@@ -37,7 +37,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is NotSupportedException ? Rejection(tool, "NotSupportedOnVersion", cause.Message)
                     : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", parameter: argument.ParamName) : null;
                 var outcome = rejection != null ? Outcome.RejectedBeforeOperation : writes ? Outcome.Unknown : Outcome.ReadFailed;
-                return Result(tool, new JsonObject { ["evidence"] = evidence }, rejection ?? Failure(outcome, evidence),
+                return Result(tool, new JsonObject { ["evidence"] = evidence },
+                    rejection ?? NativeFailureDiagnostics.FromException(Failure(outcome, evidence), ex),
                     outcome, outcome == Outcome.RejectedBeforeOperation ? Completeness.None : Completeness.Unknown, writes, current);
             }
         }

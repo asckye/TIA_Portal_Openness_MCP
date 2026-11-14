@@ -48,6 +48,7 @@ namespace TiaMcp.PlcWorker
 
         private static string EvidenceCore(Exception cause) => Serialize(new {
             exceptionType = (TiaOpenness.Shared.HostFailurePolicy.Precondition(cause) ?? TiaOpenness.Shared.HostFailurePolicy.Unwrap(cause)).GetType().Name,
+            hResult = TiaOpenness.Shared.HostFailurePolicy.Unwrap(cause).HResult,
             parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause),
             isArgument = TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)?.IsArgument,
             inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],

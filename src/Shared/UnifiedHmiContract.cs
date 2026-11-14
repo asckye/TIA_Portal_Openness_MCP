@@ -46,7 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         refusal.ParamName, HostBehavior.FailureEvidence(refusal.GetType().Name), HostBehavior.SafeDiagnostic(refusal.Message),
                             condition: refusal.Condition),
                         Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
-                return Result(tool, null, writes ? Unknown(new JsonObject()) : NativeFailure(new JsonObject()),
+                return Result(tool, null, writes ? Unknown(new JsonObject()) : NativeFailureDiagnostics.FromException(NativeFailure(new JsonObject()), error),
                     writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes, current);
             }
         }

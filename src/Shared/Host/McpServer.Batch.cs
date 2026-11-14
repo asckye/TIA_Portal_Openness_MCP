@@ -152,6 +152,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string name = (string)op["name"]!;
                 string requestId = Guid.NewGuid().ToString("N");
                 using var correlation = InvocationJournal.UseCorrelation(requestId);
+                using var diagnostics = NativeFailureDiagnostics.Begin(requestId, JsonSerializer.SerializeToElement(op["arguments"]));
                 CallToolResult result;
                 bool issued = false;
                 if (cause.HasValue) result = V4Reject(name, new Error("An earlier batch item stopped execution.", new NotExecutedDetails(cause)));

@@ -49,18 +49,22 @@ internal static class FoundationV4Result
         if (reply is not JsonObject value) return null;
         var failure = value["Failure"] as JsonObject;
         var failureEvidence = failure?["Evidence"] as JsonObject;
-        string? message = Text(value, "nativeMessage") ?? (failureEvidence == null ? null : Text(failureEvidence, "nativeMessage"))
-            ?? (failure == null ? null : Text(failure, "Message")) ?? Text(value, "error");
+        string? message = (failureEvidence == null ? null : Text(failureEvidence, "nativeMessage"))
+            ?? (failure == null ? null : Text(failure, "Message")) ?? Text(value, "nativeMessage") ?? Text(value, "error");
         if (!string.IsNullOrWhiteSpace(message))
         {
-            string type = Text(value, "nativeExceptionType") ?? (failureEvidence == null ? null : Text(failureEvidence, "nativeExceptionType"))
-                ?? (failure == null ? null : Text(failure, "Code")) ?? "NativeOperation";
+            string? type = failure == null ? Text(value, "exceptionType") ?? Text(value, "nativeExceptionType")
+                : failureEvidence == null ? null : Text(failureEvidence, "exceptionType") ?? Text(failureEvidence, "nativeExceptionType");
             int colon = message.IndexOf(':');
-            if (type == "NativeOperation" && colon > 0 && colon < 256
-                && message[..colon].All(c => char.IsLetterOrDigit(c) || c is '.' or '_' or '+')) type = message[..colon];
-            return new JsonObject { ["exceptionType"] = type, ["nativeMessage"] = HostBehavior.SafeDiagnostic(message) };
+            if (type == null && failure == null && colon > 0 && colon < 256
+                && message[..colon].All(c => char.IsLetterOrDigit(c) || c is '.' or '_' or '+')
+                && message[..colon].EndsWith("Exception", StringComparison.Ordinal)) type = message[..colon];
+            type = new NativeInnerError(type, null, null).ExceptionType;
+            return new JsonObject { ["exceptionType"] = type,
+                ["hResult"] = NativeHResult(failure == null ? value["hResult"] ?? value["nativeHResult"] : failureEvidence?["hResult"]),
+                ["nativeMessage"] = HostBehavior.SafeDiagnostic(message) };
         }
-        foreach (string member in new[] { "Meta", "Value", "Step", "Probe", "Import" })
+        foreach (string member in new[] { "Meta", "Value", "Step", "Import" })
             if (NativeDiagnostics(value[member]) is { } diagnostic) return diagnostic;
         return null;
     }
@@ -69,10 +73,18 @@ internal static class FoundationV4Result
     {
         if (result.StructuredContent is not JsonObject source) return result;
         var body = (JsonObject)source.DeepClone();
-        if (diagnostics != null && body["error"] is JsonObject error && error["details"] is JsonObject details)
+        if (diagnostics != null && body["error"] is JsonObject error && (string?)error["code"] == "NATIVE_OPERATION_FAILED"
+            && error["details"] is JsonObject details)
         {
             var evidence = details["evidence"] as JsonObject ?? new JsonObject();
             foreach (var pair in diagnostics) evidence[pair.Key] = pair.Value?.DeepClone();
+            if (body["data"] is JsonObject diagnosticData)
+            {
+                foreach (var target in new[] { diagnosticData, diagnosticData["evidence"] as JsonObject })
+                    if (target != null)
+                        foreach (string field in new[] { "exceptionType", "hResult" })
+                            if (target.ContainsKey(field)) target[field] = diagnostics[field]?.DeepClone();
+            }
             // Error detail variants have fixed fields. Retain diagnostics in data for variants without evidence.
             if (details.ContainsKey("evidence")) details["evidence"] = evidence;
             else
@@ -81,6 +93,11 @@ internal static class FoundationV4Result
                 data["nativeDiagnostics"] = diagnostics.DeepClone(); body["data"] = data;
             }
             if (details.ContainsKey("nativeMessage")) details["nativeMessage"] = diagnostics["nativeMessage"]?.DeepClone();
+            var native = new NativeOperationFailedDetails((string?)details["nativeCode"], (string?)details["nativeMessage"],
+                evidence.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value)));
+            error["details"] = JsonNode.Parse(V4Json.Serialize(native));
+            error["innererror"] = JsonNode.Parse(V4Json.Serialize(new NativeInnerError((string?)diagnostics["exceptionType"],
+                NativeHResult(diagnostics["hResult"]), (string?)body["meta"]?["requestId"])));
         }
         HostBehavior.SanitizeEvidence(body["data"], evidence: false);
         HostBehavior.SanitizeEvidence(body["error"]?["details"]);
@@ -88,6 +105,12 @@ internal static class FoundationV4Result
             Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
     }
     private static readonly IReadOnlyDictionary<string, JsonElement> Empty = new Dictionary<string, JsonElement>();
+    private static int? NativeHResult(JsonNode? value)
+    {
+        if (value == null) return null;
+        var number = JsonSerializer.SerializeToElement(value);
+        return number.ValueKind == JsonValueKind.Number && number.TryGetInt32(out int code) ? code : null;
+    }
     internal static Error Invalid(string parameter) =>
         new("Invalid Foundation argument. Nothing was executed.", new InvalidArgumentDetails(parameter, Array.Empty<string>()));
     internal static CallToolResult Reject(string release, string name, string id, Error error, bool current = false)
@@ -135,6 +158,8 @@ internal static class FoundationV4Result
             null)
     {
         var data = evidence == null ? null : Object(evidence);
+        if (data?["failure"] is JsonObject workerDiagnostic)
+            data["failure"] = JsonNode.Parse(NativeFailureDiagnostics.Evidence(JsonSerializer.SerializeToElement(workerDiagnostic)).GetRawText());
         if (exception != null && TiaOpenness.Shared.HostFailurePolicy.PriorMutation(exception))
         {
             data ??= new JsonObject();
@@ -144,7 +169,8 @@ internal static class FoundationV4Result
                     new OutcomeUnknownDetails("tool-call", Empty)), true, true);
         }
         var worker = exception as WorkerOperationException;
-        string? exceptionType = exception?.GetType().Name;
+        string? exceptionType = worker == null ? exception?.GetType().Name : worker.ExceptionType;
+        int? hResult = worker == null ? exception?.HResult : null;
         if (worker?.EvidenceJson != null && worker.EvidenceJson != "null")
         {
             var retained = JsonNode.Parse(worker.EvidenceJson);
@@ -161,6 +187,7 @@ internal static class FoundationV4Result
                 data["recoverySkipped"] = retained?["recoverySkipped"]?.DeepClone();
             }
             exceptionType = (string?)retained?["exceptionType"];
+            hResult = NativeHResult(retained?["hResult"]);
         }
         if (exception?.Data["foundationRequestSent"] is false) dispatched = false;
         if (!dispatched && exception?.Data["workerLimitBytes"] is int workerLimit)
@@ -180,9 +207,11 @@ internal static class FoundationV4Result
         var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, dispatched, !mutation, worker?.Outcome, worker?.Code, exceptionType);
         string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
         bool nativeDiagnostic = !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception)
-            && (worker == null ? exception is IOException : worker.Outcome != "rejected-before-operation"
-                && !string.IsNullOrWhiteSpace(exceptionType) && exceptionType != nameof(WorkerOperationException));
-        var details = HostBehavior.FailureEvidence(exceptionType, dispatched && nativeDiagnostic ? exception.Message : null, native: worker != null);
+            && (worker == null ? exception is IOException : worker.Outcome != "rejected-before-operation");
+        bool nativeFailure = kind == TiaOpenness.Shared.HostFailureKind.ReadFailed;
+        var details = HostBehavior.FailureEvidence(exceptionType,
+            dispatched && nativeDiagnostic && (nativeFailure || exceptionType == nameof(IOException)) ? exception.Message : null,
+            native: worker != null, hResult: nativeFailure ? hResult : null);
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         bool readCancelled = dispatched && !mutation && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
         if (kind == TiaOpenness.Shared.HostFailureKind.Unknown && exception.Data["workerRecoveryMessage"] is string recoveryMessage)

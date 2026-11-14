@@ -87,17 +87,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 "configured diagnostics directory. Release builds instrument service-owned Openness methods, properties, reflection and enumeration " +
                 "boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type " +
                 "chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary " +
-                "file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Optional requestId and sinceUtc filters " +
-                    "apply before take; matchedRecords counts all matches.")]
+                "file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Optional requestId, sinceUtc " +
+                    "and diagnosticId (the failure's correlation id) filter before paging. offset 0..10000 skips newest matching rows; each page is " +
+                    "chronological. nextOffset continues toward older rows; matchedRecords counts all matches, excluding this call's own rows.")]
         public CallToolResult GetNativeInvocationLogV4([Description("Number of recent entries, 1..500.")] int take = 100,
             [Description("Exact request id to match.")] string? requestId = null,
-            [Description("Inclusive ISO 8601 timestamp. Requires Z or a numeric offset; timestamps without an offset are rejected.")] string? sinceUtc = null)
+            [Description("Inclusive ISO 8601 timestamp. Requires Z or a numeric offset; timestamps without an offset are rejected.")] string? sinceUtc = null,
+            [Description("Exact diagnosticId from error.innererror, matching the journal row id.")] string? diagnosticId = null,
+            [Description("Number of newest matching records to skip, 0..10000.")] int offset = 0)
         {
             if (!TrySinceUtc(sinceUtc, out _))
                 return McpServer.V4Reject("GetNativeInvocationLog", new TiaMcp.Logic.V4.Error(
                     "sinceUtc must be an ISO 8601 timestamp with Z or a numeric offset.",
                     new TiaMcp.Logic.V4.InvalidArgumentDetails("sinceUtc", Array.Empty<string>())));
-            return SessionToolContract.Run("GetNativeInvocationLog", false, false, () => ReadNativeInvocationLog(take, requestId, sinceUtc));
+            return SessionToolContract.Run("GetNativeInvocationLog", false, false,
+                () => ReadNativeInvocationLog(take, requestId, sinceUtc, diagnosticId, offset));
         }
 
         private static bool TrySinceUtc(string? value, out DateTimeOffset? since)
@@ -112,12 +116,14 @@ namespace TiaMcpServer.ModelContextProtocol
             return true;
         }
 
-        public ResponseMessage ReadNativeInvocationLog(int take = 100, string? requestId = null, string? sinceUtc = null)
+        public ResponseMessage ReadNativeInvocationLog(int take = 100, string? requestId = null, string? sinceUtc = null,
+            string? diagnosticId = null, int offset = 0)
         {
             if (!TrySinceUtc(sinceUtc, out var since))
                 throw new ArgumentException("sinceUtc must be an ISO 8601 timestamp with Z or a numeric offset.", nameof(sinceUtc));
             var meta = TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.Read(
-                TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory, take, requestId, since);
+                TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory, take, requestId, since, diagnosticId, offset,
+                TiaMcp.Logic.V4.NativeFailureDiagnostics.RequestId ?? InvocationJournal.CorrelationId);
             return new ResponseMessage { Message = "Recent journal entries read; partial trailing records are counted separately.", Meta = meta };
         }
     }

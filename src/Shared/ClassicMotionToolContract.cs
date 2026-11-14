@@ -40,9 +40,10 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult Invoke(string tool, bool readOnly, bool current, Func<ResponseMessage> operation)
         {
             try { return Map(tool, operation(), readOnly, current); }
-            catch (Exception) /* swallow(privacy): no native outcome is confirmed by an escaped exception */
+            catch (Exception error) /* swallow(privacy): escaped writes retain their unknown outcome */
             {
-                return Result(tool, null, readOnly ? Failure() : Unknown(), readOnly ? Outcome.ReadFailed : Outcome.Unknown,
+                return Result(tool, null, readOnly ? NativeFailureDiagnostics.FromException(Failure(), error) : Unknown(),
+                    readOnly ? Outcome.ReadFailed : Outcome.Unknown,
                     readOnly ? Execution.ReadOnly : Execution.Unknown, Completeness.Unknown, current);
             }
         }

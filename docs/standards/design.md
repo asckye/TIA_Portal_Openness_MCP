@@ -434,7 +434,9 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 
 ### 4.6 错误
 
-- `error` MUST 恰好包含 `code`、`message`、`details` 三个字段（DES-4 增加 `innererror` 时同步修改本条，第 6.5 节）。生产者拒绝未知错误码；跨版本消费者 MUST 容忍未知字段和错误码，按 `meta.outcome` 处理。
+- `error` MUST 包含 `code`、`message`、`details`，原生失败还包含 `innererror`，无诊断时省略该字段。
+  `innererror` 的字段固定为 `exceptionType`、`hResult`、`diagnosticId`，缺少类型或 HResult 时为 null。
+  生产者拒绝未知错误码和其他错误字段。跨版本消费者 MUST 容忍未知字段和错误码，按 `meta.outcome` 处理。
 - `message` 是非空、稳定的英文文本，不承担机器语义，消费者 SHOULD NOT 解析它；填写 `details` 字段不得改变 `message`。
 - `details` 是按错误码定型的对象（`ErrorDetails` 封闭联合），文本字段为 `string|null`，列表为 `string[]`（无值为 `[]`）。
   参数错误 MUST 在 `parameter` 中给出第一个出错字段的 RFC 6901 JSON 指针，`parameters` 列出全部出错指针且始终输出。整体或重复字段错误用根指针 `""`。
@@ -465,7 +467,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `SESSION_RESET_REQUIRED` | 旧宿主信封的兼容读取类型，当前生产者不再产生 | `reason` | 保留到 Part 8 |
 | `RESOURCE_UNAVAILABLE` | SDK、Openness 环境、可选服务、工作台或包内资源缺失 | `resource` | rejected |
 | `IO_FAILED` | 动作开始前的本地文件读写失败 | `operation`、`path`（脱敏） | rejected |
-| `NATIVE_OPERATION_FAILED` | 已知的原生失败 | `nativeCode`、`nativeMessage`、`evidence` | read-failed、failed 或 rejected |
+| `NATIVE_OPERATION_FAILED` | 已知的原生失败 | `nativeCode`、`nativeMessage`（去敏首行）、`evidence` | read-failed、failed 或 rejected |
 | `COMPILE_ERRORS` | 编译完成但有错误 | `errorCount`、`warningCount`、`errors[{path, description}]`（至多 10 条叶子错误） | failed |
 | `CANCELLED` | 派发前取消（`tool-queue`）、预检中取消（`approval-precheck`）、审批等待中取消（`approval-wait`）；已派发只读调用的取消 | `stage` | rejected 或 read-failed |
 | `TIMEOUT` | 宿主能证明没有派发的超时 | `stage` | rejected 或 read-failed |
@@ -725,8 +727,20 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 - 错误对象 MUST 符合第 4.6 节，参数错误的 `details.parameter` 和 `parameters` 使用 JSON 指针，`expected` 始终输出期望的类型或形式，枚举错误给出 `allowedValues`。
 - DES-4R2 实现输入 schema、派发前宿主校验和批量行的参数详情，整体和重复字段错误使用根指针。原生证据缺少字段身份时保留根指针，宿主只采纳工具 schema 已声明的 adapter `ParamName`。个别领域消息的修订由后续任务处理（API-04、API-14）。
-- 已决定、由 DES-4 实施（维护者 2026-11-01，依据 [Azure REST API Guidelines 的 Handling Errors](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors)）：每个 `INVALID_ARGUMENT` 用 JSON 指针写出准确的参数路径和期望的类型或形式；错误对象增加 `innererror`，承载原生异常类型、HResult 等下层信息，字段名和位置由 DES-4 定稿并同步修改第 4.6 节“恰好三个字段”的规则；`details` 中的 `target` 与 `parameter` 继续表示出错的对象或参数。
-- 已决定、由 DES-4 实施：每个原生失败信封返回去敏后的原生消息首行、原生异常类型、HResult 和关联服务器日志的 `diagnosticId`，堆栈与多行详情只进日志；`GetNativeInvocationLog` 支持按请求号和诊断编号筛选并分页，超出上限的 `take` 返回 `INVALID_ARGUMENT` 并给出上限。现状：只有 `INTERNAL_ERROR` 带 `diagnosticId`，`nativeMessage` 多数为空。去敏沿用 SEC-06。
+- DES-4R3 在 `error.innererror` 返回 `{exceptionType, hResult, diagnosticId}`。`exceptionType` 使用短类型名，
+  ported 工具只采纳 worker 的证据，缺值为 null。`diagnosticId` 等于本信封的 `meta.requestId` 和调用日志行的 `id`。
+  批次子结果使用自己的请求号，CanonicalBatchTools 保留子结果已有请求号，缺少子请求号时使用父请求号。
+  `details` 中的 `target` 与 `parameter` 表示出错的对象或参数。
+- 原生失败的 `details.nativeMessage` 和 `details.evidence` 在诊断构造时去敏，只保留首行，堆栈与多行详情只进日志。
+  诊断构造使用当前调用及外层作用域中凭据命名字段的字符串、数字和布尔值作跨文本替换，其中空串和单字符字符串除外。
+  仅以 `Validity`、`Count`、`Length`、`Attempts` 或 `Enabled` 结尾的策略字段保留数字和布尔值，其他凭据键值对始终去敏。
+  安全工具的 `MapResult` 对响应消息和成功数据沿用所有非空凭据的替换规则，单字符排除只用于新建异常诊断。
+  去敏沿用 SEC-06。`OUTCOME_UNKNOWN` 的 worker 消息保持隐藏。
+- `GetNativeInvocationLog` 按 `requestId`、`diagnosticId`（均匹配行 `id`）和 `sinceUtc` 筛选。
+  `take` 为 1..500，`offset` 为 0..10000，越界返回 `INVALID_ARGUMENT`，指针为 `/take` 或 `/offset`，消息包含上限。
+  `offset` 从最新匹配记录起跳过，页内保持时间升序，`nextOffset` 向更早记录续读，`matchedRecords` 为全部匹配数。
+  本次调用的日志行按请求号排除，历史诊断读取仍参与结果和计数，越过末尾或轮转后的末尾返回空页。
+  文件可能交错且时间乱序，读取时只保留所需的 `offset + take` 条最新匹配记录。
 
 ### 6.6 示例
 
@@ -857,7 +871,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 | 编号 | 偏差 | 状态 |
 |---|---|---|
-| API-01 | 错误对象没有 `target` 路径与 `innererror`；定型 `details` 相当于 innererror 加 target | 维护者 2026-11-01 决定按 Azure 错误模型补充，DES-4 实施（第 6.5 节） |
+| API-01 | 对象路径由定型 `details` 表达，原生诊断由 `error.innererror` 承载 | DES-4R3 实施原生消息首行、短异常类型、HResult 和关联请求号（第 6.5 节） |
 | API-04 | 多字段校验错误没有逐字段列表，`parameter` 有时只写 `arguments` | P8-60 已合并，beta.2 真机仍复现；VMFIX-1 与 DES-4 |
 | API-12 | 没有弃用信号 | 已决定，未实施（第 4.13 节） |
 | API-14 | 错误码被当作兜底：旧实现失败报 `INVALID_ARGUMENT`，参数格式错误报 `NATIVE_OPERATION_FAILED`，未满足完成条件报 `INTERNAL_ERROR` | P8-60 已合并，beta.2 真机仍复现；VMFIX-1 与 DES-4 |

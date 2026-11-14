@@ -240,14 +240,23 @@ internal static class CanonicalBatchTools
 
         private CallToolResult Result(JsonObject plan, bool executed)
         {
+            string requestId = NativeFailureDiagnostics.RequestId ?? Guid.NewGuid().ToString("N");
             var rows = plan["items"]!.AsArray(); int completed = rows.Count(r => (string?)r!["status"] == "completed");
+            foreach (var row in rows)
+                foreach (string member in new[] { "preview", "result" })
+                    if (row?[member] is JsonObject child && (string?)child["error"]?["code"] == "NATIVE_OPERATION_FAILED")
+                    {
+                        var error = V4Json.Deserialize<Error>(child["error"]!.ToJsonString());
+                        child["error"] = JsonNode.Parse(V4Json.Serialize(NativeFailureDiagnostics.Complete(error,
+                            JsonSerializer.SerializeToElement(child["data"]), (string?)child["meta"]?["requestId"] ?? requestId)));
+                    }
             int failed = rows.Count(r => (string?)r!["status"] is "failed" or "preview-failed");
             int pending = rows.Count(r => (string?)r!["status"] == "not-started");
             var outcome = failed + pending == 0 ? Outcome.Succeeded : completed > 0 ? Outcome.Partial : executed ? Outcome.Failed : Outcome
                 .RejectedBeforeOperation;
             bool reset = rows.Any(row => (bool?)row?["result"]?["meta"]?["requiresSessionReset"] == true);
             if (rows.Any(row => (string?)row?["result"]?["meta"]?["outcome"] == "unknown")) outcome = Outcome.Unknown;
-            return FoundationV4Result.Composite(release, tool.Name, Guid.NewGuid().ToString("N"), plan, outcome,
+            return FoundationV4Result.Composite(release, tool.Name, requestId, plan, outcome,
                 executed ? outcome == Outcome.Unknown ? Execution.Unknown : outcome == Outcome.Partial ? Execution.Partial : Execution.Completed
                     : outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : Execution.ReadOnly,
                 outcome == Outcome.Unknown

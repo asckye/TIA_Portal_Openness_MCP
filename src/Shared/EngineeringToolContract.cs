@@ -66,7 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 if (cause is PortalException { Code: PortalErrorCode.OpennessError }
                     && (!writes || cause.Data["foundationKnownNoMutation"] is true))
-                    return Result(tool, null, NativeFailure(HostBehavior.SafeDiagnostic(cause.Message)),
+                    return Result(tool, null, NativeFailureDiagnostics.FromException(NativeFailure(HostBehavior.SafeDiagnostic(cause.Message)), ex),
                         writes ? Outcome.Failed : Outcome.ReadFailed, Completeness.None, writes);
                 return PlcToolContract.Failure(tool, ex, writes, true);
             }

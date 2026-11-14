@@ -418,7 +418,7 @@ public sealed partial class PipelineTests
         public IReadOnlyList<ToolDescriptor> Lite => All.Values.ToArray();
         public JsonArray BehaviorCapabilities { get; }
         public ToolDescriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var value) ? value : null;
-        internal Catalog(string release, bool all)
+        internal Catalog(string release, bool all, string? workerTool = null)
         {
             var root = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", release + ".json")))!;
             var names = new[] { "SaveProject", "GetSessionState", "GetCallResult", "ListExportHandles", "CallTool", "GetOpennessWorkerStatus",
@@ -427,14 +427,16 @@ public sealed partial class PipelineTests
                 string name = (string)t!["name"]!;
                 var schema = JsonSerializer.SerializeToElement(t["inputSchema"]);
                 var parameters = schema.GetProperty("properties").EnumerateObject().Select(p => new ToolParameterDescriptor(p.Name, "integer",
-                    p.Name is "offset" or "limit" or "take" ? "System.Int32" : p.Name == "confirmRestart" ? "System.Boolean" : p.Name == "arguments"
+                    p.Name is "offset" or "limit" or "take" ? "System.Int32" : p.Name is "confirmRestart" or "dryRun" ? "System.Boolean"
+                    : p.Name == "arguments"
                         ? typeof(ToolArguments).FullName! : "System.String",
                     false, null, null, "", false, Array.Empty<string>())).ToArray();
                 var classification = ToolMetadata.Find(name)!;
                 return new ToolDescriptor(name, "", new Tool { Name = name, InputSchema = schema },
-                    new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead,
-                            classification.BatchWrite),
-                    name + "()", parameters, new ToolDryRunDescriptor(false, true), null, ToolExecution.Table[name]);
+                    new ToolDescriptorClassification(classification.Layer, classification.Domain,
+                            name == workerTool ? "READ" : classification.Operation, classification.BatchRead, classification.BatchWrite),
+                    name + "()", parameters, new ToolDryRunDescriptor(false, true), null,
+                    name == workerTool ? "worker" : ToolExecution.Table[name]);
             }).ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
             DeclaredToolMetadata.Create("GetCallResult", typeof(McpServer).GetMethod(nameof(McpServer.GetCallResult))!,
                 _ => throw new InvalidOperationException("Metadata only."), out var callResult);
@@ -453,12 +455,12 @@ public sealed partial class PipelineTests
         internal Worker Worker { get; } = new();
         internal Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>> Wait =
             (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null));
-        internal Fixture(string release = "21", bool all = false)
+        internal Fixture(string release = "21", bool all = false, string? workerTool = null)
         {
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.Combine(AppContext.BaseDirectory, "fixture-data"));
             previous = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             EngineHostConfiguration.ReleaseKey = release; EngineHostConfiguration.Worker = Worker;
-            Catalog = new Catalog(release, all);
+            Catalog = new Catalog(release, all, workerTool);
             McpServer.ConfigureToolBridge(Catalog, new WorkerToolInvoker(Catalog, Worker, lifetime), () => true, new HashSet<string>(Catalog.All.Keys));
             InvocationJournal.BindingSnapshot = () => Worker.Binding as JsonObject;
             InvocationJournal.ConfigureOutput(_ => { });
@@ -484,6 +486,9 @@ public sealed partial class PipelineTests
     private sealed class Worker : IEngineWorker
     {
         internal bool Unknown, Native, Limited;
+        internal bool NativeFailure;
+        internal string? NativeFailureMessage;
+        internal JsonObject? BatchStatus;
         internal string? Payload;
         internal bool Yield;
         internal Action<string>? Event;
@@ -496,7 +501,8 @@ public sealed partial class PipelineTests
         public bool Faulted { get; set; }
         public JsonNode? Binding { get; set; }
         public object SessionKey { get; set; } = new();
-        public JsonObject Snapshot() => new() { ["readiness"] = new JsonObject { ["ready"] = Ready, ["cause"] = "fixture-worker-cause",
+        public JsonObject Snapshot() => BatchStatus?.DeepClone().AsObject() ?? new() {
+            ["readiness"] = new JsonObject { ["ready"] = Ready, ["cause"] = "fixture-worker-cause",
             ["recommendedFix"] = "fixture-worker-fix", ["recommendedFixZh"] = "fixture-worker-fix-zh" } };
         public async Task<JsonObject> Status(CancellationToken token)
         {
@@ -518,12 +524,23 @@ public sealed partial class PipelineTests
             if (Yield) await Task.Yield();
             Calls.Add(name); Started.TrySetResult();
             if (Hold != null) await Hold.Task;
-            var error = Limited ? new Error("limit", new LimitExceededDetails("response", 16 * 1024 * 1024, null))
+            bool nativeFailure = NativeFailure && !preview;
+            if (nativeFailure && NativeFailureMessage != null)
+            {
+                InvocationJournal.NativeCallStarted();
+                throw new IOException(NativeFailureMessage);
+            }
+            bool write = (bool?)arguments["dryRun"] == false;
+            var error = nativeFailure ? new Error("Native batch fixture failed.",
+                new NativeOperationFailedDetails(null, "Native batch fixture failed.", new Dictionary<string, JsonElement> {
+                    ["exceptionType"] = JsonSerializer.SerializeToElement("EngineeringException"), ["hResult"] = JsonSerializer.SerializeToElement(-123) }))
+                : Limited ? new Error("limit", new LimitExceededDetails("response", 16 * 1024 * 1024, null))
                 : Unknown ? new Error("unknown", new OutcomeUnknownDetails("fixture", new Dictionary<string, JsonElement>())) : null;
             var result = McpServer
                 .V4Result(name, Limited ? new JsonObject { ["nativeOutcomeUnknown"] = true } : Payload == null ? new JsonObject() : new JsonObject {
                     ["payload"] = Payload }, error,
-                Unknown ? Outcome.Unknown : Limited ? Outcome.Failed : Outcome.Succeeded, Unknown ? Execution.Unknown : Limited ? Execution.Completed
+                nativeFailure ? write ? Outcome.Failed : Outcome.ReadFailed : Unknown ? Outcome.Unknown : Limited ? Outcome.Failed : Outcome.Succeeded,
+                Unknown ? Execution.Unknown : Limited || nativeFailure && write ? Execution.Completed
                     : Execution.ReadOnly,
                 Unknown ? Completeness.Unknown : Limited ? Completeness.None : Completeness.Complete);
             return new EngineReply(result, Native, Binding, null, null);

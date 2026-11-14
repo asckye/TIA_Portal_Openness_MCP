@@ -68,6 +68,13 @@ internal sealed class FoundationV4Tool : McpServerTool
             return;
         }
         var properties = schema["properties"]!.AsObject();
+        if (source.Name == "GetNativeInvocationLog")
+        {
+            properties["take"]!["minimum"] = 1;
+            properties["take"]!["maximum"] = 500;
+            properties["offset"]!["minimum"] = 0;
+            properties["offset"]!["maximum"] = 10000;
+        }
         JsonElement? typedSchema = null;
         void Construction<T>(string key) where T : ConstructionSpec
         {
@@ -196,6 +203,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         string id, TiaOpenness.Shared.AuditInvocation? audit, bool write, bool internalPrecheck = false)
     {
         var args = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
+        using var correlation = TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(id);
         using var journal = internalPrecheck ? null : TiaMcpServer.ModelContextProtocol.InvocationJournal
             .Observe(id, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
@@ -245,6 +253,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         try
         {
             var argumentsInput = JsonSerializer.SerializeToElement(args);
+            if (tool.Name == "GetNativeInvocationLog" && TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.PagingError(argumentsInput) is { } paging)
+                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, paging));
             if (UnifiedInputAdmission.ValidateNavigation(tool.Name, tool.InputSchema, argumentsInput) is { } navigationError)
                 return Recorded(FoundationV4Result.Reject(release, tool.Name, id, navigationError, inner is FoundationTool { IsNative: true }));
             var validation =

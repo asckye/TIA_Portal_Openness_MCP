@@ -551,6 +551,11 @@
             "nativeResult": null
           }
         }
+      },
+      "innererror": {
+        "exceptionType": null,
+        "hResult": null,
+        "diagnosticId": "request-1"
       }
     },
     "meta": {

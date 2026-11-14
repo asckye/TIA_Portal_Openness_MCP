@@ -204,7 +204,7 @@ public sealed class WorkerJsonGoldenTests
         cause.Data[trigger] = "生产线 <&> 😀\u00a0\u0085\u2028\u2029\u001b\n\t\"\\";
         // Evidence always names the failure shape (shared host rule); data fields stay byte-exact.
         var expected = JsonConvert.SerializeObject(new {
-            exceptionType = cause.GetType().Name, parameter = (string?)null, isArgument = (bool?)null,
+            exceptionType = cause.GetType().Name, hResult = cause.HResult, parameter = (string?)null, isArgument = (bool?)null,
             inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],stagedFile=cause.Data["stagedFile"],
             recoveryDirectory=cause.Data["recoveryDirectory"],recoveryFiles=cause.Data["recoveryFiles"],exportPhase=cause.Data["exportPhase"],
             stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"],attemptedPath=cause.Data["attemptedPath"],recoveryStatus=cause.Data["recoveryStatus"],recoveryWarning=cause.Data["recoveryWarning"],recoverySkipped=cause.Data["recoverySkipped"] });

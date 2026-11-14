@@ -490,6 +490,7 @@ internal sealed partial class FoundationTool
     private async ValueTask<CallToolResult> InvokePortedAsync(RequestContext<CallToolRequestParams> request, CancellationToken token)
     {
         var arguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
+        using var diagnostics = NativeFailureDiagnostics.Begin(InvocationJournal.CorrelationId, JsonSerializer.SerializeToElement(arguments));
         using var release = HardwareContract.UseRelease(portedRelease!);
         if (RefusePortedCapability(arguments) is { } refusal) return refusal;
         // ReadState is managed lifecycle data, never an Openness lookup. Keep it in
@@ -519,6 +520,9 @@ internal sealed partial class FoundationTool
         void RecordFailure(Exception error)
         {
             workerFailure = error;
+            nativeDiagnostics = error is WorkerOperationException workerError
+                ? FoundationV4Result.NativeDiagnostics(new JsonObject { ["Failure"] = new JsonObject {
+                    ["Message"] = workerError.Message, ["Evidence"] = JsonNode.Parse(workerError.EvidenceJson ?? "null") } }) : null;
             priorMutation |= TiaOpenness.Shared.HostFailurePolicy.PriorMutation(error);
             error.Data["foundationStepKnownNoMutation"] = error is WorkerOperationException { KnownNoMutation: true }
                 || error.Data["foundationRequestSent"] is false;
@@ -540,7 +544,7 @@ internal sealed partial class FoundationTool
                 var reply = worker.Call(operation, input, token).GetAwaiter().GetResult();
                 var objectReply = reply as JsonObject;
                 lastReply = objectReply;
-                nativeDiagnostics = FoundationV4Result.NativeDiagnostics(reply) ?? nativeDiagnostics;
+                nativeDiagnostics = FoundationV4Result.NativeDiagnostics(reply);
                 priorMutation |= mayWrite;
                 return reply;
             }

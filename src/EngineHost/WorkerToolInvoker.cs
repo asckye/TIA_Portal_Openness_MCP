@@ -83,6 +83,8 @@ namespace TiaMcp.FoundationHost
         private static Type? ParameterType(string name) => typeof(TypedToolInput).Assembly.GetType(name) ?? Type.GetType(name);
         public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false)
         {
+            if (tool.Name == "GetNativeInvocationLog" && TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.PagingError(arguments) is { } paging)
+                return paging;
             var navigation = TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateNavigation(tool.Name, schema, arguments);
             if (navigation != null) return navigation;
             Error? Families(ToolDescriptor target, JsonElement input)
@@ -158,6 +160,7 @@ namespace TiaMcp.FoundationHost
 
         private async Task<ToolInvocationResult> DispatchAsync(ToolDescriptor tool, ToolArguments arguments, bool preview)
         {
+            using var diagnostics = NativeFailureDiagnostics.Begin(InvocationJournal.CorrelationId, arguments.Json);
             if (tool.Execution == "foundation"
                 || CanonicalToolParameters.Aliases(tool.Name).Count == 0 && !CanonicalToolParameters.HasStringDevice(tool.Name))
                 return RestrictArguments(tool, arguments, await DispatchCoreAsync(tool, arguments, preview).ConfigureAwait(false));

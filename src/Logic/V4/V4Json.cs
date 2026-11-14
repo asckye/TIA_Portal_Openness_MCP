@@ -242,11 +242,11 @@ namespace TiaMcp.Logic.V4
                 int count = 0;
                 foreach (var property in root.EnumerateObject())
                 {
-                    if (property.Name != "code" && property.Name != "message" && property.Name != "details")
+                    if (property.Name != "code" && property.Name != "message" && property.Name != "details" && property.Name != "innererror")
                         throw new JsonException("Unknown error property: " + property.Name);
                     count++;
                 }
-                if (count != 3 || !root.TryGetProperty("code", out var codeJson)
+                if ((count != 3 && count != 4) || !root.TryGetProperty("code", out var codeJson)
                     || !root.TryGetProperty("message", out var messageJson) || !root.TryGetProperty("details", out var detailsJson))
                     throw new JsonException("error requires code, message and details.");
                 var code = codeJson.Deserialize<ErrorCode>(options);
@@ -259,7 +259,8 @@ namespace TiaMcp.Logic.V4
                     throw new JsonException("Confirmation details require reason, planHash and requestId.");
                 var details = (ErrorDetails?)detailsJson.Deserialize(detailType, options)
                     ?? throw new JsonException("Error details must be an object.");
-                return new Error(messageJson.GetString()!, details);
+                var innererror = root.TryGetProperty("innererror", out var diagnostic) ? diagnostic.Deserialize<NativeInnerError>(options) : null;
+                return new Error(messageJson.GetString()!, details, innererror);
             }
 
             public override void Write(Utf8JsonWriter writer, Error value, JsonSerializerOptions options)
@@ -270,6 +271,11 @@ namespace TiaMcp.Logic.V4
                 writer.WriteString("message", value.Message);
                 writer.WritePropertyName("details");
                 JsonSerializer.Serialize(writer, value.Details, DetailTypes[value.Code], options);
+                if (value.Innererror != null)
+                {
+                    writer.WritePropertyName("innererror");
+                    JsonSerializer.Serialize(writer, value.Innererror, options);
+                }
                 writer.WriteEndObject();
             }
         }

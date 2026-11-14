@@ -31,9 +31,10 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult Invoke(string tool, bool readOnly, bool current, Func<ResponseMessage> operation, params string[] secrets)
         {
             try { return MapResult(tool, operation(), readOnly, current, secrets); }
-            catch (Exception) /* swallow(privacy): escaped native errors have no confirmed write outcome and must not expose credentials */
+            catch (Exception error) /* swallow(privacy): escaped writes retain their unknown outcome */
             {
-                return Result(tool, null, readOnly ? NativeFailure() : UnknownFailure(),
+                return Result(tool, null, readOnly ? NativeFailureDiagnostics.FromException(NativeFailure(), error,
+                    Diagnostic(error.GetBaseException().Message, secrets)) : UnknownFailure(),
                     readOnly ? Outcome.ReadFailed : Outcome.Unknown, readOnly ? Execution.ReadOnly : Execution.Unknown,
                     Completeness.Unknown, current);
             }
@@ -161,9 +162,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static string Redact(string text, string[] secrets)
         {
-            foreach (string secret in secrets.Where(s => !string.IsNullOrEmpty(s))) text = text.Replace(secret, "[redacted]");
+            foreach (string secret in secrets.Where(s => !string.IsNullOrEmpty(s)))
+                text = text.Replace(secret, "[redacted]");
             return text;
         }
+
+        private static string? Diagnostic(string text, string[] secrets) => HostBehavior.SafeDiagnostic(Redact(text,
+            secrets.Where(s => !string.IsNullOrEmpty(s) && s.Length > 1 && !(s.Length == 2 && char.IsSurrogatePair(s, 0))).ToArray()));
 
         private static Error NativeFailure(string? nativeMessage = null) =>
             new Error(nativeMessage ?? "The security operation did not establish a successful result.",

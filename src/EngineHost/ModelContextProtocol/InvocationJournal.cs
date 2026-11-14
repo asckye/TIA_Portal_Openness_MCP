@@ -42,6 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             private readonly long started = Stopwatch.GetTimestamp();
             private readonly DateTime time = DateTime.UtcNow;
             private readonly string arguments;
+            private readonly IDisposable diagnosticScope;
             private bool completed;
 
             internal CallSpan(string id, string tool, string host, string? release, bool write, Func<string> arguments)
@@ -51,6 +52,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 actor = ActorScope.Actor; mcpSession = ActorScope.McpSession;
                 try { this.arguments = arguments(); }
                 catch (Exception) /* swallow(logging-failure): serialization cannot change invocation behavior or echo unsupported objects */ { this.arguments = "null"; }
+                JsonElement diagnosticArguments = default;
+                try { diagnosticArguments = JsonSerializer.Deserialize<JsonElement>(this.arguments); }
+                catch (JsonException) /* swallow(logging-failure): legacy journal text cannot prevent the call */ { }
+                diagnosticScope = TiaMcp.Logic.V4.NativeFailureDiagnostics.Begin(id, diagnosticArguments);
                 Emit(() => Row(null, "BEFORE"));
             }
 
@@ -64,6 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (!completed) Emit(() => Row(null, "INTERRUPTED"));
                 if (ReferenceEquals(CurrentCall.Value, this)) CurrentCall.Value = previous;
+                diagnosticScope.Dispose();
             }
 
             private string Row(string? result, string phase)

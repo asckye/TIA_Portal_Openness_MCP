@@ -86,9 +86,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try { return MapResult(tool, operation(), readOnly, current); }
             catch (InputFailureException failure) {
                 return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current); }
-            catch (Exception) /* swallow(privacy): an escaped native error has no confirmed write outcome; never publish exception text */
+            catch (Exception error) /* swallow(privacy): an escaped native error has no confirmed write outcome */
             {
-                return Result(tool, null, readOnly ? NativeFailure() : UnknownFailure(), readOnly ? Outcome.ReadFailed : Outcome.Unknown,
+                return Result(tool, null, readOnly ? NativeFailureDiagnostics.FromException(NativeFailure(), error) : UnknownFailure(),
+                    readOnly ? Outcome.ReadFailed : Outcome.Unknown,
                     readOnly ? Execution.ReadOnly : Execution.Unknown, Completeness.Unknown, current);
             }
         }

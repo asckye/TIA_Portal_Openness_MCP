@@ -22,7 +22,10 @@ namespace TiaMcp.Logic.V4
             {
                 string code = JsonNamingPolicy.SnakeCaseUpper.ConvertName(type.Name.Replace("Details", ""));
                 knownCodes.Add(code);
-                errors.Add(Object(("code", new JsonObject { ["const"] = code }), ("message", Text()), ("details", Describe(type))));
+                var error = Object(("code", new JsonObject { ["const"] = code }), ("message", Text()), ("details", Describe(type)));
+                error["properties"]!["innererror"] = Object(("exceptionType", NullableText()),
+                    ("hResult", new JsonObject { ["type"] = new JsonArray("integer", "null") }), ("diagnosticId", NullableText()));
+                errors.Add(error);
             }
             errors.Add(Object(("code", new JsonObject { ["type"] = "string", ["minLength"] = 1,
                     ["not"] = new JsonObject { ["enum"] = new JsonArray(knownCodes.Select(c => (JsonNode)JsonValue.Create(c)!).ToArray()) } }),

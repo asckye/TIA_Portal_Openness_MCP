@@ -33,6 +33,114 @@ namespace TiaMcp.Engine.Tests
             => Assert.DoesNotContain(secret, HostBehavior.SafeDiagnostic(message), StringComparison.Ordinal);
 
         [Theory]
+        [InlineData("https://admin:Hunter2@tc-server/tc", "Hunter2")]
+        [InlineData("{\"name\":\"password\",\"value\":\"Hunter2\"}", "Hunter2")]
+        [InlineData("InvalidOperationException: {\"name\":\"password\",\"value\":\"Hunter2\"}", "Hunter2")]
+        [InlineData("InvalidOperationException: [{\"name\":\"password\",\"value\":\"Hunter2\"}]", "Hunter2")]
+        [InlineData("[{\"name\":\"password\",\"value\":\"Hunter2\",\"echo\":\"Hunter2\"}]", "Hunter2")]
+        [InlineData("-----BEGIN PRIVATE KEY-----private-fixture-material-----END PRIVATE KEY-----", "private-fixture-material")]
+        [InlineData("-----BEGIN RSA PRIVATE KEY-----\nprivate-fixture-material\n-----END RSA PRIVATE KEY-----", "PRIVATE KEY")]
+        [InlineData("password=Hunter2 echoed Hunter2", "Hunter2")]
+        [InlineData("password=NaN", "NaN")]
+        [InlineData("password=Infinity", "Infinity")]
+        [InlineData("Bearer fixture-token echoed fixture-token", "fixture-token")]
+        [InlineData("{\"password\":\"Hunter2\"", "Hunter2")]
+        public void Safe_diagnostic_retains_all_shared_text_privacy_rules(string message, string secret)
+        {
+            string? diagnostic = HostBehavior.SafeDiagnostic(message);
+            Assert.DoesNotContain(secret, diagnostic, StringComparison.Ordinal);
+            Assert.DoesNotContain("\n", diagnostic, StringComparison.Ordinal);
+        }
+
+        [Theory]
+        [InlineData("Logon failed: password=4815162342 for user X", "Logon failed: password=•••• for user X")]
+        [InlineData("Connection string: Server=s;apikey=1234567890;Database=d", "Connection string: Server=s;apikey=••••;Database=d")]
+        [InlineData("password=true", "password=••••")]
+        [InlineData("password=1", "password=••••")]
+        [InlineData("{\"numericPin\":\"password=1234\"}", "{\"numericPin\":\"password=••••\"}")]
+        public void Numeric_and_boolean_credential_pairs_are_masked(string message, string expected)
+            => Assert.Equal(expected, HostBehavior.SafeDiagnostic(message));
+
+        [Theory]
+        [InlineData("{\"password\":1234}", "Refused 1234", "Refused ••••")]
+        [InlineData("{\"password\":1}", "Refused 1", "Refused ••••")]
+        [InlineData("{\"apiKey\":1234567890}", "Refused 1234567890", "Refused ••••")]
+        [InlineData("{\"password\":true}", "Refused true", "Refused ••••")]
+        [InlineData("{\"name\":\"password\",\"value\":1234}", "Refused 1234", "Refused ••••")]
+        public void Numeric_and_boolean_argument_credentials_mask_unlabelled_echoes(string arguments, string message, string expected)
+        {
+            using var scope = NativeFailureDiagnostics.Begin("scalar-credential", JsonSerializer.Deserialize<JsonElement>(arguments));
+            Assert.Equal(expected, HostBehavior.SafeDiagnostic(message));
+        }
+
+        [Theory]
+        [InlineData("PasswordValidity", "9")]
+        [InlineData("PasswordCount", "12")]
+        [InlineData("PasswordLength", "16")]
+        [InlineData("PasswordAttempts", "3")]
+        [InlineData("PasswordEnabled", "true")]
+        public void Numeric_and_boolean_policy_fields_keep_their_diagnostic_values(string name, string value)
+        {
+            using var scope = NativeFailureDiagnostics.Begin("policy", JsonSerializer.Deserialize<JsonElement>("{\"" + name + "\":" + value + "}"));
+            string message = name + ": " + value + " out of range. Value " + value;
+            Assert.Equal(message, HostBehavior.SafeDiagnostic(message));
+        }
+
+        [Theory]
+        [InlineData("{\"a\":\"x\",\"a\":\"y\",\"password\":\"Hunter2\"}")]
+        [InlineData("{\"o\":{\"a\":1,\"a\":2},\"password\":\"Hunter2\"}")]
+        [InlineData("InvalidOperationException: {\"a\":1,\"a\":2,\"password\":\"Hunter2\"}")]
+        public void Duplicate_json_keys_keep_native_failures_sanitized_without_throwing(string message)
+        {
+            Error? error = null;
+            var thrown = Record.Exception(() => error = new Error(message,
+                new NativeOperationFailedDetails(null, message, new Dictionary<string, JsonElement>())));
+            Assert.Null(thrown);
+            Assert.NotNull(error);
+            Assert.Equal(ErrorCode.NativeOperationFailed, error!.Code);
+            Assert.False(string.IsNullOrWhiteSpace(((NativeOperationFailedDetails)error.Details).NativeMessage));
+            Assert.DoesNotContain("Hunter2", V4Json.Serialize(error), StringComparison.Ordinal);
+        }
+
+        [Theory]
+        [InlineData("releaseKey", false), InlineData("ReLeAsE-Key", false), InlineData("password", true)]
+        [InlineData("serverPassword", true), InlineData("passwd", true), InlineData("pwd", true), InlineData("sk", true)]
+        [InlineData("apiKey", true), InlineData("keys", true), InlineData("tokenValue", true), InlineData("client.secret", true)]
+        [InlineData("credentials", true), InlineData("Authorization", true), InlineData("PasswordValidity", true)]
+        [InlineData("monkey", true), InlineData("name", false), InlineData("keyboard", false), InlineData("offset", false)]
+        public void Diagnostic_and_journal_credential_names_use_the_same_rule(string name, bool expected)
+        {
+            var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            var diagnostic = typeof(NativeFailureDiagnostics).GetMethod("Credential", flags)!;
+            var journal = typeof(TiaOpenness.Shared.CallJournalPayload).GetMethod("Sensitive", flags)!;
+            Assert.Equal(expected, (bool)diagnostic.Invoke(null, new object[] { name })!);
+            Assert.Equal(expected, (bool)journal.Invoke(null, new object[] { name })!);
+        }
+
+        [Fact]
+        public void Structured_diagnostics_bound_nested_objects_and_mask_cross_field_echoes()
+        {
+            JsonNode nested = new JsonObject { ["echo"] = "Hunter2" };
+            for (int index = 0; index < 17; index++) nested = new JsonObject { ["child"] = nested };
+            nested["password"] = "Hunter2";
+            string? diagnostic = HostBehavior.SafeDiagnostic(nested.ToJsonString());
+            Assert.DoesNotContain("Hunter2", diagnostic, StringComparison.Ordinal);
+            Assert.Contains("••••", diagnostic, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void Native_failure_fields_share_url_userinfo_redaction()
+        {
+            const string url = "https://admin:Hunter2@tc-server/tc";
+            var error = new Error("Native connection failed.", new NativeOperationFailedDetails(null, url,
+                new Dictionary<string, JsonElement> { ["endpoint"] = JsonSerializer.SerializeToElement(url),
+                    ["exceptionType"] = JsonSerializer.SerializeToElement(url) }));
+            Assert.DoesNotContain("Hunter2", V4Json.Serialize(error), StringComparison.Ordinal);
+            Assert.Equal("https://••••@tc-server/tc", ((NativeOperationFailedDetails)error.Details).NativeMessage);
+            Assert.NotNull(error.Innererror);
+        }
+
+        [Theory]
         [InlineData("PasswordError: hunter2", "hunter2")]
         [InlineData("apiTokenError: abc", "abc")]
         public void Credential_markers_are_not_exception_type_prefixes(string message, string secret)

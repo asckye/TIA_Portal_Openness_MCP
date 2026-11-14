@@ -113,7 +113,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is NotSupportedException ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null))
                     : null;
                 if (error != null && !write) return Result(tool, null, error, Outcome.RejectedBeforeOperation, current);
-                return Result(tool, null, Failure(write, new JsonObject()), write ? Outcome.Unknown : Outcome.ReadFailed, current);
+                return Result(tool, null, NativeFailureDiagnostics.FromException(Failure(write, new JsonObject()), ex),
+                    write ? Outcome.Unknown : Outcome.ReadFailed, current);
             }
         }
 

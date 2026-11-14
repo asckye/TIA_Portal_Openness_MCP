@@ -26,6 +26,7 @@ public sealed class HardwareAddressingParityTests
     [InlineData("SetDeviceItemIoAddress", "{\"feasible\":true,\"dryRun\":true,\"currentStartAddress\":1}", false, "succeeded")]
     public void Released_hardware_mapping_matches_the_host(string tool, string evidence, bool write, string outcome)
     {
+        using var correlation = enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation("hardware-parity");
         enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
         using var release = HostContract.UseRelease("21");
         var expected = Normalize(enginefixture::TiaMcp.Engine.Tests.HardwareAddressingParityEngine.Map(tool, evidence, write));
@@ -47,6 +48,7 @@ public sealed class HardwareAddressingParityTests
     [Fact]
     public void Partial_address_read_preserves_records_and_next_offset()
     {
+        using var correlation = enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation("hardware-parity");
         const string evidence = "{\"success\":true,\"dataComplete\":false,\"offset\":0,\"limit\":1,\"expectedCount\":2,\"records\":[{}]}";
         using var release = HostContract.UseRelease("21");
         var expected = Normalize(enginefixture::TiaMcp.Engine.Tests.HardwareAddressingParityEngine.Map("GetDeviceAddressing", evidence, false));
@@ -62,6 +64,7 @@ public sealed class HardwareAddressingParityTests
     [Fact]
     public void Connection_failure_mapping_preserves_the_read_failed_outcome()
     {
+        using var correlation = enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation("hardware-parity");
         const string evidence = "{\"success\":false,\"status\":\"HmiReadSessionBlocked\"}";
         using var release = HostContract.UseRelease("21");
         var expected = Normalize(enginefixture::TiaMcp.Engine.Tests.HardwareAddressingParityEngine.Map("GetDeviceAddressing", evidence, false));

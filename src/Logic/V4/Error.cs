@@ -2,6 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace TiaMcp.Logic.V4
 {
@@ -18,13 +22,266 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(0)] public ErrorCode Code => Details.Code;
         [JsonPropertyOrder(1)] public string Message { get; }
         [JsonPropertyOrder(2)] public ErrorDetails Details { get; }
+        [JsonPropertyOrder(3), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public NativeInnerError? Innererror { get; }
 
-        public Error(string message, ErrorDetails details)
+        public Error(string message, ErrorDetails details) : this(message, details, null) { }
+
+        public Error(string message, ErrorDetails details, NativeInnerError? innererror)
         {
             V4Validation.Text(message, nameof(message));
             V4Validation.Require(details != null, "Error details are required.");
-            Message = message;
+            Message = details is NativeOperationFailedDetails ? NativeFailureDiagnostics.Text(message) ?? "The native operation failed." : message;
             Details = details!;
+            Innererror = innererror ?? (details as NativeOperationFailedDetails)?.Diagnostic;
+        }
+    }
+
+    public sealed class NativeInnerError
+    {
+        public string? ExceptionType { get; }
+        public int? HResult { get; }
+        public string? DiagnosticId { get; }
+        public NativeInnerError(string? exceptionType, int? hResult, string? diagnosticId)
+        {
+            ExceptionType = NativeFailureDiagnostics.Text(exceptionType)?.Split('.', '+').Last();
+            HResult = hResult;
+            // This opaque journal key must remain identical to meta.requestId.
+            DiagnosticId = diagnosticId;
+        }
+    }
+
+    // Invocation-local values are captured before dispatch and restored for nested calls.
+    // This boundary is also linked into Studio Core, so it has no host dependencies.
+    public static class NativeFailureDiagnostics
+    {
+        private static readonly AsyncLocal<Scope?> Current = new AsyncLocal<Scope?>();
+        public static string? RequestId => Current.Value?.RequestId;
+        public static IDisposable Begin(string requestId, JsonElement arguments) => new Scope(requestId, arguments);
+
+        public static Error FromException(Error error, Exception exception, string? nativeMessage = null)
+        {
+            if (error.Details is not NativeOperationFailedDetails details) return error;
+            var cause = exception.GetBaseException();
+            bool workerWrapper = cause.GetType().Name == "WorkerOperationException";
+            var evidence = details.Evidence.ToDictionary(p => p.Key, p => p.Value);
+            evidence["exceptionType"] = JsonSerializer.SerializeToElement(workerWrapper ? null : cause.GetType().Name);
+            evidence["hResult"] = JsonSerializer.SerializeToElement(workerWrapper ? (int?)null : cause.HResult);
+            return new Error(error.Message, new NativeOperationFailedDetails(details.NativeCode, nativeMessage ?? cause.Message, evidence));
+        }
+
+        private sealed class Scope : IDisposable
+        {
+            private readonly Scope? previous = Current.Value;
+            internal readonly string RequestId;
+            internal readonly HashSet<string> Secrets = new HashSet<string>(StringComparer.Ordinal);
+            internal Scope(string requestId, JsonElement arguments)
+            {
+                RequestId = requestId;
+                if (previous != null) Secrets.UnionWith(previous.Secrets);
+                Collect(arguments, Secrets, false);
+                Current.Value = this;
+            }
+            public void Dispose() => Current.Value = previous;
+        }
+
+        private static bool Credential(string name)
+        {
+            name = new string(name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+            return name != "releasekey" && (name.Contains("password") || name.Contains("passwd") || name.Contains("secret")
+                || name.Contains("token") || name.EndsWith("key", StringComparison.Ordinal) || name.EndsWith("keys", StringComparison.Ordinal)
+                || name.Contains("credential") || name.Contains("authorization") || name == "pwd" || name == "sk");
+        }
+
+        private static void Collect(JsonElement value, HashSet<string> secrets, bool credential)
+        {
+            if (value.ValueKind == JsonValueKind.Object)
+            {
+                bool named = value.EnumerateObject().Any(p => (p.Name.Equals("name", StringComparison.OrdinalIgnoreCase)
+                    || p.Name.Equals("key", StringComparison.OrdinalIgnoreCase)) && p.Value.ValueKind == JsonValueKind.String
+                    && Credential(p.Value.GetString()!));
+                foreach (var pair in value.EnumerateObject())
+                {
+                    if (!credential && !named && PolicyScalar(pair.Name, pair.Value.GetRawText())) continue;
+                    Collect(pair.Value, secrets,
+                        credential || Credential(pair.Name) || named && pair.Name.Equals("value", StringComparison.OrdinalIgnoreCase));
+                }
+            }
+            else if (value.ValueKind == JsonValueKind.Array)
+                foreach (var item in value.EnumerateArray()) Collect(item, secrets, credential);
+            else if (credential && value.ValueKind is JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False)
+                secrets.Add(value.GetRawText());
+            else if (value.ValueKind == JsonValueKind.String && value.GetString() is { } text)
+            {
+                if (credential)
+                {
+                    if (Replaceable(text)) secrets.Add(text);
+                }
+                else if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
+                {
+                    try
+                    {
+                        using var document = JsonDocument.Parse(text);
+                        Collect(document.RootElement, secrets, false);
+                    }
+                    catch (JsonException) /* swallow(parse-fallback): ordinary argument text has no embedded credential fields */ { }
+                }
+            }
+        }
+
+        private const string CredentialPair =
+            @"(?i)\b(?<name>[\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*)\s*[=:]\s*(?<value>""[^""]*""|'[^']*'|[^\s&;,""'<>]+)";
+        private static readonly JsonSerializerOptions DiagnosticJson = new JsonSerializerOptions {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+        private static bool Replaceable(string value) => value.Length > 1 && !(value.Length == 2 && char.IsSurrogatePair(value, 0));
+        private static bool NumericOrBoolean(string value) => bool.TryParse(value, out _) || double.TryParse(value,
+            System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double number)
+            && !double.IsNaN(number) && !double.IsInfinity(number);
+        private static bool PolicyScalar(string name, string value) =>
+            new[] { "Validity", "Count", "Length", "Attempts", "Enabled" }.Any(suffix => name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            && NumericOrBoolean(value);
+
+        private static string ReplaceSecrets(string text, IEnumerable<string> secrets)
+        {
+            foreach (string secret in secrets.OrderByDescending(s => s.Length))
+            {
+                bool multiline = secret.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' }) >= 0;
+                text = text.Replace(secret, multiline ? "••••\n" : "••••");
+            }
+            return text;
+        }
+
+        private static Match ExceptionPrefix(string text)
+        {
+            var prefix = Regex.Match(text, @"^[A-Za-z_][\w.`+]*(?:Exception|Error):\s", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            if (prefix.Value.EndsWith("Error: ", StringComparison.Ordinal) && prefix.Value != "KeyNotFoundError: "
+                && new[] { "password", "passwd", "pwd", "secret", "token", "key", "credential" }
+                    .Any(marker => prefix.Value.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0)) prefix = Match.Empty;
+            return prefix;
+        }
+
+        public static string? Text(string? text) => Text(text, 0, Array.Empty<string>());
+
+        private static string? Text(string? text, int depth, IEnumerable<string> collected)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return null;
+            try
+            {
+                var secrets = new HashSet<string>(collected, StringComparer.Ordinal);
+                if (Current.Value is { } scope) secrets.UnionWith(scope.Secrets);
+                var jsonPrefix = ExceptionPrefix(text);
+                if (jsonPrefix.Success)
+                {
+                    string remainder = text.Substring(jsonPrefix.Length);
+                    if (remainder.TrimStart().StartsWith("{", StringComparison.Ordinal)
+                        || remainder.TrimStart().StartsWith("[", StringComparison.Ordinal))
+                        text = jsonPrefix.Value + (Text(remainder, depth + 1, secrets) ?? "••••");
+                }
+                if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
+                {
+                    if (depth >= 16) return "••••";
+                    JsonNode? embedded;
+                    try { embedded = JsonNode.Parse(text); }
+                    catch (JsonException) /* swallow(privacy): malformed embedded JSON is hidden at the diagnostic boundary */ { return "••••"; }
+                    Collect(JsonSerializer.SerializeToElement(embedded), secrets, false);
+                    Scrub(embedded, depth + 1, secrets);
+                    text = embedded?.ToJsonString(DiagnosticJson) ?? "null";
+                }
+                text = Regex.Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", "••••",
+                    RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                text = ReplaceSecrets(text, secrets);
+                int end = text.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' });
+                if (end >= 0) text = text.Substring(0, end);
+                if (string.IsNullOrWhiteSpace(text)) return null;
+                int inner = text.IndexOf(" ---> ", StringComparison.Ordinal);
+                if (inner >= 0) text = text.Substring(0, inner);
+                var prefix = ExceptionPrefix(text);
+                string body = text.Substring(prefix.Length);
+                foreach (Match match in Regex.Matches(body, CredentialPair, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)))
+                {
+                    string value = match.Groups["value"].Value;
+                    bool quoted = value.StartsWith("\"", StringComparison.Ordinal) || value.StartsWith("'", StringComparison.Ordinal);
+                    if (quoted) value = value.Substring(1, value.Length - 2);
+                    if (Replaceable(value) && (quoted || !PolicyScalar(match.Groups["name"].Value, value))) secrets.Add(value);
+                }
+                foreach (Match match in Regex.Matches(body, @"(?i)\b(?:Bearer|Basic)\s+([^\s""'<>\\,;]+)",
+                    RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)))
+                    if (Replaceable(match.Groups[1].Value)) secrets.Add(match.Groups[1].Value);
+                body = ReplaceSecrets(body, secrets);
+                body = Regex.Replace(body, CredentialPair,
+                    match => {
+                        string value = match.Groups["value"].Value;
+                        bool quoted = value.StartsWith("\"", StringComparison.Ordinal) || value.StartsWith("'", StringComparison.Ordinal);
+                        if (!quoted && PolicyScalar(match.Groups["name"].Value, value)) return match.Value;
+                        return match.Value.Substring(0, match.Groups["value"].Index - match.Index) + "••••";
+                    }, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                body = Regex.Replace(body, @"(?i)\b(Bearer|Basic)\s+[^\s""'<>\\,;]+", "$1 ••••",
+                    RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                body = Regex.Replace(body, @"(?i)(https?://)[^/\s@]+@", "$1••••@", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                body = Regex.Replace(body, @"(?i)(?<![\w])(?:[a-z]:\\|\\\\)[^\r\n""<>|;]*", "<path>",
+                    RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                text = prefix.Value + body;
+                if (text.Length <= 4096) return text;
+                int count = char.IsHighSurrogate(text[4079]) ? 4079 : 4080;
+                return text.Substring(0, count) + "… [truncated]";
+            }
+            catch (Exception error) when (error is RegexMatchTimeoutException || error is ArgumentException)
+            {
+                /* swallow(privacy): retain a value-free native reason when parsing fails or text sanitization times out */
+                return "Native operation failed.";
+            }
+        }
+
+        internal static Error? Complete(Error? error, JsonElement? data, string requestId)
+        {
+            if (error?.Details is not NativeOperationFailedDetails details) return error;
+            JsonElement source = data ?? default;
+            if (source.ValueKind == JsonValueKind.Object && source.TryGetProperty("evidence", out var evidence)
+                && evidence.ValueKind == JsonValueKind.Object) source = evidence;
+            string? Field(string name) => source.ValueKind == JsonValueKind.Object && source.TryGetProperty(name, out var value)
+                && value.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(value.GetString()) ? value.GetString() : null;
+            var retained = details.Evidence.ToDictionary(p => p.Key, p => p.Value);
+            foreach (string name in new[] { "exceptionType", "nativeExceptionType", "hResult", "nativeMessage", "workerMessage" })
+                if (!retained.ContainsKey(name) && source.ValueKind == JsonValueKind.Object && source.TryGetProperty(name, out var value))
+                    retained[name] = value.Clone();
+            var completed = new NativeOperationFailedDetails(details.NativeCode,
+                details.NativeMessage ?? Field("nativeMessage") ?? Field("workerMessage") ?? Field("readError") ?? error.Message, retained);
+            return new Error(error.Message, completed, new NativeInnerError(error.Innererror?.ExceptionType ?? completed.Diagnostic?.ExceptionType,
+                error.Innererror?.HResult ?? completed.Diagnostic?.HResult, requestId));
+        }
+
+        internal static JsonElement Evidence(JsonElement value)
+        {
+            var node = JsonNode.Parse(value.GetRawText());
+            var secrets = new HashSet<string>(StringComparer.Ordinal);
+            Collect(value, secrets, false);
+            Scrub(node, 0, secrets);
+            return JsonSerializer.SerializeToElement(node);
+        }
+
+        private static void Scrub(JsonNode? node, int depth, IEnumerable<string> secrets)
+        {
+            if (node is JsonObject obj)
+            {
+                bool named = obj.Any(p => (p.Key.Equals("name", StringComparison.OrdinalIgnoreCase)
+                    || p.Key.Equals("key", StringComparison.OrdinalIgnoreCase)) && p.Value is JsonValue name
+                    && name.TryGetValue<string>(out var text) && Credential(text));
+                foreach (var pair in obj.ToArray())
+                {
+                    if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0) obj.Remove(pair.Key);
+                    else if (Credential(pair.Key) || named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase))
+                        obj[pair.Key] = "••••";
+                    else if (pair.Value is JsonValue scalar && scalar.TryGetValue<string>(out var text))
+                        obj[pair.Key] = Text(text, depth, secrets);
+                    else if (depth >= 16) obj[pair.Key] = "••••";
+                    else Scrub(pair.Value, depth + 1, secrets);
+                }
+            }
+            else if (node is JsonArray array)
+                for (int index = 0; index < array.Count; index++)
+                    if (array[index] is JsonValue scalar && scalar.TryGetValue<string>(out var text)) array[index] = Text(text, depth, secrets);
+                    else if (depth >= 16) array[index] = "••••";
+                    else Scrub(array[index], depth + 1, secrets);
         }
     }
 
@@ -296,11 +553,20 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(0)] public string? NativeCode { get; }
         [JsonPropertyOrder(1)] public string? NativeMessage { get; }
         [JsonPropertyOrder(2)] public IReadOnlyDictionary<string, JsonElement> Evidence { get; }
+        internal NativeInnerError? Diagnostic { get; }
         public NativeOperationFailedDetails(string? nativeCode, string? nativeMessage, IReadOnlyDictionary<string, JsonElement> evidence)
         {
             NativeCode = nativeCode;
-            NativeMessage = nativeMessage;
-            Evidence = V4Validation.Object(evidence);
+            string? Text(string key) => evidence.TryGetValue(key, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+            NativeMessage = NativeFailureDiagnostics.Text(nativeMessage) ?? NativeFailureDiagnostics.Text(Text("nativeMessage"))
+                ?? NativeFailureDiagnostics.Text(Text("workerMessage")) ?? NativeFailureDiagnostics.Text(Text("readError"));
+            Evidence = V4Validation.Object(NativeFailureDiagnostics.Evidence(JsonSerializer.SerializeToElement(evidence))
+                .EnumerateObject().ToDictionary(p => p.Name, p => p.Value.Clone()));
+            int? hResult = evidence.TryGetValue("hResult", out var number) && number.ValueKind == JsonValueKind.Number
+                && number.TryGetInt32(out var code) ? code : null;
+            string? type = Text("exceptionType") ?? Text("nativeExceptionType");
+            var diagnostic = new NativeInnerError(type, hResult, NativeFailureDiagnostics.RequestId);
+            if (diagnostic.ExceptionType != null || hResult != null || diagnostic.DiagnosticId != null) Diagnostic = diagnostic;
             V4Validation.Details(this);
         }
     }

@@ -20,7 +20,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 while (cause.InnerException != null) cause = cause.InnerException;
                 Error? rejection = cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
                     parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(portal)) : null;
-                return Result(tool, null, rejection ?? Failure(writes), rejection != null ? Outcome.RejectedBeforeOperation
+                return Result(tool, null, rejection ?? NativeFailureDiagnostics.FromException(Failure(writes), exception),
+                    rejection != null ? Outcome.RejectedBeforeOperation
                     : writes ? Outcome.Unknown : Outcome.ReadFailed, rejection != null ? Completeness.None : Completeness.Unknown, writes, current);
             }
         }

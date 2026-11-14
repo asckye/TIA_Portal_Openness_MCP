@@ -61,7 +61,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             Completeness.None, current: current);
                 }
                 return Result(tool, new JsonObject { ["exceptionType"] = ex.GetType().Name },
-                    writes ? Unknown() : NativeFailure(), writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, current: current);
+                    writes ? Unknown() : NativeFailureDiagnostics.FromException(NativeFailure(), ex),
+                    writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, current: current);
             }
         }
         private static int Count(JsonObject data, string key)

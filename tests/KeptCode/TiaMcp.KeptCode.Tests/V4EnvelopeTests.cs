@@ -122,6 +122,12 @@ namespace TiaMcp.Engine.Tests
                 (new IoFailedDetails("read", "input.xml"), """{"code":"IO_FAILED","message":"Failure.","details":{"operation":"read","path":"input.xml"}}"""),
                 (new NativeOperationFailedDetails("E1", "Native failure", Evidence()),
                         """{"code":"NATIVE_OPERATION_FAILED","message":"Failure.","details":{"nativeCode":"E1","nativeMessage":"Native failure","evidence":{"Executed":true,"observation":{"source":"readback","nativeResult":null}}}}"""),
+                (new NativeOperationFailedDetails("E2", "Native failure", new Dictionary<string, JsonElement> {
+                    ["exceptionType"] = JsonSerializer.SerializeToElement("EngineeringException"),
+                    ["hResult"] = JsonSerializer.SerializeToElement(-123) }),
+                    "{\"code\":\"NATIVE_OPERATION_FAILED\",\"message\":\"Failure.\",\"details\":{\"nativeCode\":\"E2\","
+                    + "\"nativeMessage\":\"Native failure\",\"evidence\":{\"exceptionType\":\"EngineeringException\",\"hResult\":-123}},"
+                    + "\"innererror\":{\"exceptionType\":\"EngineeringException\",\"hResult\":-123,\"diagnosticId\":null}}"),
                 (new CompileErrorsDetails(6, 0, new[] { new CompileErrorMessage("ASIS (DB1)", "Drive telegram address missing.") }),
                         """{"code":"COMPILE_ERRORS","message":"Failure.","details":{"errorCount":6,"warningCount":0,"errors":[{"path":"ASIS (DB1)","description":"Drive telegram address missing."}]}}"""),
                 (new CancelledDetails("before dispatch"), """{"code":"CANCELLED","message":"Failure.","details":{"stage":"before-dispatch"}}"""),

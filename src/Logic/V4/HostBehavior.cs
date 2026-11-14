@@ -3,13 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using TiaOpenness.Shared;
-#if TIA_APPROVAL_PRIVATE_JOURNAL
-using DiagnosticPayload = TiaOpenness.Shared.ApprovalJournalPayload;
-#else
-using DiagnosticPayload = TiaOpenness.Shared.CallJournalPayload;
-#endif
 
 namespace TiaMcp.Logic.V4
 {
@@ -125,33 +119,7 @@ namespace TiaMcp.Logic.V4
             => evidence.TryGetValue("workerMessage", out var message) && message.ValueKind == JsonValueKind.String
                 ? SafeDiagnostic(message.GetString()) : null;
 
-        internal static string? SafeDiagnostic(string? message)
-        {
-            if (string.IsNullOrWhiteSpace(message)) return null;
-            // Exception.ToString() and nested native messages can contain a whole stack.
-            // Only the first message line belongs on the wire; the full diagnostic stays in the log.
-            int end = message.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' });
-            if (end >= 0) message = message.Substring(0, end);
-            int inner = message.IndexOf(" ---> ", StringComparison.Ordinal);
-            if (inner >= 0) message = message.Substring(0, inner);
-            var prefix = Regex.Match(message, @"^(?<type>[A-Za-z_][\w.`]*)(?<kind>Exception|Error):\s",
-                RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
-            string typeName = prefix.Groups["type"].Value;
-            // KeyNotFoundError is the explicitly retained non-credential error name.
-            bool keyNotFound = typeName == "KeyNotFound";
-            if (prefix.Success && prefix.Groups["kind"].Value == "Error" && !keyNotFound && DiagnosticPayload.IsCredentialPairName(typeName))
-                prefix = Match.Empty;
-            string json = DiagnosticPayload.Sanitize(JsonSerializer.Serialize(message.Substring(prefix.Length)));
-            try
-            {
-                string? safe = JsonSerializer.Deserialize<string>(json);
-                if (safe == null) return null;
-                safe = Regex.Replace(safe, @"(?i)(?<![\w])(?:[a-z]:\\|\\\\)[^\r\n""<>|;]*", "<path>", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
-                return DiagnosticPayload.Bound(prefix.Value + safe);
-            }
-            catch (Exception error) when (error is JsonException || error is ArgumentException || error is RegexMatchTimeoutException)
-            { return "Native operation failed."; }
-        }
+        internal static string? SafeDiagnostic(string? message) => NativeFailureDiagnostics.Text(message);
 
         internal static string
             ? AdmissionDiagnostic(Exception error, int? reportedCode = null, string? reportedOutcome = null, string? reportedExceptionType = null)
@@ -204,11 +172,16 @@ namespace TiaMcp.Logic.V4
 
         // Host implementation details remain private. A worker's native diagnostic is
         // explicitly identified by its caller; ordinary host errors expose only IO failures.
-        internal static IReadOnlyDictionary<string, JsonElement> FailureEvidence(string? exceptionType, string? message = null, bool native = false)
-            => new Dictionary<string, JsonElement> {
+        internal static IReadOnlyDictionary<string, JsonElement> FailureEvidence(string? exceptionType, string? message = null,
+            bool native = false, int? hResult = null)
+        {
+            var evidence = new Dictionary<string, JsonElement> {
                 ["exceptionType"] = JsonSerializer.SerializeToElement(exceptionType),
-                ["workerMessage"] = JsonSerializer
-                    .SerializeToElement(native || exceptionType == nameof(System.IO.IOException) ? SafeDiagnostic(message) : null) };
+                ["workerMessage"] = JsonSerializer.SerializeToElement(
+                    native || exceptionType == nameof(System.IO.IOException) ? SafeDiagnostic(message) : null) };
+            if (hResult.HasValue) evidence["hResult"] = JsonSerializer.SerializeToElement(hResult);
+            return evidence;
+        }
 
         internal static Error? ExpectedProjectArgument(string? expectedProject)
         {

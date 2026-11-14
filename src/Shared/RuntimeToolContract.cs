@@ -59,7 +59,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (portal.Code == TiaMcpServer.Siemens.PortalErrorCode.NotFound) rejection =
                         new Error("The target was not found.", new NotFoundDetails(null));
                 }
-                return Result(tool, null, rejection ?? Failure(!readOnly), rejection != null ? Outcome.RejectedBeforeOperation
+                return Result(tool, null, rejection ?? NativeFailureDiagnostics.FromException(Failure(!readOnly), ex),
+                    rejection != null ? Outcome.RejectedBeforeOperation
                     : readOnly ? Outcome.ReadFailed : Outcome.Unknown, rejection != null ? Completeness.None : Completeness.Unknown, current);
             }
         }

@@ -43,6 +43,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 : cause is FileNotFoundException || cause is DirectoryNotFoundException ? "NOT_FOUND"
                 : cause is IOException ? "IO_FAILED" : cause is InvalidOperationException ? "PRECONDITION_FAILED" : null;
             if (code != null) data["rejectionCode"] = code;
+            else
+            {
+                var failure = NativeFailureDiagnostics.FromException(new Error("The native operation failed.",
+                    new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())), cause);
+                data["nativeMessage"] = ((NativeOperationFailedDetails)failure.Details).NativeMessage;
+                data["nativeExceptionType"] = failure.Innererror?.ExceptionType;
+                data["hResult"] = failure.Innererror?.HResult;
+            }
         }
 
         internal static CallToolResult Run(string tool, bool writes, Func<ResponseMessage> operation, int? offset = null, int? limit = null)

@@ -416,6 +416,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         previewId = Guid.NewGuid().ToString("N");
                         JsonObject? previewBody;
                         using (InvocationJournal.UseCorrelation(previewId))
+                        using (NativeFailureDiagnostics.Begin(previewId, JsonSerializer.SerializeToElement(StepReviewRules.PreviewArguments(step))))
                         using (AuditInvocation.ReadOnlyPreview())
                             previewBody = Body(call(step.Tool, StepReviewRules.PreviewArguments(step), null));
                         if ((bool?)previewBody?["ok"] != true)
@@ -462,6 +463,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Check(stored, fresh: !dispatched);
                     if (now() - started >= maximumDuration) { status = "cap"; stopping = "stopped-before-write"; break; }
                     using var correlation = InvocationJournal.UseCorrelation(requestId);
+                    using var diagnostics = NativeFailureDiagnostics.Begin(requestId, JsonSerializer.SerializeToElement(finalArguments));
                     using var association = AuditInvocation.GenerationStep(planId, step.Id, runId, parentId, previewHash, requestId);
                     using var granted = GenerationStepApproval.Enter(approval, step, finalArguments, previewId, previewHash, sessionKey, runId);
                     records.Append(runId, new JsonObject { ["event"] = "step-start", ["stepId"] = step.Id, ["requestId"] = requestId });

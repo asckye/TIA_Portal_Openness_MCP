@@ -63,7 +63,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             // A thrown lifecycle action can follow an issued native call, including
             // closing an old project. Exception text cannot establish its post-state.
-            var evidence = HostBehavior.FailureEvidence(exception.GetType().Name, exception.Message);
+            bool nativeFailure = kind == TiaOpenness.Shared.HostFailureKind.ReadFailed;
+            var nativeCause = nativeFailure ? exception.GetBaseException() : exception;
+            var evidence = HostBehavior.FailureEvidence(nativeCause.GetType().Name,
+                nativeCause.Message, native: nativeFailure, hResult: nativeFailure ? nativeCause.HResult : null);
             string? reason = new[] { "ConnectPortal", "ConnectProject", "AttachOpenProject" }.Contains(tool, StringComparer.Ordinal)
                 ? TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception) : null;
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);

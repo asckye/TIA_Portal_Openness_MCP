@@ -30,7 +30,7 @@ namespace TiaMcp.Logic.V4
         {
             Ok = ok;
             Data = data?.Clone();
-            Error = error;
+            Error = NativeFailureDiagnostics.Complete(error, data, meta.RequestId);
             Meta = meta;
             V4Validation.Envelope(this, schemaVersion);
         }

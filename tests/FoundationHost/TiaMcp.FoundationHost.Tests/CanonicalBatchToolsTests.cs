@@ -35,6 +35,27 @@ public sealed class CanonicalBatchToolsTests
 
     private static readonly JsonObject Binding = new() {
         ["projectPath"] = "C:/Project.ap21", ["projectName"] = "Project", ["processId"] = 42, ["generation"] = 1 };
+
+    [Theory, InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
+    public async Task Canonical_batch_failure_keeps_the_item_diagnostic_id(string release, bool omitChildId)
+    {
+        using var files = new Files();
+        var target = new Target("ImportPlcTagTable", release) { FailWrite = 1, OmitRequestId = omitChildId };
+        var batch = new CanonicalBatchTools.BatchTool(Declaration("ImportPlcTagTablesFromDirectory"),
+            new Dictionary<string, McpServerTool> { [target.ProtocolTool.Name] = target }, release, () => Binding.DeepClone().AsObject()) {
+            CompleteApproval = (_, _) => Task.CompletedTask };
+        batch.Approve = (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null));
+        var args = files.Arguments();
+        var preview = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
+        Apply(args, preview.StructuredContent!["data"]!.AsObject());
+        var result = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
+        var child = result.StructuredContent!["data"]!["items"]![0]!["result"]!;
+        string parentId = (string)result.StructuredContent["meta"]!["requestId"]!;
+        Assert.Equal(omitChildId ? null : "test", (string?)child["meta"]?["requestId"]);
+        Assert.Equal(omitChildId ? parentId : "test", (string?)child["error"]?["innererror"]?["diagnosticId"]);
+        Assert.Equal((string?)result.StructuredContent["meta"]?["requestId"],
+            (string?)result.StructuredContent["error"]?["innererror"]?["diagnosticId"]);
+    }
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject args)
         => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
             Params = new() { Name = name, Arguments = args.Deserialize<Dictionary<string, JsonElement>>() } };
@@ -428,6 +449,7 @@ public sealed class CanonicalBatchToolsTests
         internal int FailWrite;
         internal bool BlockPreview;
         internal bool HashInEvidence;
+        internal bool OmitRequestId;
         internal Action<int>? AfterWrite;
         internal JsonArray? Inventory;
         internal List<string> Writes { get; } = new();
@@ -461,10 +483,11 @@ public sealed class CanonicalBatchToolsTests
                 data.Remove("planHash"); data["evidence"] = new JsonObject { ["planHash"] = new string('a', 64) };
             }
             if (BlockPreview) { data["applyBlocked"] = true; data["applyBlockedReason"] = "Native semantics not verified."; }
-            return ValueTask
-                .FromResult(FoundationV4Result
+            var result = FoundationV4Result
                     .Composite(release, name, "test", data, failure ? Outcome.Failed : Outcome.Succeeded, write ? Execution.Completed : Execution.ReadOnly,
-                failure ? new Error("canonical failure", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())) : null));
+                failure ? new Error("canonical failure", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())) : null);
+            if (OmitRequestId) result.StructuredContent!["meta"]!.AsObject().Remove("requestId");
+            return ValueTask.FromResult(result);
         }
     }
     private sealed class Files : IDisposable

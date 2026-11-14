@@ -62,9 +62,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try { return Map(tool, operation(), writes, current, offset, limit); }
             catch (InputFailure ex)
             { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, Completeness.None, writes, current); }
-            catch (Exception) /* swallow(privacy): an escaped exception cannot establish the outcome of an issued write */
+            catch (Exception error) /* swallow(privacy): an escaped exception cannot establish the outcome of an issued write */
             {
-                return Result(tool, null, writes ? Unknown() : NativeFailure(), writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes,
+                return Result(tool, null, writes ? Unknown() : NativeFailureDiagnostics.FromException(NativeFailure(), error),
+                    writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes,
                         current);
             }
         }

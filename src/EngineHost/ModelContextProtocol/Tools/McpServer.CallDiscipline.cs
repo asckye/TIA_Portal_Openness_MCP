@@ -53,6 +53,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (name == "GetToolUsage") limit["maximum"] = 200;
             }
             if (name == "GetToolUsage") properties["exampleKind"]!["enum"] = new JsonArray("all", "sequence", "language");
+            if (name == "GetNativeInvocationLog")
+            {
+                properties["take"]!["minimum"] = 1;
+                properties["take"]!["maximum"] = 500;
+                properties["offset"]!["maximum"] = 10000;
+            }
         }
 
         internal static void RemoveV4NullDefaults(JsonObject schema)

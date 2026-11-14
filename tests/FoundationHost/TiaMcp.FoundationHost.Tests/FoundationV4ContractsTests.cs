@@ -507,7 +507,7 @@ public sealed class FoundationV4ContractsTests
         Assert.DoesNotContain("private worker detail", result.ToJsonString());
         var read = Body(FoundationV4Result.Failure("19", "ListPlcBlocks", "x", true, false, null,
             new WorkerOperationException("Project tree is incomplete.", -32603, "read-failed")));
-        Assert.Null(read["error"]!["details"]!["nativeMessage"]);
+        Assert.Equal("Project tree is incomplete.", (string?)read["error"]!["details"]!["nativeMessage"]);
         var rejected = Body(FoundationV4Result.Failure("19", "ExportPlcBlocks", "x", true, true, null,
             new WorkerOperationException("Export directory must already exist.", -32602, "rejected-before-operation",
                     "{\"parameter\":\"exportPath\",\"isArgument\":true,\"exceptionType\":\"AdapterPreconditionException\"}")));

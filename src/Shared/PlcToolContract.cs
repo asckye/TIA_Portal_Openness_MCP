@@ -102,7 +102,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var evidence = HostBehavior.FailureEvidence(exception.GetType().Name, exception.Message);
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
             return Result(tool, new JsonObject { ["evidence"] = moveEvidence ?? JsonSerializer.SerializeToNode(evidence) },
-                HostBehavior.FailureError(kind, parameter, evidence, HostBehavior.AdmissionDiagnostic(exception)),
+                NativeFailureDiagnostics.FromException(HostBehavior.FailureError(kind, parameter, evidence,
+                    HostBehavior.AdmissionDiagnostic(exception)), exception),
                 HostBehavior.OutcomeOf(kind), HostBehavior.CompletenessOf(kind), current, writes);
         }
 
