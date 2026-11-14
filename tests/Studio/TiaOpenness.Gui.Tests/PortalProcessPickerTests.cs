@@ -293,7 +293,10 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
             var owner = new Window { Content = trigger, Width = 1024, Height = 640 };
             try
             {
-                WpfContext.ShowWindow(owner); owner.Activate(); trigger.Focus(); WpfContext.Drain();
+                WpfContext.ShowWindow(owner); owner.Activate(); WpfContext.Drain();
+                // Finish Loaded/input work before establishing the focus the modal must restore.
+                Assert.True(trigger.Focus());
+                Assert.Same(trigger, Keyboard.FocusedElement);
                 bool? matchingOwner = null, safeFocus = null;
                 owner.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ContextIdle, new Action(() =>
                 {
@@ -304,6 +307,7 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
                     UnifiedDesktopTests.ClickControl(cancel);
                 }));
                 var result = new WpfDialogService().PickPortalProcess(Processes());
+                WpfContext.Drain();
                 Assert.Null(result);
                 Assert.True(matchingOwner);
                 Assert.True(safeFocus);
