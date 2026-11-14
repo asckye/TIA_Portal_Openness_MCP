@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace TiaMcpServer.Siemens
 {
@@ -13,6 +14,7 @@ namespace TiaMcpServer.Siemens
     internal sealed class PortalProcessLease : IDisposable
     {
         private FileStream? stream;
+        private readonly string holderPath;
         internal string Key { get; }
         internal string? PreviousOwnerState { get; private set; }
         internal IReadOnlyList<string> PreviousOwnerRequests { get; private set; } = Array.Empty<string>();
@@ -20,15 +22,16 @@ namespace TiaMcpServer.Siemens
         private string state = "";
         private string? requestId;
         private readonly HashSet<string> requests = new HashSet<string>(StringComparer.Ordinal);
-        private PortalProcessLease(FileStream handle, string key) { stream = handle; Key = key; }
-        internal static PortalProcessLease Acquire(string root, int pid, long startUtcTicks)
+        private PortalProcessLease(FileStream handle, string key)
+        { stream = handle; Key = key; holderPath = Path.ChangeExtension(handle.Name, ".holder"); }
+        internal static PortalProcessLease Acquire(string root, int pid, long startUtcTicks, int? hostProcessId = null, string? releaseKey = null)
         {
             if (!Path.IsPathRooted(root) || pid <= 0 || startUtcTicks <= 0) throw new ArgumentException("Invalid process lease identity.");
             Directory.CreateDirectory(root);
             string key = pid.ToString(CultureInfo.InvariantCulture) + "-" + startUtcTicks.ToString(CultureInfo.InvariantCulture);
             FileStream handle;
             try { handle = new FileStream(Path.Combine(root, key + ".lease"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
-            catch (IOException ex) { throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.LeaseReserved, ex); }
+            catch (IOException ex) { throw new InvalidOperationException(HolderDiagnostic(Path.Combine(root, key + ".holder")), ex); }
             var lease = new PortalProcessLease(handle, key);
             try
             {
@@ -53,10 +56,36 @@ namespace TiaMcpServer.Siemens
                 lease.PreviousOwnerRequests = previousRequests;
                 if (discarded) Console.Error.WriteLine("Portal lease record discarded invalid or excess request IDs or trailing data.");
                 lease.requests.UnionWith(lease.PreviousOwnerRequests);
+                File.WriteAllText(lease.holderPath, JsonSerializer.Serialize(new { hostProcessId, releaseKey }), new UTF8Encoding(false));
                 lease.Write(Record("BUSY", lease.requests));
                 return lease;
             }
             catch { lease.Dispose(); throw; }
+        }
+        private static string HolderDiagnostic(string path)
+        {
+            try
+            {
+                using (var handle = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                {
+                    if (handle.Length > 1024) return TiaOpenness.Shared.SessionBehavior.LeaseReserved;
+                    using (var record = JsonDocument.Parse(handle))
+                    {
+                        var root = record.RootElement;
+                        if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("hostProcessId", out var host)
+                            && host.TryGetInt32(out int pid) && pid > 0 && root.TryGetProperty("releaseKey", out var release)
+                            && release.ValueKind == JsonValueKind.String)
+                        {
+                            string message = TiaOpenness.Shared.SessionBehavior.LeaseReservedBy(pid, release.GetString()!);
+                            if (TiaOpenness.Shared.SessionBehavior.IsLeaseReserved(message)) return message;
+                        }
+                    }
+                }
+            }
+            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is JsonException
+                    || error is InvalidOperationException)
+            { /* swallow(env-probe): an unavailable holder sidecar retains the lease admission refusal. */ }
+            return TiaOpenness.Shared.SessionBehavior.LeaseReserved;
         }
         internal void SetUnsettledRequests(IReadOnlyList<string>? ids)
         {
@@ -98,6 +127,13 @@ namespace TiaMcpServer.Siemens
             try { Write(Record("RELEASED", requests)); } finally { Dispose(); }
         }
         // Dispose alone intentionally leaves the persistent uncertainty marker.
-        public void Dispose() { var handle = stream; stream = null; handle?.Dispose(); }
+        public void Dispose()
+        {
+            var handle = stream;
+            if (handle == null) return;
+            stream = null;
+            try { File.Delete(holderPath); }
+            finally { handle.Dispose(); }
+        }
     }
 }

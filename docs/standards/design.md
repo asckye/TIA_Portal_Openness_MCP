@@ -63,6 +63,7 @@
 - 每个 worker 绑定宿主的 Windows job object（`WorkerJob`），宿主退出或被终止时 worker 随之结束；TIA 进程不属于 job，不受宿主退出影响。
 - 会话结束等待已派发的原生调用完成，再关闭 worker 通道。空闲 worker 最多等待 10 秒，在所属线程上非拥有式分离并把租约写为 `RELEASED`。宿主退出继续由 job object 结束自己的 worker。
 - `DisconnectPortal` 只结束本会话的原生连接，`RestartOpennessWorker` 只重启本会话的 worker；新的 HTTP 会话从未绑定状态开始。
+- 同一宿主的新会话通过 `ConnectPortal(processId, takeOver=false)` 申请已有连接。没有调用、审批等待、工作台参与、操作端所有权和自启 TIA 的持有者，在最后一次请求后满 10 分钟或显式 `takeOver=true` 时让出。最近仍有活动的空闲持有者返回 `tia-held-by-session`，包含会话、客户端、空闲时间和接管参数。运行中调用的拒绝包括工具、请求、开始时间和对话框，调用返回后可以重新申请。已故障但进程仍在的持有者遵循同一组让出条件，无法确认断开时经受守卫的 worker 停止让出。
 - 断开、故障、重启、审批与故障键、暂存批次、预演计划和导出句柄都按会话隔离；导出内容的进程内容量（32 个句柄、8,000,000 个字符）全进程共用，避免并发会话扩大缓存。
 - 宿主在 `<数据根>/run/hosts/<PID>-<启动 ticks>.json` 原子写入登记记录（发布键、宿主版本、UTC 启动时间、传输、HTTP 前缀、操作端管道名、会话快照），退出时删除。工作台据此列出同一数据根的存活宿主（包括无会话的宿主），按 PID 与启动时间判断存活；登记只是提示，是否忙碌由宿主在准入边界判定。
 - 工作台停止宿主前再次核对 PID、启动时间和映像路径，并由人确认结束全部会话。HTTP 重启先核对已保存的端点和受保护密钥，再启动当前包中的宿主；stdio 宿主的输入输出流由 MCP 客户端持有，只能在该客户端中重启。
@@ -88,6 +89,7 @@
 | 已绑定项目 | 绑定成功 | `CloseProject` 回到已连接；会话结束时非拥有式分离，不保存不关闭 |
 | 未确认调用 | 最终写入结果未知（第 4.11 节） | 检查该调用的目标，按 requestId 核对证据，后续独立调用继续执行 |
 | worker 代次故障 | worker 退出、坏帧、宿主探测故障或 TIA 进程丢失 | 下一次原生调用启动新代次并重绑；失败时报告事实，下次继续尝试 |
+| 连接已移交 | 另一会话完成持有者的确认 Disconnect | 原生调用返回 `taken-over`，旧会话显式 `ConnectPortal` 后重新连接 |
 
 - 没有连接 TIA 时，需要 TIA 的工具在派发前返回带 `ConnectPortal` 提示的 `PRECONDITION_FAILED`（`connect-portal`），会话保持可用，不锁会话。
 - 八版的 answered-unknown 回复只影响本次调用。worker 退出、坏帧、探测故障或回复中的 `portalLost` 触发下一次原生调用上的自动恢复。恢复前保留未答复调用的 `worker-call-running` 保护，仍存活且自启 TIA 的 worker 返回 `worker-owns-portal`。
@@ -110,6 +112,8 @@
 | `ACTIVE` | 3.x 遗留状态 | 文件句柄释放后可连接，提示 `PREVIOUS_OWNER_UNCLEAN` |
 
 - 活持有者的独占文件句柄继续返回 `LeaseReserved`。文件内容记录前持有者证据，未决编号进入新会话清单并标记 `fromPreviousOwner=true`。
+- 同一宿主的移交先以 `serial.Wait(0)` 取得持有者通道，再原子检查并保留会话准入。原生 Disconnect 经现有 worker 所属线程执行，确认后释放租约，新会话才附着。持有者通道已故障、无法确认断开时，经 `ResetDisconnectedWorker` 的既有守卫（有未应答的已派发请求或自启 TIA 一律拒绝）停止其 worker，租约随进程结束消亡，审计记为 `taken-over-worker-stopped`。移交记录审批审计，并写入 `RELEASED <ids>`。Disconnect 超出预算或报告未回答对话框时，新连接返回 `in-progress`，迟到结果继续完成连接。旧会话清除自动重绑目标，直到自己显式调用 `ConnectPortal`。
+- 另一宿主的活持有者通过 `<PID>-<启动 ticks>.holder` 侧车给出宿主 PID、发布键和结束连接的方式。侧车仅用于拒绝说明，独占租约句柄仍决定准入。
 - 强制结束空闲 worker 保留 `IDLE`，下次可以接管；中断原生请求保留 `BUSY`，结果未知退出保留 `UNCERTAIN`。正常替换安装包不需要重启 TIA。
 - 租约只在附着前后加文件锁，不增加 Siemens 调用。
 
@@ -140,6 +144,7 @@
 - 项目页默认附着 AI 正在使用的 MCP 会话：同一工具对象、同一 worker、同一 Openness 通道、审批和审计。没有 AI 会话时，只有工作台启动的宿主（`--transport operator --operator-owner <工作台 PID>`）允许 `create` 工作台自有会话，AI 不能加入；AI 客户端拉起的宿主拒绝 `create`。
 - 握手首帧的 `action` 为 `list`、`attach`、`create`、`native-cross-references` 或 `shutdown`。`native-cross-references` 只修改所选会话的人工原生交叉引用许可，宿主只把该会话的随机 HMAC 密钥传给它的 worker；它不是 MCP 工具，也不经审批。`shutdown` 在有调用进行或占用通道时返回 `HOST_BUSY`，否则封闭新的准入后走宿主停止路径；工作台按 20 秒宿主退出预算等待（含 worker 的 10 秒宽限），超时后须再经人确认才强制结束。
 - 会话规则对所有参与方相同：Openness 通道串行，结果未知记入未确认调用清单，`DisconnectPortal` 与 `RestartOpennessWorker` 影响整个会话；`DisconnectPortal` 的回执带 `endedBy`。面板发起的写同样经预检和审批卡，没有第二条批准路径。
+- 已附着工作台或由操作端拥有的会话保留 TIA 连接。其他 MCP 会话的 `takeOver=true` 仍须等待人在工作台结束该连接。
 - 审计行、调用日志和审批请求都带 `actor`（`mcp` 或 `workbench`）。附着后宿主从缓存推送 `notifications/tiamcp/sessionState`，不调用 TIA。
 - `GetWorkbenchState.data.session` 是请求方的 MCP 会话，`selectedSession` 是工作台当前的选择，两者可以不同；读取不改变人的选择。
 

@@ -120,6 +120,8 @@ namespace TiaMcp.PlcWorker
         private readonly Func<bool> attached, detached, requiresReset;
         private readonly Action disposeEngine;
         private readonly Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch;
+        private readonly int? hostProcessId;
+        private readonly string? releaseKey;
         private PortalProcessLease? lease;
         private string? currentRequestId;
         private bool uncertain, disposed;
@@ -128,11 +130,13 @@ namespace TiaMcp.PlcWorker
 
         internal FoundationProcessLease(Func<string> root, Func<ChannelRequest, ChannelResponse> dispatch,
             Func<bool> attached, Func<bool> detached, Func<bool> requiresReset, Action disposeEngine,
-            Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch = null)
+            Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch = null, int? hostProcessId = null, string? releaseKey = null)
         {
             this.root = root; this.dispatch = dispatch; this.attached = attached;
             this.detached = detached; this.requiresReset = requiresReset; this.disposeEngine = disposeEngine;
             this.afterDispatch = afterDispatch;
+            this.hostProcessId = hostProcessId;
+            this.releaseKey = releaseKey;
         }
 
         internal long ReserveCreatedProcess(int processId)
@@ -141,7 +145,7 @@ namespace TiaMcp.PlcWorker
             using var process = Process.GetProcessById(processId);
             if (process.HasExited) throw new InvalidOperationException("TIA process exited before attachment.");
             long ticks = process.StartTime.ToUniversalTime().Ticks;
-            lease = PortalProcessLease.Acquire(root(), processId, ticks);
+            lease = PortalProcessLease.Acquire(root(), processId, ticks, hostProcessId, releaseKey);
             ProcessStartTicks = ticks;
             lease.BeginRequest(currentRequestId);
             return ticks;
@@ -168,7 +172,7 @@ namespace TiaMcp.PlcWorker
                     using var process = Process.GetProcessById(pid.Value);
                     if (process.HasExited) throw new InvalidOperationException("TIA process exited before attachment.");
                     ProcessStartTicks = process.StartTime.ToUniversalTime().Ticks;
-                    lease = PortalProcessLease.Acquire(root(), pid.Value, ProcessStartTicks);
+                    lease = PortalProcessLease.Acquire(root(), pid.Value, ProcessStartTicks, hostProcessId, releaseKey);
                     reserved = true;
                 }
                 // Post-call probes precede the host's outcome recording. Retain new unknown IDs

@@ -87,7 +87,8 @@ internal static class Program
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
                 request => recovery.Dispatch(request, dispatcher.Dispatch),
                 () => dispatcher.State.IsAttached, () => dispatcher.Detached, () => dispatcher.SessionOutcome.RequiresReset,
-                recovery.DisposeSession, recovery.Synchronize
+                recovery.DisposeSession, recovery.Synchronize,
+                int.TryParse(Environment.GetEnvironmentVariable("TIA_MCP_HOST_PROCESS_ID"), out int hostPid) ? hostPid : (int?)null, releaseKey
                 );
             dispatcher.ProcessStartTicks = () => session.ProcessStartTicks;
             engine.ProjectEnsureGroup = () => TiaMcpServer.Siemens.WindowsOpennessGroup.RequireEffectiveMembership(

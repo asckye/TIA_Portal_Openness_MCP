@@ -34,9 +34,13 @@ internal sealed class HostSession : IHostSession
     private readonly Func<JsonObject> workerState;
     private readonly Action dispose;
     private readonly string release;
-    private readonly DateTimeOffset created = DateTimeOffset.UtcNow;
+    private readonly DateTimeOffset created;
+    private readonly TimeProvider clock;
+    private DateTimeOffset lastRequestUtc;
+    private bool givingWay;
     private readonly CancellationTokenSource closed = new();
     private readonly Queue<JsonObject> calls = new();
+    private readonly Dictionary<string, JsonObject> activeRequests = new();
     private JsonObject? lane;
     private string? endedBy, endReason, clientName;
     private string? mcpSessionId;
@@ -68,8 +72,10 @@ internal sealed class HostSession : IHostSession
 
     internal HostSession(string release, string instructions, bool operatorOwned, IReadOnlyList<McpServerTool> tools,
         IReadOnlyList<McpServerTool> operatorTools, Func<JsonObject> workerState, Action dispose, string? nativeConsentDirectory = null,
-        LateCalls? lateResults = null, UnsettledCalls? unsettled = null)
+        LateCalls? lateResults = null, UnsettledCalls? unsettled = null, TimeProvider? clock = null)
     {
+        this.clock = clock ?? TimeProvider.System;
+        created = lastRequestUtc = this.clock.GetUtcNow();
         this.nativeConsentDirectory = nativeConsentDirectory;
         this.release = release; Instructions = instructions; OperatorOwned = operatorOwned;
         LateResults = lateResults ?? new LateCalls();
@@ -103,7 +109,13 @@ internal sealed class HostSession : IHostSession
     }
     public IDisposable AttachOperator()
     {
-        lock (sync) { if (disposed) throw new InvalidOperationException("The host session has ended."); operators++; }
+        lock (sync)
+        {
+            if (disposed) throw new InvalidOperationException("The host session has ended.");
+            if (givingWay)
+                throw new InvalidOperationException("The session is handing its TIA attachment to another session. Connect again after the handover.");
+            operators++;
+        }
         Changed();
         return new Attachment(this);
     }
@@ -150,8 +162,8 @@ internal sealed class HostSession : IHostSession
                 ["participants"] = new JsonObject { ["mcpClient"] = clientName, ["mcpClientVerified"] = false, ["workbench"] = operators },
                 ["worker"] = new JsonObject { ["pid"] = worker["pid"]?.DeepClone(), ["generation"] = worker["generation"]?.DeepClone(),
                     ["state"] = hostStopping || (bool?)worker["stopping"] == true ? "stopping" : disconnected ? "disconnected"
-                        : activeCalls > 0 || lane != null ? "busy" : "idle" },
-                ["callInProgress"] = activeCalls > 0 || lane != null,
+                        : activeCalls > 0 || lane != null || givingWay ? "busy" : "idle" },
+                ["callInProgress"] = activeCalls > 0 || lane != null || givingWay,
                 ["lane"] = lane?.DeepClone(), ["running"] = LateResults.Running,
                 ["binding"] = worker["binding"]?.DeepClone(),
                 ["sessionState"] = sessionState,
@@ -203,12 +215,56 @@ internal sealed class HostSession : IHostSession
     {
         lock (sync)
         {
-            if (activeCalls > 0 || lane != null) return false;
+            if (activeCalls > 0 || lane != null || givingWay) return false;
             hostStopping = true;
             return true;
         }
     }
     public void CancelHostShutdown() { lock (sync) hostStopping = false; }
+
+    internal bool CanGiveWay(TimeSpan idleFor)
+    {
+        lock (sync) return !disposed && !hostStopping && !givingWay && activeCalls == 0 && lane == null
+            && operators == 0 && !OperatorOwned && clock.GetUtcNow() - lastRequestUtc >= idleFor;
+    }
+    internal bool TryBeginGiveWay(TimeSpan idleFor)
+    {
+        lock (sync)
+        {
+            if (!CanGiveWay(idleFor)) return false;
+            givingWay = true;
+            return true;
+        }
+    }
+    internal void FinishGiveWay() { lock (sync) givingWay = false; Changed(); FinishDisposal(); }
+    internal string GiveWayRefusal(bool takeOver)
+    {
+        lock (sync)
+        {
+            if (activeCalls > 0 || lane != null || givingWay) return "This clears when the active call returns.";
+            if (operators > 0 || OperatorOwned) return "The Workbench participant or operator ownership keeps this holder protected.";
+            if (disposed || hostStopping) return "The holder session is ending. Connect again after its connection has ended.";
+            if (takeOver) return "The holder's session state changed during handover admission. Connect again when it is idle.";
+            return "An idle attached session without a Workbench gives way after 10 minutes without requests. "
+                + "ConnectPortal(takeOver=true) takes an eligible recently active idle session.";
+        }
+    }
+    internal string HolderDiagnostic(JsonObject? workerRunning = null)
+    {
+        lock (sync)
+        {
+            var running = workerRunning ?? LateResults.Running ?? lane ?? activeRequests.Values.FirstOrDefault();
+            var since = DateTimeOffset.TryParse((string?)running?["sinceUtc"], System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind, out var started) ? started : lastRequestUtc;
+            return $"Session {SessionKey}, client {TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(clientName) ?? "unknown"}, "
+                + $"idle for {(clock.GetUtcNow() - lastRequestUtc).TotalSeconds:F0} seconds. "
+                + (activeCalls > 0 || lane != null || givingWay ? $"Call {running?["tool"]} (request {running?["requestId"]}, "
+                    + $"started {since:O}, elapsed {(clock.GetUtcNow() - since).TotalSeconds:F0} seconds) is active, including any approval wait. "
+                    + "This clears when that call returns. "
+                    + (running == null ? "" : LateCalls.RunningDiagnostic(running)) : "")
+                + (operators > 0 || OperatorOwned ? "End the connection in the Workbench. " : "");
+        }
+    }
 
     internal async ValueTask<CallToolResult> Invoke(McpServerTool inner, RequestContext<CallToolRequestParams> request, bool workbench, CancellationToken token)
     {
@@ -216,6 +272,7 @@ internal sealed class HostSession : IHostSession
         {
             if (disposed || hostStopping) throw new InvalidOperationException("The host session has ended; initialize a new session.");
             activeCalls++;
+            lastRequestUtc = clock.GetUtcNow();
         }
         var call = LateResults.CreateInvocation(inner.ProtocolTool.Name, Guid.NewGuid().ToString("N"), token);
         var core = InvokeOwned(inner, request, workbench, call);
@@ -247,7 +304,7 @@ internal sealed class HostSession : IHostSession
             }
             finally
             {
-                lock (sync) activeCalls--;
+                lock (sync) { activeCalls--; lastRequestUtc = clock.GetUtcNow(); }
                 Changed();
                 FinishDisposal();
             }
@@ -263,6 +320,8 @@ internal sealed class HostSession : IHostSession
         using var attribution = workbench ? ActorScope.EnterWorkbench(mcpSessionId ?? SessionKey, id) : ActorScope
             .EnterCall(mcpSessionId ?? SessionKey, request.Server);
         using var observation = HostSessionCall.Enter(LaneChanged, Ended, inner.ProtocolTool.Name, actor, id);
+        lock (sync) activeRequests[id] = new JsonObject { ["tool"] = inner.ProtocolTool.Name, ["requestId"] = id,
+            ["sinceUtc"] = clock.GetUtcNow().ToString("O") };
         var elapsed = Stopwatch.StartNew();
         CallToolResult? result = null;
         try { return result = await inner.InvokeAsync(request, token).ConfigureAwait(false); }
@@ -270,9 +329,10 @@ internal sealed class HostSession : IHostSession
         {
             lock (sync)
             {
+                activeRequests.Remove(id);
                 calls.Enqueue(new JsonObject { ["requestId"] = (string?)result?.StructuredContent?["meta"]?["requestId"] ?? id,
                     ["tool"] = inner.ProtocolTool.Name, ["actor"] = actor, ["outcome"] = (string?)result?.StructuredContent?["meta"]?["outcome"] ?? "unknown",
-                        ["ms"] = elapsed.ElapsedMilliseconds });
+                        ["ms"] = elapsed.ElapsedMilliseconds, ["utc"] = clock.GetUtcNow().ToString("O") });
                 while (calls.Count > 20) calls.Dequeue();
             }
         }
@@ -292,7 +352,7 @@ internal sealed class HostSession : IHostSession
     {
         lock (sync)
         {
-            if (!disposed || resourcesDisposed || activeCalls > 0 || lane != null) return;
+            if (!disposed || resourcesDisposed || activeCalls > 0 || lane != null || givingWay) return;
             resourcesDisposed = true;
             finalWorkerState = workerState();
         }

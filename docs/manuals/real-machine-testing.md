@@ -68,6 +68,8 @@ python scripts/checks/Test-NativeLifecycle.py --runner tests/FoundationHost/TiaM
 
 ## worker 自动恢复核对
 
+NO-LOCK Part 6 的会话移交真机核对当前为 NOT RUN。客户端保留旧会话并重新初始化，10 分钟内连接相同 PID 应给出持有者信息，`takeOver=true` 或最后一次请求后满 10 分钟应完成交接。核对旧会话收到 `taken-over`，随后可显式连接回来。运行中调用、审批等待、已附着工作台和 worker 自启 TIA 都应保留占用。让 Disconnect 被 TIA 对话框阻塞，核对新连接返回 `in-progress`，回答对话框后可取回最终连接结果，并检查未确认编号与未保存工程状态。
+
 NO-LOCK Part 4 的真机核对当前为 NOT RUN。获准连接测试环境后，在工程副本中逐项记录调用编号、worker 代次、TIA PID、项目路径和实际工程状态。
 
 - 附着并绑定工程后使空闲 worker 退出。下一次读取应重绑同一 TIA 和项目，首次结果携带 `WORKER_RESTARTED`，工作台会话继续活动。检查 TIA 中未保存的更改仍存在。

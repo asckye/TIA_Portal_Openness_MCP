@@ -156,7 +156,8 @@ internal static class SharedReleaseHost
     {
         var host = new HostSession(options.ReleaseKey, session.Pipeline.Instructions, operatorOwned, session.Pipeline.Tools.ToArray(),
             session.Pipeline.OperatorTools, () => session.Services.OperatorSnapshot(), session.Dispose,
-            lateResults: session.Worker.LateResults, unsettled: session.Worker.Unsettled);
+            lateResults: session.Worker.LateResults, unsettled: session.Worker.Unsettled, clock: options.SessionClock);
+        session.Worker.OwnerSession = host;
         SharedSessionState.For(session.Worker).HumanCrossReferences = () => TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent
             .Read(host.NativeCrossReferenceSessionFile, host.NativeCrossReferenceSessionSecret);
         SharedSessionState.For(session.Worker).HostSessionKey = () => host.SessionKey;

@@ -87,6 +87,7 @@ internal sealed partial class WorkerClient
         bool lostOwnedPortal;
         lock (stateSync)
         {
+            if (takenOverBy != null) return;
             if (recovering || !Faulted && portalLostReason == null && !rebindPending) return;
             if (CallRunning || UnansweredRequest) throw Busy();
             if (process is { HasExited: false } && ownsPortal)

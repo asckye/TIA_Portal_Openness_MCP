@@ -24,6 +24,8 @@ internal static class Program
             string? scaledJson = scaledAt < 0 ? null : File.ReadAllText(hostArgs[scaledAt + 1]);
             if (scaledAt >= 0) hostArgs = hostArgs.Where((_, i) => i != scaledAt && i != scaledAt + 1).ToArray();
             var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(hostArgs, AppContext.BaseDirectory);
+            var clock = new FixtureSessionClock();
+            options.SessionClock = clock;
             string? overrides = Environment.GetEnvironmentVariable("TIA_MCP_WORKER_TIMEOUTS");
             var production = new TiaMcp.WorkerChannel.WorkerTimeoutPolicy(options.EngineTimeoutSeconds, options.WorkerTimeoutConfig, overrides).Budgets;
             var scaled = scaledJson == null ? null : new TiaMcp.WorkerChannel.WorkerTimeoutPolicy(options.EngineTimeoutSeconds, scaledJson, overrides).Budgets;
@@ -36,6 +38,8 @@ internal static class Program
                     if (line == "fixture-fault-background" && fault == "background")
                         throw new InvalidOperationException("Forced fixture fault (background)");
                     if (line == FixtureStartupPressure.ReleaseCommand && pressure != null) { pressure.ReleaseCatalog(); continue; }
+                    if (line == FixtureSessionClock.Command)
+                    { clock.Advance(TimeSpan.FromMinutes(10)); Console.Out.WriteLine(FixtureSessionClock.Reply); continue; }
                     if (scaled == null || line is not (FixtureHostWorkerBudgets.Command + "scaled" or FixtureHostWorkerBudgets.Command + "production")) break;
                     Console.Out.WriteLine(FixtureHostWorkerBudgets.Apply(line.EndsWith("scaled", StringComparison.Ordinal) ? scaled : production));
                 }
@@ -65,7 +69,9 @@ internal static class Program
         if (args.FirstOrDefault() == "--bridge-pool-probe") return SharedWorkerRegressionTests.RunBridgePoolProbeAsync(args[1]).GetAwaiter().GetResult();
         if (args.FirstOrDefault() == "--process-lease-fixture") return FoundationProcessLeaseTests.RunFixture(args);
         if (args.Contains("--native-session")) return EngineSessionFixture.Run(args);
-        Console.Error.WriteLine("Use dotnet run --project build-tools/release -- test-suites -Suite foundation or -Suite foundation-api, or dotnet test on this project.");
+        Console.Error
+            .WriteLine("Use dotnet run --project build-tools/release -- test-suites -Suite foundation or -Suite foundation-api, or dotnet test on this " +
+            "project.");
         return 2;
     }
 }

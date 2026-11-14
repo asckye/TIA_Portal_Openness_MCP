@@ -28269,6 +28269,10 @@
                 "ListPortalProcessProjects"
               ],
               "exampleValue": 12345
+            },
+            "takeOver": {
+              "meaning": "Optional boolean, default false. Set true to hand over an eligible idle non-owning attachment in the same host. Calls, approval waits, Workbench participation and worker-started TIA instances stay protected.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -28285,9 +28289,9 @@
             "P6-35 behavior family P6-SESSION is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "ConnectPortal binds the process only. To use the project already open in the TIA UI, call AttachOpenProject next with its file name without extension and exact listed projectPath.",
-            "ConnectPortal returns data.previousOwner with state and request IDs when a released lease record exists. BUSY, UNCERTAIN or legacy ACTIVE adds PREVIOUS_OWNER_UNCLEAN. Inspect those targets before repeating calls. Previous request IDs enter the current unsettled list with fromPreviousOwner=true and keep save warnings active. A live holder still refuses another attachment. After DisconnectPortal, an explicit ConnectPortal in this MCP session starts a new worker generation."
+            "ConnectPortal returns data.previousOwner with state and request IDs when a released lease record exists. BUSY, UNCERTAIN or legacy ACTIVE adds PREVIOUS_OWNER_UNCLEAN. Inspect those targets before repeating calls. Previous request IDs enter the current unsettled list with fromPreviousOwner=true and keep save warnings active. A protected live holder refuses another attachment. An eligible idle holder in the same host gives way after 10 minutes or with takeOver=true. A faulted attached holder follows the same eligibility rules and gives way through a guarded worker stop when Disconnect cannot be acknowledged. After DisconnectPortal, an explicit ConnectPortal in this MCP session starts a new worker generation."
           ],
-          "note": "ConnectPortal binds the process only. To use the project already open in the TIA UI, call AttachOpenProject next with its file name without extension and exact listed projectPath."
+          "note": "ConnectPortal binds the process only. To use the project already open in the TIA UI, call AttachOpenProject next with its file name without extension and exact listed projectPath. An abandoned non-owning attachment in the same host gives way after 10 minutes without requests. takeOver=true also permits a recently active idle holder. The handover is audited and carries unsettled request IDs. The previous session receives taken-over and can call ConnectPortal again. If Disconnect is still running, read GetCallResult(requestId) before repeating the connection. An explicit handover example is ConnectPortal with {\"processId\":12345,\"takeOver\":true}; replace 12345 with the selected discovery row."
         },
         "CreatePlcTag": {
           "arguments": {
@@ -47419,6 +47423,10 @@
                 "ListPortalProcessProjects"
               ],
               "exampleValue": 12345
+            },
+            "takeOver": {
+              "meaning": "Optional boolean, default false. Set true to hand over an eligible idle non-owning attachment in the same host. Calls, approval waits, Workbench participation and worker-started TIA instances stay protected.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -47435,9 +47443,9 @@
             "P6-35 behavior family P6-SESSION is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "ConnectPortal binds the process only. To use the project already open in the TIA UI, call AttachOpenProject next with its file name without extension and exact listed projectPath.",
-            "ConnectPortal returns data.previousOwner with state and request IDs when a released lease record exists. BUSY, UNCERTAIN or legacy ACTIVE adds PREVIOUS_OWNER_UNCLEAN. Inspect those targets before repeating calls. Previous request IDs enter the current unsettled list with fromPreviousOwner=true and keep save warnings active. A live holder still refuses another attachment. After DisconnectPortal, an explicit ConnectPortal in this MCP session starts a new worker generation."
+            "ConnectPortal returns data.previousOwner with state and request IDs when a released lease record exists. BUSY, UNCERTAIN or legacy ACTIVE adds PREVIOUS_OWNER_UNCLEAN. Inspect those targets before repeating calls. Previous request IDs enter the current unsettled list with fromPreviousOwner=true and keep save warnings active. A protected live holder refuses another attachment. An eligible idle holder in the same host gives way after 10 minutes or with takeOver=true. A faulted attached holder follows the same eligibility rules and gives way through a guarded worker stop when Disconnect cannot be acknowledged. After DisconnectPortal, an explicit ConnectPortal in this MCP session starts a new worker generation."
           ],
-          "note": "ConnectPortal binds the process only. To use the project already open in the TIA UI, call AttachOpenProject next with its file name without extension and exact listed projectPath."
+          "note": "ConnectPortal binds the process only. To use the project already open in the TIA UI, call AttachOpenProject next with its file name without extension and exact listed projectPath. An abandoned non-owning attachment in the same host gives way after 10 minutes without requests. takeOver=true also permits a recently active idle holder. The handover is audited and carries unsettled request IDs. The previous session receives taken-over and can call ConnectPortal again. If Disconnect is still running, read GetCallResult(requestId) before repeating the connection. An explicit handover example is ConnectPortal with {\"processId\":12345,\"takeOver\":true}; replace 12345 with the selected discovery row."
         },
         "ConnectDeviceNodesToProfinetSubnet": {
           "arguments": {
@@ -65420,7 +65428,7 @@
       "topic": "connect-project",
       "purpose": "Attach to the TIA process holding the project and read the real names before any other call.",
       "preconditions": "The intended project is already open in TIA Portal. Select its exact row from ListPortalProcessProjects; never infer a process from a project name or PID alone.",
-      "notes": "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else. The process identity values are copied from the same discovery row. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-SESSION is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19, 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance.",
+      "notes": "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else. The process identity values are copied from the same discovery row. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-SESSION is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19, 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. If ConnectPortal reports tia-held-by-session for an eligible idle attachment in this host, an explicit handover example is {\"processId\":12345,\"takeOver\":true}. Replace 12345 with the selected discovery row. Calls, approval waits, Workbench participation and worker-started TIA instances keep their attachments. Read GetCallResult(requestId) when the connection returns in-progress.",
       "releaseKeys": [
         "14sp1",
         "15.1",

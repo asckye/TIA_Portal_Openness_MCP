@@ -12632,13 +12632,18 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3d9d59505da9edbdf449e5da7014fbddca612ab700ae862772fd00ba1ac56d7c",
+      "descriptionSha256": "0483f183c3e04d025b2f8b8570384591bf38337b369e08f7efe73045175d89d4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "processId": {
             "description": "Exact foundation argument: processId",
             "type": "integer"
+          },
+          "takeOver": {
+            "default": false,
+            "description": "Exact foundation argument: takeOver",
+            "type": "boolean"
           }
         },
         "required": [

@@ -11,7 +11,7 @@ using Xunit;
 using TiaMcp.Engine.Tests.Shared;
 
 [Collection(WorkerDataDirectoryCollection.Name)]
-public sealed class EngineHttpSessionTestsPlc
+public sealed partial class EngineHttpSessionTestsPlc
 {
     [Theory, InlineData("startup"), InlineData("background")]
     public async Task Fixture_fault_exits_without_runtime_crash_handling(string mode)
@@ -132,7 +132,9 @@ public sealed class EngineHttpSessionTestsPlc
                 if (snapshot["data"]!.ToJsonString().Contains("\"active\":1") && File.Exists(Path.Combine(host.DataDirectory, "leases", "busy"))) break;
                 await Task.Delay(20);
             }
-            Assert.True(File.Exists(Path.Combine(host.DataDirectory, "leases", "busy")), "Native fixture dispatch did not start within the existing polling bound.");
+            Assert
+                .True(File.Exists(Path.Combine(host.DataDirectory, "leases", "busy")),
+                    "Native fixture dispatch did not start within the existing polling bound.");
         }
         var refused = await a.Tool("DisconnectPortal", ok: false);
         Assert.Equal("worker-call-running", (string?)refused["error"]?["details"]?["condition"]);
@@ -240,7 +242,11 @@ public sealed class EngineHttpSessionTestsPlc
         Assert.Single((await a.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray());
         Assert.True((bool?)(await a.Tool("GetProjectInfo"))["ok"]);
         await b.Tool("GetSessionState"); await b.Tool(SessionFixtureTool.Name);
-        var stageArgs = new JsonObject { ["files"] = new JsonArray(new JsonObject { ["fileName"] = "fixture.scl", ["kind"] = "scl", ["content"] = "FUNCTION Fixture : Void\nBEGIN\nEND_FUNCTION" }), ["dryRun"] = false };
+        var stageArgs = new JsonObject {
+            ["files"] =
+                new JsonArray(new JsonObject { ["fileName"] = "fixture.scl", ["kind"] = "scl", ["content"] = "FUNCTION Fixture : Void\nBEGIN\nEND_FUNCTION" }),
+                ["dryRun"] = false
+        };
         await b.Tool("StageImportFiles", stageArgs, metadata: new JsonObject { ["tiaMcpStagingSession"] = "caller-peer-token", ["other"] = "kept" });
         var batches = (await a.Tool("ListStagedImportFiles"))["data"]!.ToJsonString();
         Assert.Contains(b.Id!, batches);
@@ -268,13 +274,15 @@ public sealed class EngineHttpSessionTestsPlc
     [Fact]
     public async Task Health_has_file_version_and_readiness_requires_authentication()
     {
-        using var host = await Fixture.Start("21"); using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { BaseAddress = new Uri(host.Url) };
+        using var host = await Fixture.Start("21"); using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) {
+            BaseAddress = new Uri(host.Url) };
         var health = await client.GetFromJsonAsync<JsonObject>("/mcp/health");
         Assert.Equal("plc-foundation", (string?)health!["profile"]); Assert.False(string.IsNullOrWhiteSpace((string?)health["fileVersion"]));
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/mcp/ready")).StatusCode);
         client.DefaultRequestHeaders.Authorization = new("Bearer", "fixture-key");
         var ready = await client.GetFromJsonAsync<JsonObject>("/mcp/ready");
-        Assert.True((bool?)ready!["mcpHostReady"]); Assert.Equal("21", (string?)ready["releaseKey"]); Assert.Equal("NOT RUN", (string?)ready["nativeAcceptance"]);
+        Assert.True((bool?)ready!["mcpHostReady"]); Assert.Equal("21", (string?)ready["releaseKey"]); Assert
+            .Equal("NOT RUN", (string?)ready["nativeAcceptance"]);
     }
 
     [Theory, InlineData("20"), InlineData("21")]
@@ -307,21 +315,29 @@ public sealed class EngineHttpSessionTestsPlc
         {
             client.DefaultRequestHeaders.Authorization = new("Bearer", "fixture-key");
             client.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/event-stream");
-            using var response = await client.PostAsJsonAsync("/mcp", new JsonObject { ["jsonrpc"] = "2.0", ["id"] = ++sequence, ["method"] = method, ["params"] = input });
+            using var response = await client
+                .PostAsJsonAsync("/mcp", new JsonObject { ["jsonrpc"] = "2.0", ["id"] = ++sequence, ["method"] = method, ["params"] = input });
             response.EnsureSuccessStatusCode();
-            if (response.Headers.TryGetValues("Mcp-Session-Id", out var values)) { Id = values.Single(); client.DefaultRequestHeaders.Remove("Mcp-Session-Id"); client.DefaultRequestHeaders.Add("Mcp-Session-Id", Id); }
+            if (response.Headers.TryGetValues("Mcp-Session-Id", out var values)) {
+                Id = values.Single(); client.DefaultRequestHeaders.Remove("Mcp-Session-Id"); client.DefaultRequestHeaders.Add("Mcp-Session-Id", Id); }
             string text = await response.Content.ReadAsStringAsync();
-            var reply = JsonNode.Parse(text.StartsWith("event:") || text.StartsWith("data:") ? text.Split('\n').Single(l => l.StartsWith("data:")).Substring(5) : text)!;
+            var reply = JsonNode
+                .Parse(text.StartsWith("event:") || text.StartsWith("data:") ? text.Split('\n').Single(l => l.StartsWith("data:")).Substring(5) : text)!;
             Assert.Null(reply["error"]); return reply["result"]!;
         }
-        internal Task Initialize() => Call("initialize", new() { ["protocolVersion"] = "2025-03-26", ["capabilities"] = new JsonObject(), ["clientInfo"] = new JsonObject { ["name"] = "engine-session-fixture", ["version"] = "1" } });
+        internal Task Initialize() =>
+            Call("initialize", new() {
+                ["protocolVersion"] = "2025-03-26", ["capabilities"] = new JsonObject(), ["clientInfo"] = new JsonObject {
+                    ["name"] = "engine-session-fixture", ["version"] = "1" }
+            });
         internal async Task<JsonNode> Tool(string name, JsonObject? arguments = null, bool ok = true, JsonObject? metadata = null)
         {
             var input = new JsonObject { ["name"] = name, ["arguments"] = arguments ?? new JsonObject() };
             if (metadata != null) input["_meta"] = metadata;
             var result = await Call("tools/call", input);
             var body = result["structuredContent"]!;
-            Assert.True((bool?)body["ok"] == ok, body.ToJsonString()); Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse((string)result["content"]![0]!["text"]!)));
+            Assert.True((bool?)body["ok"] == ok, body.ToJsonString()); Assert
+                .True(JsonNode.DeepEquals(body, JsonNode.Parse((string)result["content"]![0]!["text"]!)));
             return body;
         }
         internal async Task WaitForIdle()
@@ -368,6 +384,13 @@ public sealed class EngineHttpSessionTestsPlc
             string reply = await budgetReplies.Reader.ReadAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30));
             Assert.EndsWith(" default=" + (scaled ? "0.5" : "120"), reply);
         }
+        internal async Task AdvanceClock()
+        {
+            await process.StandardInput.WriteLineAsync(FixtureSessionClock.Command);
+            await process.StandardInput.FlushAsync();
+            Assert.Equal(FixtureSessionClock.Reply,
+                await budgetReplies.Reader.ReadAsync().AsTask().WaitAsync(TestDeadlines.Hang));
+        }
         internal string Url { get; private set; } = url;
         internal string DataDirectory => directory;
         internal void ReleaseRunning()
@@ -375,19 +398,22 @@ public sealed class EngineHttpSessionTestsPlc
             string gate = Path.Combine(directory, "running-gate");
             Directory.CreateDirectory(gate); File.WriteAllText(Path.Combine(gate, "release"), "");
         }
-        internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false, bool startupPressure = false, string? fault = null)
+        internal static async Task<Fixture> Start(string release, bool shortTimeout = false, bool gracefulShutdown = false, bool startupPressure = false, string
+                ? fault = null)
         {
             string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
             string directory = Path.Combine(root, "bin-build", "P7-07a-tests", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
             string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
             // Parallel shards share this output directory and hash the identity while their workers start: install it atomically and
             // leave it in place. Truncating, restoring or deleting it here refused or killed another shard's worker (P8-stab-1).
-            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+            TiaMcp.Engine.Tests.Shared.TestPaths
+                .WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             // Let the listening host own its allocated port without a parent/child handoff window.
             string url = "http://127.0.0.1:0";
             var listening = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             var start = new ProcessStartInfo(exe) {
-                WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true };
+                WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+                    RedirectStandardInput = true };
             start.ArgumentList.Add("--foundation-http-fixture");
             if (fault != null) { start.ArgumentList.Add("--fixture-fault"); start.ArgumentList.Add(fault); }
             if (startupPressure)
@@ -395,7 +421,11 @@ public sealed class EngineHttpSessionTestsPlc
                 start.ArgumentList.Add("--fixture-startup-pressure");
                 start.Environment["DOTNET_PROCESSOR_COUNT"] = "2";
             }
-            foreach (string arg in new[] { "--bundle-root", root, "--release-key", release, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key", "--profile", "full" }) start.ArgumentList.Add(arg);
+            foreach (string arg in new[] {
+                    "--bundle-root", root, "--release-key", release, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key",
+                        "--profile", "full"
+                })
+                start.ArgumentList.Add(arg);
             foreach (string arg in new[] { "--plc-worker", "--worker-exe", exe, "--public-api", AppContext.BaseDirectory }) start.ArgumentList.Add(arg);
             if (shortTimeout)
             {
@@ -418,7 +448,8 @@ public sealed class EngineHttpSessionTestsPlc
             process.OutputDataReceived += (_, e) => {
                 if (e.Data == null) return;
                 File.AppendAllText(Path.Combine(directory, "host.log"), e.Data + "\n");
-                if (e.Data.StartsWith(FixtureHostWorkerBudgets.Reply, StringComparison.Ordinal)) budgetReplies.Writer.TryWrite(e.Data);
+                if (e.Data.StartsWith(FixtureHostWorkerBudgets.Reply, StringComparison.Ordinal) || e.Data == FixtureSessionClock.Reply)
+                    budgetReplies.Writer.TryWrite(e.Data);
             };
             process.ErrorDataReceived += (_, e) => {
                 if (e.Data == null) return;

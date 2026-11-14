@@ -137,6 +137,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     public ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name)
     {
         result = DecorateRecovery(result);
+        result = DecorateTakenOverDisconnect(result, name);
         return System.Text.Encoding.UTF8
             .GetByteCount(JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)) >= ChannelLimits.ResponseBytes / 2
             ? ResponseGuardTool.Shrink(result, name, "worker", force: true) : result;
@@ -151,8 +152,8 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     {
         get
         {
-            lock (stateSync) return channel?.Poisoned != true && process is { HasExited: false }
-                && (runningCall != null || channel?.CallRunning == true);
+            lock (stateSync) return handoverPending && runningCall != null
+                || channel?.Poisoned != true && process is { HasExited: false } && (runningCall != null || channel?.CallRunning == true);
         }
     }
     private bool UnansweredRequest => process is { HasExited: false }
@@ -174,6 +175,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         try
         {
             string? tool = FoundationWorkerRequest.ToolName;
+            if (tool != "ConnectPortal") RequireCurrentOwner();
             if (nativeEnabled && (tool == null || !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool).Name != "F04"))
                 await RecoverLostWorker(tool != "ConnectPortal", token);
@@ -200,7 +202,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     private readonly object stateSync = new();
     private JsonObject? runningCall, lastRunningCall, activeCall;
     private TaskCompletionSource<JsonObject>? dialogReported;
-    private int? dialogProcessId;
+    private int dialogProcessId;
     internal Func<int, PortalWindows> WindowProbe { get; set; } = PortalWindowProbe.Read;
     private CancellationTokenSource busyWaiters = new();
     private bool disposeRequested;
@@ -212,6 +214,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         {
             lock (stateSync)
             {
+                if (handoverPending && LateResults.Running is { } handover) return handover;
                 var current = runningCall ?? (channel?.CallRunning == true ? lastRunningCall : null);
                 if (channel?.Poisoned == true || process?.HasExited == true || current == null) return null;
                 return DescribeRunning((JsonObject)current.DeepClone());
@@ -220,7 +223,8 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     }
     private TiaMcp.Adapters.Contracts.AdapterPreconditionException Busy()
     {
-        var running = Running ?? activeCall ?? lastRunningCall;
+        JsonObject? running;
+        lock (stateSync) running = Running ?? activeCall ?? lastRunningCall;
         var error = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
             $"Worker call {running?["tool"]} (request {running?["requestId"]}, started {running?["sinceUtc"]}) is still running. "
                 + "Read GetCallResult(requestId) before repeating it." + (running == null ? "" : LateCalls.RunningDiagnostic(running)),
@@ -245,18 +249,29 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     {
         lock (stateSync)
         {
-            runningCall ??= (JsonObject)running.DeepClone();
-            runningCall["dialog"] = activeCall?["dialog"]?.DeepClone() ?? runningCall["dialog"]?.DeepClone();
-            running = DescribeRunning((JsonObject)runningCall.DeepClone());
-            lastRunningCall = runningCall;
+            var current = (JsonObject)(runningCall ?? running).DeepClone();
+            current["dialog"] = activeCall?["dialog"]?.DeepClone() ?? current["dialog"]?.DeepClone();
+            running = DescribeRunning((JsonObject)current.DeepClone());
+            runningCall = current;
+            lastRunningCall = current;
             busyWaiters.Cancel();
         }
         HostSessionCall.Detach(running);
-        LateResults.UpdateRunning(running);
+        WorkerClient? caller;
+        JsonObject latest;
+        lock (stateSync)
+        {
+            latest = DescribeRunning((JsonObject)(runningCall ?? running).DeepClone());
+            LateResults.UpdateRunning(latest);
+            caller = handoverCaller;
+            caller?.LateResults.UpdateRunning(latest);
+        }
+        caller?.RetainHandoverRunning(latest);
     }
     private JsonObject DescribeRunning(JsonObject running)
     {
-        if (dialogProcessId is int pid)
+        int pid = Volatile.Read(ref dialogProcessId);
+        if (pid > 0)
         {
             var windows = WindowProbe(pid);
             running["window"] = new JsonObject { ["mainWindowDisabled"] = windows.MainWindowDisabled,
@@ -272,7 +287,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             activeCall = new JsonObject { ["requestId"] = requestId, ["tool"] = FoundationWorkerRequest.ToolName ?? operation,
                 ["sinceUtc"] = DateTimeOffset.UtcNow.ToString("O") };
             dialogReported = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            dialogProcessId = portalProcessId;
+            dialogProcessId = portalProcessId ?? 0;
             return dialogReported.Task;
         }
     }
@@ -283,11 +298,16 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         {
             if (dialog != null && activeCall != null && !unansweredHostProbe && channel?.InFlight == true)
             {
-                activeCall["dialog"] = dialog.DeepClone();
+                var current = (JsonObject)activeCall.DeepClone();
+                current["dialog"] = dialog.DeepClone();
+                activeCall = current;
                 if (runningCall != null)
                 {
-                    runningCall["dialog"] = dialog.DeepClone();
-                    LateResults.UpdateRunning(runningCall);
+                    var running = (JsonObject)runningCall.DeepClone();
+                    running["dialog"] = dialog.DeepClone();
+                    runningCall = running;
+                    LateResults.UpdateRunning(running);
+                    handoverCaller?.LateResults.UpdateRunning(running);
                 }
                 if ((string?)dialog["answer"] == "unanswered") dialogReported?.TrySetResult(dialog);
             }
@@ -316,6 +336,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     private ChannelClient? channel;
     private bool attachAttempted;
     private int? attachedProcessId;
+    private int? attachingProcessId;
     private JsonObject? disconnectAcknowledgement;
     private bool disconnectCompleted;
     private int unsettledLimitReported;
@@ -494,7 +515,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 ["endedUtc"] = DateTimeOffset.UtcNow.ToString("O"), ["reason"] = reason });
             while (previousGenerations.Count > 16) previousGenerations.RemoveAt(0);
             bindingEpochOffset += (channel?.BindingEpoch ?? 0) + 1;
-            WorkerShutdown.Unregister(this); process = null; channel = null;
+            WorkerShutdown.Unregister(this); Holders.TryRemove(this, out _); process = null; channel = null;
             approvalIdentity = new JsonObject(); attachedProcessId = null; attachAttempted = false;
             disconnectAcknowledgement = null; disconnectCompleted = false; disconnecting = false; faultEvidence = null;
             ClearHostBinding(); HostSessionKey = new object();
@@ -536,6 +557,8 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         if (operation == "Disconnect")
         {
             if (arguments.Count != 0) throw new ArgumentException("Disconnect takes no arguments.");
+            token.ThrowIfCancellationRequested();
+            if (SettleTakenOverDisconnect() is { } settled) { HostSessionCall.Ended("disconnect"); return settled; }
             return await Disconnect(token);
         }
         bool acquired = !ReferenceEquals(Held.Value, this);
@@ -559,11 +582,21 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 FoundationWorkerRequest.ToolName, UnsettledRequestIds());
             if (CallRunning && acquired) throw Busy();
             token.ThrowIfCancellationRequested();
+            if (!nativeEnabled && !managed)
+                throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
+            if (!managed && operation != "Attach") RequireCurrentOwner();
+            if (!managed && operation == "Attach" && arguments["processId"] is JsonValue selected && selected.TryGetValue<int>(out int selectedPid))
+            {
+                // takeOver is host admission metadata. The native Attach arguments remain processId only.
+                bool takeOver = (bool?)arguments["takeOver"] ?? false;
+                arguments = (JsonObject)arguments.DeepClone();
+                arguments.Remove("takeOver");
+                lock (stateSync) dialogProcessId = selectedPid;
+                if (!recovering && !attachedProcessId.HasValue) await YieldHolder(selectedPid, takeOver, token);
+            }
             if (disconnectAcknowledgement != null && !managed && (operation == "Attach" || disconnectCompleted)
                 && !ResetDisconnectedWorker("disconnect"))
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("The previous worker could not stop.", "worker-faulted", null);
-            if (!nativeEnabled && !managed)
-                throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
             if (!managed && !WorkerOperations.IsIndependentRuntime(operation)) await RecoverLostWorker(operation != "Attach", token);
             if (Faulted && (managed || WorkerOperations.IsIndependentRuntime(operation)
                 && !(process is { HasExited: false } && channel?.CanCallIndependentRuntime == true)))
@@ -584,6 +617,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
                 TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
             activeRequestId = FoundationWorkerRequest.CorrelationId;
+            if (operation == "Attach") lock (stateSync) attachingProcessId = hostAttachPid;
             var dialog = BeginDialogCall(activeRequestId, operation, hostAttachPid ?? attachedProcessId);
             HostSessionCall.RequestIdChanged(activeRequestId!);
             var change = BindingChangeFor(operation, arguments);
@@ -630,10 +664,11 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             {
                 if (result?["PreviousOwnerRequests"] is JsonArray previousRequests)
                     Unsettled.ImportPreviousOwner(previousRequests.Select(value => value!.GetValue<string>()));
-                attachedProcessId=arguments["processId"]!.GetValue<int>();
+                lock (stateSync) { attachedProcessId=arguments["processId"]!.GetValue<int>(); takenOverBy = null; }
                 ClearHostBinding();
-                if (!Faulted && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc =
-                    startBeforeAttach;
+                lock (stateSync)
+                    if (!Faulted && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc =
+                        startBeforeAttach;
             }
             if (change == BindingChange.MayAdvance && operation != "Disconnect" && channel.BindingEpoch > epochBefore)
             {
@@ -641,11 +676,11 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 string stateWire = await channel.CallAsync("adapter.ReadState", "{}", BindingChange.None, true,
                     timeouts.For("status"), CancellationToken.None);
                 var state = JsonNode.Parse(stateWire)!.AsObject();
-                attachedProcessId = (int?)state["ProcessId"];
+                lock (stateSync) attachedProcessId = (int?)state["ProcessId"];
                 ClearHostBinding();
                 UpdateApprovalIdentity(state);
                 lock (stateSync) hostState = (JsonObject)state.DeepClone();
-                hostProcessStartUtc = !Faulted && attachedProcessId.HasValue ? ProcessStartUtc(attachedProcessId.Value) : null;
+                lock (stateSync) hostProcessStartUtc = !Faulted && attachedProcessId.HasValue ? ProcessStartUtc(attachedProcessId.Value) : null;
                 lock (stateSync) ownsPortal = (bool?)state["CanDetachOnUncertainShutdown"] == false || (bool?)state["OwnsPortal"] == true;
             }
             if (operation == "ReadState" && result is JsonObject cachedState)
@@ -712,9 +747,14 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         }
         finally
         {
-            if (UnansweredRequest && activeCall != null) lastRunningCall = activeCall;
-            activeRequestId = null;
-            lock (stateSync) { activeCall = null; dialogReported = null; }
+            lock (stateSync)
+            {
+                if (UnansweredRequest && activeCall != null) lastRunningCall = activeCall;
+                activeRequestId = null;
+                activeCall = null;
+                dialogReported = null;
+                if (operation == "Attach") attachingProcessId = null;
+            }
             if (acquired)
             {
                 ClearRunning();
@@ -751,12 +791,14 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 foreach (var argument in new WorkerLaunchOptions(releaseKey, apiDirectory, nonce, WithUi, TiaPortalLocation).Arguments())
                     start.ArgumentList.Add(argument);
                 start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = SpillsDirectory;
+                start.Environment["TIA_MCP_HOST_PROCESS_ID"] = Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 if (NativeCrossReferenceSessionFile != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionFileVariable] =
                     NativeCrossReferenceSessionFile;
                 if (NativeCrossReferenceSessionSecret != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionSecretVariable] =
                     NativeCrossReferenceSessionSecret;
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
+                Holders.TryAdd(this, 0);
                 attachAttempted = false;
                 LateResults.DescribeRunning = DescribeRunning;
                 process.ErrorDataReceived += (_, e) => { if (e.Data != null) ReceiveDiagnostic(e.Data); };
@@ -768,7 +810,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         }
     }
 
-    private async Task<JsonNode?> Disconnect(CancellationToken token)
+    private async Task<JsonNode?> Disconnect(CancellationToken token, bool forTakeover = false)
     {
         token.ThrowIfCancellationRequested();
         if (CallRunning || UnansweredRequest) throw Busy();
@@ -780,7 +822,10 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         try
         {
             if (process != null && (process.HasExited || channel?.CanDisconnect != true))
-            { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
+            {
+                if (forTakeover) throw RecoveryRefusal("tia-held-by-session", "The holder could not acknowledge Disconnect.");
+                HostSessionCall.Ended("disconnect"); return TerminateForDisconnect();
+            }
             if (process == null) disconnectAcknowledgement = DisconnectContract.Idle();
             else
             {
@@ -803,17 +848,18 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                     if (error is ChannelFailureException failure) throw WorkerOperationException.FromChannelFailure(failure);
                     throw;
                 }
-                catch (Exception) /* swallow(teardown): an unacknowledged detach retains the unknown outcome */
+                catch (Exception) when (!forTakeover) /* swallow(teardown): an unacknowledged detach retains the unknown outcome */
                 { HostSessionCall.Ended("disconnect"); return TerminateForDisconnect(); }
             }
             disconnectCompleted = true;
-            HostSessionCall.Ended("disconnect");
+            if (!forTakeover) HostSessionCall.Ended("disconnect");
             RecordDisconnect();
             lock (stateSync) { approvalIdentity = new JsonObject(); attachedProcessId = null; ClearHostBinding(); }
             return disconnectAcknowledgement.DeepClone();
         }
         finally
         {
+            if (forTakeover && !disconnectCompleted) disconnecting = false;
             lock (stateSync) { activeCall = null; dialogReported = null; }
             if (idle && acquired) { ClearRunning(); serial.Release(); FinishDeferredDisposal(); }
         }
@@ -886,7 +932,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 {
                     stopping = false;
                     if (refusal != null) { RetainStopRefusal(refusal); return; }
-                    WorkerShutdown.Unregister(this); channel = null; process = null;
+                    WorkerShutdown.Unregister(this); Holders.TryRemove(this, out _); channel = null; process = null;
                     stoppingProcess?.Dispose();
                 }
             }

@@ -21,7 +21,7 @@ internal sealed class WorkerOperationException(string message,int code,string ou
         // Only the authored lease refusal become admission diagnostics;
         // arbitrary untyped native exceptions retain the existing privacy boundary.
         if (failure.Outcome == TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative && reported.ExceptionType == nameof(InvalidOperationException)
-            && failure.Message == TiaOpenness.Shared.SessionBehavior.LeaseReserved)
+            && TiaOpenness.Shared.SessionBehavior.IsLeaseReserved(failure.Message))
         {
             diagnostic = TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(failure.Message);
             var authored = JsonNode.Parse(evidence!)!.AsObject();

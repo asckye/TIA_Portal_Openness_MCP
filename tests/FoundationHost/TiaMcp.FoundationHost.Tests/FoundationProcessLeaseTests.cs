@@ -18,6 +18,40 @@ public sealed class FoundationProcessLeaseTests
     private static ChannelFailureException Rejection(string message) => new(message, -32603, ChannelOutcome.RejectedBeforeNative,
         "{\"exceptionType\":\"InvalidOperationException\"}");
 
+    [Fact]
+    public async Task Holder_in_another_host_is_named_and_refused_before_dispatch()
+    {
+        using var session = new Session();
+        using var holder = Start(session.Root, session.Pid.ToString(), "holder-info");
+        try
+        {
+            Assert.Equal("READY", await Line(holder));
+            Assert.Equal("ATTACHED", await Command(holder, "attach"));
+            var refusal = session.Boundary.Dispatch(Attach(session.Pid)).Failure!;
+            string expected = SessionBehavior.LeaseReservedBy(holder.Id, "19");
+            Assert.Equal(expected, refusal.Message);
+            Assert.Equal(ChannelOutcome.RejectedBeforeNative, refusal.Outcome);
+            Assert.Equal(0, session.NativeCalls);
+            string sidecar = Path.ChangeExtension(session.FilePath, ".holder");
+            using (var record = JsonDocument.Parse(File.ReadAllText(sidecar)))
+            {
+                Assert.Equal(holder.Id, record.RootElement.GetProperty("hostProcessId").GetInt32());
+                Assert.Equal("19", record.RootElement.GetProperty("releaseKey").GetString());
+            }
+            foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+            {
+                var body = FoundationV4Result.Failure(release, "ConnectPortal", "held", true, true, null,
+                    WorkerOperationException.FromChannelFailure(refusal)).StructuredContent!;
+                Assert.Equal(expected, (string?)body["error"]?["message"]);
+                Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+                Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            }
+            Assert.Equal("DISCONNECTED", await Command(holder, "disconnect"));
+            Assert.False(File.Exists(sidecar));
+        }
+        finally { await Stop(holder); }
+    }
+
     private sealed class Session : IDisposable
     {
         internal string Root { get; } = Path.Combine(Path.GetTempPath(), "tia-foundation-lease-" + Guid.NewGuid().ToString("N"));
@@ -337,7 +371,10 @@ public sealed class FoundationProcessLeaseTests
     public async Task Process_gone_is_refused_without_native_dispatch()
     {
         using var session = new Session(); using var target = Start("target");
-        Assert.Equal("READY", await Line(target)); Assert.Equal(Path.GetFullPath(Path.ChangeExtension(typeof(FoundationProcessLeaseTests).Assembly.Location, ".exe")), Path.GetFullPath(target.MainModule!.FileName), ignoreCase: true); target.Kill(); Assert.True(target.WaitForExit(TestDeadlines.HangMilliseconds));
+        Assert.Equal("READY", await Line(target)); Assert
+            .Equal(Path.GetFullPath(Path.ChangeExtension(typeof(FoundationProcessLeaseTests).Assembly.Location, ".exe")), Path
+                .GetFullPath(target.MainModule!.FileName), ignoreCase: true);
+        target.Kill(); Assert.True(target.WaitForExit(TestDeadlines.HangMilliseconds));
         var failure = session.Boundary.Dispatch(Attach(target.Id)).Failure!;
         Assert.Equal(ChannelOutcome.RejectedBeforeNative, failure.Outcome);
         Assert.Equal(0, session.NativeCalls);
@@ -388,7 +425,8 @@ public sealed class FoundationProcessLeaseTests
     {
         using var session = new Session(); using var host = Start("job", session.Root, session.Pid.ToString());
         int pid = int.Parse((await Line(host))!); using var worker = Process.GetProcessById(pid);
-        host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
+        host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert
+            .True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.Equal("IDLE\n", File.ReadAllText(session.FilePath));
         var response = session.Boundary.Dispatch(Attach(session.Pid));
         Assert.Null(response.Failure);
@@ -416,7 +454,8 @@ public sealed class FoundationProcessLeaseTests
         using var session = new Session(); using var host = Start("job", session.Root, session.Pid.ToString());
         int pid = int.Parse((await Line(host))!); using var worker = Process.GetProcessById(pid);
         Assert.Equal("BUSY", await Command(host, "busy"));
-        host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
+        host.StandardInput.WriteLine("exit"); Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert
+            .True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.Equal("BUSY 1\n", File.ReadAllText(session.FilePath));
         var response = session.Boundary.Dispatch(Attach(session.Pid));
         Assert.Null(response.Failure);
@@ -430,7 +469,9 @@ public sealed class FoundationProcessLeaseTests
         using var session = new Session(); using var host = Start("shutdown", session.Root, session.Pid.ToString(), release);
         using var worker = Process.GetProcessById(int.Parse((await Line(host))!));
         host.StandardInput.WriteLine("exit");
-        Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert.True(host.ExitCode == 0, FixtureExit.Describe(host.ExitCode, host.StandardError.ReadToEnd())); Assert.Equal(0, host.ExitCode); Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
+        Assert.True(host.WaitForExit(TestDeadlines.HangMilliseconds)); Assert
+            .True(host.ExitCode == 0, FixtureExit.Describe(host.ExitCode, host.StandardError.ReadToEnd())); Assert.Equal(0, host.ExitCode); Assert
+            .True(worker.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(session.Root, session.Pid + "-1.lease")));
     }
 
@@ -455,7 +496,8 @@ public sealed class FoundationProcessLeaseTests
     {
         using var session = new Session(); Directory.CreateDirectory(session.Root); File.WriteAllText(session.FilePath, state + "\n");
         using var lease = PortalProcessLease.Acquire(session.Root, session.Pid, session.Ticks);
-        var raw = System.Text.Json.Nodes.JsonNode.Parse("{\"Stage\":\"attached\",\"OwnsPortal\":false,\"AttemptedPids\":[123],\"Strategy\":\"explicit\",\"LaunchMode\":\"attach\"}")!.AsObject();
+        var raw = System.Text.Json.Nodes.JsonNode
+            .Parse("{\"Stage\":\"attached\",\"OwnsPortal\":false,\"AttemptedPids\":[123],\"Strategy\":\"explicit\",\"LaunchMode\":\"attach\"}")!.AsObject();
         raw["PreviousOwnerState"] = lease.PreviousOwnerState;
         raw["PreviousOwnerRequests"] = JsonSerializer.SerializeToNode(lease.PreviousOwnerRequests);
         var result = V17ProjectEnvelope.Wrap("Connect", "Connection", raw, false);
@@ -533,7 +575,11 @@ public sealed class FoundationProcessLeaseTests
     }
     private static async Task<string?> Command(Process process, string command) { process.StandardInput.WriteLine(command); return await Line(process); }
     private static async Task Stop(Process process)
-    { process.StandardInput.Close(); await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang); Assert.True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, await process.StandardError.ReadToEndAsync())); Assert.Equal(0, process.ExitCode); }
+    {
+        process.StandardInput.Close(); await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang); Assert
+            .True(process.ExitCode == 0, FixtureExit.Describe(process.ExitCode, await process.StandardError.ReadToEndAsync())); Assert
+            .Equal(0, process.ExitCode);
+    }
 
     internal static int RunFixture(string[] args)
     {
@@ -542,10 +588,15 @@ public sealed class FoundationProcessLeaseTests
         {
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", args[2]);
             string exe = Environment.ProcessPath!, release = args[4];
-            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+            TiaMcp.Engine.Tests.Shared.TestPaths
+                .WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true);
-            worker.Call("Attach", new System.Text.Json.Nodes.JsonObject { ["processId"] = int.Parse(args[3]) }, CancellationToken.None).GetAwaiter().GetResult();
-            Console.WriteLine(((Process)typeof(WorkerClient).GetField("process", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(worker)!).Id);
+            worker.Call("Attach", new System.Text.Json.Nodes.JsonObject { ["processId"] = int.Parse(args[3]) }, CancellationToken.None).GetAwaiter()
+                .GetResult();
+            Console
+                .WriteLine(((Process)typeof(WorkerClient)
+                        .GetField("process", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(worker)!)
+                    .Id);
             Console.ReadLine(); Environment.Exit(0); return 0;
         }
         if (args[1] == "job")
@@ -567,12 +618,15 @@ public sealed class FoundationProcessLeaseTests
             if (request.Method == "adapter.FixtureBusy") { Console.WriteLine("BUSY"); Thread.Sleep(Timeout.Infinite); }
             detached = request.Method == "adapter.Disconnect"; attached = !detached;
             return ChannelResponse.Success("{}");
-        }, () => attached, () => detached, () => false, () => { attached = false; });
+        }, () => attached, () => detached, () => false, () => { attached = false; },
+            hostProcessId: args.Length > 3 && args[3] == "holder-info" ? Environment.ProcessId : (int?)null,
+            releaseKey: args.Length > 3 && args[3] == "holder-info" ? "19" : null);
         Console.WriteLine("READY");
         string? command;
         while ((command = Console.ReadLine()) != null)
         {
-            var request = command == "busy" ? Request("FixtureBusy") : command == "disconnect" ? Request("Disconnect") : command == "attach-formatted" ? FormattedAttach(int.Parse(args[2])) : Attach(int.Parse(args[2]));
+            var request = command == "busy" ? Request("FixtureBusy") : command == "disconnect" ? Request("Disconnect") : command == "attach-formatted"
+                ? FormattedAttach(int.Parse(args[2])) : Attach(int.Parse(args[2]));
             var response = boundary.Dispatch(request);
             Console.WriteLine(response.Failure?.Message ?? (detached ? "DISCONNECTED" : "ATTACHED"));
         }

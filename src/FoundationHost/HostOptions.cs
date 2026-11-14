@@ -7,6 +7,7 @@ namespace TiaMcp.FoundationHost;
 
 internal sealed class HostOptions
 {
+    internal TimeProvider SessionClock { get; set; } = TimeProvider.System;
     internal static readonly string WorkerTimeoutHelp =
         "All eight releases (V14 SP1-V21) share worker timeout budgets: "
         + string.Join(", ", WorkerTimeoutPolicy.Defaults.Select(budget =>

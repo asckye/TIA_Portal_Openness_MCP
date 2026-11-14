@@ -27,6 +27,10 @@ V20/V21 已经对选定的 TIA 进程取租约，V14 SP1–V19 没有。工作�
 - 新连接返回 `data.previousOwner {state, requests}`。`BUSY`、`UNCERTAIN` 或遗留 `ACTIVE` 增加 `PREVIOUS_OWNER_UNCLEAN`，`IDLE` 和 `RELEASED` 保持无此警告。
 - 前持有者编号进入新会话的未确认清单，标记 `fromPreviousOwner=true`，保存继续提示 `UNSETTLED_CALLS`。
 
+同一宿主中的连接可以移交给新会话。持有者须没有调用、审批等待、通道占用、工作台参与或操作端所有权，并且使用附着的 TIA。距最后一次请求至少 10 分钟，或新连接显式传入 `ConnectPortal.takeOver=true` 时，宿主以非阻塞方式取得持有者通道，要求所属线程确认 Disconnect，再允许新会话附着。移交保留 `RELEASED <ids>`，记入审批审计。旧会话的后续原生调用返回 `taken-over`，由其自行调用 `ConnectPortal` 重新连接。
+
+Disconnect 仍在执行时，新连接返回 `in-progress`，原调用通过 `GetCallResult` 取回真实结果。跨宿主的活租约继续拒绝连接，`<PID>-<启动 ticks>.holder` 侧车记录宿主 PID 和发布键。拒绝文本给出该身份，并提示在持有者的工作台或 MCP 客户端结束连接。侧车在释放租约时删除，租约记录继续保留。
+
 ## 后果
 
 - 活持有者阻止第二个写入者。死持有者的记录保留可核对证据，新会话可以显式连接。

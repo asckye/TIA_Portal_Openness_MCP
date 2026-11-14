@@ -4,6 +4,16 @@ Every MCP session has a version-matched worker. All eight releases start `runtim
 
 `--isolate-openness` and `--no-isolate-openness` have been removed. Use the Workbench-generated FoundationHost command. Worker separation is part of the architecture and has no on/off switch.
 
+## Reconnect to a held TIA process
+
+Each live HTTP session keeps its own worker and attachment. `ConnectPortal(processId)` can acquire an abandoned attachment in the same host after 10 minutes without requests. Pass `takeOver=true` to acquire an eligible recently active idle attachment. The holder must have no call, approval wait, Workbench participant or operator ownership, and its TIA must be an existing attached instance. A protected holder returns `tia-held-by-session` with its session, client, idle time and any active tool, request or dialog.
+
+A faulted attached holder follows the same idle, Workbench and operator rules. Running calls, unanswered dispatched requests and a worker-started TIA retain priority. When the eligible holder cannot acknowledge Disconnect, the existing guarded reset stops its worker and releases its lease. The audit records `taken-over-worker-stopped`.
+
+Handover on a healthy channel performs an acknowledged Disconnect and writes `taken-over` to the approval audit. It carries unsettled request IDs into the new session. A blocked Disconnect returns `in-progress`, and `GetCallResult(requestId)` retrieves the eventual connection result. The previous session receives `taken-over` on other native calls and can connect again explicitly with `ConnectPortal`. Its automatic worker recovery waits for that explicit connection. `DisconnectPortal` settles the previous session locally as disconnected and carries a taken-over warning. Other native operations continue to report `taken-over`.
+
+A holder in another host keeps the lease. Its refusal names the host PID and release from the lease's `.holder` sidecar. End that connection in its Workbench or MCP client, then connect again.
+
 ## Timeouts and cancellation
 
 The shared budget is 120 seconds by default, 300 seconds for the first attach in a worker generation, and 300 seconds for compile, transfer, import/export, archive and library updates. `--worker-timeout-config` reads category budgets; `TIA_MCP_WORKER_TIMEOUTS` overrides the file, and `--worker-timeout-seconds` sets the default. Previews and reads use the default. Cancellation before dispatch returns `CANCELLED`. A dispatched call continues to its actual result. When its wait budget ends, MCP returns `in-progress` with `OPERATION_IN_PROGRESS`, `ok=false` and the `activeRequestId`. Read `GetCallResult(requestId)` to retrieve the final envelope.

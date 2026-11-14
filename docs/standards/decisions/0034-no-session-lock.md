@@ -45,7 +45,9 @@ Part 4 在下一次需要原生 worker 的调用上恢复丢失的 worker。恢�
 
 租约随持有进程结束。死持有者留下的 BUSY、UNCERTAIN 或遗留 ACTIVE 记录在新连接时转为 `PREVIOUS_OWNER_UNCLEAN` 警告。IDLE 和 RELEASED 记录允许连接，保持无此警告。`data.previousOwner` 保留前持有者状态与请求编号。活持有者仍阻止另一写入者。断开后允许在同一 MCP 会话重新连接。
 
-同一宿主中的被遗弃会话，在没有调用、审批、工作台参与、操作端所有权或自启 TIA 的情况下，闲置至少 10 分钟或新连接显式给出 `takeOver=true` 时可以让出。移交执行所属线程上的非拥有式 Disconnect。若它仍在执行，移交保持等待中的事实。
+同一宿主中的被遗弃会话，在没有调用、审批、工作台参与、操作端所有权或自启 TIA 的情况下，闲置至少 10 分钟或新连接显式给出 `takeOver=true` 时可以让出。健康通道的移交执行所属线程上的非拥有式 Disconnect。若它仍在执行，移交保持等待中的事实。
+
+Part 6 已实现该移交。宿主使用持有者的非阻塞通道和会话准入保留。健康通道确认 Disconnect 后继续新连接，符合条件且无法确认断开的故障持有者通过受保护的 worker 停止释放租约后继续。移交写入审批审计，未确认编号以 `fromPreviousOwner=true` 进入新会话。旧会话的其他原生操作得到 `taken-over` 并提示自行调用 `ConnectPortal`，自动恢复保留该移交事实。`DisconnectPortal` 在本地幂等结清并携带接管警告。被阻塞的 Disconnect 返回新会话的 `in-progress`，完成后继续原连接流程。另一宿主的租约拒绝通过 `.holder` 侧车给出宿主 PID、发布键和释放方式。
 
 ### 对话框与预算
 
@@ -76,3 +78,5 @@ Part 2 已实现调用等待预算到期后的响应分离、迟到结果取回�
 2026-11-12，维护者批准本任务所有纯会话锁断言改为本次错误保留、后续独立调用可用。每项断言变更须在任务结果表中列出文件位置、原值和新值。真实结果、禁止重放、错误调用拒绝、项目身份、审批及 stale-plan 断言必须保持。
 
 离线测试验证八版调用、通道、绑定和工作台状态。真机核对尚未运行，清单见 [beta 测试者清单](../../guides/beta-tester-checklist.md)。Studio 自有 bridge 的延迟重启由 D8 指定为独立后续任务。
+
+2026-11-13，维护者批准 Part 6 第二轮决策。故障但仍存活的 attached holder 适用相同的 10 分钟闲置或 takeOver=true、工作台参与和 operator 所有权条件。运行中或未回答的派发请求，以及自启 TIA 的 worker，继续优先拒绝移交。符合条件而无法确认 Disconnect 时，复用 ResetDisconnectedWorker 的受保护停止路径释放租约，审计结果为 taken-over-worker-stopped，未确认编号传入新会话。健康通道确认移交的审计结果仍为 taken-over。被接管会话的 DisconnectPortal 在本地幂等结清并携带接管警告，其他原生操作继续返回 taken-over。

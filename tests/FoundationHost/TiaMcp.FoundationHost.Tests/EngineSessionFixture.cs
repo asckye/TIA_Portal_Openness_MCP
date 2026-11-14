@@ -22,9 +22,14 @@ internal static class EngineSessionFixture
         long epoch = 0; bool uncertain = false, hasProject = true, unknownOnNextFamily = false;
         string? slowShutdownMarker = null;
         string? leaseRoot = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
+        if (leaseRoot != null) Directory.CreateDirectory(leaseRoot);
         void Hang()
         {
             if (leaseRoot != null) File.WriteAllText(Path.Combine(leaseRoot, "busy"), "");
+            if (leaseRoot != null && File.Exists(Path.Combine(leaseRoot, "report-dialog")))
+                Console.Error.WriteLine("TIA_MCP_DIALOG " + new JsonObject { ["event"] = "Confirmation",
+                    ["utc"] = DateTimeOffset.UtcNow.ToString("O"), ["caption"] = "Fixture handover dialog",
+                    ["text"] = "Fixture Disconnect is waiting", ["answer"] = "unanswered", ["choices"] = new JsonArray("Yes") }.ToJsonString());
             string? gate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
             if (string.IsNullOrEmpty(gate)) { Thread.Sleep(10000); return; }
             Directory.CreateDirectory(gate);
@@ -82,9 +87,13 @@ internal static class EngineSessionFixture
             {
                 int pid = (int)input["processId"]!;
                 if (pid is 901 or 902 or 903 or 904)
-                    return ChannelResponse.Error(new ChannelFailureException(pid == 901 ? LeaseMessage : pid == 904 ? SessionBehavior.LeaseReserved : pid == 903 ? "Authored refusal at C:\\private\\lease.json" : "Internal secret exception text", -32603,
-                        ChannelOutcome.RejectedBeforeNative, new JsonObject { ["exceptionType"] = pid == 903 ? "AdapterPreconditionException" : "InvalidOperationException" }.ToJsonString()));
-                if (leaseRoot != null) lease = PortalProcessLease.Acquire(leaseRoot ?? DataLocations.Current.LeasesDirectory, pid, 1);
+                    return ChannelResponse
+                        .Error(new ChannelFailureException(pid == 901 ? LeaseMessage : pid == 904 ? SessionBehavior.LeaseReserved : pid == 903
+                                ? "Authored refusal at C:\\private\\lease.json" : "Internal secret exception text", -32603,
+                        ChannelOutcome.RejectedBeforeNative, new JsonObject {
+                            ["exceptionType"] = pid == 903 ? "AdapterPreconditionException" : "InvalidOperationException" }.ToJsonString()));
+                if (leaseRoot != null) lease = PortalProcessLease.Acquire(leaseRoot, pid, 1);
+                if (leaseRoot != null && File.Exists(Path.Combine(leaseRoot, "block-attach"))) Hang();
                 attached = pid; epoch++;
                 if (pid == 905) epoch++;
                 var result = new JsonObject { ["Stage"] = "attached", ["OwnsPortal"] = false,
@@ -111,6 +120,7 @@ internal static class EngineSessionFixture
             }
             if (request.Method == "adapter.Disconnect")
             {
+                if (leaseRoot != null && File.Exists(Path.Combine(leaseRoot, "block-disconnect"))) Hang();
                 var result = new JsonObject { ["Stage"] = "disconnected", ["SessionState"] = "disconnected", ["Strategy"] = "non-owning-attachment-only",
                     ["WorkerAcknowledged"] = true, ["Detached"] = attached != null, ["ProcessId"] = attached,
                     ["SavedProject"] = false, ["ClosedProject"] = false, ["LaunchMode"] = "never" };
@@ -120,7 +130,8 @@ internal static class EngineSessionFixture
                 lease?.ReleaseCleanly(); lease = null;
                 return ChannelResponse.Success(result.ToJsonString());
             }
-            if (request.Method == "adapter.FixtureUnknown") return ChannelResponse.Error(new ChannelFailureException("Fixture answered native unknown.", -32603, ChannelOutcome.Unknown));
+            if (request.Method == "adapter.FixtureUnknown") return ChannelResponse
+                .Error(new ChannelFailureException("Fixture answered native unknown.", -32603, ChannelOutcome.Unknown));
             if (request.Method == "adapter.FixtureHang") { Hang(); return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.ListProjects")
                 return ChannelResponse.Success(new JsonArray(new JsonObject { ["Name"] = "fixture",
@@ -166,10 +177,13 @@ internal static class EngineSessionFixture
             return ChannelResponse.Success(reply.ToJsonString());
         }
         var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new(epoch, attached != null), request => {
+            if (leaseRoot != null) File.AppendAllText(Path.Combine(leaseRoot, "trace-" + Environment.ProcessId + ".jsonl"),
+                new JsonObject { ["method"] = request.Method, ["arguments"] = JsonNode.Parse(request.ArgumentsJson) }.ToJsonString() + "\n");
             lease?.BeginRequest();
             var response = Dispatch(request);
             uncertain |= response.Failure?.Outcome == ChannelOutcome.Unknown
-                || (bool?)(JsonNode.Parse(response.ResultJson ?? "null") as JsonObject)?["result"]?["structuredContent"]?["meta"]?["requiresSessionReset"] == true;
+                || (bool?)(JsonNode.Parse(response.ResultJson ?? "null") as JsonObject)?["result"]?["structuredContent"]?["meta"]
+                    ?["requiresSessionReset"] == true;
             lease?.CompleteRequest(uncertain);
             return response;
         }, ChannelProfile.Foundation);
