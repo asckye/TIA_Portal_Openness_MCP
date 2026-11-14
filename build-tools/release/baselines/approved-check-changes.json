@@ -2471,6 +2471,343 @@
           "identifier": "TiaMcp.Engine.Tests.ArgumentPointerTests/Schema_errors_preserve_exact_declared_pointer_and_expected_form( string json , string pointer , string expected ):7ec540877e55822b17cd6ae76e1bbf5b3c08ef0b4af199139520a8d0e64c88e9:1"
         }
       ]
+    },
+    {
+      "task": "TEST-TRIM",
+      "maintainerDate": "2026-11-14",
+      "reason": "2026-11-14 maintainer approved the test audit in full: an independent audit proved each collapsed release dimension inert by pinning it to one value and re-running (StagedGenerationTests 564 passed, four other theories 746 passed), five registration assertions compared the registry against the predicate that built it and the sixth now uses an authored roster, three localization theories over one catalogue became one keeping every assertion, and the studio-gui minimumPassed follows the smaller row set at 1693 measured on this host (1693 passed, 0 failed, 4 skipped)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PipelineTests/EveryCatalogEntryHasReviewedOwnershipAndALocalImplementation( string release , int count ):97d7c0fd16c0a7fe949d4ca5c80bef975bdf64849c2e4d4848beade8e0b66f48:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PipelineTests/EveryCatalogEntryHasReviewedOwnershipAndALocalImplementation( string release , int count ):f05790e15e25ad06e4ed5c0651f403794706f36727712ba34341b0f238f23bcb:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ArgumentPointerTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ArgumentPointerTests/Fixed_enums_are_rejected_before_dispatch_on_every_registered_release( string release ):813dfc589f6538a42000760746c94d60f08884d085769e9f3eaa107b8fcbc9c2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B1OldReleaseBridgeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B1OldReleaseBridgeTests/BridgeUsesExactlyTheRegisteredCatalogAndReportsTargetFields( string release ):aacccc26dadfeb4ab6cf1928e49f7610e58bc8e50570ee84c1b56a3941044ba4:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B3HostPortsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B3HostPortsTests/Old_release_discovery_usage_bridges_batches_and_passive_reports_share_the_registry( string release ):aacccc26dadfeb4ab6cf1928e49f7610e58bc8e50570ee84c1b56a3941044ba4:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B4HostPortsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B4HostPortsTests/RegistryIncludesExactlyTheUsableB4Tools( string release ):aacccc26dadfeb4ab6cf1928e49f7610e58bc8e50570ee84c1b56a3941044ba4:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B5HostPortsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B5HostPortsTests/RegistryIncludesExactlyTheUsableB5Tools( string release ):aacccc26dadfeb4ab6cf1928e49f7610e58bc8e50570ee84c1b56a3941044ba4:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CompatibilityToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CompatibilityToolsTests/Retained_batches_and_every_available_alias_have_one_target( string release ):3d1616dafd1ad5855c8324fdd00937d8d96315448882455975a6903028064e37:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Export_failure_keeps_a_message_only_reason( string release ):4d413ffca4684ef25ccb4802835288c237822e948ec416c0057d964f97cc8dd2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Export_failure_keeps_a_message_only_reason( string release ):875a5dd5d7ee224962044c83c383d0488194afb9a2b2b806de2f86cabfef1511:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Export_failure_keeps_a_message_only_reason( string release ):a11e621679a971c04948a46abc5c9e155ad629905382a151c579095dc941c51f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Export_failure_keeps_a_message_only_reason( string release ):e27fabe1aedc24690c8faf31419860144f1555907e650f98c20b8bfa100c42f0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_provider_is_unsupported_capability( string release ):4d413ffca4684ef25ccb4802835288c237822e948ec416c0057d964f97cc8dd2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_provider_is_unsupported_capability( string release ):875a5dd5d7ee224962044c83c383d0488194afb9a2b2b806de2f86cabfef1511:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_provider_is_unsupported_capability( string release ):8c0f2c51695f4fee15d5b2d62a243d2d161e0670228b91a00c67a13b959b9956:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_provider_is_unsupported_capability( string release ):a11e621679a971c04948a46abc5c9e155ad629905382a151c579095dc941c51f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_provider_is_unsupported_capability( string release ):d693909dc201a65c2cf57ea5d2d54775306191c8477db213c9448fde737dcc8e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_provider_is_unsupported_capability( string release ):e27fabe1aedc24690c8faf31419860144f1555907e650f98c20b8bfa100c42f0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_text_list_is_a_documented_refusal( string release ):4d413ffca4684ef25ccb4802835288c237822e948ec416c0057d964f97cc8dd2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_text_list_is_a_documented_refusal( string release ):875a5dd5d7ee224962044c83c383d0488194afb9a2b2b806de2f86cabfef1511:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_text_list_is_a_documented_refusal( string release ):a11e621679a971c04948a46abc5c9e155ad629905382a151c579095dc941c51f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_text_list_is_a_documented_refusal( string release ):e27fabe1aedc24690c8faf31419860144f1555907e650f98c20b8bfa100c42f0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "test-removed",
+          "identifier": "HonestWriteOutcomeTests/Release_suite_without_fixtures_is_rejected_before_writing( ):508145ad364643fe3707f2fa2075a1465c40b124bea50dcde8a011db46609998"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):095d551697759754fbf93f4b211660a63ad45638f8614b3611992005f061111d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):0d0b03419de50372d33048330b82b7fd4e57f22c20dab19ebc3874a467c03812:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):1e8f6e6389d398b2949ae5db43c4933ed88735819ebfb3d97e8b83fadbeb8503:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):2c7234fcdcef62c6de4ab25ba170313c273812a1990a4eff036effa613367110:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):2d25199877cefefd21e70841164bdf9fd6aa6848ff7eae79cfac67589339d760:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):3234fc6522e3265971a13219e73bfef2372cf5afa03eabec1275b9969625020b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):3285fb1db7f5e7a5b4e8079b6b39e783ee2dfff4263858af65d4c5a23d302b68:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):441387f7b3a3b0fe3764ab7aeda8ae006dfee3abbe4b00b5d09d17b0a1bfd0a1:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):6147654f0154be07a539d2a992027b377c038a8e0ed1f383ac77bb49476bce9c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):6e234736c54f93c9b738bef193241db635992306765874ce2555130fbfbd8059:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):6e6c182f566227b48fc205a9a5407f77cae15121adab7d02a457ef1564eb3e0e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):758e932750a0d3d29da3f5c822c235c1ef35bcfe28952c6ace5300f43f343162:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):9256ccbd306b0f28be1ea39c6bdcda3ab2c5c85901d5628a6b11e8d62b24860a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):a367222885de0586e2d5894432e699e95138b0552a0d829a70734b5ea9ed28a0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):b4147f13ff88e485c20548fe77d49bf1e660bbdf0a2fcf95bb91451938215aa1:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):bfafbcfb01ac04169cd75db9a9c12a2d635e173215047cf753b5306238d1915b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):c6e09f05b57a3510129ca5951501208191b3ecc3794e3c1ea68c256f4fd87ec8:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):d012356184a22d79f8b62710a40518edcb13b897b0521f97d696fcf82b027f12:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):e33dbd1c65ee8b3791a9b84bc3cd419170cc0ab8c7ec2ed8f85e63c119443d2b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):eaf446ee463588e62c09ede65189c2d486cd99542ccea19102d801a9d5516af9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):f4475b1e103e17fb47f10e13dd1116076317605e279d4f3f82a25c86533920cd:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):f591a83d4c1ce88239003a8509b33af76ee382e9a88738debff16e056606a48e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):fb1ffdcff7b10e26e874b8b0e92d7b351eafbdc66895da855d1d581daac461e0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Denied_granted_and_disabled_follow_the_existing_approval_flow( string release , string tool ):feab4a2ad128779fcc396d63a6ae9c5b2a450ba3532f7725c26fc1963915f5c9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):10e4aa4deff91664691393394551ee8269b89e86b3e0b1576341ea4c32f59b27:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):2bcee35db06cc7fb15077c333b7b00f78091324c6ab099815454c60385d146d3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):3c82a94662e1b5d97e9639ea3b0aadc270478e8ff62582d5f36bcbb4b7aaedaa:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):5234c77d6a5b5a34cf971c8b9f97f0f5b6c4571e2042ef3246dfad891440977e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):5ad816515eafe0ef46cf2ab08272026725a8732199ff36249c13b2e3be3a3597:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):760d4cd506892d78b1b6361d21f94f68fed1dd0c04685fbecce10fe2b58aa688:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):8b524798dd618b7f5a2a4ff2ebc3ea448880e02afaaf4537a7c330edc61b6ae0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):8bb500e923a75d589067c6c55ed39851839765c213f12399fcc63328d8388945:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):a14a4ec363b171f31ccdeed6d6a5bf1e64152c4f576f000086405a02f11b4528:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):afc49b959482d66ed55fcb0083d545c3899d8419372d3d3ea409398f21190688:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):ce8e121b81fcec51294ee1e1dc1e413bc30012d882fad8b58e49f03cf1436d79:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/Whitespace_is_invalid_before_any_card_or_file_write( string release , bool leading ):d848f50045214fef4f4b43621bb17acc10b696de62339001281340c538117273:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "test-removed",
+          "identifier": "SharedWorkerRegressionTests/Suppressed_session_ended_errors_use_the_untyped_mapper_policy( string release ):493f82050ad4dfd57ab616288f233295b5e5673bc5df53c98aa5350dd01b8584"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/StagedGenerationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "data-row:454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1:2"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/StagedGenerationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "data-row:a4d451ec23463726f72c43d64c710968f6b602cd653b4de8adee1b556240a829:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaOpenness.Gui.Tests.StringsTests/Both_translations_use_the_same_placeholders( string key , string en , string zh ):901c9879a8c829a9a47b931679dedd3276da0f6dd41aa24a72228417f88b3ebf"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaOpenness.Gui.Tests.StringsTests/Every_entry_formats_without_throwing( string key , string en , string zh ):399be468fef16f3d8226cf77c869909847860b000934522005174cba82cce80e"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/StringsTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaOpenness.Gui.Tests.StringsTests/Neither_translation_is_blank( string key , string en , string zh ):43960f265d094d6ec5e287f56c9cfb84bd8fdb46d292970817794043053d3411"
+        },
+        {
+          "path": "tests/test-suites.json",
+          "kind": "minimum-passed-lowered",
+          "identifier": "/studio-gui/minimumPassed:2958-\u003E1693"
+        }
+      ]
     }
   ]
 }
