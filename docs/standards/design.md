@@ -89,7 +89,7 @@
 | 已绑定项目 | 绑定成功 | `CloseProject` 回到已连接；会话结束时非拥有式分离，不保存不关闭 |
 | 未确认调用 | 最终写入结果未知（第 4.11 节） | 检查该调用的目标，按 requestId 核对证据，后续独立调用继续执行 |
 | worker 代次故障 | worker 退出、坏帧、宿主探测故障或 TIA 进程丢失 | 下一次原生调用启动新代次并重绑；失败时报告事实，下次继续尝试 |
-| 连接已移交 | 另一会话完成持有者的确认 Disconnect | 原生调用返回 `taken-over`，旧会话显式 `ConnectPortal` 后重新连接 |
+| 连接已移交 | 另一会话完成持有者的确认分离 | 原生调用返回 `taken-over`，旧会话显式 `ConnectPortal` 后重新连接 |
 
 - 没有连接 TIA 时，需要 TIA 的工具在派发前返回带 `ConnectPortal` 提示的 `PRECONDITION_FAILED`（`connect-portal`），会话保持可用，不锁会话。
 - 八版的 answered-unknown 回复只影响本次调用。worker 退出、坏帧、探测故障或回复中的 `portalLost` 触发下一次原生调用上的自动恢复。恢复前保留未答复调用的 `worker-call-running` 保护，仍存活且自启 TIA 的 worker 返回 `worker-owns-portal`。
@@ -112,7 +112,7 @@
 | `ACTIVE` | 3.x 遗留状态 | 文件句柄释放后可连接，提示 `PREVIOUS_OWNER_UNCLEAN` |
 
 - 活持有者的独占文件句柄继续返回 `LeaseReserved`。文件内容记录前持有者证据，未决编号进入新会话清单并标记 `fromPreviousOwner=true`。
-- 同一宿主的移交先以 `serial.Wait(0)` 取得持有者通道，再原子检查并保留会话准入。原生 Disconnect 经现有 worker 所属线程执行，确认后释放租约，新会话才附着。持有者通道已故障、无法确认断开时，经 `ResetDisconnectedWorker` 的既有守卫（有未应答的已派发请求或自启 TIA 一律拒绝）停止其 worker，租约随进程结束消亡，审计记为 `taken-over-worker-stopped`。移交记录审批审计，并写入 `RELEASED <ids>`。Disconnect 超出预算或报告未回答对话框时，新连接返回 `in-progress`，迟到结果继续完成连接。旧会话清除自动重绑目标，直到自己显式调用 `ConnectPortal`。
+- 同一宿主的移交先以 `serial.Wait(0)` 取得持有者通道，再原子检查并保留会话准入。非拥有式分离经现有 worker 所属线程执行，确认后释放租约，新会话才附着。持有者通道已故障、无法确认断开时，经 `ResetDisconnectedWorker` 的既有守卫（有未应答的已派发请求或自启 TIA 一律拒绝）停止其 worker，租约随进程结束消亡，审计记为 `taken-over-worker-stopped`。移交记录审批审计，并写入 `RELEASED <ids>`。非拥有式分离超出预算或报告未回答对话框时，新连接返回 `in-progress`，迟到结果继续完成连接。旧会话清除自动重绑目标，直到自己显式调用 `ConnectPortal`。
 - 另一宿主的活持有者通过 `<PID>-<启动 ticks>.holder` 侧车给出宿主 PID、发布键和结束连接的方式。侧车仅用于拒绝说明，独占租约句柄仍决定准入。
 - 强制结束空闲 worker 保留 `IDLE`，下次可以接管；中断原生请求保留 `BUSY`，结果未知退出保留 `UNCERTAIN`。正常替换安装包不需要重启 TIA。
 - 租约只在附着前后加文件锁，不增加 Siemens 调用。
