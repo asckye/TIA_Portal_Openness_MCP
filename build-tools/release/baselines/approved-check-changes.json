@@ -2454,6 +2454,23 @@
           "identifier": "FoundationV4ContractsTests/WorkerFailuresRetainEvidenceAndDistinguishUnsentFromUnknown( ):95be9d9beb37f4124e2b25bee893ee28b2b848199a38dbb54a61fbf943371b00:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-6b",
+      "maintainerDate": "2026-11-14",
+      "reason": "2026-11-14 maintainer approved: the bridge target-field message separates unknown, missing and invalid fields (B44), so the two tests pinning the old generic text are rewritten; the recovery hint, pointers, parameters, expected and enum assertions stay",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/ArgumentPointerTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ReadBatchAdmissionTests/Bridge_type_errors_keep_the_existing_message_and_recovery_hint( string release ):c6cef9cfa9d3775fd7840f26ccdf86b2eef9eab248c3de83f59093e6e42df03b:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/ArgumentPointerTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.ArgumentPointerTests/Schema_errors_preserve_exact_declared_pointer_and_expected_form( string json , string pointer , string expected ):7ec540877e55822b17cd6ae76e1bbf5b3c08ef0b4af199139520a8d0e64c88e9:1"
+        }
+      ]
     }
   ]
 }
