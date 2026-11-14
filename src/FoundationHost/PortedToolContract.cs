@@ -269,19 +269,19 @@ internal sealed partial class FoundationTool
     private sealed class CapabilityTool(FoundationTool owner, McpServerTool inner) : McpServerTool
     {
         public override Tool ProtocolTool => inner.ProtocolTool;
-        public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
+        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
             CancellationToken cancellationToken = default)
         {
             var arguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
             var input = JsonSerializer.SerializeToElement(arguments);
             if (arguments.TryGetValue("expectedProject", out var expectedProject) && expectedProject.ValueKind == JsonValueKind.String
                 && HostBehavior.ExpectedProjectArgument(expectedProject.GetString()) is { } projectError)
-                return new ValueTask<CallToolResult>(McpServer.V4TargetReject(owner.tool.Name, projectError, current: true));
+                return McpServer.V4TargetReject(owner.tool.Name, projectError, current: true);
             if (UnifiedPortService.ValidateNavigation(owner.tool.Name, ProtocolTool.InputSchema, input) is { } navigationError)
             {
                 var rejected = McpServer.V4TargetReject(owner.tool.Name, navigationError, current: true);
                 McpServer.RecordAdmissionProjection(request, rejected);
-                return new ValueTask<CallToolResult>(rejected);
+                return rejected;
             }
             // Other invalid input still goes through the existing wrapper so its
             // behaviour disclosure and raw rejection payload remain unchanged.
@@ -291,14 +291,14 @@ internal sealed partial class FoundationTool
             {
                 var rejected = McpServer.V4TargetReject(owner.tool.Name, validation, current: true);
                 McpServer.RecordAdmissionProjection(request, rejected);
-                return new ValueTask<CallToolResult>(rejected);
+                return rejected;
             }
             if (validation == null && owner.RefusePortedCapability(arguments) is { } refusal)
             {
                 McpServer.RecordAdmissionProjection(request, refusal);
-                return new ValueTask<CallToolResult>(refusal);
+                return refusal;
             }
-            return inner.InvokeAsync(request, cancellationToken);
+            return owner.ParkWorkerResult(await inner.InvokeAsync(request, cancellationToken), owner.tool.Name);
         }
     }
 

@@ -82,7 +82,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Shutdown_drains_an_open_http_request_and_stops_its_session_worker"
             },
             ["WorkerRobustnessTests"] = new[] {
-                "Faults_lock_both_pipelines_and_require_explicit_restart",
+                "Read_failures_keep_their_outcome_and_the_next_call_recovers",
                 "Cancellation_after_dispatch_keeps_the_late_result_and_journal",
                 "Oversized_reply_survives_a_spill_slower_than_the_fault_injection_deadline",
                 "First_attach_has_a_longer_deadline_and_the_access_confirmation_hint",
@@ -92,7 +92,7 @@ namespace TiaMcp.Engine.Tests.Shared
             },
             ["PlcFixtureWorkerRobustnessTests"] = new[] {
                 "Timed_out_write_keeps_the_unknown_outcome_guard",
-                "Plc_faults_lock_the_host_and_require_explicit_restart"
+                "Plc_faults_recover_on_the_next_native_call"
             },
             ["SharedWorkerRegressionTests"] = new[] {
                 "CallTool_compile_wrapper_observes_cold_readiness_inside_the_target_lane"

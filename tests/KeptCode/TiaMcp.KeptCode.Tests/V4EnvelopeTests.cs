@@ -41,7 +41,8 @@ namespace TiaMcp.Engine.Tests
             var nodes = new System.Text.Json.Nodes.JsonArray(parent);
             if (flat) foreach (var leaf in leaves) nodes.Add(leaf!.DeepClone());
             else parent["Messages"] = leaves;
-            var data = new System.Text.Json.Nodes.JsonObject { ["state"] = "Error", ["errorCount"] = flat ? 0 : 12, ["warningCount"] = 2, ["diagnosticMessages"] = nodes };
+            var data = new System.Text.Json.Nodes.JsonObject {
+                ["state"] = "Error", ["errorCount"] = flat ? 0 : 12, ["warningCount"] = 2, ["diagnosticMessages"] = nodes };
             var error = CompileResultMapping.Errors(data)!;
             var details = Assert.IsType<CompileErrorsDetails>(error.Details);
             Assert.Equal(12, details.ErrorCount); Assert.Equal(2, details.WarningCount);
@@ -56,7 +57,8 @@ namespace TiaMcp.Engine.Tests
         private const string Hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         private static readonly DateTimeOffset Stamp = new DateTimeOffset(2026, 10, 3, 0, 0, 0, TimeSpan.Zero);
         private static readonly IReadOnlyDictionary<string, JsonElement> Empty = new Dictionary<string, JsonElement>();
-        private const string Rejected = """{"schemaVersion":4,"ok":false,"data":null,"error":{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}},"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"rejected-before-operation","execution":"not-started","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""";
+        private const string Rejected =
+            """{"schemaVersion":4,"ok":false,"data":null,"error":{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}},"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"rejected-before-operation","execution":"not-started","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""";
 
         private static JsonElement Json(string json)
         {
@@ -99,25 +101,36 @@ namespace TiaMcp.Engine.Tests
                 (new ToolNotFoundDetails("MissingTool"), """{"code":"TOOL_NOT_FOUND","message":"Failure.","details":{"tool":"MissingTool"}}"""),
                 (new ProjectNotBoundDetails(), """{"code":"PROJECT_NOT_BOUND","message":"Failure.","details":{}}"""),
                 (new NotFoundDetails("Block"), """{"code":"NOT_FOUND","message":"Failure.","details":{"target":"Block"}}"""),
-                (new TargetAmbiguousDetails("PLC", new[] { "PLC_A", "PLC_B" }), """{"code":"TARGET_AMBIGUOUS","message":"Failure.","details":{"target":"PLC","candidates":["PLC_A","PLC_B"]}}"""),
-                (new IdentityMismatchDetails("project", "epoch:1", "epoch:2"), """{"code":"IDENTITY_MISMATCH","message":"Failure.","details":{"target":"project","expected":"epoch:1","actual":"epoch:2"}}"""),
+                (new TargetAmbiguousDetails("PLC", new[] { "PLC_A", "PLC_B" }),
+                        """{"code":"TARGET_AMBIGUOUS","message":"Failure.","details":{"target":"PLC","candidates":["PLC_A","PLC_B"]}}"""),
+                (new IdentityMismatchDetails("project", "epoch:1", "epoch:2"),
+                        """{"code":"IDENTITY_MISMATCH","message":"Failure.","details":{"target":"project","expected":"epoch:1","actual":"epoch:2"}}"""),
                 (new AlreadyExistsDetails("Block"), """{"code":"ALREADY_EXISTS","message":"Failure.","details":{"target":"Block"}}"""),
-                (new ConfirmationRequiredDetails(Hash), """{"code":"CONFIRMATION_REQUIRED","message":"Failure.","details":{"reason":"plan-confirmation","planHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","requestId":null}}"""),
-                (new PlanStaleDetails(Hash, "input changed"), """{"code":"PLAN_STALE","message":"Failure.","details":{"planHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"input-changed","previewToken":null}}"""),
-                (new PreconditionFailedDetails("borrowed", "project"), """{"code":"PRECONDITION_FAILED","message":"Failure.","details":{"condition":"borrowed","target":"project","parameter":null}}"""),
+                (new ConfirmationRequiredDetails(Hash),
+                        """{"code":"CONFIRMATION_REQUIRED","message":"Failure.","details":{"reason":"plan-confirmation","planHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","requestId":null}}"""),
+                (new PlanStaleDetails(Hash, "input changed"),
+                        """{"code":"PLAN_STALE","message":"Failure.","details":{"planHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","reason":"input-changed","previewToken":null}}"""),
+                (new PreconditionFailedDetails("borrowed", "project"),
+                        """{"code":"PRECONDITION_FAILED","message":"Failure.","details":{"condition":"borrowed","target":"project","parameter":null}}"""),
                 (new OfflineRequiredDetails(new[] { "PLC_A" }), """{"code":"OFFLINE_REQUIRED","message":"Failure.","details":{"targets":["PLC_A"]}}"""),
                 (new AuthenticationRequiredDetails("Safety"), """{"code":"AUTHENTICATION_REQUIRED","message":"Failure.","details":{"capability":"Safety"}}"""),
-                (new AccessDeniedDetails("write", "Block"), """{"code":"ACCESS_DENIED","message":"Failure.","details":{"operation":"write","target":"Block"}}"""),
-                (new SessionResetRequiredDetails("channel closed"), """{"code":"SESSION_RESET_REQUIRED","message":"Failure.","details":{"reason":"channel-closed"}}"""),
+                (new AccessDeniedDetails("write", "Block"),
+                        """{"code":"ACCESS_DENIED","message":"Failure.","details":{"operation":"write","target":"Block"}}"""),
+                (new SessionResetRequiredDetails("channel closed"),
+                        """{"code":"SESSION_RESET_REQUIRED","message":"Failure.","details":{"reason":"channel-closed"}}"""),
                 (new ResourceUnavailableDetails("SDK"), """{"code":"RESOURCE_UNAVAILABLE","message":"Failure.","details":{"resource":"sdk"}}"""),
                 (new IoFailedDetails("read", "input.xml"), """{"code":"IO_FAILED","message":"Failure.","details":{"operation":"read","path":"input.xml"}}"""),
-                (new NativeOperationFailedDetails("E1", "Native failure", Evidence()), """{"code":"NATIVE_OPERATION_FAILED","message":"Failure.","details":{"nativeCode":"E1","nativeMessage":"Native failure","evidence":{"Executed":true,"observation":{"source":"readback","nativeResult":null}}}}"""),
-                (new CompileErrorsDetails(6, 0, new[] { new CompileErrorMessage("ASIS (DB1)", "Drive telegram address missing.") }), """{"code":"COMPILE_ERRORS","message":"Failure.","details":{"errorCount":6,"warningCount":0,"errors":[{"path":"ASIS (DB1)","description":"Drive telegram address missing."}]}}"""),
+                (new NativeOperationFailedDetails("E1", "Native failure", Evidence()),
+                        """{"code":"NATIVE_OPERATION_FAILED","message":"Failure.","details":{"nativeCode":"E1","nativeMessage":"Native failure","evidence":{"Executed":true,"observation":{"source":"readback","nativeResult":null}}}}"""),
+                (new CompileErrorsDetails(6, 0, new[] { new CompileErrorMessage("ASIS (DB1)", "Drive telegram address missing.") }),
+                        """{"code":"COMPILE_ERRORS","message":"Failure.","details":{"errorCount":6,"warningCount":0,"errors":[{"path":"ASIS (DB1)","description":"Drive telegram address missing."}]}}"""),
                 (new CancelledDetails("before dispatch"), """{"code":"CANCELLED","message":"Failure.","details":{"stage":"before-dispatch"}}"""),
                 (new TimeoutDetails("read"), """{"code":"TIMEOUT","message":"Failure.","details":{"stage":"read"}}"""),
                 (new NotExecutedDetails(0), """{"code":"NOT_EXECUTED","message":"Failure.","details":{"causeIndex":0}}"""),
-                (new PartialFailureDetails(1, 1, 1), """{"code":"PARTIAL_FAILURE","message":"Failure.","details":{"succeeded":1,"failed":1,"notExecuted":1}}"""),
-                (new OutcomeUnknownDetails("write", Evidence()), """{"code":"OUTCOME_UNKNOWN","message":"Failure.","details":{"stage":"write","evidence":{"Executed":true,"observation":{"source":"readback","nativeResult":null}},"reason":null}}"""),
+                (new PartialFailureDetails(1, 1, 1),
+                        """{"code":"PARTIAL_FAILURE","message":"Failure.","details":{"succeeded":1,"failed":1,"notExecuted":1}}"""),
+                (new OutcomeUnknownDetails("write", Evidence()),
+                        """{"code":"OUTCOME_UNKNOWN","message":"Failure.","details":{"stage":"write","evidence":{"Executed":true,"observation":{"source":"readback","nativeResult":null}},"reason":null}}"""),
                 (new InternalErrorDetails("diagnostic-1"), """{"code":"INTERNAL_ERROR","message":"Failure.","details":{"diagnosticId":"diagnostic-1"}}"""),
             };
             foreach (var culture in new[] { "en-US", "zh-CN" })
@@ -167,7 +180,8 @@ namespace TiaMcp.Engine.Tests
                     Outcome.Unknown => """{"code":"OUTCOME_UNKNOWN","message":"Failure.","details":{"stage":"write","evidence":{},"reason":null}}""",
                     _ => """{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}}"""
                 };
-                string expected = """{"schemaVersion":4,"ok":OK,"data":null,"error":ERROR,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"OUTCOME","execution":"EXECUTION","requiresSessionReset":RESET,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}"""
+                string expected =
+                    """{"schemaVersion":4,"ok":OK,"data":null,"error":ERROR,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"OUTCOME","execution":"EXECUTION","requiresSessionReset":RESET,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}"""
                     .Replace("OK", outcome == Outcome.Succeeded ? "true" : "false")
                     .Replace("OUTCOME", outcomeText).Replace("EXECUTION", executionText)
                     .Replace("RESET", outcome == Outcome.Unknown ? "true" : "false").Replace("ERROR", errorJson);
@@ -233,9 +247,11 @@ namespace TiaMcp.Engine.Tests
                 Golden(new Paging(PagingMode.Cursor, null, 2, null, "next-1", null, null, true),
                     """{"mode":"cursor","offset":null,"limit":2,"nextOffset":null,"cursor":"next-1","nextCursor":null,"total":null,"complete":true,"unit":"items"}""");
                 Golden(new ExportHandle("export-1", "application/json", 2147483648L, Hash, null),
-                    """{"id":"export-1","mediaType":"application/json","byteLength":2147483648,"sha256":"HASH","expiresUtc":null,"tool":null,"target":null,"createdUtc":null,"totalLength":null}""".Replace("HASH", Hash));
+                    """{"id":"export-1","mediaType":"application/json","byteLength":2147483648,"sha256":"HASH","expiresUtc":null,"tool":null,"target":null,"createdUtc":null,"totalLength":null}"""
+                        .Replace("HASH", Hash));
                 Golden(new ExportHandle("export-1", "application/json", 12, Hash, Stamp),
-                    """{"id":"export-1","mediaType":"application/json","byteLength":12,"sha256":"HASH","expiresUtc":"2026-10-03T00:00:00.0000000Z","tool":null,"target":null,"createdUtc":null,"totalLength":null}""".Replace("HASH", Hash));
+                    """{"id":"export-1","mediaType":"application/json","byteLength":12,"sha256":"HASH","expiresUtc":"2026-10-03T00:00:00.0000000Z","tool":null,"target":null,"createdUtc":null,"totalLength":null}"""
+                        .Replace("HASH", Hash));
             });
         }
 
@@ -247,13 +263,17 @@ namespace TiaMcp.Engine.Tests
             var stopped = Envelope.Create<object?>(null, new Error("Stopped.", new NotExecutedDetails(1)), Metadata());
             var items = new BatchData(new[] { new BatchItem(0, "A", success), new BatchItem(1, null, Reject()), new BatchItem(2, "C", stopped) });
             var batch = V4Json.Batch(items, new Error("Mixed.", new PartialFailureDetails(1, 1, 1)), Metadata(Outcome.Partial, Execution.Partial));
-            string successJson = """{"schemaVersion":4,"ok":true,"data":{"executed":true,"nativeResult":null,"observation":{"source":"readback"}},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"succeeded","execution":"completed","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""";
+            string successJson =
+                """{"schemaVersion":4,"ok":true,"data":{"executed":true,"nativeResult":null,"observation":{"source":"readback"}},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"succeeded","execution":"completed","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""";
             string stoppedJson = Rejected.Replace("""{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}}""",
                 """{"code":"NOT_EXECUTED","message":"Stopped.","details":{"causeIndex":1}}""");
-            string dataJson = """{"items":[{"index":0,"target":"A","result":SUCCESS},{"index":1,"target":null,"result":REJECTED},{"index":2,"target":"C","result":STOPPED}]}"""
+            string dataJson =
+                """{"items":[{"index":0,"target":"A","result":SUCCESS},{"index":1,"target":null,"result":REJECTED},{"index":2,"target":"C","result":STOPPED}]}"""
                 .Replace("SUCCESS", successJson).Replace("REJECTED", Rejected).Replace("STOPPED", stoppedJson);
             Golden(items, dataJson);
-            Golden(batch, """{"schemaVersion":4,"ok":false,"data":DATA,"error":{"code":"PARTIAL_FAILURE","message":"Mixed.","details":{"succeeded":1,"failed":1,"notExecuted":1}},"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"partial","execution":"partial","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""".Replace("DATA", dataJson));
+            Golden(batch,
+                    """{"schemaVersion":4,"ok":false,"data":DATA,"error":{"code":"PARTIAL_FAILURE","message":"Mixed.","details":{"succeeded":1,"failed":1,"notExecuted":1}},"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"partial","execution":"partial","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}"""
+                    .Replace("DATA", dataJson));
             Assert.Equal(successJson, V4Json.Serialize(V4Json.ReadBatch(batch).Items[0].Result));
             var unknown = Envelope.Create<object?>(null, new Error("Lost.", new OutcomeUnknownDetails("write", Evidence())),
                 Metadata(Outcome.Unknown, Execution.Unknown, true));
@@ -276,7 +296,9 @@ namespace TiaMcp.Engine.Tests
                 var operation = new PlanOperation("ImportPlcBlock", "Block", Json("""{"overwrite":false}"""));
                 var plan = new Plan(Hash, "21", "ImportPlcBlock", Hash, identity,
                     new Dictionary<string, string> { ["source.xml"] = Hash }, null, new[] { operation }, Array.Empty<Warning>());
-                Golden(plan, """{"hash":"HASH","releaseKey":"21","tool":"ImportPlcBlock","argumentsHash":"HASH","identity":{"processId":42,"processStartUtc":"2026-10-03T00:00:00.0000000Z","projectFile":"project.ap21","bindingEpoch":7,"workspaceRoot":null,"files":[]},"inputHashes":{"source.xml":"HASH"},"inventoryHash":null,"operations":[{"tool":"ImportPlcBlock","target":"Block","arguments":{"overwrite":false}}],"warnings":[]}""".Replace("HASH", Hash));
+                Golden(plan,
+                        """{"hash":"HASH","releaseKey":"21","tool":"ImportPlcBlock","argumentsHash":"HASH","identity":{"processId":42,"processStartUtc":"2026-10-03T00:00:00.0000000Z","projectFile":"project.ap21","bindingEpoch":7,"workspaceRoot":null,"files":[]},"inputHashes":{"source.xml":"HASH"},"inventoryHash":null,"operations":[{"tool":"ImportPlcBlock","target":"Block","arguments":{"overwrite":false}}],"warnings":[]}"""
+                        .Replace("HASH", Hash));
                 Golden(new PlanIdentity(null, null, null, null, "workspace", new[] { new PlanFile("output.xml", false, null, null) }),
                     """{"processId":null,"processStartUtc":null,"projectFile":null,"bindingEpoch":null,"workspaceRoot":"workspace","files":[{"path":"output.xml","exists":false,"byteLength":null,"sha256":null}]}""");
                 Golden(new PlanFile("input.xml", true, 12, Hash),
@@ -296,7 +318,8 @@ namespace TiaMcp.Engine.Tests
                 var value = Envelope.Create(new { Amount = 42.5m, Text = "中文", Missing = (string?)null }, null,
                     new Meta(timestamp, null, "ReadValue", "upstream-id", Outcome.Succeeded, Execution.ReadOnly, false,
                         BehaviorPolicy.SafeV4, Completeness.Complete, null, Array.Empty<Warning>()));
-                Golden(value, """{"schemaVersion":4,"ok":true,"data":{"amount":42.5,"text":"\u4E2D\u6587","missing":null},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.1234567Z","releaseKey":null,"tool":"ReadValue","requestId":"upstream-id","outcome":"succeeded","execution":"read-only","requiresSessionReset":false,"behaviorPolicy":"safe-v4","completeness":"complete","paging":null,"warnings":[]}}""");
+                Golden(value,
+                        """{"schemaVersion":4,"ok":true,"data":{"amount":42.5,"text":"\u4E2D\u6587","missing":null},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.1234567Z","releaseKey":null,"tool":"ReadValue","requestId":"upstream-id","outcome":"succeeded","execution":"read-only","requiresSessionReset":false,"behaviorPolicy":"safe-v4","completeness":"complete","paging":null,"warnings":[]}}""");
                 Assert.Equal("upstream-id", Meta.Correlate("upstream-id"));
                 Assert.NotEqual(Meta.Correlate(null), Meta.Correlate(null));
                 Assert.Equal(32, Meta.Correlate(null).Length);
@@ -312,7 +335,8 @@ namespace TiaMcp.Engine.Tests
                 new Warning(WarningCode.IncompleteData, "Limited fields.", Empty) };
             var envelope = Envelope.Create(new { Items = Array.Empty<object>() }, null,
                 Metadata(Outcome.Succeeded, Execution.ReadOnly, completeness: Completeness.Partial, warnings: warnings, policy: BehaviorPolicy.Current));
-            string expected = """{"schemaVersion":4,"ok":true,"data":{"items":[]},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"succeeded","execution":"read-only","requiresSessionReset":false,"behaviorPolicy":"current","completeness":"partial","paging":null,"warnings":[{"code":"UNVERIFIED_BEHAVIOR","message":"Current policy.","details":{}},{"code":"INCOMPLETE_DATA","message":"Limited fields.","details":{}}]}}""";
+            string expected =
+                """{"schemaVersion":4,"ok":true,"data":{"items":[]},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"succeeded","execution":"read-only","requiresSessionReset":false,"behaviorPolicy":"current","completeness":"partial","paging":null,"warnings":[{"code":"UNVERIFIED_BEHAVIOR","message":"Current policy.","details":{}},{"code":"INCOMPLETE_DATA","message":"Limited fields.","details":{}}]}}""";
             Golden(envelope, expected);
         }
 
@@ -356,7 +380,9 @@ namespace TiaMcp.Engine.Tests
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Mixed.", new PartialFailureDetails(1, 1, 0)), Metadata()));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Lost.", new OutcomeUnknownDetails(null, Empty)), Metadata()));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Reset.", new SessionResetRequiredDetails(null)), Metadata()));
-            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Timeout.", new TimeoutDetails(null)), Metadata(Outcome.Failed, Execution.Completed)));
+            Assert
+                .Throws<ArgumentException>(() => Envelope.Create<object
+                    ?>(null, new Error("Timeout.", new TimeoutDetails(null)), Metadata(Outcome.Failed, Execution.Completed)));
             Assert.Throws<ArgumentException>(() => Metadata((Outcome)99));
             Assert.Throws<ArgumentException>(() => Metadata(policy: (BehaviorPolicy)99));
             Assert.Throws<ArgumentException>(() => new PartialFailureDetails(-1, 0, 0));
@@ -498,7 +524,8 @@ namespace TiaMcp.Engine.Tests
                 error = new Error("Failed.", new NativeOperationFailedDetails(null, null, evidence));
             }
             evidence.Clear();
-            Golden(error, """{"code":"NATIVE_OPERATION_FAILED","message":"Failed.","details":{"nativeCode":null,"nativeMessage":null,"evidence":{"original":{"executed":true}}}}""");
+            Golden(error,
+                    """{"code":"NATIVE_OPERATION_FAILED","message":"Failed.","details":{"nativeCode":null,"nativeMessage":null,"evidence":{"original":{"executed":true}}}}""");
         }
 
         [Fact]
@@ -511,7 +538,8 @@ namespace TiaMcp.Engine.Tests
             var types = assembly.GetExportedTypes().Where(t => t.Namespace == "TiaMcp.Logic.V4").ToArray();
             Assert.Contains(typeof(Plan), types);
             Assert.Equal(27, Enum.GetValues<ErrorCode>().Length);
-            Assert.Equal(15, Enum.GetValues<WarningCode>().Length);
+            Assert.Equal(16, Enum.GetValues<WarningCode>().Length);
+            Assert.Contains(WarningCode.WorkerRestarted, Enum.GetValues<WarningCode>());
             Assert.Contains(WarningCode.PreviousOwnerUnclean, Enum.GetValues<WarningCode>());
             Assert.Contains(WarningCode.UnsettledCalls, Enum.GetValues<WarningCode>());
             Assert.Equal(27, types.Count(t => t.BaseType == typeof(ErrorDetails)));

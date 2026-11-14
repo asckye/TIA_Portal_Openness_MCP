@@ -198,9 +198,6 @@ namespace TiaMcp.FoundationHost
             {
                 using var digestScope = WriteDigest.Enter();
                 McpServer.PrepareWriteDigest(tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject());
-                if (worker.Faulted) return new ToolInvocationResult(McpServer.V4Reject(tool.Name,
-                    new Error("The worker is faulted. Call RestartOpennessWorker before another native call.",
-                        new PreconditionFailedDetails("worker-faulted", null))), false);
                 var token = McpServer.WorkerDispatchCancellation;
                 using var progress = (worker as IEngineWorkerProgress)?.UseProgress(preview ? null : McpServer.WorkerProgressRelay());
                 using var lane = await TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire(tool.Name, token).ConfigureAwait(false);

@@ -13,6 +13,9 @@ internal static class RuntimeQueryContract
             if(result is not JsonObject o || !Releases.Contains(Text(o,"ReleaseKey"),StringComparer.Ordinal)) throw new InvalidDataException();
             if(tool=="GetSessionState")
             {
+                o = (JsonObject)o.DeepClone();
+                if (o.ContainsKey("CanDetachOnUncertainShutdown"))
+                { Bool(o, "CanDetachOnUncertainShutdown"); o.Remove("CanDetachOnUncertainShutdown"); }
                 Keys(o,"ReleaseKey","IsAttached","ProcessId","ProjectFile","OwnsProject","IsLocalSession","IdentityStatus","RuntimeConnectionStatus");
                 var attached=Bool(o,"IsAttached"); var owns=Bool(o,"OwnsProject"); var local=Bool(o,"IsLocalSession");
                 if(o["ProcessId"]!=null) Pid(o,"ProcessId");

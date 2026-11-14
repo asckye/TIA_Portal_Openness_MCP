@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Lost worker connections recover lazily on the next native call across all eight releases. Recovery rebinds the recorded TIA process and exact project, reports `WORKER_RESTARTED` and retains export handles and unsettled calls. A new TIA PID is selected only when exactly one matching project is open with no attached Openness clients. Running native calls and live workers that started their own TIA retain their stop guards. The unreleased contract keeps schema version 4.
 - Released TIA lease handles admit a new explicit connection for every recorded state. BUSY, UNCERTAIN and legacy ACTIVE records produce `PREVIOUS_OWNER_UNCLEAN`, and previous request IDs seed the new session's unsettled list. Disconnect permits reconnecting in the same MCP session with a new worker generation. Disconnect and restart remove TIA-restart fields, and disconnect reports `disconnected`. These changes retain schema version 4 in the unreleased contract.
 - TIA dialog reports reach running-call, busy and Workbench views on all eight releases. Unanswered confirmations promptly return `in-progress`; Ok-only confirmations and notifications are acknowledged after recording. Read-only window observations report unhandled modal windows. Compile, transfer, import/export, archive and library-update wait budgets are 300 seconds.
 - Argument errors identify declared fields with RFC 6901 pointers, include `details.expected`, and retain batch row prefixes.

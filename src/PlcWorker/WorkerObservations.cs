@@ -81,6 +81,7 @@ internal static class WorkerObservations
                     ["groupOk"] = OpennessReadiness.GroupOk, ["recommendedFix"] = OpennessReadiness.FixEn, ["recommendedFixZh"] = OpennessReadiness.FixZh } };
         }
         if (operation == "status") return CachedStatus();
+        if (operation == "recovery-processes") return JsonSerializer.SerializeToNode(engine.ReadRecoveryProcesses());
         return Read(operation, arguments, new Context {
             Environment = () => JsonSerializer
                 .SerializeToNode(EnvironmentDoctor.Run(Engineering.TiaMajorVersion, Engineering.TiaMajorVersion), new JsonSerializerOptions {

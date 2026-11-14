@@ -329,15 +329,19 @@ public sealed class NoLockTests
     }
 
     [Theory, MemberData(nameof(Releases))]
-    public async Task Real_worker_fault_refuses_before_approval(string release)
+    public async Task A_later_independent_write_still_requires_approval_after_a_worker_fault(string release)
     {
         using var worker = new Worker(release) { Faulted = true };
+        int approvals = 0;
         var save = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "SaveProject"), worker),
-            release, () => new(true, 1), (_, _, _) => throw new Exception("A faulted worker must refuse before approval."));
+            release, () => new(true, 1), (pending, _, _) => {
+                approvals++;
+                return Task.FromResult(new TiaOpenness.Shared.ApprovalOutcome(pending, false, null));
+            });
         var result = Body(await save.InvokeAsync(Request("SaveProject", WriteArgs(worker))));
-        Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
-        Assert.Equal("worker-faulted", (string?)result["error"]?["details"]?["condition"]);
-        Assert.Equal(0, worker.Writes);
+        Assert.True((bool?)result["ok"], result.ToJsonString());
+        Assert.Equal(1, approvals);
+        Assert.Equal(1, worker.Writes);
         Assert.Empty(worker.Unsettled.Snapshot());
     }
 

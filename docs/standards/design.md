@@ -61,7 +61,7 @@
 
 - HTTP 宿主不设会话数上限，部署时按 worker 内存和 TIA 实例数限制客户端并发。`/mcp/health` 不鉴权，返回 `fileVersion`、发布键和档案名；`/mcp/ready` 与 MCP 调用使用同一 Bearer 密钥，只证明宿主已就绪（SEC-05）。
 - 每个 worker 绑定宿主的 Windows job object（`WorkerJob`），宿主退出或被终止时 worker 随之结束；TIA 进程不属于 job，不受宿主退出影响。
-- 会话结束、stdio EOF、Ctrl+C、控制台关闭和 HTTP 宿主停止都关闭 worker 通道。空闲 worker 最多等待 10 秒，在所属线程上非拥有式分离并把租约写为 `RELEASED`，不保存也不关闭项目；只有请求仍在进行或等待超时才结束 worker。
+- 会话结束等待已派发的原生调用完成，再关闭 worker 通道。空闲 worker 最多等待 10 秒，在所属线程上非拥有式分离并把租约写为 `RELEASED`。宿主退出继续由 job object 结束自己的 worker。
 - `DisconnectPortal` 只结束本会话的原生连接，`RestartOpennessWorker` 只重启本会话的 worker；新的 HTTP 会话从未绑定状态开始。
 - 断开、故障、重启、审批与故障键、暂存批次、预演计划和导出句柄都按会话隔离；导出内容的进程内容量（32 个句柄、8,000,000 个字符）全进程共用，避免并发会话扩大缓存。
 - 宿主在 `<数据根>/run/hosts/<PID>-<启动 ticks>.json` 原子写入登记记录（发布键、宿主版本、UTC 启动时间、传输、HTTP 前缀、操作端管道名、会话快照），退出时删除。工作台据此列出同一数据根的存活宿主（包括无会话的宿主），按 PID 与启动时间判断存活；登记只是提示，是否忙碌由宿主在准入边界判定。
@@ -87,10 +87,13 @@
 | 已连接 TIA 进程 | `ConnectPortal` | `AttachOpenProject`、`OpenProject` 或 `CreateProject` 绑定项目；`DisconnectPortal` 回到未连接 |
 | 已绑定项目 | 绑定成功 | `CloseProject` 回到已连接；会话结束时非拥有式分离，不保存不关闭 |
 | 未确认调用 | 最终写入结果未知（第 4.11 节） | 检查该调用的目标，按 requestId 核对证据，后续独立调用继续执行 |
-| worker 代次故障 | 超时、worker 退出或卡死、坏帧、TIA 进程丢失 | `RestartOpennessWorker` 或 `DisconnectPortal`，之后重新绑定 |
+| worker 代次故障 | worker 退出、坏帧、宿主探测故障或 TIA 进程丢失 | 下一次原生调用启动新代次并重绑；失败时报告事实，下次继续尝试 |
 
 - 没有连接 TIA 时，需要 TIA 的工具在派发前返回带 `ConnectPortal` 提示的 `PRECONDITION_FAILED`（`connect-portal`），会话保持可用，不锁会话。
-- 八版的 answered-unknown 回复只影响本次调用。真正的 worker 退出、坏帧或探测故障在自动恢复实现前仍返回 `PRECONDITION_FAILED`，条件为 `worker-faulted`，提示调用 `RestartOpennessWorker`。
+- 八版的 answered-unknown 回复只影响本次调用。worker 退出、坏帧、探测故障或回复中的 `portalLost` 触发下一次原生调用上的自动恢复。恢复前保留未答复调用的 `worker-call-running` 保护，仍存活且自启 TIA 的 worker 返回 `worker-owns-portal`。
+- 恢复记录 PID、进程启动时间、项目绝对路径与项目名。相同 PID 与启动时间可以重绑。变更 PID 时，只有该版本恰好一个进程打开同一项目且 `AttachedSessions` 为空才重绑。读取进程事实、Attach 与 BindProject 都在 worker 所属线程执行。
+- 自动恢复增加 generation 并更换 HostSessionKey，旧预览、批次计划和审批身份失效。`WORKER_RESTARTED` 携带代次、原因、丢失状态和重绑结果，`sessionState.workerRecovery` 保留最后一次记录。导出句柄、暂存、生成记录、未确认清单和迟到结果继续属于当前会话。自动恢复在工作台中保持会话活动状态。
+- 恢复失败返回 `tia-process-gone`、`tia-not-responding` 或 `project-not-open`，后续调用继续尝试。host-only 状态工具读取缓存；显式 `ConnectPortal` 可以重新选择进程。
 - `RestartOpennessWorker` 先让空闲 worker 分离，再启动新代次。持有进程结束时释放租约，保留前持有者状态和未决编号。
 - 绑定要求显式选定、当前枚举到的进程 ID，以及准确的项目名称和绝对路径。`CloseProject` 要求本会话拥有且未修改的项目，不静默保存。`DisconnectPortal` 返回 `sessionState=disconnected`。同一 MCP 会话可以显式调用 `ConnectPortal` 和 `AttachOpenProject`，新连接停止旧的空闲 worker 并启动新代次。
 

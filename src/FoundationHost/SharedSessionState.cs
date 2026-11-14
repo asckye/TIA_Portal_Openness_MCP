@@ -75,6 +75,7 @@ internal sealed class SharedSessionState
             ["running"] = transport["running"]?.DeepClone() ?? LateResults.Running,
             ["lateResults"] = LateResults.Snapshot(),
             ["workerFault"] = transport["workerFault"]?.DeepClone(),
+            ["workerRecovery"] = transport["workerRecovery"]?.DeepClone(),
             ["disconnected"] = ended, ["switches"] = switches };
     }
     internal JsonObject OperatorSnapshot(string release)

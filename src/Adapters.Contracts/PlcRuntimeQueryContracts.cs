@@ -2,6 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+namespace TiaMcp.Adapters.Contracts
+{
+    public sealed class PlcRecoveryProcess
+    {
+        public int ProcessId { get; set; }
+        public string? ProcessStartUtc { get; set; }
+        public string? ProjectPath { get; set; }
+        public int AttachedSessions { get; set; }
+    }
+}
+
 namespace TiaMcp.Adapters
 {
     // Cached attachment is deliberately not proof that the same OS process still exists.

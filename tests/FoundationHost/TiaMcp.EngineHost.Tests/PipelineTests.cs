@@ -79,7 +79,9 @@ public sealed partial class PipelineTests
             Assert.NotEmpty(log.Read()); Assert.All(log.Read(), row => Assert.Equal(human ? "workbench" : "mcp", row.Actor));
             var projected = rows.Select(row => JsonNode.Parse(row)!).Where(row => (int?)row["callProjection"] == 1).ToArray();
             Assert.Equal(2, projected.Length);
-            Assert.All(projected, row => { Assert.Equal(human ? "workbench" : "mcp", (string?)row["actor"]); Assert.Equal(ActorScope.McpSession, (string?)row["mcpSession"]); });
+            Assert
+                .All(projected, row => {
+                    Assert.Equal(human ? "workbench" : "mcp", (string?)row["actor"]); Assert.Equal(ActorScope.McpSession, (string?)row["mcpSession"]); });
             Assert.Null(result.StructuredContent?["meta"]?["actor"]);
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
@@ -133,7 +135,8 @@ public sealed partial class PipelineTests
         using var fixture = new Fixture(release, all: true);
         var shared = new SharedToolCatalog(fixture.Catalog, Array.Empty<McpServerTool>(), new HashSet<string>());
         Assert.Null(shared.Find("ConnectProject", includeUnavailable: true));
-        foreach (string name in new[] { "RetrieveProjectArchive", "SaveProjectCopy", "ManageMultiuserSession", "BuildProjectScaffold", "ConnectIsolatedPortal" })
+        foreach (string name in new[] { "RetrieveProjectArchive", "SaveProjectCopy", "ManageMultiuserSession", "BuildProjectScaffold", "ConnectIsolatedPortal"
+            })
         {
             Assert.Same(fixture.Catalog.Find(name), shared.Find(name));
             Assert.Same(shared.Find(name), shared.Find(name, includeUnavailable: true));
@@ -191,14 +194,15 @@ public sealed partial class PipelineTests
     }
 
     [Fact]
-    public async Task ProcessLossRefusesBeforeApproval()
+    public async Task ProcessLossKeepsApprovalForTheNextIndependentCall()
     {
         using var fixture = new Fixture(); fixture.Worker.Faulted = true;
-        fixture.Wait = (_, _, _) => throw new Exception("A faulted generation cannot request approval.");
+        bool approved = false;
+        fixture.Wait = (pending, _, _) => { approved = true; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
         var result = await fixture.Call("SaveProject", "{}");
-        Assert.Equal("PRECONDITION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.Equal("worker-faulted", (string?)result.StructuredContent?["error"]?["details"]?["condition"]);
-        Assert.Empty(fixture.Worker.Calls);
+        Assert.True((bool?)result.StructuredContent?["ok"]);
+        Assert.True(approved);
+        Assert.Equal(new[] { "SaveProject" }, fixture.Worker.Calls);
     }
 
     [Fact]
@@ -219,7 +223,8 @@ public sealed partial class PipelineTests
     public async Task BindingChangesInvalidateApproval()
     {
         using var fixture = new Fixture();
-        fixture.Wait = (pending, _, _) => { fixture.Worker.Binding = new JsonObject { ["project"] = "other" }; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
+        fixture.Wait = (pending, _, _) => {
+            fixture.Worker.Binding = new JsonObject { ["project"] = "other" }; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
         var result = await fixture.Call("SaveProject", "{}");
         Assert.Equal("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Empty(fixture.Worker.Calls);
@@ -334,7 +339,10 @@ public sealed partial class PipelineTests
             try
             {
                 var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
-                    Params = new() { Name = "CallTool", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>("{\"name\":\"GetSessionState\",\"arguments\":{}}") }
+                    Params = new() {
+                        Name = "CallTool", Arguments = JsonSerializer.Deserialize<Dictionary<string,
+                            JsonElement>>("{\"name\":\"GetSessionState\",\"arguments\":{}}")
+                    }
                 };
                 // SerializedCallTool supplies this context on the production path.
                 using var progressRequest = McpServer.UseProgressRequest(request, CancellationToken.None);
@@ -365,7 +373,8 @@ public sealed partial class PipelineTests
         internal readonly TaskCompletionSource<CallToolResult> Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public override Tool ProtocolTool { get; } = new() { Name = "GetSessionState",
             InputSchema = JsonSerializer.SerializeToElement(new { type = "object", properties = new { }, additionalProperties = false }) };
-        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
+                default)
         {
             Started.SetResult();
             return await Completion.Task;
@@ -418,11 +427,13 @@ public sealed partial class PipelineTests
                 string name = (string)t!["name"]!;
                 var schema = JsonSerializer.SerializeToElement(t["inputSchema"]);
                 var parameters = schema.GetProperty("properties").EnumerateObject().Select(p => new ToolParameterDescriptor(p.Name, "integer",
-                    p.Name is "offset" or "limit" or "take" ? "System.Int32" : p.Name == "confirmRestart" ? "System.Boolean" : p.Name == "arguments" ? typeof(ToolArguments).FullName! : "System.String",
+                    p.Name is "offset" or "limit" or "take" ? "System.Int32" : p.Name == "confirmRestart" ? "System.Boolean" : p.Name == "arguments"
+                        ? typeof(ToolArguments).FullName! : "System.String",
                     false, null, null, "", false, Array.Empty<string>())).ToArray();
                 var classification = ToolMetadata.Find(name)!;
                 return new ToolDescriptor(name, "", new Tool { Name = name, InputSchema = schema },
-                    new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead, classification.BatchWrite),
+                    new ToolDescriptorClassification(classification.Layer, classification.Domain, classification.Operation, classification.BatchRead,
+                            classification.BatchWrite),
                     name + "()", parameters, new ToolDryRunDescriptor(false, true), null, ToolExecution.Table[name]);
             }).ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
             DeclaredToolMetadata.Create("GetCallResult", typeof(McpServer).GetMethod(nameof(McpServer.GetCallResult))!,
@@ -455,7 +466,8 @@ public sealed partial class PipelineTests
             McpServer.ApprovalWaitOverrideForTests = (pending, settings, token) => Wait(pending, settings, token);
             tools = McpServer.WrapTools(McpServer.GetAllTools()).ToDictionary(t => t.ProtocolTool.Name);
         }
-        internal Task<CallToolResult> Call(string name, string json) => tools[name].InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>())
+        internal Task<CallToolResult> Call(string name, string json) => tools[name]
+            .InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>())
             { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) } }).AsTask();
         public void Dispose()
         {
@@ -492,7 +504,8 @@ public sealed partial class PipelineTests
             if (Yield) await Task.Yield();
             return Snapshot();
         }
-        public Task<JsonObject> Restart(bool confirmed, CancellationToken token) { RestartConfirmed = confirmed; return Task.FromResult(new JsonObject { ["success"] = true }); }
+        public Task<JsonObject> Restart(bool confirmed, CancellationToken token) {
+            RestartConfirmed = confirmed; return Task.FromResult(new JsonObject { ["success"] = true }); }
         private readonly SemaphoreSlim gate = new(1, 1);
         public async Task<IDisposable> Acquire(CancellationToken token)
         {
@@ -507,8 +520,11 @@ public sealed partial class PipelineTests
             if (Hold != null) await Hold.Task;
             var error = Limited ? new Error("limit", new LimitExceededDetails("response", 16 * 1024 * 1024, null))
                 : Unknown ? new Error("unknown", new OutcomeUnknownDetails("fixture", new Dictionary<string, JsonElement>())) : null;
-            var result = McpServer.V4Result(name, Limited ? new JsonObject { ["nativeOutcomeUnknown"] = true } : Payload == null ? new JsonObject() : new JsonObject { ["payload"] = Payload }, error,
-                Unknown ? Outcome.Unknown : Limited ? Outcome.Failed : Outcome.Succeeded, Unknown ? Execution.Unknown : Limited ? Execution.Completed : Execution.ReadOnly,
+            var result = McpServer
+                .V4Result(name, Limited ? new JsonObject { ["nativeOutcomeUnknown"] = true } : Payload == null ? new JsonObject() : new JsonObject {
+                    ["payload"] = Payload }, error,
+                Unknown ? Outcome.Unknown : Limited ? Outcome.Failed : Outcome.Succeeded, Unknown ? Execution.Unknown : Limited ? Execution.Completed
+                    : Execution.ReadOnly,
                 Unknown ? Completeness.Unknown : Limited ? Completeness.None : Completeness.Complete);
             return new EngineReply(result, Native, Binding, null, null);
         }

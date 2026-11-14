@@ -99,11 +99,11 @@ public sealed class SharedWorkerRegressionTests
         Assert.True((bool?)cached.StructuredContent?["ok"]);
         var next = await new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetProjectInfo"), worker), release)
             .InvokeAsync(Request("GetProjectInfo"));
-        Assert.Equal("PRECONDITION_FAILED", (string?)next.StructuredContent?["error"]?["code"]);
         Assert.Null(worker.OperatorSnapshot()["sessionLocked"]);
 
         if (release is "20" or "21")
         {
+            Assert.Equal("PRECONDITION_FAILED", (string?)next.StructuredContent?["error"]?["code"]);
             using var production = fixture.ProductionWorker();
             await production.Status(CancellationToken.None);
             var productionChild = Field<Process>(production.Client, "process");
@@ -112,7 +112,8 @@ public sealed class SharedWorkerRegressionTests
             if (busy)
             {
                 fixture.ClearBusy();
-                productionPending = productionChannel.CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
+                productionPending = productionChannel
+                    .CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
                 await fixture.WaitBusy();
             }
             else { WorkerShutdown.KillOwned(productionChild); Assert.True(productionChild.WaitForExit(TestDeadlines.HangMilliseconds)); }
@@ -122,17 +123,25 @@ public sealed class SharedWorkerRegressionTests
             var expected = FoundationV4Result.Failure(release, "GetSessionState", "compare", false, false, null, error).StructuredContent!;
             Assert.True(JsonNode.DeepEquals(expected["error"], next.StructuredContent?["error"]));
             Assert.Equal((string?)production.Snapshot()["state"], (string?)services.Snapshot()["state"]);
-            Assert.Equal(((foundationhost::TiaMcp.FoundationHost.IFoundationWorkerSupervisor)production.Client).OperatorSnapshot().ToJsonString(), worker.OperatorSnapshot().ToJsonString());
+            Assert
+                .Equal(((foundationhost::TiaMcp.FoundationHost.IFoundationWorkerSupervisor)production.Client).OperatorSnapshot().ToJsonString(), worker
+                    .OperatorSnapshot().ToJsonString());
             Assert.Null(services.Snapshot()["fault"]);
+            using var stopped = new Fixture(release);
+            await stopped.Worker.Observe("status", new(), CancellationToken.None);
+            WorkerShutdown.KillOwned(Field<Process>(stopped.Worker, "process"));
+            var managed = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                stopped.Worker.Observe("status", new(), CancellationToken.None));
+            Assert.Equal("worker-faulted", managed.Condition);
+            Assert.Equal("The worker stopped. The next native call will attempt recovery.", managed.Message);
         }
         else
         {
-            // These profiles retain the exited process until disposal, so it reports the transport fact.
-            Assert.Equal("Faulted", (string?)worker.HostSnapshot()["state"]);
-            Assert.Equal("The worker is faulted. Call RestartOpennessWorker before another native call.",
-                (string?)next.StructuredContent?["error"]?["message"]);
-            Assert.Equal("worker-faulted", (string?)next.StructuredContent?["error"]?["details"]?["condition"]);
-            Assert.True(services.Faulted);
+            Assert.True((bool?)next.StructuredContent?["ok"], next.StructuredContent?.ToJsonString());
+            Assert.Equal("Running", (string?)worker.HostSnapshot()["state"]);
+            Assert.Equal(2, (long?)worker.OperatorSnapshot()["generation"]);
+            Assert.Contains(next.StructuredContent!["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "WORKER_RESTARTED");
+            Assert.False(services.Faulted);
         }
     }
 
@@ -288,7 +297,8 @@ public sealed class SharedWorkerRegressionTests
             return await Server.CallToolAsync("CompileDevice", new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)));
         });
         Assert.False(deadline.IsCancellationRequested, "deadlinePool=" + Volatile.Read(ref deadlinePool) + "; returnedPool=" + PoolState()
-            + "; elapsedMs=" + elapsed.Elapsed.TotalMilliseconds + "; worker=" + worker.SupervisorSnapshot(new JsonObject { ["ready"] = false }).ToJsonString());
+            + "; elapsedMs=" + elapsed.Elapsed.TotalMilliseconds + "; worker=" + worker.SupervisorSnapshot(new JsonObject { ["ready"] = false })
+                .ToJsonString());
         Assert.NotEqual("CANCELLED", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.True((bool?)worker.SharedStatus?["readiness"]?["ready"], result.StructuredContent?.ToJsonString());
     }
@@ -542,7 +552,8 @@ public sealed class SharedWorkerRegressionTests
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", root);
             // Parallel shards share this output directory and hash the identity while their workers start: install it atomically and
             // leave it in place. Truncating, restoring or deleting it here refused or killed another shard's worker (P8-stab-1).
-            TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+            TiaMcp.Engine.Tests.Shared.TestPaths
+                .WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             Worker = new(release, Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe"), AppContext.BaseDirectory, true)
                 { Bundled = false, SharedSession = release is "20" or "21" };
         }

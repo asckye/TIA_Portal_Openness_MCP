@@ -305,12 +305,10 @@ internal sealed class FoundationV4Tool : McpServerTool
                     return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                         HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()), true));
             }
-            if (inner is FoundationTool { RequiresProjectSession: true, WorkerFaulted: true }
-                && !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.DispatchesTargets(tool.Name)
-                && tool.Name is not ("GetSessionState" or "GetOpennessWorkerStatus" or "RestartOpennessWorker" or "DisconnectPortal"))
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                    new Error("The worker is faulted. Call RestartOpennessWorker before another native call.",
-                        new PreconditionFailedDetails("worker-faulted", null)), true));
+            if (write && inner is FoundationTool { WorkerRecoveryNeeded: true } recoveryTool)
+            {
+                using var recoveryLane = await recoveryTool.AcquireLane(cancellationToken);
+            }
             TiaOpenness.Shared.PendingApproval? pending = null;
             TiaOpenness.Shared.ApprovalOutcome? approval = null;
             if (write && inner is not GenerationTool { OwnsApproval: true })

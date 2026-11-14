@@ -108,14 +108,6 @@ namespace TiaMcpServer.ModelContextProtocol
             Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
         {
             if (ApprovalPreviewDepth.Value > 0) return null;
-#if TIA_ENGINE_HOST
-            if (Worker.Faulted && name is not ("GetSessionState" or "GetOpennessWorkerStatus" or "RestartOpennessWorker" or "DisconnectPortal")
-                && ToolTaxonomy.UsesOpennessLane(name) && !ToolTaxonomy.DispatchesTargets(name)
-                && !(TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                    && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name == "F04"))
-                return V4Reject(name, new Error("The worker is faulted. Call RestartOpennessWorker before another native call.",
-                    new PreconditionFailedDetails("worker-faulted", null)));
-#endif
             var args = JsonNode.Parse(arguments)!.AsObject();
             try
             {

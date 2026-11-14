@@ -103,7 +103,7 @@ namespace TiaMcp.Adapters
             localSession=session as Siemens.Engineering.Multiuser.LocalSession;
 #endif
         }
-        public bool CanDetachOnUncertainShutdown => ownsPortal == false;
+        public bool CanDetachOnUncertainShutdown => portal == null || ownsPortal == false && !workerStartedPortal;
         private bool uncertainShutdown;
         public void InvalidateUncertainShutdown()
         {

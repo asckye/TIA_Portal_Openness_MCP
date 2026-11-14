@@ -173,8 +173,11 @@ internal sealed class HostSession : IHostSession
     private void ObserveWorker(string actor)
     {
         var after = finalWorkerState ?? workerState();
+        var recovery = after["workerRecovery"] ?? after["sessionState"]?["workerRecovery"];
+        bool automaticRestart = recovery is JsonObject && JsonNode.DeepEquals(recovery["generation"], after["generation"]);
         string? reason = (bool?)after["disconnected"] == true && (bool?)observedWorkerState["disconnected"] != true ? "disconnect"
-            : !JsonNode.DeepEquals(observedWorkerState["generation"], after["generation"]) ? "worker-restart" : null;
+            : !JsonNode.DeepEquals(observedWorkerState["generation"], after["generation"])
+                && !automaticRestart ? "worker-restart" : null;
         if (reason != null && (endReason != "disconnect" || reason == "worker-restart")) { endedBy = actor; endReason = reason; }
         observedWorkerState = (JsonObject)after.DeepClone();
     }

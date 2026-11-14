@@ -30,7 +30,7 @@ internal static class Program
         var identity = new ChannelIdentity(options.ReleaseKey, Hash(exe),
             Hash(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + options.ReleaseKey + ".dll")),
             System.Diagnostics.Process.GetCurrentProcess().Id, options.Nonce);
-        bool bound = false, projectClosed = false;
+        bool bound = false, projectClosed = false, ownsPortal = false;
         bool failNextStatus = false;
         int attachedPid = 123;
         int writes = 0;
@@ -63,6 +63,16 @@ internal static class Program
             }
         }
         new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity, () => new ChannelBinding(epoch, bound), request => {
+            if (Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_RECOVERY_TRACE") is { Length: > 0 } trace)
+                File.AppendAllText(trace, new JsonObject { ["pid"] = System.Diagnostics.Process.GetCurrentProcess().Id,
+                    ["method"] = request.Method, ["arguments"] = JsonNode.Parse(request.ArgumentsJson) }.ToJsonString() + "\n");
+            if (request.Method == "adapter.HostObserve" && (string?)JsonNode.Parse(request.ArgumentsJson)?["operation"] == "recovery-processes")
+            {
+                string? path = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_RECOVERY_PROCESSES");
+                return ChannelResponse.Success(path == null ? "[]" : File.ReadAllText(path));
+            }
+            if (request.Method == "adapter.FixtureOwnsPortal")
+            { ownsPortal = true; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.FixtureWriteCount") return ChannelResponse.Success(writes.ToString());
             if (request.Method == "adapter.FixtureFailNextStatus")
             { failNextStatus = true; return ChannelResponse.Success("{}"); }
@@ -132,6 +142,9 @@ internal static class Program
                 mode = null;
             }
             var injected = mode == null ? null : WorkerFaultInjection.PlcBeforeDispatch(typeof(Program).Assembly, request, _ => { });
+            if (injected?.Failure is { } lostFailure && mode is "tia-lost" or "background-tia-exit")
+                injected = ChannelResponse.Error(new ChannelFailureException(lostFailure.Message, lostFailure.Code, lostFailure.Outcome,
+                    "{\"exceptionType\":\"PortalProcessLost\",\"portalLost\":\"FixtureNonRecoverableException\"}"));
             if (injected != null) return injected;
             if (mode == "slow" && request.Method != "adapter.ReadState") Slow();
             if (request.Method == "adapter.project-lifecycle.ArchiveSaveProjectCopy")
@@ -154,6 +167,12 @@ internal static class Program
             }
             if (request.Method == "adapter.project-lifecycle.ConnectIsolatedPortal")
             {
+                if (fixtureMode == "connect-read-failed")
+                {
+                    ownsPortal = true;
+                    return ChannelResponse.Error(new ChannelFailureException("Synthetic failure after portal creation.", -32603,
+                        ChannelOutcome.ReadFailed, "{\"portalLost\":\"FixturePostStartConnectFailure\"}"));
+                }
                 if (bound) return ChannelResponse.Error(new ChannelFailureException(
                     "This session already owns a TIA connection.", -32603, ChannelOutcome.RejectedBeforeNative,
                     "{\"exceptionType\":\"AdapterPreconditionException\",\"condition\":\"session\"}"));
@@ -191,13 +210,32 @@ internal static class Program
             }
             if (request.Method == "adapter.Attach")
             {
+                if (Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_RECOVERY") == "attach") Slow();
                 attachedPid = (int)JsonNode.Parse(request.ArgumentsJson)!["processId"]!;
                 bound = true; epoch++;
                 return ChannelResponse.Success(new JsonObject { ["Stage"] = "attached", ["OwnsPortal"] = false,
                     ["AttemptedPids"] = new JsonArray(attachedPid), ["Strategy"] = "explicit", ["LaunchMode"] = "attach" }.ToJsonString());
             }
+            if (request.Method == "adapter.BindProject")
+            {
+                var args = JsonNode.Parse(request.ArgumentsJson)!;
+                if (Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_RECOVERY_PROCESSES") is { Length: > 0 } factsPath)
+                {
+                    var fact = JsonNode.Parse(File.ReadAllText(factsPath))!.AsArray().SingleOrDefault(row => (int?)row?["ProcessId"] == attachedPid);
+                    if ((string?)fact?["ProjectPath"] != (string?)args["expectedProjectFile"])
+                        return ChannelResponse.Error(new ChannelFailureException("The recorded project is not open.", -32603,
+                            ChannelOutcome.RejectedBeforeNative, "{\"exceptionType\":\"AdapterPreconditionException\",\"condition\":\"project-not-open\"}"));
+                }
+                savedAs = (string?)args["expectedProjectFile"] ?? "C:/fixture.ap" + options.ReleaseKey;
+                projectClosed = false; epoch++;
+                return ChannelResponse.Success(new JsonObject { ["Executed"] = true, ["ProjectFile"] = savedAs }.ToJsonString());
+            }
             if (request.Method == "adapter.Disconnect")
             {
+                if (ownsPortal && bound)
+                    return ChannelResponse.Error(new ChannelFailureException("DisconnectPortal would close the TIA instance and its open project.",
+                        -32603, ChannelOutcome.RejectedBeforeNative,
+                        "{\"exceptionType\":\"AdapterPreconditionException\",\"parameter\":\"session\",\"isArgument\":false}"));
                 bool wasBound = bound;
                 bound = false; epoch++;
                 return ChannelResponse.Success(new JsonObject { ["Stage"] = "disconnected", ["SessionState"] = "disconnected",
@@ -224,6 +262,7 @@ internal static class Program
                     ProjectFile = projectClosed ? null : savedAs
                         ?? (bound || !string.IsNullOrEmpty(fixtureMode) ? "C:/fixture.ap" + options.ReleaseKey : null),
                     WithUi = options.WithUi,
+                    CanDetachOnUncertainShutdown = !ownsPortal,
                     TiaPortalLocation = Environment.GetEnvironmentVariable("TiaPortalLocation") });
             return ChannelResponse.WithSpill(raw, () => Spill(raw, mode));
         }).Run();

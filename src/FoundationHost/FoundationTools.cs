@@ -153,10 +153,11 @@ internal sealed partial class FoundationTool : McpServerTool
     internal Task PrepareReadiness(CancellationToken token)
         => worker is IFoundationWorkerReadiness readiness ? readiness.PrepareReadiness(token) : Task.CompletedTask;
     internal string? ApprovalIdentity => (worker as IFoundationSessionWorker)?.ApprovalIdentity;
+    internal bool WorkerRecoveryNeeded => worker is WorkerClient { RecoveryNeeded: true };
     internal string? BoundProjectFile => (string?)SharedSessionState.For(worker).Identity?["projectPath"];
     private bool CachedSessionState => definition.Name == "GetSessionState"
         && (Unsettled.Snapshot().Count > 0 || worker is WorkerClient { Disconnected: true }
-            or WorkerClient { CallRunning: true } or WorkerClient { Faulted: true });
+            or WorkerClient { CallRunning: true } or WorkerClient { RecoveryNeeded: true });
     internal Task<IDisposable?> AcquireLane(CancellationToken token)
         => IsNative && definition.ResponseMember != "Disconnect" && !CachedSessionState
             && worker is IFoundationSessionWorker client ? client.AcquireLane(token) : Task.FromResult<IDisposable?>(null);
@@ -188,7 +189,6 @@ internal sealed partial class FoundationTool : McpServerTool
         => portedMethod != null ? InvokePortedAsync(request, cancellationToken) : InvokeCoreAsync(request, cancellationToken);
     internal ValueTask<CallToolResult> InvokeV4Async(RequestContext<CallToolRequestParams> request, string release, string id, CancellationToken cancellationToken)
         => portedMethod != null ? InvokePortedAsync(request, cancellationToken) : InvokeCoreAsync(request, cancellationToken, release, id);
-    internal bool WorkerFaulted => worker is IFoundationSessionWorker { Faulted: true };
     internal UnsettledCalls Unsettled => worker is IFoundationSessionWorker session ? session.Unsettled : UnsettledCalls.For(worker);
     internal LateCalls LateResults => worker is IFoundationSessionWorker session ? session.LateResults : LateCalls.For(worker);
     internal JsonObject? Running => LateResults.Running ?? (worker as IFoundationSessionWorker)?.Running;

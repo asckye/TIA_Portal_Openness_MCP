@@ -66,6 +66,17 @@ python scripts/checks/Test-NativeLifecycle.py --runner tests/FoundationHost/TiaM
 
 输出 `supervisor-result.json`、`runner-output.log`、`native/native-result.json` 和 `native/native-events.jsonl`；报告缺失本身就是失败证据。依据为项目保存的 Siemens 指南 [openness-testing](../../reference/siemens-openness/skills/openness-testing/SKILL.md)、[session-and-project](../../reference/siemens-openness/skills/session-and-project/SKILL.md)、[threading-and-concurrency](../../reference/siemens-openness/skills/threading-and-concurrency/SKILL.md)；指南面向 V21+，V20 另按本地 PublicAPI 编译核对。
 
+## worker 自动恢复核对
+
+NO-LOCK Part 4 的真机核对当前为 NOT RUN。获准连接测试环境后，在工程副本中逐项记录调用编号、worker 代次、TIA PID、项目路径和实际工程状态。
+
+- 附着并绑定工程后使空闲 worker 退出。下一次读取应重绑同一 TIA 和项目，首次结果携带 `WORKER_RESTARTED`，工作台会话继续活动。检查 TIA 中未保存的更改仍存在。
+- 写入失去回复时确认结果为未知，核对目标只发生一次变化。下一次独立读取应恢复连接。
+- 关闭 TIA，再打开同一路径的工程。只有唯一匹配且没有其他 Openness 客户端附着时才自动选择新 PID。多个匹配或有其他客户端时核对候选 PID 和拒绝信息。
+- 工程未打开或 TIA 暂时无响应时核对前提拒绝。恢复环境后下一次调用应继续尝试。
+- 原生调用仍等待 TIA 对话框时，断开和重启应返回忙碌状态。自启 TIA 的存活 worker 应返回 `worker-owns-portal`。
+- 恢复后旧预览与事务编号应被拒绝，导出句柄应继续可读。显式重启后导出句柄失效。核对 TIA 在失去 worker 后对原生事务的实际处理。
+
 ## 原生调用诊断
 
 - 织入：`build-tools/native-call-weaver`（Mono.Cecil 0.11.6）在编译后给八版适配器 `TiaMcp.Adapter.<key>.dll` 的每个 Openness 调用点生成包装，并内嵌 `TiaMcp.NativeCallCoverage.json`（调用者、IL 位置、目标成员、调用点 ID）。缺少织入器时构建失败，没有关闭开关；`prepare` 对八版随包适配器逐版校验。`GetSessionState.journalHealth.nativeBoundaryCoverage` 报告 `build-instrumented` 或 `not-instrumented`。

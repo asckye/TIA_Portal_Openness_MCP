@@ -163,6 +163,12 @@ namespace TiaMcp.PlcWorker
                 if (result is IWorkerOperationReply reply && reply.RequiresSessionReset)
                     sessionOutcome.MarkUncertain(blockReads: reply.BlockReadsAfterUncertain, mutation: !readOnly);
                 if(name=="Disconnect") disconnected=true;
+                if (name == "ReadState")
+                {
+                    var state = System.Text.Json.Nodes.JsonNode.Parse(WorkerJson.Serialize(result))!.AsObject();
+                    state["CanDetachOnUncertainShutdown"] = engine.CanDetachOnUncertainShutdown;
+                    return ChannelResponse.Success(state.ToJsonString());
+                }
                 return ChannelResponse.Success(WorkerJson.Serialize(result));
             }
             catch (Exception ex)

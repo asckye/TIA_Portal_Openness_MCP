@@ -103,6 +103,11 @@ public sealed class SessionRebindTests
             Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
             Assert.Equal("unknown", (string?)body["meta"]?["execution"]);
             Assert.True(worker.Faulted);
+            Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", null);
+            var next = await worker.Call("ReadBlocks", new(), CancellationToken.None);
+            Assert.Equal("fixture", (string?)next?[0]?["Name"]);
+            Assert.False(worker.Faulted);
+            Assert.Equal(2, (long?)worker.OperatorSnapshot()["generation"]);
         }
         finally { Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", previous); }
     }

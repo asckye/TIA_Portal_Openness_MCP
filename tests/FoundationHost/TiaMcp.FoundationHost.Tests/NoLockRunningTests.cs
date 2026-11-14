@@ -378,11 +378,11 @@ public sealed class NoLockRunningTests
         Assert.True(scope.Worker.Faulted);
         var final = scope.Read(id);
         Assert.Equal(read ? "read-failed" : "unknown", Outcome(final));
-        var refused = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
-            scope.Worker.Call("ReadState", new(), CancellationToken.None));
-        Assert.Equal("worker-faulted", refused.Condition);
         using (new ProductionWorkerBudgets(scope.Worker))
         {
+            var recovered = await scope.Worker.Call("ReadState", new(), CancellationToken.None);
+            Assert.Equal(release, (string?)recovered?["ReleaseKey"]);
+            Assert.Equal(2, (long?)scope.Worker.OperatorSnapshot()["generation"]);
             var restarted = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
             Assert.True((bool?)restarted["success"]);
             await scope.Worker.Call("ReadState", new(), CancellationToken.None);
@@ -767,6 +767,7 @@ public sealed class NoLockRunningTests
         private readonly string image;
         private readonly string? previousFault = Environment.GetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT");
         private readonly string? previousGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
+        private readonly string? previousFacts = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_RECOVERY_PROCESSES");
         private readonly string gate = Path.Combine(TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "running-" + Guid.NewGuid().ToString("N"));
         private readonly Engine.EngineHostPipeline pipeline;
         private readonly Foundation.FoundationHostPorts.Services services;
@@ -797,6 +798,12 @@ public sealed class NoLockRunningTests
             Directory.CreateDirectory(gate);
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", "hang");
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", gate);
+            using var host = Process.GetCurrentProcess();
+            string facts = Path.Combine(gate, "processes.json");
+            File.WriteAllText(facts, new JsonArray(new JsonObject { ["ProcessId"] = Environment.ProcessId,
+                ["ProcessStartUtc"] = host.StartTime.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+                ["ProjectPath"] = "C:/fixture.ap" + release, ["AttachedSessions"] = 0 }).ToJsonString());
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_RECOVERY_PROCESSES", facts);
             string exe = TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
             image = Path.GetFullPath(exe);
             TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"), "offline fixture identity");
@@ -874,6 +881,7 @@ public sealed class NoLockRunningTests
             Child.Dispose();
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", previousFault);
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", previousGate);
+            Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_RECOVERY_PROCESSES", previousFacts);
         }
     }
 }

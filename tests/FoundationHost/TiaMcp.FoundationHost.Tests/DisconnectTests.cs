@@ -1,3 +1,4 @@
+extern alias enginehost;
 extern alias foundationhost;
 using HostSession = foundationhost::TiaMcp.FoundationHost.HostSession;
 using TiaMcp.Tests.Shared;
@@ -14,7 +15,10 @@ internal static class DisconnectTests
 {
     internal static async Task Run(IMcpServer server,Action<bool,string> check,[System.Runtime.CompilerServices.CallerFilePath] string sourceFile="")
     {
-        void Reject(Action action,string title) { try { action(); throw new Exception("Accepted: "+title); } catch(Exception ex) when(ex is InvalidOperationException or IOException or NotSupportedException) { check(true,title); } }
+        void Reject(Action action,string title) {
+            try { action(); throw new Exception("Accepted: "+title);
+            } catch(Exception ex) when(ex is InvalidOperationException or IOException or NotSupportedException) { check(true,title); }
+        }
         foreach(var bound in new[]{false,true})
         {
             var lifecycle=new PlcLifecycleState(); lifecycle.Attached(123);
@@ -22,7 +26,8 @@ internal static class DisconnectTests
             var state=new PlcDisconnectState(); int detaches=0;
             var result=state.Execute(lifecycle.ProcessId,false,()=>detaches++);
             lifecycle.Detached();
-            check(result.Detached && result.ProcessId==123 && result.WorkerAcknowledged && !result.SavedProject && !result.ClosedProject,$"Acknowledged non-owning detach bound={bound}");
+            check(result.Detached && result.ProcessId==123 && result.WorkerAcknowledged && !result.SavedProject && !result.ClosedProject,
+                    $"Acknowledged non-owning detach bound={bound}");
             check(detaches==1 && lifecycle.ProjectFile==null,"No project prerequisite or save/close callback");
             check(ReferenceEquals(state.Execute(null,null,()=>detaches++),result) && detaches==1,"Repeated disconnect never calls native again");
             Reject(state.RequireActive,"Subsequent explicit attach requires new session");
@@ -36,10 +41,13 @@ internal static class DisconnectTests
         }
         var unbound=new PlcLifecycleState();unbound.Attached(123);unbound.Bound("C:/Projects/Test.ap17",true,false);unbound.Unbound();
         check(new PlcDisconnectState().Execute(unbound.ProcessId,false,()=>{}).Detached,"Explicitly unbound attachment can disconnect");
-        var engine=SourceFamily.Read(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFile)!,"../../../src/Adapters/Native/Session/PlcFoundationEngine.cs")));
+        var engine=SourceFamily
+            .Read(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFile)!,"../../../src/Adapters/Native/Session/PlcFoundationEngine.cs")));
         var disconnectSource=engine.Split("public PlcDisconnectResult Disconnect()")[1].Split("public void Dispose()")[0];
-        check(!disconnectSource.Contains("Project()") && !disconnectSource.Contains("IsModified") && !disconnectSource.Contains(".Save(") && !disconnectSource.Contains(".Close("),"Dirty/bound project is not inspected, saved or closed by Disconnect source");
-        check(engine.Split("public void Dispose()")[1].Contains("if (!disconnect.Attempted) Disconnect();"),"Final Dispose source does not retry a failed explicit detach");
+        check(!disconnectSource.Contains("Project()") && !disconnectSource.Contains("IsModified") && !disconnectSource.Contains(".Save(") && !disconnectSource
+                .Contains(".Close("),"Dirty/bound project is not inspected, saved or closed by Disconnect source");
+        check(engine.Split("public void Dispose()")[1].Contains("if (!disconnect.Attempted) Disconnect();"),
+                "Final Dispose source does not retry a failed explicit detach");
         var idle=new PlcDisconnectState();
         check(!idle.Execute(null,null,()=>throw new Exception("Must not detach")).Detached,"Worker idle acknowledged without native action");
         var failed=new PlcDisconnectState();int attempts=0;
@@ -56,7 +64,8 @@ internal static class DisconnectTests
             using var worker=new WorkerClient("17","/missing/never-launch-worker","/missing/no-api",enabled);
             var ack=await worker.Call("Disconnect",new JsonObject(),CancellationToken.None);
             DisconnectContract.Validate(ack,false,null,true);
-            check(JsonNode.DeepEquals(ack,await worker.Call("Disconnect",new JsonObject(),CancellationToken.None)),"Host idle disconnect repeats without launch");
+            check(JsonNode.DeepEquals(ack,await worker.Call("Disconnect",new JsonObject(),CancellationToken.None)),
+                    "Host idle disconnect repeats without launch");
             check(worker.OperatorSnapshot()["pid"] == null, "Idle disconnect leaves the configured worker unstarted");
         }
         string reconnectExe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
@@ -113,7 +122,8 @@ internal static class DisconnectTests
             DisconnectContract.Validate(await worker.Call("Disconnect",new JsonObject(),CancellationToken.None),false,null,true);
         }
         var fake=new FakeWorker();var tool=FoundationTools.Create(fake).Single(t=>t.ProtocolTool.Name=="DisconnectPortal");
-        var request=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams{Name="DisconnectPortal",Arguments=new Dictionary<string,JsonElement>()} };
+        var request=new RequestContext<CallToolRequestParams>(server) {
+            Params=new CallToolRequestParams{Name="DisconnectPortal",Arguments=new Dictionary<string,JsonElement>()} };
         await tool.InvokeAsync(request);
         check(fake.Operation=="Disconnect" && fake.Arguments!.Count==0,"Public Disconnect requires no project or dryRun");
     }
@@ -203,6 +213,9 @@ public sealed class FoundationRecoveryTests
             "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) {
             Bundled = false, SharedSession = release is "20" or "21" };
+        var services = FoundationHostPorts.CreateServices(worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
+        using var engineSession = pipeline.EnterSession();
         var tools = new[] { "ConnectPortal", "AttachOpenProject", "DisconnectPortal", "GetSessionState" }
             .Select(name => (ModelContextProtocol.Server.McpServerTool)new FoundationV4Tool(
                 new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == name), worker),
@@ -288,6 +301,9 @@ public sealed class FoundationRecoveryTests
                 "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) {
                 Bundled = false, SharedSession = release is "20" or "21" };
+            var services = FoundationHostPorts.CreateServices(worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
+            using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
+            using var engineSession = pipeline.EnterSession();
             await worker.Call("ReadState", new(), CancellationToken.None);
             int previousPid = (int)worker.OperatorSnapshot()["pid"]!;
             await worker.Call("Disconnect", new(), CancellationToken.None);
@@ -465,26 +481,31 @@ public sealed class FoundationRecoveryTests
     public async Task Foundation_channel_preserves_the_live_holder_refusal_without_poisoning(string release)
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths
+            .WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
         foreach (var item in new[] { (904, TiaOpenness.Shared.SessionBehavior.LeaseReserved) })
         {
-            var failure = await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("Attach", new JsonObject { ["processId"] = item.Item1 }, CancellationToken.None));
+            var failure = await Assert
+                .ThrowsAsync<WorkerOperationException>(() => worker.Call("Attach", new JsonObject { ["processId"] = item.Item1 }, CancellationToken.None));
             Assert.Equal(item.Item2, FoundationV4Result.WorkerRejection(failure).Message);
             Assert.Equal("rejected-before-operation", failure.Outcome);
             Assert.False(worker.Faulted);
         }
-        var hidden = await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Call("Attach", new JsonObject { ["processId"] = 902 }, CancellationToken.None));
+        var hidden = await Assert
+            .ThrowsAsync<WorkerOperationException>(() => worker.Call("Attach", new JsonObject { ["processId"] = 902 }, CancellationToken.None));
         Assert.DoesNotContain("Internal secret", FoundationV4Result.WorkerRejection(hidden).Message);
         await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
         await worker.Call("Disconnect", new JsonObject(), CancellationToken.None);
     }
 
-    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"),
+            InlineData("21")]
     public async Task Answered_unknown_can_detach_and_a_new_foundation_worker_can_attach(string release)
     {
         string exe = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
-        TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
+        TiaMcp.Engine.Tests.Shared.TestPaths
+            .WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
         await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
         using (TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation("prior-foundation-unknown"))

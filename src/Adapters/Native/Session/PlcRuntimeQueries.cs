@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using Siemens.Engineering;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Adapters
 {
@@ -17,6 +18,31 @@ namespace TiaMcp.Adapters
                 IsLocalSession=lifecycle.IsLocalSession };
         }
         // GetProcesses returns diagnostic snapshots; no Portal(), Project(), Attach(), launch or disposal.
+        public PlcRecoveryProcess[] ReadRecoveryProcesses()
+        {
+            Check();
+            var rows = new List<PlcRecoveryProcess>();
+            foreach (var process in TiaPortal.GetProcesses())
+            {
+                string? start = null;
+                try
+                {
+                    using (var observed = Process.GetProcessById(process.Id))
+                    {
+                        var before = observed.StartTime.ToUniversalTime();
+                        if (!observed.HasExited && observed.StartTime.ToUniversalTime() == before)
+                            start = before.ToString("O", CultureInfo.InvariantCulture);
+                    }
+                }
+                catch (Exception error) when (error is ArgumentException || error is InvalidOperationException
+                    || error is System.ComponentModel.Win32Exception || error is System.Security.SecurityException)
+                { /* swallow(env-probe): unavailable OS identity excludes the same-PID fast path. */ }
+                rows.Add(new PlcRecoveryProcess { ProcessId = process.Id, ProcessStartUtc = start,
+                    ProjectPath = process.ProjectPath?.FullName, AttachedSessions = process.AttachedSessions.Count });
+            }
+            return rows.ToArray();
+        }
+
         public PlcProcessQuery ReadPortalProcessProjects()
         {
             Check();

@@ -185,6 +185,9 @@ internal static class FoundationV4Result
         var details = HostBehavior.FailureEvidence(exceptionType, dispatched && nativeDiagnostic ? exception.Message : null, native: worker != null);
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         bool readCancelled = dispatched && !mutation && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
+        if (kind == TiaOpenness.Shared.HostFailureKind.Unknown && exception.Data["workerRecoveryMessage"] is string recoveryMessage)
+            return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
+                new Error(HostBehavior.SafeDiagnostic(recoveryMessage)!, new OutcomeUnknownDetails("tool-call", details, reason)), true, true);
         return Wire(release, name, id, data, readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind),
             readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
