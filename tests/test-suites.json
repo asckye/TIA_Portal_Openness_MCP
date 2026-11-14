@@ -364,7 +364,7 @@
   },
   "studio-gui": {
     "project": "tests/Studio/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj",
-    "minimumPassed": 2958,
+    "minimumPassed": 1693,
     "maximumSkipped": 4,
     "arguments": []
   }

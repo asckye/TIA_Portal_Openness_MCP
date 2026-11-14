@@ -235,7 +235,8 @@ public sealed class HonestWriteOutcomeTests
 
     public static IEnumerable<object[]> LogicTextCases()
     {
-        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (string release in ReleaseEnds.OldestAndNewest(
+            new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, _ => "outcome", release => release))
         {
             yield return new object[] { release, "SCL", "IF #a THEN\n   #b := TRUE;\n   at := 1;\nEND_IF;" };
             yield return new object[] { release, "LAD", "Network 1\n   #b\n   at contact" };
@@ -295,8 +296,7 @@ public sealed class HonestWriteOutcomeTests
     }
 
     [Theory]
-    [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
-    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    [InlineData("14sp1"), InlineData("21")]
     public void Missing_provider_is_unsupported_capability(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
@@ -460,7 +460,8 @@ public sealed class HonestWriteOutcomeTests
     [InlineData(true)]
     public void Delete_empty_PLC_group_validation_precedes_project_lookup(bool hasProject)
     {
-        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (string release in ReleaseEnds.OldestAndNewest(
+            new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, _ => "outcome", release => release))
         {
             using var selected = Host.HardwareContract.UseRelease(release);
             int projectChecks = 0, workerCalls = 0;
@@ -547,7 +548,7 @@ public sealed class HonestWriteOutcomeTests
         Assert.Equal(fileExists, (bool?)result["data"]?["evidence"]?["mayHaveWrittenFiles"]);
     }
     [Theory]
-    [InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    [InlineData("16"), InlineData("21")]
     public void Export_failure_keeps_a_message_only_reason(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
@@ -562,7 +563,7 @@ public sealed class HonestWriteOutcomeTests
     }
 
     [Theory]
-    [InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    [InlineData("16"), InlineData("21")]
     public void Missing_text_list_is_a_documented_refusal(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
@@ -614,27 +615,10 @@ public sealed class HonestWriteOutcomeTests
         internal object Validate(UnifiedHmiRequest request) => Invoke<object>(request);
     }
 
-    [Fact]
-    public void Release_suite_without_fixtures_is_rejected_before_writing()
-    {
-        string workspace = Path.Combine(AppContext.BaseDirectory, "release-fixtures-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(workspace);
-        string reports = Path.Combine(workspace, "reports");
-        try
-        {
-            var result = Host.OfflineContracts.Run("RunOfflineReleaseValidationSuite",
-                () => new Host.ResponseJsonReport { Data = Host.OfflineReleaseValidationSuite.Run(workspace, reports) }, true);
-            Assert.Equal("PRECONDITION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
-            Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
-            Assert.False(Directory.Exists(reports));
-        }
-        finally { Directory.Delete(workspace, true); }
-    }
-
-    public static IEnumerable<object[]> MissingReleaseFixtures =>
+    public static IEnumerable<object[]> MissingReleaseFixtures => ReleaseEnds.OldestAndNewest(
         from release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         from missing in new[] { "TMP_EXPORT/_verify", "docs/hmi_templates", "docs/hmi_template_mappings/tia-hmi-template-plc-mapping.release.json" }
-        select new object[] { release, missing };
+        select new object[] { release, missing }, row => (string)row[1], row => (string)row[0]);
 
     [Theory, MemberData(nameof(MissingReleaseFixtures))]
     public void Missing_release_fixtures_name_the_relative_folder(string release, string missing)

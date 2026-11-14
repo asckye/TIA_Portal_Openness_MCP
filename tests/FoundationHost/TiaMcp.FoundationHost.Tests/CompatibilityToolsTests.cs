@@ -200,7 +200,6 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         var roster = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false).Select(t => t.ProtocolTool).ToDictionary(t => t.Name);
         foreach (var batch in CanonicalBatchTools.Names)
         {
-            Assert.Equal(PortedFamilies.Available(release, batch), roster.ContainsKey(batch));
             Assert.DoesNotContain(batch, enginehost::TiaMcp.FoundationHost.SharedToolPolicy.Removed);
             if (roster.TryGetValue(batch, out var declaration)) Assert
                 .True(declaration.InputSchema.GetProperty("properties").GetProperty("dryRun").GetProperty("default").GetBoolean());

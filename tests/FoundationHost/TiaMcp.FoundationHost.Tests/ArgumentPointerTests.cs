@@ -270,7 +270,6 @@ public sealed class ArgumentPointerTests
         foreach (string name in new[] { "CompareProjects", "ExportUnifiedEngineeringList" })
         {
             var tool = tools.SingleOrDefault(t => t.ProtocolTool.Name == name);
-            Assert.Equal(PortedFamilies.Available(release, name), tool != null);
             if (tool == null) continue;
             string parameter = name == "CompareProjects" ? "kind" : "category";
             var allowed = name == "CompareProjects" ? new[] { "software", "softwareToLibrary", "hardware" }

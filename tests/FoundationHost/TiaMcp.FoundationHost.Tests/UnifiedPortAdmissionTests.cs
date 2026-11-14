@@ -545,6 +545,15 @@ public sealed class UnifiedPortAdmissionTests
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.Equal(0, worker.Calls);
     }
+    // Authored approval boundary: keep this independent of declaration markers.
+    private static readonly HashSet<string> ApprovalGatedTools = new(StringComparer.Ordinal) {
+        "SetUnifiedObjectProperties", "SetUnifiedMultilingualProperty", "ManageUnifiedLoggingTag",
+        "SetUnifiedLogDuration", "ManageUnifiedOpcUaAlarmType", "ManageUnifiedPlantNode", "SetUnifiedPlantObject",
+        "ManageUnifiedObjectParts", "ManageUnifiedDynamization", "ManageUnifiedScreenLayout", "ManageUnifiedListEntries",
+        "ImportUnifiedEngineeringList", "ManageUnifiedEngineeringObject", "ManageUnifiedEvent",
+        "ImportUnifiedOpcUaAlarms", "SetUnifiedGlobalScript", "SetUnifiedRuntimeSettings"
+    };
+
     public static IEnumerable<object[]> ApprovalCases
     {
         get
@@ -553,11 +562,11 @@ public sealed class UnifiedPortAdmissionTests
             foreach (var family in PortedFamilies.All.Where(f => f.Name is "F27" or "F28"))
             foreach (var name in family.Tools.Where(n => PortedFamilies.Available(release, n)))
             {
-                bool classifiedWrite = Method(name).GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()!.Description.Contains("[WRITE]", StringComparison.Ordinal);
-                if (!classifiedWrite && name is not ("ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" or "ImportUnifiedOpcUaAlarms" or "ExportUnifiedEngineeringList")) continue;
+                bool alwaysGated = ApprovalGatedTools.Contains(name);
+                if (!alwaysGated && name is not ("ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" or "ExportUnifiedEngineeringList")) continue;
                 foreach (var preview in new[] { true, false })
                 foreach (var action in name is "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" ? new[] { "import", "export" } : new[] { "read" })
-                    yield return new object[] { release, name, preview, action, !preview && (classifiedWrite || name == "ImportUnifiedOpcUaAlarms" || action == "import") && name != "ExportUnifiedEngineeringList" };
+                    yield return new object[] { release, name, preview, action, !preview && (alwaysGated || action == "import") };
             }
         }
     }

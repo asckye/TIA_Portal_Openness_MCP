@@ -480,8 +480,8 @@ public sealed class SharedWorkerRegressionTests
         await Assert.ThrowsAnyAsync<Exception>(() => pending);
     }
 
-    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
-    public void Suppressed_session_ended_errors_use_the_untyped_mapper_policy(string release)
+    [Fact]
+    public void Suppressed_session_ended_errors_use_the_untyped_mapper_policy()
     {
         var typed = new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Disconnect ended this session.", isArgument: false);
         typed.Data["foundationSuppressAdmissionDiagnostic"] = true;

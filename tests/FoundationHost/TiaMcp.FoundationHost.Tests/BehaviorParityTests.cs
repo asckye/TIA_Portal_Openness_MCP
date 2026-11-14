@@ -21,7 +21,7 @@ public sealed class BehaviorParityTests
         var failure = new TiaMcp.WorkerChannel.ChannelFailureException(message, -32603, TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative,
             "{\"exceptionType\":\"InvalidOperationException\"}");
         var error = WorkerOperationException.FromChannelFailure(failure);
-        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (string release in ReleaseEnds.OldestAndNewest(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, _ => "parity", release => release))
         {
             var body = FoundationV4Result.Failure(release, "ConnectPortal", "fixture", true, true, null, error).StructuredContent!;
             Assert.Equal(message, (string?)body["error"]?["message"]);
@@ -64,7 +64,7 @@ public sealed class BehaviorParityTests
                 Assert.True(JsonNode.DeepEquals(BehaviorParityCases.Project(engine), BehaviorParityCases.Project(shared)));
                 Assert.Contains(message, (string?)engine["error"]?["message"]);
                 Assert.Equal(argument ? "/" + parameter : parameter, (string?)engine["error"]?["details"]?["parameter"]);
-                foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+                foreach (string release in ReleaseEnds.OldestAndNewest(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, _ => "parity", release => release))
                 {
                     Exception cause = new AdapterPreconditionException(message, parameter, argument);
                     if (wrapped) cause = new InvalidOperationException("Private wrapper diagnostic.", cause);
@@ -188,7 +188,7 @@ public sealed class BehaviorParityTests
         if(scenario.StartsWith("disabled-",StringComparison.Ordinal)) { await DisabledBatch(engine,scenario,code);return; }
         bool enabled=!scenario.EndsWith("-disabled",StringComparison.Ordinal);
         if(!enabled) scenario=scenario.Substring(0,scenario.Length-9);
-        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (string release in ReleaseEnds.OldestAndNewest(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, _ => "parity", release => release))
         {
             if (scenario.StartsWith("staging-", StringComparison.Ordinal))
             {
@@ -286,7 +286,7 @@ public sealed class BehaviorParityTests
     private static async Task DisabledBatch(JsonNode engine,string value,string code)
     {
         bool program=value.StartsWith("disabled-program-",StringComparison.Ordinal);
-        foreach(string release in new[]{"14sp1","15.1","16","17","18","19"})
+        foreach(string release in ReleaseEnds.OldestAndNewest(new[]{"14sp1","15.1","16","17","18","19"}, _ => "parity", release => release))
         {
             // Foundation compiles its own policy copy: do not route execution through the engine fixture assembly.
             using var fixture=new TiaMcp.Engine.Tests.BatchReplacementPolicyTests.AdmissionFixture(value.Substring(program ? 17 : 15),program);

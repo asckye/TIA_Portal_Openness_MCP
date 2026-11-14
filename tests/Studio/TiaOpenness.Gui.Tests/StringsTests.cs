@@ -92,29 +92,14 @@ public class StringsTests(WpfContext wpf)
 
     [Theory]
     [MemberData(nameof(Entries))]
-    public void Neither_translation_is_blank(string key, string en, string zh)
+    public void Every_entry_has_nonblank_translations_matching_placeholders_and_valid_format(string key, string en, string zh)
     {
         Assert.False(string.IsNullOrWhiteSpace(en), key + " has no English text");
         Assert.False(string.IsNullOrWhiteSpace(zh), key + " has no Chinese text");
-    }
-
-    /// <summary>
-    /// A Chinese entry may reorder its placeholders - "{1} 中共 {0} 个程序块" is better Chinese
-    /// than the English order - but it must use the same set, or formatting throws at runtime.
-    /// </summary>
-    [Theory]
-    [MemberData(nameof(Entries))]
-    public void Both_translations_use_the_same_placeholders(string key, string en, string zh)
-    {
+        // Translations may reorder placeholders but must use the same set.
         Assert.True(IndexesIn(en).SequenceEqual(IndexesIn(zh)),
             key + ": English uses {" + string.Join("},{", IndexesIn(en)) +
             "} but Chinese uses {" + string.Join("},{", IndexesIn(zh)) + "}");
-    }
-
-    [Theory]
-    [MemberData(nameof(Entries))]
-    public void Every_entry_formats_without_throwing(string key, string en, string zh)
-    {
         var arguments = Enumerable.Range(0, HighestIndex(en) + 1).Cast<object?>().ToArray();
 
         // The exception this guards against is FormatException from a stray brace.

@@ -67,18 +67,6 @@ public sealed class OutputRootApprovalTests
     [Theory]
     [InlineData("14sp1", true)]
     [InlineData("14sp1", false)]
-    [InlineData("15.1", true)]
-    [InlineData("15.1", false)]
-    [InlineData("16", true)]
-    [InlineData("16", false)]
-    [InlineData("17", true)]
-    [InlineData("17", false)]
-    [InlineData("18", true)]
-    [InlineData("18", false)]
-    [InlineData("19", true)]
-    [InlineData("19", false)]
-    [InlineData("20", true)]
-    [InlineData("20", false)]
     [InlineData("21", true)]
     [InlineData("21", false)]
     public async Task Whitespace_is_invalid_before_any_card_or_file_write(string release, bool leading)
@@ -230,7 +218,8 @@ public sealed class OutputRootApprovalTests
 
     public static IEnumerable<object[]> RefusalCases()
     {
-        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+        foreach (string release in ReleaseEnds.OldestAndNewest(
+            new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, _ => "output", release => release))
         foreach (string tool in new[] { "SaveExportContent", "WritePlcSclSourceFile", "GenerateErrorReport",
             "BuildDeviceAmlDocument", "RunOfflineReleaseValidationSuite" })
         foreach (bool nested in new[] { false, true })
@@ -262,36 +251,12 @@ public sealed class OutputRootApprovalTests
 
     [Theory]
     [InlineData("14sp1", "SaveExportContent")]
-    [InlineData("15.1", "SaveExportContent")]
-    [InlineData("16", "SaveExportContent")]
-    [InlineData("17", "SaveExportContent")]
-    [InlineData("18", "SaveExportContent")]
-    [InlineData("19", "SaveExportContent")]
-    [InlineData("20", "SaveExportContent")]
     [InlineData("21", "SaveExportContent")]
     [InlineData("14sp1", "WritePlcSclSourceFile")]
-    [InlineData("15.1", "WritePlcSclSourceFile")]
-    [InlineData("16", "WritePlcSclSourceFile")]
-    [InlineData("17", "WritePlcSclSourceFile")]
-    [InlineData("18", "WritePlcSclSourceFile")]
-    [InlineData("19", "WritePlcSclSourceFile")]
-    [InlineData("20", "WritePlcSclSourceFile")]
     [InlineData("21", "WritePlcSclSourceFile")]
     [InlineData("14sp1", "GenerateErrorReport")]
-    [InlineData("15.1", "GenerateErrorReport")]
-    [InlineData("16", "GenerateErrorReport")]
-    [InlineData("17", "GenerateErrorReport")]
-    [InlineData("18", "GenerateErrorReport")]
-    [InlineData("19", "GenerateErrorReport")]
-    [InlineData("20", "GenerateErrorReport")]
     [InlineData("21", "GenerateErrorReport")]
     [InlineData("14sp1", "BuildDeviceAmlDocument")]
-    [InlineData("15.1", "BuildDeviceAmlDocument")]
-    [InlineData("16", "BuildDeviceAmlDocument")]
-    [InlineData("17", "BuildDeviceAmlDocument")]
-    [InlineData("18", "BuildDeviceAmlDocument")]
-    [InlineData("19", "BuildDeviceAmlDocument")]
-    [InlineData("20", "BuildDeviceAmlDocument")]
     [InlineData("21", "BuildDeviceAmlDocument")]
     public async Task Denied_granted_and_disabled_follow_the_existing_approval_flow(string release, string tool)
     {

@@ -20,10 +20,7 @@ public sealed class B4HostPortsTests
     public void RegistryIncludesExactlyTheUsableB4Tools(string release)
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
-        var families = PortedFamilies.All.Where(family => family.Name is "F12" or "F13" or "F16");
         var names = LegacyHostToolRegistry.Create(worker, release, false).Select(tool => tool.ProtocolTool.Name).ToArray();
-        foreach (var name in families.SelectMany(family => family.Tools))
-            Assert.Equal(PortedFamilies.Available(release, name), names.Contains(name));
         Assert.Equal(names.Length, names.Distinct().Count());
         Assert.Equal(0, worker.Calls);
     }

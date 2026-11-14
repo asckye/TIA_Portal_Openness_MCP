@@ -23,6 +23,115 @@ public sealed class B3HostPortsTests
         ["CreateGsdDevice"] = 18
     };
 
+    // Frozen authored roster: changes to PortedFamilies must not move both sides of the assertion.
+    private static readonly IReadOnlyDictionary<int, string> PortedRoster = new Dictionary<int, string> {
+        [14] = """
+            AnalyzeGlobalLibraryPackage AnalyzeHmiTemplateReference AnalyzePlcReferences AnalyzePlcSclSource ApplyToolBatch
+            AttachDeviceNodeToSubnet AuditEngineeringExports BuildAndImportPlcArtifact BuildDeviceAmlDocument BuildProjectScaffold
+            BuildReleaseDiagnosticReport BuildReleaseHandoffArtifacts BuildReleaseManifest BuildReleaseRunbook CallTool CheckLibraryUpdates
+            CheckProductUpdate ClearExportHandles ComparePlcBlockDocuments CompareProjects CompareSoftwareToOnline CompileDevice
+            CompileHmiDiagnostics ConfigureMotionHardwareConnection ConnectDeviceNodesToProfinetSubnet ConnectIsolatedPortal
+            ConnectOnlinePlc CreateDevice CreateLibraryMasterCopy CreatePlcBlockGroup CreatePlcTypeGroup DeleteEmptyPlcBlockGroup
+            DeleteExportHandle DeleteHmiTag DeletePlcBlock DeletePlcTagTable DeletePlcType DescribeHmiScreen DescribeHmiSoftware
+            DescribeHmiTag DescribeHmiTagTable DescribeObject DescribeObjectProperty DescribePlcBlockLogic DescribeService
+            DisconnectOnlinePlc DisconnectOnlinePlcs EnsureOpennessUserGroup EnsureSubnet ExportDeviceAml ExportHmiConnection
+            ExportHmiProgram ExportHmiScreen ExportHmiTagTable ExportProjectTexts ExportTechnologyObjectsToDirectory ExtractPlcBlockMetrics
+            FindTools GenerateAcceptanceReport GenerateErrorReport GeneratePlcDocumentation GeneratePlcSourceFromBlocks
+            GetClassicHmiGlobalization GetClassicHmiScreenTree GetDeviceAddressing GetDeviceAttributes GetDeviceInfo GetDeviceIpAddress
+            GetDeviceItemInfo GetDeviceItemIoAddresses GetDeviceItemNetworkInfo GetDeviceItemTree GetDevicePlugLocations GetDriveParameters
+            GetEnvironmentDiagnostics GetExportContent GetHardwareFeatures GetHmiProgramInfo GetHmiScreenSnapshot GetLibraryOverview
+            GetLibraryType GetMotionAxisConfiguration GetNativeInvocationLog GetObjectProperty GetOnlineState GetOpennessCompatibility
+            GetOpennessGuidance GetOpennessWorkerStatus GetPlcBlockEditCapabilities GetPlcBlockScopes GetPlcLiveValuesOpcUa
+            GetPlcLiveValuesS7 GetPlcRunStateS7 GetPlcSimAdvancedTags GetPlcTagTableConstants GetPlcWebDiagnostics GetPlcWebVars
+            GetPortalInfo GetProjectSettings GetProjectTopology GetTechnologyObjectTree GetUnifiedRuntimeAlarms GetUnifiedRuntimeTags
+            GetV21EcosystemCatalog ImportDeviceAml ImportHmiConnection ImportHmiScreen ImportHmiScreensFromDirectory ImportHmiTagTable
+            ImportHmiTagTablesFromDirectory ImportPlcBlockVerified ImportPlcTagTablesFromDirectory ImportProjectTexts
+            InitializeSimotionScripting InstantiatePlcTemplates InvokeObject InvokeService InvokeUnifiedOpenPipe ListClassicHmiFaceplates
+            ListClassicHmiScripts ListDeviceItemChannels ListDevices ListDriveObjects ListExportHandles ListHmiConnections
+            ListHmiScreenPaths ListHmiScreens ListHmiTagTables ListHmiTags ListIoSystems ListObjectChildren ListPlcSimAdvancedInstances
+            ListPlcSystemGroups ListToolCategories ListTransferRoutes ManageClassicHmiCycle ManageClassicHmiFolder ManageClassicHmiGraphic
+            ManageClassicHmiScreenObject ManageClassicHmiScript ManageClassicHmiTextGraphicList ManageDeviceUserGroup ManageDriveTelegrams
+            ManageGlobalLibrary ManageHardwareObject ManageHardwareUtilities ManageIoSystem ManageLibraryFolder ManageLibraryMasterCopy
+            ManageLibraryType ManageLibraryTypeVersion ManageMotionAxis ManagePlcExternalSources ManagePlcGitRepository
+            ManagePlcSimAdvancedInstance ManagePlcTagDefinition ManagePlcUserGroup ManagePortInterconnection ManageProjectLanguage
+            ManageStartdriveParameter ManageTechnologyObject MovePlcBlockToGroup PatchPlcBlockDocument PlanGlobalLibraryTemplateReuse
+            PlanHardwareNetworkConfiguration PlanOnlineReadOnlyDataProvider PlanOnlineReadOnlyMonitoring PlugDeviceItem PreviewToolBatch
+            PreviewToolCall ProbeGlobalLibrary ProbeHardwareHmiConnectionOwnerCandidates ProbeHardwareHmiConnectionWhitelistedServices
+            ProbeS7CpuIdentity RenderPlcBlockDocument RenderPlcVisualDiff RepairAndReimportPlcBlock RestartOpennessWorker
+            RunOfflineReleaseValidationSuite RunOnlineMonitoringSafetySelfTest RunPlcCompanionTool RunPlcSimAdvancedTestScenario
+            RunReadOnlyToolBatch RunToolTransaction SamplePlcLiveValuesS7 SaveExportContent ScanPlcSourceAnnotations
+            SearchInstalledGsdDevices SeedProjectFromReference SetDeviceAddress SetDeviceItemAttribute SetDeviceItemChannel
+            SetDeviceItemIoAddress SetPlcCpuSettings SetPlcWebOperatingMode ShowObjectInEditor SynchronizeLibrary TraceTagCause
+            TraceTagCauseLive ValidateAutomationContext ValidatePlcDocumentSchemas WritePlcSclSourceFile WritePlcSimAdvancedTags
+            WritePlcWebVars WriteUnifiedRuntimeTags
+            """,
+        [15] = """
+            ArchiveSavedProject CheckDownloadReadiness CreatePlcInstanceDb DownloadPlc ExchangeMotionCamData ExportOpcUaInterface
+            ExportPlcWatchTable ExportPlcWatchTablesToDirectory GenerateOpcUaModelledInterface GenerateSivarc GetOnlineDriveParameters
+            GetPlcChecksums GetPlcObjectFingerprints GetPlcOpcUaConfiguration GetPlcPutGetAccess GetPlcWatchTableCurrentValuesReadOnly
+            GetProjectProtection GetSivarcRuleTree ImportOpcUaInterface ImportPlcWatchTableOffline ListPlcForceTables ListSivarcRules
+            ListTransferAreas ManageDriveFunctions ManageOnlineDriveFunctions ManageOpcUaInterface ManagePlcBlockProtection
+            ManagePlcDataBlockSnapshot ManagePlcProtection ManagePlcTableEntries ManageSivarcRule ManageTransferArea MonitorPlcWatchTableS7
+            ProbePlcMonitorOnlineCapabilities RetrieveProjectArchive SaveProjectCopy SetOpcUaInterfaceEnabled SetPlcPutGetAccess
+            UploadStationFromPlc
+            """,
+        [16] = """
+            ConnectProjectToWorkspace CreateVersionControlWorkspace ExchangePlcAlarmTextLists ExportAlarmInstanceTexts ExportAlarmTextLists
+            GetDccObject GetPlcBlockFingerprints GetVersionControlStatus ImportAlarmTextLists ImportPlcAlarmInstanceTexts
+            ImportTechnologyObject ImportTechnologyObjectsFromDirectory ListDccCharts ListNetworkDomains ListPlcSoftwareUnits
+            ListVersionControlWorkspaces ManageDcbLibraries ManageDccChart ManageDeviceUsers ManageNetworkDomain ManagePlcCertificate
+            ManagePlcSoftwareUnit ManageProjectCompilationSettings ManageSafetyGlobalSettings ManageSinumerikArchive
+            ManageSinumerikSafetyMode ManageWatchForceTableWebAccess SetPlcUnitObjectAccess SynchronizeVersionControlWorkspace
+            """,
+        [17] = """
+            ExchangePlcSupervisions ExchangeSystemDiagnosticsSettings ExchangeTestSuiteCase ExportAlarmClasses ExportPlcProDiagInfo
+            ExportSafetyPrintout ExportScadaData GetProjectUserManagement GetSafetyBlockSignatures ImportAlarmClasses
+            ListSivarcBlockDefinitions ListTestSuiteCases ManageMultiuserSession ManagePlcSafety ManagePlcSupervision
+            ManageProjectUserManagement ManageSivarcBlockDefinition ManageTestSuiteCase ManageUmcUsers ManageUnifiedCwcPackage
+            RunTestSuiteCase SetPlcWatchTableModifyValue
+            """,
+        [18] = """
+            BuildClassicHmiScreen CompareLibraries CompareLibraryObjects CreateGsdDevice CreateHardwareCatalogDevice CreateHardwareDevice
+            ExchangeCfcCharts GeneratePlcLoadableFile GetPlcCrossReferences ImportSinumerikAlarmTexts ManageCfcChartProtection
+            ManageDccBlock ManageDccChartInterface ManageDccChartPartition ManageDccPin ManageDeviceServiceObjects ManagePasswordPolicy
+            ManagePlcAlarmTextList ManageSivarcRuleContainer ManageSivarcTableRule ManageTeamcenterConnection ManageTeamcenterDataset
+            ManageTeamcenterWorkflow ManageTechnologyExtensions SearchHardwareCatalog SetPlcProgram
+            """,
+        [19] = """
+            AnalyzeUnifiedHmiTemplateLayout ApplyUnifiedHmiLayout ApplyUnifiedHmiScreenDesign ApplyUnifiedHmiTheme
+            BindUnifiedHmiTagDynamization BuildUnifiedHmiButtonActionScript BuildUnifiedHmiLayoutDesign BuildUnifiedHmiTemplateApplyDesign
+            BuildUnifiedHmiTemplateApplyDesignManifest BuildUnifiedHmiThemeDesign CompareUnifiedGraphicSelections
+            DeleteEmptyUnifiedHmiScreenGroup DeleteUnifiedHmiButtonEvent DeleteUnifiedHmiDynamization DescribeHmiScreenItem
+            DescribeUnifiedHmiButtonEventScript DescribeUnifiedScreenItemType DownloadPlcToFolder EnsureUnifiedHmiButtonAction
+            EnsureUnifiedHmiButtonEventHandler EnsureUnifiedHmiConnection EnsureUnifiedHmiDynamization EnsureUnifiedHmiScreen
+            EnsureUnifiedHmiScreenItem EnsureUnifiedHmiTag EnsureUnifiedHmiTagTable ExchangeUnifiedScriptModules ExchangeUnifiedTags
+            GetUnifiedAlarmCommon GetUnifiedAuditSettings GetUnifiedCrossReferences GetUnifiedFaceplateInstance GetUnifiedGlobalScript
+            GetUnifiedGraphicSelection GetUnifiedHmiButtonEvent GetUnifiedHmiDynamization GetUnifiedHmiTexts GetUnifiedLibraryType
+            GetUnifiedObjectEvents GetUnifiedObjectProperties GetUnifiedPlantObject GetUnifiedRuntimeSettings GetUnifiedScreenBranch
+            ImportMasterCopyFromGlobalLibrary ImportUnifiedOpcUaAlarms ListUnifiedEngineeringObjects ListUnifiedGlobalScripts
+            ListUnifiedHmiApiTypes ListUnifiedLibraryFolderEntries ListUnifiedTagDefinitions ManageDriveHardwareModule ManageDriveSecurity
+            ManageSyslogServers ManageUnifiedDynamization ManageUnifiedEngineeringObject ManageUnifiedEvent ManageUnifiedHmiGroup
+            ManageUnifiedLoggingTag ManageUnifiedObjectParts ManageUnifiedOpcUaAlarmType ManageUnifiedPlantNode ManageUnifiedScreenItem
+            ManageUnifiedScreenLayout ReleaseUnifiedReadCursor RunHmiActionScriptRecipeSafetySelfTest RunHmiTemplatePlcSyncPrecheckSuite
+            ScanAccessibleDevices SetUnifiedGlobalScript SetUnifiedHmiButtonEventScriptCode SetUnifiedHmiRuntimeState SetUnifiedLogDuration
+            SetUnifiedMultilingualProperty SetUnifiedObjectProperties SetUnifiedPlantObject SetUnifiedRuntimeSettings ValidateUnifiedObject
+            """,
+        [20] = """
+            BuildFlgNetCall BuildPlcTagTable BuildStructuredText DecodePlcSimaticMl ExportPlcBlockDocuments ExportPlcBlocksDocuments
+            ExportUnifiedEngineeringList GetObjectIdentifier ImportLibraryTypeDocuments ImportPlcBlockDocuments ImportPlcBlocksDocuments
+            ImportUnifiedEngineeringList InspectSimaticSdCompatibility ManagePlcBlockDocuments ManagePlcDocuments ManageUnifiedListEntries
+            ResolveSivarcExpression RunClassicHmiOfflineValidationSuite RunClassicHmiTemporaryImportPreflight UpgradeSivarcDefinitions
+            ValidateClassicHmiMinimalPackageFiles ValidateClassicHmiMinimalPackagePlcSync WriteClassicHmiMinimalPackageFiles
+            """,
+        [21] = """
+            BindUnifiedHmiButtonPressedTag BuildClassicHmiMinimalPackage BuildClassicHmiTagTable BuildPlcAliasAlarmLad BuildPlcFbBlock
+            BuildPlcFcBlock BuildPlcLadFcBlock GetOpcUaAccessControl ListCommunicationConnections ListSafetyActivationTests
+            ManageCommunicationConnection ManageDriveSafetyAcceptanceTest ManageOpcUaAccessControl ManagePlcBlockWriteProtection
+            ManageSafetyActivationTest ManageSafetyActivationTestGroup ManageSafetyFunction ManageSafetyFunctionCondition
+            ManageSivarcScreenLayout UploadDeviceParameters
+            """,
+    };
+
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });
     [Theory, MemberData(nameof(Releases))]
     public async Task FindTools_summary_names_the_page(string release)
@@ -81,11 +190,16 @@ public sealed class B3HostPortsTests
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var registry = LegacyHostToolRegistry.Create(worker, release, false);
         var names = registry.Select(t => t.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
-        int count = registry.Count(t => !PortedFamilies.Contains(t.ProtocolTool.Name))
-            + PortedFamilies.All.SelectMany(f => f.Tools).Count(name => PortedFamilies.Available(release, name));
+        int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release);
+        var authoredNames = PortedRoster.Values.SelectMany(roster => roster.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .ToHashSet(StringComparer.Ordinal);
+        var expected = PortedRoster.Where(group => version >= group.Key)
+            .SelectMany(group => group.Value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .Where(name => name != "InitializeSimotionScripting" || version != 16).ToHashSet(StringComparer.Ordinal);
+        int count = registry.Count(t => !authoredNames.Contains(t.ProtocolTool.Name)) + expected.Count;
         Assert.Equal(count, names.Count);
-        foreach (string name in PortedFamilies.All.SelectMany(f => f.Tools))
-            Assert.Equal(PortedFamilies.Available(release, name), names.Contains(name));
+        Assert.Equal(expected.OrderBy(name => name, StringComparer.Ordinal),
+            names.Where(authoredNames.Contains).OrderBy(name => name, StringComparer.Ordinal));
         async Task<JsonNode> Invoke(string name, object arguments)
         {
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {

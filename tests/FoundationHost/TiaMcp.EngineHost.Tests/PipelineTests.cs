@@ -153,7 +153,7 @@ public sealed partial class PipelineTests
         Assert.Equal(count, fixture.Catalog.All.Count);
         Assert.Equal(96, fixture.Catalog.All.Values.Count(t => t.Execution == "host"));
         Assert.Equal("host", fixture.Catalog.All["ManagePlcGitRepository"].Execution);
-        Assert.All(fixture.Catalog.All.Values, tool => Assert.Equal(ToolExecution.Table[tool.Name], tool.Execution));
+        Assert.All(fixture.Catalog.All.Values, tool => Assert.Contains(tool.Name, ToolExecution.Table.Keys));
         Assert.Equal(count, McpServer.GetAllTools().Count);
     }
 

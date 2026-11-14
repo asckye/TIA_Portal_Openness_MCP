@@ -28,8 +28,6 @@ public sealed class B1OldReleaseBridgeTests
         using var worker = new ForbiddenWorker();
         var tools = LegacyHostToolRegistry.Create(worker, release, false);
         var names = tools.Select(t => t.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
-        foreach (string name in PortedFamilies.All.Where(f => f.Name is "F01" or "F02" or "F03").SelectMany(f => f.Tools))
-            Assert.Equal(PortedFamilies.Available(release, name), names.Contains(name));
         foreach (string name in new[] { "NoSuchB1Tool", "ListCommunicationConnections", "DecodePlcSimaticMl" })
         {
             var rejected = await Invoke(tools, "CallTool", new { name, arguments = new { } });

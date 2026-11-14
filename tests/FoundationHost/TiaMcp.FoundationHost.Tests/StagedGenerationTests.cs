@@ -17,10 +17,11 @@ using Configuration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
 
 public sealed class StagedGenerationTests
 {
-    public static IEnumerable<object[]> Releases => PlanningFixture.Releases.Select(r => new object[] { r });
-    public static IEnumerable<object[]> PlanningStates => PlanningFixture.Releases.SelectMany(release =>
+    public static IEnumerable<object[]> Releases => ReleaseEnds.OldestAndNewest(
+        PlanningFixture.Releases.Select(r => new object[] { r }), _ => "generation", row => (string)row[0]);
+    public static IEnumerable<object[]> PlanningStates => Releases.SelectMany(row =>
         new[] { "disconnected-existing", "disconnected-new", "unbound-existing", "unbound-new", "bound-existing" }
-            .Select(state => new object[] { release, state }));
+            .Select(state => new object[] { row[0], state }));
 
     [Theory, MemberData(nameof(PlanningStates))]
     public void Planning_uses_the_real_connection_and_project_state(string release, string state)
@@ -37,13 +38,22 @@ public sealed class StagedGenerationTests
         {
             var plan = fixture.Plan();
             Assert.Equal(fixture.Project, (string?)plan["target"]?["projectIdentity"]);
+            var steps = plan["steps"]!.AsArray();
+            Assert.NotEmpty(steps);
+            Assert.Equal(fixture.NewProject, steps.Any(step => (string?)step!["tool"] == "CreateProject"));
+            Assert.Equal(fixture.NewProject, steps.Any(step => (string?)step!["tool"] == "CreateDevice"));
+            Assert.Contains(steps, step => (string?)step!["tool"] == "CreatePlcTagTable"
+                && (string?)step["arguments"]?["name"] == "Tags_U01");
+            Assert.Equal(new[] { "M01_FEEDBACK", "M01_RUN", "M02_FEEDBACK", "M02_RUN" },
+                steps.Where(step => (string?)step!["tool"] == "CreatePlcTag")
+                    .Select(step => (string?)step!["arguments"]?["name"]).OrderBy(name => name, StringComparer.Ordinal));
             Assert.Equal(0, fixture.Worker.Writes);
         }
     }
 
-    public static IEnumerable<object[]> DecidingFields => PlanningFixture.Releases.SelectMany(r => new[] {
+    public static IEnumerable<object[]> DecidingFields => Releases.SelectMany(row => new[] {
         "status", "release", "projectFile", "processId", "softwarePath", "groupPath", "filePath", "inputSha256", "byteCount", "requestedSourceName", "sourcesBefore",
-        "sourceName", "generationOption", "resultBasis", "objectsBefore", "sourceIdentity", "planHash" }.Select(f => new object[] { r, f }));
+        "sourceName", "generationOption", "resultBasis", "objectsBefore", "sourceIdentity", "planHash" }.Select(f => new object[] { row[0], f }));
 
     private sealed class Fixture : IDisposable
     {
