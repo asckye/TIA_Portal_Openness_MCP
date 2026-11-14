@@ -2365,6 +2365,83 @@
           "identifier": "TiaMcp.Engine.Tests.WorkerPropertyAdmissionTests/Both_workers_match_the_original_contract_including_complete_refusal_details( string input ):9e1c35c3b4a0a9cdae305db4577afaa606a31508df5f229909dbd1ad2146a263:1"
         }
       ]
+    },
+    {
+      "task": "NO-LOCK-4",
+      "maintainerDate": "2026-11-14",
+      "reason": "Maintainer approved 2026-11-13: the worker recovers by itself instead of locking the host. Approved rows: five test renames whose subject changed from faults lock the host and require an explicit restart to recovery on the next native call, and eight removed assertions that asserted the permanent faulted state and the RestartOpennessWorker instruction, replaced by a successful call, state Running, a new generation and the WORKER_RESTARTED warning; plus the WarningCode count 15 to 16 with an added Assert.Contains for WorkerRestarted.",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs",
+          "kind": "test-removed",
+          "identifier": "PipelineTests/ProcessLossRefusesBeforeApproval( ):692f129587132c67401870d119034fd5965bc2c2df3691e18131c347a097cfce"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRunningTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRunningTests/Real_drained_fault_clears_busy_keeps_the_result_and_allows_restart( string release , string fault , bool read ):7d0078c5ba44c24d8639d7273705327d9b248d325104347b73e0fdcf3c04f4bd:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRunningTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRunningTests/Real_drained_fault_clears_busy_keeps_the_result_and_allows_restart( string release , string fault , bool read ):94ea1065b7f6d567bababeb7c0cfdbba9822c19f788c92c09ee868ebdc726704:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.NoLockTests/Real_worker_fault_refuses_before_approval( string release ):23e30601f735ee519f710aba2e3940b8b1f5e1015eed8964a9736a6044a86757"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Prechecks_and_other_invocations_do_not_consume_the_V4_fault( string release , string mode ):0b909316c4fc70daccab4c17b492e22ea62d8c40e2594d2c5f8c9856b0d1fc00:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Prechecks_and_other_invocations_do_not_consume_the_V4_fault( string release , string mode ):99d3dc836ce03ed3fc703bbe827ffc3ad66298a2f1504ce3beaa98f90f6c5f04:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "test-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Plc_faults_keep_the_V4_unknown_outcome_and_session_reset( string release , string mode ):65003e39b19c99f2c397247d85bf98c549c9bf36e815d13f84f78afec30381a1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "test-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Plc_faults_lock_the_host_and_require_explicit_restart( string release , string mode ):ea3bdc123e2b945fbbefab6a20095c89f4c978c70fd5208681abb2cdb478172d"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):43f6cec7d01b4289512d53d51e12ae773b71ba4c223cce06a529833718930acb:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):8ad4f0f461452e84cee039778d0cf3e51d26488f377feb75e138c3159660c4ed:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):dd53a69e3f66110bd7d7e2c6c18d547c70cae8cb895f6281b02e9b9751df30a6:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):dd56053820998b5172a8f14ab0e02154134a22740a9974c4f182a88de03e7849:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerRobustnessTests.cs",
+          "kind": "test-removed",
+          "identifier": "WorkerRobustnessTests/Read_failures_keep_their_outcome_and_real_transport_faults_require_explicit_restart( string release , bool shared , string mode ):390a3c853dcd718bbf56e25d3357a00e2c9740f45bc376393c3c70916211ac04"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4EnvelopeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4EnvelopeTests/NewTypesHaveNoSiemensOrMcpSdkReferences( ):4cb14c5d27e245d355f1217ce10b15407a70585a5cdfce5496b06924eb03e03b:1"
+        }
+      ]
     }
   ]
 }
