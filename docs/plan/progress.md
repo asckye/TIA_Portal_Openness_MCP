@@ -8,7 +8,7 @@
 
 - **2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归修复、NO-LOCK、DES-4R2/R3 和合并后的整理；API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF 共十项移到 beta.6，4.0 正式版仍以它们完成为条件，见[开发计划](plan.md)。
 
-- **2026-11-11 恢复开发。** beta.4 V21 回归的修复决定已全部批准，任务说明正在独立审查，审查后交 Codex 实现；归属表在维护者本机 `bin-build/refactor/tasks/VM-B4-MAP.md`。
+- **2026-11-11 恢复开发，2026-11-13 核对基线。** beta.4 V21 回归的修复主体已合并（VMFIX-6a、7A、7B、8、8B、9A、9B、10A、10B、10C、EXAMPLES-B4）；归属表在维护者本机 `bin-build/refactor/tasks/VM-B4-MAP.md`。beta.5 剩余工作逐条核实后列在[开发计划](plan.md#400-beta5)，判据为任务说明点名的源文件与测试是否存在并具备所述行为；提交信息不带任务编号，不能据此判断。
 - 当前版本 [`4.0.0-beta.4`](../releases/v4.0.0-beta.4.md) 已于 2026-11-05 发布为预发布（`48abffe8`），GitHub latest 仍为正式版 [v3.3.0](../releases/v3.3.0.md)。预发布不设为 latest，3.3 安装不提示升级。
 - beta.4 已集成默认写入预览、批次与安全移块、回滚日志、参数模型、会话恢复、原生原因、输出根审批、确认词、relay 与工作台页面重绘。所有这些变化仍待真实 TIA Portal 复验。
 - `prepare` 构建、打包、检查 ZIP 并上传私有草稿，完整候选准备已含新鲜依赖漏洞扫描。扫描接入前的构建打包实测约 6 分钟，不能作为含扫描的完整耗时。`publish-prepared` 公开封存候选，300 秒硬预算，beta.3 实测 6.9 秒。beta.4 的构建、打包和检查实测 347 秒；上传受本机网络影响，经本机代理约 4–54 KB/s，绕过代理约 148 KB/s（约 20 分钟），beta.3 约 350 KB/s（8 分 10 秒）。上传没有进度显示和超时，待修。
@@ -33,9 +33,14 @@
 | HANG-GUARD、FAST-GATE、TREND-ALERT | 已集成 `bc860ac7`、`1c4031b6`、`47437168`、`3c7a1a4b`，GUI 输入先独占，其余分片随后并行 | 保留所有功能和数量门槛，后续看主机趋势 |
 | CI-FIX4 | 已集成 `1d8eb834`、`327c3d82`、`6e4cc3a0`，会话导出句柄隔离、worker 重启清理、请求版本策略 | 多会话和 worker 重启仍待真机确认 |
 | APPROVAL-GATE | 已集成 `48abffe8`，打包审批检查换用能走到审批的写工具，新增无 Portal 时 `CreateDevice` 先被拒绝的检查 | 待真机复验 |
-| NO-LOCK-1 | 已集成至 `20a8fcc7`，去掉会话锁：结果不明的调用记入未确认清单，后续独立调用不再被拒绝，ADR 0034 | 第 3–8 部分进行中 |
-| NO-LOCK-2 | 已集成 `3295dad1`–`1dd4df49`，超时不再判故障或结束 worker：回答执行中，`GetCallResult` 取迟到结果，执行中拒绝重启和断开，同一写入未读前拒绝重发 | 第 3、5 部分已启动；待真机复验 |
+| NO-LOCK-1 | 已集成至 `20a8fcc7`，去掉会话锁：结果不明的调用记入未确认清单，后续独立调用不再被拒绝，ADR 0034 | 第 4、6、7、8 部分未完成 |
+| NO-LOCK-2 | 已集成 `3295dad1`–`1dd4df49`，超时不再判故障或结束 worker：回答执行中，`GetCallResult` 取迟到结果，执行中拒绝重启和断开，同一写入未读前拒绝重发 | 待真机复验 |
 | MEMBER-COMMENT | 已集成 `ace1ce4c`–`7d9886b3`，`PatchPlcBlockDocument` 的 `setMemberComment` 为 DB、FB/FC 接口和 UDT 成员加注释，八版 | UDT 无校验导入；待真机复验 |
+| NO-LOCK-3 | 已集成至 `7cfe4acb`，租约改为记录并带上一任未确认请求，断开后可在同一会话以新代次重连，去掉 `RequiresTiaRestart` 等需重启字段，新增 `PREVIOUS_OWNER_UNCLEAN` 警告 | 第 4 部分进行中；待真机复验 |
+| NO-LOCK-5 | 已集成至 `cc6e6d2e`，TIA 对话框随执行中答复报告，只应答仅「确定」的提示框，只读读取窗口标题，编译、下载、导入导出、归档与库更新预算 300 秒 | 待真机复验 |
+| DES-4R2 | 已集成 `46d02fd4`–`e356c135`，参数错误用 RFC 6901 指针定位字段，新增 `details.expected`，`CompareProjects.kind` 与 `ExportUnifiedEngineeringList.category` 声明枚举；未声明的调用方键名在八版所有路径上都不回显 | 八版契约基线已重新捕获；待真机复验 |
+| VMFIX-6a、7A、7B、8、8B、9A、9B、10A、10B、10C | 已集成，beta.4 V21 回归的确定结果误报、Unified 绑定与模板、可选组件加载、实时监视与删除确认、Classic HMI 绝对路径等 | 2026-11-13 对照 master 核实；待真机复验 |
+| EXAMPLES-B4、GUI-FLAKE | 已集成，工具示例改用 V21 实测参数并统一预览形式；GUI 测试左键状态读取稳定化 | 示例只对 V21 标注实测 |
 
 ## 2026-11-04、2026-11-05 决定与未完成项
 

@@ -129,29 +129,53 @@ beta.3 之后已合并：CI-FIX（`67ca6816`）、PREP-SLIM（`ccc8f7aa`、`d1a7
 
 ## 4.0.0-beta.5
 
-**2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归的修复、取消会话锁（NO-LOCK）、错误信息（DES-4R2/R3）和合并后的整理；下表中原属 beta.5 的十项新功能（API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF）移到 4.0.0-beta.6。4.0 正式版的条件不变，仍需这些任务在 beta.6 完成。
+**2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归的修复、取消会话锁（NO-LOCK）、错误信息（DES-4R2/R3）和合并后的整理；原属 beta.5 的十项新功能（API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF）移到 4.0.0-beta.6。4.0 正式版的条件不变，仍需这些任务在 beta.6 完成。
 
-DES-4 Parts 2、3 不阻塞 beta.4，继续在各自分支实现。TIDY-7、HOST-RENAME 和 LONG-LINE-GATE 必须等两部分合并，拆分与改名后的文件无法靠重命名检测跟随仍开的分支。V21 API 的 6 个 P1 缺口按 API 先行注册，带预览与读回，API-P1a 的第 0 部分先合并。T-IA 批次和生态小项先核对官方 API 再写说明。许可沿用 2026-10-30 决定。
+TIDY-7、HOST-RENAME 和 LONG-LINE-GATE 必须等 DES-4R2、DES-4R3 合并，拆分与改名后的文件无法靠重命名检测跟随仍开的分支。许可沿用 2026-10-30 决定。
+
+本表状态于 2026-11-13 逐条对照 master（`e356c135`）核实：判据是任务说明点名的源文件与测试是否存在并具备所述行为，辅以 `build-tools/release/baselines/approved-check-changes.json` 的 `task` 字段。提交信息不带任务编号，不能据此判断。
+
+### 已合并
+
+| 编号 | 内容 |
+|---|---|
+| VMFIX-6a | 工具提示去重、成员列表上限、随附示例 |
+| VMFIX-7A、7B | 确定的结果被报成未知（移块、工艺对象、交叉引用、批量文档导入、验证导入等） |
+| VMFIX-8 | Unified PLC 绑定变量、按钮事件脚本回归、动态化删除、主题颜色 |
+| VMFIX-8B | 从 VMFIX-8 审查 M3 拆出：Unified 模板布局尺寸、PLC 同步预检理由 |
+| VMFIX-9A | 可选 Openness 程序集按精确 SDK 标识加载，区分未安装与加载失败 |
+| VMFIX-9B | `PreviewToolCall` 与安全自检 |
+| VMFIX-10A | beta.4 回归的中等缺陷（第一批） |
+| VMFIX-10B | 实时监视判定、在线比较拒绝、离线库分析、删除确认 |
+| VMFIX-10C | 从 10A 拆出：Classic HMI 与 SiVArc 绝对路径 |
+| EXAMPLES-B4 | 用 V21 实测参数修正工具示例，只对 V21 标注实测 |
+| MEMBER-COMMENT | `PatchPlcBlockDocument` 的 `setMemberComment`，八版 |
+| GUI-FLAKE | GUI 测试稳定性（`WpfContext.ReadLeftButton`） |
+| NO-LOCK 1 | 一次调用结果不明不再连累后续调用，ADR 0034 |
+| NO-LOCK 2 | 到期不判故障、不结束 worker：回答执行中，`GetCallResult` 取迟到结果 |
+| NO-LOCK 3 | 租约改为记录，断开后可在同一会话重连，去掉需重启 TIA 的字段 |
+| NO-LOCK 5 | TIA 对话框随执行中答复报告，只应答仅「确定」的提示框，长调用预算 300 秒 |
+| DES-4R2 | 参数错误给出准确 JSON 指针、`details.expected` 与枚举允许值；未声明的调用方键名不回显 |
+
+### 未完成
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
-| VMFIX-7 | beta.4 回归：确定的结果被报成未知（移块、工艺对象、交叉引用、批量文档导入、验证导入等）。锁的部分归 NO-LOCK | 说明已写，决定已批准（2026-11-11），审查中 | 2026-11-05 |
-| NO-LOCK 1–5 | 取消锁会话，worker 自动恢复并重新绑定，到期不终止与忙状态，遗弃会话让出 TIA，回读确认 | 说明已写，决定已批准（2026-11-11），审查中；第 1 部分在 VMFIX-7 之后 | 2026-11-05 |
-| NO-LOCK 6 | 旧名称的脚本化改名与删除 | 排队（NO-LOCK 1–5、VMFIX-7、DES-4 Parts 2、3 之后） | 2026-11-05 |
-| VMFIX-8 | beta.4 回归：Unified PLC 绑定变量、按钮事件脚本（`1012d0b7` 引入的回归）、动态化删除、主题颜色、模板尺寸 | 说明已写，决定已批准（2026-11-11），审查中 | 2026-11-05 |
-| VMFIX-9 | beta.4 回归：可选组件被误报未安装（V21 上 39 个工具），`PreviewToolCall`，安全自检 | 说明已写，决定已批准（2026-11-11），审查中 | 2026-11-05 |
-| VMFIX-10A、10B | beta.4 回归的其余中等缺陷，按区域分两个分支 | 说明已写，决定已批准（2026-11-11），审查中 | 2026-11-05 |
-| EXAMPLES-B4 | 用 V21 实测参数修正工具示例，只对 V21 标注实测 | 说明已写，未审查，排在 VMFIX-6a 之后 | 2026-11-05 |
-| VMFIX-11 | beta.4 回归的低优先级余项，按文件区域分组（提议） | 未写说明 | 2026-11-05 |
-| DES-4R2（原 DES-4 Part 2） | 参数错误给出准确 JSON 指针、期望形式和枚举允许值，批量行前缀，调用方键名不回显，消息不串领域 | 2026-11-13 维护者批准从 master 收窄重做；旧分支 `refactor/DES-4-P2` 仅作参考，新分支合并后删除；说明审查中 | 2026-11-13 |
+| NO-LOCK 4 | worker 自己恢复并重新绑定工程 | 实现中，第三轮审查 | 2026-11-05 |
+| NO-LOCK 6 | 被遗弃的会话让出 TIA，正在工作的会话受保护 | 未开始（NO-LOCK 4 之后） | 2026-11-05 |
+| NO-LOCK 7 | 能回读确认的工具自己确认结果 | 未开始 | 2026-11-05 |
+| NO-LOCK 8 | 逐处重新归类旧标志，再删除旧名称 | 未开始（DES-4R3 之后） | 2026-11-05 |
+| DES-4R3（原 DES-4 Part 3） | 原生失败带去敏首行、`innererror`（异常类型、HResult、诊断编号），`GetNativeInvocationLog` 按诊断编号筛选和分页 | 说明已写，排在 NO-LOCK 第 4 部分合并之后；旧分支 `refactor/DES-4-P3` 仅作参考 | 2026-11-13 |
 | B21、B27、B28 | 从 DES-4 Part 2 拆出：三个工具补写入预览，硬件路径统一解析，预检预防措施按操作类别推导 | 未写说明，各自独立任务 | 2026-11-13 |
-| DES-4R3（原 DES-4 Part 3） | 原生失败带去敏首行、`innererror`（异常类型、HResult、诊断编号），一处去敏，`GetNativeInvocationLog` 按诊断编号筛选和分页 | 2026-11-13 批准收窄重做，排在 NO-LOCK 第 4 部分合并之后；旧分支 `refactor/DES-4-P3` 仅作参考 | 2026-11-13 |
-| VMFIX-6b | 参数与结果文字的剩余修正，D4 的参数细节跟随 DES-4 Part 2 | 排队（Part 2 之后） | 2026-11-05 |
-| TIDY-7 | 剩余大文件拆分与新增长行整理，保持行为和 IL | 排队（DES-4 Parts 2、3 合并后） | 2026-11-05 |
-| HOST-RENAME | `src/EngineHost` 改名，同步链接源、工程与文档路径 | 排队（DES-4 Parts 2、3 合并后） | 2026-11-05 |
-| LONG-LINE-GATE | 将 `wrap-long-lines -Check` 接入合并门 | 排队（上述拆分与改名后） | 2026-11-05 |
-| P8-97b | 单块、块组编译 | 并入 API-P1b | 2026-10-27 |
-| MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 排队（任务说明已写） | 2026-11-01 |
+| VMFIX-6b | 参数与结果文字的剩余修正，步骤失败状态与 NOT_FOUND 口径 | 说明已写（并入 `VMFIX-6A.md`），DES-4R2 已合并，可开工 | 2026-11-05 |
+| VMFIX-10D | S7DCL 准入与 PLC 文档差异（真机缺陷 M11、M13） | 说明已写，需要维护者开启虚拟机 | 2026-11-11 |
+| VMFIX-11 | beta.4 回归的低优先级余项，按文件区域分组 | 未写说明 | 2026-11-05 |
+| EXAMPLES-B4B | 示例中的工程名统一为 `ExampleProject`（EXAMPLES-B4 的 D4）；会改 V19/V20/V21 三份契约基线，须重新捕获 | 说明已写 | 2026-11-11 |
+| TIDY-7 | 剩余大文件拆分与新增长行整理，保持行为和 IL | 说明已写，排队（DES-4R2、DES-4R3 合并后） | 2026-11-05 |
+| HOST-RENAME | `src/EngineHost` 改名，同步链接源、工程与文档路径 | 未写说明，排队（同上） | 2026-11-05 |
+| LONG-LINE-GATE | 将 `wrap-long-lines -Check` 接入合并门 | 未写说明，排队（上述拆分与改名后） | 2026-11-05 |
+| MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 说明已写，排队 | 2026-11-01 |
+| P8-97b | 单块、块组编译 | 并入 API-P1b（beta.6） | 2026-10-27 |
 
 ## 4.0.0-beta.6（新功能，2026-11-13 从 beta.5 移入）
 
