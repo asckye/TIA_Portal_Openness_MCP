@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-14T09:53:10.1176464+00:00",
+  "generatedAt": "2026-11-14T11:18:19.0322479+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
-  "workerSha256": "b9fccc505e71b06ed3d3c2947bea47f020beec62eb5db63bafbd3eca31f06b11",
+  "workerSha256": "cffa9c35840f036096093cf361e71e7df6e9a44ff7db96c310bc05c774dabbbd",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2828,
+    "parameters": 2829,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 695,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
     "enumHints": 256,
-    "defaultHints": 1606,
+    "defaultHints": 1607,
     "examplesCurated": 518,
     "recipes": 40
   },
@@ -7710,9 +7710,10 @@
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [
-        "processId"
+        "processId",
+        "takeOver"
       ],
-      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Explicit existing process ID required; no launch or process ownership. Repeated attach refused. A first attach can wait for the TIA Portal Openness access dialog (Openness firewall); a denial (EngineeringSecurityException) is PRECONDITION_FAILED openness-access-denied with the AllowList steps. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectPortal\"), optionally operation or language.",
+      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Explicit existing process ID required; no launch or process ownership. Repeated attach refused. An idle attached MCP session in this host gives way after 10 minutes without requests, or with takeOver=true. Running calls, approval waits, Workbench sessions and worker-started portals stay protected. A first attach can wait for the TIA Portal Openness access dialog (Openness firewall); a denial (EngineeringSecurityException) is PRECONDITION_FAILED openness-access-denied with the AllowList steps. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ConnectPortal\"), optionally operation or language.",
       "example": "{\"processId\":12345}"
     },
     {
