@@ -2442,6 +2442,18 @@
           "identifier": "TiaMcp.Engine.Tests.V4EnvelopeTests/NewTypesHaveNoSiemensOrMcpSdkReferences( ):4cb14c5d27e245d355f1217ce10b15407a70585a5cdfce5496b06924eb03e03b:1"
         }
       ]
+    },
+    {
+      "task": "DES-4R3",
+      "maintainerDate": "2026-11-14",
+      "reason": "2026-11-14 maintainer approved: a native failure now reports a redacted first line instead of no message; the assertions forbidding worker-internal detail at :507-508 stay",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/WorkerFailuresRetainEvidenceAndDistinguishUnsentFromUnknown( ):95be9d9beb37f4124e2b25bee893ee28b2b848199a38dbb54a61fbf943371b00:1"
+        }
+      ]
     }
   ]
 }
