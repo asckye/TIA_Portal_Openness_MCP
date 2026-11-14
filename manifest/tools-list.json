@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-14T01:00:46.7779649+00:00",
+  "generatedAt": "2026-11-14T09:53:10.1176464+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "d78143528299d62fd05d363488a992067bfcf6fa5d1fc11685a0e3c004874c12",
-  "workerSha256": "066663d7304c4e123a56f5afaac056cc3f879f9a091c1bf615582893b68cfe56",
+  "workerSha256": "b9fccc505e71b06ed3d3c2947bea47f020beec62eb5db63bafbd3eca31f06b11",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2826,
+    "parameters": 2828,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 695,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
     "enumHints": 256,
-    "defaultHints": 1605,
+    "defaultHints": 1606,
     "examplesCurated": 518,
     "recipes": 40
   },
@@ -9821,9 +9821,11 @@
       "parameters": [
         "take",
         "requestId",
-        "sinceUtc"
+        "sinceUtc",
+        "diagnosticId",
+        "offset"
       ],
-      "description": "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument service-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Optional requestId and sinceUtc filters apply before take; matchedRecords counts all matches. Example: {\"take\":100} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetNativeInvocationLog\"), optionally operation or language.",
+      "description": "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument service-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500. Optional requestId, sinceUtc and diagnosticId (the failure's correlation id) filter before paging. offset 0..10000 skips newest matching rows; each page is chronological. nextOffset continues toward older rows; matchedRecords counts all matches, excluding this call's own rows. Example: {\"take\":100} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GetNativeInvocationLog\"), optionally operation or language.",
       "example": "{\"take\":100}"
     },
     {
