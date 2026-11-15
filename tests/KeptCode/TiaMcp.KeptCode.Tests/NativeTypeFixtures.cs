@@ -25,6 +25,10 @@ namespace Siemens.Engineering
         public object GetAttribute(string name);
     }
 }
+namespace Siemens.Engineering.HmiUnified
+{
+    public sealed class HmiSoftware { }
+}
 namespace TiaMcp.Engine.Tests
 {
     internal static class GraphicSelectionTests

@@ -10,6 +10,80 @@ using Xunit;
 public sealed class ExtensionFamilyReplyTests
 {
     [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Unified_preview_has_no_null_members(string release)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService(
+            (_, _) => throw new InvalidOperationException("An offline preview must not call the worker."), () => "fixture");
+        var response = service.EnsureUnifiedHmiScreen("HMI", "Overview");
+        var data = Host.UnifiedHmiContract.Map("EnsureUnifiedHmiScreen", response, true, false).StructuredContent!["data"]!.AsObject();
+        Assert.All(data, field => Assert.NotNull(field.Value));
+        Assert.True((bool)data["evidence"]!["dryRun"]!);
+
+        var connection = service.EnsureUnifiedHmiConnection("HMI");
+        var connectionData = Host.UnifiedHmiContract.Map("EnsureUnifiedHmiConnection", connection, true, false)
+            .StructuredContent!["data"]!.AsObject();
+        Assert.All(connectionData, field => Assert.NotNull(field.Value));
+
+        var values = Host.UnifiedHmiContract.Map("EnsureUnifiedHmiScreen", new {
+            Message = "Preview", Missing = (string?)null, Enabled = false, Count = 0, Text = "",
+            Nested = new { Missing = (string?)null, Enabled = false, Count = 0, Text = "" },
+            Meta = new { operationSuccess = true }
+        }, true, false).StructuredContent!["data"]!;
+        Assert.False(values.AsObject().ContainsKey("missing"));
+        Assert.False((bool)values["enabled"]!);
+        Assert.Equal(0, (int)values["count"]!);
+        Assert.Equal("", (string?)values["text"]);
+        Assert.False(values["nested"]!.AsObject().ContainsKey("missing"));
+        Assert.False((bool)values["nested"]!["enabled"]!);
+        Assert.Equal(0, (int)values["nested"]!["count"]!);
+        Assert.Equal("", (string?)values["nested"]!["text"]);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Graphic_selection_page_appears_once(string release)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        var page = JsonNode.Parse("""
+            {"scope":{"tool":"ReadUnifiedGraphicSelection","softwarePath":"HMI","expectedProject":"Fixture",
+                      "project":"Fixture","screenPath":"/Overview","itemNames":["Button"]},
+             "collectionId":"fixture","pageIndex":0,"apiCallSuccess":true,"operationSuccess":true,
+             "dataComplete":true,"traversalComplete":true,"truncated":false,"actualCount":2,"expectedCount":2,
+             "nextCursor":null,"records":[
+               {"path":"/Screens/Overview/ScreenItems/Button","status":"ok","kind":"graphicObject","name":"Button",
+                "type":"Siemens.Engineering.HmiUnified.UI.Controls.HmiButton","geometryComplete":true,"fields":{
+                  "Left":{"path":"/Screens/Overview/ScreenItems/Button/Left","kind":"value","status":"ok","value":0},
+                  "Top":{"path":"/Screens/Overview/ScreenItems/Button/Top","kind":"value","status":"ok","value":0},
+                  "Width":{"path":"/Screens/Overview/ScreenItems/Button/Width","kind":"value","status":"ok","value":120},
+                  "Height":{"path":"/Screens/Overview/ScreenItems/Button/Height","kind":"value","status":"ok","value":40}}},
+               {"path":"/Screens/Overview/$selection","status":"ok","kind":"graphicSelectionSummary"}],"failures":[]}
+            """)!.AsObject();
+        var response = new Host.ResponseMessage { Message = "Selection", Meta = page };
+        var result = Host.HmiInspectionContract.Map("GetUnifiedGraphicSelection", response, false, false, pageSize: 20).StructuredContent!;
+        var data = result["data"]!.AsObject();
+        Assert.True(JsonNode.DeepEquals(page, data["page"]));
+        Assert.Equal(new[] { "page", "summary" }, data.Select(field => field.Key).OrderBy(key => key, StringComparer.Ordinal));
+        Assert.Equal("Selection", (string?)data["summary"]);
+        Assert.Equal("succeeded", (string?)result["meta"]!["outcome"]);
+        Assert.True((bool)result["meta"]!["paging"]!["complete"]!);
+        string savedPages = new JsonArray(data["page"]!.DeepClone()).ToJsonString();
+        var pages = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(savedPages);
+        TiaMcp.Logic.V4.Domain.DomainValidation.GraphicSelections(pages, pages);
+        var comparison = enginehost::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(savedPages, savedPages);
+        Assert.Equal(0, (int)comparison["changedObjectCount"]!);
+
+        var other = Host.HmiInspectionContract.Map("GetUnifiedGlobalScript", response, false, false).StructuredContent!["data"]!;
+        Assert.True(JsonNode.DeepEquals(page["records"], other["records"]));
+        Assert.False(other.AsObject().ContainsKey("page"));
+    }
+
+    [Theory]
     [InlineData(nameof(NotSupportedException))]
     [InlineData(nameof(ArgumentException))]
     [InlineData(nameof(InvalidOperationException))]

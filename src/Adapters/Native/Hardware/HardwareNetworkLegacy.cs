@@ -134,12 +134,12 @@ namespace TiaMcp.Adapters
                 if (c.Target == null) continue;
                 if (!HardwareIsSafeHardwareHmiServiceProbeTarget(c.Target))
                 {
-                    lines.Add("Candidate: " + c.Label + " | type=" + c.Target.GetType().FullName + " | SKIP unsafe/high-level target");
+                    lines.Add("Candidate: " + c.Label + " | type=" + HardwarePublicType.Name(c.Target) + " | SKIP unsafe/high-level target");
                     continue;
                 }
 
                 lines
-                    .Add("Candidate: " + c.Label + " | type=" + (c.Target.GetType().FullName ?? c.Target.GetType().Name) + " | name="
+                    .Add("Candidate: " + c.Label + " | type=" + HardwarePublicType.Name(c.Target) + " | name="
                         + (TryGetName(c.Target) ?? "<unnamed>"));
                 foreach (var serviceType in serviceTypes)
                 {
@@ -160,7 +160,7 @@ namespace TiaMcp.Adapters
                         continue;
                     }
 
-                    lines.Add("  " + serviceType.Name + ": " + service.GetType().FullName + " | " + HardwareSummarizeWhitelistedService(service));
+                    lines.Add("  " + serviceType.Name + ": " + serviceType.FullName + " | " + HardwareSummarizeWhitelistedService(service));
                 }
             }
 

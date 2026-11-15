@@ -35,6 +35,7 @@
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareServiceObjectPolicy.cs" Link="Hardware/HardwareServiceObjectPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareUtilityPolicy.cs" Link="Hardware/HardwareUtilityPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetwork.cs" Link="Hardware/HardwareNetwork.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwarePublicType.cs" Link="Hardware/HardwarePublicType.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkPrimitives.cs" Link="Hardware/HardwareNetworkPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAml.cs" Link="Hardware/HardwareAml.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAmlPolicy.cs" Link="Hardware/HardwareAmlPolicy.cs" />

@@ -206,6 +206,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSourceDeletePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareAddressing.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetworkLegacy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwarePublicType.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareLegacyWrites.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareGroupCreation.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetwork.cs" />

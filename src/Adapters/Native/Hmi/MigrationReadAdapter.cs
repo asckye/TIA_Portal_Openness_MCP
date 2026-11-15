@@ -69,17 +69,17 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ReadUnifiedGlobalScript(string softwarePath, string expectedProject, string moduleName, string cursor = "", int pageSize = 50,
                 int budgetMs = 5000)
             =>
-                MigrationPage("ReadUnifiedGlobalScript", softwarePath, expectedProject, new HmiObject { ["moduleName"] = moduleName }, cursor, pageSize,
+                MigrationPage("GetUnifiedGlobalScript", softwarePath, expectedProject, new HmiObject { ["moduleName"] = moduleName }, cursor, pageSize,
                     budgetMs, hmi => UnifiedNativeRead.Script(hmi, moduleName));
         public HmiMessage ReadUnifiedTagDefinitions(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
             =>
-                MigrationPage("ReadUnifiedTagDefinitions", softwarePath, expectedProject, new HmiObject(), cursor, pageSize, budgetMs, UnifiedTagDefinitions
+                MigrationPage("ListUnifiedTagDefinitions", softwarePath, expectedProject, new HmiObject(), cursor, pageSize, budgetMs, UnifiedTagDefinitions
                     .Read);
         public HmiMessage ReadUnifiedScreenBranch(string softwarePath, string expectedProject, string screenPath, string itemName = "", string branchJson =
                 "[]", string cursor = "", int pageSize = 100, int budgetMs = 5000)
         {
             MigrationRead.ParseBranch(branchJson);
-            return MigrationPage("ReadUnifiedScreenBranch", softwarePath, expectedProject, new HmiObject {
+            return MigrationPage("GetUnifiedScreenBranch", softwarePath, expectedProject, new HmiObject {
                     ["screenPath"] = screenPath, ["itemName"] = itemName, ["branch"] = branchJson }, cursor, pageSize, budgetMs,
                 hmi => ScreenBranch(hmi, screenPath, itemName, branchJson));
         }
@@ -101,13 +101,13 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ReadUnifiedLibraryType(string softwarePath, string expectedProject, string typePath, string version, string cursor = "",
                 int pageSize = 100, int budgetMs = 5000)
             =>
-                MigrationPage("ReadUnifiedLibraryType", softwarePath, expectedProject, new HmiObject { ["typePath"] = typePath, ["version"] = version }, cursor,
+                MigrationPage("GetUnifiedLibraryType", softwarePath, expectedProject, new HmiObject { ["typePath"] = typePath, ["version"] = version }, cursor,
                     pageSize, budgetMs,
                 hmi => UnifiedNativeRead.LibraryType(MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, typePath, version));
         public HmiMessage ListUnifiedLibraryFolder(string softwarePath, string expectedProject, string folderPath = "/", string cursor = "", int pageSize = 100,
                 int budgetMs = 5000)
             =>
-                MigrationPage("ListUnifiedLibraryFolder", softwarePath, expectedProject, new HmiObject { ["folderPath"] = folderPath }, cursor, pageSize,
+                MigrationPage("ListUnifiedLibraryFolderEntries", softwarePath, expectedProject, new HmiObject { ["folderPath"] = folderPath }, cursor, pageSize,
                     budgetMs,
                 hmi => LibraryFolder(MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, folderPath));
         private static IEnumerable<HmiObject> LibraryFolder(object library, string path)
@@ -138,7 +138,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath = "",
                 string version = "", string cursor = "", int pageSize = 100, int budgetMs = 5000)
             =>
-                MigrationPage("ReadUnifiedFaceplateInstance", softwarePath, expectedProject, new HmiObject {
+                MigrationPage("GetUnifiedFaceplateInstance", softwarePath, expectedProject, new HmiObject {
                     ["screenPath"] = screenPath, ["itemName"] = itemName, ["typePath"] = typePath, ["version"] = version }, cursor, pageSize, budgetMs,
                 hmi => FaceplateInstance(hmi, MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, screenPath, itemName, typePath, version));
         private static IEnumerable<HmiObject> FaceplateInstance(object hmi, object library, string screenPath, string itemName, string typePath, string version)

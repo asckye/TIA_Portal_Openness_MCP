@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -54,7 +55,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult Map(string tool, object response, bool writes, bool current,
             int? offset = null, int? limit = null)
         {
-            var data = JsonSerializer.SerializeToNode(response, response.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.Web))!.AsObject();
+            var data = JsonSerializer.SerializeToNode(response, response.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.Web) {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull })!.AsObject();
             var evidence = data["meta"] as JsonObject ?? new JsonObject();
             data.Remove("meta");
             evidence.Remove("timestamp");

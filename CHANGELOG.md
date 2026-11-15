@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### Changed
+- Unified HMI replies omit null DTO members while retaining false, zero and empty strings on V19–V21.
+- `GetUnifiedGraphicSelection` returns selection evidence only in `data.page`, retaining the page accepted by `CompareUnifiedGraphicSelections`, on V19–V21.
+- Unified script, tag-definition, screen-branch, library and faceplate migration pages and request-failure records name their public tools in `scope.tool` and failure paths on V19–V21.
+- `ProbeHardwareHmiConnectionWhitelistedServices` displays public engineering types instead of implementation types across all eight releases.
+
 ### Fixed
 - Across all eight releases, adapter argument refusals identify the canonical field supplied by the caller.
 - Across all eight releases, batch admission refusals identify `/operations/<i>/name` and explain that the tool lacks a dry-run preview or batch permission, or is a batch or orchestration tool.

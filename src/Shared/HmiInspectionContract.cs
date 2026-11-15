@@ -115,11 +115,11 @@ namespace TiaMcpServer.ModelContextProtocol
             var nativeFailure = NativeResultState.FindUnsuccessful(evidence, tool);
             if (nativeFailure != null && NativeResultState.TryUnsuccessful(nativeFailure, writes, out var nativeOutcome, out var nativeError, tool))
             { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Partial; }
-            // This exact page is accepted by GraphicSelectionPage[] and retains
-            // the existing snapshot scope identifier, including its native label.
+            // GraphicSelectionPage[] accepts this complete page, including its scope.
             if (tool == "GetUnifiedGraphicSelection") data["page"] = evidence.DeepClone();
-            foreach (var pair in evidence)
-                if (pair.Key != "timestamp" && pair.Key != "tool" && pair.Key != "success") data[pair.Key] = pair.Value?.DeepClone();
+            else
+                foreach (var pair in evidence)
+                    if (pair.Key != "timestamp" && pair.Key != "tool" && pair.Key != "success") data[pair.Key] = pair.Value?.DeepClone();
             if (outcome == Outcome.Succeeded) data["summary"] = summary;
             return Result(tool, data, error, outcome, completeness, writes, current, paging,
                 Flag(evidence, "requiresExplicitRebind") == true || Flag(evidence, "connectionUnavailable") == true);

@@ -1,8 +1,22 @@
 using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Hardware;
 using Xunit;
 
 public sealed class HardwareIpNodesTests
 {
+    [Fact]
+    public void Probe_types_use_the_public_engineering_base_or_interface_and_hide_internal_names()
+    {
+        Assert.Equal("Siemens.Engineering.HW.ProbeTarget", HardwarePublicType.Name(new Siemens.Engineering.HW.ProbeTarget()));
+        Assert.Equal("Siemens.Engineering.HW.ProbeTarget", HardwarePublicType.Name(new InternalProbeTarget()));
+        Assert.Equal("Siemens.Engineering.HW.ProbeTarget", HardwarePublicType.Name(new Siemens.Engineering.HW.Internal.ProbeTarget()));
+        Assert.Equal("Siemens.Engineering.HW.IProbeService", HardwarePublicType.Name(new InternalProbeService()));
+        Assert.Equal("<unknown public engineering type>", HardwarePublicType.Name(new object()));
+    }
+
+    private sealed class InternalProbeTarget : Siemens.Engineering.HW.ProbeTarget { }
+    private sealed class InternalProbeService : Siemens.Engineering.HW.IProbeService { }
+
     [Fact]
     public void One_node_printed_in_twelve_forms_is_one_row()
     {
@@ -33,4 +47,15 @@ public sealed class HardwareIpNodesTests
 
     private static HardwareIpNode Node(string path) => new() { NodeName = "X1", Address = "192.0.2.1",
         NodeType = "Ethernet", ConnectedSubnet = "PN/IE_1", InterfacePath = path, IsIndustrialEthernet = true };
+}
+
+namespace Siemens.Engineering.HW
+{
+    public class ProbeTarget { }
+    public interface IProbeService { }
+}
+
+namespace Siemens.Engineering.HW.Internal
+{
+    public sealed class ProbeTarget : HW.ProbeTarget { }
 }

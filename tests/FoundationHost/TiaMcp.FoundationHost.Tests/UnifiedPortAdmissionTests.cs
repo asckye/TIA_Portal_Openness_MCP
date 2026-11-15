@@ -76,7 +76,7 @@ public sealed class UnifiedPortAdmissionTests
         var body = result.StructuredContent!.AsObject();
         Assert.DoesNotContain("Structured input was not decoded", body.ToJsonString(), StringComparison.Ordinal);
         Assert.True((bool?)body["ok"] == true, body.ToJsonString());
-        Assert.NotNull(body["data"]?["scope"]);
+        Assert.NotNull(name == "GetUnifiedGraphicSelection" ? body["data"]?["page"]?["scope"] : body["data"]?["scope"]);
         Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
         var received = Assert.Single(worker.Requests);
         Assert.Equal(name, received.Operation);
