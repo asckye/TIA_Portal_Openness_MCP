@@ -298,13 +298,17 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
                 Assert.True(trigger.Focus());
                 Assert.Same(trigger, Keyboard.FocusedElement);
                 bool? matchingOwner = null, safeFocus = null;
-                owner.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ContextIdle, new Action(() =>
+                // Register before the first render; ContentRendered follows the production Loaded focus assignment.
+                owner.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Normal, new Action(() =>
                 {
                     var picker = Application.Current.Windows.OfType<PortalProcessPicker>().Single();
-                    matchingOwner = picker.Owner == owner;
-                    var cancel = (Button)picker.FindName("CancelButton");
-                    safeFocus = Keyboard.FocusedElement == cancel;
-                    UnifiedDesktopTests.ClickControl(cancel);
+                    picker.ContentRendered += (_, _) =>
+                    {
+                        matchingOwner = picker.Owner == owner;
+                        var cancel = (Button)picker.FindName("CancelButton");
+                        safeFocus = Keyboard.FocusedElement == cancel;
+                        UnifiedDesktopTests.ClickControl(cancel);
+                    };
                 }));
                 var result = new WpfDialogService().PickPortalProcess(Processes());
                 WpfContext.Drain();
