@@ -19935,7 +19935,7 @@
           },
           "typeIdentifier": {
             "default": "",
-            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).",
+            "description": "typeIdentifier: technology-object type identifier, e.g. 'TO_PositioningAxis', 'TO_SpeedAxis' or 'PID_Compact'; required for create together with an officially supported version.",
             "type": "string"
           },
           "value": {

@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-15T03:46:34.0115474+00:00",
+  "generatedAt": "2026-11-15T10:26:58.3727513+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "f0112448c46f15c181b2a07705d91d2b559dd135c9b8a995975876ac36c33005",
-  "workerSha256": "3dcc7294a3076a6043d77d51a7f7fa0a95de417714664338c0fa37286835e8d4",
+  "workerSha256": "9b5db5f4415e61849988332fe97bf78573dd54da9f26a92daf70fb60d59fbff6",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
