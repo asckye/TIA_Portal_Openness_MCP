@@ -79,6 +79,20 @@ NO-LOCK Part 4 的真机核对当前为 NOT RUN。获准连接测试环境后，
 - 原生调用仍等待 TIA 对话框时，断开和重启应返回忙碌状态。自启 TIA 的存活 worker 应返回 `worker-owns-portal`。
 - 恢复后旧预览与事务编号应被拒绝，导出句柄应继续可读。显式重启后导出句柄失效。核对 TIA 在失去 worker 后对原生事务的实际处理。
 
+## V21 外部报告的风险复现
+
+其他开源项目公开报告了以下 V21 原生行为，我们尚未复现，当前均为 NOT RUN。只在工程副本中复现，先保存；每项记为“已复现”或“未复现”，并附调用编号和 TIA 版本号。已复现的项交给修复任务加拒绝或警告，未复现的保留记录。
+
+- 创建 Unified 报警指示器（`HmiAlarmIndicator`）是否使 TIA 崩溃。当前 V21 允许创建，只对 V19/V20 拒绝。
+- 在事务内新建 Unified 画面后选中其中的对象是否崩溃；在事务外先建画面再在事务内加对象作为对照。
+- 控件（widget）更新并重启后，已有实例是否丢失参数和绑定，重新绑定是否崩溃。
+- `.s7dcl` 导入是否在不报错的情况下改错以下三类块：LAD/FBD 数组下标中的数组访问；与系统类型同名的工程 FB 或 UDT（如 `TON`、`CTU`、`R_TRIG`）；AT 覆盖。导入后读回源码逐项比较。
+- 带文本接口（`S7_EditorMode := "[SCL,TextualInterface]"`）的块，自工程打开或上次写入后导出两次以上，再覆盖导入是否使 TIA 退出。
+- Classic HMI 图形列表导出是否崩溃。
+- 交叉引用是否返回“重新生成交叉引用信息”的占位节点而不是数据，以及我们是否把它报告为不完整。
+- 工艺对象实例 DB 是否读不到接口和实际值。
+- 调用进行中关闭 TIA：核对结果为未知、worker 自恢复，以及未确认清单（与“worker 自动恢复核对”一节合并记录）。
+
 ## 原生调用诊断
 
 - 织入：`build-tools/native-call-weaver`（Mono.Cecil 0.11.6）在编译后给八版适配器 `TiaMcp.Adapter.<key>.dll` 的每个 Openness 调用点生成包装，并内嵌 `TiaMcp.NativeCallCoverage.json`（调用者、IL 位置、目标成员、调用点 ID）。缺少织入器时构建失败，没有关闭开关；`prepare` 对八版随包适配器逐版校验。`GetSessionState.journalHealth.nativeBoundaryCoverage` 报告 `build-instrumented` 或 `not-instrumented`。
