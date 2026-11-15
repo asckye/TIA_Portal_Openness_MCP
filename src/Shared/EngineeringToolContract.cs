@@ -143,7 +143,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (before)
             {
                 outcome = Outcome.RejectedBeforeOperation;
-                ErrorDetails details = status == "NOT_FOUND" || status == "NotFound" ? new NotFoundDetails(null)
+                ErrorDetails details = status == "NOT_FOUND" || status == "NotFound" ? McpServer.MissingTargetDetails(tool, evidence: evidence)
                     : status == "UNSUPPORTED_CAPABILITY" || status == "NotSupported" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : status == "INVALID_ARGUMENT" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : new PreconditionFailedDetails("engineering-before-operation", null);

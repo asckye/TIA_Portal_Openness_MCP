@@ -152,7 +152,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "PROJECT_NOT_BOUND" => new ProjectNotBoundDetails(),
             "INVALID_ARGUMENT" => McpServer.ArgumentDetails(tool, null, evidence),
             "UNSUPPORTED_CAPABILITY" => new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null),
-            "NOT_FOUND" => new NotFoundDetails(null),
+            "NOT_FOUND" => McpServer.MissingTargetDetails(tool, evidence: evidence),
             "IO_FAILED" => new IoFailedDetails("optional-package-file", null),
             "LIMIT_EXCEEDED" => new LimitExceededDetails("arguments", null, null),
             _ => new PreconditionFailedDetails("optional-package-operation", null)

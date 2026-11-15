@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (!issued && (status == "NotFound" || status == "NotSupportedOnVersion" || status == "InvalidParams" || status == "InvalidState"))
             {
                 outcome = Outcome.RejectedBeforeOperation;
-                ErrorDetails details = status == "NotFound" ? new NotFoundDetails(null)
+                ErrorDetails details = status == "NotFound" ? McpServer.MissingTargetDetails(tool, evidence: evidence)
                     : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : status == "InvalidParams" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : new PreconditionFailedDetails("option-package-prerequisites", null);

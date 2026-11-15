@@ -131,7 +131,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var evidence = HostBehavior.FailureEvidence(precondition.GetType().Name, precondition.Message);
                 return Result(tool, null, HostBehavior.FailureError(precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition,
-                    precondition.ParamName, evidence, HostBehavior.AdmissionDiagnostic(error), condition: precondition.Condition),
+                    precondition.ParamName, evidence, HostBehavior.AdmissionDiagnostic(error), condition: precondition.Condition,
+                    resolveMissingTarget: field => McpServer.MissingTargetDetails(tool, field)),
                     Outcome.RejectedBeforeOperation, Completeness.None, current);
             }
             if (!writes && (cause is ArgumentException || cause is JsonException))
@@ -206,7 +207,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Error? rejection = status == "InvalidParams" ? McpServer.InvalidInput((string?)evidence["parameter"] ?? "arguments")
                 : status == "NotConnected" || status == "NoProject" ? new Error("No project is bound.", new ProjectNotBoundDetails())
                 : status == "InvalidState" ? new Error("The session prerequisite is not satisfied.", new PreconditionFailedDetails("session", null))
-                : status == "NotFound" ? new Error("The requested resource was not found.", new NotFoundDetails(null)) : null;
+                : status == "NotFound" ? new Error("The requested resource was not found.", McpServer.MissingTargetDetails(tool, evidence: evidence)) : null;
             if (rejection != null && !mayWrite)
                 return Result(tool, data, rejection, Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (writes && (mayWrite || success == null)) return Result(tool, data, Unknown(data), Outcome.Unknown, Completeness.Unknown, current);

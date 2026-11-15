@@ -107,7 +107,7 @@ namespace TiaMcpServer.ModelContextProtocol
             switch (status)
             {
                 case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
-                case "NotFound": case "NOT_FOUND": return new Error("The requested target was not found.", new NotFoundDetails(null));
+                case "NotFound": case "NOT_FOUND": return new Error("The requested target was not found.", McpServer.MissingTargetDetails(tool, evidence: evidence));
                 case "NotSupportedOnVersion": case "NativeCrashRiskBlocked": case "UNSUPPORTED_CAPABILITY"
                     : return new Error("The target or version does not support this capability.",
                         new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null));

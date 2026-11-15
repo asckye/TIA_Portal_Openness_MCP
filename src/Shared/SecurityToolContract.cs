@@ -88,7 +88,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 error = status == "NotSupportedOnVersion"
                     ? new Error(nativeMessage ?? "The requested security capability is unavailable.",
                         new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
-                    : status == "NotFound" ? new Error("The requested security target was not found.", new NotFoundDetails(null))
+                    : status == "NotFound" ? new Error("The requested security target was not found.", McpServer.MissingTargetDetails(tool, evidence: data))
                     : new Error("Access to the security operation was denied.", new AccessDeniedDetails(tool, null));
             }
             else if (success == true)

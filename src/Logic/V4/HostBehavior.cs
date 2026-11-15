@@ -111,7 +111,7 @@ namespace TiaMcp.Logic.V4
 
         internal static Error FailureError(HostFailureKind kind, string? parameter,
             IReadOnlyDictionary<string, JsonElement> evidence, string? nativeMessage = null, string? reason = null, string stage = "approval-precheck",
-            string? condition = null, string? diagnosticId = null)
+            string? condition = null, string? diagnosticId = null, Func<string?, NotFoundDetails>? resolveMissingTarget = null)
             => kind switch
             {
                 HostFailureKind.Argument =>
@@ -119,7 +119,7 @@ namespace TiaMcp.Logic.V4
                         new InvalidArgumentDetails(parameter ?? "", Array.Empty<string>())),
                 HostFailureKind.Precondition =>
                     new Error(nativeMessage ?? "The request precondition failed before operation.",
-                        condition == "not-found" ? new NotFoundDetails(parameter)
+                        condition == "not-found" ? resolveMissingTarget?.Invoke(parameter) ?? new NotFoundDetails(null)
                             : new PreconditionFailedDetails(condition ?? "native-admission", null, parameter)),
                 HostFailureKind.Cancelled => new Error("Request cancelled before operation.", new CancelledDetails(stage)),
                 HostFailureKind.Unknown =>

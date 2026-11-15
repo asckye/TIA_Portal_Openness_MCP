@@ -307,7 +307,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
                 case "InvalidParams": return new Error(InvalidInput("").Message, ArgumentDetails(tool, null, data));
-                case "NotFound": return new Error("The exact target was not found.", new NotFoundDetails(null));
+                case "NotFound": return new Error("The exact target was not found.", MissingTargetDetails(tool, evidence: data));
                 case "NotSupportedOnVersion": return new Error(HostBehavior.SafeDiagnostic((string?)data["nativeMessage"])
                     ?? "This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
                 default
@@ -335,12 +335,18 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(admission, false, !write);
                 return Reject(tool, HostBehavior.FailureError(kind, admission.ParamName, Evidence(data),
-                    HostBehavior.AdmissionDiagnostic(admission), condition: admission.Condition), data, current, write);
+                    HostBehavior.AdmissionDiagnostic(admission), condition: admission.Condition,
+                    resolveMissingTarget: field => McpServer.MissingTargetDetails(tool, field)), data, current, write);
             }
             Error? error = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
             {
-                if (cause is PortalException portal) error = StatusError(tool, new JsonObject { ["status"] = portal.Code.ToString() });
+                if (cause is PortalException portal)
+                {
+                    var evidence = portal.Code == PortalErrorCode.NotFound ? (JsonObject)data.DeepClone() : new JsonObject();
+                    evidence["status"] = portal.Code.ToString();
+                    error = StatusError(tool, evidence);
+                }
                 if (cause is ArgumentException argument)
                     error = new Error(InvalidInput("").Message, ArgumentDetails(tool, argument.ParamName));
                 if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error =
@@ -348,7 +354,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (cause is NotSupportedException) error =
                     new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
                 if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error =
-                    new Error("The input file or directory was not found.", new NotFoundDetails(null));
+                    new Error("The input file or directory was not found.", MissingTargetDetails(tool, evidence: data));
             }
             if (!write && TiaOpenness.Shared.HostFailurePolicy.WorkerReadTimeout(exception))
                 return Result(tool, data, new Error("The worker read timed out; retry when it has finished.", new TimeoutDetails("worker-read")),

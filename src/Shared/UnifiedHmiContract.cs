@@ -45,7 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         HostBehavior.FailureError(refusal.IsArgument ? TiaOpenness.Shared.HostFailureKind.Argument : TiaOpenness.Shared.HostFailureKind.
                         Precondition,
                         refusal.ParamName, HostBehavior.FailureEvidence(refusal.GetType().Name), HostBehavior.SafeDiagnostic(refusal.Message),
-                            condition: refusal.Condition),
+                            condition: refusal.Condition, resolveMissingTarget: field => McpServer.MissingTargetDetails(tool, field)),
                         Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
                 return Result(tool, null, writes ? Unknown(new JsonObject()) : NativeFailureDiagnostics.FromException(NativeFailure(new JsonObject()), error),
                     writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, writes, current);
@@ -102,7 +102,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ErrorDetails details = code == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
                     : code == "UNSUPPORTED_CAPABILITY" || code == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : code == "INVALID_ARGUMENT" || code == "InvalidParams" ? McpServer.ArgumentDetails(tool, null, evidence)
-                    : code == "NOT_FOUND" || code == "NotFound" ? new NotFoundDetails(null)
+                    : code == "NOT_FOUND" || code == "NotFound" ? McpServer.MissingTargetDetails(tool, evidence: evidence)
                     : new PreconditionFailedDetails(evidence["error"]?.ToString(), null);
                 return Result(tool, data, new Error(nativeMessage ?? "The HMI request was rejected before the operation.", details),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);

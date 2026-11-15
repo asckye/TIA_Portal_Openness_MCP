@@ -67,7 +67,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         ErrorDetails details = exception is PortalException { Code: PortalErrorCode.NotSupportedOnVersion }
                             || exception is NotSupportedException ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
-                            : exception is PortalException { Code: PortalErrorCode.NotFound } ? new NotFoundDetails(null)
+                            : exception is PortalException { Code: PortalErrorCode.NotFound }
+                                ? McpServer.MissingTargetDetails(tool, TiaOpenness.Shared.HostFailurePolicy.Parameter(exception), safeEvidence)
                             : exception is ArgumentException || exception is TiaMcp.Adapters.Contracts.AdapterPreconditionException { IsArgument: true }
                                 || exception is PortalException { Code: PortalErrorCode.InvalidParams }
                                 ? new InvalidArgumentDetails(TiaOpenness.Shared.HostFailurePolicy.Parameter(exception) ?? "", Array.Empty<string>())
@@ -173,7 +174,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (Text("v4Rejection") != null)
             {
                 var details = Text("v4Rejection") == "PROJECT_NOT_BOUND" ? (ErrorDetails)new ProjectNotBoundDetails()
-                    : Text("v4Rejection") == "NOT_FOUND" ? new NotFoundDetails(null)
+                    : Text("v4Rejection") == "NOT_FOUND" ? McpServer.MissingTargetDetails(tool, evidence: evidence)
                     : McpServer.ArgumentDetails(tool, null, evidence);
                 return Result(tool, root, new Error("The PLC request was rejected before execution.", details), Outcome.RejectedBeforeOperation, Completeness
                         .None, current);

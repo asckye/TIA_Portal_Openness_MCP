@@ -35,7 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             ErrorDetails? details = status == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
                 : status == "InvalidParams" || status == "INVALID_ARGUMENT" ? McpServer.ArgumentDetails(tool, parameter, evidence)
-                : status == "NotFound" || status == "NOT_FOUND" ? new NotFoundDetails(null)
+                : status == "NotFound" || status == "NOT_FOUND" ? McpServer.MissingTargetDetails(tool, parameter, evidence)
                 : status == "NotSupportedOnVersion" || status == "UNSUPPORTED_CAPABILITY"
                     ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI/reflection", null)
                 : status == "NativeCrashRiskBlocked" || status == "ACCESS_DENIED" ? new AccessDeniedDetails("reflection", null)

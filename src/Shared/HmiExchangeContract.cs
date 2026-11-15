@@ -50,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "InvalidState" ? new ProjectNotBoundDetails()
                 : status == "InvalidParams" ? McpServer.ArgumentDetails(tool, parameter, evidence)
                 : status == "ImportTargetExists" ? new PreconditionFailedDetails("HMI import target already exists; set overwrite=true explicitly.", null)
-                : status == "NotFound" ? new NotFoundDetails(null)
+                : status == "NotFound" ? McpServer.MissingTargetDetails(tool, parameter, evidence)
                 : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI exchange", null) : null;
             return details == null ? null
                 : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The HMI request could not start.", details);

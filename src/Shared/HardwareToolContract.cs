@@ -97,7 +97,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (TiaOpenness.Shared.HostFailurePolicy.Precondition(ex) is { } refusal)
                     return Result(tool, null, new Error(refusal.Message, refusal.IsArgument
                         ? McpServer.ArgumentDetails(tool, refusal.ParamName)
-                        : refusal.Condition == "not-found" ? new NotFoundDetails(refusal.ParamName)
+                        : refusal.Condition == "not-found" ? McpServer.MissingTargetDetails(tool, refusal.ParamName)
                             : new PreconditionFailedDetails("native-admission", null, refusal.ParamName)), Outcome.RejectedBeforeOperation, current);
                 var cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;

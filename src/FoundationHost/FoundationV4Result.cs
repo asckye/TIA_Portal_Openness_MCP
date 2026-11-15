@@ -1,6 +1,9 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias enginehost;
 using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
+using HostMcp = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+#else
+using HostMcp = TiaMcpServer.ModelContextProtocol.McpServer;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -223,7 +226,8 @@ internal static class FoundationV4Result
                 TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception) ? null : HostBehavior
                     .AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType)
                     ?? (dispatched && nativeDiagnostic ? HostBehavior.SafeDiagnostic(exception.Message) : null),
-                reason, dispatched ? "tool-call" : "tool-queue", worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition),
+                reason, dispatched ? "tool-call" : "tool-queue", worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition,
+                resolveMissingTarget: field => HostMcp.MissingTargetDetails(name, field)),
             true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
     }
 

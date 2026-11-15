@@ -59,7 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (portal.Code == TiaMcpServer.Siemens.PortalErrorCode.InvalidState) rejection =
                         new Error("No project is bound.", new ProjectNotBoundDetails());
                     if (portal.Code == TiaMcpServer.Siemens.PortalErrorCode.NotFound) rejection =
-                        new Error("The target was not found.", new NotFoundDetails(null));
+                        new Error("The target was not found.", McpServer.MissingTargetDetails(tool, TiaOpenness.Shared.HostFailurePolicy.Parameter(portal)));
                 }
                 return Result(tool, null, rejection ?? NativeFailureDiagnostics.FromException(Failure(!readOnly), ex),
                     rejection != null ? Outcome.RejectedBeforeOperation
@@ -152,7 +152,7 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.RejectedBeforeOperation;
                 error = new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, data)); }
             else if (status == "NOT_FOUND")
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The target was not found.", new NotFoundDetails(null)); }
+            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The target was not found.", McpServer.MissingTargetDetails(tool, evidence: data)); }
             else if (status == "CONFIRMATION_REQUIRED")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("Explicit confirmation is required.", new ConfirmationRequiredDetails(null)); }
             else if (status == "NotSupported" || status == "UNSUPPORTED_CAPABILITY")

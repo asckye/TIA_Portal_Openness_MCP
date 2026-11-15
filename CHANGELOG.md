@@ -17,6 +17,7 @@
 - `SearchHardwareCatalog.limit` declares its existing 1–100 range in the input schema on V18–V21.
 - `ManageTechnologyObject.typeIdentifier` describes technology-object identifiers such as `TO_PositioningAxis` across all eight releases.
 - Across all eight releases, a missing `GetDeviceItemNetworkInfo` target returns `NOT_FOUND` on `/deviceItemPath`; an unbound host or worker project returns `PROJECT_NOT_BOUND`.
+- Across all eight releases where registered, missing-target refusals identify a known declared parameter with a JSON pointer in `details.target`; unknown or undeclared parameters keep a null target.
 - Across all eight releases, adapter argument refusals identify the canonical field supplied by the caller.
 - Across all eight releases, batch admission refusals identify `/operations/<i>/name` and explain that the tool lacks a dry-run preview or batch permission, or is a batch or orchestration tool.
 

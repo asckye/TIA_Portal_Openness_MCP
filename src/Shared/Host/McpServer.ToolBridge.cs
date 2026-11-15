@@ -295,6 +295,11 @@ namespace TiaMcpServer.ModelContextProtocol
             return new InvalidArgumentDetails("/" + InvalidArgumentDetails.Segment(parameter), allowed,
                 expected: new InputSchema(target.Tool.InputSchema).ExpectedParameter(parameter));
         }
+        internal static NotFoundDetails MissingTargetDetails(string tool, string? parameter = null, JsonObject? evidence = null)
+        {
+            var pointer = ArgumentDetails(tool, parameter, evidence).Parameter;
+            return new NotFoundDetails(pointer.Length == 0 ? null : pointer);
+        }
         private static JsonObject WritePreviewPlan(string tool, object arguments, bool writing)
         {
             var normalized = JsonSerializer.SerializeToNode(arguments)!.AsObject();
