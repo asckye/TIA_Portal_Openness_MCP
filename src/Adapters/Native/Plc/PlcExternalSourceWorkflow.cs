@@ -12,13 +12,8 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
-        private bool externalSourceOutcomeUnknown;
         private Action ExternalSourceTargetCheck(string softwarePath,out PlcSoftware software,out string exactPath,out string projectFile,out int processId)
         {
-            if(externalSourceOutcomeUnknown)
-                throw new AdapterPreconditionException("Prior external-source outcome is unknown; inspect the project and start a new explicit session " +
-                "before another write.",
-                    "softwarePath",false);
             var selected=ReadSelection(softwarePath);
             exactPath=selected.ExactPath;
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
@@ -54,7 +49,6 @@ namespace TiaMcp.Adapters
                         throw new InvalidOperationException("CreateFromFile did not return a source in the selected PLC root.");
                     return Documents.Name(created);
                 });
-            if(result.RequiresSessionReset) externalSourceOutcomeUnknown=true;
             return result;
         }
         private sealed class ExternalSourceNativeObject
@@ -123,7 +117,6 @@ namespace TiaMcp.Adapters
                 return new PlcExternalSourceObject[0];
 #endif
             },ex=>ex is EngineeringException);
-            if(result.RequiresSessionReset) externalSourceOutcomeUnknown=true;
             return result;
         }
     }

@@ -4,12 +4,11 @@ internal static class DocumentExportContract
 {
     internal static bool RequiresReset(JsonObject result)
     {
-        if(result["NativeResult"] is not JsonObject native) return result["Status"]?.ToString()=="failed";
+        if(result["NativeResult"] is not JsonObject native) return false;
         if(native.Count!=2 || native["EnumType"]?.ToString()!=TiaMcp.Adapters.Contracts.NativeResultStates.Documents
             || !native.ContainsKey("State") || native["State"] is JsonValue value && (!value.TryGetValue<string>(out var state) || state.Length>128)
             || result["Status"]?.ToString()!="failed") throw new InvalidDataException("Invalid native document result evidence.");
-        return TiaMcp.Adapters.Contracts.NativeResultStates.Classify(TiaMcp.Adapters.Contracts.NativeResultStates.Documents,native["State"]?.ToString())!=TiaMcp
-            .Adapters.Contracts.NativeStateKind.Failure;
+        return false;
     }
     internal static JsonObject Validate(JsonNode? payload,bool dryRun)
     {

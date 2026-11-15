@@ -137,16 +137,17 @@ namespace TiaMcp.Adapters
                 HmiValues.ExportFailure = previousExportFailure;
             }
             reply.MayHaveChanged = session.MayHaveChanged;
-            if (reply.Failure != null) reply.RequiresSessionReset = session.MayHaveChanged;
+            if (reply.Failure != null) reply.RequiresSessionReset = !request.DryRun && session.MayHaveChanged;
             if (reply.Value is HmiMessage message)
             {
                 bool restored = message.Meta.TryGetValue("rollbackCompleted", out var rollback) && rollback is true;
                 if (restored) reply.MayHaveChanged = false;
                 bool partial = message.Meta.TryGetValue("rollbackOutcome", out var outcome) && outcome as string == "partial";
-                reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var reset) && reset is true
-                    || !restored && !partial
+                reply.RequiresSessionReset = !request.DryRun && !restored && !partial
                         && session.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success) && success is false;
             }
+            if (reply.RequiresSessionReset && reply.Value is HmiMessage uncertain)
+            { uncertain.Meta["writeOutcomeUnknown"] = true; uncertain.Meta["requiresSessionReset"] = true; }
             return reply;
         }
     }

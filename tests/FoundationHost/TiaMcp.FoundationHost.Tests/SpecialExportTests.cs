@@ -70,8 +70,8 @@ internal static class SpecialExportTests
             var failed=
                 Run(false,preview.PlanHash,publisher:(_,_)=>{
                     var error=new IOException("private native text"); error.Data["stagedFile"]="retained.xml"; error.Data["secret"]="hidden"; throw error;});
-            check(failed.Status=="failed" && failed.RequiresSessionReset && failed.Evidence.Count==1,
-                    "Unknown export outcome requires fail-stop and preserves only allowlisted evidence");
+            check(failed.Status=="failed" && !failed.RequiresSessionReset && failed.Evidence.Count==1,
+                    "Unknown export outcome stops without replay and preserves only allowlisted evidence");
             SpecialExportContract.Validate(Wire(failed),false);
             var classification=WorkerFailurePolicy
                 .Classify(new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Blocked policy","export-plan",false),true,false);
@@ -88,7 +88,7 @@ internal static class SpecialExportTests
             request["watchTableName"]="other";
             try {SpecialExportContract.ValidateRequest("ExportPlcWatchTable",request,Wire(failed)); throw new Exception("Conflicting result accepted");
             } catch(InvalidDataException){check(true,"Host refuses mismatched special export identity");}
-            var malformed=Wire(failed);malformed["RequiresSessionReset"]=false;
+            var malformed=Wire(failed);malformed["RequiresSessionReset"]=true;
             try {SpecialExportContract.Validate(malformed,false);throw new Exception("Unpoisoned failure accepted");} catch(InvalidDataException){
                 check(true,"Host refuses conflicting special export fail-stop flag");}
             File.WriteAllText(output,"existing"); Refuse(()=>Run(true),"Existing output refuses preview without overwrite"); File.Delete(output);
@@ -114,7 +114,7 @@ internal static class SpecialExportTests
             if(Environment.OSVersion.Platform!=PlatformID.Win32NT)
             {
                 var unsupported=Run(false,preview.PlanHash);
-                check(unsupported.RequiresSessionReset && exports==0 && Directory.GetFileSystemEntries(root).Length==0,
+                check(!unsupported.RequiresSessionReset && exports==0 && Directory.GetFileSystemEntries(root).Length==0,
                         "Linux publication guard writes nothing and calls no native export");
                 skip("Special export Windows native XML preservation/atomic filesystem publication requires Windows.");
             }

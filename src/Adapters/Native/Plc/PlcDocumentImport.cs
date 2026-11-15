@@ -12,25 +12,19 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         private readonly PlcExternalSourceDeleteIdentities documentImportIdentities=new PlcExternalSourceDeleteIdentities();
-        private bool documentImportOutcomeUnknown;
         public PlcDocumentImportResult ImportFromDocuments(string softwarePath,string groupPath,string importPath,string fileNameWithoutExtension,
                 bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
-            if(documentImportOutcomeUnknown)
-                throw new InvalidOperationException("Prior document import outcome unknown; inspect before a new explicit session. Never replay.");
             var r=new PlcDocumentImportRequest {
                 Release=ReleaseKey,Software=softwarePath,Group=groupPath,Directory=importPath,Name=fileNameWithoutExtension,Overwrite=overwrite,DryRun=dryRun,
                     ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile
             };
             PlcDocumentImportPolicy.ValidateOptions(r);
             var result=CreateDocumentImportContext(r).Run();
-            if(result.RequiresSessionReset)documentImportOutcomeUnknown=true;
             return result;
         }
         private PlcDocumentImportContext CreateDocumentImportContext(PlcDocumentImportRequest r)
         {
-            if(documentImportOutcomeUnknown)
-                throw new InvalidOperationException("Prior document import outcome unknown; inspect before a new explicit session. Never replay.");
             PlcDocumentImportPolicy.ValidateOptions(r);
 #if PLC_DOCUMENT_EXPORT
             var softwarePath=r.Software;var groupPath=r.Group;var importPath=r.Directory;var fileNameWithoutExtension=r.Name;

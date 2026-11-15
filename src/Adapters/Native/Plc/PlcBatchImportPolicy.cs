@@ -396,7 +396,7 @@ namespace TiaMcp.Adapters
                             bool unknown=item.Attempted && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailureException));
                             item.Status="failed";item.Failure=unknown ? "native-outcome-uncertain" : item.Attempted ? "native-import-or-verification-failed"
                                 : "target-recheck-failed";
-                            result.NativeOutcomeUnknown=unknown;result.RequiresSessionReset=unknown || !request.Overwrite;
+                            result.NativeOutcomeUnknown=unknown;result.RequiresSessionReset=unknown;
                             stopped=true;
                             if(request.Overwrite && replacements.Length>0)
                             {

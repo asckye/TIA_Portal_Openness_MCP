@@ -1,5 +1,8 @@
 extern alias enginehost;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
 using Host = enginehost::TiaMcpServer.ModelContextProtocol;
@@ -32,7 +35,7 @@ public sealed class ProvenOutcomeTests
         return new JsonObject {
             ["Executed"] = true, ["ProjectFile"] = "C:/fixture/Fixture.ap21", ["SoftwarePath"] = "PLC",
             ["GroupPath"] = "", ["Recursive"] = true, ["InventoryHash"] = Hash, ["InventoryComplete"] = true,
-            ["RequiresSessionReset"] = true, ["Items"] = items };
+            ["RequiresSessionReset"] = false, ["Items"] = items };
     }
 
     [Theory]
@@ -52,13 +55,29 @@ public sealed class ProvenOutcomeTests
     }
 
     [Fact]
-    public void Uncertain_batch_export_item_stays_unknown()
+    public void Uncertain_batch_export_item_is_a_known_failure()
     {
         var definition = FoundationTools.Definitions.Single(d => d.Name == "ExportPlcBlocks");
         var body = FoundationV4Result.Worker("21", definition, "fixture", new() { ["dryRun"] = false },
             BatchExport(uncertain: true), null).StructuredContent!;
-        Verdict(body, "unknown", "unknown", "OUTCOME_UNKNOWN");
-        Verdict(body["data"]!["items"]![0]!["result"]!, "unknown", "unknown", "OUTCOME_UNKNOWN");
+        Verdict(body, "failed", "completed", "NATIVE_OPERATION_FAILED");
+        Verdict(body["data"]!["items"]![0]!["result"]!, "failed", "completed", "NATIVE_OPERATION_FAILED");
+    }
+
+    [Theory]
+    [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Compile_with_an_unexpected_native_state_is_a_known_failure(string release)
+    {
+        const string state = "Unknown";
+        Assert.Equal(NativeStateKind.Unexpected, NativeResultStates.Classify(NativeResultStates.Compiler, state));
+        var raw = JsonSerializer.SerializeToNode(new PlcCompileResult {
+            Executed = true, ProjectFile = "C:/fixture/Fixture.ap" + release, State = state, ErrorCount = 0, WarningCount = 0 })!;
+        V17CompileEnvelope.Validate(raw, false);
+        var definition = FoundationTools.Definitions.Single(d => d.Name == "CompilePlcDiagnostics");
+        var body = FoundationV4Result.Worker(release, definition, "fixture", new() { ["dryRun"] = false }, raw, null).StructuredContent!;
+        Verdict(body, "failed", "completed", "NATIVE_OPERATION_FAILED");
+        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
     }
 
     private static WorkerOperationException LostReply()

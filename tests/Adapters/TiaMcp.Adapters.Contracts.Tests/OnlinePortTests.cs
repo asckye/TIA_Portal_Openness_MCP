@@ -224,7 +224,7 @@ public sealed class OnlinePortTests
     [InlineData("DownloadPlc", false, true, true, false, "Error", false)]
     [InlineData("DownloadPlc", false, false, false, false, null, false)]
     [InlineData("UploadStationFromPlc", false, true, true, false, null, true)]
-    [InlineData("GeneratePlcLoadableFile", false, true, false, true, null, true)]
+    [InlineData("GeneratePlcLoadableFile", false, true, false, true, null, false)]
     [InlineData("GetPlcBlockFingerprints", false, true, false, false, null, false)]
     [InlineData("DownloadPlc", true, true, true, false, "Success", false)]
     public void Completed_failures_and_unknown_writes_have_distinct_session_effects(string tool, bool success,

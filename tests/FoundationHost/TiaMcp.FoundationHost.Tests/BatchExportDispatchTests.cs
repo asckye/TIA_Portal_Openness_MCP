@@ -9,7 +9,7 @@ using TiaMcp.Adapters;
 internal static class BatchExportDispatchTests
 {
     // No processes, SDK or native calls. Uses the same response acceptance/state helper as WorkerClient.
-    private sealed class BatchWorker(string root):IFoundationWorker
+    private sealed class BatchWorker:IFoundationWorker
     {
         internal int Calls,Publications;
         internal bool FailSecond;
@@ -24,9 +24,15 @@ internal static class BatchExportDispatchTests
             {
                 var dry=arguments["dryRun"]!.GetValue<bool>();
                 if(!dry) MutationIdentityPolicy.RequireSameProject(arguments["expectedProjectFile"]!.GetValue<string>(),"C:/Projects/project.ap17");
-                var result=PlcBatchExportPolicy.Run(operation=="ExportBlocks"?"blocks":"types","C:/Projects/project.ap17","devices/PLC","",false,root,128,dry,arguments["expectedInventoryHash"]!.GetValue<string>(),
+                var result=PlcBatchExportPolicy.Run(operation=="ExportBlocks"?"blocks":"types","C:/Projects/project.ap17","devices/PLC","",false,
+                    arguments["exportPath"]!.GetValue<string>(),128,dry,arguments["expectedInventoryHash"]!.GetValue<string>(),
                     new[]{"A","B","C"}.Select(path=>new PlcBatchExportSource {Path=path,Consistent=true,Export=_=>throw new Exception("Native callback forbidden in dispatch tests")}),()=>{},
-                    (_,_)=>{if(++Publications==2 && FailSecond)throw new IOException("unknown fake publication");return null;});
+                    (destination,_)=>{
+                        if(++Publications==2 && FailSecond)throw new IOException("unknown fake publication");
+                        if(FailSecond) PlcExportPublication.Publish(destination, staged=>File.WriteAllText(staged.FullName,
+                            "<Document><Engineering version=\"V17\" /></Document>"));
+                        return null;
+                    });
                 var payload=JsonSerializer.SerializeToNode(result)!.AsObject(); AlterResponse?.Invoke(payload);
                 WorkerProtocol.ValidateExchangeResult(operation,arguments,payload);
                 LastReply = payload;
@@ -54,7 +60,7 @@ internal static class BatchExportDispatchTests
                 }
                 async Task Refused(McpServerTool tool,Dictionary<string,JsonElement> args,McpErrorCode code,string reason)
                 {try{await tool.InvokeAsync(Request(args));throw new Exception("Accepted "+reason);}catch(McpException error){check(error.ErrorCode==code,name+": "+reason);}}
-                var worker=new BatchWorker(root);var tool=Tool(worker);var args=Args();
+                var worker=new BatchWorker();var tool=Tool(worker);var args=Args();
                 var preview=Payload(await tool.InvokeAsync(Request(args)));var hash=preview["InventoryHash"]!.GetValue<string>();
                 check(worker.Calls==1 && worker.Publications==0 && !preview["Executed"]!.GetValue<bool>() && preview["Items"]!.AsArray().Count==3,name+": MCP preview returns complete plan with no publications");
                 Execute(args,null);
@@ -66,31 +72,38 @@ internal static class BatchExportDispatchTests
                 args["expectedInventoryHash"]=JsonSerializer.SerializeToElement(hash);
                 var success=Payload(await tool.InvokeAsync(Request(args)));
                 check(worker.Calls==2 && worker.Publications==3 && !success["RequiresSessionReset"]!.GetValue<bool>(),name+": confirmed exact preview hash dispatches once and returns success items");
-                var mismatch=new BatchWorker(root);var mismatchArgs=Args();Execute(mismatchArgs,new string('f',64));
+                var mismatch=new BatchWorker();var mismatchArgs=Args();Execute(mismatchArgs,new string('f',64));
                 await Refused(Tool(mismatch),mismatchArgs,McpErrorCode.InvalidParams,"mismatching preview hash rejected by plan");
                 check(mismatch.Calls==1 && mismatch.Publications==0,name+": mismatching hash cannot reach publisher");
-                var wrongProject=new BatchWorker(root);var projectArgs=Args();Execute(projectArgs,hash);projectArgs["expectedProjectFile"]=JsonSerializer.SerializeToElement("C:/Projects/other.ap17");
+                var wrongProject=new BatchWorker();var projectArgs=Args();Execute(projectArgs,hash);
+                projectArgs["expectedProjectFile"]=JsonSerializer.SerializeToElement("C:/Projects/other.ap17");
                 await Refused(Tool(wrongProject),projectArgs,McpErrorCode.InvalidParams,"exact project mismatch rejected");
                 check(wrongProject.Publications==0,name+": project mismatch cannot publish");
-                var wrongScope=new BatchWorker(root){AlterResponse=data=>data["SoftwarePath"]="devices/Other"};
+                var wrongScope=new BatchWorker(){AlterResponse=data=>data["SoftwarePath"]="devices/Other"};
                 await Refused(Tool(wrongScope),Args(),McpErrorCode.InternalError,"different returned software scope rejected");
                 wrongScope.AlterResponse = null;
                 await Tool(wrongScope).InvokeAsync(Request(Args()));
                 check(wrongScope.Calls == 2 && wrongScope.Publications == 0, name + ": independent preview runs after invalid response");
-                var partialWorker=new BatchWorker(root){FailSecond=true};
+                var partialWorker=new BatchWorker(){FailSecond=true};
                 var partialTool = new FoundationV4Tool((FoundationTool)Tool(partialWorker), "17", () => new(false, 1));
                 var partialArgs=Args();Execute(partialArgs,hash);
                 var unknown = await partialTool.InvokeAsync(Request(partialArgs));
                 var partial=partialWorker.LastReply!;
-                check((string?)unknown.StructuredContent?["meta"]?["outcome"] == "unknown", name + ": partial apply reports its unknown outcome");
-                check(partial["RequiresSessionReset"]!.GetValue<bool>() && partial["Items"]!.AsArray().Select(x=>x!["Status"]!.GetValue<string>()).SequenceEqual(new[]{"exported","failed","not-attempted"}),name+": MCP retains explicit partial progress");
+                check((string?)unknown.StructuredContent?["meta"]?["outcome"] == "partial", name + ": partial apply reports its known file progress");
+                check(!partial["RequiresSessionReset"]!.GetValue<bool>() && partial["Items"]!.AsArray().Select(x=>x!["Status"]!.GetValue<string>())
+                        .SequenceEqual(new[]{"exported","failed","not-attempted"}),name+": MCP retains explicit partial progress");
                 check(partialWorker.Publications==2,name+": partial result stops before a third publication");
                 var replay = await partialTool.InvokeAsync(Request(partialArgs));
-                check((string?)replay.StructuredContent?["error"]?["details"]?["condition"] == "same-call-unsettled", name + ": identical apply is refused");
-                check(partialWorker.Calls==1 && partialWorker.Publications==2,name+": replay cannot dispatch or republish");
-                var next = await partialTool.InvokeAsync(Request(Args()));
-                check((bool?)next.StructuredContent?["ok"] == true && partialWorker.Calls == 2 && partialWorker.Publications == 2,
+                check((string?)replay.StructuredContent?["meta"]?["outcome"] == "rejected-before-operation", name
+                        + ": existing destination refuses an identical apply");
+                check(partialWorker.Calls==2 && partialWorker.Publications==2,name+": replay cannot dispatch or republish");
+                var nextArgs = Args();
+                string nextDirectory = Path.Combine(root, "independent-" + name); Directory.CreateDirectory(nextDirectory);
+                nextArgs["exportPath"] = JsonSerializer.SerializeToElement(nextDirectory);
+                var next = await partialTool.InvokeAsync(Request(nextArgs));
+                check((bool?)next.StructuredContent?["ok"] == true && partialWorker.Calls == 3 && partialWorker.Publications == 2,
                     name + ": independent preview reaches the worker without replaying the apply");
+                foreach (string file in Directory.GetFiles(root)) File.Delete(file);
             }
         }
         finally{Directory.Delete(root,true);}

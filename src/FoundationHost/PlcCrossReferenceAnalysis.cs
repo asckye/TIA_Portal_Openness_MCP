@@ -78,7 +78,7 @@ internal static class PlcCrossReferenceAnalysis
             new Warning(WarningCode.IncompleteData, (string)report["scope"]!, details) };
         return Envelope.Create(report, error, new Meta(DateTimeOffset.UtcNow, release, "AnalyzePlcCrossReferences", id,
             outcome, partial ? Execution.Partial : incomplete ? Execution.ReadOnly : Execution.Completed,
-            (bool?)report["requiresSessionReset"] == true, BehaviorPolicy.Current, Completeness.Partial, null, warnings));
+            (bool?)report["writeOutcomeUnknown"] == true, BehaviorPolicy.Current, Completeness.Partial, null, warnings));
     }
 
     internal static JsonObject Report(string software, string directory, JsonObject export)
@@ -100,6 +100,7 @@ internal static class PlcCrossReferenceAnalysis
             ["exports"] = items.DeepClone(), ["analysis"] = analysis, ["analysisFailure"] = failure,
             ["analysisQueried"] = analysis != null, ["nativeCrossReferencesQueried"] = false,
             ["requiresSessionReset"] = (bool?)export["RequiresSessionReset"] == true,
+            ["writeOutcomeUnknown"] = (bool?)export["RequiresSessionReset"] == true,
             ["coverageComplete"] = false, ["dataComplete"] = false, ["safeToDelete"] = false,
             ["scope"] = "Covers " + exported + " exported blocks of software " + software
                 + "; blocks not exported are not analysed. Only selected root/user or software-unit block groups; other units and system blocks are excluded. "

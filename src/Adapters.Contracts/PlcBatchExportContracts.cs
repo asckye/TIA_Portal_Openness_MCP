@@ -15,7 +15,8 @@ namespace TiaMcp.Adapters
     }
     public class PlcBatchExportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || RequiresSessionReset;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || Items.Any(item => item.Status == "exported"
+            || item.Evidence.ContainsKey("recoveryDirectory"));
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; internal set; }
         public string ProjectFile { get; internal set; } = "";

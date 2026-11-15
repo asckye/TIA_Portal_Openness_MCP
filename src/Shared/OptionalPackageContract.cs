@@ -71,7 +71,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var data = response.Meta?.DeepClone().AsObject() ?? new JsonObject();
             bool issued = Issued(data);
-            bool reset = Flag(data, "requiresExplicitRebind") == true || Flag(data, "requiresSessionReset") == true;
+            bool reset = writes && Flag(data, "writeOutcomeUnknown") == true;
             bool? success = Flag(data, "operationSuccess") ?? Flag(data, "success");
             string status = data["status"]?.ToString() ?? "";
             string? rejection = data["rejectionCode"]?.ToString();

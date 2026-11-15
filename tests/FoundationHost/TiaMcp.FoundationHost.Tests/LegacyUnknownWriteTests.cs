@@ -15,7 +15,7 @@ public sealed class LegacyUnknownWriteTests
     {
         using var release = Host.HardwareContract.UseRelease("21");
         var response = new Host.ResponseMessage { Meta = new JsonObject { ["operationSuccess"] = true, ["apiCallSuccess"] = true,
-            ["mayHaveChanged"] = true, ["requiresSessionReset"] = true } };
+            ["mayHaveChanged"] = true, ["writeOutcomeUnknown"] = true } };
         string tool = writes ? "CreatePlcTag" : "GetProjectInfo";
         CallToolResult result = mapper switch {
             "drive" => Host.DriveToolContract.Map(tool, response, writes, true),

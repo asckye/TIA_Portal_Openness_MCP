@@ -112,7 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (Flag("ok") == false || Flag("operationSuccess") == false) success = false;
             bool incomplete = Flag("dataComplete") == false || Flag("incomplete") == true
                 || Flag("truncated") == true || HasObservationError(evidence);
-            bool unknown = writes && (Flag("verified") == false || Flag("requiresSessionReset") == true
+            bool unknown = writes && (Flag("verified") == false || Flag("writeOutcomeUnknown") == true
                 || Text("outcome") == "unknown");
             bool before = success != true && Flag("mayHaveChanged") == false;
             bool knownFailure = Flag("rollbackCompleted") == true;

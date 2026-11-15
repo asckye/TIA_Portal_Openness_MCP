@@ -18,13 +18,22 @@ namespace TiaMcp.Adapters
             var operation = action;
             action = !writing ? operation : meta => EngineeringWriteJournal.Run(meta, () => operation(meta),
                 () => EngineeringPlcSession.AcquireHmiEditAccess());
-            if (EngineeringServicesStep != null) return EngineeringServicesStep(tool, requiresProject, meta => {
-                meta["mayHaveChanged"] = false;
-                return action(meta);
-            });
-            return RunHmiStepCore(tool, action, requiresProject);
+            if (EngineeringServicesStep != null)
+            {
+                var reply = EngineeringServicesStep(tool, requiresProject, meta => {
+                    meta["mayHaveChanged"] = false;
+                    return action(meta);
+                });
+                if (!writing)
+                {
+                    reply.RequiresSessionReset = false;
+                    reply.Meta["writeOutcomeUnknown"] = false; reply.Meta["requiresSessionReset"] = false;
+                }
+                return reply;
+            }
+            return RunHmiStepCore(tool, action, requiresProject, writing);
         }
-        private HardwareAddressingReply RunHmiStepCore(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject)
+        private HardwareAddressingReply RunHmiStepCore(string tool, Func<Dictionary<string, object?>, string> action, bool requiresProject, bool writing = true)
         {
             var reply = new HardwareAddressingReply();
             var meta = LegacyResponseMetadata.Step(TiaMcpServer.ModelContextProtocol.ResponseClock.Now, tool);
@@ -79,12 +88,12 @@ namespace TiaMcp.Adapters
                 if (HmiReadSafety.ConnectionUnavailable(error)) RecordHmiFault(meta);
                 reply.Message = tool + " failed";
             }
-            reply.RequiresSessionReset = meta.TryGetValue("requiresExplicitRebind", out var blocked) && blocked is true
+            reply.RequiresSessionReset = writing && (meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true
                 || meta.TryGetValue("connectionUnavailable", out var unavailable) && unavailable is true
                 || !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial")
                     && meta.TryGetValue("mayHaveChanged", out var changed) && changed is true
-                    && (meta.TryGetValue("operationSuccess", out var success) && success is false
-                        || meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true);
+                    && meta.TryGetValue("operationSuccess", out var success) && success is false);
+            if (reply.RequiresSessionReset) { meta["writeOutcomeUnknown"] = true; meta["requiresSessionReset"] = true; }
             return reply;
         }
         internal void RecordHmiFault(Dictionary<string, object?> meta)

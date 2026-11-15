@@ -181,8 +181,8 @@ namespace TiaMcp.Adapters
                 if (reply.Value is HmiMessage message)
                 {
                     reply.MayHaveChanged = message.Meta.TryGetValue("mayHaveChanged", out var changed) && changed is true;
-                    reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var blocked) && blocked is true
-                        || reply.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success) && success is false;
+                    reply.RequiresSessionReset = !request.DryRun && reply.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success)
+                        && success is false;
                 }
             }
             catch (Exception error) when (error.GetBaseException() is not Siemens.Engineering.NonRecoverableException)
@@ -197,6 +197,8 @@ namespace TiaMcp.Adapters
                 UnifiedHmiAccess.Inputs = previousParse; HmiExactAccess.ContentToken = previousToken;
                 HmiValues.TraceWriter = previousTrace; HmiValues.ExportFailure = previousExportFailure;
             }
+            if (reply.RequiresSessionReset && reply.Value is HmiMessage uncertain)
+            { uncertain.Meta["writeOutcomeUnknown"] = true; uncertain.Meta["requiresSessionReset"] = true; }
             return reply;
         }
     }

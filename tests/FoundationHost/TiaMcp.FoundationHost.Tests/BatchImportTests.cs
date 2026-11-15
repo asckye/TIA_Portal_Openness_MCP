@@ -64,8 +64,12 @@ internal static class BatchImportTests
             imports=0;var unexpectedSecond=Run(Apply(preview),import:(_,p)=>++imports==2 ? new[]{new PlcBatchImportObject {Name=p.Name,Kind="UnexpectedNativeBlock",GroupPath="<unverified-native-owner>"}} : new[]{p});
             BatchImportContract.Validate(Wire(unexpectedSecond),false);
             check(unexpectedSecond.ImportedCount==1 && unexpectedSecond.FailedCount==1 && imports==2 && unexpectedSecond.Items[1].ReturnedObjects[0].Kind=="UnexpectedNativeBlock" && unexpectedSecond.Items[2].Status=="not-attempted","Unexpected second native kind/owner preserves first success and raw evidence through host contract");
-            gates=0;imports=0;var online=Run(Apply(preview),gate:()=>{if(++gates==2)throw new InvalidOperationException("online/project swap");});check(online.ImportedCount==1 && imports==1 && !online.Items[1].Attempted && online.RequiresSessionReset,"Target changes before second import preserve first mutation and stop without another callback");
-            gates=0;imports=0;var refused=Run(Apply(preview),gate:()=>{if(++gates==2)PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC");});check(refused.ImportedCount==1 && imports==1 && !refused.Items[1].Attempted && refused.RequiresSessionReset,"Typed policy refusal after first import retains prior mutation and requires reset");
+            gates=0;imports=0;var online=Run(Apply(preview),gate:()=>{if(++gates==2)throw new InvalidOperationException("online/project swap");});
+            check(online.ImportedCount==1 && imports==1 && !online.Items[1].Attempted && !online.RequiresSessionReset,
+                    "Target changes before second import preserve first mutation and stop without another callback");
+            gates=0;imports=0;var refused=Run(Apply(preview),gate:()=>{if(++gates==2)PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC");});
+            check(refused.ImportedCount==1 && imports==1 && !refused.Items[1].Attempted && !refused.RequiresSessionReset,
+                    "Typed policy refusal after first import retains the known prior import without unknown writes");
             Reset();File.WriteAllText(Path.Combine(root,"A.xml"),Xml("Duplicate"));File.WriteAllText(Path.Combine(root,"B.xml"),Xml("Duplicate"));Reject(()=>Run(Request()),"Duplicate logical identity is rejected, never silently deduplicated");
             Reset();File.WriteAllText(Path.Combine(root,"A.xml"),Xml("A"));File.WriteAllText(Path.Combine(root,"a.xml"),Xml("B"));if(Directory.GetFiles(root).Length==2)Reject(()=>Run(Request()),"Windows case aliases refused on Linux fake filesystem");
             Reset();File.WriteAllText(Path.Combine(root,"A.xml"),Xml("A"));var limits=Request();limits.MaxItems=0;Reject(()=>Run(limits),"Invalid maxItems refused");

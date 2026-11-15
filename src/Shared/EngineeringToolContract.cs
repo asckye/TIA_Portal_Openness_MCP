@@ -119,7 +119,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string status = evidence["v4Rejection"]?.ToString() ?? evidence["status"]?.ToString() ?? "";
             bool projectMissing = status == "PROJECT_NOT_BOUND" || status == "InvalidState" && evidence.ContainsKey("tool")
                 && !evidence.ContainsKey("apiCallSuccess") && !issued;
-            bool reset = Flag(evidence, "requiresExplicitRebind") == true || Flag(evidence, "requiresSessionReset") == true;
+            bool reset = writes && Flag(evidence, "writeOutcomeUnknown") == true;
             int succeeded = (data["imported"] as JsonArray)?.Count ?? 0;
             int failed = (data["failed"] as JsonArray)?.Count ?? 0;
             var nativeResult = evidence["result"] as JsonObject;

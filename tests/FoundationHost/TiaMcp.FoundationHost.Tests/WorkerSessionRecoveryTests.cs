@@ -40,7 +40,7 @@ public sealed class WorkerSessionRecoveryTests
         response = recovery.Synchronize(request, response);
         Assert.Null(response.Failure);
         Assert.Equal(reply, response.ResultJson);
-        Assert.True(outcome.RequiresReset);
+        Assert.False(outcome.RequiresReset);
         var write = new ChannelRequest(2, "adapter.SaveProject", "{}", (_, _) => { });
         Assert.Null(recovery.Synchronize(write, recovery.Dispatch(write, _ => ChannelResponse.Success("{}"))).Failure);
     }
@@ -158,9 +158,9 @@ public sealed class WorkerSessionRecoveryTests
             if (typed) { fixture.Outcome.MarkUncertain(); return ChannelResponse.Success("{\"before\":1,\"after\":null}"); }
             return ChannelResponse.Error(new ChannelFailureException("Unknown native fixture.", -32603, ChannelOutcome.Unknown));
         };
-        var response = fixture.Call("hardware-addressing.ReadHardwareIoAddresses");
-        if (typed) Assert.Equal("{\"before\":1,\"after\":null}", response.ResultJson);
-        else Assert.Equal(ChannelOutcome.Unknown, response.Failure!.Outcome);
+        var response = fixture.Call("hardware-addressing.WriteHardwareIoAddress");
+        if (typed) Assert.Equal("{\"before\":1,\"after\":null}", response.Failure!.EvidenceJson);
+        Assert.Equal(ChannelOutcome.Unknown, response.Failure!.Outcome);
         Assert.True(fixture.Outcome.RequiresReset);
         int calls = fixture.Calls;
         fixture.Reply = _ => ChannelResponse.Success("{}");
@@ -192,7 +192,7 @@ public sealed class WorkerSessionRecoveryTests
         Assert.Equal("RELEASED\n", File.ReadAllText(fixture.Marker));
         Assert.Equal(1, fixture.Clears);
         Assert.Null(fixture.BindingFault);
-        Assert.True(fixture.Outcome.RequiresReset);
+        Assert.False(fixture.Outcome.RequiresReset);
         Assert.Null(fixture.Call("ReadState").Failure);
         Assert.Contains(release, new[] { "20", "21" });
     }

@@ -59,8 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
             var success = data.ContainsKey("operationSuccess") ? Flag(data, "operationSuccess") : Flag(data, "success");
             bool issued = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
-            bool unknown = Flag(data, "mappingVerified") == false || !readOnly && (Flag(data, "requiresExplicitRebind") == true
-                || Flag(data, "requiresSessionReset") == true);
+            bool unknown = Flag(data, "mappingVerified") == false || !readOnly && Flag(data, "writeOutcomeUnknown") == true;
             string status = data["v4FailureCode"]?.ToString() ?? data["status"]?.ToString() ?? "";
             var refusal = HostBehavior.DocumentedRefusal(data)
                 ?? HostBehavior.KnownRefusal(data, success, HardwareContract.ReleaseKey, tool) ?? Refusal(tool, status, data);
@@ -71,8 +70,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 execution = readOnly ? Execution.ReadOnly : Execution.Unknown;
                 error = HostBehavior.UnavailableCall(!readOnly);
             }
-            else if (issued && (success != true || unknown))
+            else if (!readOnly && issued && (success != true || unknown))
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = Unknown(); }
+            else if (readOnly && issued && success != true)
+            { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = Failure(); }
             else if (refusal != null)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
             else if (success == true && !unknown)

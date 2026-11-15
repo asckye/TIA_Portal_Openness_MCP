@@ -42,7 +42,7 @@ internal static class BatchExportContract
                     || !v.TryGetValue<string>(out _))
                 throw new InvalidDataException("Unexpected batch evidence.");
         }
-        if(requiresReset!=failed) throw new InvalidDataException("Batch reset state conflicts with item outcomes.");
+        if(requiresReset) throw new InvalidDataException("Batch reset state conflicts with item outcomes.");
         return result;
     }
 }

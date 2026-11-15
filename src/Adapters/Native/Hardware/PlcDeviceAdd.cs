@@ -11,7 +11,6 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         private readonly List<KeyValuePair<object,string>> deviceAddIdentities=new List<KeyValuePair<object,string>>();
-        private bool deviceAddOutcomeUnknown;
         private TiaMcp.Adapters.Contracts.Candidates.CandidateIdentity? deviceAddBinding;
         private string DeviceAddIdentity(object value)
         {
@@ -23,8 +22,6 @@ namespace TiaMcp.Adapters
         public PlcDeviceAddResult AddDeviceWithFallback(string preferredMlfb,string preferredVersion,string deviceName,string family="S7-1500",bool dryRun=true,
                 string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
-            if(deviceAddOutcomeUnknown)
-                throw new InvalidOperationException("Prior device creation outcome unknown; inspect explicitly and establish a new session. Never replay.");
             var request=new PlcDeviceAddRequest {
                 Release=ReleaseKey,PreferredMlfb=preferredMlfb,PreferredVersion=preferredVersion,Name=deviceName,Family=family,DryRun=dryRun,ExpectedHash=
                     expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile
@@ -122,7 +119,6 @@ namespace TiaMcp.Adapters
                         || object.Equals(parent,ungroupedRoot)
                 };
             });
-            if(result.RequiresSessionReset) deviceAddOutcomeUnknown=true;
             return result;
 #else
             throw new NotSupportedException("This build has no verified typed hardware catalog selection API.");

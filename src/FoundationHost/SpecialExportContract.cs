@@ -30,7 +30,7 @@ internal static class SpecialExportContract
             (dryRun ? documented ? status is not ("planned" or "inconsistent") : status!="semantics-unverified" : !documented
                     || status is not ("exported" or "failed"))
                 ||
-            Flag("RequiresSessionReset")!=(status=="failed")) throw new InvalidDataException("Special export status/evidence conflict.");
+            Flag("RequiresSessionReset")) throw new InvalidDataException("Special export status/evidence conflict.");
         var hash=Text("PlanHash");
         if(hash.Length!=64 || hash.Any(c=>!"0123456789abcdef".Contains(c))) throw new InvalidDataException("Invalid special export plan hash.");
         if(result["Evidence"] is not JsonObject recovery || (dryRun && recovery.Count!=0))

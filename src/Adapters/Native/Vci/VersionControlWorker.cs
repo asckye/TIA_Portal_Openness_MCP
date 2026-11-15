@@ -33,6 +33,7 @@ public sealed partial class PlcFoundationEngine
         };
         reply.RequiresSessionReset = !dryRun && reply.Meta.TryGetValue("success", out var success) && success is false
             && (reply.MayHaveChanged || reply.Meta.TryGetValue("failed", out var failed) && failed is int count && count > 0);
+        if (reply.RequiresSessionReset) { reply.Meta["writeOutcomeUnknown"] = true; reply.Meta["requiresSessionReset"] = true; }
         return reply;
 #else
         throw new NotSupportedException("VersionControlInterface requires V16 or later.");

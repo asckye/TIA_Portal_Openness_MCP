@@ -70,7 +70,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 && !evidence.ContainsKey("mayHaveChanged")) status = "PROJECT_NOT_BOUND";
             bool knownMismatch = status == "ReadbackMismatch" && Flag(evidence, "apiCallSuccess") == true;
             bool compileFailed = tool == "CompileHmiDiagnostics" && evidence["effectiveState"]?.ToString() == "Error";
-            bool unknown = writes && (Flag(evidence, "connectionUnavailable") == true || Flag(evidence, "requiresSessionReset") == true
+            bool unknown = writes && (Flag(evidence, "connectionUnavailable") == true || Flag(evidence, "writeOutcomeUnknown") == true
                 || evidence["effectiveState"]?.ToString() == "Unknown" || issued && success != true && !knownMismatch && !compileFailed);
             Error? error = null;
             Outcome outcome;
@@ -122,7 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (pair.Key != "timestamp" && pair.Key != "tool" && pair.Key != "success") data[pair.Key] = pair.Value?.DeepClone();
             if (outcome == Outcome.Succeeded) data["summary"] = summary;
             return Result(tool, data, error, outcome, completeness, writes, current, paging,
-                Flag(evidence, "requiresExplicitRebind") == true || Flag(evidence, "connectionUnavailable") == true);
+                outcome == Outcome.Unknown);
         }
 
         private static bool Incomplete(JsonNode? node)

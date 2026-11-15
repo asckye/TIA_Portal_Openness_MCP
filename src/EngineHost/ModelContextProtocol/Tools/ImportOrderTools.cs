@@ -192,7 +192,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool mayWrite = Flag(evidence, "mayHaveChanged") == true || Flag(evidence, "mayHaveWrittenFiles") == true
                 || Flag(evidence, "mayHaveModifiedRepository") == true;
             if (evidence["files"] is JsonArray files) succeeded += files.Count(f => f is JsonObject row && Flag(row, "written") == true);
-            bool unknown = writes && (Flag(evidence, "requiresSessionReset") == true || Flag(evidence, "writeOutcomeUnknown") == true)
+            bool unknown = writes && Flag(evidence, "writeOutcomeUnknown") == true
                 || Flag(evidence, "timedOut") == true && writes
                 || writes && Flag(evidence, "dispatchStarted") == true && Flag(evidence, "executed") != true;
             if (!unknown && success == true && failed == 0)

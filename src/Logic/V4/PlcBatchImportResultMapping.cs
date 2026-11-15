@@ -70,7 +70,7 @@ namespace TiaMcp.Logic.V4
             var executionAggregate = aggregate == Outcome.Unknown ? Execution.Unknown : aggregate == Outcome.RejectedBeforeOperation ? Execution.NotStarted
                 : aggregate == Outcome.Partial ? Execution.Partial : preview ? Execution.ReadOnly : Execution.Completed;
             return Envelope.Create(data, fault, new Meta(DateTimeOffset.UtcNow, release, tool, id, aggregate, executionAggregate,
-                unknown || (bool?)data["requiresSessionReset"] == true, BehaviorPolicy.Current,
+                unknown || (bool?)data["writeOutcomeUnknown"] == true, BehaviorPolicy.Current,
                 unknown ? Completeness.Unknown : aggregate == Outcome.Partial ? Completeness.Partial : Completeness.Complete, null,
                 new[] {
                     new Warning(WarningCode.UnverifiedBehavior, "Native acceptance is pending; recovery exports and restoration evidence must be reviewed.",

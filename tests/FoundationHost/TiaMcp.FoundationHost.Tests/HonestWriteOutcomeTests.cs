@@ -203,7 +203,9 @@ public sealed class HonestWriteOutcomeTests
     public void Known_refusal_requires_unchanged_evidence(string field)
     {
         var evidence = new JsonObject { ["status"] = "NotFound", ["mayHaveChanged"] = false, [field] = true };
-        Assert.Null(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, false, "21", "Fixture"));
+        if (field is "requiresSessionReset" or "requiresExplicitRebind")
+            Assert.NotNull(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, false, "21", "Fixture"));
+        else Assert.Null(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, false, "21", "Fixture"));
         evidence[field] = false;
         Assert.NotNull(TiaMcp.Logic.V4.HostBehavior.KnownRefusal(evidence, false, "21", "Fixture"));
         evidence.Remove("mayHaveChanged");

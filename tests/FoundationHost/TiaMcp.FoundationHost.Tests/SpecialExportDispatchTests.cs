@@ -76,16 +76,17 @@ internal static class SpecialExportDispatchTests
                 worker.Fail=true;
                 var applyTool = new FoundationV4Tool((FoundationTool)tool, "17", () => new(false, 1));
                 var failed=await applyTool.InvokeAsync(Request());
-                check(worker.LastReply!["RequiresSessionReset"]!.GetValue<bool>() && worker.Publications==1
-                    && (string?)failed.StructuredContent?["meta"]?["outcome"] == "unknown",operation+": uncertain outcome returned once");
+                check(!worker.LastReply!["RequiresSessionReset"]!.GetValue<bool>() && worker.Publications==1
+                    && (string?)failed.StructuredContent?["meta"]?["outcome"] == "failed",operation+": failed export returned once");
                 var replay = await applyTool.InvokeAsync(Request());
-                check((string?)replay.StructuredContent?["error"]?["details"]?["condition"] == "same-call-unsettled", operation
-                        + ": identical apply is refused");
-                check(worker.Calls==2 && worker.Publications==1,operation+": replay cannot dispatch or republish");
+                check((string?)replay.StructuredContent?["meta"]?["outcome"] == "rejected-before-operation", operation
+                        + ": existing destination refuses an identical apply");
+                int refusedCalls = operation == "ExportTechnologyObject" ? 2 : 3;
+                check(worker.Calls==refusedCalls && worker.Publications==1,operation+": replay cannot dispatch or republish");
                 args["dryRun"] = JsonSerializer.SerializeToElement(true);
                 args["exportPath"] = JsonSerializer.SerializeToElement(Path.Combine(root,operation+"-preview.xml"));
                 var next = await applyTool.InvokeAsync(Request());
-                check((bool?)next.StructuredContent?["ok"] == true && worker.Calls == 3 && worker.Publications == 1,
+                check((bool?)next.StructuredContent?["ok"] == true && worker.Calls == refusedCalls+1 && worker.Publications == 1,
                     operation + ": independent preview reaches the worker without replaying the apply");
                 worker=new SpecialWorker{WrongTarget=true};tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name==operation);
                 args["dryRun"]=JsonSerializer.SerializeToElement(true);

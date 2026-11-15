@@ -135,7 +135,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (writes && success != true && Flag(evidence, "tagCreateConfirmed") == true
                 && failureCode == "UNSUPPORTED_CAPABILITY" && !unconfirmed)
             {
-                evidence["requiresSessionReset"] = true;
+                evidence["requiresSessionReset"] = false; evidence["writeOutcomeUnknown"] = false;
                 data["partialWrite"] =
                     "The tag was created, but the requested binding is unsupported. Inspect the tag and its binding before another call; no rollback was " +
                     "attempted.";
@@ -174,7 +174,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (node is JsonArray array) return array.Any(Unconfirmed);
             if (node is not JsonObject obj) return false;
             return Flag(obj, "verified") == false || Flag(obj, "verifiedAbsent") == false || Flag(obj, "bindingVerified") == false
-                || Flag(obj, "requiresSessionReset") == true || Flag(obj, "connectionUnavailable") == true
+                || Flag(obj, "writeOutcomeUnknown") == true || Flag(obj, "connectionUnavailable") == true
                 || Flag(obj, "setScriptCode") == false || Flag(obj, "setGlobalDefinitionAreaScriptCode") == false || Flag(obj, "setAsync") == false
                 || obj["syntaxCheckStatus"]?.ToString() == "faulted" || Integer(obj["syntaxErrorCount"]) > 0
                 || obj.Any(p => Unconfirmed(p.Value));
@@ -217,8 +217,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : outcome == Outcome.Partial ? Execution.Partial : writes ? Execution.Completed : Execution.ReadOnly;
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired
-                    || Flag(data?["evidence"], "connectionUnavailable") == true || Flag(data?["evidence"], "requiresExplicitRebind") == true
-                    || Flag(data?["evidence"], "requiresSessionReset") == true,
+                    || writes && Flag(data?["evidence"], "writeOutcomeUnknown") == true,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),

@@ -51,8 +51,8 @@ public sealed class DocumentImportSafetySources
         var program = Read(Path.Combine(worker, "FoundationWorkerDispatcher.cs"));
         Assert.DoesNotContain("sessionOutcome.RequireUsable", program, StringComparison.Ordinal);
         Assert.True(Find(program, "MutationIdentityPolicy.ValidateTarget") < Find(program, "method.Invoke(engine, call)"));
-        Assert.Contains("if (result is IWorkerOperationReply reply && reply.RequiresSessionReset)", program, StringComparison.Ordinal);
-        Assert.Contains("sessionOutcome.MarkUncertain(blockReads: reply.BlockReadsAfterUncertain, mutation: !readOnly);", program, StringComparison.Ordinal);
+        Assert.Contains("if (result is IWorkerOperationReply reply && !readOnly && reply.RequiresSessionReset)", program, StringComparison.Ordinal);
+        Assert.Contains("sessionOutcome.MarkUncertain();", program, StringComparison.Ordinal);
         var batch_reply = Read(Path.Combine(ROOT, "src/Adapters.Contracts/PlcBatchDocumentImportContracts.cs"));
         Assert.Contains("public sealed class PlcBatchDocumentImportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply", batch_reply, StringComparison.Ordinal);
         Assert.Contains("bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => true;", batch_reply, StringComparison.Ordinal);

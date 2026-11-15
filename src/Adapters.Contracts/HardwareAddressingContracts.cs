@@ -74,7 +74,7 @@ namespace TiaMcp.Adapters.Contracts
         private bool requiresSessionReset;
         public bool RequiresSessionReset
         {
-            get => requiresSessionReset || Meta.TryGetValue("requiresSessionReset", out var value) && value is true;
+            get => requiresSessionReset || Meta.TryGetValue("writeOutcomeUnknown", out var value) && value is true;
             set => requiresSessionReset = value;
         }
         public bool MayHaveChanged

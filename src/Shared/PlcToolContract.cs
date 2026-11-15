@@ -162,7 +162,7 @@ namespace TiaMcpServer.ModelContextProtocol
             int failed = Count(root, "failed");
             bool unknown = writes && (Flag("verified") == false || Flag("verifiedAbsent") == false
                 || Text("effectiveState") == "Unknown" || Text("state") == "Unknown"
-                || Flag("requiresSessionReset") == true || Flag("writeOutcomeUnknown") == true || Text("outcome") == "unknown");
+                || Flag("writeOutcomeUnknown") == true || Text("outcome") == "unknown");
             bool knownFailure = Text("status") == "DocumentReadbackMismatch" || Text("effectiveState") == "Error"
                 || Text("state") == "Error" || Text("outcome") == "failed";
             bool before = Flag("mayHaveChanged") == false && success != true;

@@ -127,12 +127,11 @@ namespace TiaMcp.Adapters
             catch(TiaMcp.Adapters.Contracts.NativeResultException ex)
             {
                 result.Status="failed"; result.NativeResult=ex.Evidence; result.RecoveryDirectory=stage.FullName;
-                result.RequiresSessionReset=TiaMcp.Adapters.Contracts.NativeResultStates.Classify(ex.Evidence.EnumType,ex.Evidence.State)!=TiaMcp.Adapters
-                    .Contracts.NativeStateKind.Failure;
+                result.RequiresSessionReset=false;
             }
-            catch(Exception) /* swallow(native-fallback): export or publication failure returns failed status, session reset and the retained staging path */
+            catch(Exception) /* swallow(native-fallback): export or publication failure returns failed status and the retained staging path */
             {
-                result.Status="failed";result.RequiresSessionReset=true;result.RecoveryDirectory=stage.FullName;
+                result.Status="failed";result.RequiresSessionReset=false;result.RecoveryDirectory=stage.FullName;
             }
             return result;
         }

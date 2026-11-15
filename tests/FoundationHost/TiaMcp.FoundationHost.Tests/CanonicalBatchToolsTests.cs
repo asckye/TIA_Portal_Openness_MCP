@@ -10,6 +10,29 @@ using Xunit;
 
 public sealed class CanonicalBatchToolsTests
 {
+    public static IEnumerable<object[]> UnknownBatchCases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
+        .SelectMany(release => new[] { new object[] { release, false }, new object[] { release, true } });
+
+    [Theory, MemberData(nameof(UnknownBatchCases))]
+    public async Task Batch_legacy_flag_follows_the_final_item_outcome(string release, bool unknown)
+    {
+        using var files = new Files();
+        var target = new Target("ImportPlcTagTable", release) { FailWrite = 1, UnknownFailure = unknown, LegacyReset = true };
+        var batch = new CanonicalBatchTools.BatchTool(Declaration("ImportPlcTagTablesFromDirectory"),
+            new Dictionary<string, McpServerTool> { [target.ProtocolTool.Name] = target }, release, () => Binding.DeepClone().AsObject()) {
+            CompleteApproval = (_, _) => Task.CompletedTask };
+        batch.Approve = (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null));
+        var args = files.Arguments();
+        var preview = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
+        Apply(args, preview.StructuredContent!["data"]!.AsObject());
+        var result = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
+        Assert.Equal(unknown ? "unknown" : "failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal(unknown, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Equal(new[] { "A.xml" }, target.Writes);
+        Assert.Equal(new[] { "failed", "not-started", "not-started" },
+            result.StructuredContent!["data"]!["items"]!.AsArray().Select(row => (string?)row!["status"]));
+    }
+
     [Fact]
     public async Task Stale_batch_plan_names_the_reconnect_cause()
     {
@@ -450,6 +473,7 @@ public sealed class CanonicalBatchToolsTests
         internal bool BlockPreview;
         internal bool HashInEvidence;
         internal bool OmitRequestId;
+        internal bool UnknownFailure, LegacyReset;
         internal Action<int>? AfterWrite;
         internal JsonArray? Inventory;
         internal List<string> Writes { get; } = new();
@@ -483,9 +507,13 @@ public sealed class CanonicalBatchToolsTests
                 data.Remove("planHash"); data["evidence"] = new JsonObject { ["planHash"] = new string('a', 64) };
             }
             if (BlockPreview) { data["applyBlocked"] = true; data["applyBlockedReason"] = "Native semantics not verified."; }
-            var result = FoundationV4Result
-                    .Composite(release, name, "test", data, failure ? Outcome.Failed : Outcome.Succeeded, write ? Execution.Completed : Execution.ReadOnly,
-                failure ? new Error("canonical failure", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())) : null);
+            bool unknown = failure && UnknownFailure;
+            var result = FoundationV4Result.Composite(release, name, "test", data,
+                unknown ? Outcome.Unknown : failure ? Outcome.Failed : Outcome.Succeeded,
+                unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
+                unknown ? new Error("canonical unknown", new OutcomeUnknownDetails("batch-item", new Dictionary<string, JsonElement>()))
+                    : failure ? new Error("canonical failure", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())) : null,
+                reset: failure && LegacyReset);
             if (OmitRequestId) result.StructuredContent!["meta"]!.AsObject().Remove("requestId");
             return ValueTask.FromResult(result);
         }

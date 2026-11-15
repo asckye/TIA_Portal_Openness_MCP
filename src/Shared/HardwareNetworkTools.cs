@@ -134,7 +134,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             bool issued = Flag(evidence, "mayHaveChanged") == true || Flag(evidence, "mayHaveWrittenFiles") == true;
             bool nestedUnknown = evidence["ensureSubnet"] is JsonObject ensure && Flag(ensure, "mayHaveChanged") == true && Flag(ensure, "success") != true;
-            if (!readOnly && (Flag(evidence, "requiresSessionReset") == true || Flag(evidence, "requiresExplicitRebind") == true)
+            if (!readOnly && (Flag(evidence, "writeOutcomeUnknown") == true)
                 && issued) nestedUnknown = true;
             bool nestedCompleted = evidence["ensureSubnet"] is JsonObject completed && Flag(completed, "mayHaveChanged") == true
                 && Flag(completed, "success") == true;

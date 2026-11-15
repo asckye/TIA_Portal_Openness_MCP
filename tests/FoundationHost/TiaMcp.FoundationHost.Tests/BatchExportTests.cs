@@ -39,17 +39,21 @@ internal static class BatchExportTests
             var partial=Run(false,preview.InventoryHash,publish:(file,export)=>{
                 if(++published==2) {var error=new IOException("secret native text");error.Data["stagedFile"]="retained-stage.xml";error.Data["untrusted"]="hidden";throw error;}return null;
             });
-            check(partial.RequiresSessionReset && published==2 && partial.Items.Count(x=>x.Status=="failed")==1 && partial.Items.Count(x=>x.Status=="not-attempted")==2,"First failure retains prior success and stops all later exports without retry");
+            check(!partial.RequiresSessionReset && published==2 && partial.Items.Count(x=>x.Status=="failed")==1 && partial.Items
+                    .Count(x=>x.Status=="not-attempted")==2,"First failure retains prior success and stops all later exports without retry");
             check(partial.Items.Single(x=>x.Status=="failed").Evidence.Count==1,"Batch failure contains only allowlisted recovery evidence");
             var blocked=Run(false,preview.InventoryHash,publish:(_,_)=>throw new Exception("must not run"),gate:()=>throw new NotSupportedException("unknown provider"));
-            check(blocked.RequiresSessionReset && blocked.Items[0].Status=="failed","Unknown offline target fails closed before publication");
+            check(!blocked.RequiresSessionReset && blocked.Items[0].Status=="failed","Unknown offline target fails closed before publication");
             published=0;
             try {Run(false,preview.InventoryHash,publish:(_,_)=>{published++;return null;},gate:()=>PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC"));throw new Exception("Policy refusal accepted");}
             catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {check(!error.IsArgument && published==0,"Known offline refusal before first export stays a precondition with no native attempt");}
             int checks=0;
-            var changed=Run(false,preview.InventoryHash,publish:(_,_)=>{published++;return null;},gate:()=>{if(++checks==2)PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC");});
-            check(changed.RequiresSessionReset && published==1 && changed.Items[0].Status=="exported" && changed.Items[1].Status=="failed","Policy refusal after a prior export retains partial execution and requires reset");
+            var changed=
+                Run(false,preview.InventoryHash,publish:(_,_)=>{published++;return null;},gate:()=>{
+                    if(++checks==2)PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC");});
+            check(!changed.RequiresSessionReset && published==1 && changed.Items[0].Status=="exported" && changed.Items[1].Status=="failed",
+                    "Policy refusal after a prior export retains partial execution and keeps file evidence without unknown project writes");
             JsonObject Wire(PlcBatchExportResult value)=>JsonSerializer.SerializeToNode(value)!.AsObject();
             BatchExportContract.Validate(Wire(preview),true); BatchExportContract.Validate(Wire(partial),false);
             check(true,"Host validates preview and partial execution contract");
@@ -59,7 +63,7 @@ internal static class BatchExportTests
             request["groupPath"]="different";
             try {WorkerProtocol.ValidateExchangeResult("ExportBlocks",request,Wire(partial));throw new Exception("Wrong batch scope accepted");} catch(IOException){check(true,"Wrong batch response scope poisons protocol instead of success");}
 
-            var malformed=Wire(partial); malformed["RequiresSessionReset"]=false;
+            var malformed=Wire(partial); malformed["RequiresSessionReset"]=true;
             try {BatchExportContract.Validate(malformed,false);throw new Exception("Malformed partial accepted");} catch(InvalidDataException){check(true,"Host rejects reset/outcome conflict");}
 
             File.WriteAllText(preview.Items[0].OutputFile,"existing");
@@ -68,7 +72,8 @@ internal static class BatchExportTests
             if(Environment.OSVersion.Platform!=PlatformID.Win32NT)
             {
                 native=0;var unsupported=Run(false,preview.InventoryHash);
-                check(unsupported.RequiresSessionReset && native==0 && Directory.GetFileSystemEntries(root).Length==0,"Linux publication fails closed with no native invocation or files");
+                check(!unsupported.RequiresSessionReset && native==0 && Directory.GetFileSystemEntries(root).Length==0,
+                        "Linux publication fails closed with no native invocation or files");
                 skip("Batch Windows atomic publication filesystem success/recovery cases require Windows.");
             }
             else
@@ -76,8 +81,14 @@ internal static class BatchExportTests
                 native=0;var actual=Run(false,preview.InventoryHash);
                 check(!actual.RequiresSessionReset && native==4 && actual.Items.Where(x=>x.Status=="exported").All(x=>File.ReadAllText(x.OutputFile).Contains("<Number>42</Number><Name>Original</Name>")),"Windows batch publishes unmodified native XML numbers and symbols");
                 foreach(var item in actual.Items.Where(x=>x.Status=="exported"))File.Delete(item.OutputFile);
-                int attempts=0;var failure=Run(false,preview.InventoryHash,inventory:sources.Select(s=>new PlcBatchExportSource {Path=s.Path,Consistent=s.Consistent,Export=f=>{File.WriteAllText(f.FullName,"<Document/>");if(++attempts==2)throw new IOException("native unknown");}}));
-                check(failure.RequiresSessionReset && attempts==2 && File.Exists(failure.Items.Single(x=>x.Status=="failed").Evidence["stagedFile"]),"Windows batch retains native failure evidence and stops without retry");
+                int attempts=0;var failure=
+                    Run(false,preview.InventoryHash,inventory:sources
+                        .Select(s=>new PlcBatchExportSource {
+                            Path=s.Path,Consistent=s.Consistent,Export=f=>{
+                                File.WriteAllText(f.FullName,"<Document/>");if(++attempts==2)throw new IOException("native unknown");}
+                        }));
+                check(!failure.RequiresSessionReset && attempts==2 && File.Exists(failure.Items.Single(x=>x.Status=="failed").Evidence["stagedFile"]),
+                        "Windows batch retains native failure evidence and stops without retry");
             }
         }
         finally {Directory.Delete(root,true);}

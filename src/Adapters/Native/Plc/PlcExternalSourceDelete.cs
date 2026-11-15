@@ -11,13 +11,9 @@ namespace TiaMcp.Adapters
     {
         // Siemens engineering-object Equals compares logical identity across proxy instances.
         private readonly PlcExternalSourceDeleteIdentities externalDeleteIdentities=new PlcExternalSourceDeleteIdentities();
-        private bool externalDeleteOutcomeUnknown;
         public PlcExternalSourceDeleteResult DeletePlcExternalSource(string softwarePath,string groupPath,string externalSourceName,bool dryRun=true,
                 string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
-            if(externalDeleteOutcomeUnknown)
-                throw new AdapterPreconditionException("Prior delete outcome unknown; explicit inspection and a new session required. Never replay.",
-                    "softwarePath",false);
             var request=new PlcExternalSourceDeleteRequest {
                 Release=ReleaseKey,Software=softwarePath,Group=groupPath,Name=externalSourceName,DryRun=dryRun,ExpectedHash=expectedPlanHash,Confirm=confirm,
                     ExpectedProject=expectedProjectFile
@@ -53,7 +49,6 @@ namespace TiaMcp.Adapters
                         .Equals(source.Parent,root) || !object.Equals(nativeTarget.Parent,root) || !object.Equals(nativeTarget,source))
                     throw new AdapterPreconditionException("Exact source identity changed; delete not called.","softwarePath",false);
                 },identity=> Documents.Delete(nativeTarget!));
-            if(result.RequiresSessionReset) externalDeleteOutcomeUnknown=true;
             return result;
         }
     }

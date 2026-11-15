@@ -28,7 +28,8 @@ namespace TiaMcpServer.Siemens.Services
                 reply["Meta"] = new JsonObject { ["operationSuccess"] = (bool?)reply["Ok"] == true,
                     ["apiCallSuccess"] = (bool?)reply["Ok"] == true,
                     ["mayHaveChanged"] = reply["MayHaveChanged"]?.DeepClone(),
-                    ["requiresSessionReset"] = reply["RequiresSessionReset"]?.DeepClone() };
+                    ["requiresSessionReset"] = reply["RequiresSessionReset"]?.DeepClone(),
+                    ["writeOutcomeUnknown"] = reply["RequiresSessionReset"]?.DeepClone() };
             // Legacy B5 catch paths report a negative verdict without the newer native flags.
             else if (reply["Meta"] is JsonObject meta && !meta.ContainsKey("apiCallSuccess")
                 && meta["success"] is JsonValue legacy && legacy.TryGetValue<bool>(out var succeeded) && !succeeded)
@@ -36,6 +37,7 @@ namespace TiaMcpServer.Siemens.Services
                 meta["apiCallSuccess"] = false;
                 meta["mayHaveChanged"] ??= reply["MayHaveChanged"]?.DeepClone();
                 meta["requiresSessionReset"] ??= reply["RequiresSessionReset"]?.DeepClone();
+                meta["writeOutcomeUnknown"] ??= reply["RequiresSessionReset"]?.DeepClone();
             }
             if (reply["Failure"] is JsonObject error)
             {

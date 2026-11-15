@@ -8,10 +8,11 @@ namespace TiaMcp.PlcWorker
         internal bool RequiresReset => mutationOutcomeUnknown;
         internal long Revision { get; private set; }
 
-        internal void MarkUncertain(bool blockReads = false, bool mutation = true)
+        internal void MarkUncertain(bool mutation = true)
         {
+            if (!mutation) return;
             mutationOutcomeUnknown = true;
-            if (mutation) Revision++;
+            Revision++;
         }
 
     }

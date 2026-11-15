@@ -432,7 +432,7 @@ namespace TiaMcp.Adapters
             public void LogCompilerMessage(string path, string state, string description, int errors, int warnings, DateTime time, int nested) { }
             public void GroupCreated(string name) { }
             public HardwareAddressingReply RunHmiStepTool(string tool, Func<Dictionary<string, object?>, string> action) => engine
-                .RunHardwareAddressStep(tool, action);
+                .RunHardwareAddressStep(tool, action, writing: tool != "CompileDevice");
             public List<PlcCrossReference>? GetCrossReferences(string path, string objectPath, string kind, string filter, out string? reason, out bool queried)
             => new PlcCrossReferences(this).GetCrossReferences(path, objectPath, kind, filter, out reason, out queried, "", "unit");
             public string? CrossReferenceRefusal(string path) => new PlcCrossReferences(this).CrossReferenceRefusal(path);

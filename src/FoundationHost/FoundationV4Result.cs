@@ -256,7 +256,7 @@ internal static class FoundationV4Result
         }
         bool mutation = IsMutation(definition, args);
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
-        bool reset = Flag(data, "requiresSessionReset") == true;
+        bool reset = mutation && Flag(data, "writeOutcomeUnknown") == true;
         if (definition.ResponseMember == "BatchImport") return ImportCandidate(PlcBatchImportResultMapping.Result(data, release, name, id, preview));
         string? status = Text(data, "status");
         if (raw == null || mutation && (Flag(data, "executed") ?? Flag(data, "attempted")) == null
@@ -275,7 +275,6 @@ internal static class FoundationV4Result
             {
                 string? state = Text(item, "status");
                 var childOutcome = state is "not-attempted" or "inconsistent" ? Outcome.RejectedBeforeOperation
-                    : state == "failed" && Text(item, "failure") == "native-outcome-uncertain" ? Outcome.Unknown
                     : state is "failed" or "inconsistent" ? (preview || Flag(item, "attempted") == false ? Outcome.RejectedBeforeOperation : Outcome.Failed)
                         : Outcome.Succeeded;
                 if (childOutcome == Outcome.Succeeded) succeeded++;
@@ -305,7 +304,7 @@ internal static class FoundationV4Result
         if (definition.ResponseMember == "Compile" && !preview && data["state"] != null
             && TiaMcp.Adapters.Contracts.NativeResultStates.Classify(TiaMcp.Adapters.Contracts.NativeResultStates.Compiler, Text(data, "state"))
                 == TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected)
-            outcome = Outcome.Unknown;
+            outcome = Outcome.Failed;
         if (outcome == Outcome.Unknown) error = Unknown();
         else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = definition.ResponseMember == "Compile" ? CompileResultMapping
             .Errors(data) ?? NativeFailure(data) : NativeFailure(data);
@@ -316,7 +315,11 @@ internal static class FoundationV4Result
             evidence["recoveryDirectory"] = data["recoveryDirectory"]?.DeepClone();
             data["nativeResultEvidence"] = evidence;
             if (NativeResultState.TryUnsuccessful(evidence, true, out var nativeOutcome, out var nativeError))
-            { outcome = nativeOutcome; error = nativeError; reset = outcome == Outcome.Unknown; }
+            {
+                outcome = nativeOutcome == Outcome.Unknown ? Outcome.Failed : nativeOutcome;
+                error = nativeOutcome == Outcome.Unknown ? NativeFailure(evidence) : nativeError;
+                reset = false;
+            }
         }
         // Preserve the void API's observations without inventing a native return value.
         if (definition.Operation == "GenerateBlocksFromExternalSource" && release == "14sp1")

@@ -80,7 +80,8 @@ internal static class DocumentExportTests
                     if(kind=="race") Directory.CreateDirectory(dest);
                     return paths;
                 },move:(from,to)=>{if(kind=="publish-failure") throw new IOException("ambiguous");Directory.Move(from.FullName,to.FullName);});
-                check(failed.Status=="failed" && failed.RequiresSessionReset && Directory.Exists(failed.RecoveryDirectory),"Document "+kind+" retains evidence and poisons session");
+                check(failed.Status=="failed" && !failed.RequiresSessionReset && Directory.Exists(failed.RecoveryDirectory),"Document "+kind
+                        +" retains evidence and reports a failed export");
                 DocumentExportContract.Validate(Wire(failed),false);
 
                 WorkerProtocol

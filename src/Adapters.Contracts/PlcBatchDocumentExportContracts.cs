@@ -15,7 +15,8 @@ namespace TiaMcp.Adapters
     }
     public sealed class PlcBatchDocumentExportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || RequiresSessionReset;
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || !string.IsNullOrEmpty(RecoveryDirectory)
+            || Items.Any(item => item.Status == "exported");
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; set; }
         public string ReleaseKey { get; set; } = "";

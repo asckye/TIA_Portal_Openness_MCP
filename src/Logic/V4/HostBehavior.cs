@@ -260,7 +260,7 @@ namespace TiaMcp.Logic.V4
         {
             bool? Flag(string key) => evidence[key] is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
             if (success == true || Flag("mayHaveChanged") != false || Flag("mayHaveWrittenFiles") == true
-                || Flag("operationStarted") == true || Flag("requiresSessionReset") == true || Flag("requiresExplicitRebind") == true
+                || Flag("operationStarted") == true
                 || Flag("mayHaveExternalEffects") == true || Flag("writeOutcomeUnknown") == true || Flag("connectionUnavailable") == true)
                 return null;
             string? parameter = evidence["parameter"]?.ToString();
@@ -298,7 +298,6 @@ namespace TiaMcp.Logic.V4
             return success == false && Flag("apiCallSuccess") == false && Flag("mayHaveChanged") == false && (allowWrittenFiles ||
                 Flag("mayHaveWrittenFiles") != true)
                 && Flag("mayHaveExternalEffects") != true && Flag("operationStarted") != true
-                && Flag("requiresSessionReset") != true && Flag("requiresExplicitRebind") != true
                 && Flag("writeOutcomeUnknown") != true && Flag("connectionUnavailable") != true
                 && evidence["v4Rejection"] == null && evidence["rejectionCode"] == null
                 && (evidence["status"]?.ToString() is null or "" or "ReadOrWriteFailed");

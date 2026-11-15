@@ -137,7 +137,7 @@ namespace TiaMcp.Logic.V4
                 return true;
             }
             if (!evidence.ContainsKey("rollbackCompleted") && !cleanup) return false;
-            string result = WriteRollbackPolicy.Outcome(Flag("rollbackCompleted"), Flag("connectionUnavailable") || Flag("requiresExplicitRebind"),
+            string result = WriteRollbackPolicy.Outcome(Flag("rollbackCompleted"), Flag("connectionUnavailable"),
                 Flag("writeOutcomeUnknown"), Flag("unrestoredWrite"), Flag("rollbackRefused"), Flag("rollbackReachable"));
             if (result == "restored")
             {

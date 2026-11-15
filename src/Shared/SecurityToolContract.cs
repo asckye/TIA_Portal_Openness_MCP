@@ -49,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
             bool? success = data.ContainsKey("operationSuccess") ? Flag(data, "operationSuccess") : Flag(data, "success");
             bool issued = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
-            bool reset = Flag(data, "requiresExplicitRebind") == true || Flag(data, "requiresSessionReset") == true;
+            bool reset = !readOnly && Flag(data, "writeOutcomeUnknown") == true;
             bool knownFailure = issued && Flag(data, "verifiedAbsent") == false;
             bool knownFile = Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") == true && data["file"] is JsonObject;
             string status = data["status"]?.ToString() ?? "";
@@ -60,7 +60,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (HostBehavior.UnchangedNativeFailure(data, success))
             { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
                 HostBehavior.UnchangedNativeError(data, nativeMessage); }
-            else if (issued && (reset || success != true && !knownFailure && !knownFile))
+            else if (!readOnly && issued && (reset || success != true && !knownFailure && !knownFile))
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
             else if (knownFailure)
             { outcome = Outcome.Failed; execution = Execution.Completed; error = NativeFailure(nativeMessage); }
@@ -75,6 +75,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 execution = readOnly ? Execution.ReadOnly : Execution.Unknown;
                 error = HostBehavior.UnavailableCall(!readOnly);
             }
+            else if (readOnly && issued && success != true)
+            { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = NativeFailure(nativeMessage); }
             else if (success != true && status == "InvalidState")
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;

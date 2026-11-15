@@ -81,7 +81,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success");
             if (Flag(evidence, "success") == false || Flag(evidence, "result") == false) success = false;
             bool issued = Flag(evidence, "mayHaveChanged") == true || Flag(evidence, "mayHaveWrittenFiles") == true;
-            bool reset = Flag(evidence, "requiresExplicitRebind") == true || Flag(evidence, "requiresSessionReset") == true;
+            bool reset = writes && Flag(evidence, "writeOutcomeUnknown") == true;
             bool knownFalse = Flag(evidence, "result") == false && Flag(evidence, "apiCallSuccess") != false;
             bool unknown = writes && (reset && issued || Flag(evidence, "verified") == false || Flag(evidence, "verifiedAbsent") == false);
             int applied = (evidence["appliedEntries"] as JsonArray)?.Count ?? 0;

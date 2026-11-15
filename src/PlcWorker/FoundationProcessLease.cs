@@ -36,7 +36,6 @@ namespace TiaMcp.PlcWorker
             if (TiaOpenness.Shared.ProcessLossPolicy.Reason(error) is string reason)
             {
                 portalLost = reason;
-                _outcome.MarkUncertain();
             }
         }
 
@@ -55,7 +54,9 @@ namespace TiaMcp.PlcWorker
                 && !(JsonNode.Parse(request.ArgumentsJson)?["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && preview))
                 response = ChannelResponse.Error(new ChannelFailureException("The write outcome is unknown.", -32603,
                     ChannelOutcome.Unknown, response.ResultJson));
-            if (response.Failure?.Outcome == ChannelOutcome.Unknown) _outcome.MarkUncertain();
+            if (response.Failure?.Outcome == ChannelOutcome.Unknown && !WorkerOperations.IsReadOnly(operation)
+                && !(JsonNode.Parse(request.ArgumentsJson)?["dryRun"] is JsonValue value && value.TryGetValue<bool>(out var isPreview) && isPreview))
+                _outcome.MarkUncertain();
             if (portalLost != null && response.Failure is { } failure)
             {
                 var evidence = JsonNode.Parse(failure.EvidenceJson ?? "{}") as JsonObject ?? new JsonObject();
@@ -106,7 +107,7 @@ namespace TiaMcp.PlcWorker
                 if (message.Length > 1024) message = message.Substring(0, 1024);
             }
             ShutdownEvidence.Add(new JsonObject { ["phase"] = phase, ["exceptionType"] = error?.GetType().Name,
-                ["message"] = message, ["requiresSessionReset"] = _outcome.RequiresReset });
+                ["message"] = message, ["requiresSessionReset"] = _outcome.RequiresReset, ["writeOutcomeUnknown"] = _outcome.RequiresReset });
             Console.Error.WriteLine("PlcWorker shutdown: " + ShutdownEvidence[ShutdownEvidence.Count - 1]!.ToJsonString());
         }
     }

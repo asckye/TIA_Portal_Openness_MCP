@@ -7,8 +7,9 @@ public static class OnlineCompletionPolicy
     {
         if (request.DryRun || success || rejected || !nativeCallIssued || OnlineCapabilities.IsReadOnly(request))
             return false;
-        if (request.Operation == "DownloadPlc" || request.Operation == "DownloadPlcToFolder")
+        if (request.Operation is "GeneratePlcLoadableFile" or "DownloadPlcToFolder") return false;
+        if (request.Operation == "DownloadPlc")
             return nativeState != "Error";
-        return mayHaveChanged || mayHaveWrittenFiles;
+        return mayHaveChanged;
     }
 }

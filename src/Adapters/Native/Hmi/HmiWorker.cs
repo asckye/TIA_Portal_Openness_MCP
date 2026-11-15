@@ -113,18 +113,20 @@ namespace TiaMcp.Adapters
                 }
                 reply.MayHaveChanged = session.MayHaveChanged;
                 if (reply.Value is HmiMessage message)
-                    reply.RequiresSessionReset = message.Meta.TryGetValue("requiresExplicitRebind", out var blocked) && blocked is true
-                        || session.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success) && success is false;
+                    reply.RequiresSessionReset = !request.DryRun && session.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success)
+                        && success is false;
                 if (reply.Value is HmiImportBatch batch && session.MayHaveChanged && batch.Failed.Count != 0)
-                    reply.RequiresSessionReset = true;
+                    reply.RequiresSessionReset = !request.DryRun;
             }
             catch (Exception error) when (error.GetBaseException() is not Siemens.Engineering.NonRecoverableException)
             {
                 reply.Failure = EngineeringReflectionFailure != null ? EngineeringReflectionFailure(error)
                     : new PlcSoftwareFailure { Code = error is PlcSoftwareException native ? native.Code : error.GetType().Name, Message = error.Message };
-                reply.MayHaveChanged = session.MayHaveChanged; reply.RequiresSessionReset = session.MayHaveChanged;
+                reply.MayHaveChanged = session.MayHaveChanged; reply.RequiresSessionReset = !request.DryRun && session.MayHaveChanged;
             }
             finally { HmiValues.Renderer = previous; HmiValues.ExportFailure = previousExportFailure; HmiValues.TraceWriter = previousTraceWriter; }
+            if (reply.RequiresSessionReset && reply.Value is HmiMessage uncertain)
+            { uncertain.Meta["writeOutcomeUnknown"] = true; uncertain.Meta["requiresSessionReset"] = true; }
             return reply;
         }
     }
