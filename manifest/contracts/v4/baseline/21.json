@@ -14793,7 +14793,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "bbcbe4033118e88fb9ddd8eff492104c7e9ca5b74548179f3a00917c59944f6f",
+      "descriptionSha256": "fce7f89f7b54eba43a71ba12cce7ef03408d31995850277e3ff77a83c7ac707f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14808,6 +14808,24 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "dryRun: true (default) previews; false executes.",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+            "type": "string"
           },
           "itemPath": {
             "description": "itemPath: array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.",
@@ -25492,8 +25510,8 @@
             "type": "string"
           },
           "overwrite": {
-            "default": true,
-            "description": "overwrite: true=Override (default)",
+            "default": false,
+            "description": "overwrite: false (default) refuses to replace an existing technology object; true replaces it.",
             "type": "boolean"
           },
           "regexName": {

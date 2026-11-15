@@ -1,7 +1,7 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-15T02:04:40.7039966+00:00",
+  "generatedAt": "2026-11-15T03:46:34.0115474+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "f0112448c46f15c181b2a07705d91d2b559dd135c9b8a995975876ac36c33005",
@@ -9,13 +9,13 @@
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2829,
+    "parameters": 2832,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 695,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
     "enumHints": 256,
-    "defaultHints": 1607,
+    "defaultHints": 1610,
     "examplesCurated": 518,
     "recipes": 40
   },
@@ -7310,10 +7310,13 @@
       "returnType": "CallToolResult",
       "parameters": [
         "devicePath",
-        "itemPath"
+        "itemPath",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > Hardware (rebuild all)' does and what DownloadPlc runs first; CompilePlcSoftware / CompilePlcDiagnostics only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"devicePath\":[\"PLC_1\"]} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CompileDevice\"), optionally operation or language.",
-      "example": "{\"devicePath\":[\"PLC_1\"]}"
+      "description": "[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > Hardware (rebuild all)' does and what DownloadPlc runs first; CompilePlcSoftware / CompilePlcDiagnostics only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. Native behaviorPolicy=current; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Example: {\"devicePath\":[\"PLC_1\"],\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CompileDevice\"), optionally operation or language.",
+      "example": "{\"devicePath\":[\"PLC_1\"],\"dryRun\":true}"
     },
     {
       "name": "CompareUnifiedGraphicSelections",
