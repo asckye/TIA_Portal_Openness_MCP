@@ -364,7 +364,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "dryRun=false.")] string expectedProjectFile =
                 "")
             => McpServer
-                .RunWritePreview("ManageOnlineDriveFunctions", dryRun && action != "read", new {
+                .RunWritePreview("ManageOnlineDriveFunctions", dryRun, new {
                     devicePath, itemPath, driveObjectNumber, driveObjectIndex, action, resetMode, activationState, confirmOnline }, () => DriveToolContract
                     .Run("ManageOnlineDriveFunctions", action != "read", true, () =>
             {

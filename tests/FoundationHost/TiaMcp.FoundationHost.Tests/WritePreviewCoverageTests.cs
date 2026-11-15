@@ -46,8 +46,9 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.True((bool?)preview.StructuredContent!["ok"]);
         var data = preview.StructuredContent["data"]!;
         Assert.False((bool?)data["targetBound"]);
+        Assert.False((bool?)data["targetVerified"]);
         Assert.Equal("No project is bound, so this preview covers only the arguments and input files and names no target. "
-            + "Applying it refuses with PROJECT_NOT_BOUND; bind a project and preview again.", (string?)data["scope"]);
+            + "The target is not verified. Applying it refuses with PROJECT_NOT_BOUND; bind a project and preview again.", (string?)data["scope"]);
         var refused = Host.RunWritePreview("EnsureSubnet", false, args, Execute, (string)data["planHash"]!, "C:/Projects/original.ap21");
         Assert.Equal("PROJECT_NOT_BOUND", (string?)refused.StructuredContent!["error"]!["code"]);
         Assert.Equal(0, worker.Calls);
@@ -64,7 +65,8 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         var preview = await Host.RunWritePreviewAsync("EnsureSubnet", true, args, () => Task.FromResult(Execute()));
         var data = preview.StructuredContent!["data"]!;
         Assert.True((bool?)data["targetBound"]);
-        Assert.Equal("Normalized arguments, input file contents and target identity; native validation/readback occurs during execution.",
+        Assert.False((bool?)data["targetVerified"]);
+        Assert.Equal("Normalized arguments, input file contents and cached target identity; the target is not verified. Native validation/readback occurs during execution.",
             (string?)data["scope"]);
         var hashed = new JsonObject { ["releaseKey"] = release, ["tool"] = "EnsureSubnet",
             ["arguments"] = JsonSerializer.SerializeToNode(args), ["inputFiles"] = new JsonArray(),
@@ -81,12 +83,119 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         using var worker = new PlanWorker { Identity = new JsonObject() };
         using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
+        int calls = 0;
         var preview = Host.RunWritePreview("InvokeObject", true, new { methodName = "GetAttributeInfos" },
-            () => throw new InvalidOperationException("Preview must not execute."), writing: false);
+            () => { calls++; return Host.V4Result("InvokeObject", new JsonObject()); }, writing: false);
         Assert.True((bool?)preview.StructuredContent!["ok"]);
         Assert.False(preview.StructuredContent["data"]!.AsObject().ContainsKey("targetBound"));
-        Assert.Equal("Normalized arguments, input file contents and target identity; native validation/readback occurs during execution.",
+        Assert.True((bool?)preview.StructuredContent["data"]!["dryRun"]);
+        Assert.True((bool?)preview.StructuredContent["data"]!["readOnlyInvocation"]);
+        Assert.Equal("Normalized arguments, input file contents and cached target identity; the target is not verified. Native validation/readback occurs during execution.",
             (string?)preview.StructuredContent["data"]!["scope"]);
+        Assert.Equal(1, calls);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    public static IEnumerable<object[]> ReadOnlyInvocations() => from release in Releases()
+        from tool in new[] { "InvokeObject", "InvokeService" }
+        from dryRun in new[] { true, false }
+        select new object[] { release[0], tool, dryRun };
+
+    [Theory, MemberData(nameof(ReadOnlyInvocations))]
+    public void Read_only_invoke_keeps_the_requested_dryRun(string release, string tool, bool dryRun)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        int calls = 0;
+        var service = new enginehost::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
+            calls++;
+            Assert.True((bool?)arguments["dryRun"]);
+            Assert.False((bool?)arguments["request"]?["AllowWrite"]);
+            Assert.Equal("GetAttribute", (string?)arguments["request"]?["MethodName"]);
+            Assert.False(arguments.ContainsKey("confirm"));
+            return new JsonObject { ["Observation"] = new JsonObject { ["Message"] = "read",
+                ["Meta"] = new JsonObject { ["success"] = true, ["invocationAttempted"] = true } } };
+        }, () => throw new InvalidOperationException("A read must not request a write identity."));
+        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.ReflectionTools(service);
+        var args = new[] { new TiaMcp.Logic.V4.Inputs.NativeValue(JsonSerializer.SerializeToElement("Name")) };
+        var result = tool == "InvokeObject"
+            ? tools.InvokeObjectV4("Project", "", "GetAttribute", args, dryRun: dryRun, allowWrite: false)
+            : tools.InvokeServiceV4("Project", "", "PlcChecksumProvider", "GetAttribute", args, dryRun: dryRun, allowWrite: false);
+        var body = result.StructuredContent!;
+        Assert.True((bool?)body["ok"], body.ToJsonString());
+        Assert.Equal(dryRun, (bool?)body["data"]!["dryRun"]);
+        Assert.True((bool?)body["data"]!["readOnlyInvocation"]);
+        Assert.True((bool?)body["data"]!["invocationAttempted"]);
+        Assert.Equal("read-only", (string?)body["meta"]!["execution"]);
+        Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+        Assert.Equal(1, calls);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(ReadOnlyInvocations))]
+    public async Task Async_read_only_invoke_keeps_the_requested_dryRun(string release, string tool, bool dryRun)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        int calls = 0;
+        var result = await Host.RunWritePreviewAsync(tool, dryRun, new { methodName = "GetAttribute" }, () => {
+            calls++;
+            return Task.FromResult(Host.V4Result(tool, new JsonObject { ["invocationAttempted"] = true }));
+        }, writing: false);
+        var body = result.StructuredContent!;
+        Assert.True((bool?)body["ok"]);
+        Assert.Equal(dryRun, (bool?)body["data"]!["dryRun"]);
+        Assert.True((bool?)body["data"]!["readOnlyInvocation"]);
+        Assert.True((bool?)body["data"]!["invocationAttempted"]);
+        Assert.Equal("read-only", (string?)body["meta"]!["execution"]);
+        Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+        Assert.Equal(1, calls);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task EnsureSubnet_preview_refuses_an_unknown_type_without_a_plan(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(null!);
+        var rejected = tools.EnsureSubnet("PLC/CPU", "PROFIBUS", "PN");
+        var asyncRejected = await Host.RunWritePreviewAsync("EnsureSubnet", true,
+            new { anchorDeviceItemPath = "PLC/CPU", subnetType = "PROFIBUS", subnetName = "PN" },
+            () => throw new InvalidOperationException("Invalid preview must not execute."));
+        foreach (var result in new[] { rejected, asyncRejected })
+        {
+            var body = result.StructuredContent!;
+            Assert.False((bool?)body["ok"]);
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]!["code"]);
+            Assert.Equal("/subnetType", (string?)body["error"]!["details"]!["parameter"]);
+            Assert.Null(body["data"]?["planHash"]);
+            Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
+            Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("PROFINET")]
+    [InlineData("PN")]
+    [InlineData("IndustrialEthernet")]
+    [InlineData("Industrial Ethernet")]
+    [InlineData("PN/IE")]
+    [InlineData(" profinet ")]
+    public void EnsureSubnet_preview_accepts_the_existing_native_type_values(string subnetType)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var result = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(null!).EnsureSubnet("PLC/CPU", subnetType, "PN");
+        Assert.True((bool?)result.StructuredContent!["ok"]);
+        Assert.False((bool?)result.StructuredContent["data"]!["targetVerified"]);
+        Assert.Matches("^[0-9a-f]{64}$", (string)result.StructuredContent["data"]!["planHash"]!);
         Assert.Equal(0, worker.Calls);
     }
 
@@ -289,6 +398,30 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             .InvokeServiceV4("Project", "", "PlcChecksumProvider", "GetAttributeInfos");
         Assert.True((bool?)result.StructuredContent!["ok"]);
         Assert.Equal(1, calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Drive_read_keeps_the_default_dryRun(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        int calls = 0;
+        var service = new enginehost::TiaMcpServer.Siemens.Services.StartdriveService((_, arguments) => {
+            calls++;
+            Assert.True((bool?)arguments["dryRun"]);
+            Assert.False((bool?)arguments["request"]?["IsWrite"]);
+            Assert.False(arguments.ContainsKey("confirm"));
+            return new JsonObject { ["Message"] = "read", ["Meta"] = new JsonObject { ["success"] = true } };
+        }, () => throw new InvalidOperationException("A read must not request the bound write identity."));
+        var result = new enginehost::TiaMcpServer.ModelContextProtocol.StartdriveTools(service)
+            .ManageOnlineDriveFunctions(new[] { "Drive" }, new[] { "Axis" });
+        Assert.True((bool?)result.StructuredContent!["ok"]);
+        Assert.True((bool?)result.StructuredContent["data"]!["dryRun"]);
+        Assert.True((bool?)result.StructuredContent["data"]!["readOnlyInvocation"]);
+        Assert.Equal("read-only", (string?)result.StructuredContent["meta"]!["execution"]);
+        Assert.Equal(1, calls);
+        Assert.Equal(0, worker.Calls);
     }
 
     [Fact]
@@ -622,9 +755,29 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     [InlineData("SetUnifiedHmiButtonEventScriptCode")]
     [InlineData("SetUnifiedHmiRuntimeState")]
     public async Task Maintained_write_examples_preview_without_native_dispatch(string name)
+        => await AssertMaintainedWritePreview("21", name);
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Generic_preview_says_it_did_not_verify_the_target(string release)
+    {
+        using var worker = new FakeWorker();
+        var registered = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false)
+            .Select(tool => tool.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
+        var names = new[] { "AttachDeviceNodeToSubnet", "ConnectDeviceNodesToProfinetSubnet", "CreateDevice", "CreateGsdDevice",
+            "CompileDevice", "CreateVersionControlWorkspace", "DownloadPlc", "EnsureSubnet", "ImportAlarmClasses", "ImportAlarmTextLists",
+            "ImportHmiConnection", "ImportHmiScreen", "ImportHmiScreensFromDirectory", "ImportHmiTagTable", "ImportHmiTagTablesFromDirectory",
+            "ImportMasterCopyFromGlobalLibrary", "ImportOpcUaInterface", "ImportTechnologyObject", "ImportTechnologyObjectsFromDirectory",
+            "InvokeObject", "InvokeService", "ManageOnlineDriveFunctions", "SeedProjectFromReference", "SetDeviceItemAttribute",
+            "SetOpcUaInterfaceEnabled", "SetPlcCpuSettings", "SetPlcWatchTableModifyValue", "SetUnifiedHmiButtonEventScriptCode",
+            "SetUnifiedHmiRuntimeState" };
+        Assert.Contains("EnsureSubnet", registered);
+        foreach (string name in names.Where(registered.Contains)) await AssertMaintainedWritePreview(release, name);
+    }
+
+    private static async Task AssertMaintainedWritePreview(string release, string name)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         var method = typeof(Host).Assembly.GetTypes().SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             .Single(candidate => candidate.GetCustomAttributesData().Any(attribute => attribute.AttributeType.Name == "McpServerToolAttribute"
@@ -632,7 +785,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         // Unconfigured services make any accidental service access fail; published admission is covered separately.
         var constructor = method.DeclaringType!.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Single();
         var target = constructor.Invoke(new object?[constructor.GetParameters().Length]);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), "21");
+        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), release);
         var path = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "reference", "tool-examples", "calls.json");
         var arguments = JsonNode.Parse(File.ReadAllText(path))!["profiles"]!["plc-foundation"]![name]!["arguments"]!.DeepClone().AsObject();
@@ -652,6 +805,8 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             });
         Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
         Assert.True((bool?)result.StructuredContent?["data"]?["dryRun"]);
+        Assert.False((bool?)result.StructuredContent?["data"]?["targetVerified"]);
+        Assert.Contains("target is not verified", (string?)result.StructuredContent?["data"]?["scope"], StringComparison.OrdinalIgnoreCase);
         Assert.Equal("read-only", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.Matches("^[0-9a-f]{64}$", (string)result.StructuredContent!["data"]!["planHash"]!);
         Assert.Equal(0, worker.Calls);

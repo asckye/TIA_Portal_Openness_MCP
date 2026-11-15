@@ -313,14 +313,14 @@ namespace TiaMcpServer.ModelContextProtocol
                             releaseKey = ReleaseKey, tool,
                             arguments = TiaOpenness.Shared.CallJournalPayload.ProtectPlanArguments(JsonNode.Parse(PendingApproval.Canonical(normalized))),
                             hostLifetime = TiaOpenness.Shared.CallJournalPayload.PlanHostLifetime, inputFiles = inputs, targetIdentity = identity }))),
-                ["targetIdentity"] = identity, ["scope"] =
-                    "Normalized arguments, input file contents and target identity; native validation/readback occurs during execution." };
+                ["targetIdentity"] = identity, ["targetVerified"] = false, ["scope"] =
+                    "Normalized arguments, input file contents and cached target identity; the target is not verified. Native validation/readback occurs during execution." };
             if (writing)
             {
                 bool targetBound = PlanProjectFile(identity) != null;
                 plan["targetBound"] = targetBound;
                 if (!targetBound) plan["scope"] = "No project is bound, so this preview covers only the arguments and input files and names no target. "
-                    + "Applying it refuses with PROJECT_NOT_BOUND; bind a project and preview again.";
+                    + "The target is not verified. Applying it refuses with PROJECT_NOT_BOUND; bind a project and preview again.";
             }
             return plan;
         }
@@ -361,21 +361,31 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return null;
         }
-        private static CallToolResult WritePlanResult(CallToolResult result, JsonObject plan)
+        private static CallToolResult WritePlanResult(CallToolResult result, JsonObject plan, bool dryRun, bool writing)
         {
             var body = ResultBody(result)?.DeepClone() as JsonObject;
             if (body?["data"] is JsonObject data)
             {
                 foreach (var pair in plan) data[pair.Key] = pair.Value?.DeepClone();
-                data["dryRun"] = false;
+                data["dryRun"] = writing ? false : dryRun;
+                if (!writing) data["readOnlyInvocation"] = true;
                 result.StructuredContent = body;
                 result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(body) } };
             }
             return result;
         }
+        private static Error? WritePreviewArgumentRefusal(string tool, object arguments)
+        {
+            if (tool != "EnsureSubnet") return null;
+            string? subnetType = (string?)JsonSerializer.SerializeToNode(arguments)!["subnetType"];
+            return TiaMcp.Logic.Siemens.SubnetTypePolicy.IsSupported(subnetType) ? null
+                : InvalidInput("subnetType", "Industrial Ethernet/PROFINET subnet type",
+                    "", "IndustrialEthernet", "Industrial Ethernet", "PROFINET", "PN", "PN/IE");
+        }
         internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
                 string expectedProjectFile = "", bool writing = true)
         {
+            if (dryRun && WritePreviewArgumentRefusal(tool, arguments) is Error argumentRefusal) return V4Reject(tool, argumentRefusal);
             JsonObject plan;
             try { plan = WritePreviewPlan(tool, arguments, writing); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
@@ -385,13 +395,14 @@ namespace TiaMcpServer.ModelContextProtocol
                             new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
                     : TargetFailure(tool, error, false);
             }
-            if (dryRun) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
+            if (dryRun && writing) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
-            return WritePlanResult(execute(), plan);
+            return WritePlanResult(execute(), plan, dryRun, writing);
         }
         internal static async Task<CallToolResult> RunWritePreviewAsync(string tool, bool dryRun, object arguments,
             Func<Task<CallToolResult>> execute, string expectedPlanHash = "", string expectedProjectFile = "", bool writing = true)
         {
+            if (dryRun && WritePreviewArgumentRefusal(tool, arguments) is Error argumentRefusal) return V4Reject(tool, argumentRefusal);
             JsonObject plan;
             try { plan = WritePreviewPlan(tool, arguments, writing); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
@@ -401,9 +412,9 @@ namespace TiaMcpServer.ModelContextProtocol
                             new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
                     : TargetFailure(tool, error, false);
             }
-            if (dryRun) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
+            if (dryRun && writing) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
-            return WritePlanResult(await execute().ConfigureAwait(false), plan);
+            return WritePlanResult(await execute().ConfigureAwait(false), plan, dryRun, writing);
         }
         internal static Paging OffsetPage(int offset, int limit, int total) => new Paging(PagingMode.Offset, offset, limit,
             (long)offset + limit < total ? offset + limit : (int?)null, null, null, total, (long)offset + limit >= total);

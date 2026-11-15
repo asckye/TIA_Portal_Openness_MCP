@@ -204,7 +204,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "dryRun=false.")] string expectedProjectFile =
                 "")
             => McpServer
-                .RunWritePreview("InvokeObject", dryRun && allowWrite, new { objectKind, objectPath, methodName, args, softwarePath, allowWrite }, () =>
+                .RunWritePreview("InvokeObject", dryRun, new { objectKind, objectPath, methodName, args, softwarePath, allowWrite }, () =>
                     HmiInspectionContract
                 .Run("InvokeObject", allowWrite, allowWrite, () =>
                     InvokeObject(objectKind, objectPath, methodName, args == null ? null : args.Select(value => value.Json).ToArray(), softwarePath,
@@ -301,7 +301,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "dryRun=false.")] string expectedProjectFile =
                 "")
             => McpServer
-                .RunWritePreview("InvokeService", dryRun && allowWrite, new {
+                .RunWritePreview("InvokeService", dryRun, new {
                     objectKind, objectPath, serviceTypeSuffix, methodName, args, softwarePath, allowWrite }, () => HmiInspectionContract
                 .Run("InvokeService", allowWrite, allowWrite, () =>
                     InvokeService(objectKind, objectPath, serviceTypeSuffix, methodName, args == null ? null : args.Select(value => value.Json).ToArray(),

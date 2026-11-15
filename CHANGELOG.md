@@ -24,6 +24,8 @@
 - `DeletePlcTagTable`, `DeletePlcBlock` and `DeletePlcType` summaries use `Warning:` for unavailable cross-references and unverified deletion across all eight releases. Tag-table replies also separate tag counts and use a plain HMI-binding warning in `nextActions`.
 - `ExportPlcProDiagInfo` and `ManagePlcSupervision` preconditions identify `prodiag` on V17–V21; Classic HMI and motion preconditions identify `classic-hmi` and `motion` across all eight releases, including their `-before-write` conditions.
 - HMI, hardware, library and optional-package scalar dates use ISO 8601 round-trip strings across all eight releases, preserving fractional seconds, UTC `Z`, local offsets and unspecified timezone values.
+- On all eight releases, read-only `InvokeObject` and `InvokeService` calls preserve the requested `dryRun` value and report `readOnlyInvocation:true` when the read runs.
+- On all eight releases, `EnsureSubnet` previews reject unsupported subnet types before issuing a plan hash, using the existing native type rule.
 - The example project name in tool descriptions and guidance is now `ExampleProject`.
 - `PreviewToolCall` precautions name the compile step for the tool's domain and include Windows Openness group changes for session tools.
 - Canonical printed device paths and arrays of names containing `/` on the seven string device entries now resolve.
@@ -78,6 +80,8 @@
 - Online monitoring safety checks use force-tool classifications and the reviewed offline-write list, require the monitoring API tools available on each release, and scan the registered roster on V20/V21. The policy covers offline force-table engineering and prohibits changing forcing on a running PLC.
 - Passive capability self-tests read cached connection and project state. A bound project is reported without a worker call, and project validation and tree reads require `connectIfNeeded=true`.
 ### Changed
+- Generic write previews report `targetVerified:false` and state that the cached target identity has not been verified, on all eight releases where each tool is registered.
+- Generic read-only invocations, including `ManageOnlineDriveFunctions` read actions, report `readOnlyInvocation:true` on all eight releases where each tool is registered.
 - `CompileDevice` now defaults to a preview on all eight releases. Existing callers must pass `dryRun:false` with the preview's `expectedPlanHash` and exact bound `expectedProjectFile` to compile.
 - `ImportTechnologyObjectsFromDirectory` defaults to `overwrite:false` on V16–V21; replacing existing technology objects requires `overwrite:true`.
 - Across all eight releases, `PreviewToolBatch` adds `data.previewToken` with the same value as `data.token`; `token` remains available until 5.0.
