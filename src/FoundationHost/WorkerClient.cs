@@ -7,6 +7,7 @@ using WorkerSupervisorState = enginehost::TiaMcp.FoundationHost.WorkerSupervisor
 using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
 using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
 using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
+using UnknownSettlement = enginehost::TiaMcp.FoundationHost.UnknownSettlement;
 using ResponseGuardTool = enginehost::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
 #else
 using McpServer = TiaMcpServer.ModelContextProtocol.McpServer;
@@ -152,7 +153,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     {
         get
         {
-            lock (stateSync) return handoverPending && runningCall != null
+            lock (stateSync) return handoverPending && runningCall != null || !settlementDrain.IsCompleted
                 || channel?.Poisoned != true && process is { HasExited: false } && (runningCall != null || channel?.CallRunning == true);
         }
     }
@@ -200,6 +201,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         }
     }
     private readonly object stateSync = new();
+    private Task settlementDrain = Task.CompletedTask;
     private JsonObject? runningCall, lastRunningCall, activeCall;
     private TaskCompletionSource<JsonObject>? dialogReported;
     private int dialogProcessId;
@@ -215,6 +217,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             lock (stateSync)
             {
                 if (handoverPending && LateResults.Running is { } handover) return handover;
+                if (!settlementDrain.IsCompleted) return null;
                 var current = runningCall ?? (channel?.CallRunning == true ? lastRunningCall : null);
                 if (channel?.Poisoned == true || process?.HasExited == true || current == null) return null;
                 return DescribeRunning((JsonObject)current.DeepClone());
@@ -224,7 +227,13 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     private TiaMcp.Adapters.Contracts.AdapterPreconditionException Busy()
     {
         JsonObject? running;
-        lock (stateSync) running = Running ?? activeCall ?? lastRunningCall;
+        lock (stateSync)
+        {
+            if (!handoverPending && !settlementDrain.IsCompleted)
+                return RecoveryRefusal("worker-call-running", "An optional settlement read is still draining on the worker channel. "
+                    + "The earlier write has ended with an unknown outcome. Try the next native call after the read finishes.");
+            running = Running ?? activeCall ?? lastRunningCall;
+        }
         var error = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
             $"Worker call {running?["tool"]} (request {running?["requestId"]}, started {running?["sinceUtc"]}) is still running. "
                 + "Read GetCallResult(requestId) before repeating it." + (running == null ? "" : LateCalls.RunningDiagnostic(running)),
@@ -539,9 +548,9 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         => SharedSession ? ImportStagingTools.UseSession(request) : null;
 
     internal Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)
-        => CallCore("HostObserve", new JsonObject { ["operation"] = operation, ["arguments"] = arguments.DeepClone() }, managed: true, token);
+        => CallCore("HostObserve", new JsonObject { ["operation"] = operation, ["arguments"] = arguments.DeepClone() }, true, false, token);
     public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
-        => CallCore(operation, arguments, managed: false, token);
+        => CallCore(operation, arguments, false, false, token);
     private string[] UnsettledRequestIds()
     {
         var calls = Unsettled.Snapshot();
@@ -552,7 +561,19 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         }
         return calls.Take(ChannelLimits.UnsettledRequestCount).Select(call => call.RequestId).ToArray();
     }
-    private async Task<JsonNode?> CallCore(string operation, JsonObject arguments, bool managed, CancellationToken token)
+    internal async Task<JsonNode?> ReadForSettlement(string operation, JsonObject arguments, CancellationToken token)
+    {
+        using var scope = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), operation);
+        return await CallCore(operation, arguments, false, true, token).ConfigureAwait(false);
+    }
+    private void SettlementRunning(JsonObject running)
+        => throw new TimeoutException("The optional settlement read exceeded its wait budget.");
+    private void RetainSettlementDrain(Task<string> reply)
+    {
+        lock (stateSync) settlementDrain = reply;
+        RetainRecoveryDrain(reply);
+    }
+    private async Task<JsonNode?> CallCore(string operation, JsonObject arguments, bool managed, bool settling, CancellationToken token)
     {
         if (operation == "Disconnect")
         {
@@ -580,7 +601,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         {
             ChannelLimits.CheckRequest("adapter." + operation, arguments.ToJsonString(), FoundationWorkerRequest.CorrelationId,
                 FoundationWorkerRequest.ToolName, UnsettledRequestIds());
-            if (CallRunning && acquired) throw Busy();
+            if (CallRunning && (acquired || !settlementDrain.IsCompleted)) throw Busy();
             token.ThrowIfCancellationRequested();
             if (!nativeEnabled && !managed)
                 throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
@@ -597,7 +618,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             if (disconnectAcknowledgement != null && !managed && (operation == "Attach" || disconnectCompleted)
                 && !ResetDisconnectedWorker("disconnect"))
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("The previous worker could not stop.", "worker-faulted", null);
-            if (!managed && !WorkerOperations.IsIndependentRuntime(operation)) await RecoverLostWorker(operation != "Attach", token);
+            if (!settling && !managed && !WorkerOperations.IsIndependentRuntime(operation)) await RecoverLostWorker(operation != "Attach", token);
             if (Faulted && (managed || WorkerOperations.IsIndependentRuntime(operation)
                 && !(process is { HasExited: false } && channel?.CanCallIndependentRuntime == true)))
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
@@ -612,14 +633,14 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             EnsureProcess();
             requestIdAtEntry = channel!.LastRequestId;
             if (!WorkerOperations.IsIndependentRuntime(operation) || !channel!.CanCallIndependentRuntime)
-                await channel!.ConnectAsync(timeouts.For("status"),token);
+                await channel!.ConnectAsync(settling ? UnknownSettlement.ReadBudget : timeouts.For("status"),token);
             token.ThrowIfCancellationRequested();
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
                 TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
             activeRequestId = FoundationWorkerRequest.CorrelationId;
             if (operation == "Attach") lock (stateSync) attachingProcessId = hostAttachPid;
-            var dialog = BeginDialogCall(activeRequestId, operation, hostAttachPid ?? attachedProcessId);
-            HostSessionCall.RequestIdChanged(activeRequestId!);
+            var dialog = settling ? null : BeginDialogCall(activeRequestId, operation, hostAttachPid ?? attachedProcessId);
+            if (!settling) HostSessionCall.RequestIdChanged(activeRequestId!);
             var change = BindingChangeFor(operation, arguments);
             long epochBefore = channel!.BindingEpoch;
             string response;
@@ -641,9 +662,9 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 else
                 response=await FoundationWorkerRequest.Dispatch(channel, "adapter."+operation,arguments.ToJsonString(),change,
                     managed || WorkerOperations.IsReadOnly(operation) || arguments["dryRun"] is JsonValue preview && preview.TryGetValue<bool>(out var dryRun)
-                        && dryRun, timeouts.ForPlc(operation, arguments, firstAttach), firstAttach,
-                    recovering ? RecoveryRunning : SetRunning, recovering ? null : dialog, CancellationToken.None,
-                    recovering ? RetainRecoveryDrain : null);
+                        && dryRun, settling ? UnknownSettlement.ReadBudget : timeouts.ForPlc(operation, arguments, firstAttach), firstAttach,
+                    settling ? SettlementRunning : recovering ? RecoveryRunning : SetRunning, recovering ? null : dialog,
+                    settling ? token : CancellationToken.None, settling ? RetainSettlementDrain : recovering ? RetainRecoveryDrain : null);
                 sent=true;
             }
             catch(ChannelFailureException failure)
@@ -688,7 +709,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             RememberRebindTarget(operation, arguments, result);
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
-            if (SharedSession && !WorkerOperations.IsIndependentRuntime(operation))
+            if (!settling && SharedSession && !WorkerOperations.IsIndependentRuntime(operation))
             {
                 unansweredHostProbe = true;
                 var statusWire = await channel
@@ -749,7 +770,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         {
             lock (stateSync)
             {
-                if (UnansweredRequest && activeCall != null) lastRunningCall = activeCall;
+                if (!settling && UnansweredRequest && activeCall != null) lastRunningCall = activeCall;
                 activeRequestId = null;
                 activeCall = null;
                 dialogReported = null;

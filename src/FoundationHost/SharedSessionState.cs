@@ -72,6 +72,7 @@ internal sealed class SharedSessionState
             ["connected"] = !ended && connected,
             ["workerGeneration"] = transport["generation"]?.DeepClone(),
             ["unsettled"] = Unsettled.ToJson(),
+            ["settled"] = Unsettled.SettledJson(),
             ["running"] = transport["running"]?.DeepClone() ?? LateResults.Running,
             ["lateResults"] = LateResults.Snapshot(),
             ["workerFault"] = transport["workerFault"]?.DeepClone(),

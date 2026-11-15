@@ -23,7 +23,20 @@ internal static class SpecialExportDispatchTests
                 bool dry=args["dryRun"]!.GetValue<bool>();
                 if(!dry) MutationIdentityPolicy.RequireSameProject(args["expectedProjectFile"]!.GetValue<string>(),"C:/Projects/project.ap17");
                 string kind=operation=="ExportPlcWatchTable"?"watch-table":"technology-object";
-                var result=PlcSpecialExportPolicy.Run(kind,"17","C:/Projects/project.ap17",args["softwarePath"]!.GetValue<string>(),args[kind=="watch-table"?"watchTableName":"toName"]!.GetValue<string>(),args["exportPath"]!.GetValue<string>(),true,dry,args["expectedPlanHash"]!.GetValue<string>(),()=>{},_=>throw new Exception("Native export forbidden in dispatch fixture"),(_,_)=>{Publications++; if(Fail)throw new IOException("private failure");return null;});
+                var result=PlcSpecialExportPolicy.Run(kind,"17","C:/Projects/project.ap17",args["softwarePath"]!.GetValue<string>(),
+                    args[kind=="watch-table"?"watchTableName":"toName"]!.GetValue<string>(),args["exportPath"]!.GetValue<string>(),true,dry,
+                    args["expectedPlanHash"]!.GetValue<string>(),()=>{},_=>throw new Exception("Native export forbidden in dispatch fixture"),
+                    (destination,_)=>{
+                        Publications++;
+                        if(Fail)
+                        {
+                            // Publish real-format XML, then simulate losing the completion reply.
+                            PlcExportPublication.Publish(destination, staged=>File.WriteAllText(staged.FullName,
+                                "<Document><Engineering version=\"V17\" /></Document>"));
+                            throw new IOException("private failure");
+                        }
+                        return null;
+                    });
                 var payload=JsonSerializer.SerializeToNode(result)!.AsObject();
                 if(WrongTarget)payload["ObjectPath"]="different";
                 WorkerProtocol.ValidateExchangeResult(operation,args,payload);
@@ -43,7 +56,10 @@ internal static class SpecialExportDispatchTests
             {
                 var worker=new SpecialWorker();
                 var tool=FoundationTools.Create(worker).Single(t=>t.ProtocolTool.Name==operation);
-                var args=new Dictionary<string,JsonElement> { ["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC"),[operation=="ExportPlcWatchTable"?"watchTableName":"toName"]=JsonSerializer.SerializeToElement("folder/object"),["exportPath"]=JsonSerializer.SerializeToElement(Path.Combine(root,"object.xml")) };
+                var args=new Dictionary<string,JsonElement> {
+                    ["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC"),
+                    [operation=="ExportPlcWatchTable"?"watchTableName":"toName"]=JsonSerializer.SerializeToElement("folder/object"),
+                    ["exportPath"]=JsonSerializer.SerializeToElement(Path.Combine(root,operation+".xml")) };
                 RequestContext<CallToolRequestParams> Request()=>new(server){Params=new(){Name=operation,Arguments=args}};
                 async Task Refuse(string reason) {try {await tool.InvokeAsync(Request());throw new Exception("Accepted "+reason);}catch(McpException){check(true,operation+": "+reason);}}
                 var preview=await tool.InvokeAsync(Request());
@@ -67,6 +83,7 @@ internal static class SpecialExportDispatchTests
                         + ": identical apply is refused");
                 check(worker.Calls==2 && worker.Publications==1,operation+": replay cannot dispatch or republish");
                 args["dryRun"] = JsonSerializer.SerializeToElement(true);
+                args["exportPath"] = JsonSerializer.SerializeToElement(Path.Combine(root,operation+"-preview.xml"));
                 var next = await applyTool.InvokeAsync(Request());
                 check((bool?)next.StructuredContent?["ok"] == true && worker.Calls == 3 && worker.Publications == 1,
                     operation + ": independent preview reaches the worker without replaying the apply");

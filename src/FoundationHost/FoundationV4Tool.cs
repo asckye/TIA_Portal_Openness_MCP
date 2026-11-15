@@ -229,7 +229,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             }
             return null;
         }
-        CallToolResult Recorded(CallToolResult result)
+        async ValueTask<CallToolResult> Recorded(CallToolResult result)
         {
             result = FoundationV4Result.RestrictArguments(result, tool.InputSchema, JsonSerializer.SerializeToElement(args));
             if (inner is FoundationTool artifactProducer)
@@ -241,7 +241,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                 sessionTool.Unsettled.ObserveProjectAfterCall(sessionTool.BoundProjectFile);
                 if (UnsettledCalls.HasUnknownOutcome(body) && IsNonPreviewMutation(arguments, write))
                     sessionTool.Unsettled.Record((string?)body["meta"]?["requestId"] ?? id, tool.Name,
-                        WriteDigest.ForOutcome(tool.Name, arguments, sessionTool.BoundProjectFile), DateTimeOffset.UtcNow);
+                        WriteDigest.ForOutcome(tool.Name, arguments, sessionTool.BoundProjectFile), DateTimeOffset.UtcNow, arguments);
+                if (UnsettledCalls.HasUnknownOutcome(body)) body = await sessionTool.SettleUnknown(body).ConfigureAwait(false);
                 body = sessionTool.Unsettled.WarnOnSave(tool.Name, body, unsettledBeforeSave);
                 result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                     Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
@@ -254,9 +255,9 @@ internal sealed class FoundationV4Tool : McpServerTool
         {
             var argumentsInput = JsonSerializer.SerializeToElement(args);
             if (tool.Name == "GetNativeInvocationLog" && TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.PagingError(argumentsInput) is { } paging)
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, paging));
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, paging));
             if (UnifiedInputAdmission.ValidateNavigation(tool.Name, tool.InputSchema, argumentsInput) is { } navigationError)
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, navigationError, inner is FoundationTool { IsNative: true }));
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, navigationError, inner is FoundationTool { IsNative: true }));
             var validation =
                 new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), tool.Name == "StageImportFiles"
                     ? new InputBudget(characters: 40 * 1024 * 1024, items: 4096) : new InputBudget())
@@ -265,44 +266,44 @@ internal sealed class FoundationV4Tool : McpServerTool
             {
                 var error = tool.Name == "GeneratePlcLoadableFile"
                     ? new InputSchema(tool.InputSchema).Validate(argumentsInput, "arguments") ?? validation.Error : validation.Error;
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, error, inner is FoundationTool { IsNative: true }));
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, error, inner is FoundationTool { IsNative: true }));
             }
             try { TiaOpenness.Shared.ApprovalOutputTargets.ValidateWhitespace(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()); }
             catch (ArgumentException error)
             {
-                if (ReplayRefusal() is { } whitespaceReplay) return Recorded(whitespaceReplay);
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                if (ReplayRefusal() is { } whitespaceReplay) return await Recorded(whitespaceReplay);
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     new Error("Filesystem targets must not have leading or trailing whitespace.",
                         new InvalidArgumentDetails(error.ParamName ?? "", Array.Empty<string>()))));
             }
             if (write) TiaOpenness.Shared.ApprovalOutputTargets.Normalize(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject());
             if (SoftwareUnitCapabilityError(release, tool.Name, args) is { } unitCapability)
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, unitCapability, true));
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, unitCapability, true));
             if (inner is FoundationTool digestTool)
             {
                 digestTool.Unsettled.ProjectChanged(digestTool.BoundProjectFile);
                 WriteDigest.Capture(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject(), digestTool.BoundProjectFile);
             }
-            if (ReplayRefusal() is { } replayRefusal) return Recorded(replayRefusal);
+            if (ReplayRefusal() is { } replayRefusal) return await Recorded(replayRefusal);
             if (inner is FoundationTool { Running: { } running } runningTool && runningTool.RequiresTia
                 && !runningTool.LateResults.ContinuesCurrentCall
                 && tool.Name is not ("GetSessionState" or "GetOpennessWorkerStatus"))
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id, LateCalls.BusyError(running), true));
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, LateCalls.BusyError(running), true));
             try { CallerInputFiles.RefuseHumanSettingsTargets(JsonSerializer.SerializeToNode(args)!.AsObject()); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
-            { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(error.Message,
+            { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(error.Message,
                 new PreconditionFailedDetails("human-only-native-cross-reference-setting", error.ParamName)))); }
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args)) is { } fenced)
-                return Recorded(fenced);
+                return await Recorded(fenced);
             if (inner is FoundationTool { Ported: true } ported && ported.RefusePortedCapability(args) is { } unavailable)
-                return Recorded(unavailable);
+                return await Recorded(unavailable);
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool
                     && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
                 await nativeTool.PrepareReadiness(cancellationToken).ConfigureAwait(false);
                 var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
                 if (!readiness["ready"]!.GetValue<bool>())
-                    return Recorded(FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness));
+                    return await Recorded(FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness));
             }
             // V20/V21 with their bundled PlcWorker answer like the engine (P8-04j2): its session and process reads stopped at
             // native admission without a ready TIA environment. A ready environment dispatches exactly as before.
@@ -312,7 +313,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             {
                 await runtimeQuery.PrepareReadiness(cancellationToken).ConfigureAwait(false);
                 if (!(readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release))["ready"]!.GetValue<bool>())
-                    return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                    return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                         HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()), true));
             }
             if (write && inner is FoundationTool { WorkerRecoveryNeeded: true } recoveryTool)
@@ -364,10 +365,10 @@ internal sealed class FoundationV4Tool : McpServerTool
                         if (refusal.StructuredContent?["ok"]?.GetValue<bool>() != true)
                         {
                             var marked = TiaOpenness.Shared.ApprovalPrecheck.Mark(refusal.StructuredContent!, id);
-                            return Recorded(new CallToolResult { IsError = true, StructuredContent = marked,
+                            return await Recorded(new CallToolResult { IsError = true, StructuredContent = marked,
                                 Content = new[] { new TextContentBlock { Text = marked.ToJsonString() } } });
                         }
-                        if (FoundationV4Result.PreviewHasNoEffect(refusal.StructuredContent)) return Recorded(refusal);
+                        if (FoundationV4Result.PreviewHasNoEffect(refusal.StructuredContent)) return await Recorded(refusal);
                         cancellationToken.ThrowIfCancellationRequested();
                     }
                 }
@@ -379,7 +380,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                     ? await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
                     : await approvalWait(pending, settings, cancellationToken);
                 capture(approval);
-                if (approval.Reason != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                if (approval.Reason != null) return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.Confirmation(approval.Reason, pending.PlanHash, id,
                         inner is not FoundationTool { IsWrite: true } && inner is not GenerationTool
                             && tool.Name != "ManagePlcGitRepository"
@@ -391,24 +392,24 @@ internal sealed class FoundationV4Tool : McpServerTool
                 targetLaneTool.ActivateLane(lane);
             }
             if (write && FoundationHostPorts.GenerationFence(tool.Name, JsonSerializer.Serialize(args), dispatched: true) is { } dispatchFenced)
-                return Recorded(dispatchFenced);
-            if (ReplayRefusal() is { } queuedReplay) return Recorded(queuedReplay);
+                return await Recorded(dispatchFenced);
+            if (ReplayRefusal() is { } queuedReplay) return await Recorded(queuedReplay);
             if (tool.Name is "SaveProject" or "SaveProjectCopy" && inner is FoundationTool saveTool)
                 unsettledBeforeSave = saveTool.Unsettled.ToJson();
-            if (await FoundationHostPorts.BeforeDispatchAsync().ConfigureAwait(false) is { } batchRefusal) return Recorded(batchRefusal);
+            if (await FoundationHostPorts.BeforeDispatchAsync().ConfigureAwait(false) is { } batchRefusal) return await Recorded(batchRefusal);
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval
                     .Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
             {
                 await TiaOpenness.Shared.ApprovalClient.Complete(approval, "rejected-before-operation");
-                return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     new Error("Target changed while awaiting confirmation.", new ConfirmationRequiredDetails("denied", pending.PlanHash, id))));
             }
             var adapted = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
             if (parameter != null)
             {
                 var input = convert!(args[parameter]);
-                if (input.Error != null) return Recorded(FoundationV4Result.Reject(release, tool.Name, id, input.Error));
+                if (input.Error != null) return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, input.Error));
                 adapted.Remove(parameter);
                 adapted[parameter + "Json"] = JsonSerializer.SerializeToElement(input.Json);
             }
@@ -417,7 +418,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             try
             {
                 if (inner is not GenerationTool { OwnsApproval: true }) audit?.Start();
-                if (inner is FoundationTool foundation) return Recorded(await foundation.InvokeV4Async(request, release, id, cancellationToken));
+                if (inner is FoundationTool foundation) return await Recorded(await foundation.InvokeV4Async(request, release, id, cancellationToken));
                 var result = await inner.InvokeAsync(request, cancellationToken);
                 JsonNode? body;
                 try
@@ -427,31 +428,31 @@ internal sealed class FoundationV4Tool : McpServerTool
                         : JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text);
                 }
                 catch (JsonException) /* swallow(privacy): SDK error text is an internal failure, not client data or invalid input */
-                { return Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
-                if (inner is GenerationTool) return Recorded(result);
-                return Recorded(FoundationV4Result
+                { return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
+                if (inner is GenerationTool) return await Recorded(result);
+                return await Recorded(FoundationV4Result
                         .Host(release, tool.Name, id, body, parameter != null && parameter != "artifacts", result.IsError == true, args));
             }
             finally { request.Params = original; }
         }
         catch (OperationCanceledException) /* swallow(privacy): cancellation is represented by the stable V4 code, without exception text */
         {
-            return Recorded(FoundationV4Result
+            return await Recorded(FoundationV4Result
                     .Reject(release, tool.Name, id,
                         new Error(sharedSession ? "Request cancelled before dispatch." : "Request cancelled before completion.",
                             new CancelledDetails(sharedSession ? "tool-queue" : "host"))));
         }
         catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
-        { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
+        { return await Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (WorkerOperationException ex) when (ex.Condition == "worker-call-running")
-        { return Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
+        { return await Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)
-        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid(""))); }
+        { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid(""))); }
         catch (Exception ex) when (ex is ArgumentException or JsonException or InvalidOperationException)
-        { return Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+        { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
             FoundationV4Result.Invalid((ex as ArgumentException)?.ParamName ?? ""))); }
         catch (Exception) /* swallow(privacy): return a value-free V4 failure; implementation details are not protocol data */
-        { return Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
+        { return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
         finally { lane?.Dispose(); }
     }
 

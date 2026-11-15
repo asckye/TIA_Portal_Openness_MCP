@@ -74,6 +74,13 @@ internal static class Program
             if (request.Method == "adapter.FixtureOwnsPortal")
             { ownsPortal = true; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.FixtureWriteCount") return ChannelResponse.Success(writes.ToString());
+            if (request.Method == "adapter.ReadTagTableNames")
+            {
+                if (Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SETTLEMENT_FAULT") == "crash")
+                    WorkerFaultInjection.BeforeDispatch("crash", request);
+                if (Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SETTLEMENT_FAULT") == "gated") Slow();
+                return ChannelResponse.Success("[\"SettledTable\"]");
+            }
             if (request.Method == "adapter.FixtureFailNextStatus")
             { failNextStatus = true; return ChannelResponse.Success("{}"); }
             if (request.Method == "adapter.HostObserve")

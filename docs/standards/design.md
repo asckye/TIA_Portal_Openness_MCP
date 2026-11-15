@@ -590,6 +590,10 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 - 非预览调用的最终 `meta.outcome` 为 `unknown`，且分类为 WRITE、ONLINE-WRITE、FILE 或 EXECUTE 时，将 `{requestId, tool, utc, fromPreviousOwner}` 加入 `data.sessionState.unsettled`。同一存储同时服务 Foundation、Engine 和工作台入口。绑定到不同项目或会话结束清除清单。重启 worker、断开和失去绑定保留清单。
 - 后续独立调用继续执行。未知回复不使 channel 或 worker 失效，绑定检查失败只拒绝当前调用。旧 `requiresSessionReset` 标志在 Part 8 前透传，结果映射继续将它作为写入结果未知的证据。准入和清单以最终信封为准。`SESSION_RESET_REQUIRED` 不再由当前生产者产生。
 - `SaveProject` 和 `SaveProjectCopy` 在清单非空时携带 `UNSETTLED_CALLS`，预览和执行均如此。警告列出请求编号，保存由正常审批和项目身份校验决定。
+- Part 7 在未知调用结束后、同一执行通道上用既有只读操作核对；worker 丢失时等下一次精确重绑后核对。根组 `CreatePlcTagTable` 读取 `ReadTagTableNames`；`CreatePlcTag` / `CreatePlcUserConstant` 读取声明，只有名称、类型和地址或值完全一致才记 `applied`，名称不存在记 `not-applied`，其他情况仍未知。外部源删除读取根名称清单。无覆盖根导入只在请求基本名存在时记 `applied`，名称缺失继续未决。单个块、类型、标签表、监控表和技术对象导出检查精确目标文件，非空为 `applied`，不存在为 `not-applied`，空文件或读取失败仍未知。项目文本导出仅在文件缺失时记 `not-applied`，存在的文件可能不完整，继续未决。
+- 确定的读回结论写入原始未知信封的 `data.settlement` 和 `sessionState.settled[]`，字段为 `{requestId, tool, outcome, utc}`，原信封仍为 `OUTCOME_UNKNOWN`。已结算项离开 `unsettled`，保存不再为该项警告。`not-applied` 解除相同写入保护；`applied` 保持保护直到调用者读取 `GetCallResult`。编译、覆盖导入、子组标签表创建及没有确定读回的工具不结算。读取失败不重发写入；清单只保留目标字段，不保存导入内容。
+- 原生补读固定等待 5 秒并使用独立请求身份，补读对话框和超时保留原调用的未知信封。每次重绑最多补读一项可结算记录，后续重绑轮换处理其他项。恢复补读遵循请求取消令牌。
+- 实际尝试的恢复读回若使 worker 通道失效或仍未答复，当前待派发请求按尚未开始拒绝，原未知调用继续保留；不向失效或忙碌的通道发送该请求。后续原生调用沿用既有忙碌和自动恢复规则。
 - 检查未知调用的目标及保留证据后，再决定是否发起新的操作。禁止自动重放。生成运行和批次仍在未知步骤停止，重新规划须经过原有预览、审批和 stale-plan 检查。
 - 调用超过等待预算时返回 `in-progress` 和 `OPERATION_IN_PROGRESS`，`ok=false`，`execution` 和 `completeness` 都为 `unknown`。原调用继续完成绑定更新、日志、审计、审批和后续步骤。`GetSessionState` 返回 `running` 和 `lateResults`，`GetOpennessWorkerStatus.worker.state` 为 `Busy`。其他原生请求得到暂时的 `worker-call-running`，其中包括工具、请求编号和开始时间。已排队的请求在响应分离时也得到该拒绝。
 - `GetCallResult(requestId)` 是八版 lite 目录中的 host-only 读取工具，支持 `activeRequestId` 及最终信封自己的请求编号。会话内存保留最近 16 个已完成结果和运行中的结果。未知编号返回 `NOT_FOUND`。相同写入在运行或结果未读取时返回 `same-call-unsettled`，读取完成结果后解除保护。预览不触发相同写入保护。

@@ -23,7 +23,13 @@
 
 宿主共用 `UnsettledCalls`，记录请求编号、工具、UTC 时间和供后续相同写入识别使用的摘要。`GetSessionState.data.sessionState.unsettled` 暴露 `{requestId, tool, utc, fromPreviousOwner}`。摘要覆盖工具、去掉 `dryRun` 和 `confirm` 的规范化参数、绑定项目文件，不向调用者暴露参数内容。
 
-`SaveProject` 和 `SaveProjectCopy` 在清单非空时通过 `UNSETTLED_CALLS` 列出请求编号，预览和执行都提示。绑定到不同项目或会话结束清除清单。重启 worker、断开和失去绑定不清除清单。后续阶段支持迟到结果和只读核对消解，提供确定证据前保持原始调用的未知结果。
+`SaveProject` 和 `SaveProjectCopy` 在清单非空时通过 `UNSETTLED_CALLS` 列出请求编号，预览和执行都提示。绑定到不同项目或会话结束清除清单。重启 worker、断开和失去绑定不清除清单。
+
+Part 7 增加确定的只读结算。未知调用结束后，在原执行通道用既有读操作核对；worker 丢失时在下一次精确重绑后核对。根标签表创建核对名称。标签和用户常量创建核对名称、类型和地址或值。外部源删除核对根名称清单，两种方向均可结算。无覆盖根导入只在清单包含请求文件基本名（含扩展名）时记 `applied`，名称缺失继续未知并保留相同写入保护，因为 TIA 可能另行命名。五种 PLC 单文件导出检查按原参数推导的精确文件，非空为 `applied`，不存在为 `not-applied`。`ExportProjectTexts` 由 TIA 直接写最终文件，只在文件不存在时记 `not-applied`，存在的文件即使非空也继续未知，因为可能被中断而不完整。声明不匹配、空文件和读取失败都继续未知。覆盖导入、编译、子组标签表创建及其他无确定读回的操作没有结算行。宿主仅保存结算所需目标字段，不保留导入内容。
+
+每个原生补读使用独立请求身份，固定等待 5 秒，作为默认 120 秒操作预算之外的短暂可选核对。补读对话框和超时不会分离调用者的响应或发布运行中写入。超时继续未决，后台排空期间暂拒绝下一条原生请求，并明确说明补读仍在排空。恢复时每次最多尝试一项可结算记录，后续重绑轮换到其余记录。恢复补读遵循当前请求的取消令牌，只有实际尝试的补读使通道失效或忙碌时，才以补读原因拒绝当前待派发请求。
+
+原信封保留 `OUTCOME_UNKNOWN`，`data.settlement` 和 `sessionState.settled[]` 增加 `{requestId, tool, outcome, utc}`。结算项移出 `unsettled` 并停止保存警告；`not-applied` 解除相同写入保护，`applied` 保持保护直到调用者读取 `GetCallResult`。重绑后的结论也装饰保留的原结果及被淘汰结果的摘要。所有结算只读，绝不重发原写入。未结算的 `ExportProjectTexts` 现在也保留写入摘要，并在 `SaveProject` / `SaveProjectCopy` 时产生 `UNSETTLED_CALLS`。
 
 ### 正在运行的调用
 

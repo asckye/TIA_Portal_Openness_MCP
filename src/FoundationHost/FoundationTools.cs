@@ -2,6 +2,9 @@
 extern alias enginehost;
 using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
 using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
+using UnknownSettlement = enginehost::TiaMcp.FoundationHost.UnknownSettlement;
+using WriteDigest = enginehost::TiaMcp.FoundationHost.WriteDigest;
+using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -192,6 +195,31 @@ internal sealed partial class FoundationTool : McpServerTool
     internal UnsettledCalls Unsettled => worker is IFoundationSessionWorker session ? session.Unsettled : UnsettledCalls.For(worker);
     internal LateCalls LateResults => worker is IFoundationSessionWorker session ? session.LateResults : LateCalls.For(worker);
     internal JsonObject? Running => LateResults.Running ?? (worker as IFoundationSessionWorker)?.Running;
+    internal async Task<JsonNode> SettleUnknown(JsonNode body)
+    {
+        if (WorkerRecoveryNeeded || worker is IFoundationSessionWorker { Faulted: true }
+            || worker is IFoundationSessionWorker { Running: not null } && !LateResults.ContinuesCurrentCall) return body;
+        string id = (string)body["meta"]!["requestId"]!;
+        var settlement = await UnknownSettlement.Run(Unsettled, LateResults, id,
+            (operation, arguments) => worker is WorkerClient client
+                ? client.ReadForSettlement(operation, arguments, CancellationToken.None)
+                : worker.Call(operation, arguments, CancellationToken.None)).ConfigureAwait(false);
+        return settlement == null ? body : UnknownSettlement.Decorate(body, settlement);
+    }
+    private async ValueTask<CallToolResult> SettlePortedResult(CallToolResult result, IReadOnlyDictionary<string, JsonElement> arguments)
+    {
+        // The FoundationV4 wrapper owns settlement on these releases, after the port has returned.
+        if (!ReleaseCatalogData.Releases[portedRelease!].WrapPortedTools) return result;
+        if (result.StructuredContent is not { } body || !UnsettledCalls.HasUnknownOutcome(body)) return result;
+        var values = JsonSerializer.SerializeToNode(arguments)!.AsObject();
+        if (TiaMcp.Logic.V4.HostBehavior.IsPreview(values, true) || UnknownSettlement.Capture(tool.Name, values) == null) return result;
+        Unsettled.ObserveProjectAfterCall(BoundProjectFile);
+        Unsettled.Record((string)body["meta"]!["requestId"]!, tool.Name,
+            WriteDigest.ForOutcome(tool.Name, values, BoundProjectFile), DateTimeOffset.UtcNow, values);
+        body = await SettleUnknown(body).ConfigureAwait(false);
+        return new CallToolResult { IsError = result.IsError, StructuredContent = body,
+            Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
+    }
     internal void ValidateApplyArguments(IReadOnlyDictionary<string, JsonElement> arguments)
     { if (portedMethod == null) ReadArguments(arguments, new JsonObject()); }
     private void ReadArguments(IReadOnlyDictionary<string, JsonElement>? arguments, JsonObject values)

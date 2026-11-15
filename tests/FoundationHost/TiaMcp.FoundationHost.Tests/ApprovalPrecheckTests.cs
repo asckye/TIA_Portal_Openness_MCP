@@ -1,3 +1,4 @@
+extern alias enginehost;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -12,13 +13,21 @@ public sealed class ApprovalPrecheckTests
 {
     private sealed class Worker : IFoundationWorker
     {
-        internal int Previews, Writes, Reads;
+        internal int Previews, Writes, Reads, SettlementReads;
         internal readonly List<string?> WrittenNames = new();
         internal string? Refusal;
         internal bool Unknown, Cancel, StampPreview;
         internal DateTimeOffset PreviewEnded;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
+            if (operation == "ListTags" && FoundationWorkerRequest.ToolName == "CreatePlcTag"
+                && enginehost::TiaMcp.FoundationHost.UnsettledCalls.For(this).Snapshot()
+                    .Any(call => call.RequestId == FoundationWorkerRequest.CorrelationId))
+            {
+                SettlementReads++;
+                return Task.FromResult<JsonNode?>(new JsonArray(new JsonObject { ["Name"] = "Ready", ["Path"] = "T/Ready",
+                    ["Kind"] = "tag", ["DataType"] = "Bool", ["Value"] = "%M0.0" }));
+            }
             bool preview = (bool?)arguments["dryRun"] == true;
             if (preview) Previews++; else if (arguments.ContainsKey("dryRun")) { Writes++; WrittenNames.Add((string?)arguments["name"]); } else Reads++;
             if (preview && StampPreview)
@@ -193,6 +202,7 @@ public sealed class ApprovalPrecheckTests
             Assert.NotEqual("SESSION_RESET_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
         }
         Assert.Equal(2, waits); Assert.Equal(2, worker.Previews); Assert.Equal(2, worker.Writes); Assert.Equal(2, worker.Reads);
+        Assert.Equal(1, worker.SettlementReads);
         Assert.Equal(new[] { "Ready", "Other" }, worker.WrittenNames);
     }
     public class ServerProxy : DispatchProxy

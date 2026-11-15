@@ -58,6 +58,23 @@ public sealed class LateCalls
     {
         lock (gate) return unreadWrites.TryGetValue(digest, out var id) ? id : null;
     }
+    public void ObserveSettlement(CallSettlement settlement)
+    {
+        lock (gate)
+        {
+            if (!entries.TryGetValue(settlement.RequestId, out var entry)) return;
+            if (entry.Result?.StructuredContent is { } body)
+            {
+                var decorated = UnknownSettlement.Decorate(body, settlement);
+                entry.Result = new CallToolResult { IsError = entry.Result.IsError, StructuredContent = decorated,
+                    Content = new[] { new TextContentBlock { Text = decorated.ToJsonString() } } };
+            }
+            if (entry.Summary != null) entry.Summary = UnknownSettlement.Decorate(entry.Summary, settlement).AsObject();
+            bool ownsResult = (string?)(entry.Result?.StructuredContent ?? entry.Summary)?["meta"]?["requestId"] == settlement.RequestId;
+            if (ownsResult && settlement.Outcome == "not-applied" && entry.Digest != null
+                && unreadWrites.TryGetValue(entry.Digest, out var id) && entry.Ids.Contains(id)) unreadWrites.Remove(entry.Digest);
+        }
+    }
     public void RecordUnknown(string id, string tool, string? digest, CallToolResult result)
     {
         if (Current.Value is { } call && ReferenceEquals(call.owner, this)) return;
@@ -70,7 +87,7 @@ public sealed class LateCalls
             entry.Summary = OutcomeSummary(result, entry.Running);
             Index(entry);
             entry.Completed = completed.AddLast(entry);
-            if (digest != null) unreadWrites[digest] = id;
+            if (digest != null && (string?)result.StructuredContent?["data"]?["settlement"]?["outcome"] != "not-applied") unreadWrites[digest] = id;
             Trim();
         }
     }
@@ -142,7 +159,7 @@ public sealed class LateCalls
         }
         var error = body["error"]?.DeepClone();
         if (error?["details"] is JsonObject details && details.ContainsKey("evidence")) details["evidence"] = new JsonObject();
-        return new JsonObject { ["schemaVersion"] = body["schemaVersion"]?.DeepClone() ?? JsonValue.Create(4),
+        var summary = new JsonObject { ["schemaVersion"] = body["schemaVersion"]?.DeepClone() ?? JsonValue.Create(4),
             ["ok"] = body["ok"]?.DeepClone() ?? JsonValue.Create((string?)body["meta"]?["outcome"] == "succeeded"),
             ["meta"] = meta, ["error"] = error,
             ["data"] = new JsonObject { ["tool"] = body["meta"]?["tool"]?.DeepClone() ?? running["tool"]?.DeepClone(),
@@ -151,6 +168,8 @@ public sealed class LateCalls
                 ["nativeOutcomeUnknown"] = body["data"]?["nativeOutcomeUnknown"]?.DeepClone(),
                 ["fullResultEvicted"] = true, ["note"] = "The full result payload is unavailable. This stored outcome summary acknowledges the call. "
                     + "Inspect its target before repeating a write." } };
+        if (body["data"]?["settlement"] is { } settlement) summary["data"]!["settlement"] = settlement.DeepClone();
+        return summary;
     }
     private static CallToolResult SummaryResult(JsonObject summary)
         => new() { IsError = (bool?)summary["ok"] != true, StructuredContent = summary.DeepClone(),
@@ -263,7 +282,14 @@ public sealed class LateCalls
                 entry.Unsettled = unsettled;
                 entry.Result = Copy(result);
                 entry.Summary = OutcomeSummary(result, entry.Running);
-                if (entry.Digest != null && !entry.Read) owner.unreadWrites[entry.Digest] = (string)entry.Running["requestId"]!;
+                bool notApplied = (string?)result.StructuredContent?["data"]?["settlement"]?["outcome"] == "not-applied"
+                    || unsettled?.Settlement(resultId)?.Outcome == "not-applied";
+                if (entry.Digest != null && !entry.Read)
+                {
+                    if (!notApplied) owner.unreadWrites[entry.Digest] = (string)entry.Running["requestId"]!;
+                    else if (owner.unreadWrites.TryGetValue(entry.Digest, out var guardedId) && entry.Ids.Contains(guardedId))
+                        owner.unreadWrites.Remove(entry.Digest);
+                }
                 if (result.StructuredContent != null)
                 {
                     if (UnsettledCalls.HasUnknownOutcome(result.StructuredContent))

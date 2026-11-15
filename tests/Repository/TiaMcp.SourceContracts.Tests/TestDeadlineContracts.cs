@@ -29,6 +29,8 @@ public sealed class TestDeadlineContracts
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PortedPortalAdmissionTests.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Program.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionStateTests.cs",
+        "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnknownSettlementTests.cs",
+        "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnknownSettlementBudgetTests.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkbenchControlHostTests.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerClientTests.cs",

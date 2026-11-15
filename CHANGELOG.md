@@ -14,6 +14,9 @@
   Missing hardware devices, groups and items also report `NOT_FOUND`, and device deletion verifies absence through typed lookup failures.
 - Argument refusals separate unknown, missing and invalid fields while keeping undeclared keys private and retaining JSON pointers and expected types.
   Precondition and optional-package refusals retain their safe native reason; batch import explains that `regexName` matches file names including `.xml`.
+- Optional settlement reads use a separate request identity and a 5-second budget. Each worker rebind attempts one eligible entry, rotating remaining entries on later rebinds. External-source import settles only when the requested basename is present. Project-text export settles only when its target file is absent.
+- Unknown `ExportProjectTexts` calls now retain a write digest in the unsettled list and produce `UNSETTLED_CALLS` warnings on `SaveProject` and `SaveProjectCopy`.
+- Eligible unknown writes now settle through definite read-back on the existing worker lane, or after worker rebind. The original result stays `OUTCOME_UNKNOWN`; `data.settlement` and `sessionState.settled` report the evidence. Settled calls stop save warnings, and `not-applied` releases the identical-write guard. Ambiguous reads, compile and overwrite imports remain unsettled; writes are never replayed.
 - Native failures retain the redacted first-line reason and `error.innererror` with the worker's short exception type,
   HResult and request correlation ID. `GetNativeInvocationLog` accepts `diagnosticId` and bounded offset paging,
   excludes the current call's rows and returns empty pages after journal rotation.

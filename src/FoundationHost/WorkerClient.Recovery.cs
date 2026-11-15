@@ -1,3 +1,7 @@
+#if TIA_FOUNDATION_TEST_HOST
+extern alias enginehost;
+using UnknownSettlement = enginehost::TiaMcp.FoundationHost.UnknownSettlement;
+#endif
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Adapters.Contracts;
@@ -123,7 +127,7 @@ internal sealed partial class WorkerClient
         try
         {
             var facts = await CallCore("HostObserve", new JsonObject { ["operation"] = "recovery-processes", ["arguments"] = new JsonObject() },
-                true, cancellationToken);
+                true, false, cancellationToken);
             var processes = facts!.AsArray().Select(row => new PortalProcessFact((int)row!["ProcessId"]!,
                 (string?)row["ProcessStartUtc"], (string?)row["ProjectPath"], (int)row["AttachedSessions"]!)).ToArray();
             var resolution = RebindTargetResolver.Resolve(target, processes);
@@ -136,15 +140,31 @@ internal sealed partial class WorkerClient
                         : $"TIA PID {candidates} has an attached Openness client. ") + "Select a process with ConnectPortal.");
             int pid = resolution.Process!.Id;
             phase = "attach";
-            await CallCore("Attach", new JsonObject { ["processId"] = pid }, false, cancellationToken);
+            await CallCore("Attach", new JsonObject { ["processId"] = pid }, false, false, cancellationToken);
             if (target.ProjectFile != null)
             {
                 phase = "project";
                 await CallCore("BindProject", new JsonObject { ["projectName"] = target.ProjectName,
-                    ["expectedProjectFile"] = target.ProjectFile }, false, cancellationToken);
+                    ["expectedProjectFile"] = target.ProjectFile }, false, false, cancellationToken);
             }
             recovery["rebound"] = true;
             lock (stateSync) { rebindPending = false; workerRecovery = (JsonObject)recovery.DeepClone(); }
+            bool readBackAttempted = false;
+            await UnknownSettlement.RunPending(Unsettled, LateResults, (operation, arguments) => {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (RecoveryNeeded || CallRunning || UnansweredRequest) return Task.FromResult<JsonNode?>(null);
+                readBackAttempted = true;
+                return ReadForSettlement(operation, arguments, cancellationToken);
+            }, cancellationToken).ConfigureAwait(false);
+            if (readBackAttempted && (RecoveryNeeded || CallRunning || UnansweredRequest))
+                throw RecoveryRefusal("tia-not-responding", "Read-back after worker recovery could not finish on the recovered channel. "
+                    + "The requested operation has not started. The next native call can try after the read finishes or the worker recovers.");
+        }
+        catch (OperationCanceledException error)
+        {
+            error.Data["foundationRequestSent"] = false;
+            error.Data["workerRecoveryRejected"] = true;
+            throw;
         }
         catch (Exception error) when (error is not OperationCanceledException and not AdapterPreconditionException)
         {

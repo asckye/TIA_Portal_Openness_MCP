@@ -665,8 +665,8 @@ internal sealed partial class FoundationTool
             if (claimsNotStarted && workerFailure != null && priorMutation)
             {
                 workerFailure.Data["foundationPriorMutation"] = true;
-                return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                    true, true, lastReply, workerFailure);
+                return await SettlePortedResult(FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                    true, true, lastReply, workerFailure), arguments).ConfigureAwait(false);
             }
             if (claimsNotStarted && workerFailure?.Data["workerReadTimeout"] is true)
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
@@ -680,15 +680,14 @@ internal sealed partial class FoundationTool
                 body["data"]!["earlierMutationMayHaveChanged"] = true;
                 result.Content = new[] { new TextContentBlock { Text = body.ToJsonString() } };
             }
-            return FoundationV4Result
-                .ReconcileWorker(result, nativeDiagnostics);
+            return await SettlePortedResult(FoundationV4Result.ReconcileWorker(result, nativeDiagnostics), arguments).ConfigureAwait(false);
         }
         catch (TargetInvocationException error) when (error.InnerException != null)
         {
             if (FoundationV4Result.Classified(lastReply))
-                return FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
+                return await SettlePortedResult(FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
                     StructuredContent = lastReply.DeepClone(), Content = new[] { new TextContentBlock { Text = lastReply.ToJsonString() } } },
-                    nativeDiagnostics);
+                    nativeDiagnostics), arguments).ConfigureAwait(false);
             var cause = workerFailure ?? error.InnerException;
             bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
                 && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var dry)
@@ -711,8 +710,7 @@ internal sealed partial class FoundationTool
             var result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                 operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
                     : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, lastReply?["Failure"] != null ? lastReply : null, cause);
-            return FoundationV4Result
-                .ReconcileWorker(result, nativeDiagnostics);
+            return await SettlePortedResult(FoundationV4Result.ReconcileWorker(result, nativeDiagnostics), arguments).ConfigureAwait(false);
         }
     }
 }

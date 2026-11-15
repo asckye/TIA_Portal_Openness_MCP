@@ -101,6 +101,13 @@ public sealed class BehaviorParityTests
         internal bool Followup;
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
         {
+            // Only a read for this invocation's recorded unknown write supplies settlement evidence.
+            // Other reads remain visible to the existing parity counters.
+            if (operation == "ListTags" && FoundationWorkerRequest.ToolName == "CreatePlcTag"
+                && enginehost::TiaMcp.FoundationHost.UnsettledCalls.For(this).Snapshot()
+                    .Any(call => call.RequestId == FoundationWorkerRequest.CorrelationId))
+                return Task.FromResult<JsonNode?>(new JsonArray(new JsonObject { ["Name"] = "Ready", ["Path"] = "T/Ready",
+                    ["Kind"] = "tag", ["DataType"] = "Bool", ["Value"] = "%M0.1" }));
             bool preview = (bool?)args["dryRun"] == true || operation == "ListTags";
             if (preview) Previews++; else Writes++;
             if (scenario.StartsWith("compile-", StringComparison.Ordinal))
@@ -172,6 +179,22 @@ public sealed class BehaviorParityTests
     }
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject args) => new(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
     { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
+
+    [Theory, InlineData("unknown"), InlineData("single-import-failed")]
+    public async Task Only_the_recorded_unknown_invocation_intercepts_a_settlement_read(string scenario)
+    {
+        using var worker = new Worker(scenario);
+        using var request = FoundationWorkerRequest.Use("fixture", "CreatePlcTag");
+        await worker.Call("ListTags", new(), CancellationToken.None);
+        Assert.Equal(1, worker.Previews);
+        Assert.Equal(0, worker.Writes);
+        enginehost::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Record("fixture", "CreatePlcTag", "digest", DateTimeOffset.UtcNow);
+        var observed = await worker.Call("ListTags", new(), CancellationToken.None);
+        Assert.IsType<JsonArray>(observed);
+        Assert.Equal("%M0.1", (string?)observed![0]?["Value"]);
+        Assert.Equal(1, worker.Previews);
+        Assert.Equal(0, worker.Writes);
+    }
 
     [Theory]
     [MemberData(nameof(Cases))]
