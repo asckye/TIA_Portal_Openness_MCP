@@ -2870,6 +2870,23 @@
           "identifier": "TiaMcp.SourceContracts.Tests.NotFoundSources/Vm_sample_sites_use_typed_refusals( string path , string expected ):fe77f3c026f0f66b514a3aec6ec5651fe1581c2788302fb106a78041047c4497:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-11d",
+      "maintainerDate": "2026-11-15",
+      "reason": "2026-11-14 maintainer approved: batch admission refuses a non-admitted tool on /operations/\u003Ci\u003E/name with a reason instead of a generic message on /operations/\u003Ci\u003E/arguments; both replaced assertions keep the INVALID_ARGUMENT, null data, tool name, outcome and execution checks and add a check on the reason text",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/ReadBatchAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ReadBatchAdmissionTests.Fixture/AssertRefused( JsonObject batch , string name ):2314655a2e2e9739d07db315e52b1d09414d3ad9858580553f33907891235ee9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.EngineHost.Tests/ReadBatchAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ReadBatchAdmissionTests.Fixture/AssertRefused( JsonObject batch , string name , int index ):ad7b1dcce26720bf193697ed96dbceace1a3a23cb5fee56e6250e71754599b8e:1"
+        }
+      ]
     }
   ]
 }
