@@ -32,13 +32,14 @@ namespace TiaMcpServer.ModelContextProtocol
             return m;
         }
 
-        private static JsonObject S7WebSafety(bool writes, bool changesMode) => new JsonObject
+        internal static JsonObject S7WebSafety(bool writes, bool changesMode, bool tlsEstablished = false, bool ignoreCertificateErrors = false) => new JsonObject
         {
             ["readOnly"] = !writes && !changesMode,
             ["writesValues"] = writes,
             ["usesForce"] = false,
             ["changesCpuMode"] = changesMode,
-            ["certificateValidated"] = true
+            ["connected"] = tlsEstablished,
+            ["certificateValidated"] = tlsEstablished ? (bool?)!ignoreCertificateErrors : null
         };
 
         // ------------------------------------------------------------------ S7 Web API
@@ -92,9 +93,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["elapsedMs"] = r.ElapsedMs,
                     ["reusedSession"] = r.ReusedSession,
                     ["items"] = items,
-                    ["safety"] = S7WebSafety(false, false)
+                    ["safety"] = S7WebSafety(false, false, r.TlsEstablished, ignoreCertificateErrors)
                 };
-                data["safety"]!["certificateValidated"] = !ignoreCertificateErrors;
                 if (r.Error != null) data["error"] = r.Error;
                 bool ok = r.Ok && r.Error == null && r.Items.All(i => i.Error == null);
                 return new ResponseJsonReport
@@ -178,11 +178,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["reusedSession"] = r.ReusedSession,
                     ["status"] = dryRun ? "Preview" : (r.Ok ? "WrittenAndVerified" : "Failed"),
                     ["items"] = items,
-                    ["safety"] = S7WebSafety(!dryRun, false)
+                    ["safety"] = S7WebSafety(!dryRun, false, r.TlsEstablished, ignoreCertificateErrors)
                 };
-                data["safety"]!["certificateValidated"] = !ignoreCertificateErrors;
                 if (r.Error != null) data["error"] = r.Error;
                 bool ok = r.Ok && r.Error == null;
+                if (dryRun) data["contactedDevice"] = r.TlsEstablished;
                 bool anyAttempt = r.Items.Any(i => i.WriteAttempted);
                 string msg = r.Error ?? (dryRun
                     ? $"Preview: {writes.Count} write(s) validated and current values read from {h}; nothing written. Re-run with dryRun=false and confirmWrite=true to write."
@@ -258,9 +258,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["memoryInformation"] = r.MemoryInformation,
                     ["unavailable"] = unavailable,
                     ["dataComplete"] = r.Ok && r.Unavailable.Count == 0,
-                    ["safety"] = S7WebSafety(false, false)
+                    ["safety"] = S7WebSafety(false, false, r.TlsEstablished, ignoreCertificateErrors)
                 };
-                data["safety"]!["certificateValidated"] = !ignoreCertificateErrors;
                 if (r.Error != null) data["error"] = r.Error;
                 bool ok = r.Ok && r.Error == null;
                 return new ResponseJsonReport
@@ -328,9 +327,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["requestedMode"] = m,
                     ["before"] = r.Before,
                     ["status"] = dryRun ? "Preview" : (r.Ok ? (r.RequestAttempted ? "ChangedAndVerified" : "AlreadyInRequestedMode") : "Failed"),
-                    ["safety"] = S7WebSafety(false, !dryRun)
+                    ["safety"] = S7WebSafety(false, !dryRun, r.TlsEstablished, ignoreCertificateErrors)
                 };
-                data["safety"]!["certificateValidated"] = !ignoreCertificateErrors;
+                if (dryRun) data["contactedDevice"] = r.TlsEstablished;
                 if (!dryRun)
                 {
                     data["requestAttempted"] = r.RequestAttempted;

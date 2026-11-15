@@ -37,6 +37,7 @@ namespace TiaMcpServer.Runtime
     public sealed class S7WebReadResult
     {
         public bool Ok;
+        public bool TlsEstablished;
         public string? Error;
         public bool ReusedSession;
         public long ElapsedMs;
@@ -60,6 +61,7 @@ namespace TiaMcpServer.Runtime
     public sealed class S7WebWriteResult
     {
         public bool Ok;
+        public bool TlsEstablished;
         public string? Error;
         public bool ReusedSession;
         public long ElapsedMs;
@@ -69,6 +71,7 @@ namespace TiaMcpServer.Runtime
     public sealed class S7WebDiagnosticsResult
     {
         public bool Ok;
+        public bool TlsEstablished;
         public string? Error;
         public bool ReusedSession;
         public long ElapsedMs;
@@ -86,6 +89,7 @@ namespace TiaMcpServer.Runtime
     public sealed class S7WebModeChangeResult
     {
         public bool Ok;
+        public bool TlsEstablished;
         public string? Error;
         public bool ReusedSession;
         public long ElapsedMs;
@@ -103,6 +107,22 @@ namespace TiaMcpServer.Runtime
         {
             public HttpClient Http = null!;
             public ApiHttpClientRequestHandler Handler = null!;
+            public TlsObservationHandler Transport = null!;
+        }
+
+        private sealed class TlsObservationHandler : DelegatingHandler
+        {
+            // Cached authentication alone does not establish that this call reached an HTTPS peer.
+            internal Action? OnResponse;
+            internal TlsObservationHandler(HttpMessageHandler inner) : base(inner) { }
+
+            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                var observe = OnResponse;
+                var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                if (request.RequestUri?.Scheme == Uri.UriSchemeHttps) observe?.Invoke();
+                return response;
+            }
         }
 
         private static readonly object Gate = new object();
@@ -128,7 +148,7 @@ namespace TiaMcpServer.Runtime
                 foreach (var name in vars)
                     result.Items.Add(await ReadOneAsync(h, name, ct));
                 result.Ok = true;
-            }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms);
+            }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms, (r, tls) => r.TlsEstablished = tls);
             return result;
         }
 
@@ -180,7 +200,7 @@ namespace TiaMcpServer.Runtime
                             $"Readback differs from the requested value (requested {item.Requested?.ToJsonString()}, read {item.After?.ToJsonString()}); the PLC program may overwrite this variable cyclically.";
                 }
                 result.Ok = result.Items.All(i => i.Error == null);
-            }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms);
+            }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms, (r, tls) => r.TlsEstablished = tls);
             return result;
         }
 
@@ -206,7 +226,7 @@ namespace TiaMcpServer.Runtime
                     result.RuntimeInformation = RuntimeChannelsLogic.ToJsonNode((await h.PlcReadRuntimeInformationAsync(ct)).Result, Serialize));
                 await Try(result, "Plc.ReadMemoryInformation", async () =>
                     result.MemoryInformation = RuntimeChannelsLogic.ToJsonNode((await h.PlcReadMemoryInformationAsync(ct)).Result, Serialize));
-            }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms);
+            }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms, (r, tls) => r.TlsEstablished = tls);
             return result;
         }
 
@@ -243,7 +263,7 @@ namespace TiaMcpServer.Runtime
                     result.Error =
                         $"Mode change was accepted but readback still reports '{result.After}' after {result.PollCount} polls; check the CPU (mode selector, startup errors).";
                 result.Ok = result.Verified;
-            }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms);
+            }, (r, reused) => r.ReusedSession = reused, (r, err) => r.Error = err, (r, ms) => r.ElapsedMs = ms, (r, tls) => r.TlsEstablished = tls);
             return result;
         }
 
@@ -308,13 +328,13 @@ namespace TiaMcpServer.Runtime
 
         private static void Run<T>(string host, string username, string password, bool ignoreCert, int timeoutMs, T result,
             Func<ApiHttpClientRequestHandler, CancellationToken, Task> body,
-            Action<T, bool> setReused, Action<T, string> setError, Action<T, long> setElapsed)
+            Action<T, bool> setReused, Action<T, string> setError, Action<T, long> setElapsed, Action<T, bool> setTls)
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
             int budget = RuntimeChannelsLogic.ClampTimeout(timeoutMs);
             try
             {
-                var task = RunAsync(host, username, password, ignoreCert, budget, result, body, setReused);
+                var task = RunAsync(host, username, password, ignoreCert, budget, result, body, setReused, () => setTls(result, true));
                 // Overall wall-clock guard: mode-change polling can legitimately take longer
                 // than one request budget, so allow the poll window on top.
                 if (!task.Wait(budget * 2 + 12000))
@@ -330,17 +350,20 @@ namespace TiaMcpServer.Runtime
                 : result is S7WebModeChangeResult mode ? !mode.RequestAttempted : true;
 
         private static async Task RunAsync<T>(string host, string username, string password, bool ignoreCert, int budget, T result,
-            Func<ApiHttpClientRequestHandler, CancellationToken, Task> body, Action<T, bool> setReused)
+            Func<ApiHttpClientRequestHandler, CancellationToken, Task> body, Action<T, bool> setReused, Action tlsEstablished)
         {
             string key = RuntimeChannelsLogic.S7WebSessionKey(host, username, password, ignoreCert);
             var gate = LockFor(key);
             if (!await gate.WaitAsync(budget))
                 throw new TimeoutException($"S7 Web API session for '{host}' (user '{username}') is busy with a previous call.");
+            Session? active = null;
             try
             {
                 for (int attempt = 0; attempt < 2; attempt++)
                 {
-                    var (session, reused) = await AcquireAsync(key, host, username, password, ignoreCert, budget, forceNew: attempt > 0);
+                    var (session, reused) = await AcquireAsync(key, host, username, password, ignoreCert, budget, forceNew: attempt > 0,
+                        tlsEstablished: tlsEstablished);
+                    active = session;
                     setReused(result, reused);
                     using var cts = new CancellationTokenSource(budget);
                     try
@@ -358,21 +381,30 @@ namespace TiaMcpServer.Runtime
                     }
                 }
             }
-            finally { gate.Release(); }
+            finally
+            {
+                if (active != null) active.Transport.OnResponse = null;
+                gate.Release();
+            }
         }
 
         private static async Task<(Session session, bool reused)> AcquireAsync(string key, string host, string username, string password, bool ignoreCert,
-                int budget, bool forceNew)
+                int budget, bool forceNew, Action tlsEstablished)
         {
             Session? existing;
             lock (Gate) { Sessions.TryGetValue(key, out existing); }
-            if (!forceNew && existing != null) return (existing, true);
+            if (!forceNew && existing != null)
+            {
+                existing.Transport.OnResponse = tlsEstablished;
+                return (existing, true);
+            }
             if (existing != null) Forget(key, existing);
 
             var handler = new HttpClientHandler { AllowAutoRedirect = false };
             if (ignoreCert)
                 handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
-            var http = new HttpClient(handler)
+            var transport = new TlsObservationHandler(handler) { OnResponse = tlsEstablished };
+            var http = new HttpClient(transport)
             {
                 BaseAddress = new Uri("https://" + host + "/"),
                 Timeout = TimeSpan.FromMilliseconds(budget)
@@ -395,7 +427,7 @@ namespace TiaMcpServer.Runtime
                 http.Dispose();
                 throw;
             }
-            var session = new Session { Http = http, Handler = requestHandler };
+            var session = new Session { Http = http, Handler = requestHandler, Transport = transport };
             lock (Gate) { Sessions[key] = session; }
             return (session, false);
         }

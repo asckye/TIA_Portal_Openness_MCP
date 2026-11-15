@@ -26,6 +26,8 @@
 - HMI, hardware, library and optional-package scalar dates use ISO 8601 round-trip strings across all eight releases, preserving fractional seconds, UTC `Z`, local offsets and unspecified timezone values.
 - On all eight releases, read-only `InvokeObject` and `InvokeService` calls preserve the requested `dryRun` value and report `readOnlyInvocation:true` when the read runs.
 - On all eight releases, `EnsureSubnet` previews reject unsupported subnet types before issuing a plan hash, using the existing native type rule.
+- Runtime channel failures retain the redacted first-line native reason in per-item errors and `details.nativeMessage` across all eight releases.
+- S7 Web API tools report `safety.connected` from the current HTTPS exchange and only claim `safety.certificateValidated` after a response with certificate checks enabled; disconnected calls report a null validation status on all eight releases.
 - The example project name in tool descriptions and guidance is now `ExampleProject`.
 - `PreviewToolCall` precautions name the compile step for the tool's domain and include Windows Openness group changes for session tools.
 - Canonical printed device paths and arrays of names containing `/` on the seven string device entries now resolve.
@@ -82,6 +84,7 @@
 ### Changed
 - Generic write previews report `targetVerified:false` and state that the cached target identity has not been verified, on all eight releases where each tool is registered.
 - Generic read-only invocations, including `ManageOnlineDriveFunctions` read actions, report `readOnlyInvocation:true` on all eight releases where each tool is registered.
+- `WritePlcWebVars` and `SetPlcWebOperatingMode` previews retain their online login and current-value reads and disclose `contactedDevice:true` on all eight releases.
 - `CompileDevice` now defaults to a preview on all eight releases. Existing callers must pass `dryRun:false` with the preview's `expectedPlanHash` and exact bound `expectedProjectFile` to compile.
 - `ImportTechnologyObjectsFromDirectory` defaults to `overwrite:false` on V16–V21; replacing existing technology objects requires `overwrite:true`.
 - Across all eight releases, `PreviewToolBatch` adds `data.previewToken` with the same value as `data.token`; `token` remains available until 5.0.

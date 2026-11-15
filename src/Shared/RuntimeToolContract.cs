@@ -172,8 +172,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     new PreconditionFailedDetails("plc-online", null));
             }
             else if (success == true) outcome = Outcome.Succeeded;
-            else if (readOnly) { outcome = Outcome.ReadFailed; error = Failure(false); }
-            else if (knownFailure || failed > 0) { outcome = Outcome.Failed; error = Failure(false); }
+            else if (readOnly) { outcome = Outcome.ReadFailed; error = Failure(false, data); }
+            else if (knownFailure || failed > 0) { outcome = Outcome.Failed; error = Failure(false, data); }
             else if (Flag(data, "mayHaveChanged") == false || Flag(data, "writeAttempted") == false)
             {
                 outcome = Outcome.RejectedBeforeOperation; error =
@@ -204,7 +204,8 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var pair in obj.ToArray())
             {
                 if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal))
-                { if (pair.Value != null) obj[pair.Key] = "The native observation failed; consult the local diagnostic log."; }
+                { if (pair.Value != null) obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value.ToString())
+                    ?? "The native observation failed; consult the local diagnostic log."; }
                 else if (pair.Key == "requestLine" || pair.Key == "responseLine")
                 {
                     if (pair.Value is JsonValue value && value.TryGetValue<string>(out var line))
@@ -219,12 +220,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 else Sanitize(pair.Value);
             }
         }
-        private static Error Failure(bool unknown) => unknown
+        private static string? NativeMessage(JsonObject? data)
+        {
+            var message = HostBehavior.SafeDiagnostic(data?["error"]?.ToString());
+            if (message != null) return message;
+            if (data?["items"] is JsonArray items)
+                foreach (var item in items.OfType<JsonObject>())
+                    if (HostBehavior.SafeDiagnostic(item["error"]?.ToString()) is { } reason) return reason;
+            return null;
+        }
+        private static Error Failure(bool unknown, JsonObject? data = null) => unknown
             ? new Error("The write outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. GetSessionState lists " +
                 "unsettled request IDs.",
                     new OutcomeUnknownDetails("runtime-operation", new Dictionary<string, System.Text.Json.JsonElement>()))
             : new Error("The operation did not establish a successful result.",
-                    new NativeOperationFailedDetails(null, null, new Dictionary<string, System.Text.Json.JsonElement>()));
+                    new NativeOperationFailedDetails(null, NativeMessage(data), new Dictionary<string, System.Text.Json.JsonElement>()));
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,
             bool current, bool readOnly = false, Paging? paging = null)
         {
