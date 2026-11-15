@@ -122,12 +122,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (args.Count > 100 || args.Any(a => !(a is JsonValue v) || !v.TryGetValue<string>(out _)))
                     throw new ArgumentException("Use at most 100 string arguments.");
                 if (!Path.IsPathRooted(workingDirectory) || !Directory.Exists(workingDirectory))
-                    throw new ArgumentException("workingDirectory must exist and be absolute.");
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Supply an existing absolute workingDirectory.", "workingDirectory");
                 string root = EcosystemFiles.RepositoryRoot();
                 string bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/plc_tools_bridge.py");
-                string python = TiaOpenness.Shared.DataLocations.Current.EcosystemPythonExecutable;
+                string python;
+                try { python = TiaOpenness.Shared.DataLocations.Current.EcosystemPythonExecutable; }
+                catch (TiaOpenness.Shared.DataLocationIOException)
+                {
+                    throw new OfflineContracts.Rejected(new TiaMcp.Logic.V4.Error(
+                        "Run tia install-plc-tools and configure TIA_MCP_PLC_TOOLS_PYTHON before using the companion.",
+                        new TiaMcp.Logic.V4.ResourceUnavailableDetails("companion-python-runtime")));
+                }
                 if (!Path.IsPathRooted(python) || !File.Exists(python))
-                    throw new FileNotFoundException("Run `tia install-plc-tools` and configure TIA_MCP_PLC_TOOLS_PYTHON.");
+                    throw new OfflineContracts.Rejected(new TiaMcp.Logic.V4.Error(
+                        "Run tia install-plc-tools and configure TIA_MCP_PLC_TOOLS_PYTHON before using the companion.",
+                        new TiaMcp.Logic.V4.ResourceUnavailableDetails("companion-python-runtime")));
                 meta["arguments"] = args.DeepClone(); meta["workingDirectory"] = workingDirectory; meta["python"] = python;
                 // envelope: legacy-single-verdict
                 if (mode == "run" && dryRun) {
@@ -147,6 +156,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
             catch (TiaOpenness.Shared.DataLocationIOException) { throw; }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
+            catch (OfflineContracts.Rejected) { throw; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Companion failed: " + ex.Message, Meta = meta }; }
         }
     }

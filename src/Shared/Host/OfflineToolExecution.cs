@@ -49,6 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var cause = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
                 if (cause is TiaOpenness.Shared.BundleResourceUnavailableException) throw;
                 if (cause is TiaOpenness.Shared.DataLocationIOException) throw;
+                if (cause is TiaMcp.Adapters.Contracts.AdapterPreconditionException) throw;
                 meta["error"] = cause.ToString();
                 if (cause is ArgumentException || cause is JsonException)
                     meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";

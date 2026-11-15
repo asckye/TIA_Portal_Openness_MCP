@@ -7,6 +7,10 @@
 ### Fixed
 - Across all eight releases, adapter argument refusals identify the canonical field supplied by the caller.
 - Across all eight releases, batch admission refusals identify `/operations/<i>/name` and explain that the tool lacks a dry-run preview or batch permission, or is a batch or orchestration tool.
+
+- Offline audit, PLC template expansion and CWC package validation refusals retain actionable reasons and declared parameter pointers before any file write (all eight releases; CWC on V17–V21). Unused template replacement keys stay private.
+- `RunPlcCompanionTool` identifies missing working directories and unavailable companion runtimes, with setup guidance, across all eight releases.
+- External-source ASCII refusals explain how to re-save without a BOM across all eight releases; the existing byte check is unchanged.
 - The example project name in tool descriptions and guidance is now `ExampleProject`.
 - `PreviewToolCall` precautions name the compile step for the tool's domain and include Windows Openness group changes for session tools.
 - Canonical printed device paths and arrays of names containing `/` on the seven string device entries now resolve.

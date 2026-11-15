@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -65,9 +66,12 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("InstantiatePlcTemplates", meta =>
             {
                 if (!Path.IsPathRooted(outputDirectory) || !Directory.Exists(outputDirectory))
-                    throw new ArgumentException("outputDirectory must be an existing absolute directory.");
+                    throw new AdapterPreconditionException("Supply an existing absolute outputDirectory.", "outputDirectory");
                 var documents = PlcTemplateExpansion.Expand(templatePath, rowsJson);
-                var outputs = documents.Select(d => NativeFileOutput.Plan(Path.Combine(outputDirectory, d.Name))).ToList();
+                System.Collections.Generic.List<FileInfo> outputs;
+                try { outputs = documents.Select(d => NativeFileOutput.Plan(Path.Combine(outputDirectory, d.Name))).ToList(); }
+                catch (Exception ex) when (ex is ArgumentException || ex is IOException)
+                { throw new AdapterPreconditionException("Supply an existing outputDirectory with no existing output files or directories for the row file names.", "outputDirectory"); }
                 var rows = new JsonArray(); meta["files"] = rows; meta["dryRun"] = dryRun;
                 for (int i = 0; i < documents.Count; i++)
                 {

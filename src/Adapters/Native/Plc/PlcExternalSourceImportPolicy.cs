@@ -76,7 +76,7 @@ namespace TiaMcp.Adapters
                 {
                     if(memory.Length+count>MaximumFileBytes) throw new AdapterPreconditionException("Source exceeds byte budget.","filePath");
                     for(int i=0;i<count;i++) if((buffer[i]<32 && buffer[i]!=9 && buffer[i]!=10 && buffer[i]!=13) || buffer[i]>126)
-                        throw new AdapterPreconditionException("Wrapper ASCII subset refuses BOM, high bytes, NUL and other controls; no transcoding.",
+                        throw new AdapterPreconditionException("Wrapper ASCII subset refuses BOM, high bytes, NUL and other controls; re-save the source as ASCII without a BOM before importing. No transcoding is performed.",
                             "filePath");
                     memory.Write(buffer,0,count);
                 }

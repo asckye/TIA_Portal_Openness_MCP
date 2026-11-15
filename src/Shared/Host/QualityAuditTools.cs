@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -40,10 +41,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 [Description("Optional new absolute .html/.pdf report path; empty returns JSON only.")] string reportPath = "")
             => OfflineToolExecution.RunOfflineAnalysisTool("AuditEngineeringExports", meta =>
             {
-                var output = string.IsNullOrEmpty(reportPath) ? null : NativeFileOutput.Plan(reportPath);
+                FileInfo? output;
+                try { output = string.IsNullOrEmpty(reportPath) ? null : NativeFileOutput.Plan(reportPath); }
+                catch (Exception ex) when (ex is ArgumentException || ex is IOException)
+                { throw new AdapterPreconditionException("Supply a new absolute reportPath in an existing directory; existing outputs cannot be overwritten.", "reportPath"); }
                 bool pdf = reportPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
                 if (output != null && !pdf && !reportPath.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException("reportPath must end in .html or .pdf.");
+                    throw new AdapterPreconditionException("Set reportPath to a new .html or .pdf file.", "reportPath");
                 var result = EngineeringQualityAudit.Audit(directoryPath, rulesJson, blockNamePattern, maxNetworks);
                 foreach (var item in result) meta[item.Key] = item.Value?.DeepClone();
                 if (output != null)
@@ -54,7 +58,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         string bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/plc_tools_bridge.py");
                         string python = TiaOpenness.Shared.DataLocations.Current.EcosystemPythonExecutable;
                         if (!Path.IsPathRooted(python) || !File.Exists(python))
-                            throw new FileNotFoundException("PDF renderer requires `tia install-plc-tools` and its Python environment.");
+                            throw new AdapterPreconditionException("Install the companion Python environment with tia install-plc-tools before requesting a PDF report.", "reportPath");
                         var request = new JsonObject { ["mode"] = "audit-pdf", ["outputPath"] = output.FullName, ["report"] = result.DeepClone() };
                         var render = EcosystemFiles.Run(python, new[] { "-I", "-X", "utf8", bridge }, output.DirectoryName!, request.ToJsonString(), 60)
                             .GetAwaiter().GetResult();

@@ -6,83 +6,99 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
     public static class UnifiedCwcPackage
     {
-        private static void NoLinks(string path)
+        private static void NoLinks(string path, string parameter)
         {
             for (FileSystemInfo? p = new DirectoryInfo(path); p != null; p = p is DirectoryInfo d ? d.Parent : ((FileInfo)p).Directory)
-                if (p.Exists && (p.Attributes & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Reparse paths refused.");
+                if (p.Exists && (p.Attributes & FileAttributes.ReparsePoint) != 0)
+                    throw new AdapterPreconditionException("Use a path without reparse points in its ancestry.", parameter);
         }
         private static void UniqueKeys(JsonElement e)
         {
             if (e.ValueKind == JsonValueKind.Object) {
                 var names = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var p in e.EnumerateObject()) {
-                    if (!names.Add(p.Name)) throw new ArgumentException("Duplicate manifest property: " + p.Name); UniqueKeys(p.Value); }
+                    if (!names.Add(p.Name)) throw new AdapterPreconditionException("Remove duplicate properties from the package manifest.", "directory"); UniqueKeys(p.Value); }
             } else if (e.ValueKind == JsonValueKind.Array) foreach (var p in e.EnumerateArray()) UniqueKeys(p);
         }
         public static JsonObject Run(string directory, string action, string outputPath, bool dryRun, string expectedFingerprint)
         {
-            if (action != "inspect" && action != "build") throw new ArgumentException("action must be inspect/build.");
-            if (!Path.IsPathRooted(directory) || !Directory.Exists(directory)) throw new ArgumentException("Existing absolute CWC source directory required.");
-            var root = new DirectoryInfo(Path.GetFullPath(directory)); NoLinks(root.FullName);
+            if (action != "inspect" && action != "build") throw new AdapterPreconditionException("Set action to inspect or build.", "action");
+            if (!Path.IsPathRooted(directory) || !Directory.Exists(directory))
+                throw new AdapterPreconditionException("Supply an existing absolute CWC source directory.", "directory");
+            var root = new DirectoryInfo(Path.GetFullPath(directory)); NoLinks(root.FullName, "directory");
             var files = new SortedDictionary<string, byte[]>(StringComparer.Ordinal); var queue = new Queue<DirectoryInfo>(); queue.Enqueue(root);
             long total = 0; int directories = 0;
             while (queue.Count > 0)
             {
-                var current = queue.Dequeue(); if (++directories > 256) throw new ArgumentException("CWC directory budget exceeded.");
+                var current = queue.Dequeue(); if (++directories > 256) throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", "directory");
                 foreach (var item in current.EnumerateFileSystemInfos())
                 {
-                    if ((item.Attributes & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Reparse package entries refused.");
+                    if ((item.Attributes & FileAttributes.ReparsePoint) != 0) throw new AdapterPreconditionException("Remove reparse entries from the CWC source.", "directory");
                     if (item is DirectoryInfo child) {
-                        if (queue.Count >= 256) throw new ArgumentException("CWC directory budget exceeded."); queue.Enqueue(child); continue; }
+                        if (queue.Count >= 256) throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", "directory"); queue.Enqueue(child); continue; }
                     var file = (FileInfo)item;
                     if (files.Count >= 1024 || file.Length > 16 * 1024 * 1024 || total + file.Length > 64 * 1024 * 1024)
-                        throw new ArgumentException("CWC supports <=1024 files, <=16 MiB each and <=64 MiB total.");
+                        throw new AdapterPreconditionException("Reduce the CWC source to <=1024 files, <=16 MiB each and <=64 MiB total.", "directory");
                     using var input = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
                     using var content = new MemoryStream(); var buffer = new byte[8192]; int n;
                     while ((n = input.Read(buffer, 0, buffer.Length)) > 0) {
                         total += n; if (content.Length + n > 16 * 1024 * 1024 || total > 64 * 1024 * 1024)
-                            throw new ArgumentException("CWC byte budget exceeded while reading."); content.Write(buffer, 0, n);
+                            throw new AdapterPreconditionException("Reduce the CWC source to <=16 MiB per file and <=64 MiB total.", "directory"); content.Write(buffer, 0, n);
                     }
                     files.Add(file.FullName.Substring(root.FullName.TrimEnd('\\', '/').Length + 1).Replace('\\', '/'), content.ToArray());
                 }
             }
             if (!files.TryGetValue("manifest.json", out var manifest) || manifest.Length > 1024 * 1024)
-                throw new ArgumentException("Root manifest.json <=1 MiB required.");
-            var jsonText = new UTF8Encoding(false, true).GetString(manifest).TrimStart('\uFEFF');
-            using var json = JsonDocument.Parse(jsonText); UniqueKeys(json.RootElement);
-            var doc = JsonNode.Parse(jsonText)?.AsObject() ?? throw new ArgumentException("Manifest object required.");
+                throw new AdapterPreconditionException("Supply root manifest.json of at most 1 MiB in the CWC source.", "directory");
+            JsonObject doc;
+            try
+            {
+                var jsonText = new UTF8Encoding(false, true).GetString(manifest).TrimStart('\uFEFF');
+                using var json = JsonDocument.Parse(jsonText); UniqueKeys(json.RootElement);
+                doc = JsonNode.Parse(jsonText) as JsonObject
+                    ?? throw new AdapterPreconditionException("Supply a valid UTF-8 JSON object in the package manifest.", "directory");
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is JsonException)
+            { throw new AdapterPreconditionException("Supply a valid UTF-8 JSON object in the package manifest.", "directory"); }
             string Required(JsonNode? value, string name) {
-                var s = value?.GetValue<string>(); return !string.IsNullOrWhiteSpace(s) ? s!
-                    : throw new ArgumentException(name + " must be a nonempty string.");
+                return value is JsonValue scalar && scalar.TryGetValue<string>(out var text) && !string.IsNullOrWhiteSpace(text) ? text
+                    : throw new AdapterPreconditionException("Supply a nonempty string for manifest " + name + ".", "directory");
             }
             Required(doc["mver"], "mver");
-            var identity = doc["control"]?["identity"]?.AsObject() ?? throw new ArgumentException("control.identity required.");
+            var identity = (doc["control"] as JsonObject)?["identity"] as JsonObject
+                ?? throw new AdapterPreconditionException("Supply control.identity as an object in the package manifest.", "directory");
             var name = Required(identity["name"], "name"); var version = Required(identity["version"], "version");
             Required(identity["displayname"], "displayname");
             var type = Required(identity["type"], "type");
             if (!type.StartsWith("guid://", StringComparison.Ordinal) || !Guid.TryParseExact(type.Substring(7), "D", out var guid))
-                throw new ArgumentException("identity.type must be guid:// followed by an 8-4-4-4-12 GUID.");
+                throw new AdapterPreconditionException("Set manifest identity.type to guid:// followed by an 8-4-4-4-12 GUID.", "directory");
             string LocalReference(string value)
             {
-                if (!value.StartsWith("./", StringComparison.Ordinal)) throw new ArgumentException("Local manifest references must start with ./.");
+                if (!value.StartsWith("./", StringComparison.Ordinal)) throw new AdapterPreconditionException("Start local manifest references with ./.", "directory");
                 var relative = value.Substring(2);
                 if (relative.Split('/').Any(p => p == ".." || p == "." || p.Length == 0) || relative.IndexOfAny(new[] { '\\', ':', '?', '#', '\0' }) >= 0
                         || !files.ContainsKey(relative))
-                    throw new ArgumentException("Missing or invalid local manifest reference: " + value);
+                    throw new AdapterPreconditionException("Supply local manifest references to existing package files without traversal or reserved characters.", "directory");
                 return relative;
             }
-            var start = LocalReference(identity["start"]?.GetValue<string>() ?? "./control/index.html");
+            var start = LocalReference(identity["start"] == null ? "./control/index.html" : Required(identity["start"], "identity.start"));
             var warnings = new JsonArray();
-            var icon = identity["icon"]?.GetValue<string>();
+            string? icon = null;
+            if (identity["icon"] != null)
+            {
+                if (identity["icon"] is not JsonValue iconValue || !iconValue.TryGetValue<string>(out icon))
+                    throw new AdapterPreconditionException("Supply a string for manifest identity.icon.", "directory");
+            }
             if (!string.IsNullOrEmpty(icon)) {
                 if (icon!.StartsWith("./", StringComparison.Ordinal)) LocalReference(icon); else warnings.Add("External/data icon was not fetched or decoded.");
             }
-            if (!files.Keys.Any(p => p.StartsWith("control/", StringComparison.Ordinal))) throw new ArgumentException("control directory content required.");
+            if (!files.Keys.Any(p => p.StartsWith("control/", StringComparison.Ordinal))) throw new AdapterPreconditionException("Supply control directory content in the CWC source.", "directory");
             if (!files.Keys.Any(p => p.StartsWith("assets/", StringComparison.Ordinal))) warnings
                 .Add("No assets files; icon is optional in the manifest contract.");
             var inventory =
@@ -101,13 +117,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
             if (action == "inspect" || dryRun) return result;
             if (fingerprint != expectedFingerprint)
-                throw new InvalidOperationException("Package content changed or preview fingerprint missing. No file written.");
+                throw new AdapterPreconditionException("Inspect or preview the package again and supply its unchanged expectedPackageHash. No file written.", "expectedPackageHash");
             if (!Path.IsPathRooted(outputPath) || !string.Equals(Path.GetFileName(outputPath), suggestedName, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("Absolute outputPath must use the suggested GUID ZIP filename.");
-            var output = Path.GetFullPath(outputPath); NoLinks(Path.GetDirectoryName(output)!);
+                throw new AdapterPreconditionException("Supply an absolute outputPath using the suggested GUID ZIP filename.", "outputPath");
+            string output;
+            try { output = Path.GetFullPath(outputPath); NoLinks(Path.GetDirectoryName(output)!, "outputPath"); }
+            catch (ArgumentException)
+            { throw new AdapterPreconditionException("Supply a valid absolute outputPath using the suggested GUID ZIP filename.", "outputPath"); }
             if (!Directory.Exists(Path.GetDirectoryName(output)) || output
                     .StartsWith(root.FullName.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("Output must be in an existing directory outside the source tree.");
+                throw new AdapterPreconditionException("Choose an existing output directory outside the source tree.", "outputPath");
+            if (File.Exists(output) || Directory.Exists(output))
+                throw new AdapterPreconditionException("Choose a new outputPath; existing files and directories cannot be overwritten.", "outputPath");
             // Snapshot bytes, not reopened inputs, are archived. Existing ZIPs are never replaced.
             using (var stream = new FileStream(output, FileMode.CreateNew, FileAccess.Write))
             using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))

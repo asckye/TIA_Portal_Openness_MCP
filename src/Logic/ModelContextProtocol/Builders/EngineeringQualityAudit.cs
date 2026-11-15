@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -18,29 +19,42 @@ namespace TiaMcpServer.ModelContextProtocol
         public static JsonObject Audit(string directory, string rulesJson, string blockNamePattern, int maxNetworks)
         {
             if (!Path.IsPathRooted(directory) || !Directory.Exists(directory))
-                throw new ArgumentException("An existing absolute export directory is required.");
-            if (maxNetworks < 1 || maxNetworks > 10000) throw new ArgumentException("maxNetworks must be 1..10000.");
-            Regex? names = string.IsNullOrEmpty(blockNamePattern) ? null : Pattern(blockNamePattern);
-            var rules = JsonNode.Parse(rulesJson) as JsonArray ?? throw new ArgumentException("rulesJson must be an array.");
-            if (rules.Count > 50) throw new ArgumentException("At most 50 XML rules.");
+                throw new AdapterPreconditionException("Supply an existing absolute export directory.", "directoryPath");
+            if (maxNetworks < 1 || maxNetworks > 10000) throw new AdapterPreconditionException("Set maxNetworks to 1..10000.", "maxNetworks");
+            Regex? names;
+            try { names = string.IsNullOrEmpty(blockNamePattern) ? null : Pattern(blockNamePattern); }
+            catch (ArgumentException) { throw new AdapterPreconditionException("Supply a valid naming-policy regular expression.", "blockNamePattern"); }
+            JsonArray rules;
+            try { rules = JsonNode.Parse(rulesJson) as JsonArray
+                ?? throw new AdapterPreconditionException("Supply rules as an array of XML rule objects.", "rules"); }
+            catch (Exception ex) when (ex is ArgumentException || ex is System.Text.Json.JsonException)
+            { throw new AdapterPreconditionException("Supply rules as an array of XML rule objects.", "rules"); }
+            if (rules.Count > 50) throw new AdapterPreconditionException("Supply at most 50 XML rules.", "rules");
             var ruleIds = new HashSet<string>(StringComparer.Ordinal); var evaluated = new Dictionary<string, int>();
-            foreach (var n in rules)
+            try
             {
-                var r = n as JsonObject ?? throw new ArgumentException("Each rule is an object.");
-                if (r.Any(k => !new[] { "id", "files", "xpath", "minCount", "maxCount", "valuePattern", "severity" }.Contains(k.Key)))
-                    throw new ArgumentException("Unknown rule property.");
-                string id = r["id"]?.GetValue<string>() ?? "";
-                if (id.Length == 0 || !ruleIds.Add(id)) throw new ArgumentException("Rule IDs must be non-empty and unique.");
-                string xpath = r["xpath"]?.GetValue<string>() ?? "";
-                if (xpath.Length == 0 || xpath.Length > 1024) throw new ArgumentException("Each rule needs an XPath selecting elements (max 1024 chars).");
-                XPathExpression.Compile(xpath); Pattern(r["files"]?.GetValue<string>() ?? ".*");
-                if (r["valuePattern"] != null) Pattern(r["valuePattern"]!.GetValue<string>());
-                int min = r["minCount"]?.GetValue<int>() ?? 0, max = r["maxCount"]?.GetValue<int>() ?? int.MaxValue;
-                if (min < 0 || max < min) throw new ArgumentException("Rule counts require 0 <= minCount <= maxCount.");
-                if (!new[] { "info", "warning", "error" }.Contains(r["severity"]?.GetValue<string>() ?? "warning"))
-                    throw new ArgumentException("severity must be info/warning/error.");
-                evaluated[id] = 0;
+                foreach (var n in rules)
+                {
+                    var r = n as JsonObject ?? throw new AdapterPreconditionException("Supply an object for every XML rule.", "rules");
+                    if (r.Any(k => !new[] { "id", "files", "xpath", "minCount", "maxCount", "valuePattern", "severity" }.Contains(k.Key)))
+                        throw new AdapterPreconditionException("Use only the declared XML rule properties.", "rules");
+                    string id = r["id"]?.GetValue<string>() ?? "";
+                    if (id.Length == 0 || !ruleIds.Add(id)) throw new AdapterPreconditionException("Supply nonempty, unique rule IDs.", "rules");
+                    string xpath = r["xpath"]?.GetValue<string>() ?? "";
+                    if (xpath.Length == 0 || xpath.Length > 1024)
+                        throw new AdapterPreconditionException("Supply an XPath selecting elements, with 1..1024 characters, for each rule.", "rules");
+                    XPathExpression.Compile(xpath); Pattern(r["files"]?.GetValue<string>() ?? ".*");
+                    if (r["valuePattern"] != null) Pattern(r["valuePattern"]!.GetValue<string>());
+                    int min = r["minCount"]?.GetValue<int>() ?? 0, max = r["maxCount"]?.GetValue<int>() ?? int.MaxValue;
+                    if (min < 0 || max < min) throw new AdapterPreconditionException("Set rule counts to 0 <= minCount <= maxCount.", "rules");
+                    if (!new[] { "info", "warning", "error" }.Contains(r["severity"]?.GetValue<string>() ?? "warning"))
+                        throw new AdapterPreconditionException("Set rule severity to info, warning or error.", "rules");
+                    evaluated[id] = 0;
+                }
             }
+            catch (AdapterPreconditionException) { throw; }
+            catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException || ex is XPathException || ex is FormatException)
+            { throw new AdapterPreconditionException("Supply valid XML rules: unique nonempty IDs, an element XPath of at most 1024 characters, valid regular expressions, 0 <= minCount <= maxCount, and severity info/warning/error.", "rules"); }
             var files = OfflineAnalysisLogic.EnumerateDocuments(directory, true, new[] { ".xml", ".scl", ".s7dcl", ".aml" });
             var findings = new JsonArray(); var failures = new JsonArray(); var blocks = new Dictionary<string, string>(StringComparer.Ordinal);
             int totalFindings = 0;
