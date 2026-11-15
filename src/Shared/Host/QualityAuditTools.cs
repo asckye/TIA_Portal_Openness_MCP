@@ -44,7 +44,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 FileInfo? output;
                 try { output = string.IsNullOrEmpty(reportPath) ? null : NativeFileOutput.Plan(reportPath); }
                 catch (Exception ex) when (ex is ArgumentException || ex is IOException)
-                { throw new AdapterPreconditionException("Supply a new absolute reportPath in an existing directory; existing outputs cannot be overwritten.", "reportPath"); }
+                {
+                    throw new AdapterPreconditionException("Supply a new absolute reportPath in an existing directory; existing outputs cannot be overwritten.",
+                            "reportPath");
+                }
                 bool pdf = reportPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
                 if (output != null && !pdf && !reportPath.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
                     throw new AdapterPreconditionException("Set reportPath to a new .html or .pdf file.", "reportPath");
@@ -58,7 +61,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         string bridge = TiaOpenness.Shared.BundleLayout.RequirePath(root, "scripts/ecosystem/plc_tools_bridge.py");
                         string python = TiaOpenness.Shared.DataLocations.Current.EcosystemPythonExecutable;
                         if (!Path.IsPathRooted(python) || !File.Exists(python))
-                            throw new AdapterPreconditionException("Install the companion Python environment with tia install-plc-tools before requesting a PDF report.", "reportPath");
+                            throw new AdapterPreconditionException("Install the companion Python environment with tia install-plc-tools before requesting a " +
+                                "PDF report.",
+                                    "reportPath");
                         var request = new JsonObject { ["mode"] = "audit-pdf", ["outputPath"] = output.FullName, ["report"] = result.DeepClone() };
                         var render = EcosystemFiles.Run(python, new[] { "-I", "-X", "utf8", bridge }, output.DirectoryName!, request.ToJsonString(), 60)
                             .GetAwaiter().GetResult();

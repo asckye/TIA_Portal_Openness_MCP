@@ -218,7 +218,9 @@ namespace TiaOpenness.Shared
                         RegexOptions.None, timeout);
             text = Regex.Replace(text, @"(?i)(https?://)[^/\s@]+@",
                 match => match.Groups[1].Value + replaceSecret(match.Value.Substring(match.Groups[1].Length).TrimEnd('@')) + "@", options, timeout);
-            return Regex.Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", match => replaceSecret(match.Value), options, timeout);
+            return Regex
+                .Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", match => replaceSecret(match.Value), options,
+                    timeout);
         }
 
         private static string RedactPairs(string text, HashSet<string>? secrets, Func<string, string>? replaceSecret = null)

@@ -32,7 +32,8 @@ namespace TiaMcpServer.ModelContextProtocol
             return m;
         }
 
-        internal static JsonObject S7WebSafety(bool writes, bool changesMode, bool tlsEstablished = false, bool ignoreCertificateErrors = false) => new JsonObject
+        internal static JsonObject S7WebSafety(bool writes, bool changesMode, bool tlsEstablished = false, bool ignoreCertificateErrors = false) =>
+            new JsonObject
         {
             ["readOnly"] = !writes && !changesMode,
             ["writesValues"] = writes,

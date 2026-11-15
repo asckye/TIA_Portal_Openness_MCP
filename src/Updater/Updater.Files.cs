@@ -44,7 +44,8 @@ namespace TiaMcp.Updater
             return inventory;
         }
 
-        private static void RemoveLegacyFiles(string root, DeliveryRules rules, Dictionary<string, string> inventory, Dictionary<string, string> newFiles, Action<string> say)
+        private static void RemoveLegacyFiles(string root, DeliveryRules rules, Dictionary<string, string> inventory, Dictionary<string, string> newFiles,
+                Action<string> say)
         {
             foreach (KeyValuePair<string, string> item in inventory.ToArray())
                 if (Matches(item.Key, rules.LegacyCleanup) && !newFiles.ContainsKey(item.Key)) RemoveOwnedFile(root, item.Key, item.Value, say);

@@ -23,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareModulesService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareNetworkPortService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareNetworkTools.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareNetworkTools.Contract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareServicesPortService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/HardwareToolContract.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/Shared/Host/EnvironmentDoctor.cs" />

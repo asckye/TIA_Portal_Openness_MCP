@@ -54,7 +54,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (AdapterPreconditionException) { throw; }
             catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException || ex is XPathException || ex is FormatException)
-            { throw new AdapterPreconditionException("Supply valid XML rules: unique nonempty IDs, an element XPath of at most 1024 characters, valid regular expressions, 0 <= minCount <= maxCount, and severity info/warning/error.", "rules"); }
+            {
+                throw new AdapterPreconditionException("Supply valid XML rules: unique nonempty IDs, an element XPath of at most 1024 characters, valid " +
+                    "regular expressions, 0 <= minCount <= maxCount, and severity info/warning/error.",
+                        "rules");
+            }
             var files = OfflineAnalysisLogic.EnumerateDocuments(directory, true, new[] { ".xml", ".scl", ".s7dcl", ".aml" });
             var findings = new JsonArray(); var failures = new JsonArray(); var blocks = new Dictionary<string, string>(StringComparer.Ordinal);
             int totalFindings = 0;

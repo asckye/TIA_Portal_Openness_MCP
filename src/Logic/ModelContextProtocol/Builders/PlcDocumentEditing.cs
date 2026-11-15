@@ -179,7 +179,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         .Concat(d.Descendants().Where(e => e.Name.LocalName == "MultiLanguageText")
                             .Select(e => (string?)e.Attribute("Lang") ?? "")).Where(c => c.Length > 0), StringComparer.Ordinal);
                     if (cultures.Count > 0 && !cultures.Contains(culture))
-                        throw new ArgumentException("culture " + culture + " does not occur in this document; use a project language that the export contains.");
+                        throw new ArgumentException("culture " + culture
+                                + " does not occur in this document; use a project language that the export contains.");
                     if (!used.Add((member, culture)))
                         throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
                     SetMemberComment(member, culture, Get("expectedValue"), Get("value"));

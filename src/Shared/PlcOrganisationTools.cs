@@ -321,7 +321,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         + (crossRefOk
                             ? $"Cross-references: {data["crossReferenceCount"]} (see data.crossReferences)."
                             : queried
-                                ? "Warning: Cross-references could not be retrieved. This does not mean the object is unreferenced; verify it before continuing."
+                                ? "Warning: Cross-references could not be retrieved. This does not mean the object is unreferenced; verify it before " +
+                                    "continuing."
                                 : "Cross-references were not queried ("
                                     + (data["crossReferenceUnavailableReason"]?.GetValue<string>() ?? "crossReferences=false, the default")
                                     + "). This does not mean the object is unreferenced.")

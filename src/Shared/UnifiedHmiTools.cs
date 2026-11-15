@@ -22,7 +22,7 @@ using TiaMcpServer.Siemens.Services;
 namespace TiaMcpServer.ModelContextProtocol
 {
     [McpServerToolType]
-    internal sealed class UnifiedHmiTools
+    internal sealed partial class UnifiedHmiTools
     {
         private readonly UnifiedHmiService _service;
 
@@ -93,25 +93,6 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("height: optional screen height, 0 means keep current")] uint height = 0, bool dryRun = true)
             => UnifiedHmiContract
                 .Run("EnsureUnifiedHmiScreen", !dryRun, true, () => EnsureUnifiedHmiScreen(hmiSoftwarePath, screenName, width, height, dryRun));
-
-        public ResponseMessage EnsureUnifiedHmiScreen(string hmiSoftwarePath,
-            string screenName,
-            uint width = 0,
-            uint height = 0, bool dryRun = true)
-        {
-            try
-            {
-                return _service.EnsureUnifiedHmiScreen(hmiSoftwarePath, screenName, width, height, dryRun);
-            }
-            catch (Exception ex) when (ex is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException)
-            {
-                throw new McpException(ex.Message, ex, McpErrorCode.InvalidParams);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error ensuring HMI screen '{screenName}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
 
         [McpServerTool(Name = "EnsureUnifiedHmiTagTable"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
@@ -240,26 +221,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Run("EnsureUnifiedHmiScreenItem", !dryRun, true, () =>
                     EnsureUnifiedHmiScreenItem(hmiSoftwarePath, screenName, itemName, itemType, left, top, width, height, text, dryRun));
 
-        public ResponseMessage EnsureUnifiedHmiScreenItem(string hmiSoftwarePath,
-            string screenName,
-            string itemName,
-            string itemType = "Button",
-            int left = 0,
-            int top = 0,
-            uint width = 120,
-            uint height = 40,
-            string text = "", bool dryRun = true)
-        {
-            try
-            {
-                return _service.EnsureUnifiedHmiScreenItem(hmiSoftwarePath, screenName, itemName, itemType, left, top, width, height, text, dryRun);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error ensuring HMI screen item '{itemName}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
-
         [McpServerTool(Name = "GetUnifiedHmiTexts"),
                 Description("[L0][HMI-Unified] Read language codes and raw text without serializing native language objects. Requires ConnectPortal + " +
                 "OpenProject. Supports Text, AlternateText and ToolTipText when present on the control. Check ok and meta.completeness.")]
@@ -269,12 +230,6 @@ namespace TiaMcpServer.ModelContextProtocol
             string itemName,
             [Description("textProperty: name of the multilingual text property to read ('' = all).")] string textProperty = "Text")
             => UnifiedHmiContract.Run("GetUnifiedHmiTexts", false, false, () => ReadUnifiedHmiTexts(hmiSoftwarePath, screenName, itemName, textProperty));
-
-        public ResponseMessage ReadUnifiedHmiTexts(string hmiSoftwarePath,
-            string screenName,
-            string itemName,
-            string textProperty = "Text")
-            => _service.ReadUnifiedHmiTexts(hmiSoftwarePath, screenName, itemName, textProperty);
 
         [McpServerTool(Name = "ApplyUnifiedHmiScreenDesign"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
@@ -294,27 +249,6 @@ namespace TiaMcpServer.ModelContextProtocol
             => UnifiedHmiContract
                 .Run("ApplyUnifiedHmiScreenDesign", !dryRun, true, () =>
                     ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design.ToBuilderInput().ToJsonString(), strict, dryRun));
-
-        public ResponseMessage ApplyUnifiedHmiScreenDesignJson(string hmiSoftwarePath,
-            string screenName,
-            string designJson,
-            bool strict = true, bool dryRun = true)
-        {
-            try
-            {
-                var design = ScreenDesign(screenName, JsonNode.Parse(designJson)!.AsObject());
-                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design.ToJsonString(), strict, dryRun);
-            }
-            catch (ArgumentException ex)
-            {
-                var refusal = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(ex.Message, ex.ParamName, isArgument: true, innerException: ex);
-                throw LegacyFailure(refusal, refusal.Message);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error applying Unified HMI design to '{screenName}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
 
 
 
@@ -338,26 +272,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Run("ApplyUnifiedHmiTheme", !dryRun, true, () =>
                     ApplyUnifiedHmiTheme(hmiSoftwarePath, screenName, theme.ToBuilderInput().ToJsonString(), dryRun));
 
-        public ResponseMessage ApplyUnifiedHmiTheme(string hmiSoftwarePath,
-            string screenName,
-            string themeJson, bool dryRun = true)
-        {
-            try
-            {
-                var design = ScreenDesign(screenName, HmiDesignBuilder.BuildUnifiedHmiThemeDesignJson(themeJson).Data!);
-                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design.ToJsonString(), dryRun: dryRun);
-            }
-            catch (ArgumentException ex)
-            {
-                var refusal = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(ex.Message, ex.ParamName, isArgument: true, innerException: ex);
-                throw LegacyFailure(refusal, refusal.Message);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error applying Unified HMI theme: {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
-
         [McpServerTool(Name = "ApplyUnifiedHmiLayout"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
                 "[L2][HMI-Unified] Apply a grid layout to a real Unified HMI screen through ApplyUnifiedHmiScreenDesign. Requires a connected TIA project; " +
@@ -370,40 +284,6 @@ namespace TiaMcpServer.ModelContextProtocol
             => UnifiedHmiContract
                 .Run("ApplyUnifiedHmiLayout", !dryRun, true, () =>
                     ApplyUnifiedHmiLayout(hmiSoftwarePath, screenName, layout.ToBuilderInput().ToJsonString(), dryRun));
-
-        public ResponseMessage ApplyUnifiedHmiLayout(string hmiSoftwarePath,
-            string screenName,
-            string layoutJson, bool dryRun = true)
-        {
-            try
-            {
-                var design = ScreenDesign(screenName, HmiDesignBuilder.BuildUnifiedHmiLayoutDesignJson(layoutJson).Data!);
-                return _service.ApplyUnifiedHmiScreenDesignJson(hmiSoftwarePath, screenName, design.ToJsonString(), dryRun: dryRun);
-            }
-            catch (ArgumentException ex)
-            {
-                var refusal = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(ex.Message, ex.ParamName, isArgument: true, innerException: ex);
-                throw LegacyFailure(refusal, refusal.Message);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error applying Unified HMI layout: {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
-
-        private static JsonObject ScreenDesign(string screenName, JsonObject built)
-        {
-            var screen = built["screen"]?.DeepClone() as JsonObject ?? new JsonObject();
-            if (screen["Name"] is JsonNode name)
-            {
-                string target = screenName.StartsWith("/", StringComparison.Ordinal)
-                    ? Uri.UnescapeDataString(screenName.Substring(screenName.LastIndexOf('/') + 1)) : screenName;
-                if (!string.Equals(name.GetValue<string>(), target, StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException("design.screen.name must name the target screen; renaming is refused");
-                screen.Remove("Name");
-            }
-            return new JsonObject { ["screen"] = screen, ["items"] = built["items"]?.DeepClone() ?? new JsonArray() };
-        }
 
         [McpServerTool(Name = "BindUnifiedHmiButtonPressedTag"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
@@ -418,21 +298,6 @@ namespace TiaMcpServer.ModelContextProtocol
             => UnifiedHmiContract
                 .Run("BindUnifiedHmiButtonPressedTag", !dryRun, true, () =>
                     BindUnifiedHmiButtonPressedTag(hmiSoftwarePath, screenName, buttonName, tagName, dryRun));
-
-        public ResponseMessage BindUnifiedHmiButtonPressedTag(string hmiSoftwarePath,
-            string screenName,
-            string buttonName,
-            string tagName, bool dryRun = true)
-        {
-            try
-            {
-                return _service.BindUnifiedHmiButtonPressedTag(hmiSoftwarePath, screenName, buttonName, tagName, dryRun);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error binding button '{buttonName}' to tag '{tagName}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
 
         [McpServerTool(Name = "ListUnifiedHmiApiTypes"),
                 Description("[L2][HMI-Unified]List loaded WinCC Unified HMI API types/enums by name filter, useful for discovering event and dynamization " +
@@ -477,21 +342,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Run("EnsureUnifiedHmiButtonEventHandler", !dryRun, true, () =>
                     EnsureUnifiedHmiButtonEventHandler(hmiSoftwarePath, screenName, buttonName, eventType, dryRun));
 
-        public ResponseMessage EnsureUnifiedHmiButtonEventHandler(string hmiSoftwarePath,
-            string screenName,
-            string buttonName,
-            string eventType, bool dryRun = true)
-        {
-            try
-            {
-                return _service.EnsureUnifiedHmiButtonEventHandler(hmiSoftwarePath, screenName, buttonName, eventType, dryRun);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error ensuring button event handler '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
-
         [McpServerTool(Name = "DescribeUnifiedHmiButtonEventScript"),
                 Description("[L2][HMI-Unified]Describe a Unified HMI button event handler Script property and its current object members/attributes.")]
         public CallToolResult DescribeUnifiedHmiButtonEventScriptV4(
@@ -504,32 +354,6 @@ namespace TiaMcpServer.ModelContextProtocol
             => UnifiedHmiContract
                 .Run("DescribeUnifiedHmiButtonEventScript", false, false, () =>
                     DescribeUnifiedHmiButtonEventScript(hmiSoftwarePath, screenName, buttonName, eventType, maxMembers));
-
-        public ResponseObjectDescribe DescribeUnifiedHmiButtonEventScript(string hmiSoftwarePath,
-            string screenName,
-            string buttonName,
-            string eventType,
-            int maxMembers = 200)
-        {
-            try
-            {
-                var res = _service.DescribeUnifiedHmiButtonEventScript(hmiSoftwarePath, screenName, buttonName, eventType, maxMembers);
-                res.Meta ??= ResponseMeta.Unstamped(false, ("operationSuccess", false));
-                res.Meta["timestamp"] = DateTime.Now;
-                res.Meta["memberCount"] = res.Members?.Count() ?? 0;
-                return res;
-            }
-            catch (PortalException pex)
-            {
-                // 路径解析不到是调用方的参数问题，不是服务器内部意外错误。
-                throw new McpException(pex.Message, pex,
-                    pex.Code == PortalErrorCode.NotFound ? McpErrorCode.InvalidParams : McpErrorCode.InternalError);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error describing button event script '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
 
         [McpServerTool(Name = "SetUnifiedHmiButtonEventScriptCode"),
                 Description("[L2][HMI-Unified]Set ScriptCode on a Unified HMI button event ScriptDynamization. SyntaxCheck is OFF by default because on TIA " +
@@ -566,27 +390,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 context.Params?.Arguments?.ContainsKey(nameof(globalDefinitionAreaScriptCode)) == true ? globalDefinitionAreaScriptCode : null,
                 context.Params?.Arguments?.ContainsKey(nameof(async)) == true ? async : (bool?)null, syntaxCheck)), expectedPlanHash, expectedProjectFile);
 
-        public ResponseMessage SetUnifiedHmiButtonEventScriptCode(string hmiSoftwarePath,
-            string screenName,
-            string buttonName,
-            string eventType,
-            string scriptCode,
-            string? globalDefinitionAreaScriptCode = null,
-            bool? async = null,
-            bool syntaxCheck = false)
-        {
-            try
-            {
-                return _service
-                    .SetUnifiedHmiButtonEventScriptCode(hmiSoftwarePath, screenName, buttonName, eventType, scriptCode, globalDefinitionAreaScriptCode, async,
-                        syntaxCheck);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error setting button event script '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
-
 
 
 
@@ -613,63 +416,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Run("EnsureUnifiedHmiButtonAction", !dryRun, true, () =>
                     EnsureUnifiedHmiButtonAction(hmiSoftwarePath, screenName, buttonName, eventType, actionKind, targetTag, syntaxCheck, dryRun));
 
-        public ResponseMessage EnsureUnifiedHmiButtonAction(string hmiSoftwarePath,
-            string screenName,
-            string buttonName,
-            string eventType,
-            string actionKind,
-            string targetTag,
-            bool syntaxCheck = false, bool dryRun = true)
-        {
-            try
-            {
-                var recipe = HmiActionScriptRecipeBuilder.Build(actionKind, eventType, new[] { targetTag });
-                var kind = recipe["recipeKind"]?.ToString() ?? "";
-                var script = recipe["script"]?.ToString() ?? "";
-                var allowed = new[] { "set-bit", "reset-bit", "toggle-bit" };
-                if (!allowed.Contains(kind, StringComparer.OrdinalIgnoreCase))
-                {
-                    recipe["applyStatus"] = "rejected";
-                    recipe["applyReason"] = "Only set-bit/reset-bit/toggle-bit recipes can be applied by this safe high-level tool.";
-                    return new ResponseMessage { Message = "Unified HMI button action rejected by safety policy.", Meta = recipe };
-                }
-                if (recipe["ok"]?.GetValue<bool>() != true || string.IsNullOrWhiteSpace(script) || script
-                        .IndexOf("TODO", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    recipe["applyStatus"] = "rejected";
-                    recipe["applyReason"] = "Recipe has errors, empty script, or TODO placeholder.";
-                    return new ResponseMessage {
-                        Message = "Unified HMI button action rejected because the generated script is not directly applicable.", Meta = recipe };
-                }
-
-                if (dryRun)
-                {
-                    TiaMcp.Adapters.Contracts.EngineeringInputValidation.NameOrAbsolutePath(screenName);
-                    recipe["dryRun"] = true; recipe["mayHaveChanged"] = false; recipe["operationSuccess"] = true;
-                    recipe["plannedChanges"] = new JsonObject {
-                        ["screenName"] = screenName, ["buttonName"] = buttonName, ["eventType"] = eventType, ["scriptCode"] = script, ["syntaxCheck"] =
-                            syntaxCheck
-                    };
-                    return new ResponseMessage { Message = "Unified HMI button action preview; no native calls or writes.", Meta = recipe };
-                }
-                var applied = _service.ApplyUnifiedHmiButtonAction(hmiSoftwarePath, screenName, buttonName, eventType, script, syntaxCheck);
-                if (applied.Meta != null) foreach (var pair in applied.Meta) recipe[pair.Key] = pair.Value?.DeepClone();
-                recipe["applyStatus"] = applied.Meta?["operationSuccess"]?.GetValue<bool>() == true ? "applied" : "apply-failed";
-                return new ResponseMessage
-                {
-                    Message = recipe["applyStatus"]?.ToString() == "applied"
-                        ? "Unified HMI button action applied via generated recipe."
-                        : "Unified HMI button action was not applied; inspect setMeta.",
-                    Meta = recipe
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex,
-                    $"Unexpected error applying Unified HMI button action '{buttonName}.{eventType}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
-
         [McpServerTool(Name = "EnsureUnifiedHmiDynamization"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
                 "[L2][HMI-Unified]Only documented Tag (default), Script, ResourceList, Flashing, Expression and TagParameter kinds are accepted; the last " +
@@ -687,22 +433,6 @@ namespace TiaMcpServer.ModelContextProtocol
             => UnifiedHmiContract
                 .Run("EnsureUnifiedHmiDynamization", !dryRun, true, () =>
                     EnsureUnifiedHmiDynamization(hmiSoftwarePath, screenName, itemName, propertyName, dynamizationType, dryRun));
-
-        public ResponseMessage EnsureUnifiedHmiDynamization(string hmiSoftwarePath,
-            string screenName,
-            string itemName,
-            string propertyName,
-            string dynamizationType = "", bool dryRun = true)
-        {
-            try
-            {
-                return _service.EnsureUnifiedHmiDynamization(hmiSoftwarePath, screenName, itemName, propertyName, dynamizationType, dryRun);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error ensuring dynamization '{itemName}.{propertyName}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
 
         [McpServerTool(Name = "BindUnifiedHmiTagDynamization"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
@@ -722,24 +452,5 @@ namespace TiaMcpServer.ModelContextProtocol
             => UnifiedHmiContract
                 .Run("BindUnifiedHmiTagDynamization", !dryRun, true, () =>
                     BindUnifiedHmiTagDynamization(hmiSoftwarePath, screenName, itemName, propertyName, tagName, dataType, plcTag, address, dryRun));
-
-        public ResponseMessage BindUnifiedHmiTagDynamization(string hmiSoftwarePath,
-            string screenName,
-            string itemName,
-            string propertyName,
-            string tagName,
-            string dataType = "",
-            string plcTag = "",
-            string address = "", bool dryRun = true)
-        {
-            try
-            {
-                return _service.BindUnifiedHmiTagDynamization(hmiSoftwarePath, screenName, itemName, propertyName, tagName, dataType, plcTag, address, dryRun);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw LegacyFailure(ex, $"Unexpected error binding tag dynamization '{itemName}.{propertyName}': {ex.Message}{McpHints.Recovery(ex)}");
-            }
-        }
     }
 }

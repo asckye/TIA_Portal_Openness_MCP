@@ -23,7 +23,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (e.ValueKind == JsonValueKind.Object) {
                 var names = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var p in e.EnumerateObject()) {
-                    if (!names.Add(p.Name)) throw new AdapterPreconditionException("Remove duplicate properties from the package manifest.", "directory"); UniqueKeys(p.Value); }
+                    if (!names.Add(p.Name)) throw new AdapterPreconditionException("Remove duplicate properties from the package manifest.", "directory");
+                    UniqueKeys(p.Value); }
             } else if (e.ValueKind == JsonValueKind.Array) foreach (var p in e.EnumerateArray()) UniqueKeys(p);
         }
         public static JsonObject Run(string directory, string action, string outputPath, bool dryRun, string expectedFingerprint)
@@ -36,12 +37,15 @@ namespace TiaMcpServer.ModelContextProtocol
             long total = 0; int directories = 0;
             while (queue.Count > 0)
             {
-                var current = queue.Dequeue(); if (++directories > 256) throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", "directory");
+                var current = queue.Dequeue(); if (++directories > 256)
+                    throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", "directory");
                 foreach (var item in current.EnumerateFileSystemInfos())
                 {
-                    if ((item.Attributes & FileAttributes.ReparsePoint) != 0) throw new AdapterPreconditionException("Remove reparse entries from the CWC source.", "directory");
+                    if ((item.Attributes & FileAttributes.ReparsePoint) != 0)
+                        throw new AdapterPreconditionException("Remove reparse entries from the CWC source.", "directory");
                     if (item is DirectoryInfo child) {
-                        if (queue.Count >= 256) throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", "directory"); queue.Enqueue(child); continue; }
+                        if (queue.Count >= 256) throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", "directory"); queue
+                            .Enqueue(child); continue; }
                     var file = (FileInfo)item;
                     if (files.Count >= 1024 || file.Length > 16 * 1024 * 1024 || total + file.Length > 64 * 1024 * 1024)
                         throw new AdapterPreconditionException("Reduce the CWC source to <=1024 files, <=16 MiB each and <=64 MiB total.", "directory");
@@ -49,7 +53,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     using var content = new MemoryStream(); var buffer = new byte[8192]; int n;
                     while ((n = input.Read(buffer, 0, buffer.Length)) > 0) {
                         total += n; if (content.Length + n > 16 * 1024 * 1024 || total > 64 * 1024 * 1024)
-                            throw new AdapterPreconditionException("Reduce the CWC source to <=16 MiB per file and <=64 MiB total.", "directory"); content.Write(buffer, 0, n);
+                            throw new AdapterPreconditionException("Reduce the CWC source to <=16 MiB per file and <=64 MiB total.", "directory"); content
+                                .Write(buffer, 0, n);
                     }
                     files.Add(file.FullName.Substring(root.FullName.TrimEnd('\\', '/').Length + 1).Replace('\\', '/'), content.ToArray());
                 }
@@ -80,11 +85,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new AdapterPreconditionException("Set manifest identity.type to guid:// followed by an 8-4-4-4-12 GUID.", "directory");
             string LocalReference(string value)
             {
-                if (!value.StartsWith("./", StringComparison.Ordinal)) throw new AdapterPreconditionException("Start local manifest references with ./.", "directory");
+                if (!value.StartsWith("./", StringComparison.Ordinal))
+                    throw new AdapterPreconditionException("Start local manifest references with ./.", "directory");
                 var relative = value.Substring(2);
                 if (relative.Split('/').Any(p => p == ".." || p == "." || p.Length == 0) || relative.IndexOfAny(new[] { '\\', ':', '?', '#', '\0' }) >= 0
                         || !files.ContainsKey(relative))
-                    throw new AdapterPreconditionException("Supply local manifest references to existing package files without traversal or reserved characters.", "directory");
+                    throw new AdapterPreconditionException("Supply local manifest references to existing package files without traversal or reserved " +
+                        "characters.",
+                            "directory");
                 return relative;
             }
             var start = LocalReference(identity["start"] == null ? "./control/index.html" : Required(identity["start"], "identity.start"));
@@ -98,7 +106,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!string.IsNullOrEmpty(icon)) {
                 if (icon!.StartsWith("./", StringComparison.Ordinal)) LocalReference(icon); else warnings.Add("External/data icon was not fetched or decoded.");
             }
-            if (!files.Keys.Any(p => p.StartsWith("control/", StringComparison.Ordinal))) throw new AdapterPreconditionException("Supply control directory content in the CWC source.", "directory");
+            if (!files.Keys.Any(p => p.StartsWith("control/", StringComparison.Ordinal)))
+                throw new AdapterPreconditionException("Supply control directory content in the CWC source.", "directory");
             if (!files.Keys.Any(p => p.StartsWith("assets/", StringComparison.Ordinal))) warnings
                 .Add("No assets files; icon is optional in the manifest contract.");
             var inventory =
@@ -117,7 +126,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
             if (action == "inspect" || dryRun) return result;
             if (fingerprint != expectedFingerprint)
-                throw new AdapterPreconditionException("Inspect or preview the package again and supply its unchanged expectedPackageHash. No file written.", "expectedPackageHash");
+                throw new AdapterPreconditionException("Inspect or preview the package again and supply its unchanged expectedPackageHash. No file written.",
+                        "expectedPackageHash");
             if (!Path.IsPathRooted(outputPath) || !string.Equals(Path.GetFileName(outputPath), suggestedName, StringComparison.OrdinalIgnoreCase))
                 throw new AdapterPreconditionException("Supply an absolute outputPath using the suggested GUID ZIP filename.", "outputPath");
             string output;

@@ -319,7 +319,9 @@ namespace TiaMcpServer.ModelContextProtocol
                             arguments = TiaOpenness.Shared.CallJournalPayload.ProtectPlanArguments(JsonNode.Parse(PendingApproval.Canonical(normalized))),
                             hostLifetime = TiaOpenness.Shared.CallJournalPayload.PlanHostLifetime, inputFiles = inputs, targetIdentity = identity }))),
                 ["targetIdentity"] = identity, ["targetVerified"] = false, ["scope"] =
-                    "Normalized arguments, input file contents and cached target identity; the target is not verified. Native validation/readback occurs during execution." };
+                    "Normalized arguments, input file contents and cached target identity; the target is not verified. Native validation/readback occurs " +
+                        "during execution."
+                    };
             if (writing)
             {
                 bool targetBound = PlanProjectFile(identity) != null;

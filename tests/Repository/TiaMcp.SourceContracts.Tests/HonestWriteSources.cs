@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using TiaMcp.BuildCommon;
 using Xunit;
 
@@ -86,7 +87,7 @@ public sealed class HonestWriteSources
         Assert.True(preview < mark && mark < call);
     }
 
-    private static string Read(string path) => System.Text.RegularExpressions.Regex.Replace(Repository.ReadSource(
+    private static string Read(string path) => System.Text.RegularExpressions.Regex.Replace(SourceFamily.Read(
         Path.Combine(Repository.FindRoot(AppContext.BaseDirectory), path)), @"\s+", " ");
 
     [Theory]

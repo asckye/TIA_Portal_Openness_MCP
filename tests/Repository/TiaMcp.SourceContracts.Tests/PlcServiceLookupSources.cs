@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using System.Text.RegularExpressions;
 using TiaMcp.BuildCommon;
 using Xunit;
@@ -17,7 +18,7 @@ public sealed class PlcServiceLookupSources
     }
 
     private static string Read(string path) => Regex.Replace(
-        File.ReadAllText(Path.Combine(Repository.FindRoot(AppContext.BaseDirectory), path)), @"\s+", " ");
+        SourceFamily.Read(Path.Combine(Repository.FindRoot(AppContext.BaseDirectory), path)), @"\s+", " ");
 
     [Fact]
     public void WorkerResolverAsksPlcSoftwareBeforeCpuItemAndDevice()

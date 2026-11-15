@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using TiaMcp.BuildCommon;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -59,7 +60,8 @@ public sealed class NoSessionLockSources
             ["src/Adapters/Native/Session/ProjectLifecycleWorker.cs:AdoptCreatedProjectLifecycleProcess:ownsPortal"] = isolated
         };
         var guard = CSharpSyntaxTree.ParseText(host).GetRoot().DescendantNodes().OfType<IfStatementSyntax>()
-            .Single(statement => statement.Condition.ToString().Contains(isolated, StringComparison.Ordinal)
+            .Single(statement => statement.Ancestors().OfType<MethodDeclarationSyntax>().Any(method => method.Identifier.ValueText == "CallCore")
+                && statement.Condition.ToString().Contains(isolated, StringComparison.Ordinal)
                 && statement.Statement.ToString().Contains("ownsPortal = true", StringComparison.Ordinal));
         var operations = guard.Condition.DescendantNodes().OfType<LiteralExpressionSyntax>()
             .Where(literal => literal.IsKind(SyntaxKind.StringLiteralExpression)).Select(literal => literal.Token.ValueText).ToArray();
@@ -95,7 +97,7 @@ public sealed class NoSessionLockSources
     public void Portal_starting_operations_are_known_to_the_recovery_guard()
     {
         string root = Repository.FindRoot(AppContext.BaseDirectory);
-        RequireKnownPortalStarts(PortalSources(), Repository.ReadSource(Path.Combine(root, "src/FoundationHost/WorkerClient.cs")));
+        RequireKnownPortalStarts(PortalSources(), SourceFamily.Read(Path.Combine(root, "src/FoundationHost/WorkerClient.cs")));
     }
 
     [Fact]
@@ -106,7 +108,7 @@ public sealed class NoSessionLockSources
         sources.Add("src/Adapters/Native/Session/NewPortal.cs", "class NewPortal { bool ownsPortal;\n#if TIA21\n"
             + "void ConnectThirdPortal() { this.ownsPortal = true; }\n#endif\n}");
         Assert.Throws<Xunit.Sdk.TrueException>(() => RequireKnownPortalStarts(sources,
-            Repository.ReadSource(Path.Combine(root, "src/FoundationHost/WorkerClient.cs"))));
+            SourceFamily.Read(Path.Combine(root, "src/FoundationHost/WorkerClient.cs"))));
     }
 
     [Fact]

@@ -26,7 +26,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 4 * 1024 * 1024 }))
                     template = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
             }
-            catch (XmlException) { throw new AdapterPreconditionException("Supply a well-formed XML template without a DTD, within the 4 MiB character limit.", "templatePath"); }
+            catch (XmlException) {
+                throw new AdapterPreconditionException("Supply a well-formed XML template without a DTD, within the 4 MiB character limit.", "templatePath"); }
             JsonArray rows;
             try { rows = JsonNode.Parse(rowsJson) as JsonArray
                 ?? throw new AdapterPreconditionException("Supply rows as an array of objects containing fileName and values.", "rows"); }
@@ -41,7 +42,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (name.Length == 0 || name != Path.GetFileName(name) || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || !name
                         .EndsWith(".xml", StringComparison.OrdinalIgnoreCase) || !names.Add(name))
                     throw new AdapterPreconditionException("Supply a unique simple .xml fileName for every row.", "/rows/" + i + "/fileName");
-                var values = row["values"] as JsonObject ?? throw new AdapterPreconditionException("Supply values as an object of strings.", "/rows/" + i + "/values");
+                var values = row["values"] as JsonObject
+                    ?? throw new AdapterPreconditionException("Supply values as an object of strings.", "/rows/" + i + "/values");
                 foreach (var value in values) if (!(value.Value is JsonValue v) || !v.TryGetValue<string>(out _))
                     throw new AdapterPreconditionException("Supply strings for all replacement values.", "/rows/" + i + "/values");
                 var used = new HashSet<string>(StringComparer.Ordinal);
@@ -56,9 +58,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var attribute in doc.Descendants().Attributes()) attribute.Value = Replace(attribute.Value);
                 foreach (var text in doc.DescendantNodes().OfType<XText>()) text.Value = Replace(text.Value);
                 if (values.Any(k => !used.Contains(k.Key)))
-                    throw new AdapterPreconditionException("A replacement key in rows[" + i + "].values is not used by the template; remove unused replacements.", "/rows/" + i + "/values");
+                    throw new AdapterPreconditionException("A replacement key in rows[" + i
+                            + "].values is not used by the template; remove unused replacements.", "/rows/" + i + "/values");
                 string xml = doc.ToString(SaveOptions.DisableFormatting);
-                if (Token.IsMatch(xml)) throw new AdapterPreconditionException("Resolve all template tokens and remove tokens introduced by replacements.", "/rows/" + i + "/values");
+                if (Token.IsMatch(xml))
+                    throw new AdapterPreconditionException("Resolve all template tokens and remove tokens introduced by replacements.", "/rows/" + i
+                        + "/values");
                 result.Add(new Document { Name = name, Xml = xml });
             }
             if (result.Count != rows.Count) throw new AdapterPreconditionException("Supply an object for every row.", "rows");

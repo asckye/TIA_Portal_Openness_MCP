@@ -150,6 +150,7 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareAddressingService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareAddressTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareNetworkTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareNetworkTools.Contract.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareNetworkPortService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareDevicesService.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HardwareDevicesTools.cs" />
@@ -222,6 +223,9 @@
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiDesignBuilder.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/CapabilitySelfTestLogic.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiTools.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiTools.Design.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiTools.Events.cs" />
+    <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiTools.Dynamization.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedHmiGroupsTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/UnifiedScreenItemsTools.cs" />
     <EngineHostSource Include="$(MSBuildThisFileDirectory)../Shared/HmiInspectionTools.cs" />

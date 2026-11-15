@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using System.Text.RegularExpressions;
 using TiaMcp.BuildCommon;
 using Xunit;
@@ -6,7 +7,7 @@ namespace TiaMcp.SourceContracts.Tests;
 
 public sealed class UnifiedHmiWriteSources
 {
-    private static string Read(string path) => Regex.Replace(Repository.ReadSource(
+    private static string Read(string path) => Regex.Replace(SourceFamily.Read(
         Path.Combine(Repository.FindRoot(AppContext.BaseDirectory), path)), @"\s+", " ");
 
     [Fact]

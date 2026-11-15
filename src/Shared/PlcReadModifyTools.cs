@@ -147,7 +147,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetPlcBlockEditCapabilities"),
                 Description("[L2][Validation][READ] Inspect one SimaticML PLC block file, or export an exact live block, to report each network's own " +
-                "language/source shape, existing multilingual title/comment targets, member comments, library binding and document fingerprint. Exactly one filePath or " +
+                "language/source shape, existing multilingual title/comment targets, member comments, library binding and document fingerprint. Exactly one " +
+                    "filePath or "
+                    +
                 "blockPath (+softwarePath). filePath also accepts a single-UDT export from ExportPlcType; blockPath exports blocks only. " +
                 "Describes the supported offline patch operations; never claims a generic rung editor or target CPU/native import " +
                 "validation. No compile/save/write to project. Current native policy; V4 safety behavior is not yet accepted.")]

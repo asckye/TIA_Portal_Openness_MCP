@@ -36,7 +36,8 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception error) when (tool == "EnsureUnifiedHmiConnection" && error.GetBaseException() is NotSupportedException)
             {
                 return Result(tool, null, new Error(error.GetBaseException().Message,
-                    new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+                    new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)), Outcome.RejectedBeforeOperation, Completeness.None, writes,
+                        current);
             }
             catch (Exception error) /* swallow(privacy): escaped writes have no confirmed outcome; diagnostics stay in the existing log */
             {
@@ -100,7 +101,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var code = rejection ?? failureCode;
                 ErrorDetails details = code == "PROJECT_NOT_BOUND" ? new ProjectNotBoundDetails()
-                    : code == "UNSUPPORTED_CAPABILITY" || code == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
+                    : code == "UNSUPPORTED_CAPABILITY" || code == "NotSupportedOnVersion"
+                        ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : code == "INVALID_ARGUMENT" || code == "InvalidParams" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : code == "NOT_FOUND" || code == "NotFound" ? McpServer.MissingTargetDetails(tool, evidence: evidence)
                     : new PreconditionFailedDetails(evidence["error"]?.ToString(), null);

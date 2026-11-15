@@ -1,3 +1,4 @@
+using TiaMcp.Tests.Shared;
 using TiaMcp.BuildCommon;
 using Xunit;
 
@@ -40,7 +41,7 @@ public sealed class NotFoundSources
     public void Vm_sample_sites_use_typed_refusals(string path, string expected)
     {
         string root = Repository.FindRoot(AppContext.BaseDirectory);
-        Assert.Contains(expected, File.ReadAllText(Path.Combine(root, "src/Adapters/Native", path)), StringComparison.Ordinal);
+        Assert.Contains(expected, SourceFamily.Read(Path.Combine(root, "src/Adapters/Native", path)), StringComparison.Ordinal);
     }
 
     [Fact]
