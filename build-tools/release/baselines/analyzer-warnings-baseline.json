@@ -3891,23 +3891,6 @@
       "contexts": [
         "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER"
       ]
-    },
-    {
-      "rule": "CA5400",
-      "path": "src/OnlineChannels/S7WebApiChannel.cs",
-      "line": 375,
-      "column": 24,
-      "endLine": 379,
-      "endColumn": 14,
-      "message": "HttpClient may be created without enabling CheckCertificateRevocationList",
-      "member": "TiaMcpServer . Runtime/S7WebApiChannel/AcquireAsync( string key , string host , string username , string password , bool ignoreCert , int budget , bool forceNew )",
-      "anchor": "new HttpClient ( handler ) { BaseAddress = new Uri ( \u0022https://\u0022 \u002B host \u002B \u0022/\u0022 ) , Timeout = TimeSpan . FromMilliseconds ( budget ) } ",
-      "fingerprint": "1098bcd7cb243e4f2b09a8c6a53fbb63de0300ec960f8d0e8c373272f4410841",
-      "reason": "PLC web server with a device certificate, usually no reachable revocation list; the channel has its own certificate policy",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/OnlineChannels/TiaMcp.OnlineChannels.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE"
-      ]
     }
   ],
   "initializedRules": [
