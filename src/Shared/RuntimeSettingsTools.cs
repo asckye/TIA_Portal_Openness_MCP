@@ -23,7 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "download or runtime restart. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ReadUnifiedRuntimeSettingsV4(
             string softwarePath,
-            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+            [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
             [Description("fields: structured string array input.")] string[] fields = null!)
             => RuntimeToolContract.Run("GetUnifiedRuntimeSettings", true, true, () =>
@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         public ResponseMessage ReadUnifiedRuntimeSettings(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string fieldsJson = "[\"StartScreen\",\"ScreenResolution\"]")
             => _runtimeSettings.ReadUnifiedRuntimeSettings(softwarePath, expectedProject, fieldsJson);
@@ -48,7 +48,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult UpdateUnifiedRuntimeSettingsV4(
             string softwarePath,
-            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+            [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
             [Description("changes: structured AttributeMap<Scalar> input.")] AttributeMap<Scalar> changes,
             bool dryRun = true,
@@ -61,7 +61,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         public ResponseMessage UpdateUnifiedRuntimeSettings(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string changesJson, bool dryRun = true, string expectedToken = "")
             => _runtimeSettings.UpdateUnifiedRuntimeSettings(softwarePath, expectedProject, changesJson, dryRun, expectedToken);

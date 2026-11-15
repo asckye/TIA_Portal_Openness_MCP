@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Fixed
+- The example project name in tool descriptions and guidance is now `ExampleProject`.
 - STDIO writes each JSON-RPC message with its newline as one serialized frame. Cancellation during a session notification can no longer join it to the following reply.
 - Known unchanged worker refusals consistently report `NOT_FOUND`, `INVALID_ARGUMENT`, `ALREADY_EXISTS` or `UNSUPPORTED_CAPABILITY`
   across all eight releases and tool families, with the redacted native reason. Writes that may have changed the target remain `OUTCOME_UNKNOWN`.

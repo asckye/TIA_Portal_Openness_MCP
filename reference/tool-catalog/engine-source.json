@@ -2967,7 +2967,7 @@
       "path": "src/Shared/GraphicSelectionTools.cs",
       "owner": "GraphicSelectionTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ReadUnifiedGraphicSelectionV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            string screenPath,\n            [Description(\"itemNames: Array of screen item names.\")] string[] itemNames,\n            string cursor = \"\",\n            int limit = 20,\n            int budgetMs = 5000)",
+      "signature": "public CallToolResult ReadUnifiedGraphicSelectionV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            string screenPath,\n            [Description(\"itemNames: Array of screen item names.\")] string[] itemNames,\n            string cursor = \"\",\n            int limit = 20,\n            int budgetMs = 5000)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -2976,7 +2976,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "screenPath": {
           "type": "string",
@@ -6655,7 +6655,7 @@
       "path": "src/Shared/MigrationReadTools.cs",
       "owner": "MigrationReadTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ListUnifiedGlobalScriptsV4(string softwarePath, [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string cursor = \"\", int limit = 100, int budgetMs = 5000)",
+      "signature": "public CallToolResult ListUnifiedGlobalScriptsV4(string softwarePath, [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string cursor = \"\", int limit = 100, int budgetMs = 5000)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -6664,7 +6664,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "cursor": {
           "type": "string",
@@ -6688,7 +6688,7 @@
       "path": "src/Shared/MigrationReadTools.cs",
       "owner": "MigrationReadTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ReadUnifiedGlobalScriptV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            [Description(\"moduleName: exact name of the global script module.\")] string moduleName,\n            string cursor = \"\",\n            int limit = 50,\n            int budgetMs = 5000)",
+      "signature": "public CallToolResult ReadUnifiedGlobalScriptV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            [Description(\"moduleName: exact name of the global script module.\")] string moduleName,\n            string cursor = \"\",\n            int limit = 50,\n            int budgetMs = 5000)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -6697,7 +6697,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "moduleName": {
           "type": "string",
@@ -6726,7 +6726,7 @@
       "path": "src/Shared/MigrationReadTools.cs",
       "owner": "MigrationReadTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ReadUnifiedTagDefinitionsV4(string softwarePath, [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string cursor = \"\", int limit = 100, int budgetMs = 5000)",
+      "signature": "public CallToolResult ReadUnifiedTagDefinitionsV4(string softwarePath, [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string cursor = \"\", int limit = 100, int budgetMs = 5000)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -6735,7 +6735,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "cursor": {
           "type": "string",
@@ -6759,7 +6759,7 @@
       "path": "src/Shared/MigrationReadTools.cs",
       "owner": "MigrationReadTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ReadUnifiedScreenBranchV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            string screenPath,\n            string itemName = \"\",\n            [Description(\"branch: exact property, attribute, nonnegative index or name selection steps.\")] BranchStep[] branch = null!,\n            string cursor = \"\",\n            int limit = 100,\n            int budgetMs = 5000)",
+      "signature": "public CallToolResult ReadUnifiedScreenBranchV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            string screenPath,\n            string itemName = \"\",\n            [Description(\"branch: exact property, attribute, nonnegative index or name selection steps.\")] BranchStep[] branch = null!,\n            string cursor = \"\",\n            int limit = 100,\n            int budgetMs = 5000)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -6768,7 +6768,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "screenPath": {
           "type": "string",
@@ -6807,7 +6807,7 @@
       "path": "src/Shared/MigrationReadTools.cs",
       "owner": "MigrationReadTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ReadUnifiedLibraryTypeV4(string softwarePath, [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string typePath, string version, string cursor = \"\", int limit = 100, int budgetMs = 5000)",
+      "signature": "public CallToolResult ReadUnifiedLibraryTypeV4(string softwarePath, [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string typePath, string version, string cursor = \"\", int limit = 100, int budgetMs = 5000)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -6816,7 +6816,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "typePath": {
           "type": "string",
@@ -6848,7 +6848,7 @@
       "path": "src/Shared/MigrationReadTools.cs",
       "owner": "MigrationReadTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ReadUnifiedFaceplateInstanceV4(string softwarePath, [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string screenPath, string itemName, string typePath = \"\", string version = \"\", string cursor = \"\", int limit = 100, int budgetMs = 5000)",
+      "signature": "public CallToolResult ReadUnifiedFaceplateInstanceV4(string softwarePath, [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string screenPath, string itemName, string typePath = \"\", string version = \"\", string cursor = \"\", int limit = 100, int budgetMs = 5000)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -6857,7 +6857,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "screenPath": {
           "type": "string",
@@ -6899,7 +6899,7 @@
       "path": "src/Shared/MigrationReadTools.cs",
       "owner": "MigrationReadTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ListUnifiedLibraryFolderV4(string softwarePath, [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string folderPath = \"/\", string cursor = \"\", int limit = 100, int budgetMs = 5000)",
+      "signature": "public CallToolResult ListUnifiedLibraryFolderV4(string softwarePath, [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject, string folderPath = \"/\", string cursor = \"\", int limit = 100, int budgetMs = 5000)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -6908,7 +6908,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "folderPath": {
           "type": "string",
@@ -11657,7 +11657,7 @@
       "path": "src/Shared/RuntimeSettingsTools.cs",
       "owner": "RuntimeSettingsTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ReadUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            [Description(\"fields: structured string array input.\")] string[] fields = null!)",
+      "signature": "public CallToolResult ReadUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            [Description(\"fields: structured string array input.\")] string[] fields = null!)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -11666,7 +11666,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "fields": {
           "type": "string[]",
@@ -11681,7 +11681,7 @@
       "path": "src/Shared/RuntimeSettingsTools.cs",
       "owner": "RuntimeSettingsTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult UpdateUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            [Description(\"changes: structured AttributeMap<Scalar> input.\")] AttributeMap<Scalar> changes,\n            bool dryRun = true,\n            string previewToken = \"\")",
+      "signature": "public CallToolResult UpdateUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            [Description(\"changes: structured AttributeMap<Scalar> input.\")] AttributeMap<Scalar> changes,\n            bool dryRun = true,\n            string previewToken = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -11690,7 +11690,7 @@
         "expectedProject": {
           "type": "string",
           "default": null,
-          "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile."
+          "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile."
         },
         "changes": {
           "type": "AttributeMap<Scalar>",

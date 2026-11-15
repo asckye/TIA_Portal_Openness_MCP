@@ -187,7 +187,7 @@ namespace TiaMcp.Logic.V4
         internal static Error? ExpectedProjectArgument(string? expectedProject)
         {
             if (expectedProject == null || expectedProject.IndexOfAny(new[] { '/', '\\', ':' }) < 0) return null;
-            return new Error("expectedProject must be the exact project NAME, for example 'AutomaticDipCoatingMachine'. Use expectedProjectFile only when " +
+            return new Error("expectedProject must be the exact project NAME, for example 'ExampleProject'. Use expectedProjectFile only when " +
                 "the tool requests an absolute project file path.",
                 new InvalidArgumentDetails("expectedProject", Array.Empty<string>(), expected: "exact project name"));
         }

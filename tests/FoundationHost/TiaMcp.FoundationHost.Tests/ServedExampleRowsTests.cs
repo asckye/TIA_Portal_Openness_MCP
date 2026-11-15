@@ -183,7 +183,7 @@ public sealed class ServedExampleRowsTests
         {
             string text = File.ReadAllText(file);
             foreach (string forbidden in new[] { "MCP_B4_", "MCP_B3_", "+S1-K", "192.168.86.", "TIA_MCP_Delivery",
-                @"SIEMENS\\Desktop", @"C:\\Users\\" }) Assert.DoesNotContain(forbidden, text);
+                @"SIEMENS\\Desktop", @"C:\\Users\\", "AutomaticDipCoatingMachine" }) Assert.DoesNotContain(forbidden, text);
             if (Path.GetExtension(file) == ".json") CheckText(JsonNode.Parse(text));
         }
         static void CheckText(JsonNode? node)

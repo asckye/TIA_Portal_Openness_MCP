@@ -27,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "budget is checked between objects, not during synchronous Openness calls.")]
         public CallToolResult ReadUnifiedGraphicSelectionV4(
             string softwarePath,
-            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+            [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
             string screenPath,
             [Description("itemNames: Array of screen item names.")] string[] itemNames,
@@ -41,7 +41,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage ReadUnifiedGraphicSelection(
             string softwarePath,
-            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+            [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
             string screenPath,
             [Description("itemNamesJson: JSON array of screen item names.")] string itemNamesJson,

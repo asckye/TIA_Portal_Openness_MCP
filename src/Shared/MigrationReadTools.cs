@@ -22,7 +22,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][HMI-Unified][READ]Page global script module names only. Names are NOT proof of body acquisition. Exact expectedProject and " +
                 "HMI path required. Resume with identical arguments and nextCursor.")]
         public CallToolResult ListUnifiedGlobalScriptsV4(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string cursor = "", int limit = 100, int budgetMs = 5000)
             => HmiInspectionContract
@@ -30,7 +30,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cursor, pageSize: limit);
 
         public ResponseMessage ListUnifiedGlobalScripts(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ListUnifiedGlobalScripts(softwarePath, expectedProject, cursor, pageSize, budgetMs);
@@ -40,7 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "nextCursor; inspect dataComplete and failures.")]
         public CallToolResult ReadUnifiedGlobalScriptV4(
             string softwarePath,
-            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+            [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
             [Description("moduleName: exact name of the global script module.")] string moduleName,
             string cursor = "",
@@ -52,7 +52,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage ReadUnifiedGlobalScript(
             string softwarePath,
-            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+            [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
             [Description("moduleName: exact name of the global script module.")] string moduleName,
             string cursor = "",
@@ -64,7 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "fields and separately labelled root source inference. Unknown bounds remain gaps. limit counts evidence records, not tags. Follow " +
                 "nextCursor until null; inspect cumulative failures.")]
         public CallToolResult ReadUnifiedTagDefinitionsV4(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string cursor = "", int limit = 100, int budgetMs = 5000)
             => HmiInspectionContract
@@ -72,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedTagDefinitions(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ReadUnifiedTagDefinitions(softwarePath, expectedProject, cursor, pageSize, budgetMs);
@@ -82,7 +82,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "writes or arbitrary method invocation.")]
         public CallToolResult ReadUnifiedScreenBranchV4(
             string softwarePath,
-            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+            [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
             string screenPath,
             string itemName = "",
@@ -96,7 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage ReadUnifiedScreenBranch(
             string softwarePath,
-            [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+            [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
             string screenPath,
             string itemName = "",
@@ -112,7 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "instantiation, whole-library traversal or automatic retry after failure. Direct dependency identifiers, original files, hashes and explicit " +
                 "gaps are returned.")]
         public CallToolResult ReadUnifiedLibraryTypeV4(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string typePath, string version, string cursor = "", int limit = 100, int budgetMs = 5000)
             => HmiInspectionContract
@@ -120,7 +120,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ReadUnifiedLibraryType(softwarePath, expectedProject, typePath, version, cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedLibraryType(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ReadUnifiedLibraryType(softwarePath, expectedProject, typePath, version, cursor, pageSize, budgetMs);
@@ -129,7 +129,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "typePath/version are optional verification constraints. Reads interface assignments, events and bindings, and exports the connected version " +
                 "directly. Unavailable service/version is an explicit gap; no guessed type or default version.")]
         public CallToolResult ReadUnifiedFaceplateInstanceV4(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string screenPath, string itemName, string typePath = "", string version = "", string cursor = "", int limit = 100, int budgetMs = 5000)
             => HmiInspectionContract
@@ -138,7 +138,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cursor, pageSize: limit);
 
         public ResponseMessage ReadUnifiedFaceplateInstance(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string screenPath, string itemName, string typePath = "", string version = "", string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ReadUnifiedFaceplateInstance(softwarePath, expectedProject, screenPath, itemName, typePath, version, cursor, pageSize, budgetMs);
@@ -147,7 +147,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "script/faceplate. No recursive search or default-version substitution. / selects root. Inspect returned folders before choosing the next " +
                 "exact path.")]
         public CallToolResult ListUnifiedLibraryFolderV4(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string folderPath = "/", string cursor = "", int limit = 100, int budgetMs = 5000)
             => HmiInspectionContract
@@ -155,7 +155,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ListUnifiedLibraryFolder(softwarePath, expectedProject, folderPath, cursor, limit, budgetMs), cursor: cursor, pageSize: limit);
 
         public ResponseMessage ListUnifiedLibraryFolder(string softwarePath,
-                [Description("Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not " +
+                [Description("Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not " +
                 "expectedProjectFile.")] string expectedProject,
                 string folderPath = "/", string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ListUnifiedLibraryFolder(softwarePath, expectedProject, folderPath, cursor, pageSize, budgetMs);
