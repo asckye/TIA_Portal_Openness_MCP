@@ -7,6 +7,9 @@
 ### Fixed
 - The example project name in tool descriptions and guidance is now `ExampleProject`.
 - `PreviewToolCall` precautions name the compile step for the tool's domain and include Windows Openness group changes for session tools.
+- Canonical printed device paths and arrays of names containing `/` on the seven string device entries now resolve.
+- Ambiguous device paths return `TARGET_AMBIGUOUS` with `details.candidates` instead of choosing a device or failing without a reason.
+- Missing array device paths return `NOT_FOUND` with `details.target` and up to 20 candidates in the message.
 - STDIO writes each JSON-RPC message with its newline as one serialized frame. Cancellation during a session notification can no longer join it to the following reply.
 - Known unchanged worker refusals consistently report `NOT_FOUND`, `INVALID_ARGUMENT`, `ALREADY_EXISTS` or `UNSUPPORTED_CAPABILITY`
   across all eight releases and tool families, with the redacted native reason. Writes that may have changed the target remain `OUTCOME_UNKNOWN`.

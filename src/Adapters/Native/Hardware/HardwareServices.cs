@@ -566,7 +566,11 @@ namespace TiaMcp.Adapters
                             ExactHardware(devicePathJson, Array.Empty<string>()); throw new InvalidOperationException("Device is still present after Delete.");
                         }
                         catch (HardwareAddressingException ex) when (ex.Status == "NotFound"
-                            && (ex.Message == "Exact unique device not found." || ex.Message == "Device not found.")) {
+                            && (ex.Message == "Exact unique device not found." || ex.Message == "Device not found."
+                                || ex.Data["target"] as string == string.Join("/", devicePathJson)
+                                    && ex.Data["candidates"] is string[] candidates
+                                    && ex.Message == "Device not found: " + string.Join("/", devicePathJson)
+                                        + ". Candidates: " + (candidates.Length == 0 ? "none" : string.Join("; ", candidates)) + ".")) {
                             meta["verifiedAbsent"] = true; }
                     }
                 }

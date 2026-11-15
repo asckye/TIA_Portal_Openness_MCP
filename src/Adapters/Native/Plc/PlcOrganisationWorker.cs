@@ -231,6 +231,9 @@ namespace TiaMcp.Adapters
                     Candidates = (error as PlcSoftwareException)?.Candidates?.ToArray() };
                 reply.Failure.Evidence["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
                 reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
+                reply.Failure.Evidence["mayHaveChanged"] = adapter.MutationStarted;
+                reply.Failure.Evidence["status"] = StepFailureStatus.Of(error);
+                StepFailureStatus.RecordTarget(error, reply.Failure.Evidence);
                 reply.MayHaveChanged = adapter.MutationStarted; reply.RequiresSessionReset = adapter.MutationStarted;
                 if (request.Operation == "MovePlcBlockToGroup") reply.Failure.Evidence["deleteStarted"] = adapter.MutationStarted;
                 PlcMovePolicy.MergeEvidence(error, reply.Failure.Evidence);

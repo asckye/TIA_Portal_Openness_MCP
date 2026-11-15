@@ -240,8 +240,15 @@ public sealed class ReadOnlySourceContracts
         // devices-and-hardware skill: devices sit in Project.Devices, the nested DeviceGroups and UngroupedDevicesGroup.Devices.
         var walk = Read("src/Adapters/Native/Hardware/ProjectDeviceWalk.cs");
         Contains(walk, "internal static IEnumerable<Located> Walk(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped,",
-            "Group(group, Name(group, onError), 0, onError)", "Devices(ungrouped, onError)", "new Located(device, ungroupedName, true)",
+            "Group(group, new[] { Name(group, onError) }, 0, onError)", "Devices(ungrouped, onError)",
+            "new Located(device, new[] { ungroupedName }, true)", "internal string[] GroupNames { get; }",
+            "foreach (var device in Each(root, onError))", "Walk(root, groups, ungrouped).Select(located => located.Device)",
             "internal const string UngroupedSegment = \"$ungrouped\";", "root.Concat(ungroupedDevices)");
+        var resolver = EngineSources.BlockAfter(walk, "internal static Device? ResolveDevice(");
+        Contains(resolver, "var all = Walk(root, groups, ungrouped).ToArray();", "bool loose = Same(path[0], UngroupedSegment);",
+            "if (loose) devices = path.Length == 2 ? ungrouped?.Devices : null;",
+            "var group = groups?.FirstOrDefault(g => Same(g.Name, path[0]));",
+            "group = group.Groups.FirstOrDefault(g => Same(g.Name, path[i]));", "devices = group?.Devices;");
         // One source file, linked into every assembly that walks devices: adapter (all eight) and Studio (all eight); the engine is deleted (P8-04l).
         Contains(Read("src/Adapters/build/Adapter.Sources.props"), "Adapters/Native/Hardware/ProjectDeviceWalk.cs");
         Contains(Read("src/Studio/Openness/Studio.Common.props"), "Adapters/Native/Hardware/ProjectDeviceWalk.cs");
@@ -260,11 +267,19 @@ public sealed class ReadOnlySourceContracts
         Contains(EngineSources.BlockAfter(network, "public Dictionary<string, object?> HardwareGetProjectTopology()"), "ProjectDeviceWalk.Walk(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup)");
         Contains(EngineSources.BlockAfter(network, "private List<string> HardwareBuildSubnetReadbackLines(string subnetName)"), "EnumerateAllDevices()");
         Excludes(network, "foreach (var device in project.Devices)", "foreach (Device device in project!.Devices)", "Devices placed inside device groups are not enumerated here");
-        Contains(Read("src/Adapters/Native/Hardware/HardwareAddressingSteps.cs"), "ProjectDeviceWalk.UngroupedSegment", "EnumerateAllDevices().ToArray()");
+        var exact = EngineSources.BlockAfter(Read("src/Adapters/Native/Hardware/HardwareAddressingSteps.cs"), "private HardwareObject ExactHardware(");
+        Contains(exact, Uses + "ResolveDevice(",
+            "project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath, legacyText: false)",
+            "?? throw Native.Hardware." + Uses + "MissingDevice(",
+            "project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath)");
         Contains(Read("src/Adapters/Native/Hardware/HardwareAml.cs"), "meta[\"deviceCountBefore\"] = EnumerateAllDevices().Count();");
         Contains(Read("src/Adapters/Native/Session/ProjectAutomationContext.cs"), Uses + "Walk(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup)");
         var services = Read("src/Adapters/Native/Engineering/EngineeringServices.cs");
-        Contains(services, Uses + "Devices(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup)", Uses + "UngroupedSegment");
+        var exactInProject = EngineSources.BlockAfter(services, "private HardwareObject ExactHardwareInProject(");
+        Contains(exactInProject, Uses + "ResolveDevice(",
+            "project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath, legacyText: false)",
+            "?? throw Native.Hardware." + Uses + "MissingDevice(",
+            "project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath)");
         Excludes(services, "EnumerateGroupDevices(");
         var navigator = Read("src/Adapters/Native/Studio/PlcNavigator.cs");
         Contains(navigator, Uses + "Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, _ => { })");

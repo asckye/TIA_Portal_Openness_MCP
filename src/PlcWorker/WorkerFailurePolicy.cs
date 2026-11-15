@@ -17,6 +17,9 @@ internal static class WorkerFailurePolicy
     internal static Exception DiagnosticCause(Exception cause) => HostFailurePolicy.Precondition(cause) ?? HostFailurePolicy.Unwrap(cause);
     internal static WorkerFailureClassification Classify(Exception cause, bool enteredOperation, bool readOnly)
     {
+        if (cause.GetBaseException() is PlcSoftwareException { Code: "Ambiguous" } device && device.Data["target"] is string
+            && device.Data["mayHaveChanged"] is not true)
+            return new WorkerFailureClassification(-32603, ChannelOutcome.RejectedBeforeNative);
         var kind = HostFailurePolicy.Classify(cause, enteredOperation, readOnly);
         int code = kind == HostFailureKind.Argument ? -32602 : -32603;
         ChannelOutcome outcome = kind == HostFailureKind.Unknown ? ChannelOutcome.Unknown

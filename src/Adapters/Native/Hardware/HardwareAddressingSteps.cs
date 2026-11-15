@@ -60,28 +60,10 @@ namespace TiaMcp.Adapters
         {
             HardwareAddressingPolicy.ValidatePath(devicePath, true);
             HardwareAddressingPolicy.ValidatePath(itemPath, false);
-            Device device;
-            if (devicePath.Length == 1)
-                device =
-                    (Device)(Find(EnumerateAllDevices().ToArray(), devicePath[0])
-                        ?? throw new HardwareAddressingException("NotFound", "Exact unique device not found."));
-            else if (devicePath[0] == TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.UngroupedSegment)
-            {
-                // The ungrouped system group has a localized name and no subgroups.
-                if (devicePath.Length != 2)
-                    throw new InvalidOperationException("Use [\"$ungrouped\", \"<device>\"] for a device in the ungrouped devices group.");
-                device =
-                    (Device)(Find(project!.UngroupedDevicesGroup.Devices, devicePath[1])
-                        ?? throw new HardwareAddressingException("NotFound", "Device not found in the ungrouped devices group."));
-            }
-            else
-            {
-                var group = Find(project!.DeviceGroups, devicePath[0]) as DeviceUserGroup
-                    ?? throw new HardwareAddressingException("NotFound", "Device group not found: " + devicePath[0]);
-                foreach (var name in devicePath.Skip(1).Take(devicePath.Length - 2))
-                    group = (DeviceUserGroup)(Find(group.Groups, name) ?? throw new HardwareAddressingException("NotFound", "Device group not found: " + name));
-                device = (Device)(Find(group.Devices, devicePath.Last()) ?? throw new HardwareAddressingException("NotFound", "Device not found."));
-            }
+            var device = Native.Hardware.ProjectDeviceWalk.ResolveDevice(
+                project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath, legacyText: false)
+                ?? throw Native.Hardware.ProjectDeviceWalk.MissingDevice(
+                    project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath);
             HardwareObject current = device;
             foreach (var name in itemPath)
             {
@@ -241,6 +223,7 @@ namespace TiaMcp.Adapters
                 meta["error"] = ex.ToString(); meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
                 meta["status"] = StepFailureStatus.Of(ex);
                 meta["parameter"] = StepFailureStatus.Parameter(ex);
+                StepFailureStatus.RecordTarget(ex, meta);
                 if (ex.GetBaseException() is EngineeringException engineering)
                 {
                     try

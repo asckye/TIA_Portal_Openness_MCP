@@ -13,7 +13,7 @@
 
 1. 参数名用 camelCase。文件系统路径是 **TIA 宿主机上的绝对路径**，文件与目录分别命名为 `exportFile`、`exportDirectory`；输入目录为 `sourceDirectory`。相对路径不能作为这些规范参数的值。路径不得有首尾空白。
 2. 工程对象路径不是文件系统路径。PLC `blockPath`、`groupPath`、`folderPath`、`objectPath` 保留现有相对所选软件或软件单元根的规则；例如 `Main` 合法。`softwarePath` 保留发现工具返回的标识。HMI 对象仍遵循现行绝对对象路径及转义规则。
-3. `devicePath` 的规范形式为名称数组：根设备 `["Station"]`，用户组 `["Group", "Subgroup", "Station"]`，未分组设备 `["$ungrouped", "Station"]`。数组元素是原始精确名称，顺序不可重排。原先的七个字符串入口接受数组，并保留原字符串的解析语义；字符串输入产生弃用警告。其余数组入口不新增字符串形式。对象是否存在、歧义与候选项由设备解析器处理。
+3. `devicePath` 的规范形式为名称数组：根设备 `["Station"]`，用户组 `["Group", "Subgroup", "Station"]`，未分组设备 `["$ungrouped", "Station"]`。数组元素是原始精确名称，按元素逐级解析，顺序不可重排；不接受 CPU 名称别名，也不把数组内的名称或名称组合解释为规范路径形式。原先的七个字符串入口同样按此规则处理数组；宿主将每个名称单独转义为规范设备路径后传给原生解析器，保留元素边界。字符串输入保留原字符串的解析语义（包括 CPU 名称别名和规范路径形式），并产生弃用警告。其余数组入口不新增字符串形式。对象是否存在、歧义与候选项由设备解析器处理。
 4. `expectedProject` 是**项目名称**，`expectedProjectFile` 是**绝对项目文件路径**。两者不互为别名；读取保留名称断言，写入使用文件身份。保留 `projectPath`、`newProjectPath`、`archivePath`、`libraryPath`、`filePath`、`inputPath`、`importPath` 等已有专用路径名；对同时作为输入与输出的操作参数也保留其既有意义。它们不是本次导出别名的隐式替换规则。
 5. `expectedPlanHash` 是该工具预览的计划摘要；`expectedInventoryHash`、`expectedPackageHash`、`expectedDocumentHash` 继续表示各自对象的摘要，`previewToken` 继续表示一次性令牌。不同类别不能互换，不引入 `expectedToken`。
 6. 本次新增的可选规范参数通过省略表示未提供，schema 不声明 `""` 默认值；显式 `null`、空字符串和相对路径不合法。内部实现可继续接收旧的缺省值；未改名的可选字符串不作全库迁移（API-35）。

@@ -1,10 +1,22 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace TiaMcp.Adapters.Contracts
 {
     public static class StepFailureStatus
     {
+        public static void RecordTarget(Exception error, IDictionary<string, object?> meta)
+        {
+            if (!meta.TryGetValue("mayHaveChanged", out var changed) || changed is not false
+                || meta.TryGetValue("mayHaveWrittenFiles", out var written) && written is true) return;
+            var cause = error.GetBaseException();
+            if (cause.Data["target"] is not string target) return;
+            meta["target"] = target;
+            meta["candidates"] = cause.Data["candidates"];
+            if (cause.Data["missingDeviceTarget"] is string missingTarget) meta["missingDeviceTarget"] = missingTarget;
+        }
+
         public static string Of(Exception error) => error.GetBaseException() switch
         {
             PlcSoftwareException plc => plc.Code,

@@ -108,7 +108,7 @@ public sealed class CanonicalParameterTests
         var inner = new CapturingTool("GetDeviceInfo", "devicePath", true);
         var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
         var canonical = await tool.InvokeAsync(Request(tool, new JsonObject { ["devicePath"] = new JsonArray("Group", "Station") }));
-        Assert.Equal("Group/Station", (string?)inner.Last!["devicePath"]);
+        Assert.Equal("device-groups/Group/devices/Station", (string?)inner.Last!["devicePath"]);
         Assert.Empty(canonical.StructuredContent!["meta"]!["warnings"]!.AsArray());
         var legacy = await tool.InvokeAsync(Request(tool, new JsonObject { ["devicePath"] = "Station" }));
         Assert.Equal("Station", (string?)inner.Last!["devicePath"]);

@@ -312,7 +312,13 @@ namespace TiaMcp.Adapters
             }
 
             // ---- 读回验证：调用没报错 ≠ 模块真的在那个槽位上 ----
-            var verifyHost = ResolvePlugHost(deviceItemPath, plugOnDevice);
+            HardwareObject? verifyHost;
+            try { verifyHost = ResolvePlugHost(deviceItemPath, plugOnDevice); }
+            catch (PlcSoftwareException error) when (error.Code == "Ambiguous")
+            {
+                error.Data["mayHaveChanged"] = true;
+                throw;
+            }
             if (verifyHost == null)
             {
                 result.Reason = "VerifyFailed";

@@ -520,6 +520,10 @@ internal sealed partial class FoundationTool
         void RecordFailure(Exception error)
         {
             workerFailure = error;
+            if (error is WorkerOperationException { Outcome: "rejected-before-operation" } deviceFailure
+                && JsonNode.Parse(deviceFailure.EvidenceJson ?? "null") is JsonObject { } deviceEvidence
+                && deviceEvidence["status"]?.ToString() == "Ambiguous" && deviceEvidence["target"] != null)
+                error.Data["nativeResultEvidence"] = deviceEvidence;
             nativeDiagnostics = error is WorkerOperationException workerError
                 ? FoundationV4Result.NativeDiagnostics(new JsonObject { ["Failure"] = new JsonObject {
                     ["Message"] = workerError.Message, ["Evidence"] = JsonNode.Parse(workerError.EvidenceJson ?? "null") } }) : null;

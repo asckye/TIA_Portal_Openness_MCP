@@ -36,7 +36,10 @@ namespace Siemens.Engineering
             using (var writer = new System.IO.StreamWriter(zip.CreateEntry("partial-project.txt").Open())) writer.Write("Synthetic partial archive.");
             if (ArchiveFailure != null) throw ArchiveFailure;
         }
-        public List<HW.Device> Devices { get; } = new();
+        private readonly List<HW.Device> devices = new();
+        internal Exception? DeviceReadFailure;
+        public List<HW.Device> Devices => ReadDevices();
+        private List<HW.Device> ReadDevices() => DeviceReadFailure == null ? devices : throw DeviceReadFailure;
         public List<HW.DeviceUserGroup> DeviceGroups { get; } = new();
         public HW.DeviceGroup UngroupedDevicesGroup { get; } = new();
         public List<HW.Subnet> Subnets { get; } = new();
@@ -219,16 +222,6 @@ namespace Siemens.Engineering.Cax
         public bool Export(HW.Device device, System.IO.FileInfo destination, System.IO.FileInfo log) => false;
     }
 }
-namespace TiaMcp.Adapters.Native.Hardware
-{
-    public static class ProjectDeviceWalk
-    {
-        public const string UngroupedSegment = "$ungrouped";
-        public static string? DevicePathPrefix(IEnumerable<Siemens.Engineering.HW.Device>? root,
-            IEnumerable<Siemens.Engineering.HW.DeviceUserGroup>? groups, Siemens.Engineering.HW.DeviceGroup? ungrouped,
-            Siemens.Engineering.HW.Device device) => "devices/" + device.Name;
-    }
-}
 namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
@@ -242,7 +235,11 @@ namespace TiaMcp.Adapters
         }
         private UmacLogin UmacCredentialsFor(string name, string password, string type, string parameter) => new();
         private bool HardwareProjectMissing() => EngineeringProjectMissing?.Invoke() ?? project == null;
-        internal Exception? DeviceInventoryFailure;
+        internal Exception? DeviceInventoryFailure
+        {
+            get => project!.DeviceReadFailure;
+            set => project!.DeviceReadFailure = value;
+        }
         private IEnumerable<Siemens.Engineering.HW.Device> EnumerateAllDevices() => DeviceInventoryFailure != null
             ? throw DeviceInventoryFailure : project!.Devices;
         private sealed class EngineeringAmbientAccess : IDisposable { public void Dispose() { } }

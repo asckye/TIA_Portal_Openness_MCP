@@ -82,6 +82,7 @@
     <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/ProjectDeviceWalk.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" Link="HardwareAddressingPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressPrimitives.cs" Link="HardwareAddressPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />

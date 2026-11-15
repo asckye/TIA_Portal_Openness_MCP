@@ -52,6 +52,10 @@ namespace TiaMcp.Adapters
                 reply.Failure = EngineeringReflectionFailure != null ? EngineeringReflectionFailure(error) : new PlcSoftwareFailure {
                     Code = error is PlcSoftwareException native ? native.Code : error.GetType().Name,
                     Message = error.Message, Candidates = (error as PlcSoftwareException)?.Candidates?.ToArray() };
+                reply.Failure.Evidence["mayHaveChanged"] = reply.MayHaveChanged;
+                reply.Failure.Evidence["status"] = StepFailureStatus.Of(error);
+                reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
+                StepFailureStatus.RecordTarget(error, reply.Failure.Evidence);
             }
             return reply;
         }

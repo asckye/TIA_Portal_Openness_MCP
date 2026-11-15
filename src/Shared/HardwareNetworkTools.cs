@@ -88,6 +88,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current); }
             catch (Exception error) /* swallow(privacy): an escaped native error has no confirmed write outcome */
             {
+                if (HostBehavior.DevicePathRefusal(error) is { } refusal)
+                    return Result(tool, null, refusal, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current);
                 return Result(tool, null, readOnly ? NativeFailureDiagnostics.FromException(NativeFailure(), error) : UnknownFailure(),
                     readOnly ? Outcome.ReadFailed : Outcome.Unknown,
                     readOnly ? Execution.ReadOnly : Execution.Unknown, Completeness.Unknown, current);

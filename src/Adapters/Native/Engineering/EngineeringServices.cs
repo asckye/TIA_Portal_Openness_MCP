@@ -305,35 +305,12 @@ namespace TiaMcp.Adapters
         }
         private HardwareObject ExactHardwareInProject(EngineeringProject project, string[] devicePath, string[] itemPath)
         {
-            var names = devicePath;
-            Device device;
-            if (names.Length == 1)
-            {
-                var all = TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.Devices(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup).ToArray();
-                device =
-                    (Device)(PlcGroupOperations.Find(all, names[0])
-                        ?? throw new PlcSoftwareException("NotFound", "Exact unique device not found in project " + project.Name + ": " + names[0]));
-            }
-            else if (names[0] == TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.UngroupedSegment)
-            {
-                if (names.Length != 2)
-                    throw new PlcSoftwareException("NotFound", "Use [\"$ungrouped\", \"<device>\"] for a device in the ungrouped devices group.");
-                device =
-                    (Device)(PlcGroupOperations.Find(project.UngroupedDevicesGroup.Devices, names[1])
-                        ?? throw new PlcSoftwareException("NotFound", "Device not found in the ungrouped devices group: " + names[1]));
-            }
-            else
-            {
-                var group = PlcGroupOperations.Find(project.DeviceGroups, names[0]) as DeviceUserGroup
-                    ?? throw new PlcSoftwareException("NotFound", "Device group not found: " + names[0]);
-                foreach (var name in names.Skip(1).Take(names.Length - 2))
-                    group =
-                        (DeviceUserGroup)(PlcGroupOperations.Find(group.Groups, name)
-                            ?? throw new PlcSoftwareException("NotFound", "Device group not found: " + name));
-                device =
-                    (Device)(PlcGroupOperations.Find(group.Devices, names.Last())
-                        ?? throw new PlcSoftwareException("NotFound", "Device not found: " + names.Last()));
-            }
+            HardwareAddressingPolicy.ValidatePath(devicePath, true);
+            HardwareAddressingPolicy.ValidatePath(itemPath, false);
+            var device = Native.Hardware.ProjectDeviceWalk.ResolveDevice(
+                project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath, legacyText: false)
+                ?? throw Native.Hardware.ProjectDeviceWalk.MissingDevice(
+                    project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, devicePath);
             HardwareObject current = device;
             var items = itemPath;
             if (items.Length > 64) throw new ArgumentException("Invalid item path.");

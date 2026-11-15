@@ -7,11 +7,11 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class HardwareWriteFailureTests
 {
     [Theory]
-    [InlineData("root", "Exact unique device not found.")]
-    [InlineData("ungrouped", "Device not found in the ungrouped devices group.")]
-    [InlineData("group", "Device group not found: Missing")]
-    [InlineData("nested-group", "Device group not found: Missing")]
-    [InlineData("group-device", "Device not found.")]
+    [InlineData("root", "Device not found: Missing. Candidates: PLC.")]
+    [InlineData("ungrouped", "Device not found: $ungrouped/Missing. Candidates: PLC.")]
+    [InlineData("group", "Device not found: Missing/PLC. Candidates: PLC.")]
+    [InlineData("nested-group", "Device not found: Group/Missing/PLC. Candidates: PLC.")]
+    [InlineData("group-device", "Device not found: Group/Missing. Candidates: PLC.")]
     [InlineData("item", "Device item not found: Missing (children of PLC: CPU).")]
     public void Exact_hardware_lookup_reports_each_missing_target(string target, string message)
     {
@@ -59,7 +59,8 @@ public sealed class HardwareWriteFailureTests
 
         var readback = fixture.Engine.ReadHardwareAddressing(path, Array.Empty<string>());
         Assert.Equal("NotFound", readback.Meta["status"]);
-        Assert.Equal(grouped ? "Device not found." : "Exact unique device not found.", readback.Meta["nativeMessage"]);
+        Assert.Equal(grouped ? "Device not found: Group/PLC. Candidates: none."
+            : "Device not found: PLC. Candidates: none.", readback.Meta["nativeMessage"]);
         Assert.False(readback.MayHaveChanged);
     }
 

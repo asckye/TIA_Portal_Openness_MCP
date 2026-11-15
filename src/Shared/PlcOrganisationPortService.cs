@@ -37,6 +37,9 @@ namespace TiaMcpServer.Siemens.Services
             {
                 string code = (string?)failure["Code"] ?? "";
                 string message = (string?)failure["Message"] ?? "PLC organisation failed.";
+                if (failure["Evidence"] is JsonObject deviceEvidence && deviceEvidence["target"] != null
+                    && (bool?)reply["MayHaveChanged"] == false && code is "Ambiguous" or "HardwareAddressingException")
+                    return new JsonObject { ["Message"] = message, ["Meta"] = deviceEvidence.DeepClone() };
                 if (Enum.TryParse<PortalErrorCode>(code, out var nativeCode))
                 {
                     var error = new PortalException(nativeCode, message,

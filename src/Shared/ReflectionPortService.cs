@@ -32,6 +32,17 @@ namespace TiaMcpServer.Siemens.Services
             {
                 string code = (string?)failure["Code"] ?? "";
                 string message = (string?)failure["Message"] ?? "Reflection failed.";
+                if (code == "Ambiguous")
+                {
+                    var error = new TiaMcp.Adapters.Contracts.PlcSoftwareException(code, message,
+                        failure["Candidates"]?.Deserialize<string[]>());
+                    if (failure["Evidence"] is JsonObject evidence)
+                    {
+                        error.Data["nativeResultEvidence"] = evidence.DeepClone();
+                        error.Data["target"] = evidence["target"]?.ToString();
+                    }
+                    throw error;
+                }
                 if (Enum.TryParse<PortalErrorCode>(code, out var nativeCode)) throw new PortalException(nativeCode, message,
                     failure["Candidates"] == null ? null : JsonSerializer.Deserialize<string[]>(failure["Candidates"]!.ToJsonString()));
                 if (code == nameof(ArgumentException)) throw new ArgumentException(message);

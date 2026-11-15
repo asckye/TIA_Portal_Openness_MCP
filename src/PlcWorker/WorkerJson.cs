@@ -40,9 +40,20 @@ namespace TiaMcp.PlcWorker
         {
             string evidence = EvidenceCore(cause);
             var condition = TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)?.Condition;
-            if (condition == null) return evidence;
+            var deviceError = cause.GetBaseException() as PlcSoftwareException;
+            bool ambiguousDevice = deviceError?.Code == "Ambiguous" && deviceError.Data["target"] is string
+                && deviceError.Data["mayHaveChanged"] is not true;
+            if (condition == null && !ambiguousDevice) return evidence;
             var node = System.Text.Json.Nodes.JsonNode.Parse(evidence)!.AsObject();
-            node["condition"] = condition;
+            if (condition != null) node["condition"] = condition;
+            if (ambiguousDevice)
+            {
+                node["status"] = "Ambiguous";
+                node["target"] = deviceError!.Data["target"] as string;
+                node["candidates"] = JsonSerializer.SerializeToNode(deviceError.Candidates);
+                node["mayHaveChanged"] = false;
+                node["nativeMessage"] = deviceError.Message;
+            }
             return node.ToJsonString();
         }
 

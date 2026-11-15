@@ -24,10 +24,22 @@ namespace TiaMcpServer.ModelContextProtocol
         private readonly Func<string, JsonObject> _putGet;
 
         public RuntimeTools()
-            : this(path => McpServer.ToolInvoker
-                .Invoke("GetPlcPutGetAccess", new ToolArguments(JsonSerializer.SerializeToElement(new { devicePath = path })), false).Result.StructuredContent
-                ?["data"] as JsonObject ?? new JsonObject(), true) {
+            : this(ReadPutGet, true) {
             }
+        private static JsonObject ReadPutGet(string path)
+        {
+            var body = McpServer.ToolInvoker.Invoke("GetPlcPutGetAccess",
+                new ToolArguments(JsonSerializer.SerializeToElement(new { devicePath = path })), false).Result.StructuredContent;
+            if (body?["error"]?["code"]?.ToString() == "TARGET_AMBIGUOUS")
+            {
+                var details = body["error"]!["details"]!;
+                var error = new TiaMcp.Adapters.Contracts.PlcSoftwareException("Ambiguous", body["error"]!["message"]!.ToString(),
+                    details["candidates"]!.AsArray().Select(c => c!.GetValue<string>()).ToArray());
+                error.Data["target"] = details["target"]?.ToString();
+                throw error;
+            }
+            return body?["data"] as JsonObject ?? new JsonObject();
+        }
         internal RuntimeTools(Func<string, JsonObject> putGet, bool useCallback) => _putGet = putGet;
 #if !TIA_ENGINE_HOST
         public RuntimeTools(IEngineeringSession session) : this(path => session.GetPutGetAccess(path), true) { }
@@ -164,7 +176,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             };
                         }
                     }
-                    catch { /* swallow(fail-open-guard): an unavailable PUT/GET precheck leaves the direct S7 read to report its own result. */ }
+                    catch (Exception error) when (HostBehavior.DevicePathRefusal(error) == null)
+                    { /* swallow(fail-open-guard): an unavailable PUT/GET precheck leaves the direct S7 read to report its own result. */ }
                 }
 
                 var r = S7LiveReader.ReadItems(ip, rack, slot, specs, string.IsNullOrWhiteSpace(expectModuleContains) ? null : expectModuleContains);

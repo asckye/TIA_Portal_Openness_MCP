@@ -45,6 +45,8 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (InputFailureException failure) { return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Completeness.None, current); }
             catch (Exception ex)
             {
+                if (HostBehavior.DevicePathRefusal(ex) is { } refusal)
+                    return Result(tool, null, refusal, Outcome.RejectedBeforeOperation, Completeness.None, current);
                 // A wrapped native exception can occur after a write was issued. Its
                 // CLR type alone cannot prove that the operation never started.
                 Error? rejection = ex is ArgumentException argument

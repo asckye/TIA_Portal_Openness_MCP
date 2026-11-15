@@ -92,6 +92,8 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (InputFailureException ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, current); }
             catch (Exception ex)
             {
+                if (HostBehavior.DevicePathRefusal(ex) is { } deviceRefusal)
+                    return Result(tool, null, deviceRefusal, Outcome.RejectedBeforeOperation, current);
                 if (TiaOpenness.Shared.HostFailurePolicy.Precondition(ex) is { } refusal)
                     return Result(tool, null, new Error(refusal.Message, refusal.IsArgument
                         ? McpServer.ArgumentDetails(tool, refusal.ParamName)
@@ -181,7 +183,14 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "HmiReadSessionBlocked")
             { outcome = write ? Outcome.Unknown : Outcome.ReadFailed; error = HostBehavior.UnavailableCall(write); }
             else if (status == "NotFound" && !issued)
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The requested object was not found.", new NotFoundDetails(null)); }
+            { outcome = Outcome.RejectedBeforeOperation;
+                error = new Error(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? "The requested object was not found.",
+                    new NotFoundDetails(evidence["missingDeviceTarget"]?.ToString())); }
+            else if (status == "Ambiguous" && !issued)
+            { outcome = Outcome.RejectedBeforeOperation;
+                error = new Error(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? "The device path is ambiguous.",
+                    new TargetAmbiguousDetails(evidence["target"]?.ToString(),
+                        (evidence["candidates"] as JsonArray)?.Select(c => c!.GetValue<string>()).ToArray() ?? Array.Empty<string>())); }
             else if (status == "InvalidParams" && started == false)
             { outcome = Outcome.RejectedBeforeOperation;
                 error = new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, evidence)); }

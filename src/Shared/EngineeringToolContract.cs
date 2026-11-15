@@ -46,6 +46,8 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (InputFailureException ex) { return Result(tool, null, ex.Error, Outcome.RejectedBeforeOperation, Completeness.None); }
             catch (Exception ex)
             {
+                if (HostBehavior.DevicePathRefusal(ex) is { } deviceRefusal)
+                    return Result(tool, null, deviceRefusal, Outcome.RejectedBeforeOperation, Completeness.None);
                 CallerInputFiles.RecordExportFailure(ex);
                 var cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;

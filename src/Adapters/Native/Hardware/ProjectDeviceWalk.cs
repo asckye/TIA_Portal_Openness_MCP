@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering.HW;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Adapters.Native.Hardware
 {
@@ -20,10 +21,12 @@ namespace TiaMcp.Adapters.Native.Hardware
 
         internal sealed class Located
         {
-            internal Located(Device device, string groupPath, bool ungrouped) { Device = device; GroupPath = groupPath; Ungrouped = ungrouped; }
+            internal Located(Device device, string[] groupNames, bool ungrouped)
+            { Device = device; GroupNames = groupNames; Ungrouped = ungrouped; }
             internal Device Device { get; }
             /// <summary>Empty at the project root, slash-separated user group names, or the ungrouped group's name.</summary>
-            internal string GroupPath { get; }
+            internal string GroupPath => string.Join("/", GroupNames);
+            internal string[] GroupNames { get; }
             internal bool Ungrouped { get; }
         }
 
@@ -34,13 +37,14 @@ namespace TiaMcp.Adapters.Native.Hardware
         internal static IEnumerable<Located> Walk(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped,
             Action<Exception>? onError = null)
         {
-            foreach (var device in Each(root, onError)) if (device != null) yield return new Located(device, string.Empty, false);
+            foreach (var device in Each(root, onError)) if (device != null) yield return new Located(device, Array.Empty<string>(), false);
             foreach (var group in Each(groups, onError))
                 if (group != null)
-                    foreach (var located in Group(group, Name(group, onError), 0, onError)) yield return located;
+                    foreach (var located in Group(group, new[] { Name(group, onError) }, 0, onError)) yield return located;
             if (ungrouped == null) yield break;
             string ungroupedName = Name(ungrouped, onError);
-            foreach (var device in Each(Devices(ungrouped, onError), onError)) if (device != null) yield return new Located(device, ungroupedName, true);
+            foreach (var device in Each(Devices(ungrouped, onError), onError))
+                if (device != null) yield return new Located(device, new[] { ungroupedName }, true);
         }
 
         internal static IEnumerable<Device> Devices(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped)
@@ -83,13 +87,14 @@ namespace TiaMcp.Adapters.Native.Hardware
             return names;
         }
 
-        private static IEnumerable<Located> Group(DeviceUserGroup group, string path, int depth, Action<Exception>? onError)
+        private static IEnumerable<Located> Group(DeviceUserGroup group, string[] names, int depth, Action<Exception>? onError)
         {
             if (depth > MaximumGroupDepth) throw new InvalidOperationException("Device group nesting exceeds the traversal depth limit.");
-            foreach (var device in Each(group.Devices, onError)) if (device != null) yield return new Located(device, path, false);
+            foreach (var device in Each(group.Devices, onError)) if (device != null) yield return new Located(device, names, false);
             foreach (var child in Each(group.Groups, onError))
                 if (child != null)
-                    foreach (var located in Group(child, path + "/" + Name(child, onError), depth + 1, onError)) yield return located;
+                    foreach (var located in Group(child, names.Concat(new[] { Name(child, onError) }).ToArray(), depth + 1, onError))
+                        yield return located;
         }
 
         private static IEnumerable<Device>? Devices(DeviceGroup group, Action<Exception>? onError)
@@ -141,39 +146,71 @@ namespace TiaMcp.Adapters.Native.Hardware
         // ---- path resolution shared by the adapter and engine resolvers -------------------------------------
 
         /// <summary>
-        /// Resolves a device path. Device names legitimately contain '/', so an exact full-name match wins first, then
-        /// the IDE-visible CPU name (a DeviceItem name) resolves to its owning device. Otherwise the path is a group path:
-        /// "Group/SubGroup/Device", or "$ungrouped/Device" for the ungrouped system group.
+        /// Resolves printed and joined name paths before considering the legacy CPU-name alias.
         /// </summary>
         internal static Device? FindDevice(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped, string devicePath)
+            => string.IsNullOrWhiteSpace(devicePath) ? null
+                : ResolveDevice(root, groups, ungrouped, new[] { devicePath.Trim() }, legacyText: true);
+
+        internal static Device? ResolveDevice(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups, DeviceGroup? ungrouped,
+            string[] path, bool legacyText)
         {
-            if (root == null || string.IsNullOrWhiteSpace(devicePath)) return null;
-            devicePath = devicePath.Trim();
-            var all = Devices(root, groups, ungrouped).ToList();
-            var exact = all.FirstOrDefault(d => d.Name.Equals(devicePath, StringComparison.OrdinalIgnoreCase));
-            if (exact != null) return exact;
-            var byItem = all.FirstOrDefault(d => HasItemNamed(d.DeviceItems, devicePath));
-            if (byItem != null) return byItem;
-
-            var segments = devicePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length == 0) return null;
-            if (segments.Length == 1) return all.FirstOrDefault(d => d.Name.Equals(segments[0], StringComparison.OrdinalIgnoreCase));
-            if (segments[0] == UngroupedSegment)
+            if (path.Length == 0) return null;
+            string target = string.Join("/", path);
+            if (path.Length > 1)
             {
-                var rest = string.Join("/", segments, 1, segments.Length - 1);
-                return ungrouped == null ? null : ungrouped.Devices.FirstOrDefault(d => d.Name.Equals(rest, StringComparison.OrdinalIgnoreCase));
+                IEnumerable<Device>? devices;
+                bool loose = Same(path[0], UngroupedSegment);
+                if (loose) devices = path.Length == 2 ? ungrouped?.Devices : null;
+                else
+                {
+                    var group = groups?.FirstOrDefault(g => Same(g.Name, path[0]));
+                    for (int i = 1; group != null && i < path.Length - 1; i++)
+                        group = group.Groups.FirstOrDefault(g => Same(g.Name, path[i]));
+                    devices = group?.Devices;
+                }
+                return Unique((devices ?? Enumerable.Empty<Device>()).Where(d => Same(d.Name, path[path.Length - 1]))
+                    .Select(d => new Located(d, path.Take(path.Length - 1).ToArray(), loose)), target);
             }
+            var all = Walk(root, groups, ungrouped).ToArray();
+            var exact = all.Where(d => Same(d.Device.Name, target) || Same(DevicePath(d), target) || Same(CanonicalDevicePath(d), target)).ToArray();
+            if (exact.Length > 0) return Unique(exact, target);
+            return legacyText ? Unique(all.Where(d => HasItemNamed(d.Device.DeviceItems, target)), target) : null;
+        }
 
-            var group = groups?.FirstOrDefault(g => g.Name.Equals(segments[0], StringComparison.OrdinalIgnoreCase));
-            if (group == null) return null;
-            for (int i = 1; i < segments.Length; i++)
-            {
-                var device = group.Devices.FirstOrDefault(d => d.Name.Equals(segments[i], StringComparison.OrdinalIgnoreCase));
-                if (device != null) return device;
-                group = group.Groups.FirstOrDefault(g => g.Name.Equals(segments[i], StringComparison.OrdinalIgnoreCase));
-                if (group == null) break;
-            }
-            return null;
+        private static bool Same(string left, string right) => string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+
+        private static string DevicePath(Located located)
+            => string.Join("/", (located.Ungrouped ? new[] { UngroupedSegment } : located.GroupNames).Concat(new[] { located.Device.Name }));
+
+        private static string CanonicalDevicePath(Located located)
+            => located.Ungrouped ? "ungrouped/" + PathName(located.Device.Name)
+                : located.GroupNames.Length == 0 ? "devices/" + PathName(located.Device.Name)
+                : "device-groups/" + string.Join("/groups/", located.GroupNames.Select(PathName)) + "/devices/" + PathName(located.Device.Name);
+
+        private static Device? Unique(IEnumerable<Located> matches, string target)
+        {
+            var distinct = matches.GroupBy(d => d.Device).Select(g => g.First()).ToArray();
+            if (distinct.Length < 2) return distinct.FirstOrDefault()?.Device;
+            var candidates = distinct.Take(20).Select(DevicePath).ToArray();
+            var error = new PlcSoftwareException("Ambiguous",
+                "Device path " + target + " matches more than one device: " + string.Join("; ", candidates) + ".", candidates);
+            error.Data["target"] = target;
+            error.Data["candidates"] = candidates;
+            throw error;
+        }
+
+        internal static HardwareAddressingException MissingDevice(IEnumerable<Device>? root, IEnumerable<DeviceUserGroup>? groups,
+            DeviceGroup? ungrouped, string[] path)
+        {
+            string target = string.Join("/", path);
+            var candidates = Walk(root, groups, ungrouped).Take(20).Select(DevicePath).ToArray();
+            var error = new HardwareAddressingException("NotFound",
+                "Device not found: " + target + ". Candidates: " + (candidates.Length == 0 ? "none" : string.Join("; ", candidates)) + ".");
+            error.Data["missingDeviceTarget"] = target;
+            error.Data["target"] = target;
+            error.Data["candidates"] = candidates;
+            return error;
         }
 
         /// <summary>

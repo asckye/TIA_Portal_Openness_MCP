@@ -54,6 +54,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static CallToolResult Failure(string tool, Exception exception, bool writes, bool current)
         {
+            if (HostBehavior.DevicePathRefusal(exception) is { } deviceRefusal)
+                return Result(tool, null, deviceRefusal, Outcome.RejectedBeforeOperation, Completeness.None, current);
             JsonObject? moveEvidence = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
                 if (cause.Data["nativeResultEvidence"] is JsonObject nativeEvidence)

@@ -10,6 +10,22 @@ namespace TiaMcp.Logic.V4
     // Host wrappers supply transport/native evidence; this code owns admission decisions.
     internal static class HostBehavior
     {
+        internal static Error? DevicePathRefusal(Exception error)
+        {
+            if (HostFailurePolicy.PriorMutation(error)) return null;
+            for (Exception? cause = error; cause != null; cause = cause.InnerException)
+            {
+                if (cause is TiaMcp.Adapters.Contracts.PlcSoftwareException { Code: "Ambiguous" } ambiguous
+                    && ambiguous.Data["target"] is string target && ambiguous.Data["mayHaveChanged"] is not true)
+                    return new Error(SafeDiagnostic(ambiguous.Message) ?? "The device path is ambiguous.",
+                        new TargetAmbiguousDetails(target, ambiguous.Candidates?.ToArray() ?? Array.Empty<string>()));
+                if (cause.Data["nativeResultEvidence"] is JsonObject evidence && evidence["target"] != null
+                    && evidence["status"]?.ToString() is "Ambiguous" or "NotFound")
+                    return KnownRefusal(evidence, false, "", "");
+            }
+            return null;
+        }
+
         internal static bool IsPreview(JsonObject args, bool defaultPreview)
         {
             if (!args.TryGetPropertyValue("dryRun", out var value)) return defaultPreview;
@@ -251,7 +267,11 @@ namespace TiaMcp.Logic.V4
             string? message = SafeDiagnostic(evidence["nativeMessage"]?.ToString());
             var refusal = evidence["status"]?.ToString() switch
             {
-                "NotFound" or "NOT_FOUND" => new Error(message ?? "The requested object was not found.", new NotFoundDetails(parameter)),
+                "NotFound" or "NOT_FOUND" => new Error(message ?? "The requested object was not found.",
+                    new NotFoundDetails(evidence["missingDeviceTarget"]?.ToString() ?? parameter)),
+                "Ambiguous" => new Error(message ?? "The device path matches more than one device.",
+                    new TargetAmbiguousDetails(evidence["target"]?.ToString(),
+                        (evidence["candidates"] as JsonArray)?.Select(c => c!.GetValue<string>()).ToArray() ?? Array.Empty<string>())),
                 "InvalidParams" or "INVALID_ARGUMENT" => new Error(message ?? "The request argument was refused before operation.",
                     new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
                 "AlreadyExists" or "ALREADY_EXISTS" => new Error(message ?? "The requested object already exists.", new AlreadyExistsDetails(null)),

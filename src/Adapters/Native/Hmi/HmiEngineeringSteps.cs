@@ -52,6 +52,7 @@ namespace TiaMcp.Adapters
                 meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
                 meta["status"] = StepFailureStatus.Of(error);
                 meta["parameter"] = StepFailureStatus.Parameter(error);
+                StepFailureStatus.RecordTarget(error, meta);
                 if (error.GetBaseException() is Siemens.Engineering.EngineeringException engineering)
                 {
                     try

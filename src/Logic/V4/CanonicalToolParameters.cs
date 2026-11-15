@@ -203,8 +203,18 @@ namespace TiaMcp.Logic.V4
                     arguments.Remove(alias.Canonical);
                 }
             if (HasStringDevice(tool) && arguments["devicePath"] is JsonArray segments)
-                arguments["devicePath"] = string.Join("/", segments.Select(segment => segment!.GetValue<string>()));
+                arguments["devicePath"] = DeviceNamePath(segments.Select(segment => segment!.GetValue<string>()).ToArray());
             return arguments;
+        }
+
+        private static string DeviceNamePath(string[] names)
+        {
+            string Escape(string name) => name.Replace("%", "%25").Replace("/", "%2F");
+            if (names.Length == 1) return "devices/" + Escape(names[0]);
+            if (string.Equals(names[0], "$ungrouped", StringComparison.OrdinalIgnoreCase) && names.Length == 2)
+                return "ungrouped/" + Escape(names[1]);
+            return "device-groups/" + string.Join("/groups/", names.Take(names.Length - 1).Select(Escape))
+                + "/devices/" + Escape(names[names.Length - 1]);
         }
 
         public static JsonNode? Warn(string tool, JsonObject input, JsonNode? result)
