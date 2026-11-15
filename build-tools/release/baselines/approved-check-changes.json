@@ -4427,6 +4427,23 @@
           "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/WorkerRetainsUncertainDocumentEvidenceWithoutRefusingLaterCalls( ):d37992f6203519b444aaaa1cbd4f29c8084eab70e5272a2c2e4bb9a8d0f58399:1"
         }
       ]
+    },
+    {
+      "task": "TIDY-7",
+      "maintainerDate": "2026-11-15",
+      "reason": "2026-11-15 maintainer approved: after the TIDY-7 split, NotFoundSources and NoSessionLockSources read the base file together with its parts, and the portal-start guard is located inside CallCore; the asserted strings are unchanged",
+      "items": [
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/NoSessionLockSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.NoSessionLockSources/An_unmapped_portal_start_fails_the_recovery_guard_contract( ):740089537190141bf3d363d591326226c32e49b3fe549f7aec6d4c4932aaef10:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/NotFoundSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.NotFoundSources/Vm_sample_sites_use_typed_refusals( string path , string expected ):d789d074c672941403ff1cfe333d60bec6e41135c388a4f6cfd7d1a77d41f15c:1"
+        }
+      ]
     }
   ]
 }
