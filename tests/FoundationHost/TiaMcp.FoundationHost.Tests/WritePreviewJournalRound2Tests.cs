@@ -20,7 +20,6 @@ public sealed class WritePreviewJournalRound2Tests
             Message = (string?)native["Message"], Meta = native["Meta"]!.AsObject() }, true, false).StructuredContent!;
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
         Assert.Equal("OUTCOME_UNKNOWN", (string?)result["error"]!["code"]);
-        Assert.True((bool?)result["meta"]!["requiresSessionReset"]);
     }
 
     [Fact]
@@ -31,7 +30,6 @@ public sealed class WritePreviewJournalRound2Tests
         var result = Host.PlcToolContract.Run("ManagePlcUserGroup", true, true, () => new Host.ResponseMessage {
             Message = (string?)native["Message"], Meta = native["Meta"]!.AsObject() }).StructuredContent!;
         Assert.Equal("failed", (string?)result["meta"]!["outcome"]);
-        Assert.False((bool?)result["meta"]!["requiresSessionReset"]);
         Assert.False((bool?)result["data"]!["evidence"]!["mayHaveChanged"]);
     }
 
@@ -47,6 +45,6 @@ public sealed class WritePreviewJournalRound2Tests
             ["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = "PLC/Node" }) };
         var result = Host.HardwareContract.Run("EnsureSubnet", () => new Host.ResponseMessage { Meta = evidence }, true, false).StructuredContent!;
         Assert.Equal(expected, (string?)result["meta"]!["outcome"]);
-        Assert.Equal(expected == "unknown", (bool?)result["meta"]!["requiresSessionReset"]);
+        Assert.Equal(expected == "unknown", (string?)result["meta"]!["outcome"] == "unknown");
     }
 }

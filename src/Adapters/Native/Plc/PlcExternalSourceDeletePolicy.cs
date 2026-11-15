@@ -97,7 +97,7 @@ namespace TiaMcp.Adapters
                     throw new InvalidOperationException("Post-delete root inventory differs from the single planned removal.");
                 result.Status="deleted-verified";result.Executed=true;result.Deleted=true;
             }
-            catch(Exception ex) {result.Status="outcome-unknown";result.RequiresSessionReset=true;result.Error=ex.GetType().Name+": "+ex.Message;}
+            catch(Exception ex) {result.Status="outcome-unknown";result.OutcomeUnknown=true;result.Error=ex.GetType().Name+": "+ex.Message;}
             return result;
         }
     }

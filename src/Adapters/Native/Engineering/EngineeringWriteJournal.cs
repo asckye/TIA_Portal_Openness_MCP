@@ -393,14 +393,13 @@ namespace TiaMcp.Adapters.Native.Engineering
                 Flag("writeOutcomeUnknown"), unrestoredWrite || Flag("unrestoredWrite"), refused, reachable);
             meta["rollbackOutcome"] = outcome;
             meta["rollbackCompleted"] = outcome == "restored";
-            meta["requiresSessionReset"] = outcome == "unknown";
             meta["rollbackRefused"] = refused;
             meta["rollbackReachable"] = reachable;
             meta["unrestoredWrite"] = unrestoredWrite || Flag("unrestoredWrite");
             if (disconnected) meta["connectionUnavailable"] = true;
             meta["mayHaveChanged"] = outcome != "restored";
             if (outcome != "restored") meta["outcome"] = outcome;
-            if (outcome == "unknown") { meta["writeOutcomeUnknown"] = true; meta["requiresSessionReset"] = true; }
+            if (outcome == "unknown") { meta["writeOutcomeUnknown"] = true; }
         }
 
         private List<object?> CleanupTasks(IDictionary<string, object?> meta)

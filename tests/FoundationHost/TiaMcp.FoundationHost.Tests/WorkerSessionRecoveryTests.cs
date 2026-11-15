@@ -16,7 +16,7 @@ public sealed class WorkerSessionRecoveryTests
         var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { }, () => { });
         var request = new ChannelRequest(1, "adapter.SaveProject", "{\"dryRun\":" + dryRun + "}", (_, _) => { });
         int calls = 0;
-        const string evidence = "{\"RequiresSessionReset\":true}";
+        const string evidence = "{\"OutcomeUnknown\":true}";
         var response = recovery.Dispatch(request, _ => {
             calls++; outcome.MarkUncertain(); return ChannelResponse.Success(evidence);
         });
@@ -32,7 +32,7 @@ public sealed class WorkerSessionRecoveryTests
         var outcome = new WorkerSessionOutcomeState();
         var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { }, () => { });
         var request = new ChannelRequest(1, "adapter.plc-online.ExecuteOnline", "{\"dryRun\":false}", (_, _) => { });
-        const string reply = "{\"Ok\":true,\"RequiresSessionReset\":true}";
+        const string reply = "{\"Ok\":true,\"OutcomeUnknown\":true}";
         var response = recovery.Dispatch(request, _ => {
             outcome.MarkUncertain(mutation: false);
             return ChannelResponse.Success(reply);
@@ -40,7 +40,7 @@ public sealed class WorkerSessionRecoveryTests
         response = recovery.Synchronize(request, response);
         Assert.Null(response.Failure);
         Assert.Equal(reply, response.ResultJson);
-        Assert.False(outcome.RequiresReset);
+        Assert.False(outcome.Uncertain);
         var write = new ChannelRequest(2, "adapter.SaveProject", "{}", (_, _) => { });
         Assert.Null(recovery.Synchronize(write, recovery.Dispatch(write, _ => ChannelResponse.Success("{}"))).Failure);
     }
@@ -50,7 +50,7 @@ public sealed class WorkerSessionRecoveryTests
     {
         var outcome = new WorkerSessionOutcomeState(); outcome.MarkUncertain();
         var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { }, () => { });
-        const string evidence = "{\"Status\":\"unknown\",\"Error\":\"native failure\",\"NativeState\":\"Error\",\"RequiresSessionReset\":true}";
+        const string evidence = "{\"Status\":\"unknown\",\"Error\":\"native failure\",\"NativeState\":\"Error\",\"OutcomeUnknown\":true}";
         var response = recovery.Synchronize(new ChannelRequest(1, "adapter.ImportFromDocuments", "{}", (_, _) => { }), ChannelResponse.Success(evidence));
         Assert.Null(response.Failure);
         Assert.Equal(evidence, response.ResultJson);
@@ -111,7 +111,7 @@ public sealed class WorkerSessionRecoveryTests
             () => retainedHandle = false, () => { Assert.False(retainedHandle); disposals++; },
             detachOnShutdown: () => detaches++, canDetachOnShutdown: () => owned == false);
         recovery.DisposeSession();
-        Assert.Equal(0, detaches); Assert.Equal(1, disposals); Assert.True(outcome.RequiresReset);
+        Assert.Equal(0, detaches); Assert.Equal(1, disposals); Assert.True(outcome.Uncertain);
         Assert.Equal("retained-uncertain-portal", (string?)Assert.Single(recovery.ShutdownEvidence)!["phase"]);
     }
 
@@ -137,7 +137,7 @@ public sealed class WorkerSessionRecoveryTests
                 if (native.Method == "adapter.Disconnect") { Detached = true; Attached = false; }
                 else Attached = true;
                 return ChannelResponse.Success("{}");
-            }), () => Attached, () => Detached, () => Outcome.RequiresReset, Recovery.DisposeSession, Recovery.Synchronize);
+            }), () => Attached, () => Detached, () => Outcome.Uncertain, Recovery.DisposeSession, Recovery.Synchronize);
         }
         internal ChannelResponse Call(string method) => Lease.Dispatch(new ChannelRequest(1, "adapter." + method,
             method == "Attach" ? JsonSerializer.Serialize(new { processId = Environment.ProcessId }) : "{}", (_, _) => { }));
@@ -161,7 +161,7 @@ public sealed class WorkerSessionRecoveryTests
         var response = fixture.Call("hardware-addressing.WriteHardwareIoAddress");
         if (typed) Assert.Equal("{\"before\":1,\"after\":null}", response.Failure!.EvidenceJson);
         Assert.Equal(ChannelOutcome.Unknown, response.Failure!.Outcome);
-        Assert.True(fixture.Outcome.RequiresReset);
+        Assert.True(fixture.Outcome.Uncertain);
         int calls = fixture.Calls;
         fixture.Reply = _ => ChannelResponse.Success("{}");
         foreach (string method in new[] { "ReadState", "SaveProject" }) Assert.Null(fixture.Call(method).Failure);
@@ -192,7 +192,7 @@ public sealed class WorkerSessionRecoveryTests
         Assert.Equal("RELEASED\n", File.ReadAllText(fixture.Marker));
         Assert.Equal(1, fixture.Clears);
         Assert.Null(fixture.BindingFault);
-        Assert.False(fixture.Outcome.RequiresReset);
+        Assert.False(fixture.Outcome.Uncertain);
         Assert.Null(fixture.Call("ReadState").Failure);
         Assert.Contains(release, new[] { "20", "21" });
     }
@@ -207,7 +207,7 @@ public sealed class WorkerSessionRecoveryTests
         Assert.Equal("RELEASED\n", File.ReadAllText(first.Marker));
         Assert.Equal(0, first.Invalidations);
         using var second = new Fixture();
-        Assert.False(second.Outcome.RequiresReset);
+        Assert.False(second.Outcome.Uncertain);
         Assert.Null(second.Call("Attach").Failure);
         Assert.Null(second.Call("BindProject").Failure);
         Assert.Equal(2, second.Refreshes);

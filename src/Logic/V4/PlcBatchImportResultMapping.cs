@@ -48,7 +48,7 @@ namespace TiaMcp.Logic.V4
                         .Succeeded ? Failed() : null;
                 Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                     : preview ? Execution.ReadOnly : Execution.Completed;
-                var child = Envelope.Create(item, error, new Meta(DateTimeOffset.UtcNow, release, tool, id, outcome, execution, outcome == Outcome.Unknown,
+                var child = Envelope.Create(item, error, new Meta(DateTimeOffset.UtcNow, release, tool, id, outcome, execution,
                     BehaviorPolicy.Current, outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, null, new[] {
                         new Warning(WarningCode.UnverifiedBehavior, "Native batch acceptance is pending.", new Dictionary<string, JsonElement>()) }));
                 mapped
@@ -69,8 +69,7 @@ namespace TiaMcp.Logic.V4
                 : aggregate != Outcome.Succeeded ? new Error(finalState, new NativeOperationFailedDetails(null, null, evidence)) : null;
             var executionAggregate = aggregate == Outcome.Unknown ? Execution.Unknown : aggregate == Outcome.RejectedBeforeOperation ? Execution.NotStarted
                 : aggregate == Outcome.Partial ? Execution.Partial : preview ? Execution.ReadOnly : Execution.Completed;
-            return Envelope.Create(data, fault, new Meta(DateTimeOffset.UtcNow, release, tool, id, aggregate, executionAggregate,
-                unknown || (bool?)data["writeOutcomeUnknown"] == true, BehaviorPolicy.Current,
+            return Envelope.Create(data, fault, new Meta(DateTimeOffset.UtcNow, release, tool, id, aggregate, executionAggregate, BehaviorPolicy.Current,
                 unknown ? Completeness.Unknown : aggregate == Outcome.Partial ? Completeness.Partial : Completeness.Complete, null,
                 new[] {
                     new Warning(WarningCode.UnverifiedBehavior, "Native acceptance is pending; recovery exports and restoration evidence must be reviewed.",

@@ -151,8 +151,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
         var envelope = Envelope.Create(data, done ? null : new Error("Workbench control " + (failed ? "failed." : "was refused."),
             details ?? new InternalErrorDetails(id)), new Meta(DateTimeOffset.UtcNow, release, name, id,
             done ? Outcome.Succeeded : failed ? Outcome.Failed : Outcome.RejectedBeforeOperation,
-            failed ? Execution.Completed : done ? read ? Execution.ReadOnly : Execution.Completed : Execution.NotStarted,
-            false, BehaviorPolicy.NotApplicable, done ? Completeness.Complete : Completeness.None,
+            failed ? Execution.Completed : done ? read ? Execution.ReadOnly : Execution.Completed : Execution.NotStarted, BehaviorPolicy.NotApplicable, done
+                ? Completeness.Complete : Completeness.None,
             paging, Array.Empty<Warning>()));
         return FoundationV4Result.ImportCandidate(envelope);
     }

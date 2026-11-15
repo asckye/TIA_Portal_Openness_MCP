@@ -8,7 +8,7 @@ internal static class BatchDocumentImportTests
  internal static JsonNode Payload(JsonObject args)
  {
   var items=new JsonArray();foreach(var name in args["fileNamesWithoutExtension"]!.AsArray()) {var single=(JsonObject)args.DeepClone();single["fileNameWithoutExtension"]=name!.DeepClone();items.Add(new JsonObject{["Name"]=name.DeepClone(),["Status"]="not-attempted",["Preview"]=DocumentImportTests.Payload(single),["Outcome"]=null,["PostInventory"]=new JsonArray()});}
-  return new JsonObject{["Policy"]="batch-document-global-db-v1",["PlanHash"]=BatchDocumentImportContract.PlanHash(items),["Status"]="planned",["Attempted"]=false,["MayHaveChanged"]=false,["RequiresSessionReset"]=false,["Error"]="",["Items"]=items};
+  return new JsonObject{["Policy"]="batch-document-global-db-v1",["PlanHash"]=BatchDocumentImportContract.PlanHash(items),["Status"]="planned",["Attempted"]=false,["MayHaveChanged"]=false,["OutcomeUnknown"]=false,["Error"]="",["Items"]=items};
  }
  internal static void Run(Action<bool,string> Check)
  {
@@ -28,11 +28,11 @@ internal static class BatchDocumentImportTests
   var ok=PlcBatchDocumentImportPolicy.Run(Contexts(names),false,p.PlanHash,true,projectFile);Check(ok.Status=="imported"&&calls==3&&closed==3&&ok.Items.All(x=>x.Status=="succeeded"),"all success");
   BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(ok),Request(false,p.PlanHash));Check(true,"host apply");
   inventory.Clear();calls=0;closed=0;Reject(()=>Preview(new[]{"A","a"}),"case duplicate");Reject(()=>PlcBatchDocumentImportPolicy.Run(Contexts(names),false,new string('0',64),true,projectFile),"hash change");Check(calls==0,"invalid hash no native");
-  foreach(var mode in new[]{"throw","partial","failure","null","extra"}) {inventory.Clear();calls=0;closed=0;modes["B"]=mode;var result=PlcBatchDocumentImportPolicy.Run(Contexts(names),false,p.PlanHash,true,projectFile);Check(calls==2&&closed==3&&result.RequiresSessionReset&&result.MayHaveChanged&&result.Items[0].Status=="succeeded"&&result.Items[1].Status=="failed"&&result.Items[2].Status=="not-attempted","stop "+mode);BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(result),Request(false,p.PlanHash));Check(true,"host failure "+mode);}
+  foreach(var mode in new[]{"throw","partial","failure","null","extra"}) {inventory.Clear();calls=0;closed=0;modes["B"]=mode;var result=PlcBatchDocumentImportPolicy.Run(Contexts(names),false,p.PlanHash,true,projectFile);Check(calls==2&&closed==3&&result.OutcomeUnknown&&result.MayHaveChanged&&result.Items[0].Status=="succeeded"&&result.Items[1].Status=="failed"&&result.Items[2].Status=="not-attempted","stop "+mode);BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(result),Request(false,p.PlanHash));Check(true,"host failure "+mode);}
   inventory.Clear();closed=0;var reversed=Preview(names.Reverse().ToArray());Check(p.PlanHash!=reversed.PlanHash,"manifest order bound");
   modes.Clear();inventory.Clear();calls=0;closed=0;closeFailure=true;var cleanup=PlcBatchDocumentImportPolicy
       .Run(Contexts(names),false,p.PlanHash,true,projectFile);
-  Check(cleanup.Status=="unknown"&&cleanup.RequiresSessionReset&&cleanup.Items.All(x=>x.Status=="succeeded")&&calls==3,
+  Check(cleanup.Status=="unknown"&&cleanup.OutcomeUnknown&&cleanup.Items.All(x=>x.Status=="succeeded")&&calls==3,
           "cleanup after native preserves outcomes and poisons");
   BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(cleanup),Request(false,p.PlanHash));
   inventory.Clear();calls=0;try{Preview(names);Check(false,"cleanup preview refused");}catch(IOException){Check(calls==0,"cleanup preview zero native");
@@ -43,7 +43,7 @@ internal static class BatchDocumentImportTests
   Check(calls==0&&closed==3,"final preflight zero native");
   inventory.Clear();calls=0;closed=0;boundary=Contexts(names);checks=0;boundary[0].Recheck=()=>{if(++checks==4)throw new ArgumentException("later change");};
   var stopped=PlcBatchDocumentImportPolicy.Run(boundary,false,p.PlanHash,true,projectFile);
-  Check(calls==1&&stopped.RequiresSessionReset&&stopped.Items[0].Status=="succeeded"&&stopped.Items[1].Status=="not-attempted",
+  Check(calls==1&&stopped.OutcomeUnknown&&stopped.Items[0].Status=="succeeded"&&stopped.Items[1].Status=="not-attempted",
           "later preflight preserves not attempted");
   BatchDocumentImportContract.Validate(JsonSerializer.SerializeToNode(stopped),Request(false,p.PlanHash));
   WorkerProtocol.ValidateExchangeResult("ImportBlocksFromDocuments",Request(false,p.PlanHash),JsonSerializer.SerializeToNode(stopped));WorkerProtocol

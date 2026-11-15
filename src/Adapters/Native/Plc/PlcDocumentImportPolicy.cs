@@ -170,11 +170,11 @@ namespace TiaMcp.Adapters
                 {
                     var cause=error.GetBaseException();
                     result.Messages=result.Messages.Concat(new[]{cause.GetType().FullName+": "+cause.Message}).ToArray();
-                    result.Status="unknown";result.Error="native-outcome-uncertain-inspect-before-new-session";result.RequiresSessionReset=true;
+                    result.Status="unknown";result.Error="native-outcome-uncertain-inspect-before-new-session";result.OutcomeUnknown=true;
                     try
                     {
                         if(absenceCanProveUnchanged && !exists(name))
-                        {result.Status="failed";result.Error="native-import-failed-target-absent";result.MayHaveChanged=false;result.RequiresSessionReset=
+                        {result.Status="failed";result.Error="native-import-failed-target-absent";result.MayHaveChanged=false;result.OutcomeUnknown=
                             false;}
                     }
                     catch(Exception readback) { /* swallow(probe-optional): a failed lookup leaves the import unknown. */ result.Messages=
@@ -194,7 +194,7 @@ namespace TiaMcp.Adapters
                 {
                     outcome.Messages=outcome.Messages.Concat(new[]{"Input cleanup: "+closeFailure.GetBaseException().Message}).ToArray();
                     if(outcome.MayHaveChanged) {outcome.Status="unknown";outcome.ExistsVerified=false;outcome.Error=
-                        "native-outcome-uncertain-inspect-before-new-session";outcome.RequiresSessionReset=true;}
+                        "native-outcome-uncertain-inspect-before-new-session";outcome.OutcomeUnknown=true;}
                 }
                 else throw new IOException("Input handle cleanup failed before native import.",closeFailure);
             }

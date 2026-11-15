@@ -108,9 +108,6 @@ namespace TiaMcp.Logic.V4
                 Require(value.Meta.Completeness == Completeness.Unknown, "An in-progress call has unknown completeness.");
             if (value.Error?.Code == ErrorCode.NotExecuted)
                 Require(outcome == Outcome.RejectedBeforeOperation, "NOT_EXECUTED must be rejected before operation.");
-            if (value.Error?.Code == ErrorCode.SessionResetRequired)
-                Require(outcome == Outcome.RejectedBeforeOperation && value.Meta.RequiresSessionReset,
-                    "SESSION_RESET_REQUIRED must reject the operation and require a reset.");
             if (value.Error?.Code == ErrorCode.Timeout || value.Error?.Code == ErrorCode.Cancelled)
                 Require(outcome == Outcome.ReadFailed || outcome == Outcome.RejectedBeforeOperation,
                     "TIMEOUT and CANCELLED may only represent a read or an operation that has not started.");

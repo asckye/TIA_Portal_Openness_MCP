@@ -31,9 +31,9 @@ public sealed partial class PlcFoundationEngine
                 .SyncVersionControlWorkspace(request.Direction, request.WorkspaceName, dryRun, request.ChangedOnly),
             _ => throw new ArgumentException("Unregistered VCI operation: " + request.Operation)
         };
-        reply.RequiresSessionReset = !dryRun && reply.Meta.TryGetValue("success", out var success) && success is false
+        reply.OutcomeUnknown = !dryRun && reply.Meta.TryGetValue("success", out var success) && success is false
             && (reply.MayHaveChanged || reply.Meta.TryGetValue("failed", out var failed) && failed is int count && count > 0);
-        if (reply.RequiresSessionReset) { reply.Meta["writeOutcomeUnknown"] = true; reply.Meta["requiresSessionReset"] = true; }
+        if (reply.OutcomeUnknown) { reply.Meta["writeOutcomeUnknown"] = true; }
         return reply;
 #else
         throw new NotSupportedException("VersionControlInterface requires V16 or later.");

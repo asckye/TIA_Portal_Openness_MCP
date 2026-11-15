@@ -81,7 +81,6 @@ public sealed class FoundationCoverageRegressionTests
             Assert.Equal(message, (string?)body["error"]?["message"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-            Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
         }
     }
 
@@ -95,7 +94,7 @@ public sealed class FoundationCoverageRegressionTests
         var write = FoundationV4Result.Failure("14sp1", "ImportPlcExternalSource", "fixture", true, true, null,
             new WorkerOperationException(message, -32602, "unknown"));
         Assert.Equal("OUTCOME_UNKNOWN", (string?)write.StructuredContent?["error"]?["code"]);
-        Assert.True((bool?)write.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Equal("unknown", (string?)write.StructuredContent?["meta"]?["outcome"]);
         var state = FoundationV4Result.Failure("14sp1", "PlanPlcExternalSourceImport", "fixture", true, false, null,
             new WorkerOperationException("PLC/root identity changed.", -32603, "rejected-before-operation"));
         Assert.Equal("PRECONDITION_FAILED", (string?)state.StructuredContent?["error"]?["code"]);
@@ -113,7 +112,7 @@ public sealed class FoundationCoverageRegressionTests
         Assert.Equal(ErrorCode.InvalidArgument, result.Error!.Code);
         Assert.Equal("Fixture source admission.", result.Error.Message);
         Assert.Equal(Execution.NotStarted, result.Meta.Execution);
-        Assert.False(result.Meta.RequiresSessionReset);
+        Assert.Equal(Outcome.RejectedBeforeOperation, result.Meta.Outcome);
     }
 
     private sealed class DeleteWorker(bool exists, string release = "14sp1") : IFoundationWorker

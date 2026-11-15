@@ -316,22 +316,22 @@ public sealed class FoundationProcessLeaseTests
         var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { },
             () => { detaches++; throw new IOException("Fixture detach failed."); });
         using var boundary = new FoundationProcessLease(() => root, _ => ChannelResponse.Success("{}"),
-            () => true, () => false, () => outcome.RequiresReset, recovery.DisposeSession);
+            () => true, () => false, () => outcome.Uncertain, recovery.DisposeSession);
         try
         {
             Assert.Null(boundary.Dispatch(Attach(Environment.ProcessId)).Failure);
-            Assert.False(outcome.RequiresReset);
+            Assert.False(outcome.Uncertain);
             Assert.Null(Record.Exception(boundary.Dispose));
-            Assert.True(outcome.RequiresReset);
+            Assert.True(outcome.Uncertain);
             boundary.Dispose();
-            Assert.True(outcome.RequiresReset);
+            Assert.True(outcome.Uncertain);
             Assert.Equal(1, detaches);
             Assert.Equal("UNCERTAIN\n", File.ReadAllText(Directory.GetFiles(root, "*.lease").Single()));
             var evidence = Assert.Single(recovery.ShutdownEvidence)!;
             Assert.Equal("dispose", (string?)evidence["phase"]);
             Assert.Equal(nameof(IOException), (string?)evidence["exceptionType"]);
             Assert.Equal("Fixture detach failed.", (string?)evidence["message"]);
-            Assert.True((bool?)evidence["requiresSessionReset"]);
+            Assert.True((bool?)evidence["outcomeUnknown"]);
         }
         finally
         {
@@ -443,7 +443,7 @@ public sealed class FoundationProcessLeaseTests
         Assert.Equal(message, (string?)body["error"]?["message"]);
         Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+        Assert.NotEqual("unknown", (string?)body["meta"]?["outcome"]);
         Assert.Equal("The request precondition failed before operation.",
             FoundationV4Result.WorkerRejection(WorkerOperationException.FromChannelFailure(Rejection(message + " private suffix"))).Message);
     }

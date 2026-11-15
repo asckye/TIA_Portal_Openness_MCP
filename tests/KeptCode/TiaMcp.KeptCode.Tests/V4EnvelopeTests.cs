@@ -12,6 +12,24 @@ namespace TiaMcp.Engine.Tests
     public sealed class V4EnvelopeTests
     {
         [Fact]
+        public void Envelope_has_no_session_reset_field()
+        {
+            Assert.False(Json(V4Json.Serialize(Reject())).GetProperty("meta").TryGetProperty("requiresSessionReset", out _));
+            var schema = EnvelopeSchema.Value.GetProperty("properties").GetProperty("meta");
+            Assert.False(schema.GetProperty("properties").TryGetProperty("requiresSessionReset", out _));
+            Assert.DoesNotContain("requiresSessionReset", schema.GetProperty("required").EnumerateArray().Select(item => item.GetString()));
+        }
+
+        [Fact]
+        public void Error_union_has_no_session_reset_code()
+        {
+            Assert.DoesNotContain("SESSION_RESET_REQUIRED", EnvelopeSchema.Value.GetRawText(), StringComparison.Ordinal);
+            Assert.DoesNotContain("SessionResetRequired", Enum.GetNames(typeof(ErrorCode)));
+            Assert.Throws<JsonException>(() => V4Json.Deserialize<Error>(
+                """{"code":"SESSION_RESET_REQUIRED","message":"Removed code.","details":{"reason":null}}"""));
+        }
+
+        [Fact]
         public void In_progress_requires_its_error_code_and_ok_false()
         {
             var meta = Metadata(Outcome.InProgress, Execution.Unknown, completeness: Completeness.Unknown);
@@ -58,7 +76,7 @@ namespace TiaMcp.Engine.Tests
         private static readonly DateTimeOffset Stamp = new DateTimeOffset(2026, 10, 3, 0, 0, 0, TimeSpan.Zero);
         private static readonly IReadOnlyDictionary<string, JsonElement> Empty = new Dictionary<string, JsonElement>();
         private const string Rejected =
-            """{"schemaVersion":4,"ok":false,"data":null,"error":{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}},"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"rejected-before-operation","execution":"not-started","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""";
+            """{"schemaVersion":4,"ok":false,"data":null,"error":{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}},"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"rejected-before-operation","execution":"not-started","behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""";
 
         private static JsonElement Json(string json)
         {
@@ -73,9 +91,9 @@ namespace TiaMcp.Engine.Tests
         };
 
         private static Meta Metadata(Outcome outcome = Outcome.RejectedBeforeOperation, Execution execution = Execution.NotStarted,
-            bool reset = false, Completeness completeness = Completeness.None, Paging? paging = null,
+            Completeness completeness = Completeness.None, Paging? paging = null,
             IReadOnlyList<Warning>? warnings = null, BehaviorPolicy policy = BehaviorPolicy.NotApplicable) =>
-            new Meta(Stamp, "21", "GetPlcBlockInfo", "request-1", outcome, execution, reset, policy, completeness,
+            new Meta(Stamp, "21", "GetPlcBlockInfo", "request-1", outcome, execution, policy, completeness,
                 paging, warnings ?? Array.Empty<Warning>());
 
         private static Envelope Reject() => Envelope.Create<object?>(null,
@@ -116,8 +134,6 @@ namespace TiaMcp.Engine.Tests
                 (new AuthenticationRequiredDetails("Safety"), """{"code":"AUTHENTICATION_REQUIRED","message":"Failure.","details":{"capability":"Safety"}}"""),
                 (new AccessDeniedDetails("write", "Block"),
                         """{"code":"ACCESS_DENIED","message":"Failure.","details":{"operation":"write","target":"Block"}}"""),
-                (new SessionResetRequiredDetails("channel closed"),
-                        """{"code":"SESSION_RESET_REQUIRED","message":"Failure.","details":{"reason":"channel-closed"}}"""),
                 (new ResourceUnavailableDetails("SDK"), """{"code":"RESOURCE_UNAVAILABLE","message":"Failure.","details":{"resource":"sdk"}}"""),
                 (new IoFailedDetails("read", "input.xml"), """{"code":"IO_FAILED","message":"Failure.","details":{"operation":"read","path":"input.xml"}}"""),
                 (new NativeOperationFailedDetails("E1", "Native failure", Evidence()),
@@ -187,11 +203,11 @@ namespace TiaMcp.Engine.Tests
                     _ => """{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}}"""
                 };
                 string expected =
-                    """{"schemaVersion":4,"ok":OK,"data":null,"error":ERROR,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"OUTCOME","execution":"EXECUTION","requiresSessionReset":RESET,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}"""
+                    """{"schemaVersion":4,"ok":OK,"data":null,"error":ERROR,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"OUTCOME","execution":"EXECUTION","behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}"""
                     .Replace("OK", outcome == Outcome.Succeeded ? "true" : "false")
                     .Replace("OUTCOME", outcomeText).Replace("EXECUTION", executionText)
-                    .Replace("RESET", outcome == Outcome.Unknown ? "true" : "false").Replace("ERROR", errorJson);
-                var envelope = Envelope.Create<object?>(null, error, Metadata(outcome, execution, outcome == Outcome.Unknown));
+                    .Replace("ERROR", errorJson);
+                var envelope = Envelope.Create<object?>(null, error, Metadata(outcome, execution));
                 Golden(envelope, expected);
                 var mapped = McpResult.From(envelope);
                 Assert.Equal(expected, Assert.Single(mapped.Content).Text);
@@ -270,7 +286,7 @@ namespace TiaMcp.Engine.Tests
             var items = new BatchData(new[] { new BatchItem(0, "A", success), new BatchItem(1, null, Reject()), new BatchItem(2, "C", stopped) });
             var batch = V4Json.Batch(items, new Error("Mixed.", new PartialFailureDetails(1, 1, 1)), Metadata(Outcome.Partial, Execution.Partial));
             string successJson =
-                """{"schemaVersion":4,"ok":true,"data":{"executed":true,"nativeResult":null,"observation":{"source":"readback"}},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"succeeded","execution":"completed","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""";
+                """{"schemaVersion":4,"ok":true,"data":{"executed":true,"nativeResult":null,"observation":{"source":"readback"}},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"succeeded","execution":"completed","behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}""";
             string stoppedJson = Rejected.Replace("""{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}}""",
                 """{"code":"NOT_EXECUTED","message":"Stopped.","details":{"causeIndex":1}}""");
             string dataJson =
@@ -278,11 +294,11 @@ namespace TiaMcp.Engine.Tests
                 .Replace("SUCCESS", successJson).Replace("REJECTED", Rejected).Replace("STOPPED", stoppedJson);
             Golden(items, dataJson);
             Golden(batch,
-                    """{"schemaVersion":4,"ok":false,"data":DATA,"error":{"code":"PARTIAL_FAILURE","message":"Mixed.","details":{"succeeded":1,"failed":1,"notExecuted":1}},"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"partial","execution":"partial","requiresSessionReset":false,"behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}"""
+                    """{"schemaVersion":4,"ok":false,"data":DATA,"error":{"code":"PARTIAL_FAILURE","message":"Mixed.","details":{"succeeded":1,"failed":1,"notExecuted":1}},"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"partial","execution":"partial","behaviorPolicy":"not-applicable","completeness":"none","paging":null,"warnings":[]}}"""
                     .Replace("DATA", dataJson));
             Assert.Equal(successJson, V4Json.Serialize(V4Json.ReadBatch(batch).Items[0].Result));
             var unknown = Envelope.Create<object?>(null, new Error("Lost.", new OutcomeUnknownDetails("write", Evidence())),
-                Metadata(Outcome.Unknown, Execution.Unknown, true));
+                Metadata(Outcome.Unknown, Execution.Unknown));
             var unknownItems = new BatchData(new[] { new BatchItem(0, null, batch), new BatchItem(1, "B", unknown) });
             Assert.Throws<ArgumentException>(() => V4Json.Batch(unknownItems, batch.Error, batch.Meta));
             var parent = V4Json.Batch(unknownItems, unknown.Error, unknown.Meta);
@@ -322,10 +338,10 @@ namespace TiaMcp.Engine.Tests
                 var timestamp = new DateTimeOffset(2026, 10, 3, 8, 0, 0, TimeSpan.FromHours(8)).AddTicks(1234567);
                 Golden(timestamp, "\"2026-10-03T00:00:00.1234567Z\"");
                 var value = Envelope.Create(new { Amount = 42.5m, Text = "中文", Missing = (string?)null }, null,
-                    new Meta(timestamp, null, "ReadValue", "upstream-id", Outcome.Succeeded, Execution.ReadOnly, false,
+                    new Meta(timestamp, null, "ReadValue", "upstream-id", Outcome.Succeeded, Execution.ReadOnly,
                         BehaviorPolicy.SafeV4, Completeness.Complete, null, Array.Empty<Warning>()));
                 Golden(value,
-                        """{"schemaVersion":4,"ok":true,"data":{"amount":42.5,"text":"\u4E2D\u6587","missing":null},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.1234567Z","releaseKey":null,"tool":"ReadValue","requestId":"upstream-id","outcome":"succeeded","execution":"read-only","requiresSessionReset":false,"behaviorPolicy":"safe-v4","completeness":"complete","paging":null,"warnings":[]}}""");
+                        """{"schemaVersion":4,"ok":true,"data":{"amount":42.5,"text":"\u4E2D\u6587","missing":null},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.1234567Z","releaseKey":null,"tool":"ReadValue","requestId":"upstream-id","outcome":"succeeded","execution":"read-only","behaviorPolicy":"safe-v4","completeness":"complete","paging":null,"warnings":[]}}""");
                 Assert.Equal("upstream-id", Meta.Correlate("upstream-id"));
                 Assert.NotEqual(Meta.Correlate(null), Meta.Correlate(null));
                 Assert.Equal(32, Meta.Correlate(null).Length);
@@ -342,7 +358,7 @@ namespace TiaMcp.Engine.Tests
             var envelope = Envelope.Create(new { Items = Array.Empty<object>() }, null,
                 Metadata(Outcome.Succeeded, Execution.ReadOnly, completeness: Completeness.Partial, warnings: warnings, policy: BehaviorPolicy.Current));
             string expected =
-                """{"schemaVersion":4,"ok":true,"data":{"items":[]},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"succeeded","execution":"read-only","requiresSessionReset":false,"behaviorPolicy":"current","completeness":"partial","paging":null,"warnings":[{"code":"UNVERIFIED_BEHAVIOR","message":"Current policy.","details":{}},{"code":"INCOMPLETE_DATA","message":"Limited fields.","details":{}}]}}""";
+                """{"schemaVersion":4,"ok":true,"data":{"items":[]},"error":null,"meta":{"timestamp":"2026-10-03T00:00:00.0000000Z","releaseKey":"21","tool":"GetPlcBlockInfo","requestId":"request-1","outcome":"succeeded","execution":"read-only","behaviorPolicy":"current","completeness":"partial","paging":null,"warnings":[{"code":"UNVERIFIED_BEHAVIOR","message":"Current policy.","details":{}},{"code":"INCOMPLETE_DATA","message":"Limited fields.","details":{}}]}}""";
             Golden(envelope, expected);
         }
 
@@ -381,11 +397,9 @@ namespace TiaMcp.Engine.Tests
                 new Error("Lost.", new OutcomeUnknownDetails(null, Empty)), Metadata(Outcome.Unknown, Execution.Unknown),
                 nativeIssued: true, mutation: true);
             Assert.Equal(Outcome.Unknown, unknown.Meta.Outcome);
-            Assert.False(unknown.Meta.RequiresSessionReset);
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, Reject().Error, Metadata(Outcome.Partial, Execution.Partial)));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Mixed.", new PartialFailureDetails(1, 1, 0)), Metadata()));
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Lost.", new OutcomeUnknownDetails(null, Empty)), Metadata()));
-            Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null, new Error("Reset.", new SessionResetRequiredDetails(null)), Metadata()));
             Assert
                 .Throws<ArgumentException>(() => Envelope.Create<object
                     ?>(null, new Error("Timeout.", new TimeoutDetails(null)), Metadata(Outcome.Failed, Execution.Completed)));
@@ -413,21 +427,17 @@ namespace TiaMcp.Engine.Tests
         [InlineData(false, true)]
         [InlineData(true, false)]
         [InlineData(true, true)]
-        public void UnknownOutcomeCarriesTheLegacyFlagWithoutSessionAdmission(bool nativeIssued, bool mutation)
+        public void UnknownOutcomeIsIndependentOfNativeDispatchAndMutation(bool nativeIssued, bool mutation)
         {
-            bool locked = nativeIssued && mutation;
-            Meta Observation(bool reset) => new Meta(Stamp, "21", "Sample", "request-1", Outcome.Unknown,
-                Execution.Unknown, reset, BehaviorPolicy.NotApplicable, Completeness.Unknown, null, Array.Empty<Warning>());
+            Meta Observation() => new Meta(Stamp, "21", "Sample", "request-1", Outcome.Unknown,
+                Execution.Unknown, BehaviorPolicy.NotApplicable, Completeness.Unknown, null, Array.Empty<Warning>());
             var error = new Error("Lost.", new OutcomeUnknownDetails(null, Empty));
-            var correct = Envelope.Create<object?>(null, error, Observation(locked), nativeIssued, mutation);
-            Assert.Equal(locked, correct.Meta.RequiresSessionReset);
+            var correct = Envelope.Create<object?>(null, error, Observation(), nativeIssued, mutation);
+            Assert.Equal(Outcome.Unknown, correct.Meta.Outcome);
             Assert.Equal(ErrorCode.OutcomeUnknown, correct.Error!.Code);
-            var carried = Envelope.Create<object?>(null, error, Observation(!locked), nativeIssued, mutation);
-            Assert.Equal(!locked, carried.Meta.RequiresSessionReset);
-            Assert.Equal(ErrorCode.OutcomeUnknown, carried.Error!.Code);
-            // Even an unlocked unknown result cannot turn into a replayable native failure.
+            // An unknown result cannot turn into a replayable native failure.
             Assert.Throws<ArgumentException>(() => Envelope.Create<object?>(null,
-                new Error("Lost.", new NativeOperationFailedDetails(null, null, Empty)), Observation(locked)));
+                new Error("Lost.", new NativeOperationFailedDetails(null, null, Empty)), Observation()));
         }
 
         [Fact]
@@ -463,7 +473,7 @@ namespace TiaMcp.Engine.Tests
                 (Outcome.InProgress, Execution.Unknown) => true,
                 _ => false
             };
-            var exception = Record.Exception(() => Metadata(outcome, execution, outcome == Outcome.Unknown));
+            var exception = Record.Exception(() => Metadata(outcome, execution));
             Assert.Equal(valid, exception == null);
         }
 
@@ -543,12 +553,12 @@ namespace TiaMcp.Engine.Tests
                 || reference.Name.StartsWith("ModelContextProtocol", StringComparison.OrdinalIgnoreCase));
             var types = assembly.GetExportedTypes().Where(t => t.Namespace == "TiaMcp.Logic.V4").ToArray();
             Assert.Contains(typeof(Plan), types);
-            Assert.Equal(27, Enum.GetValues<ErrorCode>().Length);
+            Assert.Equal(26, Enum.GetValues<ErrorCode>().Length);
             Assert.Equal(16, Enum.GetValues<WarningCode>().Length);
             Assert.Contains(WarningCode.WorkerRestarted, Enum.GetValues<WarningCode>());
             Assert.Contains(WarningCode.PreviousOwnerUnclean, Enum.GetValues<WarningCode>());
             Assert.Contains(WarningCode.UnsettledCalls, Enum.GetValues<WarningCode>());
-            Assert.Equal(27, types.Count(t => t.BaseType == typeof(ErrorDetails)));
+            Assert.Equal(26, types.Count(t => t.BaseType == typeof(ErrorDetails)));
         }
 
         private static void InCulture(string culture, Action action)

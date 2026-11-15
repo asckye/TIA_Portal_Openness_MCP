@@ -738,7 +738,7 @@ public sealed class NoLockRunningTests
                 ["sinceUtc"] = DateTimeOffset.UtcNow.ToString("O") });
             var envelope = Envelope.Create(new JsonObject(), null,
                 new Meta(DateTimeOffset.UtcNow, "19", "SaveProject", "final-request", TiaMcp.Logic.V4.Outcome.Succeeded,
-                    Execution.Completed, false, BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>()));
+                    Execution.Completed, BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>()));
             var body = JsonNode.Parse(V4Json.Serialize(envelope));
             return ValueTask.FromResult(new CallToolResult { IsError = false, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } });

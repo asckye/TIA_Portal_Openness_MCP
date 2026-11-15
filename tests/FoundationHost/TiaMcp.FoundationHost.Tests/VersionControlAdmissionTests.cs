@@ -487,7 +487,6 @@ public sealed class VersionControlAdmissionTests
         Assert.Equal("PROJECT_NOT_BOUND", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
         Assert.Empty(body["data"]!["items"]!.AsArray());
         Assert.Equal("PROJECT_NOT_BOUND", (string?)body["data"]?["evidence"]?["v4Rejection"]);
     }

@@ -10,11 +10,11 @@ internal static class ExternalSourceDeleteTests
         JsonObject Args()=>new(){["softwarePath"]="Device/PLC",["groupPath"]="",["externalSourceName"]="Pump.scl",["dryRun"]=true};
         var payload=Payload();ExternalSourceDeleteContract.Validate(payload,Args());check(true,"Delete preview validates");
         void Reject(Action a,string label){bool rejected=false;try{a();}catch(InvalidDataException){rejected=true;}check(rejected,label);}
-        foreach(var pair in new (string,JsonNode?)[]{("Executed",JsonValue.Create(true)),("Deleted",JsonValue.Create(true)),("Attempted",JsonValue.Create(true)),("RequiresSessionReset",JsonValue.Create(true)),("Generation",JsonValue.Create("success")),("Status",JsonValue.Create("deleted-verified")),("Release",JsonValue.Create("14")),("ProcessId",JsonValue.Create(0)),("PlanHash",JsonValue.Create("bad")),("GroupPath",JsonValue.Create("folder")),("SourceName",JsonValue.Create("Other.scl")),("TargetIdentity",JsonValue.Create("")),("Recovery",JsonValue.Create("rollback-guaranteed"))})
+        foreach(var pair in new (string,JsonNode?)[]{("Executed",JsonValue.Create(true)),("Deleted",JsonValue.Create(true)),("Attempted",JsonValue.Create(true)),("OutcomeUnknown",JsonValue.Create(true)),("Generation",JsonValue.Create("success")),("Status",JsonValue.Create("deleted-verified")),("Release",JsonValue.Create("14")),("ProcessId",JsonValue.Create(0)),("PlanHash",JsonValue.Create("bad")),("GroupPath",JsonValue.Create("folder")),("SourceName",JsonValue.Create("Other.scl")),("TargetIdentity",JsonValue.Create("")),("Recovery",JsonValue.Create("rollback-guaranteed"))})
         {var bad=(JsonObject)payload.DeepClone();bad[pair.Item1]=pair.Item2;Reject(()=>ExternalSourceDeleteContract.Validate(bad,Args()),"Delete rejects "+pair.Item1);}
         foreach(var key in payload.Select(x=>x.Key).ToArray()) {var bad=(JsonObject)payload.DeepClone();bad.Remove(key);Reject(()=>ExternalSourceDeleteContract.Validate(bad,Args()),"Delete requires "+key);}
         var apply=Args();apply["dryRun"]=false;apply["confirm"]=true;apply["expectedProjectFile"]=payload["ProjectFile"]!.DeepClone();apply["expectedPlanHash"]=payload["PlanHash"]!.DeepClone();
-        var unknown=(JsonObject)payload.DeepClone();unknown["Status"]="outcome-unknown";unknown["Attempted"]=true;unknown["RequiresSessionReset"]=true;unknown["Error"]="transport lost";
+        var unknown=(JsonObject)payload.DeepClone();unknown["Status"]="outcome-unknown";unknown["Attempted"]=true;unknown["OutcomeUnknown"]=true;unknown["Error"]="transport lost";
         WorkerProtocol.ValidateExchangeResult("DeletePlcExternalSource",apply,unknown);
 
         Reject(()=>ExternalSourceDeleteContract.Validate(null,apply),"Missing delete outcome rejected");

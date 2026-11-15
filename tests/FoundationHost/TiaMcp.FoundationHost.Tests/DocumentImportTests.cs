@@ -47,7 +47,7 @@ foreach(var kind in new[]{"null","exception","partial","failure","zero","extra",
  },exists:_=>presence=="unreadable"?throw new IOException("Readback unavailable."):presence=="present");
  bool outcomeUnknown=presence!="absent"||!noNativeEvidence;
  Check(result.Status==(outcomeUnknown?"unknown":"failed")&&result.Attempted&&result.MayHaveChanged==outcomeUnknown
-     &&result.RequiresSessionReset==outcomeUnknown&&!result.ExistsVerified,"readback "+presence+" "+kind);
+     &&result.OutcomeUnknown==outcomeUnknown&&!result.ExistsVerified,"readback "+presence+" "+kind);
  Check(result.Messages.Any(message=>message.Contains(kind=="exception"?"Injected native import failure.":"InvalidDataException")),
      "native cause retained "+kind);
  var attemptedRequest=new JsonObject {["softwarePath"]=r.Software,["groupPath"]=r.Group,["importPath"]=r.Directory,["fileNameWithoutExtension"]=r.Name,
@@ -58,7 +58,7 @@ foreach(var kind in new[]{"null","exception","partial","failure","zero","extra",
  {
   var importDefinition=FoundationTools.Definitions.Single(x=>x.Name=="ImportPlcBlockDocuments");
   var workerOutcome=new WorkerSessionOutcomeState();
-  if(result.RequiresSessionReset)workerOutcome.MarkUncertain();
+  if(result.OutcomeUnknown)workerOutcome.MarkUncertain();
   var recovery=new WorkerSessionRecovery(workerOutcome,()=>false,()=>{},()=>{},()=>{},()=>{});
   var channel=recovery.Synchronize(new ChannelRequest(1,"adapter.ImportFromDocuments","{}",(_,_)=>{}),
       ChannelResponse.Success(wire.ToJsonString()));
@@ -68,11 +68,11 @@ foreach(var kind in new[]{"null","exception","partial","failure","zero","extra",
           WorkerOperationException.FromChannelFailure(failure))
       : FoundationV4Result.Worker("21",importDefinition,"absent-import",attemptedRequest,wire,wire);
   Check((string?)mapped.StructuredContent?["meta"]?["outcome"]==(outcomeUnknown?"unknown":"failed")
-      &&(bool?)mapped.StructuredContent?["meta"]?["requiresSessionReset"]==outcomeUnknown,"Absent import maps using native evidence "+kind);
+      ,"Absent import maps using native evidence "+kind);
   if(outcomeUnknown)
   {
    var forgedFailure=wire.DeepClone();forgedFailure["Status"]="failed";forgedFailure["Error"]="native-import-failed-target-absent";
-   forgedFailure["MayHaveChanged"]=false;forgedFailure["RequiresSessionReset"]=false;
+   forgedFailure["MayHaveChanged"]=false;forgedFailure["OutcomeUnknown"]=false;
    Reject(()=>DocumentImportContract.Validate(forgedFailure,attemptedRequest),"Native evidence cannot be relabelled failed "+kind);
   }
  }
@@ -83,7 +83,7 @@ foreach(var kind in new[]{"partial-empty","state-unreadable","identities-unread"
      State=kind=="partial-empty"?"PartialSuccess":kind=="state-unreadable"?"unknown":"Failure",
      IdentitiesRead=kind!="identities-unread"
  },exists:_=>false);
- Check(incomplete.Status=="unknown"&&incomplete.Attempted&&incomplete.MayHaveChanged&&incomplete.RequiresSessionReset,
+ Check(incomplete.Status=="unknown"&&incomplete.Attempted&&incomplete.MayHaveChanged&&incomplete.OutcomeUnknown,
      "Incomplete native evidence stays unknown "+kind);
  var incompleteRequest=new JsonObject {
      ["softwarePath"]=r.Software,["groupPath"]=r.Group,["importPath"]=r.Directory,["fileNameWithoutExtension"]=r.Name,
@@ -116,7 +116,7 @@ int reads=0;var countBefore=calls;Reject(()=>Run(inventory:()=>++reads==1?Array.
 var request=new JsonObject { ["softwarePath"]="PLC",["groupPath"]="",["importPath"]=documentDirectory,["fileNameWithoutExtension"]="Demo",["dryRun"]=true };
 JsonObject Wire(PlcDocumentImportResult x)=>JsonSerializer.SerializeToNode(x)!.AsObject();
 DocumentImportContract.Validate(Wire(preview),request);
-foreach(var field in new[]{"Executed","Attempted","MayHaveChanged","RequiresSessionReset","ExistsVerified","ContentVerified"}) {var bad=Wire(preview);bad[field]=true;Reject(()=>DocumentImportContract.Validate(bad,request),"Forged preview "+field);}
+foreach(var field in new[]{"Executed","Attempted","MayHaveChanged","OutcomeUnknown","ExistsVerified","ContentVerified"}) {var bad=Wire(preview);bad[field]=true;Reject(()=>DocumentImportContract.Validate(bad,request),"Forged preview "+field);}
 foreach(var field in new[]{"ProjectFile","TargetIdentity","SoftwarePath","DeclaredName","CodeSha256","PlanHash","NativeOptions","Kind","Language","Policy","Validation","InstalledUpdate","Recovery","Compilation","Save","Download"}) {var bad=Wire(preview);bad[field]="";Reject(()=>DocumentImportContract.Validate(bad,request),"Missing evidence "+field);}
 var valid=Run();request["dryRun"]=false;request["confirm"]=true;request["expectedProjectFile"]=r.Project;request["expectedPlanHash"]=preview.PlanHash;DocumentImportContract.Validate(Wire(valid),request);
 foreach(var field in new[]{"Attempted","MayHaveChanged","ExistsVerified"}) {var bad=Wire(valid);bad[field]=false;Reject(()=>DocumentImportContract.Validate(bad,request),"Forged successful outcome "+field);}
@@ -129,10 +129,11 @@ PlcDocumentImportPolicy.ValidateDirectory(@"C:/Documents");
 PlcDocumentImportPolicy.ValidateDirectory(@"C:\Documents");Check(true,"Canonical local Windows directory admitted lexically");
 var overflow=Encoding.ASCII.GetBytes(code.Replace("-12","18446744073709551616"));Check(PlcDocumentDeclaration.Parse(overflow)=="Demo","Lexical admission does not certify native integer range validity");
 var cleanup=PlcDocumentImportPolicy.Run(r,()=>files,_=>new DisposeFailureStream(input),()=>Array.Empty<string>(),_=>false,()=>{},Native,_=>true);
-Check(cleanup.Status=="unknown" && cleanup.RequiresSessionReset && cleanup.Attempted && cleanup.MayHaveChanged && !cleanup.ExistsVerified,"Post-native cleanup failure returns poisoned uncertain result");
+Check(cleanup.Status=="unknown" && cleanup.OutcomeUnknown && cleanup.Attempted && cleanup.MayHaveChanged && !cleanup.ExistsVerified,
+        "Post-native cleanup failure returns poisoned uncertain result");
 var unchangedCleanup=PlcDocumentImportPolicy.Run(r,()=>files,_=>new DisposeFailureStream(input),()=>Array.Empty<string>(),_=>false,()=>{},()=>
     throw new IOException("Native import refused."),_=>false);
-Check(unchangedCleanup.Status=="failed" && !unchangedCleanup.MayHaveChanged && !unchangedCleanup.RequiresSessionReset,
+Check(unchangedCleanup.Status=="failed" && !unchangedCleanup.MayHaveChanged && !unchangedCleanup.OutcomeUnknown,
     "Cleanup cannot overwrite absent-target proof");
 Check(unchangedCleanup.Messages.Any(message=>message.Contains("Injected cleanup failure.")),"Cleanup diagnostic retained with definite failure");
 DocumentImportContract.Validate(JsonSerializer.SerializeToNode(unchangedCleanup),request);

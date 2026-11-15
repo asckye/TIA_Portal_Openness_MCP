@@ -41,7 +41,6 @@ public sealed class SessionToolContractFailureTests
         Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
         Assert.Equal(reason, (string?)body["error"]?["message"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
     }
 
     [Fact]
@@ -64,7 +63,6 @@ public sealed class SessionToolContractFailureTests
             writes, false, false).StructuredContent!;
         Assert.Equal("INTERNAL_ERROR", (string?)body["error"]?["code"]);
         Assert.Equal("read-failed", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
     }
 
     [Fact]
@@ -74,6 +72,5 @@ public sealed class SessionToolContractFailureTests
             true, false, true).StructuredContent!;
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
         Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
-        Assert.True((bool?)body["meta"]?["requiresSessionReset"]);
     }
 }

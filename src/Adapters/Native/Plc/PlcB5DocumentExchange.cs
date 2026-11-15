@@ -161,7 +161,7 @@ namespace TiaMcp.Adapters.Native.Plc
             reply.ImportedNames = LastImportedDocumentBlocks; reply.Scanned = LastImportFromDocumentsScanned; reply.Selected = LastImportFromDocumentsSelected;
             reply.Attempted = LastImportFromDocumentsAttempted; reply.Succeeded = LastImportFromDocumentsSucceeded; reply.Stopped =
                 LastImportFromDocumentsStopped;
-            reply.MayHaveChanged = exchange.Events.Any(e => e.Kind == "start"); reply.RequiresSessionReset = reply.MayHaveChanged
+            reply.MayHaveChanged = exchange.Events.Any(e => e.Kind == "start"); reply.OutcomeUnknown = reply.MayHaveChanged
                 && (reply.Failure != null || reply.Stopped);
             return reply;
         }

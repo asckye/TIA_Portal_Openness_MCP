@@ -121,7 +121,7 @@ internal sealed class CanonicalParameterTool : McpServerTool
     internal static CallToolResult Reject(string release, string name, Error error)
     {
         var meta = new Meta(DateTimeOffset.UtcNow, release, name, Meta.Correlate(null), Outcome.RejectedBeforeOperation,
-            Execution.NotStarted, false, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>());
+            Execution.NotStarted, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>());
         var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create<object?>(null, error, meta)))!;
         return new CallToolResult { IsError = true, StructuredContent = body,
             Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };

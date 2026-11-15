@@ -141,7 +141,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | 层 | 位置 | 错误表达 |
 |---|---|---|
 | L1 组件内部 | 领域服务、适配器、Logic、WorkerChannel | 抛异常；可预期的输入拒绝可以用结果类型（如 V4 `InputContract.Validate`） |
-| L2 工具边界 | `*ToolContract.Run`/`RunAsync`、`FoundationV4Tool`、[`HostFailurePolicy`](../../src/Shared/HostFailurePolicy.cs)、`HostBehavior` | 把异常和原生结果证据转为 V4 信封（`ok=false`、`error.code`、`meta.outcome`、`requiresSessionReset`）；异常类型到错误码的映射只在这里维护 |
+| L2 工具边界 | `*ToolContract.Run`/`RunAsync`、`FoundationV4Tool`、[`HostFailurePolicy`](../../src/Shared/HostFailurePolicy.cs)、`HostBehavior` | 把异常和原生结果证据转为 V4 信封（`ok=false`、`error.code`、`meta.outcome`、`meta.execution`、`meta.completeness`）；异常类型到错误码的映射只在这里维护 |
 | L3 进程通道 | WorkerChannel 协议 2、工作台桥接进程 | 错误作为数据（`error.data = {outcome, evidence}`）；通道故障使会话失效，不重放 |
 
 | ID | 级别 | 规则 |

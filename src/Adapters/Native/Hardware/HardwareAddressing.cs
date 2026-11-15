@@ -13,7 +13,7 @@ namespace TiaMcp.Adapters
         private bool HardwareProjectMissing() { Check(); return EngineeringProjectMissing != null ? EngineeringProjectMissing() : project == null; }
         private static IoAddressWriteReply IoWrite(bool ok, string message, IoAddressInfo? before, IoAddressInfo? after)
             => new IoAddressWriteReply { Ok = ok, Message = message, Before = before, After = after,
-                RequiresSessionReset = before != null && after == null };
+                OutcomeUnknown = before != null && after == null };
         public IReadOnlyList<IoAddressInfo>? ReadHardwareIoAddresses(string deviceItemPath)
         {
             Check(); HardwareAddressingPolicy.RequireAvailable(ReleaseKey, "GetDeviceItemIoAddresses");

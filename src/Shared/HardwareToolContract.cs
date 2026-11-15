@@ -252,8 +252,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Add(new Warning(WarningCode.CandidateOnly, "The AML document is a candidate; successful import has not been verified.", empty));
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : write ? Execution.Completed : Execution.ReadOnly;
-            var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown, policy, completeness ?? (outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.None), paging, warnings);
+            var meta =
+                new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution, policy, completeness
+                    ?? (outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.None), paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };

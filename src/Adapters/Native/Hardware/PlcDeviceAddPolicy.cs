@@ -165,7 +165,7 @@ namespace TiaMcp.Adapters
                 result.Status="created-verified"; result.Executed=true;
             }
             catch(Exception ex) {
-                result.Status="outcome-unknown";result.RequiresSessionReset=true;var error=ex.GetType().Name+": "+ex.Message;result.Error=error.Length<=2048
+                result.Status="outcome-unknown";result.OutcomeUnknown=true;var error=ex.GetType().Name+": "+ex.Message;result.Error=error.Length<=2048
                     ?error:error.Substring(0,2048);
             }
             return result;

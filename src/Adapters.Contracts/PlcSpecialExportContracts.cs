@@ -7,7 +7,6 @@ namespace TiaMcp.Adapters
     public sealed class PlcSpecialExportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || Evidence.ContainsKey("recoveryDirectory");
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; set; }
         public string ProjectFile { get; set; } = "";
         public string SoftwarePath { get; set; } = "";
@@ -21,7 +20,7 @@ namespace TiaMcp.Adapters
         public string MethodEvidence { get; set; } = "static-sdk-signature-verified";
         public string SemanticsEvidence { get; set; } = "unverified";
         public string Status { get; set; } = "planned";
-        public bool RequiresSessionReset { get; set; }
+        public bool OutcomeUnknown { get; set; }
         public Dictionary<string,string> Evidence { get; set; } = new Dictionary<string,string>();
     }
 }

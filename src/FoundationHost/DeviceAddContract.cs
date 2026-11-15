@@ -6,7 +6,7 @@ internal static class DeviceAddContract
     {
         if(payload is not JsonObject r) throw new InvalidDataException("Missing device creation result.");
         var fields=new[]{
-            "Status","Attempted","Executed","RequiresSessionReset","Error","Release","ProjectFile","ProcessId","DeviceName","TypeIdentifier","ArticleNumber",
+            "Status","Attempted","Executed","OutcomeUnknown","Error","Release","ProjectFile","ProcessId","DeviceName","TypeIdentifier","ArticleNumber",
                 "Version","Family","PlanHash","Inventory","Policy","Compatibility","Save","Download","Recovery"
         };
         if(r.Count!=fields.Length || r.Any(x=>!fields.Contains(x.Key,StringComparer.Ordinal)))
@@ -48,11 +48,11 @@ internal static class DeviceAddContract
             throw new InvalidDataException("Creation name collision.");
         switch(Text("Status"))
         {
-            case "planned":if(!dry||Flag("Attempted")||Flag("Executed")||Flag("RequiresSessionReset")||Text("Error")!="")
+            case "planned":if(!dry||Flag("Attempted")||Flag("Executed")||Flag("OutcomeUnknown")||Text("Error")!="")
                 throw new InvalidDataException("Conflicting creation preview.");break;
-            case "created-verified":if(dry||!Flag("Attempted")||!Flag("Executed")||Flag("RequiresSessionReset")||Text("Error")!="")
+            case "created-verified":if(dry||!Flag("Attempted")||!Flag("Executed")||Flag("OutcomeUnknown")||Text("Error")!="")
                 throw new InvalidDataException("Unverified creation success.");break;
-            case "outcome-unknown":if(dry||!Flag("Attempted")||Flag("Executed")||!Flag("RequiresSessionReset")||string.IsNullOrWhiteSpace(Text("Error")))
+            case "outcome-unknown":if(dry||!Flag("Attempted")||Flag("Executed")||!Flag("OutcomeUnknown")||string.IsNullOrWhiteSpace(Text("Error")))
                 throw new InvalidDataException("Unknown creation must poison session.");break;
             default:throw new InvalidDataException("Unknown creation status.");
         }

@@ -29,7 +29,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal("NotFound", result.Meta["status"]);
         Assert.Equal(message, result.Meta["nativeMessage"]);
         Assert.False(result.MayHaveChanged);
-        Assert.False(result.RequiresSessionReset);
+        Assert.False(result.OutcomeUnknown);
     }
 
     [Theory, InlineData(false), InlineData(true)]
@@ -55,7 +55,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal(true, result.Meta["operationSuccess"]);
         Assert.Equal(true, result.Meta["verifiedAbsent"]);
         Assert.True(result.MayHaveChanged);
-        Assert.False(result.RequiresSessionReset);
+        Assert.False(result.OutcomeUnknown);
 
         var readback = fixture.Engine.ReadHardwareAddressing(path, Array.Empty<string>());
         Assert.Equal("NotFound", readback.Meta["status"]);
@@ -116,7 +116,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal("InvalidParams", result.Meta["status"]);
         Assert.Equal("offset>=0, limit 1..500 required.", result.Meta["nativeMessage"]);
         Assert.False(result.MayHaveChanged);
-        Assert.False(result.RequiresSessionReset);
+        Assert.False(result.OutcomeUnknown);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal("NotSupportedOnVersion", result.Meta["status"]);
         Assert.Equal("Service unavailable.", result.Meta["nativeMessage"]);
         Assert.False(result.MayHaveChanged);
-        Assert.False(result.RequiresSessionReset);
+        Assert.False(result.OutcomeUnknown);
     }
 
     [Theory, InlineData(false), InlineData(true)]
@@ -310,7 +310,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal(false, result.Meta["operationSuccess"]);
         Assert.Equal(false, result.Meta["apiCallSuccess"]);
         Assert.False(result.MayHaveChanged);
-        Assert.False(result.RequiresSessionReset);
+        Assert.False(result.OutcomeUnknown);
         Assert.Empty(fixture.Syslog.Calls);
         Assert.False(fixture.Syslog.EnableSystemLogging);
         Assert.Equal(1, fixture.Portal.ExclusiveCalls);
@@ -328,7 +328,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal(false, result.Meta["apiCallSuccess"]);
         Assert.Equal("ReadOrWriteFailed", result.Meta["status"]);
         Assert.True(result.MayHaveChanged);
-        Assert.True(result.RequiresSessionReset);
+        Assert.True(result.OutcomeUnknown);
         Assert.Equal(new[] { property }, fixture.Syslog.Calls);
         if (property == "EnableSystemLogging") Assert.True(fixture.Syslog.EnableSystemLogging);
         else Assert.Equal(Siemens.Engineering.HW.SysLogTransportProtocolType.UDP, fixture.Syslog.TransportProtocol);
@@ -349,7 +349,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal(false, result.Meta["operationSuccess"]);
         Assert.Equal("ReadOrWriteFailed", result.Meta["status"]);
         Assert.True(result.MayHaveChanged);
-        Assert.True(result.RequiresSessionReset);
+        Assert.True(result.OutcomeUnknown);
     }
 
     [Fact]
@@ -359,7 +359,7 @@ public sealed class HardwareWriteFailureTests
         var result = SyslogUpdate(fixture.Engine, new(), new() { ["SysLogAutoAcceptClient"] = new HardwareScalar { Kind = "boolean", Text = "true" } });
         Assert.Equal(false, result.Meta["operationSuccess"]);
         Assert.False(result.MayHaveChanged);
-        Assert.False(result.RequiresSessionReset);
+        Assert.False(result.OutcomeUnknown);
         Assert.Empty(fixture.Cpu.Calls);
         Assert.Empty(fixture.Syslog.Calls);
         Assert.Equal(0, fixture.Portal.ExclusiveCalls);
@@ -390,7 +390,7 @@ public sealed class HardwareWriteFailureTests
         Assert.Equal(false, meta["operationSuccess"]);
         Assert.Equal(false, meta["apiCallSuccess"]);
         Assert.False(result.MayHaveChanged);
-        Assert.False(result.RequiresSessionReset);
+        Assert.False(result.OutcomeUnknown);
         Assert.Equal(1, fixture.Portal.ExclusiveCalls);
         Assert.Empty(fixture.Syslog.Calls);
         Assert.Empty(fixture.Cpu.Calls);
@@ -422,7 +422,7 @@ public sealed class HardwareWriteFailureTests
             Assert.Equal(false, result.Meta["operationSuccess"]);
             Assert.Equal(false, result.Meta["apiCallSuccess"]);
             Assert.False(result.MayHaveChanged);
-            Assert.False(result.RequiresSessionReset);
+            Assert.False(result.OutcomeUnknown);
             Assert.Equal(1, fixture.Portal.ExclusiveCalls);
             Assert.Equal(0, cax.ImportCalls);
         }

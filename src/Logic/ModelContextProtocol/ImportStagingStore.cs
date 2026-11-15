@@ -60,8 +60,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
             return Envelope.Create(new JsonObject { ["attemptedPath"] = attempted },
                 new Error("The installed bundle could not be resolved for staging; attempted path: " + attempted,
                         new IoFailedDetails("bundle-staging", attempted)),
-                new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), Outcome.RejectedBeforeOperation, Execution.NotStarted,
-                    false, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>()));
+                new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), Outcome.RejectedBeforeOperation, Execution.NotStarted, BehaviorPolicy
+                        .NotApplicable, Completeness.None, null, Array.Empty<Warning>()));
         }
         public ImportStagingStore(string bundleRoot, string release, string session)
             : this(bundleRoot, release, new ImportStagingSession(session, session)) { }
@@ -505,8 +505,10 @@ namespace TiaMcp.Logic.ModelContextProtocol
             if ((bool?)data?["folderRetained"] == true) warnings.Add(new Warning(WarningCode.StagingFolderRetained,
                 "The batch folder is retained because it contains unknown entries; only staging-owned files are deleted.",
                 new Dictionary<string, JsonElement> { ["unknownEntries"] = JsonSerializer.SerializeToElement(data["unknownEntries"]) }));
-            return Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), outcome, execution,
-                false, BehaviorPolicy.NotApplicable, error == null ? ((bool?)data?["truncated"] == true ? Completeness.Partial : Completeness.Complete)
+            return Envelope
+                .Create(data, error,
+                    new Meta(DateTimeOffset.UtcNow, release, tool, Meta.Correlate(id), outcome, execution, BehaviorPolicy.NotApplicable, error == null
+                        ? ((bool?)data?["truncated"] == true ? Completeness.Partial : Completeness.Complete)
                     : execution == Execution.NotStarted ? Completeness.None : Completeness.Partial, null, warnings));
         }
     }

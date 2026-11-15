@@ -376,7 +376,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
  "error": {"code": "PRECONDITION_FAILED", "message": "No TIA Portal is connected. Call ConnectPortal with an explicitly selected processId first.",
            "details": {"condition": "connect-portal", "target": null, "parameter": null}},
  "meta": {"timestamp": "…", "releaseKey": "20", "tool": "CompileHmiDiagnostics", "requestId": "…",
-          "outcome": "rejected-before-operation", "execution": "not-started", "requiresSessionReset": false,
+          "outcome": "rejected-before-operation", "execution": "not-started",
           "behaviorPolicy": "current", "completeness": "none", "paging": null,
           "warnings": [{"code": "UNVERIFIED_BEHAVIOR", "message": "…", "details": {}}]}}
 ```
@@ -400,7 +400,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 不变量（生产者 MUST 满足，消费者 MAY 依赖）：
 
 1. `outcome == partial` 当且仅当 `error.code == PARTIAL_FAILURE`；`outcome == unknown` 当且仅当 `error.code == OUTCOME_UNKNOWN`。
-2. `NOT_EXECUTED` 只伴随 `rejected-before-operation`；`SESSION_RESET_REQUIRED` 仅为旧信封保留读取类型，当前生产者不再产生该码；`TIMEOUT` 只伴随 `read-failed` 或 `rejected-before-operation`。
+2. `NOT_EXECUTED` 只伴随 `rejected-before-operation`；`TIMEOUT` 只伴随 `read-failed` 或 `rejected-before-operation`。
 3. `succeeded` 且 `completeness == partial` 时 `warnings` 不为空；`behaviorPolicy == current` 时含 `UNVERIFIED_BEHAVIOR`。
 4. `releaseKey` 只取八个发布键之一或 null；`tool`、`requestId` 和警告的 `message` 不得为空串。
 
@@ -413,7 +413,6 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `tool` | 实际执行的工具名（`CallTool` 规则见第 4.2 节） |
 | `requestId` | 服务器生成的关联 ID：审计调用 ID → 调用日志关联 ID → 新的 32 位小写 GUID；审批过的调用使用审批请求的 ID；批次为每个子项生成新 ID；不采用客户端提供的 ID |
 | `outcome`、`execution`、`completeness` | 第 4.5 节 |
-| `requiresSessionReset` | Part 8 清理前透传旧字段，写入结果映射保留其未知证据含义，准入和清单以最终 `meta.outcome` 为准（第 4.11 节） |
 | `behaviorPolicy` | `not-applicable`（纯宿主工具或不属于 D1 行为族）、`current`（沿用既有原生行为，未经真机验收）、`safe-v4`（已验收的新行为；发布配置中没有选用） |
 | `paging` | 第 4.8 节；不分页时为 null |
 | `warnings` | 第 4.7 节；按发出顺序，装饰类警告追加在末尾 |
@@ -469,7 +468,6 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `OFFLINE_REQUIRED` | 目标或受影响的设备需要离线 | `targets` | rejected |
 | `AUTHENTICATION_REQUIRED` | 缺少必要认证 | `capability`（不回显凭据） | rejected |
 | `ACCESS_DENIED` | 权限拒绝 | `operation`、`target` | rejected |
-| `SESSION_RESET_REQUIRED` | 旧宿主信封的兼容读取类型，当前生产者不再产生 | `reason` | 保留到 Part 8 |
 | `RESOURCE_UNAVAILABLE` | SDK、Openness 环境、可选服务、工作台或包内资源缺失 | `resource` | rejected |
 | `IO_FAILED` | 动作开始前的本地文件读写失败 | `operation`、`path`（脱敏） | rejected |
 | `NATIVE_OPERATION_FAILED` | 已知的原生失败 | `nativeCode`、`nativeMessage`（去敏首行）、`evidence` | read-failed、failed 或 rejected |
@@ -588,7 +586,7 @@ paging = {mode: "offset"|"cursor", unit: "items"|"utf16", offset: int32|null, li
 
 - 最终信封保留本次调用的真实结果。读失败为 `read-failed`，编译错误、已核实的回滚和读回不一致为确定失败，已知混合批次为 `partial`。已派发写入缺少确定结果证据时返回 `unknown` 和 `OUTCOME_UNKNOWN`。
 - 非预览调用的最终 `meta.outcome` 为 `unknown`，且分类为 WRITE、ONLINE-WRITE、FILE 或 EXECUTE 时，将 `{requestId, tool, utc, fromPreviousOwner}` 加入 `data.sessionState.unsettled`。同一存储同时服务 Foundation、Engine 和工作台入口。绑定到不同项目或会话结束清除清单。重启 worker、断开和失去绑定保留清单。
-- 后续独立调用继续执行。未知回复不使 channel 或 worker 失效，绑定检查失败只拒绝当前调用。旧 `requiresSessionReset` 标志在 Part 8 前透传，结果映射继续将它作为写入结果未知的证据。准入和清单以最终信封为准。`SESSION_RESET_REQUIRED` 不再由当前生产者产生。
+- 后续独立调用继续执行。未知回复不使 channel 或 worker 失效，绑定检查失败只拒绝当前调用。beta.5 已移除 `meta.requiresSessionReset` 和 `SESSION_RESET_REQUIRED`，按 ADR 0001 硬切，`schemaVersion` 仍为 4。worker 的 `OutcomeUnknown` 只表示原生写入结果未知。准入和清单以最终 `meta.outcome` 为准，`GetSessionState.unsettled` 列出未确认写入。
 - `SaveProject` 和 `SaveProjectCopy` 在清单非空时携带 `UNSETTLED_CALLS`，预览和执行均如此。警告列出请求编号，保存由正常审批和项目身份校验决定。
 - Part 7 在未知调用结束后、同一执行通道上用既有只读操作核对；worker 丢失时等下一次精确重绑后核对。根组 `CreatePlcTagTable` 读取 `ReadTagTableNames`；`CreatePlcTag` / `CreatePlcUserConstant` 读取声明，只有名称、类型和地址或值完全一致才记 `applied`，名称不存在记 `not-applied`，其他情况仍未知。外部源删除读取根名称清单。无覆盖根导入只在请求基本名存在时记 `applied`，名称缺失继续未决。单个块、类型、标签表、监控表和技术对象导出检查精确目标文件，非空为 `applied`，不存在为 `not-applied`，空文件或读取失败仍未知。项目文本导出仅在文件缺失时记 `not-applied`，存在的文件可能不完整，继续未决。
 - 确定的读回结论写入原始未知信封的 `data.settlement` 和 `sessionState.settled[]`，字段为 `{requestId, tool, outcome, utc}`，原信封仍为 `OUTCOME_UNKNOWN`。已结算项离开 `unsettled`，保存不再为该项警告。`not-applied` 解除相同写入保护；`applied` 保持保护直到调用者读取 `GetCallResult`。编译、覆盖导入、子组标签表创建及没有确定读回的工具不结算。读取失败不重发写入；清单只保留目标字段，不保存导入内容。
@@ -886,7 +884,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 | API-14 | 错误码被当作兜底：旧实现失败报 `INVALID_ARGUMENT`，参数格式错误报 `NATIVE_OPERATION_FAILED`，未满足完成条件报 `INTERNAL_ERROR` | P8-60 已合并，beta.2 真机仍复现；VMFIX-1 与 DES-4 |
 | API-18 | 预览绑定参数有多种叫法，规则是 `expected<对象>Hash` 与 `previewToken` | P8-60 已合并，beta.2 真机仍复现；VMFIX-1 与 DES-4 |
 | API-19 | `expectedProject` 有时被当作项目文件 | P8-60 已合并，beta.2 真机仍复现；VMFIX-1 |
-| API-25 | `requiresSessionReset` 与实际锁定不一致 | P8-60 已合并，beta.2 真机仍复现；VMFIX-1 |
+| API-25 | 写入结果未知与会话准入分离 | NO-LOCK Part 8 已移除旧字段及错误码；以 `meta.outcome` 和 `GetSessionState.unsettled` 报告 |
 | API-35 | 可选字符串参数用 `""` 作为缺省哨兵 | 原为有意偏差；维护者 2026-11-01 决定由 DES-4 改为省略即未提供 |
 
 4.x 迁移到 MCP 现行修订时处理：

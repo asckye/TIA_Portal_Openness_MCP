@@ -7,12 +7,11 @@ namespace TiaMcp.Adapters
     public sealed class PlcDocumentImportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => MayHaveChanged;
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public string Status {get;internal set;}="planned";
         public bool Executed {get;internal set;}
         public bool Attempted {get;internal set;}
         public bool MayHaveChanged {get;internal set;}
-        public bool RequiresSessionReset {get;internal set;}
+        public bool OutcomeUnknown {get;internal set;}
         public bool ExistsVerified {get;internal set;}
         public bool ContentVerified => false;
         public string Error {get;internal set;}="";

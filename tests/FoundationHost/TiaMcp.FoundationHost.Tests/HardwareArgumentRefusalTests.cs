@@ -184,7 +184,6 @@ public sealed class HardwareArgumentRefusalTests
         Assert.DoesNotContain("PathJson", (string?)body["error"]?["message"], StringComparison.Ordinal);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
     }
 
     private sealed class BoundWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker

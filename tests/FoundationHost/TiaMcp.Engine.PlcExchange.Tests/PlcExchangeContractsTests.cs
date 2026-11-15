@@ -407,7 +407,7 @@ namespace PlcExchangeTests
             var body = Map(meta);
             Verdict(body, outcome, execution);
             Assert.Equal("current", (string?)body["meta"]!["behaviorPolicy"]);
-            Assert.Equal(outcome == "unknown", (bool)body["meta"]!["requiresSessionReset"]!);
+            Assert.Equal(outcome == "unknown", (string?)body["meta"]!["outcome"] == "unknown");
         }
 
         [Theory]

@@ -96,7 +96,7 @@ internal static class BatchDocumentExportTests
                     Run(destination,sources,false,preview.PlanHash,move:(from,to)=>{
                         if(kind=="publish")throw new IOException("unknown publication");Directory.Move(from.FullName,to.FullName);});
                 Validate(failed,false);
-                check(failed.Status=="failed" && !failed.RequiresSessionReset && Directory.Exists(failed.RecoveryDirectory) && failed.Items
+                check(failed.Status=="failed" && !failed.OutcomeUnknown && Directory.Exists(failed.RecoveryDirectory) && failed.Items
                         .All(x=>x.Status!="exported"),"Batch document "+kind+" retains evidence without false published successes");
                 var midFailure=kind is "native" or "missing-resource" or "extra" or "empty" or "duplicate" or "escaped";
                 check(midFailure?attempts==2 && failed.Items[0].Status=="staged" && failed.Items[1].Status=="failed" && failed.Items[2].Status=="not-attempted":attempts==3,"Batch document "+kind+" stops without native replay");
@@ -119,7 +119,7 @@ internal static class BatchDocumentExportTests
                 })};
                 var linkPlan=Run(linkOutput,linkSources);var linked=
                     Run(linkOutput,linkSources,false,linkPlan.PlanHash,move:(from,to)=>Directory.Move(from.FullName,to.FullName));Validate(linked,false);
-                check(linked.Status=="failed" && !linked.RequiresSessionReset && !Directory.Exists(linkOutput),
+                check(linked.Status=="failed" && !linked.OutcomeUnknown && !Directory.Exists(linkOutput),
                         "Batch document final root reparse refresh rejects replaced symlink");
             }
             var optionalOutput=Path.Combine(root,"optional");var optionalSources=new[]{Source("group/A",callback:(directory,name)=>{var file=Path.Combine(directory.FullName,name+".s7dcl");File.WriteAllText(file,"code");return new[]{file};})};
@@ -140,7 +140,7 @@ internal static class BatchDocumentExportTests
             var partialPath=Path.Combine(root,"policy-partial");var partialSources=new[]{Source("group/A"),refusedSources[0]};partialSources[1].Path="group/B";
             var partialPlan=Run(partialPath,partialSources);var partialResult=
                 Run(partialPath,partialSources,false,partialPlan.PlanHash,move:(from,to)=>Directory.Move(from.FullName,to.FullName));
-            check(!partialResult.RequiresSessionReset && partialResult.Items[0].Status=="staged" && partialResult.Items[1].Status=="failed",
+            check(!partialResult.OutcomeUnknown && partialResult.Items[0].Status=="staged" && partialResult.Items[1].Status=="failed",
                     "Batch document policy refusal after native export retains staging evidence and keeps file evidence without unknown project writes");
         }
         finally {Directory.Delete(root,true);}

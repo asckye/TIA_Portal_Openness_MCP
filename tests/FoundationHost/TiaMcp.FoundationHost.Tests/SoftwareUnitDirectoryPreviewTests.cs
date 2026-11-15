@@ -33,11 +33,11 @@ public sealed class SoftwareUnitDirectoryPreviewTests
         var result = FoundationV4Result.Failure("21", "ImportPlcProgramFromDirectory", "test", true, true, null, worker).StructuredContent!;
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result["error"]?["code"]);
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
-        Assert.False((bool?)result["meta"]?["requiresSessionReset"]);
+        Assert.NotEqual("unknown", (string?)result["meta"]?["outcome"]);
         var unknown = new WorkerOperationException("unknown", -32603, "unknown", WorkerJson.Evidence(refusal));
         var uncertain = FoundationV4Result.Failure("21", "ImportPlcProgramFromDirectory", "test", true, true, null, unknown).StructuredContent!;
         Assert.Equal("OUTCOME_UNKNOWN", (string?)uncertain["error"]?["code"]);
-        Assert.True((bool?)uncertain["meta"]?["requiresSessionReset"]);
+        Assert.Equal("unknown", (string?)uncertain["meta"]?["outcome"]);
     }
 
     [Theory]

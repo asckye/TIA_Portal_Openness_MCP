@@ -20,7 +20,7 @@ internal static class BatchDocumentImportContract
   string Text(JsonObject obj,string key)=>obj[key] is JsonValue v&&v.TryGetValue<string>(out var text)?text
       :throw new InvalidDataException("Invalid batch document text.");
   bool Flag(string key)=>result[key] is JsonValue v&&v.TryGetValue<bool>(out var flag)?flag:throw new InvalidDataException("Invalid batch document flag.");
-  Shape(result,"Policy","PlanHash","Status","Attempted","MayHaveChanged","RequiresSessionReset","Error","Items");
+  Shape(result,"Policy","PlanHash","Status","Attempted","MayHaveChanged","OutcomeUnknown","Error","Items");
   var dry=request["dryRun"]?.GetValue<bool>()??true;
   if(request["fileNamesWithoutExtension"] is not JsonArray names || names.Count<1||names.Count>16||names.Select(x=>x!.GetValue<string>())
           .Distinct(StringComparer.OrdinalIgnoreCase).Count()!=names.Count)
@@ -29,8 +29,8 @@ internal static class BatchDocumentImportContract
           ||Text(result,"PlanHash")!=PlanHash(items))
       throw new InvalidDataException("Batch manifest/hash conflict.");
   var status=Text(result,"Status");
-  if(dry?(status!="planned"||Flag("Attempted")||Flag("MayHaveChanged")||Flag("RequiresSessionReset")||Text(result,"Error")!="")
-          :(status is not ("imported" or "unknown")||!Flag("Attempted")||!Flag("MayHaveChanged")||Flag("RequiresSessionReset")!=(status=="unknown")
+  if(dry?(status!="planned"||Flag("Attempted")||Flag("MayHaveChanged")||Flag("OutcomeUnknown")||Text(result,"Error")!="")
+          :(status is not ("imported" or "unknown")||!Flag("Attempted")||!Flag("MayHaveChanged")||Flag("OutcomeUnknown")!=(status=="unknown")
               ||Text(result,"Error")!=(status=="unknown"?"batch-outcome-uncertain-no-replay-or-rollback":"")))
       throw new InvalidDataException("Conflicting batch outcome.");
   if(!dry && (request["confirm"]?.GetValue<bool>()!=true||request["expectedPlanHash"]?.GetValue<string>()!=Text(result,"PlanHash")))

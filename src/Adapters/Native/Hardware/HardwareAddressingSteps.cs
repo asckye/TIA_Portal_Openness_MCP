@@ -204,8 +204,8 @@ namespace TiaMcp.Adapters
                 });
                 if (!writing)
                 {
-                    step.RequiresSessionReset = false;
-                    step.Meta["writeOutcomeUnknown"] = false; step.Meta["requiresSessionReset"] = false;
+                    step.OutcomeUnknown = false;
+                    step.Meta["writeOutcomeUnknown"] = false;
                 }
                 return step;
             }
@@ -250,10 +250,10 @@ namespace TiaMcp.Adapters
                 }
                 if (!meta.TryGetValue("nativeMessage", out var nativeMessage) || nativeMessage == null)
                     meta["nativeMessage"] = ex.GetBaseException().Message;
-                reply.RequiresSessionReset = writing && (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)
+                reply.OutcomeUnknown = writing && (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)
                     || reply.MayHaveChanged && !meta.ContainsKey("after")
                         && !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial"));
-                if (reply.RequiresSessionReset) { meta["writeOutcomeUnknown"] = true; meta["requiresSessionReset"] = true; }
+                if (reply.OutcomeUnknown) { meta["writeOutcomeUnknown"] = true; }
                 reply.Message = tool + " failed";
             }
             return reply;

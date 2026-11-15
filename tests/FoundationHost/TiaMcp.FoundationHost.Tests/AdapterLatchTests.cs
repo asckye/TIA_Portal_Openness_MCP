@@ -50,14 +50,14 @@ public sealed class AdapterLatchTests
             return;
         }
         var first = Execute("First");
-        Assert.True(first.RequiresSessionReset);
+        Assert.True(first.OutcomeUnknown);
         Assert.Equal(1, calls);
         fail = false;
         var later = Execute("Independent");
-        Assert.False(later.RequiresSessionReset);
+        Assert.False(later.OutcomeUnknown);
         Assert.True(later.MayHaveChanged);
         Assert.Equal(2, calls);
-        Assert.True(first.RequiresSessionReset);
+        Assert.True(first.OutcomeUnknown);
     }
 
     private const string Project = "C:/fixture/Project.ap21";

@@ -142,7 +142,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Empty(result.ReadbackItems!);
             var reply = new LibraryReply { Import = result };
             Assert.False(reply.MayHaveChanged);
-            Assert.False(reply.RequiresSessionReset);
+            Assert.False(reply.OutcomeUnknown);
         }
 
         [Fact]

@@ -136,8 +136,9 @@ public sealed class DevicePathHostConversionTests
             Calls++;
             LastPath = request.Params!.Arguments!["devicePath"].GetString()!;
             Selected = FindDevice(Roots, Groups, Ungrouped, LastPath);
-            var meta = new Meta(DateTimeOffset.UtcNow, release, protocol.Name, "fixture", Outcome.Succeeded, Execution.ReadOnly,
-                false, BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>());
+            var meta =
+                new Meta(DateTimeOffset.UtcNow, release, protocol.Name, "fixture", Outcome.Succeeded, Execution.ReadOnly, BehaviorPolicy.NotApplicable,
+                    Completeness.Complete, null, Array.Empty<Warning>());
             var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { found = Selected != null }, null, meta)))!;
             return ValueTask.FromResult(new CallToolResult { IsError = false, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } });

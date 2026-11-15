@@ -31,11 +31,11 @@ public sealed class OnlinePortAdmissionTests
         {
             Assert.Equal("PRECONDITION_FAILED", (string?)result.StructuredContent!["error"]?["code"]);
             Assert.Equal(1, worker.Calls); // Admitted API; managed ReadState finds no project.
-            Assert.False((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
+            Assert.NotEqual("unknown", (string?)result.StructuredContent["meta"]!["outcome"]);
             return;
         }
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result.StructuredContent!["error"]?["code"]);
-        Assert.False((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)result.StructuredContent["meta"]!["outcome"]);
         Assert.Equal(0, worker.Calls);
     }
 

@@ -62,7 +62,7 @@ internal static class ExternalSourceWorkflowTests
         Reject(()=>PlcExternalSourceWorkflowPolicy.Import(ImportResult(),new MemoryStream(bytes.Concat(new byte[]{32}).ToArray()),false,importPlan.PlanHash,true,Project,()=>state,()=>{},(_,__)=>{attempts++;return "Pump.scl";}),"Changed source bytes invalidate preview");
         check(attempts==0,"Changed input is rejected before native creation");
         var failedImport=PlcExternalSourceWorkflowPolicy.Import(ImportResult(),new MemoryStream(bytes),false,importPlan.PlanHash,true,Project,()=>state,()=>{},(_,__)=> {attempts++;state.Add("Pump.scl");throw new IOException("native failure after creation");});
-        check(attempts==1 && failedImport.RequiresSessionReset && failedImport.Status=="outcome-unknown" && !failedImport.Executed,"Native import failure retains uncertainty and is not replayed");
+        check(attempts==1 && failedImport.OutcomeUnknown && failedImport.Status=="outcome-unknown" && !failedImport.Executed,"Native import failure retains uncertainty and is not replayed");
         foreach(var release in new[]{"14sp1","15.1","16","17","18","19","20","21"})
         {
             var objects=new[]{Block("Existing")};int nativeCalls=0,readbacks=0;
@@ -73,7 +73,7 @@ internal static class ExternalSourceWorkflowTests
                 .Generate(GenerationResult(release),false,generationPlan.PlanHash,true,Project,()=>objects,()=>{},native,readback,Recoverable);
             var failedGeneration=
                 Apply(()=>{nativeCalls++;throw new GenerationDiagnosticException("Source line 3: unknown symbol");},()=>{readbacks++;return objects;});
-            check(failedGeneration.Status=="failed" && failedGeneration.Error.Contains("Source line 3") && !failedGeneration.RequiresSessionReset
+            check(failedGeneration.Status=="failed" && failedGeneration.Error.Contains("Source line 3") && !failedGeneration.OutcomeUnknown
                     && !failedGeneration.Executed && nativeCalls==1 && readbacks==0,
                     "Recoverable native generation failure preserves diagnostics without poisoning the session "+release);
             var request=new JsonObject {
@@ -87,10 +87,11 @@ internal static class ExternalSourceWorkflowTests
             var fixedGeneration=Apply(()=>{nativeCalls++;},()=>{readbacks++;return release=="14sp1"?Array.Empty<PlcExternalSourceObject>():objects;});
             check(fixedGeneration.Status=="completed" && fixedGeneration.Executed && nativeCalls==2 && readbacks==1,"User correction can run generation again after a normal source error "+release);
             var readbackFailure=Apply(()=>{nativeCalls++;},()=>throw new GenerationDiagnosticException("Native call succeeded; object readback failed"));
-            check(readbackFailure.Status=="outcome-unknown" && readbackFailure.RequiresSessionReset,"Recoverable-class exception during readback is not mistaken for generation rollback "+release);
+            check(readbackFailure.Status=="outcome-unknown" && readbackFailure.OutcomeUnknown,
+                    "Recoverable-class exception during readback is not mistaken for generation rollback "+release);
             WorkerProtocol.ValidateExchangeResult("GenerateBlocksFromExternalSource",request,JsonSerializer.SerializeToNode(readbackFailure));
             var lost=Apply(()=>throw new IOException("Connection lost during generation"),()=>throw new Exception());
-            check(lost.Status=="outcome-unknown" && lost.RequiresSessionReset,"Transport or fatal generation failure remains unknown "+release);
+            check(lost.Status=="outcome-unknown" && lost.OutcomeUnknown,"Transport or fatal generation failure remains unknown "+release);
         }
         var fake=new FakeWorker();
         foreach(var name in new[]{"ImportPlcExternalSource","GenerateBlocksFromExternalSource"})

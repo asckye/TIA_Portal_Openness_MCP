@@ -222,7 +222,7 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             ["error"] = code == null ? null : new JsonObject { ["code"] = code, ["message"] = "fixture refusal", ["details"] = code == "PRECONDITION_FAILED" ? new JsonObject { ["condition"] = condition, ["target"] = null, ["parameter"] = null } : code == "PLAN_STALE" ? new JsonObject { ["planHash"] = null, ["reason"] = "fixture", ["previewToken"] = null } : new JsonObject { ["operation"] = name, ["target"] = null } },
             ["meta"] = new JsonObject { ["timestamp"] = DateTime.UtcNow.ToString("O"), ["releaseKey"] = Host.ReleaseKey, ["tool"] = name,
                 ["requestId"] = Guid.NewGuid().ToString("N"), ["outcome"] = code == null ? "succeeded" : "rejected-before-operation",
-                ["execution"] = code == null ? "read-only" : "not-started", ["requiresSessionReset"] = false, ["behaviorPolicy"] = "not-applicable",
+                ["execution"] = code == null ? "read-only" : "not-started", ["behaviorPolicy"] = "not-applicable",
                 ["completeness"] = "complete", ["paging"] = null, ["warnings"] = new JsonArray() } };
         return new() { IsError = code != null, StructuredContent = envelope, Content = [new TextContentBlock { Text = envelope.ToJsonString() }] };
     }

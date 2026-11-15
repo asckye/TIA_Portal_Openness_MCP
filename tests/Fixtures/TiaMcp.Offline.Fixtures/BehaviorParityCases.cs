@@ -119,7 +119,7 @@ namespace TiaMcp.BehaviorParity
             string reason = scenario == "batch-inconsistent" ? "inconsistent" : scenario == "batch-unknown-consistency" ? "unknown-consistency" : "know-how-protected";
             return new JsonObject { ["executed"] = false, ["projectFile"] = "C:/fixture.ap19", ["softwarePath"] = "CPU/PLC_1", ["release"] = "19",
                 ["planHash"] = new string('a', 64), ["recursive"] = false, ["dependencyStatus"] = "unverified-caller-order-required",
-                ["requiresSessionReset"] = false, ["importedCount"] = 0, ["failedCount"] = 0, ["imported"] = new JsonArray(), ["failed"] = new JsonArray(),
+                ["importedCount"] = 0, ["failedCount"] = 0, ["imported"] = new JsonArray(), ["failed"] = new JsonArray(),
                 ["items"] = new JsonArray(new JsonObject { ["relativePath"] = "A.xml", ["status"] = "replace-blocked", ["action"] = "replace-blocked: " + reason,
                     ["inputSha256"] = new string('a', 64), ["planned"] = new JsonObject { ["name"] = "A", ["kind"] = "FC", ["groupPath"] = "", ["number"] = 1 },
                     ["replaced"] = new JsonObject { ["name"] = "A", ["kind"] = "FC", ["groupPath"] = "", ["number"] = 1, ["backupBlocker"] = reason },
@@ -174,7 +174,7 @@ namespace TiaMcp.BehaviorParity
 
         public static JsonObject Project(JsonNode body)
             => new JsonObject { ["code"] = (string?)body["error"]?["code"] ?? "", ["outcome"] = (string?)body["meta"]?["outcome"],
-                ["execution"] = (string?)body["meta"]?["execution"], ["reset"] = (bool?)body["meta"]?["requiresSessionReset"],
+                ["execution"] = (string?)body["meta"]?["execution"], ["reset"] = (string?)body["meta"]?["outcome"] == "unknown",
                 ["compileErrorCount"] = (int?)body["error"]?["details"]?["errorCount"],
                 ["details"] = Shape(body["error"]?["details"]), ["applyBlocked"] = (bool?)body["data"]?["applyBlocked"],
                 ["applyBlockedReason"] = (string?)body["data"]?["applyBlockedReason"],

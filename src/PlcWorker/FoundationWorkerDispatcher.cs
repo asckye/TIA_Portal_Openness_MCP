@@ -160,7 +160,7 @@ namespace TiaMcp.PlcWorker
                 enteredOperation=true;
                 if(name=="Disconnect") disconnectAttempted=true;
                 var result = method.Invoke(engine, call);
-                if (result is IWorkerOperationReply reply && !readOnly && reply.RequiresSessionReset)
+                if (result is IWorkerOperationReply reply && !readOnly && reply.OutcomeUnknown)
                     sessionOutcome.MarkUncertain();
                 if(name=="Disconnect") disconnected=true;
                 if (name == "ReadState")

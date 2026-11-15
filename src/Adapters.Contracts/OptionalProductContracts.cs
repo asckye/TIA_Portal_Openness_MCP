@@ -82,7 +82,6 @@ public sealed class OptionalProductReply : IWorkerOperationReply
 {
     public string Message { get; set; } = "";
     public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>();
-    public bool RequiresSessionReset { get; set; }
+    public bool OutcomeUnknown { get; set; }
     public bool MayHaveChanged => Meta.TryGetValue("mayHaveChanged", out var changed) && changed is true;
-    public bool BlockReadsAfterUncertain => true;
 }

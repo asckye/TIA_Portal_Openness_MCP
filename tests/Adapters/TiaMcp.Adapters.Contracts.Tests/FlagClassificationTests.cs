@@ -24,7 +24,7 @@ public sealed class FlagClassificationTests
         Assert.Equal(false, reply.Meta["operationSuccess"]);
         Assert.True((bool)reply.Meta["connectionUnavailable"]!);
         Assert.False(reply.MayHaveChanged);
-        Assert.Equal(writing, reply.RequiresSessionReset);
+        Assert.Equal(writing, reply.OutcomeUnknown);
         Assert.Equal(writing, reply.Meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true);
     }
 
@@ -38,7 +38,7 @@ public sealed class FlagClassificationTests
         }, true, writing: false);
         Assert.Equal(false, reply.Meta["operationSuccess"]);
         Assert.True((bool)reply.Meta["connectionUnavailable"]!);
-        Assert.False(reply.RequiresSessionReset);
+        Assert.False(reply.OutcomeUnknown);
         Assert.False(reply.MayHaveChanged);
     }
 
@@ -56,6 +56,6 @@ public sealed class FlagClassificationTests
         }, true, writing: false);
         Assert.Equal(false, reply.Meta["operationSuccess"]);
         Assert.True(reply.MayHaveChanged);
-        Assert.False(reply.RequiresSessionReset);
+        Assert.False(reply.OutcomeUnknown);
     }
 }

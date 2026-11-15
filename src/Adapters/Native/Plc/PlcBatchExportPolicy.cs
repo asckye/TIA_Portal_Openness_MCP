@@ -74,7 +74,7 @@ namespace TiaMcp.Adapters
                 catch(AdapterPreconditionException) when(i==0) { throw; }
                 catch(Exception error)
                 {
-                    item.Status="failed"; stopped=true; result.RequiresSessionReset=false;
+                    item.Status="failed"; stopped=true; result.OutcomeUnknown=false;
                     // Preserve only allowlisted publication evidence, never native messages/XML.
                     foreach(var name in new[]{"outputFile","stagedFile","recoveryDirectory","exportPhase","stagedSha256"})
                         if(error.Data[name] is string value) item.Evidence[name]=value;

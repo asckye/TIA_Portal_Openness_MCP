@@ -117,7 +117,6 @@ namespace TiaMcp.Adapters.Contracts
         public OpennessObservation? Observation { get; set; }
         public PlcSoftwareFailure? Failure { get; set; }
         public bool MayHaveChanged { get; set; }
-        public bool RequiresSessionReset { get; set; }
-        public bool BlockReadsAfterUncertain => true;
+        public bool OutcomeUnknown { get; set; }
     }
 }

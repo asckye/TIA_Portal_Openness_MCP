@@ -262,7 +262,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 paging = new Paging(PagingMode.Offset, offset.Value, limit.Value, next, null, null, total.Value, next == null);
             }
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId),
-                outcome, execution, outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+                outcome, execution, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                 completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),

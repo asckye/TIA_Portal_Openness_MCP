@@ -58,7 +58,6 @@ public sealed class ImportStagingHostTests : IDisposable
         Assert.Equal("C:/bundle/data/recovery", (string?)warning["details"]?["recoveryDirectory"]);
         Assert.DoesNotContain(result["meta"]!["warnings"]!.AsArray(), x => (string?)x?["code"] == "NATIVE_WARNING");
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
-        Assert.True((bool)result["meta"]!["requiresSessionReset"]!);
     }
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject args) => new(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
     { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };

@@ -45,6 +45,14 @@ public sealed class EngineResultTextTests(WpfContext wpf)
     }
 
     [Theory]
+    [InlineData("SESSION_RESET_REQUIRED", "older host", "旧版宿主")]
+    public void OlderHostErrorsHaveFriendlyTextInBothLanguages(string code, string english, string chinese)
+    {
+        wpf.RunWithLanguage(AppLanguage.English, () => Assert.Contains(english, EngineResultText.Error(code)));
+        wpf.RunWithLanguage(AppLanguage.Chinese, () => Assert.Contains(chinese, EngineResultText.Error(code)));
+    }
+
+    [Theory]
     [InlineData("PARTIAL_FAILURE", "Partial result", "部分结果")]
     [InlineData("OUTCOME_UNKNOWN", "Unknown outcome", "结果未知")]
     public void IncompleteOutcomesNeverDisplayAsSuccess(string code, string english, string chinese)

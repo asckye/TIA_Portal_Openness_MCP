@@ -45,12 +45,12 @@ public sealed class WorkerOperationModuleTests
         }));
 
     [Fact]
-    public void ExistingReplyReadLockPoliciesStayDistinct()
+    public void ExistingRepliesExposeTheirOwnUnknownOutcome()
     {
         var device = new TiaMcp.Adapters.PlcDeviceAddResult();
         var documentBatch = new TiaMcp.Adapters.PlcBatchDocumentImportResult();
         Assert.False(((IWorkerOperationReply)device).MayHaveChanged);
-        Assert.False(((IWorkerOperationReply)device).BlockReadsAfterUncertain);
-        Assert.True(((IWorkerOperationReply)documentBatch).BlockReadsAfterUncertain);
+        Assert.False(((IWorkerOperationReply)device).OutcomeUnknown);
+        Assert.False(((IWorkerOperationReply)documentBatch).OutcomeUnknown);
     }
 }

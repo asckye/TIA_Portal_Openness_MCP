@@ -223,7 +223,7 @@ public sealed class SharedHostSessionTests
         {
             var unknown = (await writeTool.InvokeAsync(writeRequest)).StructuredContent!;
             Assert.Equal("OUTCOME_UNKNOWN", (string?)unknown["error"]?["code"]);
-            Assert.True((bool?)unknown["meta"]?["requiresSessionReset"]);
+            Assert.Equal("unknown", (string?)unknown["meta"]?["outcome"]);
             Assert.Single(worker.Unsettled.Snapshot());
             Assert.Null(services.Snapshot()["fault"]);
             var state = (await Tool("ReadState").InvokeAsync(Request())).StructuredContent!;

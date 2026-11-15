@@ -199,7 +199,7 @@ internal static class Program
             {
                 var document = JsonSerializer.SerializeToNode(new TiaMcp.Adapters.PlcDocumentImportResult())!.AsObject();
                 document["Status"] = "unknown"; document["Attempted"] = true; document["MayHaveChanged"] = true;
-                document["RequiresSessionReset"] = true; document["Error"] = "Synthetic document import result unknown.";
+                document["OutcomeUnknown"] = true; document["Error"] = "Synthetic document import result unknown.";
                 return ChannelResponse.Success(document.ToJsonString());
             }
             if (request.Method == "adapter.FixtureAnsweredUnknown")
@@ -253,8 +253,8 @@ internal static class Program
             string padding = mode is "oversized" or "oversized-delayed" ? new string('x', ChannelLimits.ResponseBytes) : "fixture";
             if (request.Method == "adapter.optional-products.ExecuteOptionalProduct")
             {
-                string step = new JsonObject { ["Message"] = "fixture", ["RequiresSessionReset"] = false,
-                    ["MayHaveChanged"] = false, ["BlockReadsAfterUncertain"] = true,
+                string step = new JsonObject { ["Message"] = "fixture", ["OutcomeUnknown"] = false,
+                    ["MayHaveChanged"] = false,
                     ["Meta"] = new JsonObject { ["tool"] = "ListTestSuiteCases", ["success"] = true,
                         ["fixture"] = padding, ["records"] = new JsonArray() } }.ToJsonString();
                 return ChannelResponse.WithSpill(step, () => Spill(step, mode));
@@ -278,7 +278,7 @@ internal static class Program
 
     private static ChannelResponse Step(string meta, bool changed) => ChannelResponse.Success(new JsonObject {
         ["Message"] = "Fixture lifecycle result.", ["Meta"] = JsonNode.Parse(meta),
-        ["RequiresSessionReset"] = false, ["MayHaveChanged"] = changed, ["BlockReadsAfterUncertain"] = true
+        ["OutcomeUnknown"] = false, ["MayHaveChanged"] = changed
     }.ToJsonString());
 
     // Replies whose shape the host checks member for member, as their worker producers write them: the PUT/GET dictionaries

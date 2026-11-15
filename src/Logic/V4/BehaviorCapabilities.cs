@@ -55,8 +55,8 @@ namespace TiaMcp.Logic.V4
             if (policy == meta.BehaviorPolicy && (policy != BehaviorPolicy.Current || warnings.Any(w => w.Code == WarningCode.UnverifiedBehavior))) return meta;
             if (policy == BehaviorPolicy.Current && !warnings.Any(w => w.Code == WarningCode.UnverifiedBehavior))
                 warnings.Add(new Warning(WarningCode.UnverifiedBehavior, CurrentDisclosure, new Dictionary<string, JsonElement>()));
-            return new Meta(meta.Timestamp, meta.ReleaseKey, meta.Tool, meta.RequestId, meta.Outcome, meta.Execution,
-                meta.RequiresSessionReset, policy, meta.Completeness, meta.Paging, warnings);
+            return new Meta(meta.Timestamp, meta.ReleaseKey, meta.Tool, meta.RequestId, meta.Outcome, meta.Execution, policy, meta.Completeness, meta.Paging,
+                    warnings);
         }
 
         public static BehaviorPolicy Released(string release, string family)

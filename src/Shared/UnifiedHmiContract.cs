@@ -135,7 +135,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (writes && success != true && Flag(evidence, "tagCreateConfirmed") == true
                 && failureCode == "UNSUPPORTED_CAPABILITY" && !unconfirmed)
             {
-                evidence["requiresSessionReset"] = false; evidence["writeOutcomeUnknown"] = false;
+                evidence["writeOutcomeUnknown"] = false;
                 data["partialWrite"] =
                     "The tag was created, but the requested binding is unsupported. Inspect the tag and its binding before another call; no rollback was " +
                     "attempted.";
@@ -216,8 +216,6 @@ namespace TiaMcpServer.ModelContextProtocol
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : writes ? Execution.Completed : Execution.ReadOnly;
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired
-                    || writes && Flag(data?["evidence"], "writeOutcomeUnknown") == true,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),

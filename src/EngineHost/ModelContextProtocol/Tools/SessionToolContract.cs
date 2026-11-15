@@ -179,7 +179,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static IReadOnlyDictionary<string, JsonElement> Evidence(JsonObject data)
             => data.ToDictionary(pair => pair.Key, pair => JsonSerializer.SerializeToElement(pair.Value), StringComparer.Ordinal);
         private static Error Unknown(JsonObject evidence) =>
-            new Error("The operation outcome is unconfirmed. Inspect the retained evidence and reset the session before further writes.",
+            new Error("The operation outcome is unconfirmed. Inspect the retained evidence and target before repeating this call. Never replay " +
+                "automatically. GetSessionState lists unsettled request IDs.",
             new OutcomeUnknownDetails("session operation", Evidence(evidence)));
 
         private static bool HasObservationError(JsonNode? node)
@@ -211,7 +212,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "The diagnostic observation is incomplete; inspect the retained evidence.", new Dictionary<string, JsonElement>()));
             var execution = HostBehavior.ExecutionOf(outcome, writes);
             var meta = new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId),
-                outcome, execution, outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+                outcome, execution, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                 completeness, null, warnings);
             var result = McpResult.From(BehaviorCapabilities.Disclose(Envelope.Create(data, error, meta)));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),

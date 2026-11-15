@@ -26,11 +26,11 @@ internal static class ExternalSourceWorkflowContract
         var status=Text("Status");
         bool validOutcome=status switch
         {
-            "planned" => dryRun && !Flag("Attempted") && !Flag("Executed") && !Flag("RequiresSessionReset") && Text("Error")=="",
-            "completed" => !dryRun && Flag("Attempted") && Flag("Executed") && !Flag("RequiresSessionReset") && Text("Error")=="",
-            "failed" => !dryRun && operation=="GenerateBlocksFromExternalSource" && Flag("Attempted") && !Flag("Executed") && !Flag("RequiresSessionReset")
+            "planned" => dryRun && !Flag("Attempted") && !Flag("Executed") && !Flag("OutcomeUnknown") && Text("Error")=="",
+            "completed" => !dryRun && Flag("Attempted") && Flag("Executed") && !Flag("OutcomeUnknown") && Text("Error")=="",
+            "failed" => !dryRun && operation=="GenerateBlocksFromExternalSource" && Flag("Attempted") && !Flag("Executed") && !Flag("OutcomeUnknown")
                 && !string.IsNullOrWhiteSpace(Text("Error")),
-            "outcome-unknown" => !dryRun && Flag("Attempted") && !Flag("Executed") && Flag("RequiresSessionReset") && !string.IsNullOrWhiteSpace(Text("Error")),
+            "outcome-unknown" => !dryRun && Flag("Attempted") && !Flag("Executed") && Flag("OutcomeUnknown") && !string.IsNullOrWhiteSpace(Text("Error")),
             _ => false
         };
         if(!validOutcome) throw new InvalidDataException("Conflicting external-source execution outcome.");

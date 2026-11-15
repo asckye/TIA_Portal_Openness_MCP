@@ -180,7 +180,6 @@ namespace TiaMcp.Engine.Tests
                     Assert.False(partial.Ok);
                     Assert.Equal(TiaMcp.Logic.V4.Outcome.Partial, partial.Meta.Outcome);
                     Assert.Equal(TiaMcp.Logic.V4.Execution.Partial, partial.Meta.Execution);
-                    Assert.False(partial.Meta.RequiresSessionReset);
                     Assert.Equal(1, Assert.IsType<TiaMcp.Logic.V4.PartialFailureDetails>(partial.Error!.Details).Succeeded);
                     Assert.Contains("Staging publication failed after batch reservation:", partial.Error.Message);
                     held!.Dispose();

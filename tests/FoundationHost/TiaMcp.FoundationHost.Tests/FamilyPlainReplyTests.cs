@@ -56,7 +56,8 @@ public sealed class FamilyPlainReplyTests
         var data = new TheoryData<string, string>();
         foreach (string operation in new[] { "project-lifecycle.EnsureOpennessUserGroup", "project-lifecycle.ArchiveSaveProjectCopy",
             "engineering-services.ReadEngineeringTransaction" })
-            foreach (string reply in new[] { "\"true\"", "1", "null", "{}", "[true]", "{\"Message\":\"m\",\"RequiresSessionReset\":false,\"Meta\":{\"success\":true}}" })
+            foreach (string reply in new[] {
+                    "\"true\"", "1", "null", "{}", "[true]", "{\"Message\":\"m\",\"OutcomeUnknown\":false,\"Meta\":{\"success\":true}}" })
                 data.Add(operation, reply);
         foreach (string reply in new[] { "\"\"", "true", "null", "{}", "[\"3f2a\"]", "7" })
             data.Add("engineering-services.BeginEngineeringTransaction", reply);
@@ -91,8 +92,8 @@ public sealed class FamilyPlainReplyTests
     // Replies whose shape depends on the request (PUT/GET, scaffold primitives) or that are contract objects without step members.
     private const string SecurityRequest = "{\"request\":{\"Operation\":\"OP\"}}";
     private const string KindRequest = "{\"request\":{\"Kind\":\"KIND\"}}";
-    private const string Contract = "{\"Value\":{\"State\":\"Online\"},\"Failure\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}";
-    private const string Hmi = "{\"Value\":[1],\"Notes\":null,\"Failure\":null,\"MayHaveChanged\":true,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}";
+    private const string Contract = "{\"Value\":{\"State\":\"Online\"},\"Failure\":null,\"MayHaveChanged\":false,\"OutcomeUnknown\":false}";
+    private const string Hmi = "{\"Value\":[1],\"Notes\":null,\"Failure\":null,\"MayHaveChanged\":true,\"OutcomeUnknown\":false}";
 
     private static string SecurityReply() => WorkerJson.Serialize(new SecurityResult {
         Message = "m", Meta = new() { ["success"] = true }
@@ -176,7 +177,7 @@ public sealed class FamilyPlainReplyTests
         {
             "plc-online.ExecuteOnline", "{}",
                 "{\"Value\":null,\"Failure\":{\"Code\":\"c\",\"Message\":\"m\"},\"MayHaveChanged\":true," +
-                    "\"RequiresSessionReset\":true,\"BlockReadsAfterUncertain\":true}"
+                    "\"OutcomeUnknown\":true}"
         },
         { "hmi-generic.ExecuteHmi", "{}", Hmi },
         { "hmi-classic.ExecuteHmi", "{}", Hmi },
@@ -187,13 +188,12 @@ public sealed class FamilyPlainReplyTests
         { "hmi-unified-model.ExecuteUnified", "{}", Hmi },
         {
             "libraries.ExecuteLibrary", "{}",
-                "{\"Step\":{\"Message\":\"m\",\"Meta\":{},\"RequiresSessionReset\":false,\"MayHaveChanged\":false}," +
-                    "\"Probe\":null,\"Import\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false," +
-                    "\"BlockReadsAfterUncertain\":true}"
+                "{\"Step\":{\"Message\":\"m\",\"Meta\":{},\"OutcomeUnknown\":false,\"MayHaveChanged\":false}," +
+                    "\"Probe\":null,\"Import\":null,\"MayHaveChanged\":false,\"OutcomeUnknown\":false}"
         },
         {
             "openness-reflection.ExecuteOpennessReflection", "{}",
-                "{\"Observation\":{\"Kind\":\"k\"},\"Failure\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}"
+                "{\"Observation\":{\"Kind\":\"k\"},\"Failure\":null,\"MayHaveChanged\":false,\"OutcomeUnknown\":false}"
         },
         {
             "hardware-devices.HardwareCreateCatalogDevice", "{}",
@@ -235,20 +235,20 @@ public sealed class FamilyPlainReplyTests
         { "project-lifecycle.ExecuteProjectScaffoldPrimitive", "{}", "{\"Message\":\"m\",\"Meta\":{}}" },
         // PlcSeedHmiReply with a member missing, extra or of the wrong kind.
         { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":null,\"Imported\":[],\"Failed\":[]}" },
-        { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":null,\"Imported\":[],\"Failed\":[],\"Meta\":{},\"RequiresSessionReset\":false}" },
+        { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":null,\"Imported\":[],\"Failed\":[],\"Meta\":{},\"OutcomeUnknown\":false}" },
         { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":null,\"Imported\":[1],\"Failed\":[],\"Meta\":{}}" },
         { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":null,\"Imported\":[],\"Failed\":[{\"Path\":\"p\"}],\"Meta\":{}}" },
-        { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":\"m\",\"Meta\":{\"success\":true},\"RequiresSessionReset\":false}" },
+        { "plc-software.SeedReferenceHmi", "{}", "{\"Message\":\"m\",\"Meta\":{\"success\":true},\"OutcomeUnknown\":false}" },
         // Contract replies with a member missing, extra or of the wrong kind, and the step shape for them.
-        { "plc-online.ExecuteOnline", "{}", Contract.Replace(",\"BlockReadsAfterUncertain\":true", "") },
+        { "plc-online.ExecuteOnline", "{}", Contract.Replace(",\"OutcomeUnknown\":false", "") },
         { "plc-online.ExecuteOnline", "{}", Contract.Replace("\"MayHaveChanged\":false", "\"MayHaveChanged\":\"false\"") },
         { "plc-online.ExecuteOnline", "{}", Contract.Replace("\"Failure\":null", "\"Failure\":\"f\"") },
-        { "plc-online.ExecuteOnline", "{}", "{\"Message\":\"m\",\"Meta\":{\"success\":true},\"RequiresSessionReset\":false}" },
+        { "plc-online.ExecuteOnline", "{}", "{\"Message\":\"m\",\"Meta\":{\"success\":true},\"OutcomeUnknown\":false}" },
         { "hmi-generic.ExecuteHmi", "{}", Hmi.Replace("\"Notes\":null", "\"Notes\":1") },
         { "hmi-unified.ExecuteUnifiedHmi", "{}", Hmi.Replace("}", ",\"Message\":\"m\"}") },
         { "hmi-unified-exchange.ReleaseUnifiedReadCursor", "{}", Contract },
-        { "libraries.ExecuteLibrary", "{}", "{\"Step\":\"s\",\"Probe\":null,\"Import\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false,\"BlockReadsAfterUncertain\":true}" },
-        { "openness-reflection.ExecuteOpennessReflection", "{}", "{\"Observation\":null,\"Failure\":null,\"MayHaveChanged\":false,\"RequiresSessionReset\":false}" },
+        { "libraries.ExecuteLibrary", "{}", "{\"Step\":\"s\",\"Probe\":null,\"Import\":null,\"MayHaveChanged\":false,\"OutcomeUnknown\":false}" },
+        { "openness-reflection.ExecuteOpennessReflection", "{}", "{\"Observation\":null,\"Failure\":null,\"MayHaveChanged\":false}" },
         // Device creation replies: a full description in Device (never produced), an extra member, or a missing Attempts list.
         { "hardware-devices.HardwareCreateCatalogDevice", "{}", "{\"Device\":{\"Name\":\"PLC_1\",\"Attributes\":[]},\"Candidate\":null,\"Candidates\":[],\"Attempts\":[],\"Error\":null}" },
         { "hardware-devices.HardwareCreateGsdDevice", "{}", "{\"Device\":{\"Name\":\"PLC_1\"},\"Attempts\":[\"t\"]}" },

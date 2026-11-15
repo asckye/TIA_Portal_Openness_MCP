@@ -212,7 +212,7 @@ namespace TiaMcp.Engine.Tests
                 var restricted = Schema.Restrict(error,
                     JsonSerializer.Deserialize<JsonElement>("{\"properties\":{\"" + key + "\":\"value\"}}"), data);
                 var meta = new Meta(DateTimeOffset.UtcNow, "21", "Fixture", "fixture", Outcome.RejectedBeforeOperation,
-                    Execution.NotStarted, false, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>());
+                    Execution.NotStarted, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>());
                 var result = McpResult.From(Envelope.Create(data, restricted, meta));
                 Assert.Equal("/properties", ((InvalidArgumentDetails)restricted.Details).Parameter);
                 Assert.DoesNotContain(key, result.StructuredContent.GetRawText(), StringComparison.Ordinal);
@@ -229,7 +229,7 @@ namespace TiaMcp.Engine.Tests
                 "{\"Text\":{\"" + key + "\":false}}")!;
             var error = V4Json.Deserialize<Error>(JsonSerializer.Serialize(raw));
             var meta = new Meta(DateTimeOffset.UtcNow, "21", "SetUnifiedScreenItemProperties", "fixture",
-                Outcome.RejectedBeforeOperation, Execution.NotStarted, false, BehaviorPolicy.NotApplicable,
+                Outcome.RejectedBeforeOperation, Execution.NotStarted, BehaviorPolicy.NotApplicable,
                 Completeness.None, null, Array.Empty<Warning>());
             var result = McpResult.From(Envelope.Create<object?>(null, error, meta));
             Assert.Equal("/properties", ((InvalidArgumentDetails)error.Details).Parameter);

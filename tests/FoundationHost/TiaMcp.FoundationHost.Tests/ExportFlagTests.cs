@@ -21,7 +21,7 @@ public sealed class ExportFlagTests
             _ => new PlcBatchDocumentExportResult { Status = "failed", RecoveryDirectory = "retained" }
         };
         Assert.True(reply.MayHaveChanged);
-        Assert.False(reply.RequiresSessionReset);
+        Assert.False(reply.OutcomeUnknown);
     }
 
     [Fact]
@@ -41,11 +41,11 @@ public sealed class ExportFlagTests
             var plan = Run(true);
             var failed = Run(false, plan.PlanHash);
             Assert.Equal("failed", failed.Status);
-            Assert.False(failed.RequiresSessionReset);
+            Assert.False(failed.OutcomeUnknown);
             Assert.True(((IWorkerOperationReply)failed).MayHaveChanged);
             var wire = JsonSerializer.SerializeToNode(failed)!.AsObject();
             SpecialExportContract.Validate(wire, false);
-            wire["RequiresSessionReset"] = true;
+            wire["OutcomeUnknown"] = true;
             Assert.Throws<InvalidDataException>(() => SpecialExportContract.Validate(wire, false));
         }
         finally { Directory.Delete(root, true); }

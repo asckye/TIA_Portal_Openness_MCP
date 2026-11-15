@@ -145,7 +145,7 @@ namespace TiaMcp.Adapters.Native.Plc
             created = new List<string>();
             if (IsProjectNull()) return null;
             var reply = ManagePlcUserGroup(softwarePath, "blocks", groupPath, "create", dryRun: false);
-            if (reply.RequiresSessionReset || reply.MayHaveChanged) MutationStarted = true;
+            if (reply.OutcomeUnknown || reply.MayHaveChanged) MutationStarted = true;
             if (!reply.Meta.TryGetValue("operationSuccess", out var success) || !Equals(success, true))
                 throw new PlcSoftwareException("OpennessError", reply.Message);
             if (reply.Meta.TryGetValue("result", out var result) && result is Dictionary<string, object?> details

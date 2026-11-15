@@ -9,7 +9,7 @@ internal static class SpecialExportContract
         if(payload is not JsonObject result) throw new InvalidDataException("Missing special export result.");
         if(result
                 .Any(p=>p
-                    .Key is not ("Executed" or "ProjectFile" or "SoftwarePath" or "ObjectPath" or "OutputFile" or "ReleaseKey" or "Kind" or "Scope" or "PlanHash" or "ExportOptions" or "MethodEvidence" or "SemanticsEvidence" or "Status" or "RequiresSessionReset" or "Evidence")))
+                    .Key is not ("Executed" or "ProjectFile" or "SoftwarePath" or "ObjectPath" or "OutputFile" or "ReleaseKey" or "Kind" or "Scope" or "PlanHash" or "ExportOptions" or "MethodEvidence" or "SemanticsEvidence" or "Status" or "OutcomeUnknown" or "Evidence")))
             throw new InvalidDataException("Unexpected special export field.");
         string Text(string key)=>result[key] is JsonValue v && v.TryGetValue<string>(out var text)?text
             :throw new InvalidDataException("Missing special export field: "+key);
@@ -30,7 +30,7 @@ internal static class SpecialExportContract
             (dryRun ? documented ? status is not ("planned" or "inconsistent") : status!="semantics-unverified" : !documented
                     || status is not ("exported" or "failed"))
                 ||
-            Flag("RequiresSessionReset")) throw new InvalidDataException("Special export status/evidence conflict.");
+            Flag("OutcomeUnknown")) throw new InvalidDataException("Special export status/evidence conflict.");
         var hash=Text("PlanHash");
         if(hash.Length!=64 || hash.Any(c=>!"0123456789abcdef".Contains(c))) throw new InvalidDataException("Invalid special export plan hash.");
         if(result["Evidence"] is not JsonObject recovery || (dryRun && recovery.Count!=0))

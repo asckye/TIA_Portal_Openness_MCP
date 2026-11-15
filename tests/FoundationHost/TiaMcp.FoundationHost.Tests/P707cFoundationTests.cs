@@ -26,14 +26,14 @@ public sealed class P707cFoundationTests
             var plan = Run(true);
             var single = Run(false, plan.PlanHash);
             Assert.Equal("failed", single.Status);
-            Assert.Equal(reset, single.RequiresSessionReset);
+            Assert.Equal(reset, single.OutcomeUnknown);
             Assert.Equal(state, single.NativeResult!.State);
             DocumentExportContract.Validate(JsonSerializer.SerializeToNode(single), false);
             var definition = FoundationTools.Definitions.Single(d => d.ResponseMember == "DocumentExport");
             var wire = FoundationV4Result.Worker("21", definition, "native-state", new JsonObject { ["dryRun"] = false },
                 JsonSerializer.SerializeToNode(single), JsonSerializer.SerializeToNode(single)).StructuredContent!;
             Assert.Equal(reset ? "OUTCOME_UNKNOWN" : "NATIVE_OPERATION_FAILED", (string?)wire["error"]?["code"]);
-            Assert.Equal(reset, (bool?)wire["meta"]?["requiresSessionReset"]);
+            Assert.Equal(reset, (string?)wire["meta"]?["outcome"] == "unknown");
             Assert.Equal(state, (string?)wire["error"]?["details"]?["evidence"]?["nativeState"]);
 
             string batchPath = Path.Combine(root, "batch");
@@ -43,7 +43,7 @@ public sealed class P707cFoundationTests
                 batchPath, 128, preview, hash, new[] { source }, () => { });
             var batchPlan = Batch(true);
             var batch = Batch(false, batchPlan.PlanHash);
-            Assert.Equal(reset, batch.RequiresSessionReset);
+            Assert.Equal(reset, batch.OutcomeUnknown);
             Assert.Equal(state, batch.NativeResult!.State);
             var request = new JsonObject { ["softwarePath"] = "PLC_1", ["groupPath"] = "", ["exportPath"] = batchPath,
                 ["dryRun"] = false, ["expectedPlanHash"] = batchPlan.PlanHash, ["expectedProjectFile"] = "C:/Example.ap21" };

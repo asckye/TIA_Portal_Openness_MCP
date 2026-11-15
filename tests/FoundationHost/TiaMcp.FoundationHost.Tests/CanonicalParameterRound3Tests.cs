@@ -162,8 +162,8 @@ public sealed class CanonicalParameterRound3Tests
             using var heartbeat = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat.Begin(request);
             HeartbeatAvailable = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat.CaptureSender() != null;
             var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { written = true }, null,
-                new Meta(DateTimeOffset.UtcNow, "21", ProtocolTool.Name, "test", Outcome.Succeeded, Execution.Completed,
-                    false, BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>()))))!;
+                new Meta(DateTimeOffset.UtcNow, "21", ProtocolTool.Name, "test", Outcome.Succeeded, Execution.Completed, BehaviorPolicy.NotApplicable,
+                        Completeness.Complete, null, Array.Empty<Warning>()))))!;
             return ValueTask.FromResult(new CallToolResult { StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } });
         }

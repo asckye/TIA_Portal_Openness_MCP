@@ -197,8 +197,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
-            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+            var meta =
+                new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution, current
+                    ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                     completeness, null, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult {

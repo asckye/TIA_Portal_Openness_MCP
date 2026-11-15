@@ -28,23 +28,21 @@ namespace TiaMcpServer.Siemens.Services
                 reply["Meta"] = new JsonObject { ["operationSuccess"] = (bool?)reply["Ok"] == true,
                     ["apiCallSuccess"] = (bool?)reply["Ok"] == true,
                     ["mayHaveChanged"] = reply["MayHaveChanged"]?.DeepClone(),
-                    ["requiresSessionReset"] = reply["RequiresSessionReset"]?.DeepClone(),
-                    ["writeOutcomeUnknown"] = reply["RequiresSessionReset"]?.DeepClone() };
+                    ["writeOutcomeUnknown"] = reply["OutcomeUnknown"]?.DeepClone() };
             // Legacy B5 catch paths report a negative verdict without the newer native flags.
             else if (reply["Meta"] is JsonObject meta && !meta.ContainsKey("apiCallSuccess")
                 && meta["success"] is JsonValue legacy && legacy.TryGetValue<bool>(out var succeeded) && !succeeded)
             {
                 meta["apiCallSuccess"] = false;
                 meta["mayHaveChanged"] ??= reply["MayHaveChanged"]?.DeepClone();
-                meta["requiresSessionReset"] ??= reply["RequiresSessionReset"]?.DeepClone();
-                meta["writeOutcomeUnknown"] ??= reply["RequiresSessionReset"]?.DeepClone();
+                meta["writeOutcomeUnknown"] ??= reply["OutcomeUnknown"]?.DeepClone();
             }
             if (reply["Failure"] is JsonObject error)
             {
                 string code = (string?)error["Code"] ?? "", message = (string?)error["Message"] ?? "";
                 bool writes = !request.DryRun && ToolTaxonomy.OperationOf(request.Operation, null)
                     .Operation is "WRITE" or "ONLINE-WRITE" or "FILE" or "EXECUTE";
-                if ((bool?)reply["MayHaveChanged"] == true || writes && (bool?)reply["RequiresSessionReset"] == true)
+                if ((bool?)reply["MayHaveChanged"] == true || writes && (bool?)reply["OutcomeUnknown"] == true)
                 {
                     var uncertain = new InvalidOperationException(message);
                     uncertain.Data["workerOutcomeUnknown"] = true;
@@ -55,7 +53,7 @@ namespace TiaMcpServer.Siemens.Services
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
                 var nativeFailure = new PortalException(PortalErrorCode.OpennessError, message);
                 nativeFailure.Data["foundationKnownNoMutation"] = (bool?)reply["MayHaveChanged"] == false
-                    && (!writes || (bool?)reply["RequiresSessionReset"] == false);
+                    && (!writes || (bool?)reply["OutcomeUnknown"] == false);
                 throw nativeFailure;
             }
             return reply;

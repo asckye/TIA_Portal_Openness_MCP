@@ -41,7 +41,7 @@ namespace TiaMcp.Generation.Planning.Tests
             var import = Assert.Single(plan.Steps, s => s.Tool == "ImportPlcExternalSource"); Assert.Contains(replacement.Id, import.DependsOn);
             var projection = new JsonObject { ["release"] = release, ["projectFile"] = plan.Target.ProjectIdentity, ["processId"] = 42,
                 ["softwarePath"] = "PLC1", ["groupPath"] = "", ["sourceName"] = name, ["targetIdentity"] = "native-source-identity",
-                ["status"] = "planned", ["executed"] = false, ["attempted"] = false, ["requiresSessionReset"] = false,
+                ["status"] = "planned", ["executed"] = false, ["attempted"] = false, ["outcomeUnknown"] = false,
                 ["planHash"] = new string('a', 64), ["sourcesBefore"] = JsonSerializer.SerializeToNode(fixture.Observed.ExternalSources.Select(s => s.Name)) };
             var verdict = StepReviewRules.Compare(plan, replacement, projection, new RunFacts(plan), 42);
             Assert.True(verdict.Matches, verdict.Differences.ToJsonString());

@@ -47,28 +47,33 @@ internal static class BatchImportTests
             try {Run(Apply(preview),gate:()=>PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC"));throw new Exception("Policy refusal accepted");}
             catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {check(!error.IsArgument && imports==0 && gates==0,"Known offline refusal before first import stays a precondition and issues no import");}
-            var result=Run(Apply(preview));check(result.ImportedCount==3 && !result.RequiresSessionReset && imports==3 && gates==3,"Fake native callbacks verify all identities and gate every item");
+            var result=Run(Apply(preview));
+            check(result.ImportedCount==3 && !result.NativeOutcomeUnknown && imports==3 && gates==3,
+                    "Fake native callbacks verify all identities and gate every item");
             check(original.All(x=>File.ReadAllBytes(x.Key).SequenceEqual(x.Value)),"Input bytes stay unchanged throughout preview/apply");
             imports=0;var partial=Run(Apply(preview),import:(f,p)=>{if(++imports==2)throw new IOException("uncertain write");return new[]{p};});
-            check(partial.ImportedCount==1 && partial.FailedCount==1 && partial.RequiresSessionReset && partial.Items.Select(x=>x.Status).SequenceEqual(new[]{"imported","failed","not-attempted"}) && imports==2,"Second failure preserves first result, stops before third, never retries");
+            check(partial.ImportedCount==1 && partial.FailedCount==1 && partial.NativeOutcomeUnknown && partial.Items.Select(x=>x.Status)
+                    .SequenceEqual(new[]{"imported","failed","not-attempted"}) && imports==2,
+                    "Second failure preserves first result, stops before third, never retries");
             BatchImportContract.Validate(Wire(partial),false);check(true,"Host retains valid partial outcome");
             var args=new JsonObject {["dryRun"]=false,["expectedProjectFile"]=preview.ProjectFile,["softwarePath"]=preview.SoftwarePath,["groupPath"]="",["expectedPlanHash"]=preview.PlanHash,["importOrder"]=JsonSerializer.SerializeToNode(Apply(preview).Order)};
             WorkerProtocol.ValidateExchangeResult("ImportBlocksFromDirectory",args,Wire(partial));
-            Reject(()=>{var wire=Wire(partial);wire["RequiresSessionReset"]=false;BatchImportContract.Validate(wire,false);},"Reset/count conflicts rejected");
+            Reject(()=>{var wire=Wire(partial);wire["NativeOutcomeUnknown"]=false;BatchImportContract.Validate(wire,false);},"Reset/count conflicts rejected");
             foreach(var returned in new PlcBatchImportObject[]?[] {null,Array.Empty<PlcBatchImportObject>(),new[]{new PlcBatchImportObject {Name="Wrong",Kind="FC"}},new[]{preview.Items[0].Planned,preview.Items[1].Planned},new[]{new PlcBatchImportObject {Name="LogicalZ",Kind="unknown-native-kind",GroupPath="",Number=1}},new PlcBatchImportObject[]{null!}})
             {
                 imports=0;var mismatch=Run(Apply(preview),import:(_,_)=>{imports++;return returned!;});
-                check(mismatch.RequiresSessionReset && imports==1 && mismatch.ImportedCount==0 && mismatch.Items[0].ReturnedObjects.Length==(returned?.Length??0),"Null/empty/multiple/mismatched native identities stop and preserve returned evidence");
+                check(mismatch.NativeOutcomeUnknown && imports==1 && mismatch.ImportedCount==0 && mismatch.Items[0].ReturnedObjects
+                        .Length==(returned?.Length??0),"Null/empty/multiple/mismatched native identities stop and preserve returned evidence");
                 BatchImportContract.Validate(Wire(mismatch),false);check(true,"Unexpected native identities remain visible in the host partial result");
             }
             imports=0;var unexpectedSecond=Run(Apply(preview),import:(_,p)=>++imports==2 ? new[]{new PlcBatchImportObject {Name=p.Name,Kind="UnexpectedNativeBlock",GroupPath="<unverified-native-owner>"}} : new[]{p});
             BatchImportContract.Validate(Wire(unexpectedSecond),false);
             check(unexpectedSecond.ImportedCount==1 && unexpectedSecond.FailedCount==1 && imports==2 && unexpectedSecond.Items[1].ReturnedObjects[0].Kind=="UnexpectedNativeBlock" && unexpectedSecond.Items[2].Status=="not-attempted","Unexpected second native kind/owner preserves first success and raw evidence through host contract");
             gates=0;imports=0;var online=Run(Apply(preview),gate:()=>{if(++gates==2)throw new InvalidOperationException("online/project swap");});
-            check(online.ImportedCount==1 && imports==1 && !online.Items[1].Attempted && !online.RequiresSessionReset,
+            check(online.ImportedCount==1 && imports==1 && !online.Items[1].Attempted && !online.NativeOutcomeUnknown,
                     "Target changes before second import preserve first mutation and stop without another callback");
             gates=0;imports=0;var refused=Run(Apply(preview),gate:()=>{if(++gates==2)PlcOfflinePolicy.RequireStates(new[]{"Online"},true,"selected PLC");});
-            check(refused.ImportedCount==1 && imports==1 && !refused.Items[1].Attempted && !refused.RequiresSessionReset,
+            check(refused.ImportedCount==1 && imports==1 && !refused.Items[1].Attempted && !refused.NativeOutcomeUnknown,
                     "Typed policy refusal after first import retains the known prior import without unknown writes");
             Reset();File.WriteAllText(Path.Combine(root,"A.xml"),Xml("Duplicate"));File.WriteAllText(Path.Combine(root,"B.xml"),Xml("Duplicate"));Reject(()=>Run(Request()),"Duplicate logical identity is rejected, never silently deduplicated");
             Reset();File.WriteAllText(Path.Combine(root,"A.xml"),Xml("A"));File.WriteAllText(Path.Combine(root,"a.xml"),Xml("B"));if(Directory.GetFiles(root).Length==2)Reject(()=>Run(Request()),"Windows case aliases refused on Linux fake filesystem");

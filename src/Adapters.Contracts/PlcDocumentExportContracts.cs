@@ -7,7 +7,6 @@ namespace TiaMcp.Adapters
     public sealed class PlcDocumentExportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || !string.IsNullOrEmpty(RecoveryDirectory);
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; set; }
         public string ReleaseKey { get; set; } = "";
         public string ProjectFile { get; set; } = "";
@@ -17,7 +16,7 @@ namespace TiaMcp.Adapters
         public string Language { get; set; } = "";
         public string PlanHash { get; set; } = "";
         public string Status { get; set; } = "planned";
-        public bool RequiresSessionReset { get; set; }
+        public bool OutcomeUnknown { get; set; }
         public TiaMcp.Adapters.Contracts.NativeResultEvidence? NativeResult { get; set; }
         public string Options { get; set; } = "native-default-two-argument-overload";
         public string[] Files { get; set; } = new string[0];

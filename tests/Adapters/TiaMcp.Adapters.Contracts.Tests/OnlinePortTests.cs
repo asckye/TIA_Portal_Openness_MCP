@@ -229,6 +229,6 @@ public sealed class OnlinePortTests
     [InlineData("DownloadPlc", true, true, true, false, "Success", false)]
     public void Completed_failures_and_unknown_writes_have_distinct_session_effects(string tool, bool success,
         bool nativeIssued, bool changed, bool files, string? state, bool reset)
-        => Assert.Equal(reset, OnlineCompletionPolicy.RequiresSessionReset(
+        => Assert.Equal(reset, OnlineCompletionPolicy.OutcomeUnknown(
             new OnlineRequest { Operation = tool, DryRun = false }, success, nativeIssued, changed, files, false, state));
 }

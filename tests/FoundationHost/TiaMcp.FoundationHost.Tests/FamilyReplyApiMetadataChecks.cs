@@ -209,7 +209,7 @@ internal static class FamilyReplyShapes
         JsonNode? Parse(string json) => JsonNode.Parse(json);
         switch (operation)
         {
-            // OnlineChannels/Simulation/PlcSimAdvancedAdapter.cs: Ok, Message, Data and Meta, never RequiresSessionReset.
+            // OnlineChannels/Simulation/PlcSimAdvancedAdapter.cs: Ok, Message, Data and Meta, never OutcomeUnknown.
             case "runtime-channels.ExecutePlcSimAdvanced":
                 return One(Parse("{\"Ok\":true,\"Message\":\"m\",\"Data\":{},\"Meta\":{\"success\":true}}"));
             // HardwareDevices.cs:818-827 and :1023-1027: the created device's name only, the candidates and the attempted identifiers.

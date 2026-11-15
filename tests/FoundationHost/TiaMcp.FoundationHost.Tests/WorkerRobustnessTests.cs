@@ -276,7 +276,6 @@ public sealed class WorkerRobustnessTests
         bool draining = mode == "hang";
         bool faulted = !draining && mode != "tia-lost";
         Assert.Equal(draining ? "in-progress" : "read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (draining) Assert.Equal("OPERATION_IN_PROGRESS", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
         var previous = scope.Worker.Snapshot();

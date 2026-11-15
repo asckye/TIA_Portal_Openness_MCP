@@ -21,9 +21,8 @@ namespace TiaMcp.Adapters.Contracts
         /// <summary>插入子模块的结果。失败时 <see cref="Reason"/> 给出**可判定的失败类别**，不是一句「插入失败」。</summary>
         public sealed class HardwarePlugResult : IWorkerOperationReply
         {
-            public bool RequiresSessionReset { get; set; }
+            public bool OutcomeUnknown { get; set; }
             public bool MayHaveChanged { get; set; }
-            public bool BlockReadsAfterUncertain => true;
             /// <summary>整体成功（dryRun 时表示「预检通过、可以插」）。</summary>
             public bool Ok { get; set; }
 

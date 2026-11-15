@@ -177,7 +177,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         lines[i] = Regex
                             .Replace(text, @"(\| FAILED:|\| could not enumerate children:|Unknown\().*$", "| Native observation or operation failed.",
                                 RegexOptions.Singleline);
-            return Result(tool, data, error, outcome, completeness, writes, paging, reset, current);
+            return Result(tool, data, error, outcome, completeness, writes, paging, current);
         }
         private static bool Incomplete(JsonNode? node)
         {
@@ -216,7 +216,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "unsettled request IDs.",
                 new OutcomeUnknownDetails("engineering-operation", new Dictionary<string, JsonElement>()));
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,
-            bool writes = false, Paging? paging = null, bool reset = false, bool current = true)
+            bool writes = false, Paging? paging = null, bool current = true)
         {
             var warnings = new List<Warning>();
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior,
@@ -229,7 +229,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
-                execution, reset || outcome == Outcome.Unknown, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging,
+                execution, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging,
                     warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),

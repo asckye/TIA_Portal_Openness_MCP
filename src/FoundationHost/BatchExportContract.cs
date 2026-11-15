@@ -8,7 +8,7 @@ internal static class BatchExportContract
     {
         if(payload is not JsonObject result || result["Executed"] is not JsonValue flag || !flag.TryGetValue<bool>(out var executed) || executed==dryRun ||
             result["InventoryComplete"] is not JsonValue complete || !complete.TryGetValue<bool>(out var isComplete) || !isComplete ||
-            result["RequiresSessionReset"] is not JsonValue reset || !reset.TryGetValue<bool>(out var requiresReset) ||
+            result["OutcomeUnknown"] is not JsonValue reset || !reset.TryGetValue<bool>(out var requiresReset) ||
             result["Recursive"] is not JsonValue recurse || !recurse.TryGetValue<bool>(out _) ||
             result["Items"] is not JsonArray items || items.Count>256)
             throw new InvalidDataException("Malformed batch export outcome.");

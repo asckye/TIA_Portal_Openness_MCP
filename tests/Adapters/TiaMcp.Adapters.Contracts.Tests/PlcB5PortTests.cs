@@ -60,11 +60,11 @@ public sealed class PlcB5PortTests
     {
         var original = new PlcB5Reply { Blocks = new[] { new PlcB5Block { Name = "Main", Attributes = new() { new() { Name = "Number", Value = 1, AccessMode = "Read" } } } },
             Events = new() { new() { Kind = "native", State = "Failed", ChangesProject = true, Value = new[] { "message" }, Name = "Main" } },
-            Attempted = 1, Stopped = true, MayHaveChanged = true, RequiresSessionReset = true };
+            Attempted = 1, Stopped = true, MayHaveChanged = true, OutcomeUnknown = true };
         var decoded = JsonSerializer.Deserialize<PlcB5Reply>(JsonSerializer.Serialize(original))!;
         Assert.Equal("Main", Assert.Single(decoded.Blocks!).Name);
         Assert.Equal("Failed", Assert.Single(decoded.Events).State);
         Assert.Equal("message", ((JsonElement)decoded.Events[0].Value!)[0].GetString());
-        Assert.True(decoded.RequiresSessionReset); Assert.True(decoded.BlockReadsAfterUncertain);
+        Assert.True(decoded.OutcomeUnknown);
     }
 }

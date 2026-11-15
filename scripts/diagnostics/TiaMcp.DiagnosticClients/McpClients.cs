@@ -132,7 +132,7 @@ public static class McpSession
     }
     public static JsonObject Call(string tool, IMcpClient client, JsonObject arguments, int timeoutSeconds = 180) =>
         McpResults.Envelope(client.Rpc("tools/call", new JsonObject { ["name"] = tool, ["arguments"] = arguments.DeepClone() }, timeoutSeconds: timeoutSeconds));
-    public static bool ResetRequired(JsonObject value) => (bool?)value["meta"]?["requiresSessionReset"] == true || (string?)value["meta"]?["outcome"] == "unknown";
+    public static bool ResetRequired(JsonObject value) => (string?)value["meta"]?["outcome"] == "unknown";
 }
 
 public sealed record FoundationLaunch(string Executable, string BundleRoot, string ReleaseKey)

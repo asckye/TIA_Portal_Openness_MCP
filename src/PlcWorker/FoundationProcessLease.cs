@@ -71,7 +71,7 @@ namespace TiaMcp.PlcWorker
         {
             try
             {
-                if (_outcome.RequiresReset)
+                if (_outcome.Uncertain)
                 {
                     // EOF runs on the native owner lane. Disposing an owned/unknown-lifetime
                     // portal could close TIA while the write outcome is still unknown.
@@ -107,7 +107,7 @@ namespace TiaMcp.PlcWorker
                 if (message.Length > 1024) message = message.Substring(0, 1024);
             }
             ShutdownEvidence.Add(new JsonObject { ["phase"] = phase, ["exceptionType"] = error?.GetType().Name,
-                ["message"] = message, ["requiresSessionReset"] = _outcome.RequiresReset, ["writeOutcomeUnknown"] = _outcome.RequiresReset });
+                ["message"] = message, ["outcomeUnknown"] = _outcome.Uncertain, ["writeOutcomeUnknown"] = _outcome.Uncertain });
             Console.Error.WriteLine("PlcWorker shutdown: " + ShutdownEvidence[ShutdownEvidence.Count - 1]!.ToJsonString());
         }
     }

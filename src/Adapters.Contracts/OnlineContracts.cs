@@ -60,8 +60,7 @@ public sealed class OnlineReply : IWorkerOperationReply
     public object? Value { get; set; }
     public PlcSoftwareFailure? Failure { get; set; }
     public bool MayHaveChanged { get; set; }
-    public bool RequiresSessionReset { get; set; }
-    public bool BlockReadsAfterUncertain => true;
+    public bool OutcomeUnknown { get; set; }
 }
 
 public sealed class OnlineStateResult

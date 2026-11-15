@@ -113,7 +113,6 @@ namespace TiaMcp.Adapters.Contracts
         public GlobalLibraryImportEvidence? Import { get; set; }
         public bool MayHaveChanged => Step?.MayHaveChanged == true || Import?.Ok == true || Import?.Attempts?
             .Any(a => a.StartsWith("Try ", StringComparison.Ordinal)) == true;
-        public bool RequiresSessionReset => Step?.RequiresSessionReset == true || MayHaveChanged && Import?.Ok == false;
-        public bool BlockReadsAfterUncertain => true;
+        public bool OutcomeUnknown => Step?.OutcomeUnknown == true || MayHaveChanged && Import?.Ok == false;
     }
 }

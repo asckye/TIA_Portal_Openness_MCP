@@ -39,7 +39,7 @@ public sealed partial class PlcFoundationEngine
             try { return action(meta); }
             finally { foreach (var field in meta) values[field.Key] = field.Value; }
         }, requiresProject);
-        return new SecurityResult { Message = reply.Message, Meta = reply.Meta, RequiresSessionReset = reply.RequiresSessionReset };
+        return new SecurityResult { Message = reply.Message, Meta = reply.Meta, OutcomeUnknown = reply.OutcomeUnknown };
     }
     public SecurityResult ConnectIsolatedPortal()
     {

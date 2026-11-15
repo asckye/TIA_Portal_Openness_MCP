@@ -72,7 +72,7 @@ public sealed partial class PlcFoundationEngine
         string? state = value is OnlineDownloadResult result ? result.State
             : meta != null && meta.TryGetValue("nativeState", out var nativeState) ? nativeState as string : null;
         return new OnlineReply { Value = value, MayHaveChanged = changed,
-            RequiresSessionReset = OnlineCompletionPolicy.RequiresSessionReset(request, succeeded,
+            OutcomeUnknown = OnlineCompletionPolicy.OutcomeUnknown(request, succeeded,
                 nativeCalls.NativeCallIssued, changed, files, rejected, state) };
     }
     private static string? Empty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;

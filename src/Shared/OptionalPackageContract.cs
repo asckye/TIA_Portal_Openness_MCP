@@ -141,7 +141,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
-                execution, reset || outcome == Outcome.Unknown, BehaviorPolicy.Current, completeness, paging, warnings);
+                execution, BehaviorPolicy.Current, completeness, paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };

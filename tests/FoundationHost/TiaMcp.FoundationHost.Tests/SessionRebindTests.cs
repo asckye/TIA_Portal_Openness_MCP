@@ -158,7 +158,6 @@ public sealed class SessionRebindTests
         var body = Host.SessionToolContract.Failure("SaveProjectCopy", new Exception("Wrapped.", cause), true, true).StructuredContent!;
         Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
         Assert.Contains("single-user", (string?)body["error"]?["message"]);
     }
 

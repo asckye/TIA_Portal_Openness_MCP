@@ -14,7 +14,7 @@ internal static class DocumentExportContract
     {
         if(payload is not JsonObject result) throw new InvalidDataException("Missing document export result.");
         var fields=new[]{
-            "Executed","ReleaseKey","ProjectFile","SoftwarePath","BlockPath","OutputDirectory","Language","PlanHash","Status","RequiresSessionReset",
+            "Executed","ReleaseKey","ProjectFile","SoftwarePath","BlockPath","OutputDirectory","Language","PlanHash","Status","OutcomeUnknown",
                 "NativeResult","Options","Files","Evidence","RecoveryDirectory"
         };
         if(result.Count!=fields.Length || result.Any(p=>!fields.Contains(p.Key))) throw new InvalidDataException("Unexpected document export shape.");
@@ -29,7 +29,7 @@ internal static class DocumentExportContract
         var hash=Text("PlanHash"); if(hash.Length!=64 || hash.Any(c=>!"0123456789abcdef".Contains(c))) throw new InvalidDataException("Invalid document hash.");
         var status=Text("Status");
         if(Flag("Executed")==dryRun || (dryRun?status is not ("planned" or "inconsistent"):status is not ("exported" or "failed"))
-                || Flag("RequiresSessionReset")!=RequiresReset(result)
+                || Flag("OutcomeUnknown")!=RequiresReset(result)
                 || (status=="failed"?string.IsNullOrWhiteSpace(Text("RecoveryDirectory")):Text("RecoveryDirectory")!=""))
             throw new InvalidDataException("Document status conflict.");
         var name=Uri.UnescapeDataString(Text("BlockPath").Split('/').Last());

@@ -52,8 +52,10 @@ namespace TiaMcpServer.ModelContextProtocol
             string id = Meta.Correlate(requestId);
             bool reading = false, created = false;
             Envelope Result(object? data, Error? error, Outcome outcome, Execution execution, Completeness completeness)
-                => Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, releaseKey, tool, id, outcome, execution,
-                    false, BehaviorPolicy.NotApplicable, completeness, null, Array.Empty<Warning>()));
+                => Envelope
+                    .Create(data, error,
+                        new Meta(DateTimeOffset.UtcNow, releaseKey, tool, id, outcome, execution, BehaviorPolicy.NotApplicable, completeness, null, Array
+                            .Empty<Warning>()));
             try
             {
                 Absolute(inputPath, "inputPath"); Absolute(outputPath, "outputPath");

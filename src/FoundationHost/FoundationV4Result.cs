@@ -31,7 +31,7 @@ internal static class FoundationV4Result
     internal static CallToolResult InProgress(string release, string name, JsonObject running)
         => LateCalls.InProgress(release, name, running);
     internal static CallToolResult LateFailure(string release, string name, string id)
-        => Wire(release, name, id, null, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, Unknown(), true, true);
+        => Wire(release, name, id, null, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, Unknown(), true);
     internal static CallToolResult WorkerFailure(CallToolResult result, string release, string name, string id, bool mutation, Exception? failure)
     {
         if (failure == null || result.IsError != true || Classified(result.StructuredContent)
@@ -169,7 +169,7 @@ internal static class FoundationV4Result
             data["earlierMutationMayHaveChanged"] = true;
             return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
                 new Error("An earlier operation may have changed state. Do not repeat this call. Read GetCallResult(requestId) and inspect the target.",
-                    new OutcomeUnknownDetails("tool-call", Empty)), true, true);
+                    new OutcomeUnknownDetails("tool-call", Empty)), true);
         }
         var worker = exception as WorkerOperationException;
         string? exceptionType = worker == null ? exception?.GetType().Name : worker.ExceptionType;
@@ -219,7 +219,7 @@ internal static class FoundationV4Result
         bool readCancelled = dispatched && !mutation && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
         if (kind == TiaOpenness.Shared.HostFailureKind.Unknown && exception.Data["workerRecoveryMessage"] is string recoveryMessage)
             return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
-                new Error(HostBehavior.SafeDiagnostic(recoveryMessage)!, new OutcomeUnknownDetails("tool-call", details, reason)), true, true);
+                new Error(HostBehavior.SafeDiagnostic(recoveryMessage)!, new OutcomeUnknownDetails("tool-call", details, reason)), true);
         return Wire(release, name, id, data, readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind),
             readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
@@ -228,7 +228,7 @@ internal static class FoundationV4Result
                     ?? (dispatched && nativeDiagnostic ? HostBehavior.SafeDiagnostic(exception.Message) : null),
                 reason, dispatched ? "tool-call" : "tool-queue", worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition,
                 resolveMissingTarget: field => HostMcp.MissingTargetDetails(name, field)),
-            true, kind == TiaOpenness.Shared.HostFailureKind.Unknown);
+            true);
     }
 
     internal static CallToolResult Worker(string release, Definition definition, string id, JsonObject args, JsonNode? raw, JsonNode? validated)
@@ -256,7 +256,6 @@ internal static class FoundationV4Result
         }
         bool mutation = IsMutation(definition, args);
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
-        bool reset = mutation && Flag(data, "writeOutcomeUnknown") == true;
         if (definition.ResponseMember == "BatchImport") return ImportCandidate(PlcBatchImportResultMapping.Result(data, release, name, id, preview));
         string? status = Text(data, "status");
         if (raw == null || mutation && (Flag(data, "executed") ?? Flag(data, "attempted")) == null
@@ -285,7 +284,7 @@ internal static class FoundationV4Result
                     : state == "not-attempted" ? new Error("Not executed after an earlier failure.", new NotExecutedDetails(causeIndex))
                     : childOutcome != Outcome.Succeeded ? NativeFailure(item) : null;
                 var child = EnvelopeFor(release, name, id, item, childOutcome, Execute(childOutcome, mutation),
-                    childOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, childError, true, childOutcome == Outcome.Unknown);
+                    childOutcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, childError, true);
                 mapped
                     .Add(new JsonObject {
                         ["index"] = mapped.Count, ["target"] = Text(item, "objectPath") ?? Text(item, "relativePath"), ["result"] = JsonNode
@@ -318,7 +317,6 @@ internal static class FoundationV4Result
             {
                 outcome = nativeOutcome == Outcome.Unknown ? Outcome.Failed : nativeOutcome;
                 error = nativeOutcome == Outcome.Unknown ? NativeFailure(evidence) : nativeError;
-                reset = false;
             }
         }
         // Preserve the void API's observations without inventing a native return value.
@@ -335,7 +333,7 @@ internal static class FoundationV4Result
             || definition.ResponseMember == "RuntimeQuery" || data["unavailableAttributes"] is JsonArray { Count: > 0 };
         return Wire(release, name, id, data, outcome, Execute(outcome, mutation && Flag(data, "executed") != false),
             outcome == Outcome.Unknown ? Completeness.Unknown : incomplete ? Completeness.Partial : Completeness.Complete,
-            error, true, reset || outcome == Outcome.Unknown);
+            error, true);
     }
 
     internal static JsonObject ValidateBlockPage(JsonNode? raw, JsonObject args)
@@ -416,7 +414,7 @@ internal static class FoundationV4Result
                 new InvalidArgumentDetails("repository", Array.Empty<string>())));
         return Wire(release, name, id, data, success ? Outcome.Succeeded : Outcome.ReadFailed, Execution.ReadOnly,
             name is "InitializeEnvironment" or "RunCapabilitySelfTest" ? Completeness.Partial : Completeness.Complete,
-            success ? null : NativeFailure(data), false, false, candidate, paging);
+            success ? null : NativeFailure(data), false, candidate, paging);
     }
 
     private static Error Unknown() => new("The operation outcome is unknown. Do not repeat this call. Read GetCallResult(requestId).",
@@ -447,7 +445,7 @@ internal static class FoundationV4Result
         return data;
     }
     private static Envelope EnvelopeFor(string release, string name, string id, JsonObject? data, Outcome outcome,
-        Execution execution, Completeness completeness, Error? error, bool current, bool reset, bool candidate = false, Paging? paging = null)
+        Execution execution, Completeness completeness, Error? error, bool current, bool candidate = false, Paging? paging = null)
     {
         if (outcome == Outcome.Unknown) data?.Remove("recovery");
         var warnings = new List<Warning>();
@@ -469,19 +467,19 @@ internal static class FoundationV4Result
             warnings.Add(new Warning(WarningCode.NativeWarning, "Native diagnostics include warnings; see data.warnings.", Empty));
         if (completeness == Completeness.Partial) warnings
             .Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; retain the declared scope and unprobed fields.", Empty));
-        return BehaviorCapabilities.Disclose(Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution, reset,
+        return BehaviorCapabilities.Disclose(Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution,
             current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings)));
     }
     internal static CallToolResult Composite(string release, string name, string id, JsonObject data, Outcome outcome,
-        Execution execution, Error? error = null, bool reset = false)
+        Execution execution, Error? error = null)
         =>
             Wire(release, name, id, data, outcome, execution, outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial ? Completeness
-                .Partial : Completeness.Complete, error, true, reset);
+                .Partial : Completeness.Complete, error, true);
 
     private static CallToolResult Wire(string release, string name, string id, JsonObject? data, Outcome outcome,
-        Execution execution, Completeness completeness, Error? error, bool current, bool reset = false, bool candidate = false, Paging? paging = null)
+        Execution execution, Completeness completeness, Error? error, bool current, bool candidate = false, Paging? paging = null)
     {
-        var mapped = McpResult.From(EnvelopeFor(release, name, id, data, outcome, execution, completeness, error, current, reset, candidate, paging));
+        var mapped = McpResult.From(EnvelopeFor(release, name, id, data, outcome, execution, completeness, error, current, candidate, paging));
         return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
             Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
     }

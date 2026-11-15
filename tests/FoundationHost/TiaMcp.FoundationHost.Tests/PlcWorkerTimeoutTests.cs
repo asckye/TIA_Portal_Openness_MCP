@@ -625,7 +625,6 @@ public sealed class PlcWorkerRobustnessTests
             var result = Foundation.FoundationV4Result.InProgress(release, "ListPlcBlocks", running.Running);
             Assert.Equal("OPERATION_IN_PROGRESS", (string?)result.StructuredContent?["error"]?["code"]);
             Assert.Equal("in-progress", (string?)result.StructuredContent?["meta"]?["outcome"]);
-            Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
             Assert.True(scope.Worker.CallRunning);
             Assert.Equal("Busy", (string?)scope.Worker.SupervisorSnapshot(new JsonObject())["state"]);
             Assert.False(scope.Worker.Faulted);
@@ -721,7 +720,7 @@ public sealed class PlcWorkerRobustnessTests
                 {
                     var reply = await Worker.Call(operation, arguments, invocation.Token);
                     var envelope = Envelope.Create(reply, null, new Meta(DateTimeOffset.UtcNow, release, operation, id, Outcome.Succeeded,
-                        Operations.IsReadOnly(operation) ? Execution.ReadOnly : Execution.Completed, false,
+                        Operations.IsReadOnly(operation) ? Execution.ReadOnly : Execution.Completed,
                         BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>()));
                     var body = JsonNode.Parse(V4Json.Serialize(envelope));
                     invocation.Complete(new ModelContextProtocol.Protocol.CallToolResult { IsError = false, StructuredContent = body,
@@ -880,7 +879,6 @@ public sealed class PlcWorkerRobustnessTests
             Assert.False(scope.Worker.Faulted);
             var result = Foundation.FoundationV4Result.InProgress("19", "CompilePlc", running.Running);
             Assert.Equal("in-progress", (string?)result.StructuredContent?["meta"]?["outcome"]);
-            Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
             var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
                 scope.Worker.Call("ReadState", new(), CancellationToken.None));
             Assert.Equal("worker-call-running", refusal.Condition);

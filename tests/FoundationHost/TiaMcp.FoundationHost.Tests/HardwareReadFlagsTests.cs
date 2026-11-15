@@ -76,7 +76,6 @@ public sealed class HardwareReadFlagsTests
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         Assert.Equal("none", (string?)body["meta"]?["completeness"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
         Assert.False(body["error"]!["details"]!.AsObject().ContainsKey("target"));
     }
 
@@ -116,7 +115,6 @@ public sealed class HardwareReadFlagsTests
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         Assert.Equal("none", (string?)body["meta"]?["completeness"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
     }
 
     [Theory, MemberData(nameof(Releases))]

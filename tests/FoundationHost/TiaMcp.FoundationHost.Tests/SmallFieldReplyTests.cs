@@ -83,6 +83,5 @@ public sealed class SmallFieldReplyTests
         Assert.Equal(family + (beforeWrite ? "-before-write" : ""), (string?)body["error"]!["details"]!["condition"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 }

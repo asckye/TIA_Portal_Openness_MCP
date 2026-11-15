@@ -39,7 +39,7 @@ namespace TiaMcp.Adapters
         {
             result.Attempted=true;
             try { action(); result.Executed=true; result.Status="completed"; }
-            catch(Exception ex) { result.Status="outcome-unknown"; result.RequiresSessionReset=true; result.Error=ex.GetType().Name+": "+ex.Message; }
+            catch(Exception ex) { result.Status="outcome-unknown"; result.OutcomeUnknown=true; result.Error=ex.GetType().Name+": "+ex.Message; }
         }
         internal static string InputHash(Stream stream)
         {
@@ -119,7 +119,7 @@ namespace TiaMcp.Adapters
                 // contract. Readback after a successful call is a separate phase.
                 var recoverable=recoverableGenerationFailure(ex);
                 result.Status=recoverable ? "failed" : "outcome-unknown";
-                result.RequiresSessionReset=!recoverable;
+                result.OutcomeUnknown=!recoverable;
                 result.Error=ex.GetType().Name+": "+ex.Message;
                 return result;
             }

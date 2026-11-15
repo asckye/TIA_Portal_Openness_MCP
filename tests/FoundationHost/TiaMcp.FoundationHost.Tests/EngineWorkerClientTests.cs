@@ -76,7 +76,6 @@ public sealed class EngineWorkerClientTests
             Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-            Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
             Assert.False((bool)error.Data["foundationRequestSent"]!);
             Assert.False(worker.Faulted);
         }

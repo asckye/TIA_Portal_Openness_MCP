@@ -39,9 +39,8 @@ namespace TiaMcp.Adapters.Contracts
         public string Message { get; set; } = "";
         public IoAddressInfo? Before { get; set; }
         public IoAddressInfo? After { get; set; }
-        public bool RequiresSessionReset { get; set; }
+        public bool OutcomeUnknown { get; set; }
         public bool MayHaveChanged => Before != null;
-        public bool BlockReadsAfterUncertain => true;
     }
 
     // Scalar values are explicit at the worker boundary. Native code never parses JSON.
@@ -71,18 +70,17 @@ namespace TiaMcp.Adapters.Contracts
         // The evidence bag preserves the released step wrapper's optional fields.
         // Values are managed scalars, arrays and dictionaries; never native handles.
         public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>(StringComparer.Ordinal);
-        private bool requiresSessionReset;
-        public bool RequiresSessionReset
+        private bool outcomeUnknown;
+        public bool OutcomeUnknown
         {
-            get => requiresSessionReset || Meta.TryGetValue("writeOutcomeUnknown", out var value) && value is true;
-            set => requiresSessionReset = value;
+            get => outcomeUnknown || Meta.TryGetValue("writeOutcomeUnknown", out var value) && value is true;
+            set => outcomeUnknown = value;
         }
         public bool MayHaveChanged
         {
             get => mayHaveChanged || Meta.TryGetValue("mayHaveChanged", out var value) && Equals(value, true);
             set => mayHaveChanged = value;
         }
-        public bool BlockReadsAfterUncertain => true;
     }
 
     public sealed class HardwareIpNode

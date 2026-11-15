@@ -117,8 +117,7 @@ namespace TiaMcp.Adapters.Contracts
         public Dictionary<string, object?>? Meta { get; set; }
         public Dictionary<string, object?>? Data { get; set; }
         public PlcSoftwareFailure? Failure { get; set; }
-        public bool RequiresSessionReset { get; set; }
+        public bool OutcomeUnknown { get; set; }
         public bool MayHaveChanged { get; set; }
-        public bool BlockReadsAfterUncertain => true;
     }
 }

@@ -86,7 +86,7 @@ internal static class Program
                 () => { engine.Disconnect(); dispatcher.EndSharedSession(); }, () => engine.CanDetachOnUncertainShutdown);
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
                 request => recovery.Dispatch(request, dispatcher.Dispatch),
-                () => dispatcher.State.IsAttached, () => dispatcher.Detached, () => dispatcher.SessionOutcome.RequiresReset,
+                () => dispatcher.State.IsAttached, () => dispatcher.Detached, () => dispatcher.SessionOutcome.Uncertain,
                 recovery.DisposeSession, recovery.Synchronize,
                 int.TryParse(Environment.GetEnvironmentVariable("TIA_MCP_HOST_PROCESS_ID"), out int hostPid) ? hostPid : (int?)null, releaseKey
                 );

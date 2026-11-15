@@ -258,8 +258,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     var m = original.Meta;
                     var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ResponseExports.MaxSliceChars), page.NextOffset, null, null,
                         page.TotalLength, page.Eof, PagingUnit.Utf16);
-                    var pageMeta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.RequiresSessionReset,
-                        m.BehaviorPolicy, m.Completeness, paging, m.Warnings);
+                    var pageMeta =
+                        new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.BehaviorPolicy, m.Completeness, paging, m.Warnings);
                     var mapped = McpResult.From(Envelope.Create(data, original.Error, pageMeta));
                     return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                         Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };

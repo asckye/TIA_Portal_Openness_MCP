@@ -47,18 +47,18 @@ internal static class DeviceAddTests
         Reset();items.Add(Item("other","one"));Reject(()=>Run(Request()),"duplicate identities");
         Reset();items[0].ParentVerified=false;Reject(()=>Run(Request()),"wrong parent");
         Reset();items=Enumerable.Range(0,4097).Select(i=>Item("N"+i,"I"+i)).ToList();Reject(()=>Run(Request()),"inventory budget");
-        Reset();var apply=Apply();result=Run(apply);Check(calls==1&&result.Attempted&&result.Executed&&!result.RequiresSessionReset&&items.Count==2,"exactly one creation");
+        Reset();var apply=Apply();result=Run(apply);Check(calls==1&&result.Attempted&&result.Executed&&!result.OutcomeUnknown&&items.Count==2,"exactly one creation");
         foreach(var mutate in new Action<PlcDeviceAddRequest>[] {r=>r.Confirm=false,r=>r.ExpectedHash="",r=>r.ExpectedHash=new string('a',64),r=>r.ExpectedProject="",r=>r.ExpectedProject="Test.ap19",r=>r.ExpectedProject=@"C:\Other.ap19",r=>r.PreferredVersion="V2",r=>r.ProcessId=43,r=>r.RootIdentity="changed",r=>r.Name="changed",r=>r.Family="S7-1200"}) {Reset();apply=Apply();mutate(apply);Reject(()=>Run(apply),"changed bound field");Check(calls==0,"changed bound field no creation");}
         Reset();apply=Apply();items[0].Identity="replaced";Reject(()=>Run(apply),"identity replacement");Check(calls==0,"replacement no create");
         Reset();apply=Apply();rows[0].TypeIdentifier="OrderNumber:different/V1";Reject(()=>Run(apply),"catalog change");Check(calls==0,"catalog changed no create");
         Reset();apply=Apply();int checkNo=0;Reject(()=>Run(apply,check:()=>{if(++checkNo==2)items[0].Name="changed";}),"late inventory change");Check(calls==0,"late inventory no create");
-        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;throw new InvalidOperationException("native failed");});Check(calls==1&&result.Attempted&&!result.Executed&&result.RequiresSessionReset&&result.Status=="outcome-unknown","native exception once and unknown");
-        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;items.Add(Item(n,"two"));throw new InvalidOperationException("partial create");});Check(calls==1&&items.Count==2&&result.RequiresSessionReset,"partial create never retry or rollback");
-        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;return Item(n,"two");});Check(calls==1&&!result.Executed&&result.RequiresSessionReset,"missing created inventory unknown");
-        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;items.Clear();var created=Item(n,"two");items.Add(created);return created;});Check(calls==1&&result.RequiresSessionReset,"unexpected removal unknown");
-        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;var created=Item("renamed","two");items.Add(created);return created;});Check(calls==1&&result.RequiresSessionReset,"auto rename unknown");
-        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;var created=Item(n,"two");created.ParentVerified=false;items.Add(created);return created;});Check(calls==1&&result.RequiresSessionReset,"created parent unknown");
-        Reset();apply=Apply();checkNo=0;result=Run(apply,check:()=>{if(++checkNo==4)throw new InvalidOperationException("project lost");});Check(calls==1&&result.RequiresSessionReset,"post-entry identity failure unknown");
+        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;throw new InvalidOperationException("native failed");});Check(calls==1&&result.Attempted&&!result.Executed&&result.OutcomeUnknown&&result.Status=="outcome-unknown","native exception once and unknown");
+        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;items.Add(Item(n,"two"));throw new InvalidOperationException("partial create");});Check(calls==1&&items.Count==2&&result.OutcomeUnknown,"partial create never retry or rollback");
+        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;return Item(n,"two");});Check(calls==1&&!result.Executed&&result.OutcomeUnknown,"missing created inventory unknown");
+        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;items.Clear();var created=Item(n,"two");items.Add(created);return created;});Check(calls==1&&result.OutcomeUnknown,"unexpected removal unknown");
+        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;var created=Item("renamed","two");items.Add(created);return created;});Check(calls==1&&result.OutcomeUnknown,"auto rename unknown");
+        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;var created=Item(n,"two");created.ParentVerified=false;items.Add(created);return created;});Check(calls==1&&result.OutcomeUnknown,"created parent unknown");
+        Reset();apply=Apply();checkNo=0;result=Run(apply,check:()=>{if(++checkNo==4)throw new InvalidOperationException("project lost");});Check(calls==1&&result.OutcomeUnknown,"post-entry identity failure unknown");
 
         PlcFoundationEngine Engine(){var e=new PlcFoundationEngine();e.AttachedPortal.HardwareCatalog.Rows.Add(Candidate());return e;}
         PlcDeviceAddResult Preview(PlcFoundationEngine e)=>e.AddDeviceWithFallback("6ES7 513-1AM03-0AB0","V1","PLC_2");
@@ -84,12 +84,12 @@ internal static class DeviceAddTests
         engine=Engine();engine.BoundProject.UngroupedDevicesGroup.Devices.Add(new(){Name="plc_2",Parent=engine.BoundProject.UngroupedDevicesGroup});Reject(()=>Preview(engine),"ungrouped name collision");
         engine=Engine();group=new(){Parent=engine.BoundProject};group.Groups.Add(group);engine.BoundProject.DeviceGroups.Add(group);Reject(()=>Preview(engine),"cyclic groups");
         engine=Engine();group=new(){Parent=engine.BoundProject};group.Devices.Add(new(){Name="existing",Parent=group});engine.BoundProject.DeviceGroups.Add(group);result=Preview(engine);Check(result.Inventory.SequenceEqual(new[]{"existing"}),"group inventory complete");Check(Execute(engine,result.PlanHash).Executed,"ordinary grouped project supported");
-        engine=Engine();engine.BoundProject.Devices.ThrowAfterCreate=true;result=Execute(engine,Preview(engine).PlanHash);Check(result.RequiresSessionReset&&engine.BoundProject.Devices.Calls==1,"adapter unknown latch");Reject(()=>Preview(engine),"adapter replay quarantined");Check(engine.BoundProject.Devices.Calls==1,"quarantine prevents retry");
+        engine=Engine();engine.BoundProject.Devices.ThrowAfterCreate=true;result=Execute(engine,Preview(engine).PlanHash);Check(result.OutcomeUnknown&&engine.BoundProject.Devices.Calls==1,"adapter unknown latch");Reject(()=>Preview(engine),"adapter replay quarantined");Check(engine.BoundProject.Devices.Calls==1,"quarantine prevents retry");
         Reset();var requestJson=System.Text.Json.Nodes.JsonNode.Parse("{\"preferredMlfb\":\"6ES7 513-1AM03-0AB0\",\"preferredVersion\":\"V1\",\"deviceName\":\"PLC_2\",\"family\":\"S7-1500\",\"dryRun\":true}")!.AsObject();
         var response=System.Text.Json.JsonSerializer.SerializeToNode(Run(Request()))!;
         Check(TiaMcp.FoundationHost.DeviceAddContract.Validate(response,requestJson)["Status"]!.GetValue<string>()=="planned","host preview validated");
         void BadResponse(string key,object value){var bad=response.DeepClone();bad[key]=System.Text.Json.JsonSerializer.SerializeToNode(value);try{TiaMcp.FoundationHost.DeviceAddContract.Validate(bad,requestJson);}catch(InvalidDataException){Check(true,"Host rejected "+key);return;}throw new Exception("Host accepted "+key);}
-        foreach(var key in new[]{"Attempted","Executed","RequiresSessionReset"})BadResponse(key,true);
+        foreach(var key in new[]{"Attempted","Executed","OutcomeUnknown"})BadResponse(key,true);
         BadResponse("Status","created-verified");BadResponse("DeviceName","different");BadResponse("TypeIdentifier","OrderNumber:different/V1");
         BadResponse("Version","V2");BadResponse("ArticleNumber","different");BadResponse("Policy","other");BadResponse("Save","saved");BadResponse("Inventory",new[]{"PLC_2"});BadResponse("Unexpected",true);BadResponse("Release","17");BadResponse("PlanHash","bad");
         requestJson["preferredMlfb"]=Candidate().TypeIdentifier;requestJson["preferredVersion"]="";BadResponse("TypeIdentifier","OrderNumber:different/V1");
@@ -99,6 +99,6 @@ internal static class DeviceAddTests
         engine=Engine();result=Preview(engine);engine.BoundProject.DeviceGroups.Add(new(){Parent=engine.BoundProject});Reject(()=>Execute(engine,result.PlanHash),"new empty group invalidates preview");Check(engine.BoundProject.Devices.Calls==0,"group graph change no create");
         engine=Engine();group=new(){Parent=new object()};engine.BoundProject.DeviceGroups.Add(group);Reject(()=>Preview(engine),"group parent fails closed");
         engine=Engine();group=new(){Parent=engine.BoundProject};var subgroup=new Siemens.Engineering.HW.DeviceUserGroup(){Parent=group,Name="Sub"};group.Groups.Add(subgroup);engine.BoundProject.DeviceGroups.Add(group);result=Preview(engine);subgroup.Parent=engine.BoundProject;group.Groups.Clear();engine.BoundProject.DeviceGroups.Add(subgroup);Reject(()=>Execute(engine,result.PlanHash),"group movement invalidates preview");
-        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;throw new InvalidOperationException(new string('x',5000));});Check(result.Error.Length==2048&&result.RequiresSessionReset,"native diagnostic bounded without hiding unknown");
+        Reset();apply=Apply();result=Run(apply,(id,n)=>{calls++;throw new InvalidOperationException(new string('x',5000));});Check(result.Error.Length==2048&&result.OutcomeUnknown,"native diagnostic bounded without hiding unknown");
     }
 }

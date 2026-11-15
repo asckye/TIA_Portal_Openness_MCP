@@ -152,7 +152,7 @@ public sealed class WorkerDispatchTests
         var body = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw lost).StructuredContent!;
         Xunit.Assert.Equal(writes ? "unknown" : "read-failed", (string?)body["meta"]?["outcome"]);
         Xunit.Assert.Equal(writes ? "unknown" : "read-only", (string?)body["meta"]?["execution"]);
-        Xunit.Assert.Equal(writes, (bool?)body["meta"]?["requiresSessionReset"]);
+        Xunit.Assert.Equal(writes, (string?)body["meta"]?["outcome"] == "unknown");
         Xunit.Assert.Equal(writes ? "OUTCOME_UNKNOWN" : "NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
         Xunit.Assert.Null(body["data"]?["operationNotStarted"]);
         // The same failure before the request was sent stays a pre-operation rejection.
@@ -160,7 +160,6 @@ public sealed class WorkerDispatchTests
         unsent.Data["foundationRequestSent"] = false;
         var refused = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw unsent).StructuredContent!;
         Xunit.Assert.Equal("rejected-before-operation", (string?)refused["meta"]?["outcome"]);
-        Xunit.Assert.False((bool?)refused["meta"]?["requiresSessionReset"]);
     }
 
     // A request over the worker frame is never sent; both the shared (FoundationV4Result) and the
@@ -183,7 +182,6 @@ public sealed class WorkerDispatchTests
             Xunit.Assert.Equal("LIMIT_EXCEEDED", (string?)body["error"]?["code"]);
             Xunit.Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Xunit.Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-            Xunit.Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
         }
     }
 }

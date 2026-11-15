@@ -38,8 +38,7 @@ public sealed class ProjectSaveCopyResult : IWorkerOperationReply
     public string NewProjectFile { get; set; } = "";
     public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>();
     public bool MayHaveChanged => true;
-    public bool RequiresSessionReset { get; set; }
-    public bool BlockReadsAfterUncertain => true;
+    public bool OutcomeUnknown { get; set; }
 }
 
 // The scaffold orchestrator keeps its JSON and response types in Shared. Each

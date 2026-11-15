@@ -289,8 +289,9 @@ public sealed class CanonicalParameterTests
         {
             Calls++;
             Last = JsonSerializer.SerializeToNode(request.Params!.Arguments)!.AsObject();
-            var meta = new Meta(DateTimeOffset.UtcNow, release, tool.Name, "test", Outcome.Succeeded, Execution.ReadOnly,
-                false, BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>());
+            var meta =
+                new Meta(DateTimeOffset.UtcNow, release, tool.Name, "test", Outcome.Succeeded, Execution.ReadOnly, BehaviorPolicy.NotApplicable, Completeness
+                    .Complete, null, Array.Empty<Warning>());
             var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { value = true }, null, meta)))!;
             return ValueTask.FromResult(new CallToolResult { IsError = false, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } });

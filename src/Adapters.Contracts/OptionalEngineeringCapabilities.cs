@@ -18,8 +18,7 @@ public static class OptionalEngineeringCapabilities
         Meta = new System.Collections.Generic.Dictionary<string, object?> {
             ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false,
             ["status"] = "NotSupportedOnVersion", ["v4Rejection"] = "UNSUPPORTED_CAPABILITY",
-            ["rejectionCode"] = "UNSUPPORTED_CAPABILITY", ["operationNotStarted"] = true,
-            ["requiresSessionReset"] = false, ["writeOutcomeUnknown"] = false }
+            ["rejectionCode"] = "UNSUPPORTED_CAPABILITY", ["operationNotStarted"] = true, ["writeOutcomeUnknown"] = false }
     };
 
     public static HardwareAddressingReply LoadFailure(string assembly, Exception error)

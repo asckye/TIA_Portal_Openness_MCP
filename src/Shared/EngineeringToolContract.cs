@@ -171,7 +171,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ? Completeness.Partial : Completeness.Complete;
             }
             if (outcome != Outcome.Succeeded) data.Remove("summary");
-            return Result(tool, data, error, outcome, completeness, writes, paging, reset);
+            return Result(tool, data, error, outcome, completeness, writes, paging);
         }
         private static bool Incomplete(JsonNode? node)
         {
@@ -212,7 +212,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "unsettled request IDs.",
                 new OutcomeUnknownDetails("engineering-operation", new Dictionary<string, JsonElement>()));
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,
-            bool writes = false, Paging? paging = null, bool reset = false)
+            bool writes = false, Paging? paging = null)
         {
             var warnings = new List<Warning> { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) };
@@ -224,7 +224,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
-                execution, reset || outcome == Outcome.Unknown, BehaviorPolicy.Current, completeness, paging, warnings);
+                execution, BehaviorPolicy.Current, completeness, paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };

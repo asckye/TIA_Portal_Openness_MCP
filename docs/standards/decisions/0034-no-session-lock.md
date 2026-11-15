@@ -1,7 +1,7 @@
 # 0034 结果未知只影响本次调用，取消会话锁
 
-- 状态：已采纳
-- 日期：2026-11-12
+- 状态：已关闭（Parts 1–8 已实现，真实 TIA 行为仍待真机复验）
+- 日期：2026-11-15
 - 决策者：维护者 2026-11-05, recommendations approved 2026-11-11
 - 相关：[ADR 0008](0008-worker-timeouts-and-faults.md)、[ADR 0007](0007-one-worker-per-mcp-session.md)、[设计规范第 4.11 节](../design.md#411-未知结果与未确认调用)
 
@@ -67,7 +67,7 @@ Part 5 已实现 `TIA_MCP_DIALOG` 结构化 stderr 上报，每行最多 2 KiB�
 
 4.0 尚未正式发布，此次按 ADR 0001 硬切，`schemaVersion` 仍为 4。Part 1 停止产生 `SESSION_RESET_REQUIRED`，移除未知结果中的 `data.recovery`、会话状态中的重置字段和操作端锁状态，增加未确认清单及保存警告。
 
-`meta.requiresSessionReset` 和 worker 的 `RequiresSessionReset` 在 Part 8 前继续透传。宿主准入和未确认清单以调用的最终结果为准。Part 8 逐点重分类前，结果映射继续将旧标志作为写入结果未知的证据，读取不受该标志影响。旧 `SessionResetRequiredDetails` 的读取类型保留到 Part 8。原有回复形状及伪造字段校验继续执行。
+Part 8 已完成：8a 逐点重分类，8b 移除 `meta.requiresSessionReset`、`SessionResetRequiredDetails` 和 `SESSION_RESET_REQUIRED`，worker 字段改为 `OutcomeUnknown`，已有 `NativeOutcomeUnknown` 的批次复用该字段，不增加重复字段。维护者 2026-11-15 批准在 beta.5 按 ADR 0001 硬切，`schemaVersion` 仍为 4。宿主准入和未确认清单以最终 `meta.outcome` 为准，调用方读取 `GetSessionState.unsettled`。原有回复形状及伪造字段校验继续执行。
 
 Part 8 逐个重分类标志设置点后，才将 worker 字段改为 `OutcomeUnknown` 并删除旧字段。调用结果分类以 VMFIX-7 D1 和真实证据为准。
 

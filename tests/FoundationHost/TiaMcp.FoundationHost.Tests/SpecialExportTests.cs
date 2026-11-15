@@ -66,11 +66,11 @@ internal static class SpecialExportTests
             Refuse(()=>Run(false,preview.PlanHash,kind:"technology-object",consistent:false),"Inconsistent technology object cannot export");
             check(exports==0 && offline==0,"Rejected special export plans reach no native callbacks");
             var executed=Run(false,preview.PlanHash,publisher:(_,_)=>null);
-            check(executed.Status=="exported" && offline==1 && !executed.RequiresSessionReset,"Special export gates exact offline target before publication");
+            check(executed.Status=="exported" && offline==1 && !executed.OutcomeUnknown,"Special export gates exact offline target before publication");
             var failed=
                 Run(false,preview.PlanHash,publisher:(_,_)=>{
                     var error=new IOException("private native text"); error.Data["stagedFile"]="retained.xml"; error.Data["secret"]="hidden"; throw error;});
-            check(failed.Status=="failed" && !failed.RequiresSessionReset && failed.Evidence.Count==1,
+            check(failed.Status=="failed" && !failed.OutcomeUnknown && failed.Evidence.Count==1,
                     "Unknown export outcome stops without replay and preserves only allowlisted evidence");
             SpecialExportContract.Validate(Wire(failed),false);
             var classification=WorkerFailurePolicy
@@ -88,7 +88,7 @@ internal static class SpecialExportTests
             request["watchTableName"]="other";
             try {SpecialExportContract.ValidateRequest("ExportPlcWatchTable",request,Wire(failed)); throw new Exception("Conflicting result accepted");
             } catch(InvalidDataException){check(true,"Host refuses mismatched special export identity");}
-            var malformed=Wire(failed);malformed["RequiresSessionReset"]=true;
+            var malformed=Wire(failed);malformed["OutcomeUnknown"]=true;
             try {SpecialExportContract.Validate(malformed,false);throw new Exception("Unpoisoned failure accepted");} catch(InvalidDataException){
                 check(true,"Host refuses conflicting special export fail-stop flag");}
             File.WriteAllText(output,"existing"); Refuse(()=>Run(true),"Existing output refuses preview without overwrite"); File.Delete(output);
@@ -114,7 +114,7 @@ internal static class SpecialExportTests
             if(Environment.OSVersion.Platform!=PlatformID.Win32NT)
             {
                 var unsupported=Run(false,preview.PlanHash);
-                check(!unsupported.RequiresSessionReset && exports==0 && Directory.GetFileSystemEntries(root).Length==0,
+                check(!unsupported.OutcomeUnknown && exports==0 && Directory.GetFileSystemEntries(root).Length==0,
                         "Linux publication guard writes nothing and calls no native export");
                 skip("Special export Windows native XML preservation/atomic filesystem publication requires Windows.");
             }
@@ -158,7 +158,6 @@ public sealed class PlannedExportDirectoryTests
         Xunit.Assert.False(error.IsArgument); Xunit.Assert.Equal(0, publications); Xunit.Assert.False(Directory.Exists(root));
         var refusal = FoundationV4Result.Failure("20", "ExportPlcWatchTable", "mkdir-test", true, true, null, error);
         Xunit.Assert.Equal("rejected-before-operation", (string?)refusal.StructuredContent?["meta"]?["outcome"]);
-        Xunit.Assert.False((bool?)refusal.StructuredContent?["meta"]?["requiresSessionReset"]);
     }
 
     [Xunit.Theory]

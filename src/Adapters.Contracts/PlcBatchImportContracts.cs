@@ -38,7 +38,6 @@ namespace TiaMcp.Adapters
     public class PlcBatchImportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Items.Any(x => x.Attempted);
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; internal set; }
         public string ProjectFile { get; internal set; } = "";
         public string SoftwarePath { get; internal set; } = "";
@@ -51,7 +50,7 @@ namespace TiaMcp.Adapters
         public string RecoveryFailure { get; internal set; } = "";
         public PlcBatchImportObject[] Restored => Items.Where(x => x.RestoreStatus == "restored").Select(x => x.Replaced!).ToArray();
         public PlcBatchImportObject[] RemainingChanged => Items.Where(x => x.Attempted && x.RestoreStatus != "restored").Select(x => x.Planned).ToArray();
-        public bool RequiresSessionReset { get; internal set; }
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.OutcomeUnknown => NativeOutcomeUnknown;
         public string[] Imported => Items.Where(x=>x.Status=="imported" && x.RestoreStatus!="restored").SelectMany(x=>x.ReturnedObjects.Select(o=>o.Name))
             .ToArray();
         public PlcBatchImportFailure[] Failed => Items.Where(x=>x.Status=="failed").Select(x=>new PlcBatchImportFailure {Path=x.RelativePath,Error=x.Failure})

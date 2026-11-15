@@ -23,7 +23,7 @@ internal static class V4Fixtures
             envelopes.Add(JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { activeRequestId = "running-call" },
                 new Error("The call is still running. Read GetCallResult(requestId).", new OperationInProgressDetails("running-call")),
                 new Meta(DateTimeOffset.Parse("2026-11-12T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture), "21",
-                    "SaveProject", "running-call", Outcome.InProgress, Execution.Unknown, false, BehaviorPolicy.NotApplicable,
+                    "SaveProject", "running-call", Outcome.InProgress, Execution.Unknown, BehaviorPolicy.NotApplicable,
                     Completeness.Unknown, null, Array.Empty<Warning>()))))!.AsObject());
         if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1") Regenerate(envelopes);
         foreach (var envelope in envelopes) yield return JsonSerializer.SerializeToElement(envelope);
@@ -31,9 +31,11 @@ internal static class V4Fixtures
 
     private static void Regenerate(List<JsonObject> envelopes, [CallerFilePath] string sourceFile = "")
     {
+        envelopes.RemoveAll(envelope => (string?)envelope["error"]?["code"] == "SESSION_RESET_REQUIRED");
         for (int i = 0; i < envelopes.Count; i++)
         {
             var envelope = envelopes[i];
+            RegenerateArguments(envelope);
             if (envelope["error"]?["details"] is JsonObject details)
             {
                 switch ((string?)envelope["error"]!["code"])
@@ -70,6 +72,8 @@ internal static class V4Fixtures
     {
         if (node is JsonObject obj)
         {
+            if (obj["schemaVersion"]?.GetValue<int>() == 4 && obj["meta"] is JsonObject meta)
+                meta.Remove("requiresSessionReset");
             if ((string?)obj["code"] == "INVALID_ARGUMENT" && obj["details"] is JsonObject details)
             {
                 string Pointer(string? field) => field == "arguments" ? "" : field ?? "";

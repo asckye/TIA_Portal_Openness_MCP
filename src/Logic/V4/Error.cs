@@ -12,7 +12,7 @@ namespace TiaMcp.Logic.V4
     public enum ErrorCode
     {
         InvalidArgument, LimitExceeded, UnsupportedCapability, ToolNotFound, ProjectNotBound, NotFound, TargetAmbiguous, IdentityMismatch, AlreadyExists,
-            ConfirmationRequired, PlanStale, PreconditionFailed, OfflineRequired, AuthenticationRequired, AccessDenied, SessionResetRequired,
+            ConfirmationRequired, PlanStale, PreconditionFailed, OfflineRequired, AuthenticationRequired, AccessDenied,
             ResourceUnavailable, IoFailed, NativeOperationFailed, CompileErrors, Cancelled, Timeout, NotExecuted, PartialFailure, OutcomeUnknown,
             OperationInProgress, InternalError
     }
@@ -508,17 +508,6 @@ namespace TiaMcp.Logic.V4
         {
             Operation = DiagnosticVocabulary.Key(operation);
             Target = target;
-            V4Validation.Details(this);
-        }
-    }
-
-    public sealed class SessionResetRequiredDetails : ErrorDetails
-    {
-        internal override ErrorCode Code => ErrorCode.SessionResetRequired;
-        [JsonPropertyOrder(0)] public string? Reason { get; }
-        public SessionResetRequiredDetails(string? reason)
-        {
-            Reason = DiagnosticVocabulary.Key(reason);
             V4Validation.Details(this);
         }
     }

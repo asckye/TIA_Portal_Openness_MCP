@@ -68,7 +68,7 @@ public sealed class FixR1RegressionTests
             var result = await tool.InvokeAsync(request);
             Assert.Equal(outcome, (string?)result.StructuredContent?["meta"]?["outcome"]);
             Assert.Equal(code, (string?)result.StructuredContent?["error"]?["code"]);
-            Assert.Equal(outcome == "unknown", (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+            Assert.Equal(outcome == "unknown", (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown");
             Assert.Contains("plc:type:T", result.StructuredContent!["data"]!["imported"]!.AsArray().Select(row => (string?)row));
             Assert.NotEmpty(result.StructuredContent["data"]!["failed"]!.AsArray());
             Assert.Equal(1, worker.PlcWrites);
@@ -162,12 +162,11 @@ public sealed class FixR1RegressionTests
         var reply = await worker
             .Call("plc-software.ExecutePlcOrganisation", new JsonObject {
                 ["request"] = new JsonObject { ["Operation"] = "listGroups", ["SoftwarePath"] = "PLC" } }, CancellationToken.None);
-        Assert.True((bool?)reply?["RequiresSessionReset"] == true);
+        Assert.True((bool?)reply?["OutcomeUnknown"] == true);
         var original = FoundationV4Result.Failure("21", "ListPlcForceTables", "family", true, false, null,
             new WorkerOperationException("Native family read failed", -32603, "read-failed"));
         var result = FoundationV4Result.ReconcileWorker(original, null);
         Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         Assert.Empty(worker.Unsettled.Snapshot());
         var next = await worker.Call("ReadState", new JsonObject(), CancellationToken.None);
         Assert.Equal("21", (string?)next?["ReleaseKey"]);

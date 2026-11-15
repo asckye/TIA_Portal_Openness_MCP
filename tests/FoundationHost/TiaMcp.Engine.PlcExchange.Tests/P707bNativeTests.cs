@@ -145,7 +145,7 @@ namespace PlcExchangeTests
             Assert.Equal(true, reply.Meta["operationNotStarted"]);
             Assert.Equal(false, reply.Meta["operationSuccess"]);
             Assert.Equal(false, reply.Meta["apiCallSuccess"]);
-            Assert.False(reply.RequiresSessionReset);
+            Assert.False(reply.OutcomeUnknown);
             Assert.Equal(0, fake.NativeCalls);
             var map = typeof(McpServer).Assembly.GetType("TiaMcpServer.ModelContextProtocol.OptionalPackageContract", true)!
                 .GetMethod("Map", BindingFlags.NonPublic | BindingFlags.Static)!;
@@ -156,7 +156,6 @@ namespace PlcExchangeTests
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("none", (string?)body["meta"]?["completeness"]);
-            Assert.Equal(false, (bool?)body["meta"]?["requiresSessionReset"]);
         }
 
         [Theory]
@@ -225,7 +224,7 @@ namespace PlcExchangeTests
                 var body = Body(map.Invoke(null, args)!);
                 Assert.Equal(modifiesProject ? "OUTCOME_UNKNOWN" : "NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
                 Assert.Equal(state, (string?)body["error"]?["details"]?["evidence"]?["nativeState"]);
-                Assert.Equal(modifiesProject, (bool?)body["meta"]?["requiresSessionReset"]);
+                Assert.Equal(modifiesProject, (string?)body["meta"]?["outcome"] == "unknown");
             }
         }
 
@@ -254,7 +253,7 @@ namespace PlcExchangeTests
             var body = Body(map.Invoke(null, new object?[] { "GetUnifiedLibraryType", response, false, false, null, 0, null })!);
             Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
             Assert.Equal("Error", (string?)body["error"]?["details"]?["evidence"]?["nativeState"]);
-            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+            Assert.NotEqual("unknown", (string?)body["meta"]!["outcome"]);
         }
 
         [Theory]
@@ -307,7 +306,7 @@ namespace PlcExchangeTests
             if (missingAfter)
             {
                 Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
-                Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
+                Assert.Equal("unknown", (string?)body["meta"]!["outcome"]);
             }
             else
             {

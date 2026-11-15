@@ -56,7 +56,7 @@ public sealed class LegacyUnknownWriteTests
             var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((_, _) =>
                 System.Text.Json.JsonSerializer.SerializeToNode(new TiaMcp.Adapters.Contracts.PlcB5Reply {
                     Failure = new TiaMcp.Adapters.Contracts.PlcSoftwareFailure { Code = "OpennessError", Message = "Synthetic native result unavailable." },
-                    MayHaveChanged = false, RequiresSessionReset = true }), () => "C:/fixture.ap21");
+                    MayHaveChanged = false, OutcomeUnknown = true }), () => "C:/fixture.ap21");
             string tool = writes ? "ImportAlarmClasses" : "GetPlcOpcUaConfiguration";
             var result = Host.EngineeringToolContract.Run(tool, writes,
                 () => writes ? service.ImportAlarmClasses("PLC", file) : service.GetOpcUaConfig("PLC"));

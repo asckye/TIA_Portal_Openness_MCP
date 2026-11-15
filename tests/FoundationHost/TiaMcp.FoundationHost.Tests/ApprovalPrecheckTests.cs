@@ -72,7 +72,6 @@ public sealed class ApprovalPrecheckTests
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
         Assert.Equal(0, worker.Previews + worker.Writes + worker.Reads);
         Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "APPROVAL_PRECHECK_REFUSED");
     }
@@ -88,7 +87,7 @@ public sealed class ApprovalPrecheckTests
         args["dryRun"]=false;args["confirm"]=false;args["expectedProjectFile"]="C:/fixture.ap18";
         var body=(await tool.InvokeAsync(Request(tool.ProtocolTool.Name,args))).StructuredContent!;
         Assert.Equal("INVALID_ARGUMENT",(string?)body["error"]?["code"]);Assert.Equal("/confirm",(string?)body["error"]?["details"]?["parameter"]);
-        Assert.Equal("not-started",(string?)body["meta"]?["execution"]);Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+        Assert.Equal("not-started",(string?)body["meta"]?["execution"]);Assert.NotEqual("unknown", (string?)body["meta"]?["outcome"]);
         Assert.Equal(0,worker.Previews+worker.Writes+worker.Reads);
         Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_PRECHECK_REFUSED");
     }

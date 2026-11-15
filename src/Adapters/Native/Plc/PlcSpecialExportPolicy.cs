@@ -106,7 +106,7 @@ namespace TiaMcp.Adapters
             catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch(Exception error)
             {
-                result.Status="failed"; result.RequiresSessionReset=false;
+                result.Status="failed"; result.OutcomeUnknown=false;
                 foreach(var name in new[]{"outputFile","stagedFile","recoveryDirectory","exportPhase","stagedSha256"})
                     if(error.Data[name] is string value) result.Evidence[name]=value;
             }

@@ -109,11 +109,11 @@ namespace TiaMcp.Adapters
             catch(TiaMcp.Adapters.Contracts.NativeResultException ex)
             {
                 result.Status="failed"; result.NativeResult=ex.Evidence; result.RecoveryDirectory=stage.FullName;
-                result.RequiresSessionReset=false;
+                result.OutcomeUnknown=false;
             }
             catch(Exception) /* swallow(native-fallback): failed export or publication returns failed status and retains staging evidence */
             {
-                result.Status="failed"; result.RequiresSessionReset=false; result.RecoveryDirectory=stage.FullName;
+                result.Status="failed"; result.OutcomeUnknown=false; result.RecoveryDirectory=stage.FullName;
             }
             return result;
         }

@@ -12,7 +12,9 @@ internal static class ExternalSourceDeletePolicyTests
          PlcExternalSourceDeleteResult Run()=>PlcExternalSourceDeletePolicy.Run(r,()=>items,()=>{},_=>{},id=>{calls++;items.RemoveAll(x=>x.Identity==id);});
          var plan=Run();Assert(plan.Status=="planned"&&!plan.Attempted&&calls==0&&plan.Inventory.Length==2,"preview "+release);
          r.DryRun=false;r.Confirm=true;r.ExpectedProject=r.Project;r.ExpectedHash=plan.PlanHash;
-         var deleted=Run();Assert(deleted.Deleted&&deleted.Attempted&&deleted.Executed&&!deleted.RequiresSessionReset&&calls==1&&items.Single().Name=="Pump.awl","single exact delete "+release);
+         var deleted=Run();
+         Assert(deleted.Deleted&&deleted.Attempted&&deleted.Executed&&!deleted.OutcomeUnknown&&calls==1&&items.Single().Name=="Pump.awl","single exact delete "
+                 +release);
         }
         foreach(var configure in new Action<PlcExternalSourceDeleteRequest>[] {r=>r.Release="14",r=>r.Release="15",r=>r.Group="child",r=>r.Name="../Pump",r=>r.DryRun=false,r=>{r.DryRun=false;r.Confirm=true;r.ExpectedHash=new string('a',64);}}) {var r=Request();configure(r);Reject(()=>PlcExternalSourceDeletePolicy.Run(r,()=>new[]{Item()},()=>{},_=>{},_=>throw new Exception("native reached")),"options");}
         foreach(var items in new[]{new[]{Item(),Item("Pump.scl","b")},new[]{Item(parent:false)},Enumerable.Range(0,4097).Select(i=>Item(i.ToString(),i.ToString())).ToArray(),new[]{Item(),Item("Other","a")}}) Reject(()=>PlcExternalSourceDeletePolicy.Run(Request(),()=>items,()=>{},_=>{},_=>{}),"bad inventory");
@@ -23,7 +25,7 @@ internal static class ExternalSourceDeletePolicyTests
          IEnumerable<PlcExternalSourceDeleteItem> Read(){if(entered&&mode=="readback-throw")throw new InvalidOperationException("lost response");return items;}
          var p=PlcExternalSourceDeletePolicy.Run(r,Read,()=>{},_=>{},_=>{});r.DryRun=false;r.Confirm=true;r.ExpectedProject=r.Project;r.ExpectedHash=p.PlanHash;
          var result=PlcExternalSourceDeletePolicy.Run(r,Read,()=>{},_=>{},id=>{calls++;entered=true;if(mode=="throw")throw new InvalidOperationException("native error");if(mode=="wrong-removal")items.Clear();if(mode=="readback-throw")items.RemoveAt(0);if(mode=="changed-parent")items[1].ParentVerified=false;});
-         Assert(result.Status=="outcome-unknown"&&result.RequiresSessionReset&&!result.Deleted&&!result.Executed&&result.Attempted&&calls==1,"unknown no retry "+mode);
+         Assert(result.Status=="outcome-unknown"&&result.OutcomeUnknown&&!result.Deleted&&!result.Executed&&result.Attempted&&calls==1,"unknown no retry "+mode);
         }
         {
          var r=Request();var p=PlcExternalSourceDeletePolicy.Run(r,()=>new[]{Item()},()=>{},_=>{},_=>{});r.DryRun=false;r.Confirm=true;r.ExpectedProject=r.Project;r.ExpectedHash=p.PlanHash;

@@ -57,7 +57,7 @@ namespace PlcExchangeTests
                         var body = ((CallToolResult)method.Invoke(null, args)!).StructuredContent!;
                         bool unknown = kind is NativeStateKind.Unexpected or NativeStateKind.Partial || kind == NativeStateKind.Failure && changesProject;
                         Assert.Equal(success ? "succeeded" : unknown ? "unknown" : "failed", (string?)body["meta"]?["outcome"]);
-                        Assert.Equal(unknown, (bool?)body["meta"]?["requiresSessionReset"]);
+                        Assert.Equal(unknown, (string?)body["meta"]?["outcome"] == "unknown");
                         Assert.Equal(success ? null : unknown ? "OUTCOME_UNKNOWN" : "NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
                         if (!success) Assert.Equal(state, (string?)body["error"]?["details"]?["evidence"]?["nativeState"]);
                         Assert.Equal(kind == NativeStateKind.Warning, body["meta"]!["warnings"]!.AsArray().Any(w => (string?)w?["code"] == "NATIVE_WARNING"));
@@ -81,7 +81,6 @@ namespace PlcExchangeTests
             };
             var body = ((CallToolResult)method.Invoke(null, args)!).StructuredContent!;
             Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
-            Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
             Assert.Equal("987654", (string?)body["error"]?["details"]?["evidence"]?["nativeState"]);
         }
 

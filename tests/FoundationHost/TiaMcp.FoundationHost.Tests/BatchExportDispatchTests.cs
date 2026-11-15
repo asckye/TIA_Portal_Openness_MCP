@@ -71,7 +71,8 @@ internal static class BatchExportDispatchTests
                 check(worker.Calls==1,name+": blank hash never dispatched");
                 args["expectedInventoryHash"]=JsonSerializer.SerializeToElement(hash);
                 var success=Payload(await tool.InvokeAsync(Request(args)));
-                check(worker.Calls==2 && worker.Publications==3 && !success["RequiresSessionReset"]!.GetValue<bool>(),name+": confirmed exact preview hash dispatches once and returns success items");
+                check(worker.Calls==2 && worker.Publications==3 && !success["OutcomeUnknown"]!.GetValue<bool>(),name
+                        +": confirmed exact preview hash dispatches once and returns success items");
                 var mismatch=new BatchWorker();var mismatchArgs=Args();Execute(mismatchArgs,new string('f',64));
                 await Refused(Tool(mismatch),mismatchArgs,McpErrorCode.InvalidParams,"mismatching preview hash rejected by plan");
                 check(mismatch.Calls==1 && mismatch.Publications==0,name+": mismatching hash cannot reach publisher");
@@ -90,7 +91,7 @@ internal static class BatchExportDispatchTests
                 var unknown = await partialTool.InvokeAsync(Request(partialArgs));
                 var partial=partialWorker.LastReply!;
                 check((string?)unknown.StructuredContent?["meta"]?["outcome"] == "partial", name + ": partial apply reports its known file progress");
-                check(!partial["RequiresSessionReset"]!.GetValue<bool>() && partial["Items"]!.AsArray().Select(x=>x!["Status"]!.GetValue<string>())
+                check(!partial["OutcomeUnknown"]!.GetValue<bool>() && partial["Items"]!.AsArray().Select(x=>x!["Status"]!.GetValue<string>())
                         .SequenceEqual(new[]{"exported","failed","not-attempted"}),name+": MCP retains explicit partial progress");
                 check(partialWorker.Publications==2,name+": partial result stops before a third publication");
                 var replay = await partialTool.InvokeAsync(Request(partialArgs));

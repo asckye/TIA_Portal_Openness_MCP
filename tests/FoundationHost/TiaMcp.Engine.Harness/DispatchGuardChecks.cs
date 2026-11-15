@@ -121,7 +121,7 @@ internal static partial class Program
                     Check((string)error["code"] == (unknown ? "OUTCOME_UNKNOWN" : cancelled ? "CANCELLED" : "INTERNAL_ERROR")
                         && (string)meta["outcome"] == (unknown ? "unknown" : cancelled ? "rejected-before-operation" : "read-failed")
                         && (string)meta["execution"] == (unknown ? "unknown" : cancelled ? "not-started" : "read-only")
-                        && (bool)meta["requiresSessionReset"] == false, "SDK guard lost typed outcome details: " + scenario + " " + text);
+                        && !meta.ContainsKey("requiresSessionReset"), "SDK guard lost typed outcome details: " + scenario + " " + text);
                     Check(fixture.Calls == (cancelled ? 0 : 1) && !text.Contains("SECRET") && !body.ContainsKey("message"), "SDK guard leaked arguments or dispatched cancellation");
                     if (unknown)
                     {

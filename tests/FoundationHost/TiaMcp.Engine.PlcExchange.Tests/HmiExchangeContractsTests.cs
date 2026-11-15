@@ -225,7 +225,7 @@ namespace PlcExchangeTests
             Assert.Equal(outcome, (string?)body["meta"]!["outcome"]);
             Assert.Equal(execution, (string?)body["meta"]!["execution"]);
             Assert.Equal(completeness, (string?)body["meta"]!["completeness"]);
-            Assert.Equal(outcome == "unknown", (bool)body["meta"]!["requiresSessionReset"]!);
+            Assert.Equal(outcome == "unknown", (string?)body["meta"]!["outcome"] == "unknown");
             Assert.Equal("current", (string?)body["meta"]!["behaviorPolicy"]);
             Assert.Contains(body["meta"]!["warnings"]!.AsArray(), w => (string?)w!["code"] == "UNVERIFIED_BEHAVIOR");
             Assert.Equal("Success is only text", (string?)body["data"]!["summary"]);

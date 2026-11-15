@@ -302,7 +302,7 @@ public sealed class NoLockTests
     public void Document_import_with_status_unknown_stays_unknown_after_synchronize_is_removed(string release)
     {
         var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlockDocuments");
-        var raw = new JsonObject { ["Status"] = "unknown", ["Attempted"] = true, ["Executed"] = false, ["RequiresSessionReset"] = true };
+        var raw = new JsonObject { ["Status"] = "unknown", ["Attempted"] = true, ["Executed"] = false, ["OutcomeUnknown"] = true };
         var body = Body(FoundationV4Result.Worker(release, definition, "document-import", new() { ["dryRun"] = false }, raw, raw));
         Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
@@ -377,7 +377,7 @@ public sealed class NoLockTests
     public void Succeeded_with_a_legacy_flag_is_not_unsettled(string release)
     {
         var definition = FoundationTools.Definitions.Single(tool => tool.Name == "SaveProject");
-        var raw = new JsonObject { ["Executed"] = true, ["ProjectFile"] = "C:/fixture.ap" + release, ["RequiresSessionReset"] = true };
+        var raw = new JsonObject { ["Executed"] = true, ["ProjectFile"] = "C:/fixture.ap" + release, ["OutcomeUnknown"] = true };
         var result = FoundationV4Result.Worker(release, definition, "succeeded", new() { ["dryRun"] = false }, raw, raw);
         Assert.Equal("succeeded", (string?)result.StructuredContent?["meta"]?["outcome"]);
         RemainsSettled(release, "SaveProject", result, true);
@@ -405,7 +405,7 @@ public sealed class NoLockTests
     {
         var definition = FoundationTools.Definitions.Single(d => d.Name == "CompilePlcSoftware");
         var raw = new JsonObject { ["Executed"] = true, ["State"] = "Error", ["ErrorCount"] = 1,
-            ["Errors"] = new JsonArray("Synthetic compiler error"), ["RequiresSessionReset"] = true };
+            ["Errors"] = new JsonArray("Synthetic compiler error"), ["OutcomeUnknown"] = true };
         var result = FoundationV4Result.Worker(release, definition, "compile", new() { ["dryRun"] = false }, raw, raw);
         Assert.Equal("failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
         RemainsSettled(release, definition.Name, result, true);
@@ -415,7 +415,7 @@ public sealed class NoLockTests
     public void Definite_batch_failure_is_not_unsettled(string release)
     {
         var definition = FoundationTools.Definitions.Single(d => d.Name == "ExportPlcBlocks");
-        var raw = new JsonObject { ["Executed"] = true, ["RequiresSessionReset"] = true,
+        var raw = new JsonObject { ["Executed"] = true, ["OutcomeUnknown"] = true,
             ["Items"] = new JsonArray(new JsonObject { ["Status"] = "exported", ["Attempted"] = true },
                 new JsonObject { ["Status"] = "failed", ["Attempted"] = false, ["Failure"] = "target-recheck-failed" }) };
         var result = FoundationV4Result.Worker(release, definition, "batch", new() { ["dryRun"] = false }, raw, raw);

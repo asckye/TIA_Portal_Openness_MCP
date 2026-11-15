@@ -17,11 +17,11 @@ internal static class HardwareAddressingWire
             "hardware-addressing.ReadHardwareIpAddress" => reply is JsonObject ip && Flag(ip["Found"]) && ip["Nodes"] is JsonArray nodes
                 && nodes.All(n => n is JsonObject && Text(n["NodeName"]) && Text(n["Address"]) && Flag(n["IsIndustrialEthernet"])),
             "hardware-addressing.SetHardwareIoAddress" => reply is JsonObject io && Flag(io["Ok"]) && Text(io["Message"])
-                && Flag(io["RequiresSessionReset"]) && (io["Before"] == null || Address(io["Before"])) && (io["After"] == null || Address(io["After"]))
+                && Flag(io["OutcomeUnknown"]) && (io["Before"] == null || Address(io["Before"])) && (io["After"] == null || Address(io["After"]))
                 && (!(bool)io["Ok"]! || io["Before"] != null && io["After"] != null)
-                && ((bool)io["RequiresSessionReset"]! == (io["Before"] != null && io["After"] == null)),
+                && ((bool)io["OutcomeUnknown"]! == (io["Before"] != null && io["After"] == null)),
             "hardware-addressing.ReadHardwareAddressing" or "hardware-addressing.UpdateHardwareAddress" => reply is JsonObject step
-                && Text(step["Message"]) && Flag(step["RequiresSessionReset"]) && step["Meta"] is JsonObject meta
+                && Text(step["Message"]) && Flag(step["OutcomeUnknown"]) && step["Meta"] is JsonObject meta
                 && Text(meta["tool"])
                     && (string?)meta["tool"] == (operation.EndsWith("ReadHardwareAddressing", StringComparison.Ordinal) ? "GetDeviceAddressing"
                         : "SetDeviceAddress")

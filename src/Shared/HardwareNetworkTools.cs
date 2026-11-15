@@ -274,8 +274,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The hardware observation covers only the reported scope and available fields.",
                         new Dictionary<string, JsonElement>()));
-            var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+            var meta =
+                new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution, current
+                    ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                     completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),

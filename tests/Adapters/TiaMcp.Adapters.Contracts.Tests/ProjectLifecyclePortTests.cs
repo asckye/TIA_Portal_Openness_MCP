@@ -50,7 +50,7 @@ public sealed class ProjectLifecyclePortTests
             }
             Assert.False(result.MayHaveChanged);
             Assert.NotEqual(true, result.Meta.GetValueOrDefault("mayHaveWrittenFiles"));
-            Assert.False(result.RequiresSessionReset);
+            Assert.False(result.OutcomeUnknown);
             Assert.Equal(0, engine.Connection.ExclusiveCalls);
         }
         finally { Directory.Delete(root, true); }

@@ -35,7 +35,7 @@ public sealed class ProvenOutcomeTests
         return new JsonObject {
             ["Executed"] = true, ["ProjectFile"] = "C:/fixture/Fixture.ap21", ["SoftwarePath"] = "PLC",
             ["GroupPath"] = "", ["Recursive"] = true, ["InventoryHash"] = Hash, ["InventoryComplete"] = true,
-            ["RequiresSessionReset"] = false, ["Items"] = items };
+            ["OutcomeUnknown"] = false, ["Items"] = items };
     }
 
     [Theory]
@@ -77,7 +77,7 @@ public sealed class ProvenOutcomeTests
         var definition = FoundationTools.Definitions.Single(d => d.Name == "CompilePlcDiagnostics");
         var body = FoundationV4Result.Worker(release, definition, "fixture", new() { ["dryRun"] = false }, raw, null).StructuredContent!;
         Verdict(body, "failed", "completed", "NATIVE_OPERATION_FAILED");
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
+        Assert.NotEqual("unknown", (string?)body["meta"]?["outcome"]);
     }
 
     private static WorkerOperationException LostReply()
@@ -130,7 +130,7 @@ public sealed class ProvenOutcomeTests
     private static JsonObject DocumentImport(string status, bool executed = true) => new() {
         ["Policy"] = "single-document-global-db-v1", ["PlanHash"] = Hash, ["Status"] = status,
         ["Executed"] = executed, ["Attempted"] = executed, ["MayHaveChanged"] = executed,
-        ["RequiresSessionReset"] = status == "unknown", ["Error"] = status == "unknown" ? "Import reply lost." : "",
+        ["OutcomeUnknown"] = status == "unknown", ["Error"] = status == "unknown" ? "Import reply lost." : "",
         ["Release"] = "21", ["ProjectFile"] = "C:/fixture/Fixture.ap21", ["ProcessId"] = 123,
         ["TargetIdentity"] = "PLC/DB_Fixture", ["SoftwarePath"] = "PLC", ["GroupPath"] = "",
         ["InputDirectory"] = "C:/fixture/documents", ["DeclaredName"] = "DB_Fixture", ["Kind"] = "GlobalDB", ["Language"] = "DB",
@@ -140,7 +140,7 @@ public sealed class ProvenOutcomeTests
 
     private static JsonObject BatchDocumentImport(string status) => new() {
         ["Policy"] = "batch-document-global-db-v1", ["PlanHash"] = Hash, ["Status"] = status,
-        ["Attempted"] = true, ["MayHaveChanged"] = true, ["RequiresSessionReset"] = status == "unknown",
+        ["Attempted"] = true, ["MayHaveChanged"] = true, ["OutcomeUnknown"] = status == "unknown",
         ["Error"] = status == "unknown" ? "Import reply lost." : "", ["Items"] = new JsonArray(new JsonObject {
             ["Name"] = "DB_Fixture", ["Status"] = status, ["Preview"] = DocumentImport("planned", false),
             ["Outcome"] = DocumentImport(status), ["PostInventory"] = new JsonArray("DB_Fixture") }) };

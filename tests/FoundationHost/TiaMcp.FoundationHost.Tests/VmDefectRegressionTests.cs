@@ -25,7 +25,7 @@ public sealed class VmDefectRegressionTests
         Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("/expectedProject", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
         Assert.Contains("NAME", (string)result.StructuredContent!["error"]!["message"]!);
-        Assert.False((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)result.StructuredContent["meta"]!["outcome"]);
     }
 
     [Fact]
@@ -38,7 +38,6 @@ public sealed class VmDefectRegressionTests
         var result = Host.UnifiedHmiContract.Map("EnsureUnifiedHmiTag", response, true, true);
         Assert.Equal("PARTIAL_FAILURE", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("partial", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.False((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
         Assert.Contains("no rollback", (string)result.StructuredContent["data"]!["partialWrite"]!);
     }
 
@@ -79,7 +78,7 @@ public sealed class VmDefectRegressionTests
             () => invalidations++, () => disposals++, detachOnShutdown: () => detached = true);
         recovery.DisposeSession();
         Assert.True(detached); Assert.Equal(0, invalidations); Assert.Equal(1, disposals);
-        Assert.True(state.RequiresReset);
+        Assert.True(state.Uncertain);
     }
 
     [Fact]
@@ -159,16 +158,14 @@ public sealed class VmDefectRegressionTests
         error.Data["foundationSessionPoisoned"] = true;
         var result = FoundationV4Result.Failure("21", tool, "vm-read", true, false, null, error);
         Assert.Equal("read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.False((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
         Assert.Null(result.StructuredContent["data"]?["recovery"]);
         Assert.Equal("Native option unavailable", (string?)result.StructuredContent["error"]?["details"]?["nativeMessage"]);
         error.Data["foundationSessionPoisoned"] = false;
         var ordinary = FoundationV4Result.Failure("21", tool, "vm-read", true, false, null, error);
-        Assert.False((bool)ordinary.StructuredContent!["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)ordinary.StructuredContent!["meta"]!["outcome"]);
 
         var reconciled = FoundationV4Result.ReconcileWorker(ordinary,
             new JsonObject { ["exceptionType"] = "EngineeringTargetInvocationException", ["nativeMessage"] = "Native option unavailable" });
-        Assert.False((bool)reconciled.StructuredContent!["meta"]!["requiresSessionReset"]!);
         Assert.Equal("read-failed", (string?)reconciled.StructuredContent["meta"]?["outcome"]);
         Assert.True(JsonNode.DeepEquals(reconciled.StructuredContent, JsonNode.Parse(
             ((global::ModelContextProtocol.Protocol.TextContentBlock)Assert.Single(reconciled.Content)).Text)));
@@ -183,7 +180,7 @@ public sealed class VmDefectRegressionTests
         error.Data["workerOutcomeUnknown"] = true;
         var result = FoundationV4Result.Failure("21", "SearchInstalledGsdDevices", "vm-timeout", true, false, null, error);
         Assert.Equal("NATIVE_OPERATION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.False((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)result.StructuredContent!["meta"]!["outcome"]);
         Assert.Null(result.StructuredContent["data"]?["recovery"]);
         Assert.Equal(TimeSpan.FromSeconds(120), WorkerTimeoutPolicy.Defaults["default"]);
 
@@ -228,7 +225,7 @@ public sealed class VmDefectRegressionTests
             });
         var preview = Run(); Assert.Equal(0, creates);
         request.ExpectedHash = preview.PlanHash; request.ExpectedProject = request.Project; request.Confirm = true; request.DryRun = false;
-        var result = Run(); Assert.Equal(1, creates); Assert.True(result.Executed); Assert.False(result.RequiresSessionReset);
+        var result = Run(); Assert.Equal(1, creates); Assert.True(result.Executed); Assert.False(result.OutcomeUnknown);
         var wireRequest = JsonSerializer.SerializeToNode(new { preferredMlfb = article, preferredVersion = version,
             deviceName = request.Name, family, dryRun = false, confirm = true, expectedPlanHash = preview.PlanHash,
             expectedProjectFile = request.Project })!.AsObject();

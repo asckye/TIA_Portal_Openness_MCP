@@ -45,9 +45,9 @@ namespace TiaMcp.Adapters
                         : LibraryValue(reply.Observation.Value);
                 bool invoked = reply.Observation.Meta.TryGetValue("invocationAttempted", out var attempted) && Equals(attempted, true);
                 reply.MayHaveChanged = request.AllowWrite && invoked;
-                reply.RequiresSessionReset = reply.MayHaveChanged && !Equals(reply.Observation.Meta["success"], true);
-                if (reply.RequiresSessionReset)
-                { reply.Observation.Meta["writeOutcomeUnknown"] = true; reply.Observation.Meta["requiresSessionReset"] = true; }
+                reply.OutcomeUnknown = reply.MayHaveChanged && !Equals(reply.Observation.Meta["success"], true);
+                if (reply.OutcomeUnknown)
+                { reply.Observation.Meta["writeOutcomeUnknown"] = true; }
             }
             catch (Exception error) when (error.GetBaseException() is not NonRecoverableException)
             {

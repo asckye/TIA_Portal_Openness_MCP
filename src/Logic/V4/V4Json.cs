@@ -220,7 +220,6 @@ namespace TiaMcp.Logic.V4
                 [ErrorCode.OfflineRequired] = typeof(OfflineRequiredDetails),
                 [ErrorCode.AuthenticationRequired] = typeof(AuthenticationRequiredDetails),
                 [ErrorCode.AccessDenied] = typeof(AccessDeniedDetails),
-                [ErrorCode.SessionResetRequired] = typeof(SessionResetRequiredDetails),
                 [ErrorCode.ResourceUnavailable] = typeof(ResourceUnavailableDetails),
                 [ErrorCode.IoFailed] = typeof(IoFailedDetails),
                 [ErrorCode.NativeOperationFailed] = typeof(NativeOperationFailedDetails),

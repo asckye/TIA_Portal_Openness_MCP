@@ -103,7 +103,8 @@ namespace TiaMcp.Logic.V4
             var details = Evidence(evidence, tool);
             // PartialSuccess and None cannot establish that all requested work completed.
             outcome = Outcome.Unknown;
-            error = new Error("The native result state does not establish a complete outcome. Inspect the retained raw state and reset the session.",
+            error = new Error("The native result state does not establish a complete outcome. Inspect the target and retained raw state; "
+                + "the call stays on GetSessionState.unsettled. Do not replay it.",
                 new OutcomeUnknownDetails("native-result-state", details));
             return true;
         }
@@ -150,7 +151,8 @@ namespace TiaMcp.Logic.V4
                 outcome = Outcome.Partial;
                 error = new Error("The reachable target refused compensation; perform the listed cleanup.", new PartialFailureDetails(0, 0, 0));
             }
-            else error = new Error("Restoration could not be established. Inspect the retained evidence and reset the session.",
+            else error = new Error("Restoration could not be established. Inspect the target and retained evidence; "
+                + "the call stays on GetSessionState.unsettled. Do not replay it.",
                 new OutcomeUnknownDetails("rollback", Evidence(evidence, tool)));
             return true;
         }
@@ -195,7 +197,8 @@ namespace TiaMcp.Logic.V4
             if (changesProject) outcome = Outcome.Unknown;
             var details = Evidence(evidence, tool);
             error = changesProject
-                ? new Error("The native operation returned " + state + "; partial project changes are possible. Inspect the evidence and reset the session.",
+                ? new Error("The native operation returned " + state + "; partial project changes are possible. Inspect the target and evidence; "
+                        + "the call stays on GetSessionState.unsettled. Do not replay it.",
                         new OutcomeUnknownDetails("native-result-state", details))
                 : new Error("The native operation returned " + state + ". The project was unchanged; inspect the file and log evidence.",
                         new NativeOperationFailedDetails(state, null, details));

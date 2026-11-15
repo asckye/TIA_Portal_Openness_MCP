@@ -44,14 +44,13 @@ public sealed class VersionControlPortTests
             Message = "partial",
             Items = new[] { "A | synchronized", "B | FAILED" },
             Meta = new Dictionary<string, object?> { ["success"] = false, ["mayHaveChanged"] = true },
-            RequiresSessionReset = true
+            OutcomeUnknown = true
         };
         string wire = System.Text.Json.JsonSerializer.Serialize(reply);
         var copy = System.Text.Json.JsonSerializer.Deserialize<VersionControlResult>(wire)!;
         Assert.Equal(reply.Items, copy.Items);
-        Assert.True(copy.RequiresSessionReset);
+        Assert.True(copy.OutcomeUnknown);
         Assert.True(copy.MayHaveChanged);
-        Assert.True(reply.BlockReadsAfterUncertain);
         Assert.False(copy.Meta["success"] is null);
     }
 

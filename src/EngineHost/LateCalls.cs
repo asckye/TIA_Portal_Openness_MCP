@@ -100,7 +100,7 @@ public sealed class LateCalls
             {
                 var unknown = unsettled.Snapshot().FirstOrDefault(call => call.RequestId == id && unsettled.IsUnread(id));
                 if (unknown == null) return null;
-                var meta = new Meta(unknown.Utc, release, unknown.Tool, id, Outcome.Unknown, Execution.Unknown, false,
+                var meta = new Meta(unknown.Utc, release, unknown.Tool, id, Outcome.Unknown, Execution.Unknown,
                     BehaviorPolicy.Current, Completeness.Unknown, null, new[] { new Warning(WarningCode.UnverifiedBehavior,
                         "Native behavior has not been verified on a real machine.", new Dictionary<string, System.Text.Json.JsonElement>()) });
                 var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new JsonObject(),
@@ -182,7 +182,7 @@ public sealed class LateCalls
     public static CallToolResult InProgress(string release, string tool, JsonObject running)
     {
         string id = (string)running["requestId"]!;
-        var meta = new Meta(DateTimeOffset.UtcNow, release, tool, id, Outcome.InProgress, Execution.Unknown, false,
+        var meta = new Meta(DateTimeOffset.UtcNow, release, tool, id, Outcome.InProgress, Execution.Unknown,
             BehaviorPolicy.Current, Completeness.Unknown, null, new[] { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior has not been verified on a real machine.", new Dictionary<string, System.Text.Json.JsonElement>()) });
         var envelope = Envelope.Create(new JsonObject { ["activeRequestId"] = id, ["running"] = running.DeepClone() },

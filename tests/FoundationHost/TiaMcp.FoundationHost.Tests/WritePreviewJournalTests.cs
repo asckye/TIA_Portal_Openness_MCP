@@ -16,7 +16,6 @@ public sealed class WritePreviewJournalTests
                 ["success"] = false, ["operationSuccess"] = false, ["rollbackCompleted"] = true,
                 ["mayHaveChanged"] = false, ["cleanupRequired"] = new JsonArray() } }, true, false);
         Assert.Equal("failed", (string?)result.StructuredContent!["meta"]!["outcome"]);
-        Assert.False((bool?)result.StructuredContent["meta"]!["requiresSessionReset"]);
         Assert.False((bool?)result.StructuredContent["data"]!["evidence"]!["mayHaveChanged"]);
     }
 

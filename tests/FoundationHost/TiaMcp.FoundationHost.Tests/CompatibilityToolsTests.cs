@@ -171,7 +171,7 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
             meta = new JsonObject { ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = started } };
         var result = enginehost::TiaMcpServer.ModelContextProtocol.EngineeringToolContract.Map("ExportTechnologyObjectsToDirectory", response, true);
         Assert.Equal(outcome, (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.Equal(reset, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Equal(reset, (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown");
     }
 
     [Fact]
@@ -370,7 +370,6 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         Assert.Equal(1, calls);
         Assert.Equal(expected, (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.NotEqual(true, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         Assert.Null(result.StructuredContent?["data"]?["evidence"]?["recoveryExportPath"]);
     }
 
@@ -394,7 +393,6 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args));
         Assert.Equal(expected, (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         Assert.Contains(result.StructuredContent!["meta"]!["warnings"]!.AsArray(),
             warning => (string?)warning?["code"] == "APPROVAL_DISABLED");
         Assert.Equal(1, worker.MoveCalls);
@@ -414,7 +412,7 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
             MoveCalls++;
             if ((bool?)args["dryRun"] == true) return Task.FromResult<JsonNode?>(new JsonObject { ["Message"] = "preview",
                 ["Meta"] = new JsonObject { ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["planHash"] = new string('a', 64) } });
-            return Task.FromResult<JsonNode?>(new JsonObject { ["MayHaveChanged"] = false, ["RequiresSessionReset"] = false,
+            return Task.FromResult<JsonNode?>(new JsonObject { ["MayHaveChanged"] = false, ["OutcomeUnknown"] = false,
                 ["Failure"] = new JsonObject { ["Code"] = code, ["Message"] = message,
                     ["Evidence"] = new JsonObject { ["nativeExceptionType"] = code, ["nativeMessage"] = message } } });
         }
@@ -432,7 +430,7 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         var result = new enginehost::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools(service)
             .MoveBlockToGroupV4("PLC", "Motor", "Target", true, false, true, new string('a', 64), "C:/Project.ap21");
         Assert.Equal("OUTCOME_UNKNOWN", (string?)result.StructuredContent?["error"]?["code"]);
-        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.NotNull(attempted);
         Assert.Equal(attempted, (string?)result.StructuredContent?["data"]?["evidence"]?["recoveryExportPath"]);
     }

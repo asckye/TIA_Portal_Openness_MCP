@@ -236,7 +236,7 @@ public sealed class LateCallsTests
             })) : null;
         var envelope = Envelope.Create(new JsonObject { ["payload"] = "original-payload-only" }, error,
             new Meta(DateTimeOffset.UtcNow, "21", "SaveProject", "evicted", unknown ? Outcome.Unknown : Outcome.Succeeded,
-                unknown ? Execution.Unknown : Execution.Completed, false, BehaviorPolicy.NotApplicable,
+                unknown ? Execution.Unknown : Execution.Completed, BehaviorPolicy.NotApplicable,
                 unknown ? Completeness.Unknown : Completeness.Complete, null, Array.Empty<Warning>()));
         var body = V4Json.Serialize(envelope);
         store.RecordUnknown("evicted", "SaveProject", "digest", new CallToolResult {
@@ -257,8 +257,8 @@ public sealed class LateCallsTests
         var store = new LateCalls();
         var envelope = Envelope.Create(new JsonObject { ["nativeOutcomeUnknown"] = true },
             new Error("Result exceeded its limit.", new LimitExceededDetails("response", 100, null)),
-            new Meta(DateTimeOffset.UtcNow, "21", "SaveProject", "limited", Outcome.Failed, Execution.Completed,
-                false, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>()));
+            new Meta(DateTimeOffset.UtcNow, "21", "SaveProject", "limited", Outcome.Failed, Execution.Completed, BehaviorPolicy.NotApplicable, Completeness
+                    .None, null, Array.Empty<Warning>()));
         store.RecordUnknown("limited", "SaveProject", "digest", new CallToolResult {
             StructuredContent = JsonNode.Parse(V4Json.Serialize(envelope)) });
         for (int index = 0; index < 16; index++)

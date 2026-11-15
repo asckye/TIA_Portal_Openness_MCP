@@ -10,6 +10,24 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class NoSessionLockSources
 {
     [Fact]
+    public void Removed_session_lock_names_are_absent_from_sources_and_reference()
+    {
+        string root = Repository.FindRoot(AppContext.BaseDirectory);
+        string[] names = { "RequiresSessionReset", "requiresSessionReset", "SESSION_RESET_REQUIRED",
+            "BlockReadsAfterUncertain", "requiresTiaRestart" };
+        foreach (string directory in new[] { "src", "reference" })
+        foreach (string file in Directory.EnumerateFiles(Path.Combine(root, directory), "*", SearchOption.AllDirectories)
+            .Where(file => !file.Split(Path.DirectorySeparatorChar).Any(part => part is "bin" or "obj")))
+        {
+            string relative = Path.GetRelativePath(root, file).Replace('\\', '/');
+            if (relative == "src/Studio/Gui/Localization/EngineResultText.cs") continue;
+            string source = Repository.ReadSource(file);
+            foreach (string name in names)
+                Assert.False(source.Contains(name, StringComparison.Ordinal), relative + ": " + name);
+        }
+    }
+
+    [Fact]
     public void Recovery_tests_use_production_budgets()
     {
         string root = Repository.FindRoot(AppContext.BaseDirectory);

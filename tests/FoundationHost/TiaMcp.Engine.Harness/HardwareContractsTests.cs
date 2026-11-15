@@ -137,7 +137,7 @@ internal static class HardwareContractsTests
                 && body["error"]!["message"]!.GetValue<string>().Contains("ConnectProject")
                 && (string?)body["meta"]?["outcome"] == "rejected-before-operation"
                 && (string?)body["meta"]?["execution"] == "not-started"
-                && (bool?)body["meta"]?["requiresSessionReset"] == false,
+                && body["meta"] is JsonObject meta && !meta.ContainsKey("requiresSessionReset"),
                 "P6-70 approval-disabled real body refuses unbound catalog: " + sample.Item1);
         }
     }

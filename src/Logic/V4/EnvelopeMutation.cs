@@ -42,7 +42,7 @@ namespace TiaMcp.Logic.V4
         {
             var m = value.Meta;
             var meta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, requestId ?? m.RequestId, outcome ?? m.Outcome, execution ?? m.Execution,
-                m.RequiresSessionReset, m.BehaviorPolicy, completeness ?? m.Completeness, m.Paging, warnings);
+                m.BehaviorPolicy, completeness ?? m.Completeness, m.Paging, warnings);
             return JsonNode.Parse(V4Json.Serialize(new Envelope(4, meta.Outcome == Outcome.Succeeded, value.Data, value.Error, meta)))!;
         }
     }

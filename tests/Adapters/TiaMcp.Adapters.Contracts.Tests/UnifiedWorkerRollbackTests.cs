@@ -19,7 +19,7 @@ public sealed class UnifiedWorkerRollbackTests
         Assert.Null(reply.Failure);
         Assert.Equal(1, worker.NativeCalls);
         Assert.Equal(changed, reply.MayHaveChanged);
-        Assert.False(reply.RequiresSessionReset);
+        Assert.False(reply.OutcomeUnknown);
     }
 
     [Theory]
@@ -34,7 +34,7 @@ public sealed class UnifiedWorkerRollbackTests
         Assert.Null(reply.Failure);
         Assert.Equal(1, worker.NativeCalls);
         Assert.True(reply.MayHaveChanged);
-        Assert.Equal(reset, reply.RequiresSessionReset);
+        Assert.Equal(reset, reply.OutcomeUnknown);
     }
 
     private static UnifiedHmiRequest Request() => new() {

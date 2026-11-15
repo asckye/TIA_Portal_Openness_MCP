@@ -79,19 +79,19 @@ public sealed class WorkerFamilyCallbackTests
         Bind(engine);
         var hardware = engine.EngineeringStep!("Hardware", _ => throw new HardwareAddressingException("NotFound", "missing"));
         Assert.Equal("NotFound", hardware.Meta["status"]);
-        Assert.False(hardware.RequiresSessionReset);
+        Assert.False(hardware.OutcomeUnknown);
         var changed = engine.EngineeringStep!("Write", meta => { meta["mayHaveChanged"] = true; throw new InvalidOperationException("failed after write"); });
-        Assert.True(changed.RequiresSessionReset);
+        Assert.True(changed.OutcomeUnknown);
         Assert.False((bool)changed.Meta["operationSuccess"]!);
         var unknown = engine.EngineeringServicesStep!("Write", true, meta =>
         { meta["mayHaveChanged"] = true; meta["writeOutcomeUnknown"] = true; return "unknown"; });
-        Assert.True(unknown.RequiresSessionReset);
+        Assert.True(unknown.OutcomeUnknown);
         var native = engine.EngineeringStep!("Native", _ => throw new Siemens.Engineering.EngineeringException("native error"));
         Assert.Equal("native message", ((Dictionary<string, object?>)native.Meta["messageData"]!)["text"]);
         Assert.False((bool)native.Meta["apiCallSuccess"]!);
         Assert.Equal(3, engine.ExportFailures);
         var unavailable = engine.EngineeringStep!("Read", meta => { meta["connectionUnavailable"] = true; return "partial"; });
-        Assert.True(unavailable.RequiresSessionReset);
+        Assert.True(unavailable.OutcomeUnknown);
     }
 
     [Theory]
@@ -114,7 +114,7 @@ public sealed class WorkerFamilyCallbackTests
         int calls = 0;
         var following = engine.EngineeringServicesStep!("CompareLibraries", false, _ => { calls++; return "Read completed"; });
         Assert.Equal(1, calls);
-        Assert.False(following.RequiresSessionReset);
+        Assert.False(following.OutcomeUnknown);
         Assert.Empty(engine.NativeCalls);
         var project = engine.NewProject("Replacement");
         engine.ProjectReleased!();
@@ -122,7 +122,7 @@ public sealed class WorkerFamilyCallbackTests
         Assert.Null(engine.ReadEngineeringHmiReadFault!());
         Assert.Equal("read", engine.EngineeringStep!("Tool", _ => "read").Message);
         var lost = engine.EngineeringStep!("Tool", _ => throw new ObjectDisposedException("Openness handle"));
-        Assert.True(lost.RequiresSessionReset);
+        Assert.True(lost.OutcomeUnknown);
         Assert.True((bool)lost.Meta["connectionUnavailable"]!);
         Assert.NotNull(engine.ReadEngineeringHmiReadFault!());
     }

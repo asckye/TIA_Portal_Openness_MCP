@@ -27,7 +27,7 @@ internal static class DeviceAddDispatchTests
         }check(rejected&&worker.Calls==calls,"Device add hash required before worker");
         args["expectedPlanHash"]=JsonSerializer.SerializeToElement(planned["PlanHash"]!.GetValue<string>());response=await tool.InvokeAsync(Request());
         check(response.IsError!=true&&worker.Calls==calls+1,"Reviewed device addition actual MCP dispatch");
-        var unknown=Payload(worker.Arguments!);unknown["Executed"]=false;unknown["Status"]="outcome-unknown";unknown["RequiresSessionReset"]=true;
+        var unknown=Payload(worker.Arguments!);unknown["Executed"]=false;unknown["Status"]="outcome-unknown";unknown["OutcomeUnknown"]=true;
         unknown["Error"]="native outcome unknown";
         WorkerProtocol.ValidateExchangeResult("AddDeviceWithFallback",worker.Arguments!,unknown);WorkerProtocol
             .ValidateExchangeResult("AddDeviceWithFallback",worker.Arguments!,Payload(worker.Arguments!));

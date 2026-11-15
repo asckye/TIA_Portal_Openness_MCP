@@ -91,7 +91,7 @@ public sealed partial class PlcFoundationEngine
             finally { foreach (var pair in meta) values[pair.Key] = pair.Value; }
         }, requiresProject: true);
         return new SecurityResult { Message = reply.Message, Meta = reply.Meta,
-            RequiresSessionReset = reply.RequiresSessionReset
+            OutcomeUnknown = reply.OutcomeUnknown
                 || reply.Meta.TryGetValue("mayHaveChanged", out var changed) && changed is true
                     && reply.Meta.TryGetValue("operationSuccess", out var success) && success is false };
     }

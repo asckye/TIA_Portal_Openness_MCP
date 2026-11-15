@@ -172,7 +172,6 @@ public sealed class PlcFixtureWorkerRobustnessTests
                 .ToJsonString()) };
         var result = await scope.Call(tool, request);
         Assert.Equal(mode == "hang" ? "in-progress" : "read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (mode == "hang") Assert.Equal("OPERATION_IN_PROGRESS", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
         Assert.Equal(mode is not ("hang" or "tia-lost"), scope.Worker.Faulted);
@@ -210,7 +209,6 @@ public sealed class PlcFixtureWorkerRobustnessTests
                 .ToJsonString()) };
         var result = await scope.Call(tool, request);
         Assert.Equal(mode == "hang" ? "in-progress" : "read-failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         if (mode == "hang") Assert.Equal("OPERATION_IN_PROGRESS", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.NotEmpty(result.StructuredContent!["meta"]!["warnings"]!.AsArray());
         Assert.Equal(mode is not ("hang" or "tia-lost"), scope.Worker.Faulted);

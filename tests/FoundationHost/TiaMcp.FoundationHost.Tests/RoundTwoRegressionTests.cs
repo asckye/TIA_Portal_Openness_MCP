@@ -33,7 +33,7 @@ public sealed class RoundTwoRegressionTests
         Assert.Equal(supported ? "unknown" : "not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.Equal(supported ? "OUTCOME_UNKNOWN" : "UNSUPPORTED_CAPABILITY", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal(supported, (bool?)result.StructuredContent?["data"]?["earlierMutationMayHaveChanged"] ?? false);
-        Assert.Equal(supported, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Equal(supported, (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown");
         Assert.Equal(supported ? 1 : 0, inner.Unsettled.Snapshot().Count);
     }
 
@@ -54,7 +54,6 @@ public sealed class RoundTwoRegressionTests
         Assert.Equal(0, worker.Mutations);
         Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         Assert.Empty(inner.Unsettled.Snapshot());
     }
 
@@ -84,7 +83,6 @@ public sealed class RoundTwoRegressionTests
         Assert.Contains(steps, step => (string?)step?["step"] == "scl" && (string?)step?["status"] == "failed");
         Assert.Equal(continueAfterRefusal, steps.Any(step => (string?)step?["step"] == "scl" && (string?)step?["status"] == "ok"));
         Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
         Assert.Single(inner.Unsettled.Snapshot());
     }
 

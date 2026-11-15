@@ -486,8 +486,8 @@ namespace TiaMcpServer.ModelContextProtocol
             // An audited call answers with its audit id (the journal starts with the same id at dispatch, and
             // CorrelationId would invent a new one for a refusal before dispatch).
             var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool,
-                Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? InvocationJournal.CorrelationId), outcome, execution,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, policy, completeness, paging, warnings);
+                Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? InvocationJournal.CorrelationId), outcome, execution, policy,
+                    completeness, paging, warnings);
             var mapped = McpResult.From(BehaviorCapabilities.Disclose(Envelope.Create(data, error, meta)));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };

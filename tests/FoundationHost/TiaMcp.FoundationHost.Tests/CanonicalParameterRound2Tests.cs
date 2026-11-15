@@ -206,8 +206,9 @@ public sealed class CanonicalParameterRound2Tests
             CancellationToken cancellationToken = default)
         {
             Calls++; Last = JsonSerializer.SerializeToNode(request.Params!.Arguments)!.AsObject();
-            var meta = new Meta(DateTimeOffset.UtcNow, "21", "SaveExportContent", "test", Outcome.Succeeded, Execution.Completed,
-                false, BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>());
+            var meta =
+                new Meta(DateTimeOffset.UtcNow, "21", "SaveExportContent", "test", Outcome.Succeeded, Execution.Completed, BehaviorPolicy.NotApplicable,
+                    Completeness.Complete, null, Array.Empty<Warning>());
             var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { written = true }, null, meta)))!;
             return ValueTask.FromResult(new CallToolResult { IsError = false, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } });

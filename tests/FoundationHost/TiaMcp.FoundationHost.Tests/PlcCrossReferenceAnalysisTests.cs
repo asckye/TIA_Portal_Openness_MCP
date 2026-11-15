@@ -255,21 +255,20 @@ public sealed class PlcCrossReferenceAnalysisTests
             string staged = Path.Combine(directory, ".tia-export-failed"); Directory.CreateDirectory(staged);
             File.WriteAllText(Path.Combine(staged, "unpublished.xml"), Xml("Unpublished"));
             var result = PlcCrossReferenceAnalysis.Report("devices/Station/PLC", directory, new JsonObject {
-                ["Items"] = items, ["GroupPath"] = "Group", ["Recursive"] = true, ["InventoryComplete"] = true, ["RequiresSessionReset"] = true });
+                ["Items"] = items, ["GroupPath"] = "Group", ["Recursive"] = true, ["InventoryComplete"] = true, ["OutcomeUnknown"] = true });
             Assert.Equal(successful, (int)result["exportedBlocks"]!);
             Assert.Contains("Covers " + successful + " exported blocks of software devices/Station/PLC", (string)result["scope"]!);
             Assert.Contains("blocks not exported are not analysed", (string)result["scope"]!);
             Assert.False((bool)result["exportComplete"]!);
             Assert.False((bool)result["dataComplete"]!);
             Assert.False((bool)result["nativeCrossReferencesQueried"]!);
-            Assert.True((bool)result["requiresSessionReset"]!);
+            Assert.True((bool)result["writeOutcomeUnknown"]!);
             Assert.Equal(successful != 0, (bool)result["analysisQueried"]!);
             if (successful > 0) Assert.Equal(successful, (int)result["analysis"]!["indexedBlocks"]!);
             var envelope = PlcCrossReferenceAnalysis.Result("21", "partial-query", result);
             Assert.False(envelope.Ok);
             Assert.Equal(successful == 0 ? TiaMcp.Logic.V4.Outcome.ReadFailed : TiaMcp.Logic.V4.Outcome.Partial, envelope.Meta.Outcome);
             Assert.Equal(successful == 0 ? TiaMcp.Logic.V4.ErrorCode.IoFailed : TiaMcp.Logic.V4.ErrorCode.PartialFailure, envelope.Error!.Code);
-            Assert.True(envelope.Meta.RequiresSessionReset);
         }
         finally { Directory.Delete(directory, true); }
     }
@@ -401,7 +400,7 @@ public sealed class PlcCrossReferenceAnalysisTests
                     ["XmlContent"] = "native-xml", ["Warnings"] = new JsonArray(), ["Evidence"] = new JsonObject() });
             }
             return Task.FromResult<JsonNode?>(new JsonObject { ["Executed"] = !preview, ["ProjectFile"] = "project.ap21", ["SoftwarePath"] = "devices/Station/PLC",
-                ["GroupPath"] = "", ["Recursive"] = true, ["InventoryHash"] = new string('a', 64), ["InventoryComplete"] = true, ["RequiresSessionReset"] = false, ["Items"] = items });
+                ["GroupPath"] = "", ["Recursive"] = true, ["InventoryHash"] = new string('a', 64), ["InventoryComplete"] = true, ["OutcomeUnknown"] = false, ["Items"] = items });
         }
         public void Dispose() { if (directory != null) Directory.Delete(directory, true); }
     }

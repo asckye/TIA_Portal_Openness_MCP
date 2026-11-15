@@ -136,7 +136,6 @@ public sealed class OptionalEngineeringBoundaryTests
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 
     private sealed class CredentialWorker : IFoundationWorker

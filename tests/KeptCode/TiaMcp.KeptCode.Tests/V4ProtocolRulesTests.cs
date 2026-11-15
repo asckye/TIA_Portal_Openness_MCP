@@ -446,9 +446,7 @@ namespace TiaMcp.Engine.Tests
             var marked = EnvelopeMutation.Precheck(value, "new-id");
             Assert.Equal("unknown", (string?)marked["meta"]!["outcome"]);
             Assert.Equal("plc-operation", (string?)marked["error"]!["details"]!["stage"]);
-            Assert.False(V4Json.Deserialize<Envelope>(marked.ToJsonString()).Meta.RequiresSessionReset);
             var locked = marked;
-            Assert.False(V4Json.Deserialize<Envelope>(locked.ToJsonString()).Meta.RequiresSessionReset);
             Assert.Equal("Unknown.", (string?)locked["error"]!["message"]);
         }
 
@@ -534,7 +532,7 @@ namespace TiaMcp.Engine.Tests
         }
         private static JsonObject Body(Outcome outcome, Error error) => JsonNode.Parse(V4Json.Serialize(Envelope.Create<object?>(null, error,
             new Meta(DateTimeOffset.UtcNow, "21", "CallTool", "id", outcome, outcome == Outcome.Unknown ? Execution.Unknown : Execution.NotStarted,
-                false, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>()))))!.AsObject();
+                    BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>()))))!.AsObject();
         private static Tool Descriptor(string name, string properties = "{}") => new Tool { Name = name, Description = "[L1][Project][SESSION] test",
             InputSchema = JsonSerializer.Deserialize<JsonElement>("{\"type\":\"object\",\"properties\":" + properties + "}") };
     }

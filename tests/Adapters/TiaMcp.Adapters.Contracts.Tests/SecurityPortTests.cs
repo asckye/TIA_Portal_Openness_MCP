@@ -50,11 +50,10 @@ public sealed class SecurityPortTests
         var result = new SecurityDataResult(new Dictionary<string, object?> {
             ["ok"] = false, ["mayHaveChanged"] = true, ["writeOutcomeKnown"] = false, ["message"] = "SetAttribute failed"
         });
-        Assert.True(result.RequiresSessionReset);
-        Assert.True(result.BlockReadsAfterUncertain);
+        Assert.True(result.OutcomeUnknown);
         var wire = JsonSerializer.SerializeToElement(result);
         Assert.Equal("SetAttribute failed", wire.GetProperty("message").GetString());
-        Assert.False(wire.TryGetProperty(nameof(SecurityDataResult.RequiresSessionReset), out _));
+        Assert.False(wire.TryGetProperty(nameof(SecurityDataResult.OutcomeUnknown), out _));
         Assert.True(wire.GetProperty("mayHaveChanged").GetBoolean());
     }
 }

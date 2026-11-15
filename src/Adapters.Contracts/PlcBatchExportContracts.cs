@@ -17,7 +17,6 @@ namespace TiaMcp.Adapters
     {
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Executed || Items.Any(item => item.Status == "exported"
             || item.Evidence.ContainsKey("recoveryDirectory"));
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public bool Executed { get; internal set; }
         public string ProjectFile { get; internal set; } = "";
         public string SoftwarePath { get; internal set; } = "";
@@ -25,7 +24,7 @@ namespace TiaMcp.Adapters
         public bool Recursive { get; internal set; }
         public string InventoryHash { get; internal set; } = "";
         public bool InventoryComplete { get; internal set; } = true;
-        public bool RequiresSessionReset { get; internal set; }
+        public bool OutcomeUnknown { get; internal set; }
         public PlcBatchExportItem[] Items { get; internal set; } = new PlcBatchExportItem[0];
     }
 }

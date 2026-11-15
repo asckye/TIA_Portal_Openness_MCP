@@ -65,7 +65,7 @@ public sealed class DeviceApplyAdmissionTests
         if (scenario == "catalog") Assert.Equal(new[] { "/preferredMlfb", "/preferredVersion" },
             body["error"]!["details"]!["parameters"]!.AsArray().Select(value => (string)value!));
         Assert.Equal("rejected-before-operation",(string?)body["meta"]?["outcome"]);Assert.Equal("not-started",(string?)body["meta"]?["execution"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);Assert.Equal(scenario=="duplicate" ? 1 : 0,worker.Creates);
+        Assert.Equal(scenario=="duplicate" ? 1 : 0,worker.Creates);
         Assert.Contains(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_DISABLED");
         Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_PRECHECK_REFUSED");
         Assert.True((bool?)(await Call("ListPlcTags",new JsonObject { ["plc"]="PLC_1",["table"]="T" }))["ok"]);

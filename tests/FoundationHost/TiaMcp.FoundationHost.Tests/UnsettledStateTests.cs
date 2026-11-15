@@ -66,7 +66,7 @@ public sealed class UnsettledStateTests
         var result = await new FoundationV4Tool(inner, "21").InvokeAsync(Request("PlanOnlineReadOnlyMonitoring", new JsonObject {
             ["softwarePath"] = "PLC_1", ["tagPaths"] = new JsonArray("DB_Status.Ready") }));
         Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.NotEqual("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.Null(result.StructuredContent?["data"]?["recovery"]);
     }
 

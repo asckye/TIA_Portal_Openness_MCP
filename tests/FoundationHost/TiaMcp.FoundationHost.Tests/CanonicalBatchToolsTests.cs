@@ -27,7 +27,7 @@ public sealed class CanonicalBatchToolsTests
         Apply(args, preview.StructuredContent!["data"]!.AsObject());
         var result = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
         Assert.Equal(unknown ? "unknown" : "failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.Equal(unknown, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.Equal(unknown, (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown");
         Assert.Equal(new[] { "A.xml" }, target.Writes);
         Assert.Equal(new[] { "failed", "not-started", "not-started" },
             result.StructuredContent!["data"]!["items"]!.AsArray().Select(row => (string?)row!["status"]));
@@ -512,8 +512,7 @@ public sealed class CanonicalBatchToolsTests
                 unknown ? Outcome.Unknown : failure ? Outcome.Failed : Outcome.Succeeded,
                 unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
                 unknown ? new Error("canonical unknown", new OutcomeUnknownDetails("batch-item", new Dictionary<string, JsonElement>()))
-                    : failure ? new Error("canonical failure", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())) : null,
-                reset: failure && LegacyReset);
+                    : failure ? new Error("canonical failure", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())) : null);
             if (OmitRequestId) result.StructuredContent!["meta"]!.AsObject().Remove("requestId");
             return ValueTask.FromResult(result);
         }

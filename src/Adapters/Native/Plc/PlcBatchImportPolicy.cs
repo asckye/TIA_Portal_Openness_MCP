@@ -396,7 +396,7 @@ namespace TiaMcp.Adapters
                             bool unknown=item.Attempted && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailureException));
                             item.Status="failed";item.Failure=unknown ? "native-outcome-uncertain" : item.Attempted ? "native-import-or-verification-failed"
                                 : "target-recheck-failed";
-                            result.NativeOutcomeUnknown=unknown;result.RequiresSessionReset=unknown;
+                            result.NativeOutcomeUnknown=unknown;
                             stopped=true;
                             if(request.Overwrite && replacements.Length>0)
                             {
@@ -423,7 +423,6 @@ namespace TiaMcp.Adapters
                                     catch(Exception) /* swallow(privacy): preserve restoration uncertainty and recovery evidence without native exception text. */
                                     {
                                         old.RestoreStatus="restore-failed";old.RestoreFailure="restoration-outcome-unverified";result.NativeOutcomeUnknown=true;
-                                        result.RequiresSessionReset=true;
                                     }
                                 }
                             }

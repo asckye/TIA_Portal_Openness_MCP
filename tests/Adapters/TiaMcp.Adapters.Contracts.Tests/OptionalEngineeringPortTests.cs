@@ -68,7 +68,7 @@ public sealed class OptionalEngineeringPortTests
         Assert.Equal(0, calls);
         Assert.Equal("NotSupportedOnVersion", reply.Meta["status"]);
         Assert.Equal(false, reply.Meta["mayHaveChanged"]);
-        Assert.False(reply.RequiresSessionReset);
+        Assert.False(reply.OutcomeUnknown);
         Assert.Equal("UNSUPPORTED_CAPABILITY", reply.Meta["rejectionCode"]);
         Assert.Equal("UNSUPPORTED_CAPABILITY", reply.Meta["v4Rejection"]);
         Assert.Equal(true, reply.Meta["operationNotStarted"]);

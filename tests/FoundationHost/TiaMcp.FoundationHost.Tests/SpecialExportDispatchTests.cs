@@ -76,7 +76,7 @@ internal static class SpecialExportDispatchTests
                 worker.Fail=true;
                 var applyTool = new FoundationV4Tool((FoundationTool)tool, "17", () => new(false, 1));
                 var failed=await applyTool.InvokeAsync(Request());
-                check(!worker.LastReply!["RequiresSessionReset"]!.GetValue<bool>() && worker.Publications==1
+                check(!worker.LastReply!["OutcomeUnknown"]!.GetValue<bool>() && worker.Publications==1
                     && (string?)failed.StructuredContent?["meta"]?["outcome"] == "failed",operation+": failed export returned once");
                 var replay = await applyTool.InvokeAsync(Request());
                 check((string?)replay.StructuredContent?["meta"]?["outcome"] == "rejected-before-operation", operation

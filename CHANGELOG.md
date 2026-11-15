@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### Changed
+- Typed V4 results rename `data.requiresSessionReset` to `data.outcomeUnknown` for device add, document import and export, batch export, batch document import and export, external-source tools and special export; batch import keeps only `data.nativeOutcomeUnknown`, with all values unchanged.
+- Beta.5 removes `meta.requiresSessionReset` and the `SESSION_RESET_REQUIRED` error code across all eight releases as a hard cut under ADR 0001; `schemaVersion` stays 4. Read `meta.outcome` for each call and `GetSessionState.unsettled` for unconfirmed writes. Inspect the target before repeating an unknown write; never replay it automatically.
 - `GetUnifiedGraphicSelection` writes its public tool name in new page scopes on V19–V21. `CompareUnifiedGraphicSelections` accepts both the new label and the legacy label in saved pages, including comparisons between old and new snapshots.
 - Across all eight releases, `GetDeviceItemNetworkInfo` reports complete reads and names its attribute-name heuristic in `data.selection`; unreadable attributes retain their names and make the read partial with `INCOMPLETE_DATA`, while enumeration and portal-loss failures report `read-failed`.
 - Across all eight releases, `GetHardwareFeatures` reports `present:null` with a reason for unprobed features, sets `dataComplete` from probe results and page coverage, and names the connected release's API in its scope.

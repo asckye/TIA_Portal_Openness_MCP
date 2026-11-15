@@ -26,8 +26,8 @@ namespace TiaMcp.Adapters
                 });
                 if (!writing)
                 {
-                    reply.RequiresSessionReset = false;
-                    reply.Meta["writeOutcomeUnknown"] = false; reply.Meta["requiresSessionReset"] = false;
+                    reply.OutcomeUnknown = false;
+                    reply.Meta["writeOutcomeUnknown"] = false;
                 }
                 return reply;
             }
@@ -88,12 +88,12 @@ namespace TiaMcp.Adapters
                 if (HmiReadSafety.ConnectionUnavailable(error)) RecordHmiFault(meta);
                 reply.Message = tool + " failed";
             }
-            reply.RequiresSessionReset = writing && (meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true
+            reply.OutcomeUnknown = writing && (meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true
                 || meta.TryGetValue("connectionUnavailable", out var unavailable) && unavailable is true
                 || !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial")
                     && meta.TryGetValue("mayHaveChanged", out var changed) && changed is true
                     && meta.TryGetValue("operationSuccess", out var success) && success is false);
-            if (reply.RequiresSessionReset) { meta["writeOutcomeUnknown"] = true; meta["requiresSessionReset"] = true; }
+            if (reply.OutcomeUnknown) { meta["writeOutcomeUnknown"] = true; }
             return reply;
         }
         internal void RecordHmiFault(Dictionary<string, object?> meta)

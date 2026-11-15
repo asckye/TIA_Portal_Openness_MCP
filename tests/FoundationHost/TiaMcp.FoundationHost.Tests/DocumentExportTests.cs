@@ -66,7 +66,8 @@ internal static class DocumentExportTests
             if(!OperatingSystem.IsWindows()) Reject(()=>Run(output,false,plan.PlanHash),"Document production publication refuses non-Windows before native callback");
             var applied=Run(output,false,plan.PlanHash,move:(from,to)=>Directory.Move(from.FullName,to.FullName));
             DocumentExportContract.Validate(Wire(applied),false);
-            check(applied.Status=="exported" && !applied.RequiresSessionReset && Directory.GetFiles(output).Length==2,"Document pair publishes together to fresh output");
+            check(applied.Status=="exported" && !applied.OutcomeUnknown && Directory.GetFiles(output).Length==2,
+                    "Document pair publishes together to fresh output");
             foreach(var kind in new[]{"missing","extra","escaped","duplicate","empty","native-failure","publish-failure","race"})
             {
                 var dest=Path.Combine(root,kind);var preview=Run(dest);
@@ -80,7 +81,7 @@ internal static class DocumentExportTests
                     if(kind=="race") Directory.CreateDirectory(dest);
                     return paths;
                 },move:(from,to)=>{if(kind=="publish-failure") throw new IOException("ambiguous");Directory.Move(from.FullName,to.FullName);});
-                check(failed.Status=="failed" && !failed.RequiresSessionReset && Directory.Exists(failed.RecoveryDirectory),"Document "+kind
+                check(failed.Status=="failed" && !failed.OutcomeUnknown && Directory.Exists(failed.RecoveryDirectory),"Document "+kind
                         +" retains evidence and reports a failed export");
                 DocumentExportContract.Validate(Wire(failed),false);
 

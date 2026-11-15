@@ -28,7 +28,7 @@ internal sealed class CollaborationSession
             }
         }, requiresProject);
         return new VersionControlResult { Message = reply.Message, Meta = reply.Meta,
-            RequiresSessionReset = reply.RequiresSessionReset
+            OutcomeUnknown = reply.OutcomeUnknown
                 || reply.Meta.TryGetValue("mayHaveChanged", out var changed) && changed is true
                     && reply.Meta.TryGetValue("operationSuccess", out var success) && success is false };
     }

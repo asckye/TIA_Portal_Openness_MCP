@@ -71,7 +71,7 @@ def assert_refused(reply: dict, label: str) -> None:
     require(details.get("reason") == "workbench-unavailable", f"{label}: wrong refusal reason: {body}")
     require(meta.get("outcome") == "rejected-before-operation" and meta.get("execution") == "not-started",
             f"{label}: operation was not proven to stop before dispatch: {body}")
-    require(meta.get("requiresSessionReset") is False, f"{label}: refusal incorrectly requires a session reset")
+    require("requiresSessionReset" not in meta, f"{label}: refusal contains the removed session-reset field")
 
 
 def assert_readiness_refused(reply: dict, label: str) -> None:
@@ -84,7 +84,7 @@ def assert_readiness_refused(reply: dict, label: str) -> None:
             f"{label}: readiness did not take precedence: {body}")
     require(meta.get("outcome") == "rejected-before-operation" and meta.get("execution") == "not-started",
             f"{label}: readiness was not proven to stop before dispatch: {body}")
-    require(meta.get("requiresSessionReset") is False, f"{label}: refusal incorrectly requires a session reset")
+    require("requiresSessionReset" not in meta, f"{label}: refusal contains the removed session-reset field")
 
 
 def assert_create_device_stopped(reply: dict, key: str, label: str, *, production_worker: bool = False) -> str:
@@ -105,7 +105,7 @@ def assert_create_device_stopped(reply: dict, key: str, label: str, *, productio
             f"{label}: missing portal did not stop native admission: {body}")
     require(meta.get("outcome") == "rejected-before-operation" and meta.get("execution") == "not-started",
             f"{label}: operation was not proven to stop before dispatch: {body}")
-    require(meta.get("requiresSessionReset") is False, f"{label}: refusal incorrectly requires a session reset")
+    require("requiresSessionReset" not in meta, f"{label}: refusal contains the removed session-reset field")
     require(any(warning.get("code") == "APPROVAL_PRECHECK_REFUSED" for warning in meta.get("warnings", [])),
             f"{label}: no evidence that refusal preceded the approval card: {body}")
     return "native-admission"
@@ -367,7 +367,7 @@ def self_test() -> int:
     refused = {"result": {"isError": True, "structuredContent": {
         "schemaVersion": 4, "ok": False, "data": {},
         "error": {"code": "CONFIRMATION_REQUIRED", "details": {"reason": "workbench-unavailable"}},
-        "meta": {"outcome": "rejected-before-operation", "execution": "not-started", "requiresSessionReset": False}}}}
+        "meta": {"outcome": "rejected-before-operation", "execution": "not-started"}}}}
     assert_refused(refused, "synthetic refusal")
     readiness = json.loads(json.dumps(refused))
     readiness["result"]["structuredContent"]["error"] = {

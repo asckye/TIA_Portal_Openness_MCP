@@ -31,7 +31,7 @@ public sealed class DevicePathStepTests
             Assert.Equal(new[] { "Dup", "G/Dup" }, Assert.IsType<string[]>(reply.Meta["candidates"]));
             Assert.Contains(target, Assert.IsType<string>(reply.Meta["nativeMessage"]));
             Assert.False(reply.MayHaveChanged);
-            Assert.False(reply.RequiresSessionReset);
+            Assert.False(reply.OutcomeUnknown);
         }
     }
 

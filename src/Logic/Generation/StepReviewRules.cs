@@ -133,7 +133,8 @@ namespace TiaMcp.Logic.Generation
             }
             Equal("status", JsonValue.Create("planned")); Equal("release", JsonValue.Create(plan.Target.Release));
             if (review.Rule != Delete) Equal("operation", JsonValue.Create(step.Tool));
-            Equal("executed", JsonValue.Create(false)); Equal("attempted", JsonValue.Create(false)); Equal("requiresSessionReset", JsonValue.Create(false));
+            Equal("executed", JsonValue.Create(false)); Equal("attempted", JsonValue.Create(false));
+            Equal("outcomeUnknown", JsonValue.Create(false));
             if (!SameFile(String(projection["projectFile"]), plan.Target.ProjectIdentity)) verdict
                 .Different("projectFile", JsonValue.Create(plan.Target.ProjectIdentity), projection["projectFile"]);
             Equal("processId", JsonValue.Create(processId));

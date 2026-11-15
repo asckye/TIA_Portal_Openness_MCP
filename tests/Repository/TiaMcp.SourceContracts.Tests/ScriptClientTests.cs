@@ -20,7 +20,7 @@ public sealed class ScriptClientTests
     {
         ["schemaVersion"] = 4, ["ok"] = ok, ["data"] = data ?? new JsonObject(),
         ["error"] = ok ? null : new JsonObject { ["code"] = "OUTCOME_UNKNOWN", ["message"] = "Inspect evidence" },
-        ["meta"] = new JsonObject { ["outcome"] = outcome ?? (ok ? "succeeded" : "unknown"), ["requiresSessionReset"] = !ok }
+        ["meta"] = new JsonObject { ["outcome"] = outcome ?? (ok ? "succeeded" : "unknown")}
     };
     private static JsonObject Reply(JsonObject value) => new() { ["result"] = new JsonObject { ["isError"] = !(bool)value["ok"]!, ["structuredContent"] = value.DeepClone() } };
     [Fact]
@@ -49,7 +49,7 @@ public sealed class ScriptClientTests
     {
         Assert.False(Campaign.Classify(Value(false)).Ok);
         Assert.Equal("UNCONFIRMED", Campaign.Verdict(Value(false), expectation));
-        var known = Value(false, outcome: "failed"); known["meta"]!["requiresSessionReset"] = false; known["error"]!["code"] = "PROJECT_NOT_BOUND";
+        var known = Value(false, outcome: "failed"); known["error"]!["code"] = "PROJECT_NOT_BOUND";
         Assert.Equal(expectation == "ok" ? "FAIL" : "PASS", Campaign.Verdict(known, expectation));
         Assert.Throws<ArgumentException>(() => Campaign.Classify(new JsonObject { ["message"] = "success", ["meta"] = new JsonObject { ["success"] = true } }));
     }

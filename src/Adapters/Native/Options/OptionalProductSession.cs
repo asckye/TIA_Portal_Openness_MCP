@@ -66,7 +66,7 @@ internal sealed class OptionalProductSession
             }
             finally { foreach (var pair in meta) values[pair.Key] = pair.Value; }
         }, requiresProject);
-        return new OptionalProductReply { Message = reply.Message, Meta = reply.Meta, RequiresSessionReset = reply.RequiresSessionReset };
+        return new OptionalProductReply { Message = reply.Message, Meta = reply.Meta, OutcomeUnknown = reply.OutcomeUnknown };
     }
     internal static string RefuseMissingAssembly(HmiObject meta)
     {

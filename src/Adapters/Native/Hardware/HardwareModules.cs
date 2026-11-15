@@ -293,7 +293,7 @@ namespace TiaMcp.Adapters
             try
             {
                 result.MayHaveChanged = true;
-                result.RequiresSessionReset = true;
+                result.OutcomeUnknown = true;
                 created = host.PlugNew(acceptedType, itemName, acceptedSlot);
             }
             catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
@@ -373,7 +373,7 @@ namespace TiaMcp.Adapters
             result.Addresses = ReadAddressesDeep(verifyItem);
 
             result.Ok = true;
-            result.RequiresSessionReset = false;
+            result.OutcomeUnknown = false;
             var addrText = result.Addresses == null || result.Addresses.Count == 0
                 ? "the module currently has no I/O addresses"
                 : "current addresses: " + string.Join(" / ", result.Addresses.Select(a => a.ToString()));

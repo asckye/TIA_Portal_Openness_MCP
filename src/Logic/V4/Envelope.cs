@@ -59,14 +59,13 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(3)] public string RequestId { get; }
         [JsonPropertyOrder(4)] public Outcome Outcome { get; }
         [JsonPropertyOrder(5)] public Execution Execution { get; }
-        [JsonPropertyOrder(6)] public bool RequiresSessionReset { get; }
         [JsonPropertyOrder(7)] public BehaviorPolicy BehaviorPolicy { get; }
         [JsonPropertyOrder(8)] public Completeness Completeness { get; }
         [JsonPropertyOrder(9)] public Paging? Paging { get; }
         [JsonPropertyOrder(10)] public IReadOnlyList<Warning> Warnings { get; }
 
         public Meta(DateTimeOffset timestamp, string? releaseKey, string tool, string requestId,
-            Outcome outcome, Execution execution, bool requiresSessionReset, BehaviorPolicy behaviorPolicy,
+            Outcome outcome, Execution execution, BehaviorPolicy behaviorPolicy,
             Completeness completeness, Paging? paging, IReadOnlyList<Warning> warnings)
         {
             Timestamp = timestamp.ToUniversalTime();
@@ -75,7 +74,6 @@ namespace TiaMcp.Logic.V4
             RequestId = requestId;
             Outcome = outcome;
             Execution = execution;
-            RequiresSessionReset = requiresSessionReset;
             BehaviorPolicy = behaviorPolicy;
             Completeness = completeness;
             Paging = paging;

@@ -181,7 +181,7 @@ namespace TiaMcp.Adapters
                 if (reply.Value is HmiMessage message)
                 {
                     reply.MayHaveChanged = message.Meta.TryGetValue("mayHaveChanged", out var changed) && changed is true;
-                    reply.RequiresSessionReset = !request.DryRun && reply.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success)
+                    reply.OutcomeUnknown = !request.DryRun && reply.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success)
                         && success is false;
                 }
             }
@@ -197,8 +197,8 @@ namespace TiaMcp.Adapters
                 UnifiedHmiAccess.Inputs = previousParse; HmiExactAccess.ContentToken = previousToken;
                 HmiValues.TraceWriter = previousTrace; HmiValues.ExportFailure = previousExportFailure;
             }
-            if (reply.RequiresSessionReset && reply.Value is HmiMessage uncertain)
-            { uncertain.Meta["writeOutcomeUnknown"] = true; uncertain.Meta["requiresSessionReset"] = true; }
+            if (reply.OutcomeUnknown && reply.Value is HmiMessage uncertain)
+            { uncertain.Meta["writeOutcomeUnknown"] = true;  }
             return reply;
         }
     }

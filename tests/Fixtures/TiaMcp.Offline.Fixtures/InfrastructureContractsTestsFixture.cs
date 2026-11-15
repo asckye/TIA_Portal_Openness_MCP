@@ -77,7 +77,6 @@ namespace TiaMcp.Engine.Tests
             var applied = Body(McpServer.ApplyToolBatch((string)preview["data"]!["token"]!));
             Assert.Equal("PRECONDITION_FAILED", (string?)applied["data"]?["items"]?[0]?["result"]?["error"]?["code"]);
             Assert.NotEqual("unknown", (string?)applied["meta"]?["outcome"]);
-            Assert.False((bool)applied["meta"]!["requiresSessionReset"]!);
         }
 
         private static ToolArguments Args(string json = "{}") => new ToolArguments(JsonSerializer.Deserialize<JsonElement>(json));

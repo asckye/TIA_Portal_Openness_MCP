@@ -92,7 +92,8 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         internal string RunId { get; }
         internal GenerationPersistenceUnknownException(string runId, Exception inner)
-            : base("Generation evidence could not be persisted after dispatch; inspect run " + runId + ", reset the session and replan. Never replay.", inner) {
+            : base("Generation evidence could not be persisted after dispatch; inspect run " + runId
+                    + ", inspect the target and replan. Never replay. GetSessionState lists unsettled request IDs.", inner) {
                 RunId = runId; }
     }
 

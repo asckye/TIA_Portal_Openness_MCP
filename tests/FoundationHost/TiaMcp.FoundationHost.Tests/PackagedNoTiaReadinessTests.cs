@@ -42,7 +42,6 @@ public sealed class PackagedNoTiaReadinessTests
         Assert.Null(reply["data"]);
         Assert.Equal("rejected-before-operation", (string?)reply["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)reply["meta"]?["execution"]);
-        Assert.False(reply["meta"]?["requiresSessionReset"]?.GetValue<bool>());
     }
 
     [Theory, InlineData("20"), InlineData("21")]

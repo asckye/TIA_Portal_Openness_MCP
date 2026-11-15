@@ -79,7 +79,7 @@ public sealed class BatchOverwriteTests : IDisposable
         Inputs(("A", "FC", ""), ("B", "FC", "")); var result = Run(Apply(Run(Request())));
         Assert.Equal(new[] { "backup:A", "backup:B", "import:A", "import:B" }, calls);
         Assert.All(result.Items, x => Assert.Equal(TiaMcp.Adapters.Contracts.Candidates.CandidatePrimitives.ByteHash(File.ReadAllBytes(x.RecoveryPath)), x.RecoverySha256));
-        Assert.False(result.RequiresSessionReset); BatchImportContract.Validate(Wire(result), false);
+        Assert.False(result.NativeOutcomeUnknown); BatchImportContract.Validate(Wire(result), false);
     }
     [Fact]
     public void Middle_known_failure_restores_earlier_replacements_in_original_dependency_order()
@@ -88,7 +88,7 @@ public sealed class BatchOverwriteTests : IDisposable
         var result = Run(Apply(Run(Request())), (_, item) => item.Name == "Last" ? throw new PlcBatchImportKnownFailureException("known rejection") : new[] { item });
         Assert.Equal(new[] { "restore:Base", "restore:Last", "restore:Dependent" }, calls.Where(x => x.StartsWith("restore:")));
         Assert.Equal(3, result.Restored.Length); Assert.Empty(result.RemainingChanged); Assert.False(result.NativeOutcomeUnknown);
-        Assert.False(result.RequiresSessionReset); BatchImportContract.Validate(Wire(result), false);
+        BatchImportContract.Validate(Wire(result), false);
         Assert.Empty(result.Imported); Assert.Equal(Outcome.Failed, Envelope(result).Meta.Outcome);
         Assert.All(JsonNode.Parse(Envelope(result).Data!.Value.GetRawText())!["items"]!.AsArray(), x => Assert.NotEqual("succeeded", (string?)x!["result"]!["meta"]!["outcome"]));
     }
@@ -97,7 +97,7 @@ public sealed class BatchOverwriteTests : IDisposable
     {
         Inputs(("A", "FC", "")); var result = Run(Apply(Run(Request())), backupFailure: true);
         Assert.Equal(new[] { "backup:A" }, calls); Assert.All(result.Items, x => Assert.False(x.Attempted));
-        Assert.NotEmpty(result.RecoveryDirectory); Assert.False(result.RequiresSessionReset);
+        Assert.NotEmpty(result.RecoveryDirectory); Assert.False(result.NativeOutcomeUnknown);
         BatchImportContract.Validate(Wire(result), false); Assert.Equal(Outcome.RejectedBeforeOperation, Envelope(result).Meta.Outcome);
     }
     [Fact]
@@ -107,7 +107,7 @@ public sealed class BatchOverwriteTests : IDisposable
         var failed = Run(apply, failedBackup: "B"); Assert.Equal("B", Assert.Single(failed.Items.Where(x => x.Status == "failed")).Planned.Name);
         Assert.All(failed.Items, x => Assert.False(x.Attempted)); Assert.DoesNotContain(calls, x => x.StartsWith("import:"));
         BatchImportContract.Validate(Wire(failed), false); Assert.IsType<PreconditionFailedDetails>(Envelope(failed).Error!.Details);
-        var directory = Run(apply, directoryFailure: true); Assert.False(directory.RequiresSessionReset);
+        var directory = Run(apply, directoryFailure: true); Assert.False(directory.NativeOutcomeUnknown);
         Assert.IsType<PreconditionFailedDetails>(Envelope(directory).Error!.Details); Assert.Equal(Execution.NotStarted, Envelope(directory).Meta.Execution);
     }
     [Theory]
@@ -116,7 +116,7 @@ public sealed class BatchOverwriteTests : IDisposable
     {
         Inputs(("A", "FC", ""), ("B", "FC", ""), ("C", "FC", ""));
         var result = Run(Apply(Run(Request())), (_, item) => item.Name == "B" ? restoreFailure ? throw new PlcBatchImportKnownFailureException("known rejection") : throw new IOException("unknown native outcome") : new[] { item }, restoreFailure: restoreFailure);
-        Assert.DoesNotContain("import:C", calls); Assert.True(result.NativeOutcomeUnknown); Assert.True(result.RequiresSessionReset);
+        Assert.DoesNotContain("import:C", calls); Assert.True(result.NativeOutcomeUnknown);
         Assert.All(result.Items, x => Assert.True(File.Exists(x.RecoveryPath))); Assert.NotEmpty(result.RemainingChanged);
         BatchImportContract.Validate(Wire(result), false); var envelope = Envelope(result);
         Assert.Equal(Outcome.Unknown, envelope.Meta.Outcome); Assert.IsType<OutcomeUnknownDetails>(envelope.Error!.Details);
@@ -139,7 +139,7 @@ public sealed class BatchOverwriteTests : IDisposable
         Assert.Equal(new[] { "New" }, result.RemainingChanged.Select(x => x.Name));
         Assert.Equal(new[] { "Old", "Last" }, result.Restored.Select(x => x.Name));
         Assert.DoesNotContain("backup:New", calls); Assert.DoesNotContain("restore:New", calls);
-        Assert.False(result.RequiresSessionReset); BatchImportContract.Validate(Wire(result), false);
+        Assert.False(result.NativeOutcomeUnknown); BatchImportContract.Validate(Wire(result), false);
         var wire = Wire(result); wire["Items"]![1]!["RecoveryPath"] = Path.Combine(root, "outside.xml");
         Assert.Throws<InvalidDataException>(() => BatchImportContract.Validate(wire, false));
     }

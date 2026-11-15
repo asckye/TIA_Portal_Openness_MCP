@@ -79,7 +79,6 @@ public sealed class PlcSimReadinessTests
         var tool = Tool(simulator, release, name, (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)));
         var result = await tool.InvokeAsync(Request(name, Arguments(name)));
         Assert.Equal("unknown", (string?)result.StructuredContent!["meta"]?["outcome"]);
-        Assert.True((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
         Assert.Equal(1, simulator.Executions);
         Assert.Equal(0, simulator.UncertainMarks);
         Host.ObserveSessionOutcome(name, result, write: true, Arguments(name).ToJsonString());
@@ -110,9 +109,9 @@ public sealed class PlcSimReadinessTests
 
         WorkerProtocol.ValidateExchangeResult(operation, new JsonObject(), reply);
 
-        reply["RequiresSessionReset"] = true;
+        reply["OutcomeUnknown"] = true;
         Assert.Throws<IOException>(() => WorkerProtocol.ValidateExchangeResult(operation, new JsonObject(), reply));
-        reply.Remove("RequiresSessionReset"); reply["Ok"] = "malformed";
+        reply.Remove("OutcomeUnknown"); reply["Ok"] = "malformed";
         Assert.Throws<IOException>(() => WorkerProtocol.ValidateExchangeResult(operation, new JsonObject(), reply));
     }
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments) =>

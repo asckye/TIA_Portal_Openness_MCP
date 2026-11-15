@@ -103,13 +103,14 @@ public sealed class HardwareAddressingTests
     public void Io_reply_has_stable_worker_json_and_uncertainty_flags()
     {
         var reply = new IoAddressWriteReply { Before = new IoAddressInfo { IoType = "Input", StartAddress = 2, Length = 1 },
-            Message = "readback failed", RequiresSessionReset = true };
-        const string golden = "{\"Ok\":false,\"Message\":\"readback failed\",\"Before\":{\"IoType\":\"Input\",\"StartAddress\":2,\"Length\":1},\"After\":null,\"RequiresSessionReset\":true,\"MayHaveChanged\":true,\"BlockReadsAfterUncertain\":true}";
+            Message = "readback failed", OutcomeUnknown = true };
+        const string golden =
+            "{\"Ok\":false,\"Message\":\"readback " +
+            "failed\",\"Before\":{\"IoType\":\"Input\",\"StartAddress\":2,\"Length\":1},\"After\":null,\"OutcomeUnknown\":true,\"MayHaveChanged\":true}";
         Assert.Equal(golden, WorkerJson.Serialize(reply));
         var restored = JsonSerializer.Deserialize<IoAddressWriteReply>(golden)!;
         Assert.True(restored.MayHaveChanged);
-        Assert.True(restored.RequiresSessionReset);
-        Assert.True(restored.BlockReadsAfterUncertain);
+        Assert.True(restored.OutcomeUnknown);
     }
 
     [Fact]
@@ -134,14 +135,14 @@ public sealed class HardwareAddressingTests
     [Fact]
     public void Step_reply_keeps_uncertainty_after_a_worker_round_trip()
     {
-        var reply = new HardwareAddressingReply { Message = "uncertain", RequiresSessionReset = true,
+        var reply = new HardwareAddressingReply { Message = "uncertain", OutcomeUnknown = true,
             Meta = new() { ["mayHaveChanged"] = true, ["writeOutcomeUnknown"] = true } };
-        const string golden = "{\"Message\":\"uncertain\",\"Meta\":{\"mayHaveChanged\":true,\"writeOutcomeUnknown\":true},\"RequiresSessionReset\":true,\"MayHaveChanged\":true,\"BlockReadsAfterUncertain\":true}";
+        const string golden =
+            "{\"Message\":\"uncertain\",\"Meta\":{\"mayHaveChanged\":true,\"writeOutcomeUnknown\":true},\"OutcomeUnknown\":true,\"MayHaveChanged\":true}";
         Assert.Equal(golden, WorkerJson.Serialize(reply));
         IWorkerOperationReply restored = JsonSerializer.Deserialize<HardwareAddressingReply>(golden)!;
         Assert.True(restored.MayHaveChanged);
-        Assert.True(restored.RequiresSessionReset);
-        Assert.True(restored.BlockReadsAfterUncertain);
+        Assert.True(restored.OutcomeUnknown);
     }
 
     [Fact]

@@ -89,7 +89,7 @@ public sealed class B6HostPortsTests
         var reply = new LibraryReply { Import = new GlobalLibraryImportEvidence { Ok = false,
             Attempts = attempted ? new[] { "Try ScreenItems.Import(MasterCopy)" } : new[] { "No compatible method" } } };
         Assert.Equal(attempted, reply.MayHaveChanged);
-        Assert.Equal(attempted, reply.RequiresSessionReset);
+        Assert.Equal(attempted, reply.OutcomeUnknown);
     }
 
     [Fact]

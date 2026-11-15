@@ -105,11 +105,10 @@ internal static class BatchImportContract
             else throw new InvalidDataException("Invalid batch status.");
         }
         if(Count("ImportedCount")!=imported || Count("FailedCount")!=failures) throw new InvalidDataException("Batch counts/reset disagree with outcomes.");
-        if((bool?)result["NativeOutcomeUnknown"]==true && !Flag(result,"RequiresSessionReset"))
-            throw new InvalidDataException("Unknown native outcome requires session reset.");
+        bool nativeOutcomeUnknown = (bool?)result["NativeOutcomeUnknown"]==true;
         if(items.Any(x=>(string?)x?["Failure"]=="native-outcome-uncertain" || (string?)x?["RestoreStatus"]=="restore-failed")
-                && !Flag(result,"RequiresSessionReset"))
-            throw new InvalidDataException("Unknown item outcome requires session reset.");
+                && !nativeOutcomeUnknown)
+            throw new InvalidDataException("Unknown item outcome requires the native-outcome-unknown flag.");
         if(result["Items"]!.AsArray().Any(x=>(string?)x?["Action"]=="replace" && (bool?)x?["Attempted"]==true) && string
                 .IsNullOrWhiteSpace((string?)result["RecoveryDirectory"]))
             throw new InvalidDataException("Replacement lacks recovery directory.");

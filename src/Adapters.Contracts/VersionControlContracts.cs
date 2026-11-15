@@ -20,9 +20,8 @@ public sealed class VersionControlResult : IWorkerOperationReply
     public string Message { get; set; } = "";
     public IEnumerable<string>? Items { get; set; } = System.Array.Empty<string>();
     public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>();
-    public bool RequiresSessionReset { get; set; }
+    public bool OutcomeUnknown { get; set; }
     public bool MayHaveChanged => Meta.TryGetValue("mayHaveChanged", out var changed)
         && string
             .Equals(System.Convert.ToString(changed, System.Globalization.CultureInfo.InvariantCulture), "true", System.StringComparison.OrdinalIgnoreCase);
-    public bool BlockReadsAfterUncertain => true;
 }

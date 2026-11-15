@@ -159,7 +159,7 @@ public sealed class WorkbenchControlHostTests
         Assert.Equal((WorkbenchControlOperation)index, server.Request.Operation);
         AssertDeadlineWindow(server.Request.DeadlineUtc, beforeCall, afterCall, index);
         Assert.Equal("not-applicable", (string?)result.StructuredContent?["meta"]?["behaviorPolicy"]);
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+        Assert.NotEqual("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.Equal(before.Keys.Order(), Directory.GetFiles(audit).Order());
         foreach (var pair in before) Assert.Equal(pair.Value, File.ReadAllBytes(pair.Key));
     }
@@ -198,7 +198,6 @@ public sealed class WorkbenchControlHostTests
         Assert.Equal(expected, (string?)body["error"]?["code"]);
         Assert.Equal(failed ? "failed" : "rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal(failed ? "completed" : "not-started", (string?)body["meta"]?["execution"]);
-        Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
         Assert.Equal("workbench-user-active", (string?)body["data"]?["controlRefusal"]?["condition"]);
         Assert.Equal(2, body["data"]!["workbench"]!["contracts"]!.AsArray().Count);
         if (code == WorkbenchControlError.TargetAmbiguous) Assert.Equal(2, body["error"]!["details"]!["candidates"]!.AsArray().Count);
@@ -230,7 +229,6 @@ public sealed class WorkbenchControlHostTests
         var result = await Tool(5, worker, Client(server)).InvokeAsync(Request("GetWorkbenchState", new()));
         Assert.Equal("INTERNAL_ERROR", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("failed", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.False((bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
     }
     [Theory, InlineData(0), InlineData(5)]
     public async Task Missing_response_times_out_at_the_correct_stage(int index)

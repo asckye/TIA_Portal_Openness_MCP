@@ -254,7 +254,6 @@ internal static class CanonicalBatchTools
             int pending = rows.Count(r => (string?)r!["status"] == "not-started");
             var outcome = failed + pending == 0 ? Outcome.Succeeded : completed > 0 ? Outcome.Partial : executed ? Outcome.Failed : Outcome
                 .RejectedBeforeOperation;
-            bool reset = rows.Any(row => (string?)row?["result"]?["meta"]?["outcome"] == "unknown");
             if (rows.Any(row => (string?)row?["result"]?["meta"]?["outcome"] == "unknown")) outcome = Outcome.Unknown;
             return FoundationV4Result.Composite(release, tool.Name, requestId, plan, outcome,
                 executed ? outcome == Outcome.Unknown ? Execution.Unknown : outcome == Outcome.Partial ? Execution.Partial : Execution.Completed
@@ -267,8 +266,7 @@ internal static class CanonicalBatchTools
                         : outcome == Outcome.RejectedBeforeOperation
                             ? new Error("A canonical preview blocks batch execution.", new PreconditionFailedDetails("batch-preview", null))
                             : new Error("The batch stopped before any item completed.",
-                                    new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>(StringComparer.Ordinal))),
-                                reset);
+                                    new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>(StringComparer.Ordinal))));
         }
         private string? ExportRoot(JsonObject args) => tool.Name switch {
             "ExportPlcWatchTablesToDirectory" => Path.GetFullPath((string?)args["dir"] ?? ""),

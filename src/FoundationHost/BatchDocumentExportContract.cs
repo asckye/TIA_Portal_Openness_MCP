@@ -20,13 +20,13 @@ internal static class BatchDocumentExportContract
             :throw new InvalidDataException("Invalid batch document flag.");
         Shape(result,new[]{
                 "Executed","ReleaseKey","ProjectFile","SoftwarePath","GroupPath","Recursive","MaxItems","OutputDirectory","PlanHash","InventoryComplete",
-                    "Status","RequiresSessionReset","NativeResult","RecoveryDirectory","Options","Evidence","Items"
+                    "Status","OutcomeUnknown","NativeResult","RecoveryDirectory","Options","Evidence","Items"
             });
         var dry=request["dryRun"]?.GetValue<bool>()??true;
         var release=Text(result,"ReleaseKey");var status=Text(result,"Status");var output=Text(result,"OutputDirectory");var group=Text(result,"GroupPath");
         var recursive=Flag(result,"Recursive");
         if(release is not ("20" or "21") || Flag(result,"Executed")==dry || !Flag(result,"InventoryComplete")
-                || Flag(result,"RequiresSessionReset")!=DocumentExportContract.RequiresReset(result)
+                || Flag(result,"OutcomeUnknown")!=DocumentExportContract.RequiresReset(result)
                 || (dry?status is not ("planned" or "inconsistent"):status is not ("exported" or "failed")))
             throw new InvalidDataException("Batch document outcome conflicts.");
         if(result["MaxItems"] is not JsonValue maximum || !maximum.TryGetValue<int>(out var maxItems) || maxItems<1 || maxItems>256

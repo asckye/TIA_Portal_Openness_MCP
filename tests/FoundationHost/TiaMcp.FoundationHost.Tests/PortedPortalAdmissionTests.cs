@@ -94,7 +94,7 @@ public sealed class PortedPortalAdmissionTests
             result = Host.McpServer.ObserveSessionOutcome(name, result, true, "{}");
             Assert.Equal(!refusal, Host.InvocationJournal.NativeCallIssued);
             Assert.Equal(refusal ? "rejected-before-operation" : "unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
-            Assert.Equal(!refusal, (bool?)result.StructuredContent?["meta"]?["requiresSessionReset"]);
+            Assert.Equal(!refusal, (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown");
             Assert.Equal(refusal ? 0 : 1, Host.McpServer.Worker.Unsettled.Snapshot().Count);
         }
         finally { Host.McpServer.ApprovalSessionKeyForTests = previous; }
@@ -106,7 +106,7 @@ public sealed class PortedPortalAdmissionTests
             => Task.FromResult<JsonNode?>(operation == "ReadState"
                 ? new JsonObject { ["ProcessId"] = 123, ["IsAttached"] = true, ["ProjectFile"] = "C:/Fixture.ap21" }
                 : new JsonObject { ["Data"] = new JsonObject { ["meta"] = new JsonObject {
-                    ["operationSuccess"] = false, ["mayHaveChanged"] = true, ["requiresSessionReset"] = true } } });
+                    ["operationSuccess"] = false, ["mayHaveChanged"] = true } } });
         public void Dispose() { }
     }
 
@@ -208,7 +208,6 @@ public sealed class PortedPortalAdmissionTests
             File.WriteAllText(Path.Combine(directory, release + "-" + name + "-" + combined + ".json"), body.ToJsonString());
         }
         Assert.NotEqual("unknown", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
         Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
         if (name is "CreatePlcBlockGroup" or "BuildAndImportPlcArtifact" or "CompileHmiDiagnostics"
             or "TraceTagCause" or "TraceTagCauseLive" or "MonitorPlcWatchTableS7" or "ProbePlcMonitorOnlineCapabilities"

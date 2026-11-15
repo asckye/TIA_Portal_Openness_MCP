@@ -117,7 +117,7 @@ public sealed class ExtensionFamilyReplyTests
         var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
                 Failure = new PlcSoftwareFailure { Code = code, Message = "Native result unavailable after a change." },
-                MayHaveChanged = true, RequiresSessionReset = true }));
+                MayHaveChanged = true, OutcomeUnknown = true }));
             WorkerProtocol.ValidateExchangeResult(operation, args, json);
             return json;
         }, () => "fixture");
@@ -125,7 +125,7 @@ public sealed class ExtensionFamilyReplyTests
             () => service.GetOpcUaConfig("PLC")).StructuredContent!;
 
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
-        Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
+        Assert.Equal("unknown", (string?)body["meta"]!["outcome"]);
     }
 
     [Theory]
@@ -139,7 +139,7 @@ public sealed class ExtensionFamilyReplyTests
         var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
                 Failure = new PlcSoftwareFailure { Code = code, Message = "Native result unavailable after a change." },
-                MayHaveChanged = true, RequiresSessionReset = true }));
+                MayHaveChanged = true, OutcomeUnknown = true }));
             WorkerProtocol.ValidateExchangeResult(operation, args, json);
             return json;
         }, () => "fixture");
@@ -149,7 +149,6 @@ public sealed class ExtensionFamilyReplyTests
         Assert.Equal("read-failed", (string?)body["meta"]!["outcome"]);
         Assert.Equal("read-only", (string?)body["meta"]!["execution"]);
         Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 
     [Theory]
@@ -165,15 +164,14 @@ public sealed class ExtensionFamilyReplyTests
         var response = JsonSerializer.Deserialize<Host.ResponseMessage>(json.ToJsonString())!;
         var body = Host.OptionalPackageContract.Map("ManageSinumerikArchive", response, true).StructuredContent!;
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
-        Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
+        Assert.Equal("unknown", (string?)body["meta"]!["outcome"]);
     }
 
     [Fact]
     public void An_uncertain_extension_write_still_requires_a_session_reset()
     {
         var reply = new HardwareAddressingReply { Message = "Write readback unavailable.", MayHaveChanged = true,
-            RequiresSessionReset = true, Meta = new() { ["operationSuccess"] = false, ["mayHaveChanged"] = true,
-                ["requiresSessionReset"] = true } };
+            OutcomeUnknown = true, Meta = new() { ["operationSuccess"] = false, ["mayHaveChanged"] = true } };
         var json = JsonNode.Parse(WorkerJson.Serialize(reply))!;
 
         WorkerProtocol.ValidateExchangeResult("startdrive.ExecuteStartdrive", new(), json);
@@ -181,7 +179,7 @@ public sealed class ExtensionFamilyReplyTests
         var response = JsonSerializer.Deserialize<Host.ResponseMessage>(json.ToJsonString())!;
         var body = Host.DriveToolContract.Map("ManageDriveFunctions", response, true, true).StructuredContent!;
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
-        Assert.True((bool)body["meta"]!["requiresSessionReset"]!);
+        Assert.Equal("unknown", (string?)body["meta"]!["outcome"]);
     }
 
     [Theory]
@@ -200,7 +198,7 @@ public sealed class ExtensionFamilyReplyTests
         var result = Host.EngineeringToolContract.Run("ExportAlarmClasses", true, () => service.ExportAlarmClasses("PLC", "fixture.dat"));
         Assert.Equal("NATIVE_OPERATION_FAILED", (string?)result.StructuredContent!["error"]!["code"]);
         Assert.Contains(message, result.StructuredContent["error"]!.ToJsonString(), StringComparison.Ordinal);
-        Assert.False((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)result.StructuredContent["meta"]!["outcome"]);
     }
 
     [Theory]
@@ -221,7 +219,7 @@ public sealed class ExtensionFamilyReplyTests
         var result = Host.EngineeringToolContract.Run("GetPlcOpcUaConfiguration", false, () => service.GetOpcUaConfig("PLC"));
         Assert.Equal(expected, (string?)result.StructuredContent!["error"]!["code"]);
         Assert.Contains(message, result.StructuredContent["error"]!.ToJsonString(), StringComparison.Ordinal);
-        Assert.False((bool)result.StructuredContent["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)result.StructuredContent["meta"]!["outcome"]);
 
     }
 
@@ -238,7 +236,7 @@ public sealed class ExtensionFamilyReplyTests
         Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]!["code"]);
         Assert.Equal(cause, (string?)result["error"]!["message"]);
         Assert.Equal("hmi-before-write", (string?)result["error"]!["details"]!["condition"]);
-        Assert.False((bool)result["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)result["meta"]!["outcome"]);
         Assert.DoesNotContain("at Fixture.Native", result.ToJsonString(), StringComparison.Ordinal);
     }
 
@@ -352,7 +350,7 @@ public sealed class ExtensionFamilyReplyTests
             Assert.Throws<IOException>(() => HardwareFamilyWire.Validate(operation, json));
             json["Blocks"]![0]!["Name"] = "Main";
         }
-        json["RequiresSessionReset"] = "false";
+        json["OutcomeUnknown"] = "false";
         var malformed = Assert.Throws<IOException>(() => WorkerProtocol.ValidateExchangeResult(operation, new(), json));
 
     }
@@ -389,7 +387,7 @@ public sealed class ExtensionFamilyReplyTests
                 _ => Host.OptionalPackageContract.Map(tool, response, writes) };
             var body = result.StructuredContent!;
             Assert.Equal(verdict == "normal", (bool)body["ok"]!);
-            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+            Assert.NotEqual("unknown", (string?)body["meta"]!["outcome"]);
             if (verdict == "normal") continue;
             Assert.Equal(verdict == "unsupported" ? "UNSUPPORTED_CAPABILITY" : "NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
             Assert.Contains(response.Message, body["error"]!.ToJsonString(), StringComparison.Ordinal);

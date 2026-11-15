@@ -121,8 +121,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var pair in evidence)
                     if (pair.Key != "timestamp" && pair.Key != "tool" && pair.Key != "success") data[pair.Key] = pair.Value?.DeepClone();
             if (outcome == Outcome.Succeeded) data["summary"] = summary;
-            return Result(tool, data, error, outcome, completeness, writes, current, paging,
-                outcome == Outcome.Unknown);
+            return Result(tool, data, error, outcome, completeness, writes, current, paging);
         }
 
         private static bool Incomplete(JsonNode? node)
@@ -145,7 +144,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,
-            bool writes, bool current, Paging? paging = null, bool reset = false)
+            bool writes, bool current, Paging? paging = null)
         {
             var warnings = new List<Warning>();
             if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
@@ -159,7 +158,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : outcome == Outcome.Partial ? Execution.Partial : outcome == Outcome.ReadFailed || outcome == Outcome.Succeeded && !writes ? Execution
                     .ReadOnly : Execution.Completed;
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome,
-                execution, reset || outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired,
+                execution,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),

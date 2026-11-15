@@ -46,7 +46,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             var result = LegacyFailure(tool, failure);
             Assert.Equal("unknown", result.Meta["outcome"]);
             Assert.True(result.MayHaveChanged);
-            Assert.True(result.RequiresSessionReset);
+            Assert.True(result.OutcomeUnknown);
             Assert.NotEmpty((IEnumerable)result.Meta["cleanupRequired"]!);
         }
 
@@ -56,7 +56,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             var result = LegacyFailure("SetPlcCpuSettings", "refused");
             Assert.Equal("partial", result.Meta["outcome"]);
             Assert.True(result.MayHaveChanged);
-            Assert.False(result.RequiresSessionReset);
+            Assert.False(result.OutcomeUnknown);
             Assert.Equal(true, result.Meta["rollbackReachable"]);
             Assert.Equal(true, result.Meta["rollbackRefused"]);
         }
@@ -74,7 +74,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Empty(collection);
             Assert.Equal(true, result.Meta["rollbackCompleted"]);
             Assert.False(result.MayHaveChanged);
-            Assert.False(result.RequiresSessionReset);
+            Assert.False(result.OutcomeUnknown);
         }
 
         [Fact]
@@ -91,7 +91,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Equal((uint)3, item.Sequence);
             Assert.Equal("unknown", result.Meta["outcome"]);
             Assert.True(result.MayHaveChanged);
-            Assert.True(result.RequiresSessionReset);
+            Assert.True(result.OutcomeUnknown);
             Assert.Contains("MoveInRuntimeSequence", JsonSerializer.Serialize(result.Meta["cleanupRequired"]));
         }
 
@@ -107,7 +107,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             }, true);
             Assert.Equal((uint)3, item.Sequence);
             Assert.Equal(true, result.Meta["operationSuccess"]);
-            Assert.False(result.RequiresSessionReset);
+            Assert.False(result.OutcomeUnknown);
             Assert.False(result.Meta.ContainsKey("rollbackCompleted"));
         }
 
@@ -124,7 +124,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.False(item.A);
             Assert.Equal(true, result.Meta["rollbackCompleted"]);
             Assert.False(result.MayHaveChanged);
-            Assert.False(result.RequiresSessionReset);
+            Assert.False(result.OutcomeUnknown);
         }
 
         public sealed class Attributes
@@ -160,7 +160,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             var result = GroupFailure();
             Assert.Equal(true, result.Meta["rollbackCompleted"]);
             Assert.False(result.MayHaveChanged);
-            Assert.False(result.RequiresSessionReset);
+            Assert.False(result.OutcomeUnknown);
         }
 
         public sealed class LostTarget(string failure)

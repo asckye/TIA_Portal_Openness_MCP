@@ -48,7 +48,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 finally { MayHaveChanged |= meta.TryGetValue("mayHaveChanged", out var changed) && changed is true; }
             });
             return new PlcB5Reply {
-                Message = reply.Message, Meta = reply.Meta, MayHaveChanged = reply.MayHaveChanged, RequiresSessionReset = reply.RequiresSessionReset };
+                Message = reply.Message, Meta = reply.Meta, MayHaveChanged = reply.MayHaveChanged, OutcomeUnknown = reply.OutcomeUnknown };
         }
         private void ValidateRequest() { if (request.ValidationError != null) throw new ArgumentException(request.ValidationError); }
         private bool ValidatedWriting() { ValidateRequest(); return request.ValidatedWriting; }

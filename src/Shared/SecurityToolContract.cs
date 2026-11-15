@@ -126,7 +126,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // Comparison tools already carry a structured summary; retain it.
             if (outcome == Outcome.Succeeded && !data.ContainsKey("summary")) data["summary"] = response.Message;
             Sanitize(data, secrets);
-            return Result(tool, data, error, outcome, execution, completeness, current, paging, reset);
+            return Result(tool, data, error, outcome, execution, completeness, current, paging);
         }
 
         private static bool Incomplete(JsonNode? node)
@@ -182,7 +182,7 @@ namespace TiaMcpServer.ModelContextProtocol
             new OutcomeUnknownDetails("security-operation", new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,
-            Completeness completeness, bool current, Paging? paging = null, bool reset = false)
+            Completeness completeness, bool current, Paging? paging = null)
         {
             var warnings = new List<Warning>();
             if (current) warnings
@@ -192,7 +192,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Add(new Warning(WarningCode.IncompleteData, "The security observation covers only the reported scope and available fields.",
                         new Dictionary<string, JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
-                reset || outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
             var result = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),

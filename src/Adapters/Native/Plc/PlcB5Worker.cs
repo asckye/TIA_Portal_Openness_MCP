@@ -126,7 +126,7 @@ namespace TiaMcp.Adapters
                 return new PlcB5Reply {
                     Failure = new PlcSoftwareFailure {
                         Code = error is PlcSoftwareException failure ? failure.Code : error.GetType().Name, Message = error.Message }, MayHaveChanged = adapter
-                        .MayHaveChanged, RequiresSessionReset = adapter.MayHaveChanged
+                        .MayHaveChanged, OutcomeUnknown = adapter.MayHaveChanged
                 };
             }
         }

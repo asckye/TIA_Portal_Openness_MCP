@@ -37,7 +37,6 @@ namespace TiaMcp.Logic.V4
                 ("releaseKey", NullableText()), ("tool", Text()), ("requestId", Text()),
                 ("outcome", Choices("succeeded", "rejected-before-operation", "read-failed", "failed", "partial", "unknown", "in-progress")),
                 ("execution", Choices("not-started", "read-only", "completed", "partial", "unknown")),
-                ("requiresSessionReset", new JsonObject { ["type"] = "boolean" }),
                 ("behaviorPolicy", Choices("not-applicable", "current", "safe-v4")),
                 ("completeness", Choices("complete", "partial", "none", "unknown")),
                 ("paging", paging), ("warnings", new JsonObject { ["type"] = "array", ["items"] = warning }));

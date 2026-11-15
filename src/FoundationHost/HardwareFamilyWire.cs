@@ -28,7 +28,7 @@ internal static class HardwareFamilyWire
     // HardwareAddressingReply, SecurityResult and OptionalProductReply share these wire members.
     // Meta is an evidence bag: refusals and failures need not contain the legacy success flag.
     private static bool Step(JsonNode? reply) => Exactly(reply, ("Message", Text), ("Meta", Object),
-        ("RequiresSessionReset", Flag), ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", True));
+        ("OutcomeUnknown", Flag), ("MayHaveChanged", Flag));
 
     private static bool SoftwareFailure(JsonNode? node) => node == null || Exactly(node, ("Code", Text), ("Message", Text),
         ("Candidates", values => values == null || Texts(values)), ("Evidence", Object));
@@ -107,7 +107,7 @@ internal static class HardwareFamilyWire
             "ExecutePlcSimAdvanced" => reply is JsonObject simulation && Flag(simulation["Ok"])
                 && Text(simulation["Message"]) && simulation["Data"] is JsonObject
                 && simulation["Meta"] is JsonObject simulationMeta && Flag(simulationMeta["success"])
-                && !simulation.ContainsKey("RequiresSessionReset"),
+                && !simulation.ContainsKey("OutcomeUnknown"),
             "HardwareDescribeDeviceAt" or "HardwareDescribeItemAt" => Description(reply),
             "HardwareDescribeDevices" => reply is JsonArray devices && devices.All(d => d != null && Description(d)),
             "HardwareReadItemTree" or "HardwareCreateDevice" or "HardwareProbeConnectDeviceNodesToSubnet" => Text(reply),
@@ -123,8 +123,8 @@ internal static class HardwareFamilyWire
             "HardwareReadPlugLocations" => reply == null || reply is JsonObject slots && slots["free"] is JsonArray
                 && slots["occupied"] is JsonArray,
             "HardwarePlugModule" => reply is JsonObject module && Flag(module["Ok"]) && Text(module["Message"])
-                && Flag(module["MayHaveChanged"]) && Flag(module["RequiresSessionReset"])
-                && (!(bool)module["RequiresSessionReset"]! || (bool)module["MayHaveChanged"]!),
+                && Flag(module["MayHaveChanged"]) && Flag(module["OutcomeUnknown"])
+                && (!(bool)module["OutcomeUnknown"]! || (bool)module["MayHaveChanged"]!),
             "HardwareGetDeviceItemNetworkInfo" => reply == null || reply is JsonArray network
                 && network.All(a => a is JsonObject && Text(a["Name"]))
                 || Exactly(reply, ("failureCode", code => Text(code) && (string?)code == "PROJECT_NOT_BOUND"), ("message", Text)),
@@ -148,11 +148,11 @@ internal static class HardwareFamilyWire
                     ("ImportedNames", Texts),
                 ("Scanned", Number), ("Selected", Number), ("Attempted", Number), ("Succeeded", Number),
                 ("Stopped", Flag), ("Ok", Flag), ("Value", Flag), ("Message", Text), ("Meta", OptionalObject),
-                ("Data", OptionalObject), ("Failure", SoftwareFailure), ("RequiresSessionReset", Flag),
-                ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", True)),
+                ("Data", OptionalObject), ("Failure", SoftwareFailure), ("OutcomeUnknown", Flag),
+                ("MayHaveChanged", Flag)),
             "ExecuteVersionControl" or "ExecuteTeamcenter" => Exactly(reply, ("Message", Text),
-                ("Items", node => node == null || Texts(node)), ("Meta", Object), ("RequiresSessionReset", Flag),
-                ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", True)),
+                ("Items", node => node == null || Texts(node)), ("Meta", Object), ("OutcomeUnknown", Flag),
+                ("MayHaveChanged", Flag)),
             "ExecuteSivarc" or "ExecuteStartdrive" or "ExecuteDcc" or "ExecuteSafety" or "ExecuteSafetyValidation"
                 or "ExecuteOptionalProduct" or "ExecuteEngineeringServices" or "ReadPortalInfo" or "ConnectIsolatedPortal"
                 or "ArchiveSavedProject" or "RetrieveProjectArchive" or "ExecuteMultiuserSession" or "ValidateAutomationContext"
@@ -165,20 +165,20 @@ internal static class HardwareFamilyWire
                 or "HardwareUpdateDeviceItemChannel" or "HardwareManagePortInterconnection" or "HardwareEnsureSubnet"
                 or "HardwareAttachDeviceNodeToSubnet" or "ImportHardwareAml" => Step(reply),
             "ExecuteOnline" => Exactly(reply, ("Value", Any), ("Failure", OptionalObject), ("MayHaveChanged", Flag),
-                ("RequiresSessionReset", Flag), ("BlockReadsAfterUncertain", Flag)),
+                ("OutcomeUnknown", Flag)),
             "ExecutePlcOrganisation" => Exactly(reply, ("Report", OptionalObject), ("Names", node => node == null || Texts(node)),
                 ("TagAddresses", OptionalObject), ("Message", Text), ("Meta", Object), ("Data", OptionalObject),
                 ("Created", Texts), ("References", node => node == null || Objects(node)), ("Reason", OptionalText),
                 ("Queried", Flag), ("Batch", OptionalObject), ("Compiler", OptionalObject), ("Found", Flag),
                 ("Failure", SoftwareFailure),
-                ("RequiresSessionReset", Flag), ("MayHaveChanged", Flag), ("BlockReadsAfterUncertain", Flag)),
+                ("OutcomeUnknown", Flag), ("MayHaveChanged", Flag)),
             "ExecuteHmi" or "ExecuteUnified" or "ExecuteUnifiedHmi" or "ExecuteUnifiedHmiMetadata" or "ReleaseUnifiedReadCursor" => Exactly(reply,
                 ("Value", Any), ("Notes", OptionalText), ("Failure", OptionalObject), ("MayHaveChanged", Flag),
-                ("RequiresSessionReset", Flag), ("BlockReadsAfterUncertain", Flag)),
+                ("OutcomeUnknown", Flag)),
             "ExecuteLibrary" => Exactly(reply, ("Step", OptionalObject), ("Probe", OptionalObject), ("Import", OptionalObject),
-                ("MayHaveChanged", Flag), ("RequiresSessionReset", Flag), ("BlockReadsAfterUncertain", Flag)),
+                ("MayHaveChanged", Flag), ("OutcomeUnknown", Flag)),
             "ExecuteOpennessReflection" => Exactly(reply, ("Observation", OptionalObject), ("Failure", OptionalObject), ("MayHaveChanged", Flag),
-                ("RequiresSessionReset", Flag), ("BlockReadsAfterUncertain", Flag)),
+                ("OutcomeUnknown", Flag)),
             "SeedReferenceHmi" => Exactly(reply, ("Message", OptionalText), ("Imported", node => node == null || Texts(node)),
                 ("Failed", node => node == null || node is JsonArray failures && failures
                         .All(f => Exactly(f, ("Path", OptionalText), ("Error", OptionalText)))),

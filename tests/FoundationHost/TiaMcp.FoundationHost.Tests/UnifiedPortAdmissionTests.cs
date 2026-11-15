@@ -77,7 +77,7 @@ public sealed class UnifiedPortAdmissionTests
         Assert.DoesNotContain("Structured input was not decoded", body.ToJsonString(), StringComparison.Ordinal);
         Assert.True((bool?)body["ok"] == true, body.ToJsonString());
         Assert.NotNull(name == "GetUnifiedGraphicSelection" ? body["data"]?["page"]?["scope"] : body["data"]?["scope"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)body["meta"]!["outcome"]);
         var received = Assert.Single(worker.Requests);
         Assert.Equal(name, received.Operation);
         Assert.Equal("HMI", received.SoftwarePath);
@@ -369,7 +369,7 @@ public sealed class UnifiedPortAdmissionTests
             var result = await tool.InvokeAsync(Request(name, arguments));
             Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
             Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
-            Assert.False((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
+            Assert.NotEqual("unknown", (string?)result.StructuredContent!["meta"]!["outcome"]);
             Assert.Contains("/Group/Sub/Table", (string)result.StructuredContent!["error"]!["message"]!);
         }
         Assert.Equal(0, worker.Calls);
@@ -439,7 +439,6 @@ public sealed class UnifiedPortAdmissionTests
         Assert.Equal("/" + parameter, (string?)body["error"]?["details"]?["parameter"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
         var message = (string)body["error"]!["message"]!;
         Assert.Contains("Expected an array", message);
         Assert.Contains("\"property\"", message);

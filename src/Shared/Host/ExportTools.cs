@@ -402,8 +402,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     .Add(new Warning(WarningCode.NativeWarning, "Native or precheck diagnostics are retained in data.", new Dictionary<string, JsonElement>()));
             var meta =
                 new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome ?? Outcome.Succeeded, execution
-                    ?? Execution.ReadOnly,
-                outcome == Outcome.Unknown || error?.Code == ErrorCode.SessionResetRequired, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
+                    ?? Execution.ReadOnly, current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable,
                     completeness ?? Completeness.Complete, paging, warnings);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),

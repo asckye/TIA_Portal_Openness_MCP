@@ -55,7 +55,6 @@ public sealed class SecurityAuditBoundaryTests
         Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
         Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]!["code"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 
     [Theory]

@@ -81,7 +81,7 @@ internal static class EngineSessionFixture
             {
                 unknownOnNextFamily = false;
                 return ChannelResponse.Success(TiaMcp.PlcWorker.WorkerJson.Serialize(
-                    new TiaMcp.Adapters.Contracts.PlcSoftwareReply { Found = true, RequiresSessionReset = true }));
+                    new TiaMcp.Adapters.Contracts.PlcSoftwareReply { Found = true, OutcomeUnknown = true }));
             }
             if (request.Method == "adapter.Attach")
             {
@@ -166,7 +166,7 @@ internal static class EngineSessionFixture
             var body = Envelope.Create(data, unknown
                 ? new Error("Fixture native outcome unknown.", new OutcomeUnknownDetails("fixture", new Dictionary<string, JsonElement>())) : null,
                 new Meta(DateTimeOffset.UtcNow, release, name, id, unknown ? Outcome.Unknown : Outcome.Succeeded,
-                    unknown ? Execution.Unknown : Execution.ReadOnly, unknown, BehaviorPolicy.Current,
+                    unknown ? Execution.Unknown : Execution.ReadOnly, BehaviorPolicy.Current,
                     unknown ? Completeness.Unknown : Completeness.Complete, null,
                     new[] { new Warning(WarningCode.UnverifiedBehavior, "Fixture native behavior.", new Dictionary<string, JsonElement>()) }));
             var node = JsonNode.Parse(V4Json.Serialize(body))!;
@@ -182,8 +182,8 @@ internal static class EngineSessionFixture
             lease?.BeginRequest();
             var response = Dispatch(request);
             uncertain |= response.Failure?.Outcome == ChannelOutcome.Unknown
-                || (bool?)(JsonNode.Parse(response.ResultJson ?? "null") as JsonObject)?["result"]?["structuredContent"]?["meta"]
-                    ?["requiresSessionReset"] == true;
+                || (string?)(JsonNode.Parse(response.ResultJson ?? "null") as JsonObject)?["result"]?["structuredContent"]?["meta"]
+                    ?["outcome"] == "unknown";
             lease?.CompleteRequest(uncertain);
             return response;
         }, ChannelProfile.Foundation);

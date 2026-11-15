@@ -113,7 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = writes ? Outcome.Partial : Outcome.ReadFailed; execution = writes ? Execution.Partial : Execution.ReadOnly;
             }
             var envelope = Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name,
-                Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId), outcome, execution, false, BehaviorPolicy.NotApplicable,
+                Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId), outcome, execution, BehaviorPolicy.NotApplicable,
                 outcome == Outcome.Succeeded ? Completeness.Complete : outcome == Outcome.Partial ? Completeness.Partial : Completeness.None, null, Array
                     .Empty<Warning>()));
             var result = McpResult.From(envelope);

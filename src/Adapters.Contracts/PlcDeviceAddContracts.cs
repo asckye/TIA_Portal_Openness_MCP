@@ -8,11 +8,10 @@ namespace TiaMcp.Adapters
     public sealed class PlcDeviceAddResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Attempted;
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.BlockReadsAfterUncertain => false;
         public string Status { get; internal set; } = "planned";
         public bool Attempted { get; internal set; }
         public bool Executed { get; internal set; }
-        public bool RequiresSessionReset { get; internal set; }
+        public bool OutcomeUnknown { get; internal set; }
         public string Error { get; internal set; } = "";
         public string Release { get; internal set; } = "";
         public string ProjectFile { get; internal set; } = "";

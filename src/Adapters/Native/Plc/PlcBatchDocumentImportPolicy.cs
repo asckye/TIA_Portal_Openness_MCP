@@ -122,7 +122,7 @@ namespace TiaMcp.Adapters
                         Stable();r.DryRun=true;var current=c.Run();
                         r.DryRun=false;r.Confirm=true;r.ExpectedProject=expectedProject;r.ExpectedHash=current.PlanHash;
                         var outcome=c.Run();item.Outcome=outcome;result.Attempted|=outcome.Attempted;
-                        if(outcome.Status!="imported" || outcome.RequiresSessionReset){
+                        if(outcome.Status!="imported" || outcome.OutcomeUnknown){
                             item.Status="failed";throw new InvalidDataException("Native document outcome uncertain.");}
                         item.Status="succeeded";
                         var after=Snapshot(c);item.PostInventory=after;var added=after.Except(baseline,StringComparer.Ordinal).ToArray();
@@ -137,7 +137,7 @@ namespace TiaMcp.Adapters
                     {
                         if(!result.Attempted)throw;
                         if(item.Outcome?.Attempted==true)item.Status="failed";
-                        result.Status="unknown";result.RequiresSessionReset=true;result.Error="batch-outcome-uncertain-no-replay-or-rollback";return result;
+                        result.Status="unknown";result.OutcomeUnknown=true;result.Error="batch-outcome-uncertain-no-replay-or-rollback";return result;
                     }
                 }
                 result.Status="imported";return result;
@@ -149,7 +149,7 @@ namespace TiaMcp.Adapters
                 foreach(var stream in locks.Values)try{stream.Dispose();}catch(Exception ex){failure=ex;}
                 if(failure!=null)
                 {
-                    if(result.Attempted){result.Status="unknown";result.RequiresSessionReset=true;result.Error="batch-outcome-uncertain-no-replay-or-rollback";}
+                    if(result.Attempted){result.Status="unknown";result.OutcomeUnknown=true;result.Error="batch-outcome-uncertain-no-replay-or-rollback";}
                     else throw new IOException("Manifest lock cleanup failed before any native import.",failure);
                 }
             }

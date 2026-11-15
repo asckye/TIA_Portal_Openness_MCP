@@ -27,7 +27,7 @@ internal static class DocumentImportContract
         bool Flag(string key)=>result[key] is JsonValue v && v.TryGetValue<bool>(out var b)?b
             :throw new InvalidDataException("Invalid document import flag: "+key);
         var fields=new[]{
-            "Status","Executed","Attempted","MayHaveChanged","RequiresSessionReset","ExistsVerified","ContentVerified","Error","Release","ProjectFile",
+            "Status","Executed","Attempted","MayHaveChanged","OutcomeUnknown","ExistsVerified","ContentVerified","Error","Release","ProjectFile",
                 "ProcessId","TargetIdentity","SoftwarePath","GroupPath","InputDirectory","DeclaredName","Kind","Language","CodeSha256","ResourceSha256",
                 "PlanHash","Inventory","ImportedIdentities","Messages","NativeState","NativeOptions","Compilation","Save","Download","InstalledUpdate",
                 "Validation","Recovery","Policy"
@@ -62,14 +62,14 @@ internal static class DocumentImportContract
         var dry=request["dryRun"]?.GetValue<bool>()??true;var status=Text("Status");
         if(dry)
         {
-            if(status!="planned" || Flag("Executed") || Flag("Attempted") || Flag("MayHaveChanged") || Flag("RequiresSessionReset") || Flag("ExistsVerified")
+            if(status!="planned" || Flag("Executed") || Flag("Attempted") || Flag("MayHaveChanged") || Flag("OutcomeUnknown") || Flag("ExistsVerified")
                     || Text("Error")!="" || imported.Count!=0 || Text("NativeState")!="notRun" || result["Messages"]!.AsArray().Count!=0)
                 throw new InvalidDataException("Conflicting document preview outcome.");
         }
         else
         {
             if(!Flag("Executed") || !Flag("Attempted") || Flag("MayHaveChanged")!=(status!="failed") ||
-                status is not ("imported" or "unknown" or "failed") || Flag("RequiresSessionReset")!=(status=="unknown") || Flag("ExistsVerified")!=
+                status is not ("imported" or "unknown" or "failed") || Flag("OutcomeUnknown")!=(status=="unknown") || Flag("ExistsVerified")!=
                 (status=="imported"))throw new InvalidDataException("Conflicting attempted document outcome.");
             string Field(string text)=>text.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)+":"+text;
             var identity=Field(Text("GroupPath"))+Field(Text("DeclaredName"))+Field("GlobalDB")+Field("returned");

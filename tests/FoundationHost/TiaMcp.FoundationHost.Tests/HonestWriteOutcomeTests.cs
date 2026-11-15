@@ -370,7 +370,7 @@ public sealed class HonestWriteOutcomeTests
         var result = Run();
         Assert.Equal(unknown ? "unknown" : "failed", result.Status);
         Assert.Equal(unknown, result.MayHaveChanged);
-        Assert.Equal(unknown, result.RequiresSessionReset);
+        Assert.Equal(unknown, result.OutcomeUnknown);
         var arguments = new JsonObject {
             ["softwarePath"] = request.Software, ["groupPath"] = request.Group, ["importPath"] = request.Directory,
             ["fileNameWithoutExtension"] = request.Name, ["dryRun"] = false, ["confirm"] = true,
@@ -392,7 +392,6 @@ public sealed class HonestWriteOutcomeTests
         var body = Host.UnifiedHmiContract.Map("EnsureUnifiedHmiScreen", response, true, true).StructuredContent!;
         Assert.Equal(code, (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 
     [Fact]
@@ -418,7 +417,7 @@ public sealed class HonestWriteOutcomeTests
                 "Action is not supported within ExclusiveAccess." },
             ["detailMessageData"] = new[] { new Dictionary<string, object?> { ["text"] = "Type unchanged", ["detailText"] = "No version created." } } } };
         var json = JsonNode.Parse(WorkerJson.Serialize(new { Step = reply, Probe = (object?)null, Import = (object?)null,
-            MayHaveChanged = false, RequiresSessionReset = false, BlockReadsAfterUncertain = true }))!;
+            MayHaveChanged = false, OutcomeUnknown = false }))!;
          WorkerProtocol.ValidateExchangeResult("libraries.ExecuteLibrary", new(), json);
         var response = JsonSerializer.Deserialize<Host.ResponseMessage>(json["Step"]!.ToJsonString())!;
         var body = Host.LibraryToolContract.Map("ImportLibraryTypeDocuments", response, true).StructuredContent!;
@@ -427,7 +426,7 @@ public sealed class HonestWriteOutcomeTests
         Assert.Contains("No version created.", body.ToJsonString(), StringComparison.Ordinal);
         Assert.DoesNotContain("private stack", body.ToJsonString(), StringComparison.Ordinal);
 
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)body["meta"]!["outcome"]);
     }
 
     [Fact]
@@ -438,7 +437,7 @@ public sealed class HonestWriteOutcomeTests
         var service = new enginehost::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcSoftwareReply {
                 Failure = new PlcSoftwareFailure { Code = nameof(AdapterPreconditionException), Message = "TIA Portal did not grant exclusive access." },
-                MayHaveChanged = false, RequiresSessionReset = false }));
+                MayHaveChanged = false, OutcomeUnknown = false }));
             WorkerProtocol.ValidateExchangeResult(operation, arguments, json);
             return json;
         }, () => true, () => "fixture");
@@ -446,7 +445,6 @@ public sealed class HonestWriteOutcomeTests
             () => service.CreatePlcTypeGroup("PLC", "Group", false)).StructuredContent!;
         Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
 
     }
 
@@ -471,7 +469,7 @@ public sealed class HonestWriteOutcomeTests
             _ => Host.SecurityToolContract.MapResult("ManagePlcProtection", response, false, true)
         }).StructuredContent!;
         Assert.Equal(refusal ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
+        Assert.NotEqual("unknown", (string?)body["meta"]!["outcome"]);
 
     }
     [Fact]
@@ -483,7 +481,6 @@ public sealed class HonestWriteOutcomeTests
             () => service.CreatePlcTypeGroup("PLC", "", false)).StructuredContent!;
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
 
     [Theory]
@@ -503,7 +500,6 @@ public sealed class HonestWriteOutcomeTests
                 () => service.DeleteEmptyPlcBlockGroup("PLC", "Program blocks", false)).StructuredContent!;
             Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-            Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
             Assert.Equal((0, 0), (projectChecks, workerCalls));
         }
     }
@@ -562,7 +558,7 @@ public sealed class HonestWriteOutcomeTests
         Assert.Equal(kind == "refusal" ? "PRECONDITION_FAILED" : kind == "unchanged" ? "NATIVE_OPERATION_FAILED" : "OUTCOME_UNKNOWN",
             (string?)body["error"]?["code"]);
         Assert.Equal(kind == "refusal" ? "rejected-before-operation" : kind == "unchanged" ? "failed" : "unknown", (string?)body["meta"]?["outcome"]);
-        Assert.Equal(uncertain, (bool?)body["meta"]?["requiresSessionReset"]);
+        Assert.Equal(uncertain, (string?)body["meta"]?["outcome"] == "unknown");
         if (kind == "refusal") Assert.Contains("did not grant exclusive access", (string?)body["error"]?["message"]);
         if (kind == "unchanged") Assert.Equal("Native setter refused the value.", (string?)body["error"]?["details"]?["nativeMessage"]);
     }
@@ -575,7 +571,6 @@ public sealed class HonestWriteOutcomeTests
                 ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = fileExists, ["nativeMessage"] = "Native export refused." } }));
         Assert.Equal("failed", (string?)result["meta"]?["outcome"]);
         Assert.Equal("NATIVE_OPERATION_FAILED", (string?)result["error"]?["code"]);
-        Assert.False((bool)result["meta"]!["requiresSessionReset"]!);
         Assert.Equal(fileExists, (bool?)result["data"]?["evidence"]?["mayHaveWrittenFiles"]);
     }
     [Theory]
@@ -637,7 +632,6 @@ public sealed class HonestWriteOutcomeTests
         var body = Body(Host.UnifiedHmiContract.Run(request.Operation, true, true, () => service.Validate(request)));
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.False((bool)body["meta"]!["requiresSessionReset"]!);
     }
     private static JsonObject Body(CallToolResult result) => result.StructuredContent!.AsObject();
     private sealed class ValidationService : Services.UnifiedHmiPortService
@@ -692,7 +686,6 @@ public sealed class HonestWriteOutcomeTests
         Assert.Equal("PROJECT_NOT_BOUND", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-        Assert.Equal(false, (bool?)body["meta"]?["requiresSessionReset"]);
     }
 
     [Fact]
@@ -715,6 +708,5 @@ public sealed class HonestWriteOutcomeTests
         var body = Body(Host.HmiInspectionContract.Map("ArchiveSavedProject", response, true, true));
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
         Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
-        Assert.Equal(true, (bool?)body["meta"]?["requiresSessionReset"]);
     }
 }

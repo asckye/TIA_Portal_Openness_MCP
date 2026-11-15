@@ -13,7 +13,7 @@ internal sealed class WorkerReplyFixture
     {
         var request = new ChannelRequest(1, "adapter." + operation, arguments.ToJsonString(), (_, _) => { });
         var response = recovery.Dispatch(request, _ => {
-            if ((bool?)reply["RequiresSessionReset"] == true) outcome.MarkUncertain();
+            if ((bool?)reply["OutcomeUnknown"] == true) outcome.MarkUncertain();
             return ChannelResponse.Success(reply.ToJsonString());
         });
         response = recovery.Synchronize(request, response);

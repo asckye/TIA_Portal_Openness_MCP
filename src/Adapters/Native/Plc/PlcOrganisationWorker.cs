@@ -221,7 +221,7 @@ namespace TiaMcp.Adapters
                 if (step != null)
                 {
                     reply.Message = step.Message; reply.Meta = step.Meta;
-                    reply.RequiresSessionReset = step.RequiresSessionReset; reply.MayHaveChanged = step.MayHaveChanged;
+                    reply.OutcomeUnknown = step.OutcomeUnknown; reply.MayHaveChanged = step.MayHaveChanged;
                 }
             }
             catch (Exception error) when (error.GetBaseException() is not NonRecoverableException)
@@ -234,7 +234,7 @@ namespace TiaMcp.Adapters
                 reply.Failure.Evidence["mayHaveChanged"] = adapter.MutationStarted;
                 reply.Failure.Evidence["status"] = StepFailureStatus.Of(error);
                 StepFailureStatus.RecordTarget(error, reply.Failure.Evidence);
-                reply.MayHaveChanged = adapter.MutationStarted; reply.RequiresSessionReset = adapter.MutationStarted;
+                reply.MayHaveChanged = adapter.MutationStarted; reply.OutcomeUnknown = adapter.MutationStarted;
                 if (request.Operation == "MovePlcBlockToGroup") reply.Failure.Evidence["deleteStarted"] = adapter.MutationStarted;
                 PlcMovePolicy.MergeEvidence(error, reply.Failure.Evidence);
             }

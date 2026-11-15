@@ -28,7 +28,6 @@ public sealed class HardwareFamilyAdmissionTests
         Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)result["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
-        Assert.False((bool?)result["meta"]?["requiresSessionReset"]);
         Assert.False((bool?)result["data"]?["mayHaveChanged"]);
     }
 
@@ -196,7 +195,7 @@ public sealed class HardwareFamilyAdmissionTests
     [Fact]
     public void Invalid_write_evidence_is_rejected_instead_of_promoted()
     {
-        var reply = JsonNode.Parse("{\"Ok\":false,\"Message\":\"failed\",\"MayHaveChanged\":false,\"RequiresSessionReset\":true}");
+        var reply = JsonNode.Parse("{\"Ok\":false,\"Message\":\"failed\",\"MayHaveChanged\":false,\"OutcomeUnknown\":true}");
         Assert.Throws<IOException>(() => HardwareFamilyWire.Validate("HardwarePlugModule", reply));
         reply!["MayHaveChanged"] = true;
         HardwareFamilyWire.Validate("HardwarePlugModule", reply);
@@ -228,7 +227,7 @@ public sealed class HardwareFamilyAdmissionTests
             var body = ApplyConnection(new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service), "PLC", "HMI").StructuredContent!;
             Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
             Assert.Equal(code, (string?)body["error"]?["code"]);
-            Assert.Equal(outcome == "unknown", (bool?)body["meta"]?["requiresSessionReset"]);
+            Assert.Equal(outcome == "unknown", (string?)body["meta"]?["outcome"] == "unknown");
             if (code == "NOT_FOUND") Assert.Equal("PLC", (string?)body["error"]?["details"]?["target"]);
         }
         [Theory]
@@ -247,7 +246,6 @@ public sealed class HardwareFamilyAdmissionTests
                 .StructuredContent!;
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
-            Assert.Equal(false, (bool?)body["meta"]?["requiresSessionReset"]);
             Assert.Equal(0, calls);
         }
     private static CallToolResult ApplyConnection(enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools tools,

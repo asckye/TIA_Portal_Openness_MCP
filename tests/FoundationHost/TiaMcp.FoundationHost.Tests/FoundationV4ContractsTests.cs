@@ -373,7 +373,7 @@ public sealed class FoundationV4ContractsTests
             new WorkerOperationException(reason,-32603,"rejected-before-operation",
                     "{\"exceptionType\":\"AdapterPreconditionException\",\"isArgument\":false}")));
         Assert.Equal("PRECONDITION_FAILED",(string?)result["error"]?["code"]);Assert.Equal(reason,(string?)result["error"]?["message"]);
-        Assert.Equal("not-started",(string?)result["meta"]?["execution"]);Assert.False((bool?)result["meta"]?["requiresSessionReset"]);
+        Assert.Equal("not-started",(string?)result["meta"]?["execution"]);Assert.NotEqual("unknown", (string?)result["meta"]?["outcome"]);
     }
     [Fact]
     public void WorkerIOExceptionCarriesSanitizedBoundedMessage()
@@ -384,7 +384,7 @@ public sealed class FoundationV4ContractsTests
         string diagnostic=(string)result["error"]!["details"]!["evidence"]!["workerMessage"]!;
         Assert.Contains("Recovery export refused",diagnostic);Assert.Contains("<path>",diagnostic);Assert.True(diagnostic.Length<=4096);
         Assert.DoesNotContain("Private",diagnostic);Assert.DoesNotContain("private-secret",diagnostic);
-        Assert.Equal("OUTCOME_UNKNOWN",(string?)result["error"]?["code"]);Assert.True((bool?)result["meta"]?["requiresSessionReset"]);
+        Assert.Equal("OUTCOME_UNKNOWN",(string?)result["error"]?["code"]);Assert.Equal("unknown", (string?)result["meta"]?["outcome"]);
     }
 
     [Fact]
@@ -448,13 +448,13 @@ public sealed class FoundationV4ContractsTests
     public void ExternalSourceEvidenceIsNeverPromoted(string status, bool executed, bool reset, string outcome, string execution)
     {
         var definition = FoundationTools.Definitions.Single(d => d.Name == "GenerateBlocksFromExternalSource");
-        var raw = new JsonObject { ["Status"] = status, ["Executed"] = executed, ["RequiresSessionReset"] = reset,
+        var raw = new JsonObject { ["Status"] = status, ["Executed"] = executed, ["OutcomeUnknown"] = reset,
             ["ResultBasis"] = "inventory-observation-only; native API returns void", ["ObservedChanges"] = new JsonArray("observed"),
             ["Evidence"] = new JsonObject { ["ExactNativeKey"] = "retained" } };
         var result = Body(FoundationV4Result.Worker("14sp1", definition, "test-request", new JsonObject { ["dryRun"] = false }, raw, raw));
         Assert.Equal(outcome, (string?)result["meta"]!["outcome"]);
         Assert.Equal(execution, (string?)result["meta"]!["execution"]);
-        Assert.Equal(reset, (bool)result["meta"]!["requiresSessionReset"]!);
+        Assert.Equal(reset, (string?)result["meta"]!["outcome"] == "unknown");
         Assert.Null(result["data"]!["nativeResult"]);
         Assert.Equal("retained", (string?)result["data"]!["evidence"]!["ExactNativeKey"]);
         Assert.Equal("observed", (string?)result["data"]!["observation"]!["observedChanges"]![0]);
@@ -466,7 +466,7 @@ public sealed class FoundationV4ContractsTests
     {
         var definition = FoundationTools.Definitions.Single(d => d.Name == "ImportPlcBlocksFromDirectory");
         var raw = JsonNode
-            .Parse("{\"Executed\":true,\"RequiresSessionReset\":true,\"Items\":[{\"RelativePath\":\"a.xml\",\"Status\":\"imported\",\"Attempted\":true},{\"RelativePath\":\"b.xml\",\"Status\":\"failed\",\"Attempted\":true,\"Failure\":\"native-outcome-uncertain\"},{\"RelativePath\":\"c.xml\",\"Status\":\"not-attempted\"}]}")!;
+            .Parse("{\"Executed\":true,\"OutcomeUnknown\":true,\"Items\":[{\"RelativePath\":\"a.xml\",\"Status\":\"imported\",\"Attempted\":true},{\"RelativePath\":\"b.xml\",\"Status\":\"failed\",\"Attempted\":true,\"Failure\":\"native-outcome-uncertain\"},{\"RelativePath\":\"c.xml\",\"Status\":\"not-attempted\"}]}")!;
         var result = Body(FoundationV4Result.Worker("19", definition, "batch", new JsonObject { ["dryRun"] = false }, raw, raw));
         Assert.Equal("unknown", (string?)result["meta"]!["outcome"]);
         Assert

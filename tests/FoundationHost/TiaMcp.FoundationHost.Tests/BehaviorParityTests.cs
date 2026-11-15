@@ -28,7 +28,6 @@ public sealed class BehaviorParityTests
             Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-            Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
         }
     }
 
@@ -75,7 +74,6 @@ public sealed class BehaviorParityTests
                     Assert.True(JsonNode.DeepEquals(engine["error"]?["details"], body["error"]?["details"]));
                     Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
                     Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
-                    Assert.False((bool?)body["meta"]?["requiresSessionReset"]);
                     var rejection = FoundationV4Result.WorkerRejection(new WorkerOperationException(cause is AdapterPreconditionException ? cause.Message : cause.InnerException!.Message,
                         argument ? -32602 : -32603, "rejected-before-operation", JsonSerializer.Serialize(new { exceptionType = nameof(AdapterPreconditionException), parameter })));
                     Assert.Contains(message, rejection.Message);
@@ -322,7 +320,7 @@ public sealed class BehaviorParityTests
             }
             var body=await Call(program ? "ImportPlcProgramFromDirectory" : "ImportPlcBlocksFromDirectory",fixture.Arguments());
             Assert.Equal(code,(string?)body["error"]?["code"]);Assert.Equal("rejected-before-operation",(string?)body["meta"]?["outcome"]);Assert.Equal("not-started",(string?)body["meta"]?["execution"]);
-            Assert.False((bool?)body["meta"]?["requiresSessionReset"]);Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_PRECHECK_REFUSED");
+            Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_PRECHECK_REFUSED");
             Assert.Contains(body["meta"]!["warnings"]!.AsArray(),w=>(string?)w?["code"]=="APPROVAL_DISABLED");
             Assert.Equal(value.EndsWith("backup-io",StringComparison.Ordinal) ? new[]{"directory","backup"} : value.Substring(program ? 17 : 15)=="recheck-io" ? new[]{"directory"} : Array.Empty<string>(),fixture.Calls);
             var results=new JsonArray(BehaviorParityCases.Project(body));
