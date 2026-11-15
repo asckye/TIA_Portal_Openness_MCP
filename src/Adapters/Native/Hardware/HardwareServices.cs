@@ -235,7 +235,7 @@ namespace TiaMcp.Adapters
                     var typeName = HardwareServicesPolicy.FeatureTypeName(feature);
                     var type = typeof(HardwareObject).Assembly.GetType(typeName) ?? typeof(PlcSoftware).Assembly.GetType(typeName);
                     var row = new Dictionary<string, object?> {
-                        ["feature"] = feature, ["type"] = typeName, ["typeAvailableInApi"] = type != null, ["present"] = false };
+                        ["feature"] = feature, ["type"] = typeName, ["typeAvailableInApi"] = type != null, ["present"] = null };
                     if (type == null || !typeof(IEngineeringService).IsAssignableFrom(type) || type.IsAbstract || type.IsInterface) {
                         row["skipped"] = type == null ? "type absent on this version" : "not a concrete service type"; rows.Add(row); continue; }
                     object? service;
@@ -250,9 +250,13 @@ namespace TiaMcp.Adapters
                 meta["records"] = new List<object?>(page);
                 meta["presentCount"] = rows.Count(r => Equals(r["present"], true));
                 foreach (var pair in HardwareServicesPolicy.PageMeta(rows.Count, offset, limit, page.Length)) meta[pair.Key] = pair.Value;
-                meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
+                meta["apiCallSuccess"] = true;
+                meta["dataComplete"] = page.Length == rows.Count && rows.All(r => !r.ContainsKey("probeError")
+                    && !(r.TryGetValue("values", out var values) && values is Dictionary<string, object?> scalar
+                        && scalar.TryGetValue("dataComplete", out var complete) && Equals(complete, false)));
                 meta["scope"] =
-                    "Catalog of Siemens.Engineering.HW.Features.* from the V21 XML docs; presence via GetService<T>, scalar values only. Nothing written.";
+                    "Catalog of Siemens.Engineering.HW.Features.* checked against the connected TIA Portal " + ReleaseKey
+                    + " API; presence via GetService<T>, scalar values only. Nothing written.";
                 return "Hardware feature services probed on the exact hardware object; read-only.";
             }, writing: false);
 

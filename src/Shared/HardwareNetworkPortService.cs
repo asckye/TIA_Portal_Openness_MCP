@@ -26,7 +26,8 @@ namespace TiaMcpServer.Siemens.Services
                     : name == "HardwareUpdateDeviceItemChannel" ? "SetDeviceItemChannel" : name.Substring("Hardware".Length);
                 if (name == "ReadHardwareOwnerCandidates" || name == "ReadHardwareWhitelistedServices")
                     return JsonSerializer.SerializeToNode(new HardwareProbeReply { Lines = new[] { "Project is null" }, FailureCode = "PROJECT_NOT_BOUND" });
-                if (name == "HardwareGetDeviceItemNetworkInfo") return null;
+                if (name == "HardwareGetDeviceItemNetworkInfo")
+                    return new JsonObject { ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." };
                 if (name == "HardwareProbeConnectDeviceNodesToSubnet") return JsonValue.Create("Project is null");
                 if (name == "HardwareEnsureSubnet" || name == "HardwareAttachDeviceNodeToSubnet")
                 {
@@ -213,11 +214,9 @@ namespace TiaMcpServer.Siemens.Services
                             ["deepScan"] = JsonSerializer.SerializeToNode(deepScan)
                     }, false));
 
-        public List<ModelContextProtocol.NetworkAttribute>? GetDeviceItemNetworkInfo(string deviceItemPath)
-            => !HasProject ? null : JsonSerializer.Deserialize<List<ModelContextProtocol.NetworkAttribute>
-                ? >(Invoke("hardware-network.HardwareGetDeviceItemNetworkInfo", new JsonObject {
-                        ["deviceItemPath"] = JsonSerializer.SerializeToNode(deviceItemPath) }, false)!
-                    .ToJsonString());
+        public JsonNode? GetDeviceItemNetworkInfo(string deviceItemPath)
+            => Invoke("hardware-network.HardwareGetDeviceItemNetworkInfo", new JsonObject {
+                ["deviceItemPath"] = JsonSerializer.SerializeToNode(deviceItemPath) }, false);
 
         public string ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName)
             => JsonSerializer

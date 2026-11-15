@@ -283,51 +283,6 @@ namespace TiaMcp.Adapters
             return lines;
         }
 
-        public List<HardwareNetworkAttribute>? HardwareGetDeviceItemNetworkInfo(string deviceItemPath)
-        {
-            if (HardwareProjectMissing()) return null;
-            var di = HardwareResolveItem(deviceItemPath);
-            if (di == null) return null;
-
-            // Heuristic: filter attribute names that likely contain network addressing / interface identity.
-            var keys = new[]
-            {
-                "ip", "ipv4", "subnet", "mask", "gateway", "mac", "pn", "profinet", "device", "station", "interface", "name", "address"
-            };
-
-            var list = new List<HardwareNetworkAttribute>();
-            try
-            {
-                foreach (var info in di.GetAttributeInfos())
-                {
-                    var n = info.Name ?? "";
-                    var lower = n.ToLowerInvariant();
-                    if (!keys.Any(k => lower.Contains(k))) continue;
-
-                    object vObj;
-                    try { vObj = di.GetAttribute(info.Name); }
-                    catch /* swallow(probe-optional): an unreadable device attribute is omitted from address diagnostics */ { continue; }
-
-                    var v = vObj?.ToString();
-                    if (string.IsNullOrWhiteSpace(v)) continue;
-
-                    list.Add(new HardwareNetworkAttribute
-                    {
-                        Name = info.Name,
-                        Value = v,
-                        DataType = HardwareAttributeTypes(info) is { Length: > 0 } types ? types : null,
-                        IsWritable = HardwareAttributeWritable(info)
-                    });
-                }
-            }
-            catch /* swallow(enumerate-optional): unavailable attribute metadata leaves the collected address diagnostics intact */
-            {
-                // best-effort
-            }
-
-            return list;
-        }
-
         private List<object?> HardwareBuildDeviceNodesJson(Device device)
         {
             var arr = new List<object?>();

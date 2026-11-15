@@ -229,6 +229,14 @@ internal static class FamilyReplyShapes
             case "hardware-devices.HardwareReadPlugLocations": return new[] { (NoArguments, Parse("{\"free\":[],\"occupied\":[]}")), (NoArguments, (JsonNode?)null) };
             case "hardware-network.HardwareGetProjectTopology":
                 return new[] { (NoArguments, Parse("{\"deviceCount\":0,\"devices\":[]}")), (NoArguments, Parse("{\"failureCode\":\"NO_PROJECT\"}")) };
+            case "hardware-network.HardwareGetDeviceItemNetworkInfo":
+                return new[]
+                {
+                    (NoArguments, Contract("System.Collections.Generic.List<TiaMcp.Adapters.Contracts.HardwareNetworkAttribute>")),
+                    (NoArguments, Parse("[{\"Name\":\"Address\"}]")),
+                    (NoArguments, Parse("{\"failureCode\":\"PROJECT_NOT_BOUND\",\"message\":\"No project open.\"}")),
+                    (NoArguments, (JsonNode?)null),
+                };
             // SessionCallbackPrimitives.Snapshot.
             case "project-lifecycle.ReadProjectLifecycleBinding":
                 return One(Parse("{\"identity\":null,\"fault\":null,\"instanceReserved\":false,\"verifiedLive\":false,\"note\":\"n\"}"));

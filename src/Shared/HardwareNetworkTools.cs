@@ -200,13 +200,17 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 data["deviceItemName"] = network.DeviceItemName;
                 data["attributes"] = JsonNode.Parse(V4Json.Serialize(network.Attributes));
+                data["selection"] = "attribute-name heuristic";
             }
             foreach (var pair in evidence)
                 if (!data.ContainsKey(pair.Key) && pair.Key != "timestamp" && pair.Key != "tool" && pair.Key != "success") data[pair.Key] = pair.Value?
                     .DeepClone();
             data.Remove("message");
             if (outcome == Outcome.Succeeded) data["summary"] = response.Message;
-            bool incomplete = Incomplete(data) || tool == "GetProjectTopology" || tool == "GetDeviceItemNetworkInfo"
+            bool incomplete = Incomplete(data)
+                || response is ResponseNetworkInfo && data["attributes"] is JsonArray networkAttributes
+                    && networkAttributes.Any(attribute => attribute?["value"] == null)
+                || tool == "GetProjectTopology"
                 || tool.StartsWith("ProbeHardwareHmiConnection", StringComparison.Ordinal);
             Paging? paging = null;
             if (data["offset"] is JsonValue offset && offset.TryGetValue<int>(out var start)
@@ -663,7 +667,14 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var attrs = _hardware.GetDeviceItemNetworkInfo(deviceItemPath);
+                var reply = _hardware.GetDeviceItemNetworkInfo(deviceItemPath);
+                if (reply is JsonObject refusal && (string?)refusal["failureCode"] == "PROJECT_NOT_BOUND")
+                {
+                    var unbound = ResponseMeta.Basic(DateTime.Now, false);
+                    unbound["failureCode"] = "PROJECT_NOT_BOUND";
+                    return new ResponseNetworkInfo { Message = "No project is bound.", Meta = unbound };
+                }
+                var attrs = reply == null ? null : JsonSerializer.Deserialize<List<NetworkAttribute>>(reply.ToJsonString());
                 if (attrs != null)
                 {
                     return new ResponseNetworkInfo
@@ -675,7 +686,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     };
                 }
 
-                throw new McpException($"Device item not found at '{deviceItemPath}'", McpErrorCode.InternalError);
+                var missing = ResponseMeta.Basic(DateTime.Now, false);
+                missing["failureCode"] = "NOT_FOUND";
+                missing["target"] = "/deviceItemPath";
+                return new ResponseNetworkInfo
+                {
+                    Message = "The device item was not found.",
+                    Meta = missing
+                };
             }
             catch (Exception ex) when (ex is not McpException)
             {

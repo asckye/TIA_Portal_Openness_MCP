@@ -462,7 +462,7 @@ namespace TiaMcp.Adapters
         private List<object?> HardwareBuildDeviceItemNetworkReadbackJson(string deviceItemPath)
         {
             var arr = new List<object?>();
-            var attrs = HardwareGetDeviceItemNetworkInfo(deviceItemPath) ?? new List<HardwareNetworkAttribute>();
+            var attrs = HardwareGetDeviceItemNetworkInfo(deviceItemPath) as List<HardwareNetworkAttribute> ?? new List<HardwareNetworkAttribute>();
             foreach (var attr in attrs)
             {
                 arr.Add(new Dictionary<string, object?>

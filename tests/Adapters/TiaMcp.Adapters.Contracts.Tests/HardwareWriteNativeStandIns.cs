@@ -58,6 +58,7 @@ namespace Siemens.Engineering.HW
         public string Name { get; set; } = "";
         public object? Parent { get; set; }
         public Dictionary<Type, object> Services { get; } = new();
+        internal Dictionary<Type, Exception> ServiceFailures { get; } = new();
         public List<string> Calls { get; } = new();
         public Exception? AttributeFailure { get; set; }
         internal Action? Deleting;
@@ -67,7 +68,8 @@ namespace Siemens.Engineering.HW
         public bool CanPlugCopy(DeviceItem item, int position) => throw new NotSupportedException();
         public DeviceItem PlugMove(DeviceItem item, int position) => throw new NotSupportedException();
         public DeviceItem PlugCopy(DeviceItem item, int position) => throw new NotSupportedException();
-        public T? GetService<T>() where T : class, IEngineeringService => Services.TryGetValue(typeof(T), out var value) ? (T)value : null;
+        public T? GetService<T>() where T : class, IEngineeringService => ServiceFailures.TryGetValue(typeof(T), out var failure) ? throw failure
+            : Services.TryGetValue(typeof(T), out var value) ? (T)value : null;
         public virtual IEnumerable<EngineeringAttributeInfo> GetAttributeInfos() => Array.Empty<EngineeringAttributeInfo>();
         public virtual object GetAttribute(string name) { Calls.Add("get:" + name); return false; }
         public virtual void SetAttribute(string name, object? value) { Calls.Add("set:" + name); if (AttributeFailure != null) throw AttributeFailure; }
@@ -178,10 +180,11 @@ namespace Siemens.Engineering.HW.Features
 {
     public sealed class NetworkInterface : IEngineeringService
     {
+        internal bool FailScalarRead;
         public List<Siemens.Engineering.HW.IoConnector> IoConnectors { get; } = new();
         public List<Siemens.Engineering.HW.IoController> IoControllers { get; } = new();
         public List<object> Nodes { get; } = new();
-        public string InterfaceType => "Ethernet";
+        public string InterfaceType => FailScalarRead ? throw new InvalidOperationException("Interface type read failed.") : "Ethernet";
         public string InterfaceOperatingMode => "IoController";
     }
     public sealed class SysLogConfigurationManager : IEngineeringService

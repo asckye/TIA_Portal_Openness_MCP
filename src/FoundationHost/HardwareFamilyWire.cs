@@ -126,7 +126,8 @@ internal static class HardwareFamilyWire
                 && Flag(module["MayHaveChanged"]) && Flag(module["RequiresSessionReset"])
                 && (!(bool)module["RequiresSessionReset"]! || (bool)module["MayHaveChanged"]!),
             "HardwareGetDeviceItemNetworkInfo" => reply == null || reply is JsonArray network
-                && network.All(a => a is JsonObject && Text(a["Name"])),
+                && network.All(a => a is JsonObject && Text(a["Name"]))
+                || Exactly(reply, ("failureCode", code => Text(code) && (string?)code == "PROJECT_NOT_BOUND"), ("message", Text)),
             "HardwareGetProjectTopology" => reply is JsonObject topology && (Text(topology["failureCode"])
                 || Number(topology["deviceCount"]) && topology["devices"] is JsonArray),
             "ReadHardwareOwnerCandidates" or "ReadHardwareWhitelistedServices" => reply is JsonObject probe
