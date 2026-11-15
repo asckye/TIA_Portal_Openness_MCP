@@ -34,7 +34,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     trace.AddTo(fault); _session.RecordHmiReadFault(fault);
                 }
                 var scope = new HmiObject { ["screenPath"] = screenPath, ["itemNames"] = UnifiedRequestValues.Parse(itemNamesJson) };
-                var page = _migrationRead.MigrationPage("ReadUnifiedGraphicSelection", softwarePath, expectedProject, scope, cursor, pageSize, budgetMs,
+                var page = _migrationRead.MigrationPage("GetUnifiedGraphicSelection", softwarePath, expectedProject, scope, cursor, pageSize, budgetMs,
                     hmi => GuardGraphicSelection(UnifiedGraphicSelection.Capture(hmi, screenPath, names, trace), Error), Error, names.Length + 1);
                 foreach (var entry in page.Meta!) meta[entry.Key] = entry.Value?.DeepClone();
                 // A resumed iterator holds its original trace; its callback records

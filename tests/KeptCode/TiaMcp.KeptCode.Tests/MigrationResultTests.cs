@@ -25,11 +25,42 @@ public sealed class MigrationResultTests
         using var version = HardwareContract.UseRelease(release);
         using var session = new Session { CurrentProject = null };
         var reply = Read(session, tool);
-        string identity = tool == "GetUnifiedGraphicSelection" ? "ReadUnifiedGraphicSelection" : tool;
+        string identity = tool;
         Assert.Equal(identity, reply.Meta!["scope"]!.Field("tool"));
         Assert.Equal(identity, ((HmiArray)reply.Meta["failures"]!)[0]!.Field("path"));
         Assert.Equal(false, reply.Meta["apiCallSuccess"]);
         Assert.Equal(0, session.Resolves);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Graphic_selection_producer_names_the_public_tool(string release)
+    {
+        using var version = HardwareContract.UseRelease(release);
+        using var session = new Session();
+        var adapter = new MigrationReadAdapter(session);
+        var scope = new HmiObject { ["screenPath"] = "/Overview", ["itemNames"] = new HmiArray("Button") };
+        var geometry = new HmiObject();
+        foreach (string field in new[] { "Left", "Top", "Width", "Height" })
+            geometry[field] = new HmiObject { ["path"] = "/Screens/Overview/ScreenItems/Button/" + field,
+                ["kind"] = "value", ["status"] = "ok", ["value"] = 1 };
+        var first = adapter.MigrationPage("GetUnifiedGraphicSelection", "HMI", "Fixture", scope, "", 1, 5000,
+            _ => new[] {
+                new HmiObject { ["path"] = "/Screens/Overview/ScreenItems/Button", ["kind"] = "graphicObject", ["status"] = "ok",
+                    ["name"] = "Button", ["type"] = "Siemens.Engineering.HmiUnified.UI.Controls.HmiButton",
+                    ["geometryComplete"] = true, ["fields"] = geometry },
+                new HmiObject { ["path"] = "/Screens/Overview/$selection", ["kind"] = "graphicSelectionSummary", ["status"] = "ok" }
+            }, expectedCount: 2);
+        var cursor = (string)first.Meta!["nextCursor"]!;
+        Assert.False(string.IsNullOrEmpty(cursor));
+        var reply = new GraphicSelectionAdapter(session, adapter)
+            .ReadUnifiedGraphicSelection("HMI", "Fixture", "/Overview", "[\"Button\"]", cursor);
+        Assert.Equal("GetUnifiedGraphicSelection", reply.Meta!["scope"]!.Field("tool"));
+        Assert.Equal(true, reply.Meta["apiCallSuccess"]);
+        Assert.Equal(true, reply.Meta["traversalComplete"]);
+        Assert.Equal(1, session.Resolves);
     }
 
     [Theory]

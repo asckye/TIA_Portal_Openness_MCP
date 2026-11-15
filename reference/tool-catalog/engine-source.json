@@ -3510,7 +3510,9 @@
           "type": "int",
           "default": "50",
           "description": "limit: maximum candidates to return",
-          "value": 50
+          "value": 50,
+          "minimum": 1,
+          "maximum": 100
         }
       }
     },
@@ -10637,7 +10639,7 @@
       "path": "src/Shared/PlcTechnologyTools.cs",
       "owner": "PlcTechnologyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ManageTechnologyObjectV4(\n            string softwarePath,\n            string objectPath,\n            [Description(\"action: the operation to perform - read | create | delete | setParameter.\")] string action,\n            [Description(\"typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).\")] string typeIdentifier=\"\",\n            string version=\"\",\n            [Description(\"parameter: exact parameter name.\")] string parameter=\"\",\n            [Description(\"value: scalar parameter value (number, string, boolean or null); arrays and objects are refused.\")] NativeValue value = default,\n            bool dryRun=true)",
+      "signature": "public CallToolResult ManageTechnologyObjectV4(\n            string softwarePath,\n            string objectPath,\n            [Description(\"action: the operation to perform - read | create | delete | setParameter.\")] string action,\n            [Description(\"typeIdentifier: technology-object type identifier, e.g. 'TO_PositioningAxis', 'TO_SpeedAxis' or 'PID_Compact'; required for create together with an officially supported version.\")] string typeIdentifier=\"\",\n            string version=\"\",\n            [Description(\"parameter: exact parameter name.\")] string parameter=\"\",\n            [Description(\"value: scalar parameter value (number, string, boolean or null); arrays and objects are refused.\")] NativeValue value = default,\n            bool dryRun=true)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10655,7 +10657,7 @@
         "typeIdentifier": {
           "type": "string",
           "default": "\"\"",
-          "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).",
+          "description": "typeIdentifier: technology-object type identifier, e.g. 'TO_PositioningAxis', 'TO_SpeedAxis' or 'PID_Compact'; required for create together with an officially supported version.",
           "value": ""
         },
         "version": {

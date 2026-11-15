@@ -32,7 +32,7 @@ namespace TiaMcp.Logic.V4.Domain
                 ("rawCoordinateEnvelope?", Union(envelope, Null())), ("coordinateCaveat?", text));
             d[typeof(GraphicSelectionRecord)] = Union(d[typeof(GraphicObjectRecord)], d[typeof(GraphicSummaryRecord)]);
             d[typeof(GraphicPageFailure)] = Union(evidence, d[typeof(GraphicSelectionRecord)]);
-            d[typeof(GraphicSelectionScope)] = Object(("tool", String(0, null, "ReadUnifiedGraphicSelection")), ("softwarePath", text),
+            d[typeof(GraphicSelectionScope)] = Object(("tool", String(0, null, "GetUnifiedGraphicSelection", "ReadUnifiedGraphicSelection")), ("softwarePath", text),
                 ("expectedProject", text), ("project", text), ("screenPath", text), ("itemNames", Array(String(1, 1024), 1, 128, true)));
             d[typeof(GraphicSelectionPage)] = Object(("pageIndex", count), ("collectionId", String(1)), ("scope", d[typeof(GraphicSelectionScope)]),
                 ("apiCallSuccess", flag), ("traversalComplete", flag), ("truncated", flag), ("nextCursor", nullableText),

@@ -59,7 +59,7 @@ namespace TiaMcpServer.Siemens.Services
                 var page = pages[j] as JsonObject ?? throw new ArgumentException("Each page must be a Meta object.");
                 var currentScope = page["scope"] as JsonObject;
                 if (j == 0) { scope = currentScope; id = page["collectionId"]?.ToString(); }
-                if (scope == null || scope["tool"]?.ToString() != "ReadUnifiedGraphicSelection" || string.IsNullOrEmpty(id)
+                if (scope == null || !TiaMcp.Logic.V4.Domain.DomainValidation.IsGraphicSelectionTool(scope["tool"]?.ToString()) || string.IsNullOrEmpty(id)
                     || !JsonNode.DeepEquals(scope, currentScope) || id != page["collectionId"]?.ToString()
                     || page["pageIndex"]?.GetValue<int>() != j || page["apiCallSuccess"]?.GetValue<bool>() != true)
                     throw new ArgumentException("Pages must be contiguous, successful and from one graphical-selection collection/scope.");
@@ -83,7 +83,7 @@ namespace TiaMcpServer.Siemens.Services
         internal static JsonObject Compare(string beforePagesJson, string afterPagesJson)
         {
             var before = Decode(beforePagesJson); var after = Decode(afterPagesJson);
-            if (!JsonNode.DeepEquals(before.scope, after.scope))
+            if (!TiaMcp.Logic.V4.Domain.DomainValidation.GraphicScopesEqual(before.scope, after.scope))
                 throw new ArgumentException("Both snapshots must have exactly the same project, HMI, screen and itemNames scope.");
             var changes = new JsonArray(); int changed = 0;
             foreach (var entry in before.items)

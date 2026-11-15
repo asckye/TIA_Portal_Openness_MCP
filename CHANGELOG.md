@@ -5,12 +5,15 @@
 ## [Unreleased]
 
 ### Changed
+- `GetUnifiedGraphicSelection` writes its public tool name in new page scopes on V19–V21. `CompareUnifiedGraphicSelections` accepts both the new label and the legacy label in saved pages, including comparisons between old and new snapshots.
 - Unified HMI replies omit null DTO members while retaining false, zero and empty strings on V19–V21.
 - `GetUnifiedGraphicSelection` returns selection evidence only in `data.page`, retaining the page accepted by `CompareUnifiedGraphicSelections`, on V19–V21.
 - Unified script, tag-definition, screen-branch, library and faceplate migration pages and request-failure records name their public tools in `scope.tool` and failure paths on V19–V21.
 - `ProbeHardwareHmiConnectionWhitelistedServices` displays public engineering types instead of implementation types across all eight releases.
 
 ### Fixed
+- `SearchHardwareCatalog.limit` declares its existing 1–100 range in the input schema on V18–V21.
+- `ManageTechnologyObject.typeIdentifier` describes technology-object identifiers such as `TO_PositioningAxis` across all eight releases.
 - Across all eight releases, adapter argument refusals identify the canonical field supplied by the caller.
 - Across all eight releases, batch admission refusals identify `/operations/<i>/name` and explain that the tool lacks a dry-run preview or batch permission, or is a batch or orchestration tool.
 

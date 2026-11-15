@@ -15,6 +15,19 @@ namespace TiaMcp.FoundationHost.Tests;
 
 public sealed class HostCatalogTests
 {
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Hardware_catalog_declares_its_limit_bounds_where_registered(string release)
+    {
+        var (host, _, _) = Build(release);
+        var tool = host.Find("SearchHardwareCatalog");
+        if (release is "14sp1" or "15.1" or "16" or "17") { Assert.Null(tool); return; }
+        var limit = tool!.Tool.InputSchema.GetProperty("properties").GetProperty("limit");
+        Assert.Equal("integer", limit.GetProperty("type").GetString());
+        Assert.Equal(50, limit.GetProperty("default").GetInt32());
+        Assert.Equal(1, limit.GetProperty("minimum").GetInt32());
+        Assert.Equal(100, limit.GetProperty("maximum").GetInt32());
+    }
+
     [Fact]
     public void Presentation_data_covers_exactly_the_eight_releases()
         => Assert.Equal(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, Data.Releases.Keys);

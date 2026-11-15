@@ -12,7 +12,8 @@ namespace TiaMcp.Logic.V4.Domain
         public static void GraphicSelections(GraphicSelectionPage[] before, GraphicSelectionPage[] after)
         {
             var a = ValidatePages(before); var b = ValidatePages(after);
-            Require(Equal(before[0].Scope, after[0].Scope));
+            Require(GraphicScopesEqual(JsonNode.Parse(before[0].Scope.Json.GetRawText())!.AsObject(),
+                JsonNode.Parse(after[0].Scope.Json.GetRawText())!.AsObject()));
             foreach (var item in a)
             {
                 var next = b[item.Key];
@@ -20,6 +21,15 @@ namespace TiaMcp.Logic.V4.Domain
                 foreach (var field in Geometry(item.Value).Zip(Geometry(next), (x, y) => new[] { x, y }))
                     _ = checked(Coordinate(field[1]) - Coordinate(field[0]));
             }
+        }
+        internal static bool IsGraphicSelectionTool(string? tool)
+            => tool is "GetUnifiedGraphicSelection" or "ReadUnifiedGraphicSelection";
+        internal static bool GraphicScopesEqual(JsonObject before, JsonObject after)
+        {
+            if (!IsGraphicSelectionTool(before["tool"]?.ToString()) || !IsGraphicSelectionTool(after["tool"]?.ToString())) return false;
+            var a = before.DeepClone(); var b = after.DeepClone();
+            a["tool"] = "GetUnifiedGraphicSelection"; b["tool"] = "GetUnifiedGraphicSelection";
+            return JsonNode.DeepEquals(a, b);
         }
         private static Dictionary<string, GraphicObjectRecord> ValidatePages(GraphicSelectionPage[] pages)
         {

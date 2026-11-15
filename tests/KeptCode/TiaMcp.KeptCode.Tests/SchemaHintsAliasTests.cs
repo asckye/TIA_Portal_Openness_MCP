@@ -39,6 +39,18 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
+        public void Hardware_catalog_limit_hints_declare_the_runtime_bounds()
+        {
+            var schema = new JsonObject { ["properties"] = new JsonObject {
+                ["limit"] = new JsonObject { ["type"] = "integer" } } };
+            var spec = new PreflightLogic.ParameterSpec("limit", "integer", false, "50", "");
+            SchemaHintsLogic.Augment(schema, new[] { spec }, null, "SearchHardwareCatalog");
+            Assert.Equal(1, (int?)schema["properties"]!["limit"]!["minimum"]);
+            Assert.Equal(100, (int?)schema["properties"]!["limit"]!["maximum"]);
+            Assert.Equal(50L, (long?)schema["properties"]!["limit"]!["default"]);
+        }
+
+        [Fact]
         public void Existing_examples_are_preserved()
         {
             var schema = new JsonObject { ["properties"] = new JsonObject {

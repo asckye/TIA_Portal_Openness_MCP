@@ -78,6 +78,29 @@ public sealed class ExtensionFamilyReplyTests
         var comparison = enginehost::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(savedPages, savedPages);
         Assert.Equal(0, (int)comparison["changedObjectCount"]!);
 
+        foreach (string beforeTool in new[] { "GetUnifiedGraphicSelection", "ReadUnifiedGraphicSelection" })
+        foreach (string afterTool in new[] { "GetUnifiedGraphicSelection", "ReadUnifiedGraphicSelection" })
+        {
+            var beforePage = page.DeepClone(); beforePage["scope"]!["tool"] = beforeTool;
+            var afterPage = page.DeepClone(); afterPage["scope"]!["tool"] = afterTool;
+            string beforeJson = new JsonArray(beforePage).ToJsonString();
+            string afterJson = new JsonArray(afterPage).ToJsonString();
+            var before = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(beforeJson);
+            var after = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(afterJson);
+            TiaMcp.Logic.V4.Domain.DomainValidation.GraphicSelections(before, after);
+            var compatible = enginehost::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(beforeJson, afterJson);
+            Assert.True((bool)compatible["success"]!);
+            Assert.Equal(0, (int)compatible["changedObjectCount"]!);
+
+            var differentScreen = JsonNode.Parse(afterJson)!;
+            differentScreen[0]!["scope"]!["screenPath"] = "/Other";
+            string differentJson = differentScreen.ToJsonString();
+            var different = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(differentJson);
+            Assert.Throws<ArgumentException>(() => TiaMcp.Logic.V4.Domain.DomainValidation.GraphicSelections(before, different));
+            Assert.Throws<ArgumentException>(() => enginehost::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(beforeJson, differentJson));
+        }
+
+
         var other = Host.HmiInspectionContract.Map("GetUnifiedGlobalScript", response, false, false).StructuredContent!["data"]!;
         Assert.True(JsonNode.DeepEquals(page["records"], other["records"]));
         Assert.False(other.AsObject().ContainsKey("page"));

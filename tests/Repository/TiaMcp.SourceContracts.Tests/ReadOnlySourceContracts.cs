@@ -10,6 +10,16 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class ReadOnlySourceContracts
 {
     [Fact]
+    public void Technology_object_type_description_uses_technology_identifiers()
+    {
+        string member = Sources.Member("ManageTechnologyObjectV4", tool: true);
+        Assert.Contains("typeIdentifier: technology-object type identifier", member, StringComparison.Ordinal);
+        Assert.Contains("TO_PositioningAxis", member, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrderNumber:", member, StringComparison.Ordinal);
+        Assert.DoesNotContain("normalizeTypeIdentifier", member, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Device_attribute_rows_print_the_item_path()
     {
         Contains(Read("src/Adapters/Native/Hardware/HardwareDevices.cs"),

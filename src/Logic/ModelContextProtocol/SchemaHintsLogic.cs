@@ -92,6 +92,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static void DeclareArgumentEnums(string tool, JsonObject schema)
         {
             if (schema["properties"] is not JsonObject properties) return;
+            if (tool == "SearchHardwareCatalog" && properties["limit"] is JsonObject limit)
+            { limit["minimum"] = 1; limit["maximum"] = 100; }
             if (tool == "CompareProjects" && properties["kind"] is JsonObject kind)
                 kind["enum"] = new JsonArray("software", "softwareToLibrary", "hardware");
             if (tool == "ExportUnifiedEngineeringList" && properties["category"] is JsonObject category)

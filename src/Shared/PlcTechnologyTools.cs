@@ -201,8 +201,8 @@ namespace TiaMcpServer.ModelContextProtocol
             string softwarePath,
             string objectPath,
             [Description("action: the operation to perform - read | create | delete | setParameter.")] string action,
-            [Description("typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / " +
-                "ManageHardwareUtilities normalizeTypeIdentifier).")] string typeIdentifier=
+            [Description("typeIdentifier: technology-object type identifier, e.g. 'TO_PositioningAxis', 'TO_SpeedAxis' or 'PID_Compact'; " +
+                "required for create together with an officially supported version.")] string typeIdentifier=
                 "",
             string version="",
             [Description("parameter: exact parameter name.")] string parameter="",
