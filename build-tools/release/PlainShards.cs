@@ -52,7 +52,7 @@ internal static class PlainShards
                         plan: plan.Path, reserveSensitive: reserve, process: process, sensitiveShards: sensitiveCount);
                     return new(name + "-shard-" + index, result.ExitCode, result.StandardOutput, result.StandardError);
                 }))).ToArray();
-            // Finish GUI input on the shared desktop before starting its parallel layout processes.
+            // Retain the input lane's serial order; each GUI process receives its own desktop.
             var rows = RunLanes(directory, studioGui ? Math.Max(1, parallelism - 1) : parallelism, jobs.Take(ordinaryCount).ToArray(),
                 jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] == 0).ToArray(),
                 jobs.Skip(ordinaryCount).Where((_, i) => plan.SensitivePartitions![i] != 0).ToArray(), sensitiveFirst: studioGui);

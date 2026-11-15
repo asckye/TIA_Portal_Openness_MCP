@@ -143,6 +143,8 @@ internal sealed record CommandResult(int ExitCode, string StandardOutput, string
 
 internal static class ProcessRunner
 {
+    internal static readonly object StartLock = new();
+
     internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false)
     {
         var end = timeoutMilliseconds is { } milliseconds ? DateTime.UtcNow.AddMilliseconds(milliseconds) : DateTime.MaxValue;
@@ -162,9 +164,12 @@ internal static class ProcessRunner
             foreach (var (key, value) in environment)
                 if (value is null) start.Environment.Remove(key); else start.Environment[key] = value;
         start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
+        start.Environment.Remove(GuiTestDesktop.EnvironmentKey);
 
-        using var process = new Process { StartInfo = start };
-        try { process.Start(); }
+        string? desktop = environment != null && environment.TryGetValue(GuiTestDesktop.EnvironmentKey, out var requested) ? requested : null;
+        using var isolated = desktop == null ? null : IsolatedDesktopProcess.Start(start, desktop);
+        using var process = isolated == null ? new Process { StartInfo = start } : null;
+        try { lock (StartLock) process?.Start(); }
         catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
         StreamWriter? logWriter = null;
         if (logPath != null)
@@ -185,26 +190,36 @@ internal static class ProcessRunner
             }
             return content.ToString();
         }
-        var stdout = logPath != null || forwardOutput ? Read(process.StandardOutput, Console.Out) : process.StandardOutput.ReadToEndAsync();
-        var stderr = logPath != null || forwardOutput ? Read(process.StandardError, Console.Error) : process.StandardError.ReadToEndAsync();
+        var outputReader = isolated?.StandardOutput ?? process!.StandardOutput;
+        var errorReader = isolated?.StandardError ?? process!.StandardError;
+        var stdout = logPath != null || forwardOutput ? Read(outputReader, Console.Out) : outputReader.ReadToEndAsync();
+        var stderr = logPath != null || forwardOutput ? Read(errorReader, Console.Error) : errorReader.ReadToEndAsync();
         if (standardInput is not null)
         {
-            process.StandardInput.Write(standardInput);
-            process.StandardInput.Close();
+            var input = isolated?.StandardInput ?? process!.StandardInput;
+            input.Write(standardInput);
+            input.Close();
         }
+        else isolated?.StandardInput.Close();
 
         int Remaining() => end == DateTime.MaxValue ? Timeout.Infinite : (int)Math.Clamp((end - DateTime.UtcNow).TotalMilliseconds, 0, int.MaxValue);
         void TimedOut()
         {
-            process.Kill(entireProcessTree: true);
-            process.WaitForExit();
+            if (isolated != null) isolated.Finish();
+            else
+            {
+                process!.Kill(entireProcessTree: true);
+                process.WaitForExit();
+            }
             throw new ReleaseException($"{executable} timed out after {timeoutMilliseconds} ms.");
         }
-        if (!process.WaitForExit(Remaining())) TimedOut();
+        if (!(isolated?.WaitForExit(Remaining()) ?? process!.WaitForExit(Remaining()))) TimedOut();
+        int exitCode = isolated?.ExitCode ?? process!.ExitCode;
+        isolated?.Finish();
         if (!Task.WhenAll(stdout, stderr).Wait(Remaining())) TimedOut();
         var output = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();
-        return new CommandResult(process.ExitCode, output, error);
+        return new CommandResult(exitCode, isolated == null ? output : $"DESKTOP {isolated.DesktopPath} PID {isolated.ProcessId}\n" + output, error);
     }
 
     internal static void RequireSuccess(CommandResult result, string description)

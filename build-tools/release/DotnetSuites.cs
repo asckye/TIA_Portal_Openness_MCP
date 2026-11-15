@@ -191,7 +191,8 @@ internal static class DotnetSuites
         int? exit = null;
         try
         {
-            var result = SuiteHang.Complete(directory, name, before, (process ?? RunProcess)(dotnet, command, root, environment));
+            var result = SuiteHang.Complete(directory, name, before,
+                (process ?? RunProcess)(dotnet, command, root, GuiTestDesktop.EnvironmentFor(name, environment)));
             output.Append(result.StandardOutput);
             stderr = result.StandardError;
             exit = result.ExitCode;

@@ -73,7 +73,8 @@ internal static class FastSuites
             var diagnostic = Path.Combine(directory, name + ".vstest.log") + ";TraceLevel=Info";
             args.AddRange(["--diag", diagnostic]);
         }
-        var result = SuiteHang.Complete(directory, name, before, (process ?? DotnetSuites.RunProcess)(dotnet, args, root, environment));
+        var result = SuiteHang.Complete(directory, name, before,
+            (process ?? DotnetSuites.RunProcess)(dotnet, args, root, GuiTestDesktop.EnvironmentFor(name, environment)));
         if (!File.Exists(trx)) return result with { ExitCode = 1, StandardError = result.StandardError + "\nMissing shard TRX: " + trx };
         var errors = DotnetSuites.ReadTrx(trx).Errors;
         if (errors.Count > 0) return result with { ExitCode = 1, StandardError = result.StandardError + "\n" + string.Join("\n", errors) };
