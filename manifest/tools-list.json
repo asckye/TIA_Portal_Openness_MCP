@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.4_20261105",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-15T10:26:58.3727513+00:00",
+  "generatedAt": "2026-11-15T17:58:00.9782570+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "f0112448c46f15c181b2a07705d91d2b559dd135c9b8a995975876ac36c33005",
-  "workerSha256": "9b5db5f4415e61849988332fe97bf78573dd54da9f26a92daf70fb60d59fbff6",
+  "workerSha256": "72451bdf9a5bceeb4d419c3d2021ee44abee7c217993b031b7f8bfd93701682f",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -2173,7 +2173,7 @@
         "expectedProjectFile",
         "sourceDirectory"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [bounded-batch-import-candidate] Top directory XML only, exact ordinary PLC/group. One object per file; preview identifies create/replace. overwrite=true backs up every replacement before imports and restores known earlier replacements on failure. Unknown outcomes retain recovery files and require reset. No repair or inferred dependencies. Preview defaults true; apply requires complete importOrder, expectedPlanHash, confirmation and exact project. Native None/Override; first failure stops with recovery evidence. Windows SDK/native unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksFromDirectory\"), optionally operation or language. dir and sourceDirectory are mutually exclusive parameter alternatives.",
+      "description": "[PLC foundation; native unverified][WRITE] [bounded-batch-import-candidate] Top directory XML only, exact ordinary PLC/group. One object per file; preview identifies create/replace. overwrite=true backs up every replacement before imports and restores known earlier replacements on failure. Unknown outcomes retain recovery files; inspect the target before an explicit retry. Never replay automatically. No repair or inferred dependencies. Preview defaults true; apply requires complete importOrder, expectedPlanHash, confirmation and exact project. Native None/Override; first failure stops with recovery evidence. Windows SDK/native unverified. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksFromDirectory\"), optionally operation or language. dir and sourceDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"sourceDirectory\":\"C:\\\\TIA_MCP\\\\imports\",\"dryRun\":true,\"confirm\":false,\"regexName\":\"^Main\\\\.xml$\",\"overwrite\":false}"
     },
     {
