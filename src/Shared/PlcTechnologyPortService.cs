@@ -22,7 +22,7 @@ namespace TiaMcpServer.Siemens.Services
                 Invoke(new PlcSoftwareRequest {
                     Operation = "ImportTechnologyObject", SoftwarePath = softwarePath, GroupPath = folderPath, FilePath = importPath, DryRun = false });
         public ResponseImportBatch ImportTechnologyObjectsFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "",
-                bool overwrite = true)
+                bool overwrite = false)
             =>
                 TechnologyBatch(Invoke(new PlcSoftwareRequest {
                         Operation = "ImportTechnologyObjectsFromDirectory", SoftwarePath = softwarePath, GroupPath = folderPath, FilePath = dir, RegexName =

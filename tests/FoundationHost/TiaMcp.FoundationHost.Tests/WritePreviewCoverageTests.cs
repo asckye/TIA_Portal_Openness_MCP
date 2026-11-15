@@ -596,6 +596,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     [InlineData("AttachDeviceNodeToSubnet")]
     [InlineData("ConnectDeviceNodesToProfinetSubnet")]
     [InlineData("CreateGsdDevice")]
+    [InlineData("CompileDevice")]
     [InlineData("CreateVersionControlWorkspace")]
     [InlineData("DownloadPlc")]
     [InlineData("EnsureSubnet")]

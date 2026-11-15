@@ -124,7 +124,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("folderPath: optional technology object group path (use empty for root)")] string folderPath,
             [Description("dir: directory containing technology object XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override (default)")] bool overwrite = true,
+            [Description("overwrite: false (default) refuses to replace an existing technology object; true replaces it.")] bool overwrite = false,
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
             [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
@@ -141,7 +141,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string folderPath,
             string dir,
             string regexName = "",
-            bool overwrite = true)
+            bool overwrite = false)
         {
             try
             {

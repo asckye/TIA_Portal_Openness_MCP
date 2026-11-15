@@ -14,17 +14,24 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > " +
                 "Hardware (rebuild all)' does and what DownloadPlc runs first; CompilePlcSoftware / CompilePlcDiagnostics only compile the program. Returns " +
                 "the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an " +
-                "S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+                "S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. Native behaviorPolicy=current; V4 native acceptance is pending. " +
+                "Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
+                "from this preview, and the exact bound expectedProjectFile.")]
         public CallToolResult CompileDevice(
             [Description("devicePath: array naming the station to compile, e.g. [\"PLC_1\"].")] string[] devicePath,
             [Description("itemPath: array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.")] string[] itemPath =
-                null!)
-            => HardwareToolContract.Invoke("CompileDevice", false, true, () =>
-            {
-                string devicePathJson = HardwareToolContract.Path(devicePath, "devicePath", rootAllowed: false, optional: false);
-                string itemPathJson = HardwareToolContract.Path(itemPath, "itemPath", rootAllowed: true, optional: true);
-                return _service.CompileDevice(devicePathJson,itemPathJson);
-            });
+                null!,
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
+            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
+                "dryRun=false.")] string expectedProjectFile = "")
+            => McpServer.RunWritePreview("CompileDevice", dryRun, new { devicePath, itemPath }, () =>
+                HardwareToolContract.Invoke("CompileDevice", false, true, () =>
+                {
+                    string devicePathJson = HardwareToolContract.Path(devicePath, "devicePath", rootAllowed: false, optional: false);
+                    string itemPathJson = HardwareToolContract.Path(itemPath, "itemPath", rootAllowed: true, optional: true);
+                    return _service.CompileDevice(devicePathJson,itemPathJson);
+                }), expectedPlanHash, expectedProjectFile);
 
         [McpServerTool(Name = "CompileHmiDiagnostics"),
                 Description("[L1][HMI] Compile an HMI and return structured errors/warnings, the HMI counterpart of CompilePlcDiagnostics. Use it after " +

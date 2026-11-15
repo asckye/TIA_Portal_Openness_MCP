@@ -56,6 +56,8 @@
 - Online monitoring safety checks use force-tool classifications and the reviewed offline-write list, require the monitoring API tools available on each release, and scan the registered roster on V20/V21. The policy covers offline force-table engineering and prohibits changing forcing on a running PLC.
 - Passive capability self-tests read cached connection and project state. A bound project is reported without a worker call, and project validation and tree reads require `connectIfNeeded=true`.
 ### Changed
+- `CompileDevice` now defaults to a preview on all eight releases. Existing callers must pass `dryRun:false` with the preview's `expectedPlanHash` and exact bound `expectedProjectFile` to compile.
+- `ImportTechnologyObjectsFromDirectory` defaults to `overwrite:false` on V16–V21; replacing existing technology objects requires `overwrite:true`.
 - `EnsureUnifiedHmiTag.hmiDataType` and `BindUnifiedHmiTagDynamization.dataType` default to empty on V19–V21. Symbolic tags use the type supplied by TIA; absolute tags still default to Bool. Dynamization dataType, plcTag and address are optional expected values compared after binding, because those API properties are read-only.
 - Unified colour conversion and write verification also accept `0xAARRGGBB`; the theme schema keeps its existing `0x` format.
 

@@ -8514,7 +8514,7 @@
       "path": "src/Shared/PlcCompilePortTools.cs",
       "owner": "PlcCompilePortTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult CompileDevice(\n            [Description(\"devicePath: array naming the station to compile, e.g. [\\\"PLC_1\\\"].\")] string[] devicePath,\n            [Description(\"itemPath: array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.\")] string[] itemPath = null!)",
+      "signature": "public CallToolResult CompileDevice(\n            [Description(\"devicePath: array naming the station to compile, e.g. [\\\"PLC_1\\\"].\")] string[] devicePath,\n            [Description(\"itemPath: array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.\")] string[] itemPath = null!,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "devicePath": {
           "type": "string[]",
@@ -8526,6 +8526,24 @@
           "default": "null!",
           "description": "itemPath: array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station.",
           "value": null
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -10526,7 +10544,7 @@
       "path": "src/Shared/PlcTechnologyTools.cs",
       "owner": "PlcTechnologyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ImportTechnologyObjectsFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional technology object group path (use empty for root)\")] string folderPath,\n            [Description(\"dir: directory containing technology object XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: true=Override (default)\")] bool overwrite = true,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult ImportTechnologyObjectsFromDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional technology object group path (use empty for root)\")] string folderPath,\n            [Description(\"dir: directory containing technology object XML files\")] string dir,\n            [Description(\"regexName: optional regex filter applied to filename without extension\")] string regexName = \"\",\n            [Description(\"overwrite: false (default) refuses to replace an existing technology object; true replaces it.\")] bool overwrite = false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10551,9 +10569,9 @@
         },
         "overwrite": {
           "type": "bool",
-          "default": "true",
-          "description": "overwrite: true=Override (default)",
-          "value": true
+          "default": "false",
+          "description": "overwrite: false (default) refuses to replace an existing technology object; true replaces it.",
+          "value": false
         },
         "dryRun": {
           "type": "bool",

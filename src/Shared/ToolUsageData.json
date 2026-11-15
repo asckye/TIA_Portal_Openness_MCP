@@ -35521,7 +35521,8 @@
           "arguments": {
             "devicePath": [
               "PLC_1"
-            ]
+            ],
+            "dryRun": true
           },
           "parameters": {
             "itemPath": {
@@ -36705,7 +36706,7 @@
               "requiresBinding": true
             },
             "overwrite": {
-              "exampleValue": true
+              "exampleValue": false
             }
           },
           "operations": {},
@@ -47272,7 +47273,8 @@
           "arguments": {
             "devicePath": [
               "PLC_1"
-            ]
+            ],
+            "dryRun": true
           },
           "parameters": {
             "itemPath": {
@@ -51553,7 +51555,7 @@
               "requiresBinding": true
             },
             "overwrite": {
-              "exampleValue": true
+              "exampleValue": false
             }
           },
           "operations": {},
@@ -65888,7 +65890,20 @@
           "arguments": {
             "devicePath": [
               "<Station>"
-            ]
+            ],
+            "dryRun": true
+          },
+          "expect": "planHash and targetIdentity for the bound project; no compile"
+        },
+        {
+          "tool": "CompileDevice",
+          "arguments": {
+            "devicePath": [
+              "<Station>"
+            ],
+            "dryRun": false,
+            "expectedPlanHash": "<planHash from the CompileDevice preview>",
+            "expectedProjectFile": "<bound project file>"
           },
           "expect": "0 errors (warnings allowed)"
         }
