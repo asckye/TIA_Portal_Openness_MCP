@@ -82,7 +82,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") == false)
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
-                    new Error("The operation stopped before a write was issued.", new PreconditionFailedDetails("classic-motion-before-write", null));
+                    new Error("The operation stopped before a write was issued.", new PreconditionFailedDetails(Family(tool) + "-before-write", null));
             }
             else
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = Unknown(); }
@@ -114,10 +114,31 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "InvalidParams": case "INVALID_ARGUMENT":
                     return new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, evidence));
                 case "PRECONDITION_FAILED"
-                    : return new Error("The operation's preconditions were not satisfied.", new PreconditionFailedDetails("classic-motion", null));
+                    : return new Error("The operation's preconditions were not satisfied.", new PreconditionFailedDetails(Family(tool), null));
                 default: return null;
             }
         }
+
+        private static readonly IReadOnlyDictionary<string, string> ToolFamilies = new Dictionary<string, string>(StringComparer.Ordinal) {
+            ["ExportPlcProDiagInfo"] = "prodiag",
+            ["ManagePlcSupervision"] = "prodiag",
+            ["GetClassicHmiScreenTree"] = "classic-hmi",
+            ["ManageClassicHmiScreenObject"] = "classic-hmi",
+            ["ManageClassicHmiFolder"] = "classic-hmi",
+            ["ManageClassicHmiGraphic"] = "classic-hmi",
+            ["ListClassicHmiScripts"] = "classic-hmi",
+            ["ManageClassicHmiScript"] = "classic-hmi",
+            ["ManageClassicHmiCycle"] = "classic-hmi",
+            ["ManageClassicHmiTextGraphicList"] = "classic-hmi",
+            ["GetClassicHmiGlobalization"] = "classic-hmi",
+            ["ListClassicHmiFaceplates"] = "classic-hmi",
+            ["GetMotionAxisConfiguration"] = "motion",
+            ["ManageMotionAxis"] = "motion",
+            ["ExchangeMotionCamData"] = "motion",
+            ["ConfigureMotionHardwareConnection"] = "motion"
+        };
+
+        private static string Family(string tool) => ToolFamilies[tool];
 
         private static bool Incomplete(JsonNode? node)
         {

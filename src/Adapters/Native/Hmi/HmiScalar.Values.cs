@@ -14,7 +14,8 @@ namespace TiaMcp.Adapters.Native.Hmi
     {
 internal static object? Json(object? value) => value != null && HmiValueTypes.Render(value) is object rendered ? rendered : value is TimeSpan span ? span
     .ToString("c", CultureInfo.InvariantCulture)
-            : value != null && (value.GetType().IsEnum || value is Version || value is Guid || value is DateTime)
+            : value is DateTime date ? date.ToString("o", CultureInfo.InvariantCulture)
+            : value != null && (value.GetType().IsEnum || value is Version || value is Guid)
                 ? Convert.ToString(value, CultureInfo.InvariantCulture) : value;
         internal static object? ConvertValue(object? value, Type type) => HardwareAddressingPolicy
             .ConvertValue(value == null ? new HardwareScalar { Kind = "null" } : value is string text ? new HardwareScalar { Kind = "string", Text = text }

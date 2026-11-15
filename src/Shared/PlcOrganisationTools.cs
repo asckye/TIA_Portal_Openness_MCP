@@ -195,7 +195,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var report = BuildDeletionReport(
                     data, dryRun, crossRefOk,
-                    objectLabel: $"Tag table '{data["resolvedTagTablePath"]}'({tagCount} tag(s))",
+                    objectLabel: $"Tag table '{data["resolvedTagTablePath"]}' ({tagCount} tag(s))",
                     dryRunTail: "After verifying the preview, use dryRun=false, confirm=true and the exact bound expectedProjectFile to delete.",
                     extraWarning: null,
                     nextActions: dryRun
@@ -208,7 +208,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         : new JsonArray
                         {
                             "CompilePlcSoftware to detect broken PLC references",
-                            "⚠️ Compilation cannot detect HMI symbol-binding failures; verify screen tags separately",
+                            "Warning: Compilation cannot detect HMI symbol-binding failures; verify screen tags separately",
                             "SaveProject: save only after verification"
                         });
 
@@ -321,7 +321,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         + (crossRefOk
                             ? $"Cross-references: {data["crossReferenceCount"]} (see data.crossReferences)."
                             : queried
-                                ? "⚠️ Cross-references could not be retrieved. This does not mean the object is unreferenced; verify it before continuing."
+                                ? "Warning: Cross-references could not be retrieved. This does not mean the object is unreferenced; verify it before continuing."
                                 : "Cross-references were not queried ("
                                     + (data["crossReferenceUnavailableReason"]?.GetValue<string>() ?? "crossReferences=false, the default")
                                     + "). This does not mean the object is unreferenced.")
@@ -336,7 +336,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 // 走到这里说明 Delete() 调过但回读没能确认对象消失。绝不当成功报。
                 ok = false;
-                message = $"⚠️ UNVERIFIED: {objectLabel} deletion outcome cannot be confirmed (deleted={deleted}, verifiedAbsent={verifiedAbsent}). "
+                message = $"Warning: UNVERIFIED: {objectLabel} deletion outcome cannot be confirmed (deleted={deleted}, verifiedAbsent={verifiedAbsent}). "
                         + "Manually verify in TIA whether the object still exists; do not continue on the assumption that it was deleted.";
                 warnings.Add("Post-deletion readback confirmation failed; this result is unverified.");
             }

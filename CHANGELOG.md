@@ -21,6 +21,9 @@
   and identifies `archivePath` or `destinationDirectory` in file and argument refusals before retrieval starts.
 - `CreateProject` and `OpenProject` refusals name the requested operation on all eight releases.
 - Existing-project generation planning accepts equivalent project paths with forward slashes and different casing on all eight releases.
+- `DeletePlcTagTable`, `DeletePlcBlock` and `DeletePlcType` summaries use `Warning:` for unavailable cross-references and unverified deletion across all eight releases. Tag-table replies also separate tag counts and use a plain HMI-binding warning in `nextActions`.
+- `ExportPlcProDiagInfo` and `ManagePlcSupervision` preconditions identify `prodiag` on V17–V21; Classic HMI and motion preconditions identify `classic-hmi` and `motion` across all eight releases, including their `-before-write` conditions.
+- HMI, hardware, library and optional-package scalar dates use ISO 8601 round-trip strings across all eight releases, preserving fractional seconds, UTC `Z`, local offsets and unspecified timezone values.
 - The example project name in tool descriptions and guidance is now `ExampleProject`.
 - `PreviewToolCall` precautions name the compile step for the tool's domain and include Windows Openness group changes for session tools.
 - Canonical printed device paths and arrays of names containing `/` on the seven string device entries now resolve.

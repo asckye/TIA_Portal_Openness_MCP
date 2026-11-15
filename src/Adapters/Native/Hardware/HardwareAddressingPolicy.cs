@@ -82,8 +82,9 @@ namespace TiaMcp.Adapters.Hardware
         {
             if (value == null) return null;
             if (value is TimeSpan span) return span.ToString("c", CultureInfo.InvariantCulture);
+            if (value is DateTime date) return date.ToString("o", CultureInfo.InvariantCulture);
             var type = value.GetType();
-            if (type.IsEnum || value is Version || value is Guid || value is DateTime)
+            if (type.IsEnum || value is Version || value is Guid)
                 return Convert.ToString(value, CultureInfo.InvariantCulture);
             if (type.IsPrimitive || value is string || value is decimal) return value;
             throw new NotSupportedException("Complex/reference attribute requires a dedicated adapter: " + type.FullName);
