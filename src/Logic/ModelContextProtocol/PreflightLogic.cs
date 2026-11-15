@@ -215,8 +215,22 @@ namespace TiaMcpServer.ModelContextProtocol
             return s.Substring(i);
         }
 
-        /// <summary>What a caller must keep in mind for one operation class (the third tag of a tool description).</summary>
-        public static IReadOnlyList<string> Precautions(string operation, Report report, bool readOnly, IReadOnlyList<ParameterSpec> specs)
+        private static readonly IReadOnlyDictionary<string, string> WriteCompileTools = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["PLC-Software"] = "CompilePlcSoftware",
+            ["PLC-Alarms"] = "CompilePlcSoftware",
+            ["PLC-OpcUA"] = "CompilePlcSoftware",
+            ["PLC-TechnologyObjects"] = "CompilePlcSoftware",
+            ["Safety"] = "CompilePlcSoftware",
+            ["HMI"] = "CompileHmiDiagnostics",
+            ["HMI-Classic"] = "CompileHmiDiagnostics",
+            ["HMI-Unified"] = "CompileHmiDiagnostics",
+            ["Hardware"] = "CompileDevice",
+        };
+
+        /// <summary>What a caller must keep in mind for the tool's operation class, domain and read-only hint.</summary>
+        public static IReadOnlyList<string> Precautions(
+            string operation, string domain, Report report, bool readOnly, IReadOnlyList<ParameterSpec> specs)
         {
             var list = new List<string>();
             var op = (operation ?? "").ToUpperInvariant();
@@ -228,9 +242,11 @@ namespace TiaMcpServer.ModelContextProtocol
                         "confirmation.");
                     break;
                 case "WRITE":
-                    list
-                        .Add("Modifies the open project offline; nothing is saved, compiled or downloaded by itself - CompilePlcSoftware then SaveProject " +
-                        "afterwards.");
+                    list.Add(WriteCompileTools.TryGetValue(domain, out var compileTool)
+                        ? "Modifies the open project offline; nothing is saved, compiled or downloaded by itself - "
+                            + compileTool + " then SaveProject afterwards."
+                        : "Writes what the description names. No compile step is implied; "
+                            + "call SaveProject afterwards only if the open project changed.");
                     break;
                 case "ONLINE-WRITE":
                     list
@@ -257,8 +273,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "SESSION":
                     list.Add(readOnly
                         ? "Reads session or discovery state; does not change the project."
-                        : "Changes the TIA session, the project binding or the project files. "
-                            + "Read the description for what it saves, closes or rebinds.");
+                        : "Changes the TIA session, the project binding, the project files or the Windows Openness group membership. "
+                            + "Read the description for what it saves, closes, rebinds or adds.");
                     break;
                 case "READ":
                     list.Add("Reads the open project; no change.");

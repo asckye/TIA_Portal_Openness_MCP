@@ -172,7 +172,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var op = ToolTaxonomy.OperationOf(canonical, description);
             bool readOnly = CatalogView.Find(canonical)?.Tool.Annotations?.ReadOnlyHint == true || ToolTaxonomy.IsSessionReader(canonical);
             bool changesState = !readOnly && !report.DryRunEffective;
-            var precautions = PreflightLogic.Precautions(op.Operation, report, readOnly, specs).ToList();
+            var precautions = PreflightLogic.Precautions(op.Operation, tag.Domain, report, readOnly, specs).ToList();
             var usageNotes = TiaOpenness.Shared.ToolUsageCatalog.Notes(canonical);
             bool nativeParameterRead = (bool?)usageNotes["nativeReadsPossible"] == true;
             if (usageNotes["precaution"] is JsonValue note) precautions.Add(note.GetValue<string>());

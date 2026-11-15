@@ -15,6 +15,69 @@ public sealed class PreviewToolCallTruthTests
     public static IEnumerable<object[]> Releases() => CanonicalParameterRound2Tests.Releases();
     public static IEnumerable<object[]> ProjectCopyAndDownloadReleases() => new[] { "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(release => new object[] { release });
+    public static IEnumerable<object[]> UnifiedHmiReleases() => new[] { "19", "20", "21" }
+        .Select(release => new object[] { release });
+    public static IEnumerable<object[]> NonProgramWrites() => Releases().SelectMany(row => new[] {
+        new object[] { row[0], "CreateProject" }, new object[] { row[0], "ManageGlobalLibrary" }
+    });
+
+    [Theory, MemberData(nameof(UnifiedHmiReleases))]
+    public void Hmi_write_names_the_hmi_compile(string release)
+    {
+        using var fixture = new PreviewHostFixture(release);
+        using var session = fixture.Pipeline.EnterSession();
+        var data = Preview("SetUnifiedHmiButtonEventScriptCode", new {
+            hmiSoftwarePath = "HMI_RT_1", screenName = "Screen_1", buttonName = "Button_1", eventType = "Tapped", scriptCode = "return;"
+        });
+        string precautions = data["precautions"]!.ToJsonString();
+        Assert.Contains("CompileHmiDiagnostics", precautions);
+        Assert.DoesNotContain("CompilePlcSoftware", precautions);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Hardware_write_names_the_device_compile(string release)
+    {
+        using var fixture = new PreviewHostFixture(release);
+        using var session = fixture.Pipeline.EnterSession();
+        var data = Preview("SetDeviceItemAttribute", new { deviceItemPath = "PLC_1/CPU", attributeName = "Name", value = "CPU_1" });
+        string precautions = data["precautions"]!.ToJsonString();
+        Assert.Contains("CompileDevice", precautions);
+        Assert.DoesNotContain("CompilePlcSoftware", precautions);
+    }
+
+    [Theory, MemberData(nameof(NonProgramWrites))]
+    public void Write_outside_the_program_names_no_compile(string release, string tool)
+    {
+        using var fixture = new PreviewHostFixture(release);
+        using var session = fixture.Pipeline.EnterSession();
+        object arguments = tool == "CreateProject"
+            ? new { directoryPath = "C:/Projects", projectName = "NewProject" }
+            : new { action = "create", filePath = "C:/Libraries/Fixture" };
+        var data = Preview(tool, arguments);
+        string precautions = data["precautions"]!.ToJsonString();
+        Assert.Contains("No compile step is implied", precautions);
+        Assert.DoesNotContain("CompilePlcSoftware", precautions);
+        Assert.DoesNotContain("Modifies the open project", precautions);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Plc_write_keeps_the_program_compile(string release)
+    {
+        using var fixture = new PreviewHostFixture(release);
+        using var session = fixture.Pipeline.EnterSession();
+        var data = Preview("CreatePlcTagTable", new { plc = "PLC_1", group = "", name = "Tags" });
+        Assert.Contains("CompilePlcSoftware then SaveProject", data["precautions"]!.ToJsonString());
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Openness_group_tool_names_the_windows_group(string release)
+    {
+        using var fixture = new PreviewHostFixture(release);
+        using var session = fixture.Pipeline.EnterSession();
+        var data = Preview("EnsureOpennessUserGroup", new { });
+        Assert.True((bool?)data["changesState"]);
+        Assert.Contains("Windows Openness group", data["precautions"]!.ToJsonString());
+    }
 
     [Theory, MemberData(nameof(ProjectCopyAndDownloadReleases))]
     public void SaveProjectCopy_runs_at_once_and_changes_state(string release)
