@@ -123,7 +123,7 @@ public sealed class HardwareArgumentRefusalTests
     }
 
     [Theory, MemberData(nameof(Releases))]
-    public void EnsureSubnet_apply_with_an_unknown_type_is_an_argument_refusal(string release)
+    public void EnsureSubnet_unknown_type_is_refused_by_preview_and_native_apply(string release)
     {
         var engine = NativeFixture(release);
         using var worker = new BoundWorker();
@@ -137,14 +137,27 @@ public sealed class HardwareArgumentRefusalTests
             return JsonSerializer.SerializeToNode(engine.HardwareEnsureSubnet("PLC/CPU", "Unknown", "PN_IE_1"));
         }, () => true, () => "C:/Fixture/Fixture.ap21"));
         var preview = tool.EnsureSubnet("PLC/CPU", "Unknown", "PN_IE_1").StructuredContent!;
-        var body = tool.EnsureSubnet("PLC/CPU", "Unknown", "PN_IE_1", dryRun: false,
-            expectedPlanHash: (string)preview["data"]!["planHash"]!,
-            expectedProjectFile: (string)preview["data"]!["targetIdentity"]!["identity"]!["projectPath"]!).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)preview["error"]?["code"]);
+        Assert.Equal("/subnetType", (string?)preview["error"]?["details"]?["parameter"]);
+        Assert.Null(preview["data"]?["planHash"]);
+        Assert.Equal(0, calls);
+
+        var refused = engine.HardwareEnsureSubnet("PLC/CPU", "Unknown", "PN_IE_1");
+        Assert.Equal("INVALID_ARGUMENT", refused.Meta["failureCode"]);
+        Assert.Equal("InvalidParams", refused.Meta["status"]);
+        Assert.Equal("subnetType", refused.Meta["parameter"]);
+        Assert.Equal(0, engine.HardwareEditAccessCalls);
+        var nativeMessage = Assert.IsType<string>(refused.Meta["nativeMessage"]);
+        var body = enginehost::TiaMcpServer.ModelContextProtocol.HardwareToolContract.MapResult("EnsureSubnet",
+            new enginehost::TiaMcpServer.ModelContextProtocol.ResponseMessage {
+                Message = refused.Message, Meta = JsonSerializer.SerializeToNode(refused.Meta)!.AsObject()
+            }, readOnly: false, current: true).StructuredContent!;
         Refusal(body, "subnetType", "PROFINET");
         foreach (string allowed in new[] { "PROFINET", "PN", "IndustrialEthernet", "Industrial Ethernet", "PN/IE" })
+        {
+            Assert.Contains(allowed, nativeMessage, StringComparison.Ordinal);
             Assert.Contains(allowed, (string)body["error"]!["message"]!, StringComparison.Ordinal);
-        Assert.Equal(1, calls);
-        Assert.Equal(0, engine.HardwareEditAccessCalls);
+        }
         Assert.False((bool?)body["data"]?["mayHaveChanged"]);
 
         var accepted = engine.HardwareEnsureSubnet("PLC/CPU", "PN", "PN_IE_1");
