@@ -33,6 +33,7 @@ namespace TiaMcp.Adapters.Contracts
 
         public static string? Parameter(Exception error) => error.GetBaseException() switch
         {
+            PlcSoftwareException plc => plc.Data["parameter"] as string,
             AdapterPreconditionException precondition => precondition.ParamName,
             ArgumentException argument => argument.ParamName,
             _ => null

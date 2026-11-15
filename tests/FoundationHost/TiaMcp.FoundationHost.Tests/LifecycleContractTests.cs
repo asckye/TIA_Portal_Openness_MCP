@@ -29,14 +29,14 @@ internal static class LifecycleContractTests
         }
         Reject(()=>PlcLifecyclePolicy.IsSessionFile("15.1","Project.ap15"),"A V15 project is not opened as V15.1");
         var state=new PlcLifecycleState();
-        Reject(state.RequireUnbound,"Cannot open while detached"); Reject(()=>state.RequireAttach(0),"No automatic process selection");
+        Reject(()=>state.RequireUnbound("OpenProject"),"Cannot open while detached"); Reject(()=>state.RequireAttach(0),"No automatic process selection");
         state.RequireAttach(123); check(!state.ProcessId.HasValue,"Validation does not attach");
         state.Attached(123); Reject(()=>state.RequireAttach(123),"Duplicate attach cannot replay native call");
-        state.RequireUnbound(); state.RequireUnbound(); check(state.ProjectFile==null,"Repeated preview leaves project state unchanged");
+        state.RequireUnbound("OpenProject"); state.RequireUnbound("OpenProject"); check(state.ProjectFile==null,"Repeated preview leaves project state unchanged");
         state.Bound(@"C:\Projects\P.ap17",false,false);
-        try { state.RequireUnbound();throw new Exception("Borrowed replacement accepted"); }
+        try { state.RequireUnbound("OpenProject");throw new Exception("Borrowed replacement accepted"); }
         catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException ex) { check(ex.Message.Contains("borrowed") && ex.Message.Contains("already open"),"OpenProject refusal names borrowed already-open binding"); }
-        Reject(state.RequireUnbound,"Cannot replace a bound project"); Reject(()=>state.RequireClose(false),"Cannot close borrowed unmodified project");
+        Reject(()=>state.RequireUnbound("OpenProject"),"Cannot replace a bound project"); Reject(()=>state.RequireClose(false),"Cannot close borrowed unmodified project");
         state.RequireBound(); check(!state.OwnsProject,"Saving a borrowed project never grants ownership");
         state.Unbound(); Reject(state.Unbound,"Repeated unbind refused");
         state.Bound(@"C:\Projects\P.als17",true,true);

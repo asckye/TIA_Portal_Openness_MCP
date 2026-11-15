@@ -43,6 +43,16 @@ public sealed class StepFailureStatusTests
     }
 
     [Fact]
+    public void Already_exists_retains_the_declared_parameter_through_wrappers()
+    {
+        var error = new PlcSoftwareException("AlreadyExists", "Destination must be new.") { Data = { ["parameter"] = "destinationDirectory" } };
+        Assert.Equal("AlreadyExists", StepFailureStatus.Of(error));
+        Assert.Equal("destinationDirectory", StepFailureStatus.Parameter(error));
+        Assert.Equal("destinationDirectory", StepFailureStatus.Parameter(new TargetInvocationException(error)));
+        Assert.Null(StepFailureStatus.Parameter(new PlcSoftwareException("AlreadyExists", "No parameter.")));
+    }
+
+    [Fact]
     public void Not_found_precondition_is_not_an_argument()
     {
         var error = AdapterPreconditionException.NotFound("Target absent.", "target");

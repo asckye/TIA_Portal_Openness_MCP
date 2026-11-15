@@ -163,18 +163,17 @@ public sealed partial class PlcFoundationEngine
         Check();
 #if PROJECT_EXCHANGE
         return RunProjectLifecycleStep("RetrieveProjectArchive", meta => {
-            if (portal == null) throw new InvalidOperationException("Connect to TIA first.");
+            if (portal == null) throw new AdapterPreconditionException("RetrieveProjectArchive needs a connected Portal. Call ConnectPortal first.",
+                "portal-connected", null);
             if (project != null || lifecycle.IsLocalSession || portal.Projects.Any()
 #if PROJECT_MULTIUSER
                 || portal.LocalSessions.Any()
 #endif
-                ) throw new InvalidOperationException("Use a connected Portal with no open project/session. Existing projects will never be closed " +
-                    "automatically.");
+                ) throw new AdapterPreconditionException("RetrieveProjectArchive needs a connected Portal with no open project/session. Close the " +
+                    "project/session explicitly before retrieving; existing projects will never be closed automatically.", "project-open", null);
             var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(request.ArchivePath));
-            if (!file.Exists) throw new FileNotFoundException("Archive not found.");
-            if (!Path.IsPathRooted(request.DestinationDirectory)) throw new ArgumentException("Absolute destination required.");
-            var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(request.DestinationDirectory));
-            if (directory.Exists) throw new IOException("Destination must be new; merge/overwrite refused.");
+            if (!file.Exists) throw AdapterPreconditionException.NotFound("Archive not found.", "archivePath");
+            var directory = RetrieveDestination(request.DestinationDirectory);
             meta["dryRun"] = request.DryRun; meta["upgrade"] = request.Upgrade; meta["mayHaveWrittenFiles"] = false; meta["destination"] = directory.FullName;
             using var login = UmacCredentialsFor(request.UmacUserName, request.UmacPassword, request.UmacUserType, "umacUserName");
             meta["umacCredentialsGiven"] = login.Given;
@@ -202,6 +201,14 @@ public sealed partial class PlcFoundationEngine
 #endif
     }
 #if PROJECT_EXCHANGE
+    private static DirectoryInfo RetrieveDestination(string destinationDirectory)
+    {
+        if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute destination required.", nameof(destinationDirectory));
+        var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory));
+        if (directory.Exists) throw new PlcSoftwareException("AlreadyExists", "Destination must be new; merge/overwrite refused.") {
+            Data = { ["parameter"] = nameof(destinationDirectory) } };
+        return directory;
+    }
     private static object RetrieveArchive(TiaPortal connection, FileInfo file, DirectoryInfo directory, bool upgrade, UmacLogin login)
     {
         using (login.Authenticate(connection))

@@ -15,6 +15,23 @@ namespace TiaMcp.Generation.Planning.Tests
     {
         public static IEnumerable<object[]> CulturesAndReleases => PlanningFixture.Releases.SelectMany(r => new[] { "en-US", "fr-FR", "tr-TR", "zh-CN" }.Select(c => new object[] { r, c }));
 
+        public static IEnumerable<object[]> IdentityReleases => PlanningFixture.Releases.Select(r => new object[] { r });
+
+        [Theory, MemberData(nameof(IdentityReleases))]
+        public void Existing_project_identity_matches_with_forward_slashes_and_case(string release)
+        {
+            var fixture = new PlanningFixture(release);
+            fixture.Observed.ProjectIdentity = @"C:\Projects\Existing.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release);
+            fixture.Machine.Target.Project.ProjectIdentity = fixture.Observed.ProjectIdentity.Replace('\\', '/').ToLowerInvariant();
+            var result = fixture.Build();
+            Assert.Empty(result.Plan.Conflicts);
+            Assert.Equal(fixture.Machine.Target.Project.ProjectIdentity, result.Plan.Target.ProjectIdentity);
+            fixture.Machine.Target.Project.ProjectIdentity = "C:/Projects/Other.ap" + release;
+            Assert.Throws<GenerationValidationException>(() => fixture.Build());
+            fixture.Observed.ProjectIdentity = "";
+            Assert.Throws<GenerationValidationException>(() => fixture.Build());
+        }
+
         [Theory]
         [MemberData(nameof(CulturesAndReleases))]
         public void GoldenPlansAndArtifactsAreByteIdentical(string release, string culture)

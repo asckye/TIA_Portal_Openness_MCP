@@ -23,6 +23,21 @@ public sealed class StagedGenerationTests
         new[] { "disconnected-existing", "disconnected-new", "unbound-existing", "unbound-new", "bound-existing" }
             .Select(state => new object[] { row[0], state }));
 
+    [Theory]
+    [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Existing_project_identity_matches_with_forward_slashes_and_case(string release)
+    {
+        using var fixture = new Fixture(release);
+        fixture.Planner.Machine.Target.Project.ProjectIdentity = fixture.Project.Replace('/', '\\').ToUpperInvariant();
+        var plan = fixture.Plan();
+        Assert.NotEmpty(plan["steps"]!.AsArray());
+        Assert.Equal(0, fixture.Worker.Writes);
+        fixture.Planner.Machine.Target.Project.ProjectIdentity = Path.Combine(fixture.Root, "Other.ap" + release);
+        var error = Assert.Throws<enginehost::TiaMcpServer.ModelContextProtocol.GenerationCallRejectionException>(() => fixture.Plan());
+        Assert.Contains("Bind the intended existing project", error.Message, StringComparison.Ordinal);
+        Assert.Equal(0, fixture.Worker.Writes);
+    }
+
     [Theory, MemberData(nameof(PlanningStates))]
     public void Planning_uses_the_real_connection_and_project_state(string release, string state)
     {

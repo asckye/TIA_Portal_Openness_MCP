@@ -274,7 +274,7 @@ namespace TiaMcp.Logic.V4
                         (evidence["candidates"] as JsonArray)?.Select(c => c!.GetValue<string>()).ToArray() ?? Array.Empty<string>())),
                 "InvalidParams" or "INVALID_ARGUMENT" => new Error(message ?? "The request argument was refused before operation.",
                     new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
-                "AlreadyExists" or "ALREADY_EXISTS" => new Error(message ?? "The requested object already exists.", new AlreadyExistsDetails(null)),
+                "AlreadyExists" or "ALREADY_EXISTS" => new Error(message ?? "The requested object already exists.", new AlreadyExistsDetails(parameter)),
                 "NotSupported" or "NotSupportedOnVersion" or "UNSUPPORTED_CAPABILITY" => new Error(message ?? "This capability is unavailable.",
                     new UnsupportedCapabilityDetails(release, tool, null)),
                 _ => null

@@ -12,6 +12,35 @@ using Services = enginehost::TiaMcpServer.Siemens.Services;
 
 public sealed class HonestWriteOutcomeTests
 {
+    public static IEnumerable<object[]> RetrievalRefusals()
+        => new[] { "15.1", "16", "17", "18", "19", "20", "21" }.SelectMany(release =>
+            new[] { "AlreadyExists", "InvalidParams", "NotFound", "PreconditionFailed" }.SelectMany(status =>
+                new[] { false, true }.Select(dryRun => new object[] { release, status, dryRun })));
+
+    [Theory, MemberData(nameof(RetrievalRefusals))]
+    public void Retrieval_refusals_retain_code_and_field_identity(string release, string status, bool dryRun)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        string parameter = status == "NotFound" ? "archivePath" : "destinationDirectory";
+        var evidence = new JsonObject {
+            ["mayHaveChanged"] = false, ["operationSuccess"] = false, ["apiCallSuccess"] = false,
+            ["status"] = status, ["parameter"] = parameter,
+            ["nativeMessage"] = "Retrieval refused.\npassword=hunter2"
+        };
+        if (status == "PreconditionFailed")
+        { evidence["precondition"] = "project-open"; evidence["refusal"] = "Close the open project/session explicitly.\npassword=hunter2"; }
+        var body = Host.SecurityToolContract.MapResult("RetrieveProjectArchive",
+            new Host.ResponseMessage { Message = "RetrieveProjectArchive failed", Meta = evidence }, dryRun, true, "hunter2").StructuredContent!;
+        Assert.Equal(status switch { "AlreadyExists" => "ALREADY_EXISTS", "InvalidParams" => "INVALID_ARGUMENT", "NotFound" => "NOT_FOUND",
+            _ => "PRECONDITION_FAILED" }, (string?)body["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        if (status == "InvalidParams") Assert.Equal("/destinationDirectory", (string?)body["error"]?["details"]?["parameter"]);
+        else Assert.Equal(status == "PreconditionFailed" ? "project-open" : parameter,
+            (string?)body["error"]?["details"]?[status == "PreconditionFailed" ? "condition" : "target"]);
+        Assert.DoesNotContain("hunter2", body.ToJsonString(), StringComparison.Ordinal);
+    }
+
     public static IEnumerable<object[]> KnownRefusals()
     {
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })

@@ -33,7 +33,7 @@ namespace TiaMcp.Adapters
     {
         public PlcMutationResult BindProject(string projectName,string expectedProjectFile)
         {
-            Portal(); lifecycle.RequireUnbound();
+            Portal(); lifecycle.RequireUnbound("AttachOpenProject");
             string full;
             try { full=Path.GetFullPath(expectedProjectFile); }
             catch(ArgumentException ex) {
@@ -68,7 +68,7 @@ namespace TiaMcp.Adapters
         public PlcMutationResult OpenProject(string path, bool dryRun = true, string umacUserName = "", string umacPassword = "", string umacUserType = "")
         {
             var p = Portal();
-            lifecycle.RequireUnbound();
+            lifecycle.RequireUnbound("OpenProject");
             bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,path);
             PlcLifecyclePolicy.RequireLocalSessionExecution(session,dryRun);
             var input = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(path)));
@@ -115,7 +115,7 @@ namespace TiaMcp.Adapters
         {
             var p = Portal();
             PlcFoundationPolicy.RequireName(projectName);
-            lifecycle.RequireUnbound();
+            lifecycle.RequireUnbound("CreateProject");
             var parent = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(directoryPath)));
             if (!parent.Exists || Directory.Exists(Path.Combine(parent.FullName, projectName)) || File.Exists(Path.Combine(parent.FullName, projectName)))
                 throw new AdapterPreconditionException("Use an existing parent directory and a new project name.",!parent.Exists ? "directoryPath"

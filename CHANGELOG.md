@@ -17,6 +17,10 @@
 - Offline audit, PLC template expansion and CWC package validation refusals retain actionable reasons and declared parameter pointers before any file write (all eight releases; CWC on V17–V21). Unused template replacement keys stay private.
 - `RunPlcCompanionTool` identifies missing working directories and unavailable companion runtimes, with setup guidance, across all eight releases.
 - External-source ASCII refusals explain how to re-save without a BOM across all eight releases; the existing byte check is unchanged.
+- `RetrieveProjectArchive` on V15.1–V21 reports open projects/sessions as `PRECONDITION_FAILED`, an existing destination as `ALREADY_EXISTS`,
+  and identifies `archivePath` or `destinationDirectory` in file and argument refusals before retrieval starts.
+- `CreateProject` and `OpenProject` refusals name the requested operation on all eight releases.
+- Existing-project generation planning accepts equivalent project paths with forward slashes and different casing on all eight releases.
 - The example project name in tool descriptions and guidance is now `ExampleProject`.
 - `PreviewToolCall` precautions name the compile step for the tool's domain and include Windows Openness group changes for session tools.
 - Canonical printed device paths and arrays of names containing `/` on the seven string device entries now resolve.

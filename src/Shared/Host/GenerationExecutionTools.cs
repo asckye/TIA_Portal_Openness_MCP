@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Logic.Generation;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
@@ -169,7 +170,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (machine.Target.Release != release) throw new ArgumentException("Machine release must match the session release.", "machine.target.release");
             bool newProject = machine.Target.Project.Mode == "new";
             var before = Target(allowUnbound: newProject);
-            if (newProject ? before.Project.Length != 0 : machine.Target.Project.ProjectIdentity != before.Project)
+            if (newProject ? before.Project.Length != 0 : CandidatePrimitives.CanonicalProject(machine.Target.Project.ProjectIdentity!)
+                != CandidatePrimitives.CanonicalProject(before.Project))
                 throw new GenerationCallRejectionException(new Error(newProject ? "New-project planning requires a connected portal without a bound project."
                             : "Bind the intended existing project first and supply its exact project file.",
                             new PreconditionFailedDetails("generation-project", before.Project)));

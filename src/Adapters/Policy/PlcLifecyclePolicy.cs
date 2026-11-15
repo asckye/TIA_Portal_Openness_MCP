@@ -17,17 +17,18 @@ namespace TiaMcp.Adapters
                 throw new AdapterPreconditionException("Select one positive process ID while detached; repeated attach is refused.","processId");
         }
         internal void Attached(int processId) { RequireAttach(processId); ProcessId=processId; }
-        internal void RequireUnbound()
+        internal void RequireUnbound(string operation)
         {
-            if(!ProcessId.HasValue) throw new AdapterPreconditionException("ConnectPortal before opening a project/session.",isArgument:false);
+            if(!ProcessId.HasValue) throw new AdapterPreconditionException(operation + " needs a connected Portal. Call ConnectPortal first.",isArgument:false);
             if(ProjectFile!=null)
-                throw new AdapterPreconditionException(OwnsProject ? "A project/session is already open and bound; close it explicitly before opening another."
-                    : "A borrowed project/session is already open and bound; OpenProject cannot replace it. Disconnect and reconnect without attaching " +
-                    "before opening another project.",
+                throw new AdapterPreconditionException(OwnsProject ? operation + " needs an unbound Portal; a project/session is already open and bound. " +
+                    "Close it explicitly before continuing."
+                    : "A borrowed project/session is already open and bound; " + operation + " cannot replace it. Disconnect and reconnect without attaching " +
+                    "before continuing.",
                     isArgument:false);
         }
         internal void Bound(string file,bool owns,bool local)
-        { RequireUnbound(); ProjectFile=MutationIdentityPolicy.AbsoluteFile(file); OwnsProject=owns; IsLocalSession=local; }
+        { RequireUnbound("Project binding"); ProjectFile=MutationIdentityPolicy.AbsoluteFile(file); OwnsProject=owns; IsLocalSession=local; }
         internal void RequireBound()
         {
             if(!ProcessId.HasValue || ProjectFile==null)
