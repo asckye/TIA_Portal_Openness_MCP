@@ -145,7 +145,8 @@ internal static class ProcessRunner
 {
     internal static readonly object StartLock = new();
 
-    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false)
+    internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false,
+        System.Text.Encoding? standardInputEncoding = null, System.Text.Encoding? standardOutputEncoding = null, System.Text.Encoding? standardErrorEncoding = null)
     {
         var end = timeoutMilliseconds is { } milliseconds ? DateTime.UtcNow.AddMilliseconds(milliseconds) : DateTime.MaxValue;
         var commandArguments = arguments.ToArray();
@@ -158,6 +159,9 @@ internal static class ProcessRunner
             RedirectStandardInput = standardInput is not null,
             CreateNoWindow = true
         };
+        if (standardInputEncoding != null) start.StandardInputEncoding = standardInputEncoding;
+        if (standardOutputEncoding != null) start.StandardOutputEncoding = standardOutputEncoding;
+        if (standardErrorEncoding != null) start.StandardErrorEncoding = standardErrorEncoding;
         foreach (var argument in commandArguments) start.ArgumentList.Add(argument);
         foreach (var key in new[] { "TIA_MCP_TEST_SHARD_COUNT", "TIA_MCP_TEST_SHARD_INDEX", "TIA_MCP_TEST_SHARD_ASSEMBLY", "TIA_MCP_TEST_SHARD_PLAN", "TIA_MCP_TEST_CASE_TIMINGS", "TIA_MCP_TEST_RESERVE_SENSITIVE_SHARD" }) start.Environment.Remove(key);
         if (environment is not null)

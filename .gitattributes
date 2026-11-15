@@ -15,6 +15,9 @@ manifest/** -text whitespace=cr-at-eol
 # Renderer goldens are compared byte for byte; keep their LF bytes on every checkout.
 tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/** -text
 
+# Release-tool vectors keep their original bytes, including LF review subjects.
+tests/Release/TiaMcp.ReleaseTool.Tests/Vectors/** -text
+
 # Frozen 3.x contract evidence must retain its original bytes.
 manifest/history/contracts-v3/** -text
 

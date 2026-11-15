@@ -69,7 +69,8 @@ public sealed class IsolatedDesktopProcessTests
         string name = environment[GuiTestDesktop.EnvironmentKey]!;
         var log = Path.Combine(tree.Root, "output.log");
         var result = ProcessRunner.Run(Fixture, [FixtureAssembly, "--desktop-parent", report, "orphan", exitCode.ToString(), .. arguments], tree.Root,
-            environment, log, standardInput: "input: 你好", timeoutMilliseconds: TestDeadlines.HangMilliseconds);
+            environment, log, standardInput: "input: 你好", timeoutMilliseconds: TestDeadlines.HangMilliseconds,
+            standardInputEncoding: Encoding.UTF8, standardOutputEncoding: Encoding.UTF8, standardErrorEncoding: Encoding.UTF8);
         Assert.Equal(exitCode, result.ExitCode);
         Assert.Contains("DESKTOP WinSta0\\" + name, result.StandardOutput);
         Assert.Contains("input: 你好", result.StandardOutput);
@@ -85,6 +86,21 @@ public sealed class IsolatedDesktopProcessTests
             AssertExited(probe.Pid);
         }
         AssertDesktopClosed(name);
+    }
+
+    [Fact]
+    public void Explicit_stream_encodings_round_trip_UTF8_without_an_isolated_desktop()
+    {
+        using var tree = new StaticTree();
+        var log = Path.Combine(tree.Root, "output.log");
+        var result = ProcessRunner.Run(Fixture, [FixtureAssembly, "--desktop-echo"], tree.Root,
+            logPath: log, standardInput: "input: 你好", timeoutMilliseconds: TestDeadlines.HangMilliseconds,
+            standardInputEncoding: Encoding.UTF8, standardOutputEncoding: Encoding.UTF8, standardErrorEncoding: Encoding.UTF8);
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("input: 你好", result.StandardOutput);
+        Assert.Contains("stderr: 你好", result.StandardError);
+        Assert.Contains("input: 你好", File.ReadAllText(log));
+        Assert.Contains("stderr: 你好", File.ReadAllText(log));
     }
 
     [Fact]
@@ -257,6 +273,14 @@ public sealed class IsolatedDesktopProcessTests
                 GuiTestDesktop.EnvironmentFor("studio-gui", null), forwardOutput: true);
             Console.WriteLine(result.StandardOutput.Split('\n')[0]);
             return result.ExitCode;
+        }
+        Console.InputEncoding = Encoding.UTF8;
+        Console.OutputEncoding = Encoding.UTF8;
+        if (args[0] == "--desktop-echo")
+        {
+            Console.WriteLine(Console.In.ReadToEnd());
+            Console.Error.WriteLine("stderr: 你好");
+            return 0;
         }
         string report = args[1], mode = args[2];
         string[] forwarded = args.Skip(4).ToArray();
