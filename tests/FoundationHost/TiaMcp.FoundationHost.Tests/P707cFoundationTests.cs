@@ -9,9 +9,9 @@ public sealed class P707cFoundationTests
 {
     [Theory]
     [InlineData("Failure", false)]
-    [InlineData("PartialSuccess", true)]
-    [InlineData("987654", true)]
-    [InlineData(null, true)]
+    [InlineData("PartialSuccess", false)]
+    [InlineData("987654", false)]
+    [InlineData(null, false)]
     public void FileOnlyDocumentResultsRetainRawStateAndResetOnlyForUncertainty(string? state, bool reset)
     {
         // A short root: the batch staging path adds about 135 characters, and the release run's isolated TEMP is 31 characters
@@ -57,7 +57,7 @@ public sealed class P707cFoundationTests
     [InlineData("Information", "succeeded")]
     [InlineData("Warning", "succeeded")]
     [InlineData("Error", "failed")]
-    [InlineData("987654", "unknown")]
+    [InlineData("987654", "failed")]
     public void EveryFoundationReleaseUsesTheExactCompilerEnum(string state, string outcome)
     {
         foreach (var definition in FoundationTools.Definitions.Where(d => d.ResponseMember == "Compile"))

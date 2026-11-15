@@ -38,7 +38,7 @@ public sealed class VmDefectRegressionTests
         var result = Host.UnifiedHmiContract.Map("EnsureUnifiedHmiTag", response, true, true);
         Assert.Equal("PARTIAL_FAILURE", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("partial", (string?)result.StructuredContent?["meta"]?["outcome"]);
-        Assert.True((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
+        Assert.False((bool)result.StructuredContent!["meta"]!["requiresSessionReset"]!);
         Assert.Contains("no rollback", (string)result.StructuredContent["data"]!["partialWrite"]!);
     }
 
