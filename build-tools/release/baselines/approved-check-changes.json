@@ -2808,6 +2808,68 @@
           "identifier": "/studio-gui/minimumPassed:2958-\u003E1693"
         }
       ]
+    },
+    {
+      "task": "B27",
+      "maintainerDate": "2026-11-15",
+      "reason": "2026-11-14 maintainer approved: one device resolver replaces two, so the generic not-found texts become \u0027Device not found: \u003Ctried path\u003E. Candidates: \u003Clist\u003E.\u0027 (empty list reads none), the typed-refusal and device-walk source contracts move to the shared resolver with the same guarantees, and an array devicePath is forwarded in the escaped canonical form instead of a slash-joined string so decision D1 holds on the seven string-entry tools",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HardwareWriteFailureTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HardwareWriteFailureTests/Device_deletion_verifies_absence_with_the_typed_lookup( bool grouped ):871b46a7e9d2dbba30965431292c9a8e0f936cb453d9700262a1ba29a3372b96:1"
+        },
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HardwareWriteFailureTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HardwareWriteFailureTests/Exact_hardware_lookup_reports_each_missing_target( string target , string message ):09b88d0f710714790349363fd0e69884d35cf120d36b379d2b09875422b02e48:1"
+        },
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HardwareWriteFailureTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HardwareWriteFailureTests/Exact_hardware_lookup_reports_each_missing_target( string target , string message ):712e8a1f025ef913ba1445743cb985a50c2d0b4e884dbcf8d167283310dfb50d:1"
+        },
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HardwareWriteFailureTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HardwareWriteFailureTests/Exact_hardware_lookup_reports_each_missing_target( string target , string message ):7a6166740aff19a42d33cca47af9352d874e3fd3523e5f5d7622a374589a4826:1"
+        },
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HardwareWriteFailureTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HardwareWriteFailureTests/Exact_hardware_lookup_reports_each_missing_target( string target , string message ):952b07bc62b22abb238c0cd90e3ada11bd787540d2e574b6f173d6e2a5221061:1"
+        },
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HardwareWriteFailureTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HardwareWriteFailureTests/Exact_hardware_lookup_reports_each_missing_target( string target , string message ):bda7efe4bc7f7e9272a4455765f63089f2297c90b4cdbb27e7efc858eeae6236:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalParameterTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalParameterTests/Device_array_preserves_group_order_and_legacy_string_warns( string release ):e12eac11b1e8393c7c5e9f83df0912bf73e2075367801444daa405221b224c1d:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/NotFoundSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.NotFoundSources/Vm_sample_sites_use_typed_refusals( string path , string expected ):50e16f53832ad0345883645c238279482cd9e7425f56003477dcaa8dc4d42a3a:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/NotFoundSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.NotFoundSources/Vm_sample_sites_use_typed_refusals( string path , string expected ):943c2776825343f965987c641ecebd482e45872de28a467b3a98694141badcec:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/NotFoundSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.NotFoundSources/Vm_sample_sites_use_typed_refusals( string path , string expected ):a5369a9c0a6c73dfb97548ab17cabe42206a846b7f3ca048efb15b32ca1cc6fd:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/NotFoundSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.NotFoundSources/Vm_sample_sites_use_typed_refusals( string path , string expected ):fe77f3c026f0f66b514a3aec6ec5651fe1581c2788302fb106a78041047c4497:1"
+        }
+      ]
     }
   ]
 }
