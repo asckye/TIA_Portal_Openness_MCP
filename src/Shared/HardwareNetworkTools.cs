@@ -57,11 +57,16 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string Map(AttributeMap<Scalar> value, string parameter, bool optional)
             => Json(value ?? (optional ? new AttributeMap<Scalar>(new Dictionary<string, Scalar>()) : null!), parameter, Attributes);
 
-        internal static void Check(Action validation)
+        // Only value-free argument checks opt into a diagnostic from the validator.
+        internal static void Check(Action validation, bool describeArgument = false, string? parameter = null)
         {
             try { validation(); }
             catch (ArgumentException error) /* swallow(privacy): legacy validators can include input values in their messages */
-            { throw new InputFailureException(McpServer.InvalidInput(error.ParamName ?? "")); }
+            {
+                var refusal = McpServer.InvalidInput(error.ParamName ?? parameter ?? "");
+                throw new InputFailureException(describeArgument
+                    ? new Error(HostBehavior.SafeDiagnostic(error.Message) ?? refusal.Message, refusal.Details) : refusal);
+            }
             catch (NotSupportedException) /* swallow(privacy): keep capability refusals separate from parser diagnostics */
             {
                 throw new InputFailureException(new Error("The requested hardware operation is unavailable.",
@@ -291,8 +296,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 HardwareToolContract.Check(() =>
                 {
                     HardwareServicesLogic.ValidatePagination(offset, limit);
-                    if (string.IsNullOrEmpty(subnetName) == (devicePathJson == "[]")) throw new ArgumentException();
-                });
+                    if (string.IsNullOrEmpty(subnetName) == (devicePathJson == "[]"))
+                        throw new ArgumentException("Give exactly one of subnetName or devicePath.", nameof(subnetName));
+                }, describeArgument: true);
                 return _hardware.ReadIoSystems(subnetName,devicePathJson,itemPathJson,offset,limit);
             });
 
@@ -360,8 +366,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     HardwareNetworkLogic.ValidateDomainRequest(kind, action, name);
                     if (action == "delete") HardwareToolContract.Confirm(dryRun, confirmDelete);
-                    if (action == "addParticipant" && participantDevicePathJson == "[]") throw new ArgumentException();
-                });
+                    if (action == "addParticipant" && participantDevicePathJson == "[]")
+                        throw new ArgumentException("addParticipant requires a nonempty participantDevicePath.", nameof(participantDevicePath));
+                }, describeArgument: true);
                 return _hardware
                     .ManageNetworkDomain(subnetName,kind,action,name,propertiesJson,attributesJson,participantDevicePathJson,participantItemPathJson,
                         confirmDelete,dryRun);
@@ -476,9 +483,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 string attributesJson = HardwareToolContract.Map(attributes, "attributes", optional: false);
                 HardwareToolContract.Check(() =>
                 {
-                    if (!HardwareNetworkLogic.ChannelIdentityGiven(channelType, channelIoType, channelNumber)) throw new ArgumentException();
-                    if (attributes.Count == 0) throw new ArgumentException();
-                });
+                    if (!HardwareNetworkLogic.ChannelIdentityGiven(channelType, channelIoType, channelNumber))
+                        throw new ArgumentException("Give an exact channelType, channelIoType and nonnegative channelNumber.", nameof(channelType));
+                    if (attributes.Count == 0) throw new ArgumentException("attributes must be a nonempty map of channel attributes.", nameof(attributes));
+                }, describeArgument: true, parameter: nameof(channelType));
                 return _hardware.UpdateDeviceItemChannel(devicePathJson,itemPathJson,channelType,channelIoType,channelNumber,attributesJson,dryRun);
             });
 
@@ -518,8 +526,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 HardwareToolContract.Check(() =>
                 {
                     HardwareNetworkLogic.RequireOneOf(action, HardwareNetworkLogic.PortActions, "action");
-                    if (action != "read" && partnerDevicePathJson == "[]") throw new ArgumentException();
-                });
+                    if (action != "read" && partnerDevicePathJson == "[]")
+                        throw new ArgumentException("connect and disconnect require a nonempty partnerDevicePath.", nameof(partnerDevicePath));
+                }, describeArgument: true);
                 return _hardware.ManagePortInterconnection(devicePathJson,itemPathJson,action,partnerDevicePathJson,partnerItemPathJson,dryRun);
             });
 

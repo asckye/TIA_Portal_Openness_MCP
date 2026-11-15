@@ -41,11 +41,12 @@ namespace TiaMcp.Adapters
             return value is System.Collections.IEnumerable items && value is not string && items.Cast<object>().Any(HardwareHasFailures);
         }
         private static DeviceItem HardwareRequireDeviceItem(HardwareObject owner, string parameter)
-            => owner as DeviceItem ?? throw new ArgumentException(parameter + " must address a DeviceItem (non-empty itemPathJson).");
+            => owner as DeviceItem ?? throw HardwareServicesPolicy.Argument(parameter, "must address a DeviceItem (nonempty path).");
 
         private static T HardwareRequireHardwareService<T>(HardwareObject owner, string parameter) where T : class, IEngineeringService
             => HardwareServiceProvider(owner).GetService<T>()
-                ?? throw new NotSupportedException(parameter + " does not expose " + typeof(T).Name + " (service is null for this hardware object).");
+                ?? throw new NotSupportedException(HardwareServicesPolicy.DeclaredParameter(parameter) + " does not expose " + typeof(T).Name
+                    + " (service is null for this hardware object).");
 
         private static object? HardwareFindOnFresh(Func<object> composition, string name, Dictionary<string, object?> meta, string phase)
         {

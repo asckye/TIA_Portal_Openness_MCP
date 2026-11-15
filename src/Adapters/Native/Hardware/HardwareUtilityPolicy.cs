@@ -25,7 +25,7 @@ namespace TiaMcp.Adapters.Hardware
         internal static void ValidateDevicePath(string[] names)
         {
             if (names == null || names.Length < 1 || names.Length > 64 || names.Any(string.IsNullOrWhiteSpace))
-                throw new ArgumentException("devicePathJson needs 1-64 exact nonempty names.");
+                throw HardwareServicesPolicy.Argument("devicePathJson", "needs 1-64 exact nonempty names.");
         }
         internal static void ValidateHardwareUtilityRequest(string action, string typeIdentifier, string[] devicePathJson, string filePath, string password,
                 bool dryRun)

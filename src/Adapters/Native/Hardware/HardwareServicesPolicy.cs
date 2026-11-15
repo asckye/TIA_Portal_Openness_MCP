@@ -35,6 +35,29 @@ namespace TiaMcp.Adapters.Hardware
         internal static readonly string[] CaxImportOptions = { "MoveToParkingLot", "OverwriteTiaDevice", "RetainTiaDevice" };
         internal static readonly string[] TableAccessValues = { "None", "Read", "Write" };
 
+        internal static string DeclaredParameter(string parameter) => parameter switch
+        {
+            "devicePathJson" => "devicePath",
+            "itemPathJson" => "itemPath",
+            "localInterfaceItemPathJson" => "localInterfaceItemPath",
+            "partnerDevicePathJson" => "partnerDevicePath",
+            "partnerItemPathJson" => "partnerItemPath",
+            "partnerInterfaceItemPathJson" => "partnerInterfaceItemPath",
+            "participantDevicePathJson" => "participantDevicePath",
+            "participantItemPathJson" => "participantItemPath",
+            "targetDevicePathJson" => "targetDevicePath",
+            "targetItemPathJson" => "targetItemPath",
+            "destinationDevicePathJson" => "destinationDevicePath",
+            "destinationItemPathJson" => "destinationItemPath",
+            _ => parameter
+        };
+
+        internal static ArgumentException Argument(string parameter, string reason)
+        {
+            string declared = DeclaredParameter(parameter);
+            return new ArgumentException(declared + " " + reason, declared);
+        }
+
         internal static string RequireOneOf(string value, string[] allowed, string parameter)
             {
             if (string.IsNullOrWhiteSpace(value) || !allowed.Contains(value, StringComparer.Ordinal))

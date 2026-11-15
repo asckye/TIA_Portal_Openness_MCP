@@ -36,9 +36,12 @@ namespace TiaMcp.Adapters
 
                 if (!HardwareIsSupportedProfinetSubnetType(subnetType))
                 {
-                    meta["failureCode"] = "UNSUPPORTED_CAPABILITY";
-                    meta["error"] = "Only IndustrialEthernet/PROFINET subnet types are supported by this safe primitive.";
-                    return new HardwareAddressingReply { Message = "Unsupported subnet type", Meta = meta };
+                    meta["failureCode"] = "INVALID_ARGUMENT";
+                    meta["status"] = "InvalidParams";
+                    meta["parameter"] = "subnetType";
+                    meta["nativeMessage"] = "subnetType must be one of: PROFINET, PN, IndustrialEthernet, Industrial Ethernet, PN/IE.";
+                    meta["error"] = meta["nativeMessage"];
+                    return new HardwareAddressingReply { Message = "Invalid subnetType", Meta = meta };
                 }
                 if (!nestedWrite) editAccess = EngineeringPlcSession.AcquireHmiEditAccess();
 

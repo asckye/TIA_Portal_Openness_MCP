@@ -104,6 +104,7 @@ namespace TiaMcp.Adapters
         private OrganisationSession? EngineeringPlcOrganisationSession;
         private OrganisationSession EngineeringPlcSession => EngineeringPlcOrganisationSession ?? new OrganisationSession(this);
         public readonly List<string> FamilyCalls = new();
+        public int HardwareEditAccessCalls { get; set; }
         public readonly object FamilyObject = new Siemens.Engineering.HW.Device();
         public readonly Siemens.Engineering.SW.PlcSoftware FamilyPlc = new();
         public readonly Siemens.Engineering.HW.DeviceItem FamilyItem = new();
@@ -146,7 +147,11 @@ namespace TiaMcp.Adapters
             { _engine.FamilyCalls.Add("hardware:" + string.Join("/", devices) + ":" + string.Join("/", items)); return _engine.FamilyObject; }
             public string SerializeEvidence(Dictionary<string, object?> evidence) => JsonSerializer.Serialize(evidence);
             public bool IsProjectNull() => _engine.EngineeringProjectMissing!();
-            public IDisposable AcquireHmiEditAccess() => new System.IO.MemoryStream();
+            public IDisposable AcquireHmiEditAccess()
+            {
+                _engine.HardwareEditAccessCalls++;
+                return new System.IO.MemoryStream();
+            }
             public void RecordExportFailure(Exception error) => _engine.ExportFailures++;
             public void LogEngineeringFailure(Exception error, string message) => _engine.FamilyCalls.Add("log:" + message);
             public string GetPlcBlockGroupPath(Siemens.Engineering.SW.Blocks.PlcBlockGroup group) => "Folder/Subfolder";

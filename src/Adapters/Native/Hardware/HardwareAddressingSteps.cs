@@ -123,7 +123,7 @@ namespace TiaMcp.Adapters
                 using var access = dryRun ? null : AcquireEngineeringEditAccess != null ? AcquireEngineeringEditAccess() : Portal()
                     .ExclusiveAccess(ExclusiveAccessText());
                 var item = ExactHardware(update.DevicePath, update.ItemPath) as DeviceItem
-                    ?? throw new ArgumentException("itemPathJson must address a DeviceItem (non-empty itemPathJson).");
+                    ?? throw HardwareServicesPolicy.Argument("itemPathJson", "must address a DeviceItem (nonempty path).");
                 var wanted = (AddressIoType)Enum.Parse(typeof(AddressIoType), update.IoType);
                 var matches = Items(item.Addresses).Cast<Address>().Where(a => a.IoType == wanted && a.StartAddress == update.StartAddress).Take(2).ToArray();
                 if (matches.Length != 1)

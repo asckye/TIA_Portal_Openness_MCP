@@ -21,8 +21,11 @@ namespace TiaMcp.Adapters
             => HardwareGroupOperations.Items(project!.Subnets).Cast<Subnet>().SelectMany(s => HardwareGroupOperations.Items(s.IoSystems).Cast<IoSystem>());
 
         private NetworkInterface HardwareRequireNetworkInterface(HardwareObject item, string parameter)
-            => HardwareServiceProvider(item).GetService<NetworkInterface>()
+        {
+            parameter = HardwareServicesPolicy.DeclaredParameter(parameter);
+            return HardwareServiceProvider(item).GetService<NetworkInterface>()
                 ?? throw new InvalidOperationException(parameter + " must identify a DeviceItem that exposes NetworkInterface.");
+        }
 
         private Dictionary<string, object?> HardwareIoSystemRow(IoSystem system) => new Dictionary<string, object?>
         {
@@ -129,7 +132,8 @@ namespace TiaMcp.Adapters
                 HardwareServicesPolicy.ValidatePagination(offset, limit);
                 bool bySubnet = !string.IsNullOrEmpty(subnetName), byInterface = devicePathJson != null && devicePathJson.Length > 0;
                 if (bySubnet == byInterface)
-                    throw new ArgumentException("Give exactly one scope: subnetName, or devicePathJson/itemPathJson of an interface device item.");
+                    throw new ArgumentException("Give exactly one of subnetName or devicePath (with itemPath identifying the interface device item).",
+                        nameof(subnetName));
                 var rows = new List<object>();
                 if (bySubnet)
                 {

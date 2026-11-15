@@ -58,6 +58,7 @@ namespace TiaMcp.Adapters
 
         private Node HardwareExactInterfaceNode(HardwareObject interfaceItem, string nodeName, string parameter)
         {
+            parameter = HardwareServicesPolicy.DeclaredParameter(parameter);
             var network = HardwareServiceProvider(interfaceItem).GetService<NetworkInterface>()
                 ?? throw new InvalidOperationException(parameter + " must identify a DeviceItem that exposes NetworkInterface.");
             var nodes = HardwareGroupOperations.Items(network.Nodes).Cast<Node>().ToArray();
@@ -65,7 +66,7 @@ namespace TiaMcp.Adapters
             {
                 if (nodes.Length != 1)
                     throw new ArgumentException(parameter + " interface has " + nodes.Length + " nodes; give the exact node name: " + string
-                        .Join(", ", nodes.Select(n => n.Name)));
+                        .Join(", ", nodes.Select(n => n.Name)), parameter);
                 return nodes[0];
             }
             return HardwareGroupOperations.Find(network.Nodes, nodeName) as Node
@@ -137,7 +138,7 @@ namespace TiaMcp.Adapters
                 var localInterface = ExactHardware(devicePathJson, localInterfaceItemPathJson);
                 var localNode = HardwareExactInterfaceNode(localInterface, localNodeName, "localInterfaceItemPathJson");
                 var partnerTarget = ExactHardware(partnerDevicePathJson, partnerItemPathJson) as DeviceItem
-                    ?? throw new ArgumentException("partnerItemPathJson must identify a DeviceItem (nonempty path).");
+                    ?? throw HardwareServicesPolicy.Argument("partnerItemPathJson", "must identify a DeviceItem (nonempty path).");
                 var partnerInterface = ExactHardware(partnerDevicePathJson, partnerInterfaceItemPathJson);
                 var partnerNode = HardwareExactInterfaceNode(partnerInterface, partnerNodeName, "partnerInterfaceItemPathJson");
                 if (!string.IsNullOrEmpty(connectionName)
@@ -508,13 +509,15 @@ namespace TiaMcp.Adapters
                 meta["mayHaveChanged"] = true;
                 if (action == "exportOpcUa")
                 {
-                    var item = owner as DeviceItem ?? throw new ArgumentException("exportOpcUa needs the PLC DeviceItem (non-empty itemPathJson).");
+                    var item = owner as DeviceItem ?? throw HardwareServicesPolicy.Argument("itemPathJson",
+                        "must identify the PLC DeviceItem for exportOpcUa (nonempty path).");
                     OpcUaExportProvider provider = HardwareRequireUtility<OpcUaExportProvider>("OPCUAExportProvider");
                     provider.Export(item, file);
                 }
                 else
                 {
-                    var device = owner as Device ?? throw new ArgumentException("exportCardReaderPsc needs the Device (empty itemPathJson).");
+                    var device = owner as Device ?? throw HardwareServicesPolicy.Argument("itemPathJson",
+                        "must be empty to identify the Device for exportCardReaderPsc.");
 #if PLC_HARDWARE_TRANSFER_AREAS
                     CardReaderPscProvider provider = HardwareRequireUtility<CardReaderPscProvider>("CardReaderPscProvider");
                     if (string.IsNullOrEmpty(password)) provider.Export(device, file);
@@ -558,7 +561,7 @@ namespace TiaMcp.Adapters
                     "Hardware descendants and dependent software/configuration can be affected. No online action or download is performed.";
                 if (action == "deleteDevice")
                 {
-                    if (source is not Device device) throw new ArgumentException("deleteDevice requires empty itemPathJson.");
+                    if (source is not Device device) throw HardwareServicesPolicy.Argument("itemPathJson", "must be empty for deleteDevice.");
                     if (!dryRun)
                     {
                         meta["mayHaveChanged"] = true; device.Delete();

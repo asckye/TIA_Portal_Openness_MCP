@@ -28,6 +28,9 @@
 - On all eight releases, `EnsureSubnet` previews reject unsupported subnet types before issuing a plan hash, using the existing native type rule.
 - Runtime channel failures retain the redacted first-line native reason in per-item errors and `details.nativeMessage` across all eight releases.
 - S7 Web API tools report `safety.connected` from the current HTTPS exchange and only claim `safety.certificateValidated` after a response with certificate checks enabled; disconnected calls report a null validation status on all eight releases.
+- Hardware argument refusals explain missing scopes, participants, channel identities, attributes and port partners, with declared parameter pointers on all eight releases where registered.
+- Hardware adapter refusals use declared path names on all eight releases where registered, including V21 communication interfaces with multiple nodes.
+- `EnsureSubnet` apply rejects an unknown `subnetType` as `INVALID_ARGUMENT` on `/subnetType` on all eight releases, listing the accepted types before taking edit access.
 - The example project name in tool descriptions and guidance is now `ExampleProject`.
 - `PreviewToolCall` precautions name the compile step for the tool's domain and include Windows Openness group changes for session tools.
 - Canonical printed device paths and arrays of names containing `/` on the seven string device entries now resolve.
