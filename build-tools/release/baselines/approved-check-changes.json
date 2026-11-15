@@ -2899,6 +2899,58 @@
           "identifier": "UnifiedPortAdmissionTests/Catalogue_reads_use_only_host_decoded_inputs( string name ):3e0568d44a758486b9ec50b3acfb19bc6924306abbf197105f9182595f24a05f:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-11E",
+      "maintainerDate": "2026-11-15",
+      "reason": "2026-11-15 maintainer approved all nine: six assertions of Maintained_write_examples_preview_without_native_dispatch move unchanged into AssertMaintainedWritePreview (same 28 rows, release 21); three preview scope texts state the target is not verified per decision D1, with targetVerified=false added; Read_action_preview_has_no_target_flag now expects the read-only invocation to run once and report dryRun=true (D1)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Bound_preview_keeps_its_scope_and_hash( string release ):70bd345bd22a1cfacd70723cea9b35d172818046ae08bc099c73a0b4caa12a48:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Maintained_write_examples_preview_without_native_dispatch( string name ):068ac61c837f1b0cfd25d30509e6456371584dd1d159acd97ee86509000194a5:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Maintained_write_examples_preview_without_native_dispatch( string name ):8df4b8f6ea787cb15669f3630dd720fa611f024eda811d444b16e1de7aef025f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Maintained_write_examples_preview_without_native_dispatch( string name ):934f3453dc3b14b9ba4a34b850549e1d41b75d69211b51e685fd6a0ef233a9c7:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Maintained_write_examples_preview_without_native_dispatch( string name ):cb926d3d1565b970ad7047a7e93b7d1b0c753671a171e5a287330fdef5d09e81:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Maintained_write_examples_preview_without_native_dispatch( string name ):ed99affcda3e1ede40dcf1e54edd43cdb7fea32f75c5692135c3db6668164d89:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Maintained_write_examples_preview_without_native_dispatch( string name ):fcbfa8dc4ed982206d64e787c6fcc6849ee082fa6c756493b502b230bc3c02c9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Read_action_preview_has_no_target_flag( string release ):7f9343a4bf2e2a1994e9cb8c8765da1bdb65d68fa42153f909325616b60427b6:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Unbound_preview_says_it_names_no_target( string release ):fb872a921b661e54d7a1019e9da776fee6f14dadb8621d97cf626b018f31578b:1"
+        }
+      ]
     }
   ]
 }
