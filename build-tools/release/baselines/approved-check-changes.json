@@ -3103,6 +3103,38 @@
           "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/WorkerRetainsUncertainDocumentEvidenceWithoutRefusingLaterCalls( ):946ea130d08f19f1d824850269d9a3ae22657ea85141ff896ed02daf592d1c25:1"
         }
       ]
+    },
+    {
+      "task": "NO-LOCK-8A",
+      "maintainerDate": "2026-11-15",
+      "reason": "2026-11-15 maintainer decision 1 of NO-LOCK part 8 (outcome follows the reclassification): file-only document exports with an uncertain native state no longer set the flag, a compile with an unexpected native state maps to failed, and a confirmed tag creation with a refused binding is a known partial write, not unknown",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/P707cFoundationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "P707cFoundationTests/EveryFoundationReleaseUsesTheExactCompilerEnum( string state , string outcome ):59e35c0bd4925942bad89cab69f76d5a212add37626dcf0e4021fe004b044866:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/P707cFoundationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "P707cFoundationTests/FileOnlyDocumentResultsRetainRawStateAndResetOnlyForUncertainty( string ? state , bool reset ):21e90fbdea37152984051f6a0bba3bec459c76e7ea884fc8eca812ce99841f5d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/P707cFoundationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "P707cFoundationTests/FileOnlyDocumentResultsRetainRawStateAndResetOnlyForUncertainty( string ? state , bool reset ):cf8ab8956f554646b91b463a0800cf0e7c63c4697ffb2fdc42627a5de637f039:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/P707cFoundationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "P707cFoundationTests/FileOnlyDocumentResultsRetainRawStateAndResetOnlyForUncertainty( string ? state , bool reset ):e46028ac687a9a1699fb53325751ca7c697a214149c2f305ad3578d32e362f3c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VmDefectRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VmDefectRegressionTests/Confirmed_tag_creation_with_unsupported_binding_is_partial_with_reset( ):0bbb0fc75b0db7dcc633b341280df324cfd288d1fa8623502452839dad0822b2:1"
+        }
+      ]
     }
   ]
 }
