@@ -22957,7 +22957,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "itemName": {
@@ -23022,7 +23022,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "limit": {
@@ -23072,7 +23072,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "itemNames": {
@@ -23247,7 +23247,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "limit": {
@@ -23568,7 +23568,7 @@
         "additionalProperties": false,
         "properties": {
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "fields": {
@@ -23722,7 +23722,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "itemName": {
@@ -28065,7 +28065,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "limit": {
@@ -28138,7 +28138,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "folderPath": {
@@ -28188,7 +28188,7 @@
             "type": "string"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "limit": {
@@ -41387,7 +41387,7 @@
             "type": "boolean"
           },
           "expectedProject": {
-            "description": "Exact project NAME, e.g. AutomaticDipCoatingMachine; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
             "type": "string"
           },
           "previewToken": {
