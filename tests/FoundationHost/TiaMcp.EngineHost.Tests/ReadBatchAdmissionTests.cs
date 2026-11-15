@@ -174,8 +174,9 @@ public sealed partial class ReadBatchAdmissionTests
         internal void AssertRefused(JsonObject batch, string name)
         {
             Assert.True((string?)batch["error"]?["code"] == "INVALID_ARGUMENT"
-                && (string?)batch["error"]?["details"]?["parameter"] == "/operations/0/arguments"
+                && (string?)batch["error"]?["details"]?["parameter"] == "/operations/0/name"
                 && batch["data"] == null, name + " was not refused: " + batch.ToJsonString());
+            Assert.Contains("is not marked batch-readable", (string?)batch["error"]?["message"]);
             Assert.Equal("RunReadOnlyToolBatch", (string?)batch["meta"]?["tool"]);
             Assert.Equal("rejected-before-operation", (string?)batch["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)batch["meta"]?["execution"]);
@@ -184,8 +185,9 @@ public sealed partial class ReadBatchAdmissionTests
         internal void AssertRefused(JsonObject batch, string name, int index)
         {
             Assert.True((string?)batch["error"]?["code"] == "INVALID_ARGUMENT"
-                && (string?)batch["error"]?["details"]?["parameter"] == "/operations/" + index + "/arguments"
+                && (string?)batch["error"]?["details"]?["parameter"] == "/operations/" + index + "/name"
                 && batch["data"] == null, name + " was not refused: " + batch.ToJsonString());
+            Assert.Contains("is not marked batch-readable", (string?)batch["error"]?["message"]);
             Assert.Equal("RunReadOnlyToolBatch", (string?)batch["meta"]?["tool"]);
             Assert.Equal("rejected-before-operation", (string?)batch["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)batch["meta"]?["execution"]);

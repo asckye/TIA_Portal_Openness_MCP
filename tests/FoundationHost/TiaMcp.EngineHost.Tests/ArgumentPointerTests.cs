@@ -9,6 +9,32 @@ using Xunit;
 
 public sealed partial class ReadBatchAdmissionTests
 {
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Non_admitted_batch_tool_is_refused_on_its_name_with_a_reason(string release)
+    {
+        using var fixture = new Fixture(release);
+        var cases = new[] {
+            ("GetProjectInfo", new JsonObject(), "has no dryRun preview"),
+            ("SetDeviceItemAttribute", new JsonObject { ["deviceItemPath"] = "Station/CPU", ["attributeName"] = "Name",
+                ["value"] = "CPU", ["dryRun"] = true }, "is not marked batch-writable"),
+            ("CallTool", new JsonObject { ["name"] = "GetProjectInfo", ["arguments"] = new JsonObject() },
+                "is a batch or orchestration tool") };
+        foreach (var (name, arguments, reason) in cases)
+        {
+            var result = await fixture.CallResult("PreviewToolBatch", new JsonObject { ["expectedProject"] = "Fixture",
+                ["operations"] = new JsonArray(new JsonObject { ["name"] = name, ["arguments"] = arguments }) });
+            Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent!["error"]!["code"]);
+            Assert.Equal("/operations/0/name", (string?)result.StructuredContent["error"]!["details"]!["parameter"]);
+            Assert.Equal(new[] { "/operations/0/name" }, result.StructuredContent["error"]!["details"]!["parameters"]!
+                .AsArray().Select(value => (string?)value));
+            Assert.Contains(reason, (string?)result.StructuredContent["error"]!["message"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent["meta"]!["execution"]);
+            Assert.Null(result.StructuredContent["data"]);
+            Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+        }
+        fixture.AssertNothingDispatched();
+    }
+
     [Theory]
     [InlineData("sofwarePath", "Undeclared input field (did you mean 'softwarePath'?)")]
     [InlineData("token=sk-live", "Undeclared input field.")]

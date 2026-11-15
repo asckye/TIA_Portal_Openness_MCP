@@ -11,6 +11,73 @@ using Xunit;
 
 public sealed class CanonicalParameterTests
 {
+    public static IEnumerable<object[]> Releases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
+        .Select(release => new object[] { release });
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Adapter_refusal_on_a_canonical_call_names_the_canonical_field(string release)
+    {
+        string file = Path.Combine(Path.GetTempPath(), "vmfix-11d-" + Guid.NewGuid().ToString("N") + ".xml");
+        File.WriteAllText(file, "<Document />");
+        try
+        {
+            var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(new RefusingExportTool(release), release);
+            foreach (string field in new[] { "exportFile", "exportPath" })
+            {
+                var result = await tool.InvokeAsync(Request(tool, new JsonObject { [field] = file }));
+                Assert.True(result.IsError);
+                Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent!["error"]!["code"]);
+                Assert.Equal("/" + field, (string?)result.StructuredContent["error"]!["details"]!["parameter"]);
+                Assert.Equal(new[] { "/" + field }, result.StructuredContent["error"]!["details"]!["parameters"]!
+                    .AsArray().Select(value => (string?)value));
+                Assert.Equal(field == "exportPath" ? 1 : 0, result.StructuredContent["meta"]!["warnings"]!.AsArray().Count);
+                Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+            }
+            Assert.Equal("<Document />", File.ReadAllText(file));
+        }
+        finally { File.Delete(file); }
+    }
+
+    [Theory]
+    [InlineData("ExportPlcBlocks", "exportDirectory", "exportPath")]
+    [InlineData("ImportPlcBlocksFromDirectory", "sourceDirectory", "dir")]
+    [InlineData("ExportDeviceAml", "exportFile", "exportPath")]
+    [InlineData("ExportDeviceAml", "exportDirectory", "exportPath")]
+    public void Adapter_pointers_translate_only_the_alias_the_caller_used(string name, string canonical, string legacy)
+    {
+        var original = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Reject("21", name,
+            new Error("Fixture refusal.", new InvalidArgumentDetails("/" + legacy, Array.Empty<string>(),
+                new[] { "/" + legacy, "/other" }, "fixture target")));
+        var input = new JsonObject { [canonical] = "C:/Exports/Target" };
+        var result = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, input, original);
+        Assert.Equal("/" + canonical, (string?)result.StructuredContent!["error"]!["details"]!["parameter"]);
+        Assert.Equal(new[] { "/" + canonical, "/other" }, result.StructuredContent["error"]!["details"]!["parameters"]!
+            .AsArray().Select(value => (string?)value));
+        Assert.Equal("fixture target", (string?)result.StructuredContent["error"]!["details"]!["expected"]);
+        Assert.Equal("/" + legacy, (string?)original.StructuredContent!["error"]!["details"]!["parameter"]);
+        Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+        var omitted = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, new JsonObject(), original);
+        Assert.Same(original, omitted);
+        input[legacy] = "C:/Exports/Legacy";
+        var both = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, input, original);
+        Assert.Equal("/" + legacy, (string?)both.StructuredContent!["error"]!["details"]!["parameter"]);
+        Assert.Single(both.StructuredContent["meta"]!["warnings"]!.AsArray());
+    }
+
+    private sealed class RefusingExportTool(string release) : McpServerTool
+    {
+        public override Tool ProtocolTool => new CapturingTool("ExportPlcTagTable", "exportPath", true, release).ProtocolTool;
+        public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
+            CancellationToken cancellationToken = default)
+        {
+            var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                TiaMcp.Adapters.PlcFoundationPolicy.XmlOutput(request.Params!.Arguments!["exportPath"].GetString()!));
+            return ValueTask.FromResult(enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Reject(release, ProtocolTool.Name,
+                new Error("Choose a new XML file; existing files are never overwritten.",
+                    new InvalidArgumentDetails(refusal.ParamName, Array.Empty<string>()))));
+        }
+    }
+
     [Theory]
     [InlineData("14sp1")]
     [InlineData("15.1")]

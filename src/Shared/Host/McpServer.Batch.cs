@@ -104,7 +104,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     return V4Reject(tool, new Error("Connection changed during preview.", new PreconditionFailedDetails("batch-identity", expectedProject)));
                 string previewToken = BatchPlans.Add(plan, DateTime.UtcNow);
                 return V4Result(tool, new JsonObject {
-                        ["token"] = previewToken, ["expiresUtc"] = V4Json.Timestamp(new DateTimeOffset(plan.Expires.ToUniversalTime())),
+                    ["previewToken"] = previewToken, ["token"] = previewToken,
+                    ["expiresUtc"] = V4Json.Timestamp(new DateTimeOffset(plan.Expires.ToUniversalTime())),
                     ["operations"] = plan.Operations.DeepClone(), ["items"] = rows,
                     ["executed"] = false, ["scope"] = "Revalidates native previews, not all engineering state. External edits can occur between calls." });
             }
@@ -210,16 +211,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (CatalogView.Find(call.Name, includeUnavailable: true)?.Classification.Operation == "UI")
                     return new Error("UI operations cannot run in a batch.", new UnsupportedCapabilityDetails(ReleaseKey, "workbench-ui-batch", call.Name));
                 var args = JsonNode.Parse(call.Arguments.Json.GetRawText())!.AsObject();
-                if (write) args["dryRun"] = true;
+                var targetMethod = CatalogView.Find(call.Name, includeUnavailable: true);
+                if (write && targetMethod?.DryRun.Present == true) args["dryRun"] = true;
                 var error = ToolInvoker.Bind(call.Name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out _);
                 if (error != null) return InvalidArgumentDetails.Prefix(error, row + "/arguments");
-                var targetMethod = CatalogView.Find(call.Name, includeUnavailable: true)!;
-                string name = targetMethod.Name;
+                string name = targetMethod!.Name;
                 var classification = ClassificationOf(targetMethod);
                 bool orchestration = IsBatchOrchestration(targetMethod);
                 bool read = classification?.BatchRead == true;
                 bool preview = classification?.BatchWrite == true && targetMethod.DryRun.Present;
-                if (orchestration || (write ? !preview : !read)) return InvalidInput(row + "/arguments", "admitted batch tool arguments");
+                if (orchestration || (write ? !preview : !read))
+                {
+                    string reason = orchestration ? "is a batch or orchestration tool"
+                        : write && !targetMethod.DryRun.Present ? "has no dryRun preview"
+                        : write ? "is not marked batch-writable" : "is not marked batch-readable";
+                    return new Error("The tool " + reason + ".", new InvalidArgumentDetails(row + "/name", Array.Empty<string>(),
+                        expected: write ? "batch-writable tool with a dryRun preview" : "batch-readable tool"));
+                }
                 targets[call.Name] =
                     new ToolTarget(call.Name, new InputSchema(targetMethod.Tool.InputSchema), new InputBudget(), read, preview, orchestration: orchestration);
             }

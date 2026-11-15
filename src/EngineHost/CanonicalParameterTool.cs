@@ -162,6 +162,24 @@ internal sealed class CanonicalParameterTool : McpServerTool
     {
         var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
         var decorated = CanonicalToolParameters.Warn(name, input, body);
+        if (decorated?["error"]?["details"] is JsonObject details)
+            foreach (var alias in CanonicalToolParameters.Aliases(name)
+                .Where(alias => !input.ContainsKey(alias.Legacy) && input.ContainsKey(alias.Canonical)))
+            {
+                string legacy = "/" + alias.Legacy, canonical = "/" + alias.Canonical;
+                bool parameter = (string?)details["parameter"] == legacy;
+                bool parameters = details["parameters"] is JsonArray fields && fields.Any(field => (string?)field == legacy);
+                if (!parameter && !parameters) continue;
+                if (ReferenceEquals(body, decorated))
+                {
+                    decorated = body!.DeepClone();
+                    details = decorated["error"]!["details"]!.AsObject();
+                }
+                if (parameter) details["parameter"] = canonical;
+                if (details["parameters"] is JsonArray pointers)
+                    for (int index = 0; index < pointers.Count; index++)
+                        if ((string?)pointers[index] == legacy) pointers[index] = canonical;
+            }
         if (ReferenceEquals(body, decorated)) return result;
         return new CallToolResult { IsError = result.IsError, StructuredContent = decorated,
             Content = new[] { new TextContentBlock { Text = decorated!.ToJsonString() } } };

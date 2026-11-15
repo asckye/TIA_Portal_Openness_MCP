@@ -155,6 +155,34 @@ public sealed class B1OldReleaseBridgeTests
             Assert.Equal("NOT_FOUND", (string?)Host.McpServer.ApplyToolBatch(token).StructuredContent?["error"]?["code"]);
         }
     }
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
+    [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+    public async Task Preview_batch_result_carries_previewToken(string release)
+    {
+        var fixture = McpServerTool.Create((bool dryRun = true) => Host.McpServer.V4Result("DeletePlcBlock",
+            new JsonObject { ["dryRun"] = dryRun, ["value"] = "fixture" }), new() { Name = "DeletePlcBlock" });
+        using var worker = new BatchWorker();
+        using var pipeline = new Pipeline(release, worker, new[] { fixture });
+        var preview = await Invoke(pipeline.AllTools, "PreviewToolBatch", new { expectedProject = "Fixture",
+            operations = new[] { new { name = "DeletePlcBlock", arguments = new { dryRun = true } } } });
+        Assert.True((bool)preview["ok"]!);
+        Assert.NotNull(preview["data"]!["previewToken"]);
+        string token = preview["data"]!["previewToken"]!.GetValue<string>();
+        Assert.False(string.IsNullOrWhiteSpace(token));
+        Assert.Equal(token, (string?)preview["data"]!["token"]);
+        using (pipeline.EnterSession())
+        {
+            using var request = Host.McpServer.UseProgressRequest(Request("ApplyToolBatch", new { previewToken = token }), CancellationToken.None);
+            var applied = Host.McpServer.ApplyToolBatch(token).StructuredContent!;
+            Assert.True((bool)applied["ok"]!, applied.ToJsonString());
+            Assert.False((bool)applied["data"]!["items"]![0]!["result"]!["data"]!["dryRun"]!);
+            var consumed = Host.McpServer.ApplyToolBatch(token).StructuredContent!;
+            Assert.Equal("NOT_FOUND", (string?)consumed["error"]!["code"]);
+        }
+        Assert.Equal(0, worker.NativeCalls);
+    }
+
     private static void SetWorkerField(WorkerClient worker, string name, object value)
         => typeof(WorkerClient).GetField(name, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(worker, value);
     [Theory, MemberData(nameof(Releases))]
@@ -209,6 +237,25 @@ public sealed class B1OldReleaseBridgeTests
             throw new InvalidOperationException("No target dispatch expected: " + operation);
         }
         public void Dispose() { }
+    }
+    private sealed class BatchWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    {
+        private readonly BoundWorker state = new();
+        internal int NativeCalls;
+        public object SessionKey => state.SessionKey;
+        public bool Faulted => false;
+        public JsonNode? Binding => state.Binding;
+        public JsonObject Snapshot() => state.Snapshot();
+        public Task<JsonObject> Status(CancellationToken token) => state.Status(token);
+        public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new InvalidOperationException("No restart expected.");
+        public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new Lease());
+        private sealed class Lease : IDisposable { public void Dispose() { } }
+        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
+        {
+            NativeCalls++;
+            throw new InvalidOperationException("No native dispatch expected: " + name);
+        }
+        public void Dispose() => state.Dispose();
     }
     private sealed class BoundWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
     {

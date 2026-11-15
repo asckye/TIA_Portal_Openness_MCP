@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### Fixed
+- Across all eight releases, adapter argument refusals identify the canonical field supplied by the caller.
+- Across all eight releases, batch admission refusals identify `/operations/<i>/name` and explain that the tool lacks a dry-run preview or batch permission, or is a batch or orchestration tool.
 - The example project name in tool descriptions and guidance is now `ExampleProject`.
 - `PreviewToolCall` precautions name the compile step for the tool's domain and include Windows Openness group changes for session tools.
 - Canonical printed device paths and arrays of names containing `/` on the seven string device entries now resolve.
@@ -61,6 +63,7 @@
 ### Changed
 - `CompileDevice` now defaults to a preview on all eight releases. Existing callers must pass `dryRun:false` with the preview's `expectedPlanHash` and exact bound `expectedProjectFile` to compile.
 - `ImportTechnologyObjectsFromDirectory` defaults to `overwrite:false` on V16–V21; replacing existing technology objects requires `overwrite:true`.
+- Across all eight releases, `PreviewToolBatch` adds `data.previewToken` with the same value as `data.token`; `token` remains available until 5.0.
 - `EnsureUnifiedHmiTag.hmiDataType` and `BindUnifiedHmiTagDynamization.dataType` default to empty on V19–V21. Symbolic tags use the type supplied by TIA; absolute tags still default to Bool. Dynamization dataType, plcTag and address are optional expected values compared after binding, because those API properties are read-only.
 - Unified colour conversion and write verification also accept `0xAARRGGBB`; the theme schema keeps its existing `0x` format.
 
