@@ -2887,6 +2887,18 @@
           "identifier": "ReadBatchAdmissionTests.Fixture/AssertRefused( JsonObject batch , string name , int index ):ad7b1dcce26720bf193697ed96dbceace1a3a23cb5fee56e6250e71754599b8e:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-11G",
+      "maintainerDate": "2026-11-15",
+      "reason": "2026-11-14 maintainer approved: GetUnifiedGraphicSelection reports its scope only under data.page, so the scope assertion moves from data.scope to data.page.scope for that tool (VMFIX-11G spec item 2)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "UnifiedPortAdmissionTests/Catalogue_reads_use_only_host_decoded_inputs( string name ):3e0568d44a758486b9ec50b3acfb19bc6924306abbf197105f9182595f24a05f:1"
+        }
+      ]
     }
   ]
 }
