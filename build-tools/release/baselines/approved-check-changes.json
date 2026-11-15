@@ -2951,6 +2951,158 @@
           "identifier": "WritePreviewCoverageTests/Unbound_preview_says_it_names_no_target( string release ):fb872a921b661e54d7a1019e9da776fee6f14dadb8621d97cf626b018f31578b:1"
         }
       ]
+    },
+    {
+      "task": "NO-LOCK-8A",
+      "maintainerDate": "2026-11-15",
+      "reason": "2026-11-15 maintainer approved: NO-LOCK part 8 decisions 1-3 (outcome follows the reclassification for reads, compiles with errors and exports; export validators carry the flag false with forged flags rejected; adapter-local latches removed) and Table 8 P rows, plus four further changes approved the same day: WorkerSessionRecoveryTests row modelling a write, two DocumentImportSafetySources pins following the write-only uncertainty mark, and the renamed ProvenOutcomeTests batch export test",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OnlinePortTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.OnlinePortTests/Completed_failures_and_unknown_writes_have_distinct_session_effects( string tool , bool success , bool nativeIssued , bool changed , bool files , string ? state , bool reset ):588680d7f21cb38512886335b884c07b2886dbab511101b73e7ef7981f7156c3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchDocumentExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchDocumentExportTests/Run( Action \u003C bool , string \u003E check ):3e2002c2b1e6f6ce6d83a5c85cc42edf5242d9ca05771627bc7c02c4159b323c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchDocumentExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchDocumentExportTests/Run( Action \u003C bool , string \u003E check ):4b5f40f11d65a55888cae821f624f16a8864d82e99825808df69a0bdfa20072e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchDocumentExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchDocumentExportTests/Run( Action \u003C bool , string \u003E check ):8a9aabd9016f1b12f60d8f65ff99e352e0929fde0a22a6a3c00c9a632d140a89:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):1e5babd6dbaa96aa1eebc490a1e94a9d4a77f5b4a9f78baae563e2aa74c3dda3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):59869c6ba973970329a78700f4d7e7ae57475689dfde92d0fdf980d48cf6f8c4:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):bc1718396cd0e5a8acdbc4257a923902fe7ab18a47c49299f80fbd0f714b1d4b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):c8fe788372d741d98e4d24a92183d5c4fae3c6cd3610f8ec6f4fe3c4efc350b8:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):f2bfc603df3a1ab9b612e29754d031068d1ac871044a34b65835f775b79537f5:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):1830d6bd33844f6e2c67024252d821943d7c6cc6a42fd3526996738bcee1b0cb:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):28cf99e3070e0039370be9581df2de46cbcd025a9bc6a6cca9abc8bc539f9e56:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):67f2f14566df1c3fc85316c84d80fc08985a6f508ec2d8f1544ed58bae52a009:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):68e24bf1725cab39ebedf0af13372022e054b0a08b2c36ceaca9d8a6d3348e50:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchExportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):a6dae71c06f6251031db6e91884b01e79be2904ff54460410adc31daa459c948:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchImportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchImportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):4969d743dbcf28802590216d250e6a9750ad11b773c695dc078a8a81166cab1b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/BatchImportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "BatchImportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):f7a792ee3558c819691c56434ca32c9d1d28d387bcb4f99f4513ea0d24fa9e6c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DocumentExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "DocumentExportTests/Run( Action \u003C bool , string \u003E check ):315a9eca9bc38b3aab67c401db3af92b7271f83018225c97e6b16890666e0a64:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ProvenOutcomeTests.cs",
+          "kind": "test-removed",
+          "identifier": "ProvenOutcomeTests/Uncertain_batch_export_item_stays_unknown( ):23aa529b6e6565d2c5daa39974fb8fa3d13f7e4cb1d115221b8bd6c48f3ee2b6"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SpecialExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SpecialExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):0c5393c9cf8a2ec1bda76ff5640e5ed72c7c581984dc47a11dbabbbe675f4d16:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SpecialExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SpecialExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):3468f4d66556b6a4c83248f0e1b52b4252e8a5d71d713446b6ded2b52b72c3f2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SpecialExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SpecialExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):4470adf0a65a823f38f005ac60448d2897bb2d92b551ecc6455de38879c10128:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SpecialExportDispatchTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SpecialExportDispatchTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):738a2a2e86a2a99a36caea3c960062c10a115dc7ac180e1d7dd2e8d28656607b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SpecialExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SpecialExportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):9f39247ea39b4fefb5fb9743c50632c78fc3a105d0695a7e3aa6c5f7fb2686c0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SpecialExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SpecialExportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):be47e8e4bb0da4ff006abf810534ba9332af7e4ac0846095128946fdec978476:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerSessionRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerSessionRecoveryTests/Process_loss_during_a_read_becomes_unknown_and_disconnect_recovery_releases_the_lease( string release ):200e174f935f97c5a4612cdbed512ce2a49fce6bbd129b4a0d375e4c4443a0bc:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerSessionRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerSessionRecoveryTests/Read_uncertainty_keeps_the_real_reply_and_does_not_rewrite_a_later_write( ):e10c1a31de3b521d155085cf82bb4b718d0fbc5c2c6b1356ed12bf8e28cbd3c8:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerSessionRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerSessionRecoveryTests/Unknown_native_outcome_preserves_typed_evidence_and_allows_independent_calls( string release , bool typed ):83925270ca8e82c451fefa56649c62a038c2252eecddd3388fab128a6f15d239:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/DocumentImportSafetySources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/WorkerRetainsUncertainDocumentEvidenceWithoutRefusingLaterCalls( ):71f9bf1b75cdd17dd991d4058de11abacb9030e7a6923c31da4e5e1193e7f651:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/DocumentImportSafetySources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/WorkerRetainsUncertainDocumentEvidenceWithoutRefusingLaterCalls( ):946ea130d08f19f1d824850269d9a3ae22657ea85141ff896ed02daf592d1c25:1"
+        }
+      ]
     }
   ]
 }
