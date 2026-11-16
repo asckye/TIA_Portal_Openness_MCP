@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,10 +10,10 @@ using TiaMcp.WorkerChannel;
 using Xunit;
 using Client = WorkerBackendFixture;
 using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using Journal = enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using Journal = toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal;
 using Foundation = foundationhost::TiaMcp.FoundationHost;
-using Engine = enginehost::TiaMcp.FoundationHost;
+using Engine = toolpipeline::TiaMcp.FoundationHost;
 
 // Scope sets the process-wide data directory and fault variables. Classes running beside it read
 // DataLocations.Current (approval settings, audit directory) and observed that directory mid-test.
@@ -94,7 +94,7 @@ public sealed class WorkerRobustnessTests
         private readonly string? previousFacts = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_RECOVERY_PROCESSES");
         private readonly string gate;
         private readonly Foundation.HostSession session;
-        private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
+        private readonly toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly McpServerTool engine;
         private readonly McpServerTool shared;
         internal readonly string SpillsDirectory = Path.Combine(AppContext.BaseDirectory, "worker-fixture-spills", Guid.NewGuid().ToString("N"));

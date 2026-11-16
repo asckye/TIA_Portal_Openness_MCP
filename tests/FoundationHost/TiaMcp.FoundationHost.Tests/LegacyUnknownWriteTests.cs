@@ -1,8 +1,8 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class LegacyUnknownWriteTests
 {
@@ -53,7 +53,7 @@ public sealed class LegacyUnknownWriteTests
         File.WriteAllText(file, "<AlarmClasses />");
         try
         {
-            var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((_, _) =>
+            var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcB5PortService((_, _) =>
                 System.Text.Json.JsonSerializer.SerializeToNode(new TiaMcp.Adapters.Contracts.PlcB5Reply {
                     Failure = new TiaMcp.Adapters.Contracts.PlcSoftwareFailure { Code = "OpennessError", Message = "Synthetic native result unavailable." },
                     MayHaveChanged = false, OutcomeUnknown = true }), () => "C:/fixture.ap21");

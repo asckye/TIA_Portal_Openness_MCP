@@ -1,7 +1,7 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
@@ -93,10 +93,10 @@ public sealed class B1HostPortsTests
         using var scope = EngineHostParity.EnterScope();
         var tool = global::ModelContextProtocol.Server.McpServerTool.Create(
             (string[] files) => string.Join(",", files), new() { Name = "SharedArrayFixture" });
-        var catalog = new enginehost::TiaMcp.FoundationHost.SharedToolCatalog(Host.McpServer.CatalogView,
+        var catalog = new toolpipeline::TiaMcp.FoundationHost.SharedToolCatalog(Host.McpServer.CatalogView,
             new[] { tool }, new HashSet<string>());
-        var invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog,
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Worker, new Host.ImportStagingHostLifetime(), new[] { tool });
+        var invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog,
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker, new Host.ImportStagingHostLifetime(), new[] { tool });
         Assert.Null(invoker.Bind("SharedArrayFixture", new ToolArguments(JsonSerializer.SerializeToElement(
             new { files = new[] { "one.scl", "two.scl" } })), out var call));
         Assert.NotNull(call);

@@ -1,12 +1,12 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using DeclaredToolMetadata = enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
-using ProgressHeartbeat = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
-using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
-using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
-using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
-using WriteDigest = enginehost::TiaMcp.FoundationHost.WriteDigest;
-using UnifiedInputAdmission = enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService;
+extern alias toolpipeline;
+using DeclaredToolMetadata = toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
+using ProgressHeartbeat = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
+using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
+using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
+using WriteDigest = toolpipeline::TiaMcp.FoundationHost.WriteDigest;
+using UnifiedInputAdmission = toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService;
 #else
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;

@@ -1,14 +1,14 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using McpServer = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using ImportStagingTools = enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingTools;
-using WorkerSupervisorReplies = enginehost::TiaMcp.FoundationHost.WorkerSupervisorReplies;
-using WorkerSupervisorState = enginehost::TiaMcp.FoundationHost.WorkerSupervisorState;
-using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
-using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
-using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
-using UnknownSettlement = enginehost::TiaMcp.FoundationHost.UnknownSettlement;
-using ResponseGuardTool = enginehost::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
+extern alias toolpipeline;
+using McpServer = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using ImportStagingTools = toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools;
+using WorkerSupervisorReplies = toolpipeline::TiaMcp.FoundationHost.WorkerSupervisorReplies;
+using WorkerSupervisorState = toolpipeline::TiaMcp.FoundationHost.WorkerSupervisorState;
+using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
+using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
+using UnknownSettlement = toolpipeline::TiaMcp.FoundationHost.UnknownSettlement;
+using ResponseGuardTool = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
 #else
 using McpServer = TiaMcpServer.ModelContextProtocol.McpServer;
 using ImportStagingTools = TiaMcpServer.ModelContextProtocol.ImportStagingTools;

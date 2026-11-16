@@ -1,11 +1,11 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
-using View = enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView;
-using Descriptor = enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
-using Parameter = enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor;
+using View = toolpipeline::TiaMcpServer.ModelContextProtocol.IToolCatalogView;
+using Descriptor = toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
+using Parameter = toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor;
 
 // This descriptor lives only in the test assembly; the internal test entry replaces
 // the registered tool after the production registry has been built.
@@ -20,7 +20,7 @@ internal static class SessionFixtureTool
     {
         var descriptor = new Catalog(new EmptyView()).All[Name];
         var fixture = new PlcTool(worker, descriptor.Tool);
-        var wrapped = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.WrapTools(new[] { fixture }).Single();
+        var wrapped = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.WrapTools(new[] { fixture }).Single();
         return tools.Where(tool => tool.ProtocolTool.Name != Name).Append(wrapped).ToArray();
     }
     private sealed class EmptyView : View
@@ -40,13 +40,13 @@ internal static class SessionFixtureTool
         {
             var args = JsonSerializer.SerializeToNode(request.Params!.Arguments)?.AsObject() ?? new JsonObject();
             // Same request id as a served worker tool (WorkerToolInvoker) and the fixture outcome below.
-            string id = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
+            string id = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
             var reply = await worker.Call("FixtureInvoke", new JsonObject { ["name"] = Name,
                 ["requestId"] = id, ["arguments"] = args }, token);
             var result = JsonSerializer.Deserialize<CallToolResult>(reply!["result"]!.ToJsonString(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!;
             if ((string?)result.StructuredContent?["meta"]?["outcome"] == "unknown")
                 worker.Unsettled.Record(id, Name,
-                    enginehost::TiaMcp.FoundationHost.UnsettledCalls.WriteDigest(Name, args, null), DateTimeOffset.UtcNow);
+                    toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.WriteDigest(Name, args, null), DateTimeOffset.UtcNow);
             return result;
         }
     }

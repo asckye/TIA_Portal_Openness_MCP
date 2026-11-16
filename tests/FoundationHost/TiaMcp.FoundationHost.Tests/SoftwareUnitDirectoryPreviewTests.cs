@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters;
@@ -7,8 +7,8 @@ using TiaMcp.PlcWorker;
 using TiaMcp.WorkerChannel;
 using TiaMcpServer.ModelContextProtocol;
 using Xunit;
-using Organisation = enginehost::TiaMcpServer.Siemens.Services.PlcOrganisationPortService;
-using HostContract = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract;
+using Organisation = toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService;
+using HostContract = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract;
 
 public sealed class SoftwareUnitDirectoryPreviewTests
 {

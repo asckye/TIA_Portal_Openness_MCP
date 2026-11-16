@@ -2,6 +2,7 @@
   <Import Project="../../Shared/Xunit.props" />
   <PropertyGroup>
     <RootNamespace>TiaMcp.EngineHost.Tests</RootNamespace>
+    <AssemblyName>TiaMcp.ToolPipeline.Tests</AssemblyName>
     <TargetFramework>net10.0</TargetFramework>
     <GenerateProgramFile>false</GenerateProgramFile>
     <OutputType>Exe</OutputType>
@@ -12,7 +13,7 @@
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" />
     <Compile Include="../../../src/PlcWorker/WorkerProjectScaffold.cs" Link="WorkerProjectScaffold.cs" />
     <Compile Include="../../Adapters/TiaMcp.Adapters.Contracts.Tests/ScaffoldWorkerFake.cs" Link="ScaffoldWorkerFake.cs" />
-    <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" />
+    <ProjectReference Include="../../../src/ToolPipeline/TiaMcp.ToolPipeline.csproj" />
     <None Update="Fixtures/EngineSource20.json" Link="Catalog/20.json" TargetPath="Catalog/20.json" CopyToOutputDirectory="Always" />
     <None Update="Fixtures/EngineSource21.json" Link="Catalog/21.json" TargetPath="Catalog/21.json" CopyToOutputDirectory="Always" />
   </ItemGroup>

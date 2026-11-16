@@ -1,10 +1,10 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Foundation = foundationhost::TiaMcp.FoundationHost;
-using Engine = enginehost::TiaMcp.FoundationHost;
+using Engine = toolpipeline::TiaMcp.FoundationHost;
 
 // The fixture uses the production PLC client and supervisor services. The adapter
 // operation used by session fixtures is private to the synthetic worker executable.

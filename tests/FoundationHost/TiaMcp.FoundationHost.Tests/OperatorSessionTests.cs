@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using TiaMcp.Engine.Tests.Shared;
 using System.IO.Pipelines;
 using System.Text.Json;
@@ -216,12 +216,12 @@ public sealed class OperatorSessionTestsPlc
     public async Task Engine_operator_view_does_not_forge_or_accept_another_ai_session_id()
     {
         using var fixture = new Fixture("21");
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
         using var worker = new WorkerBackendFixture(fixture.Options);
         var shared = foundationhost::TiaMcp.FoundationHost.LegacyHostToolRegistry.Create(worker, "21", true, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         // Same staging-owner wiring as the served host session (SharedReleaseHost.CreateSession).
-        worker.StagingProvider = () => { using var scope = pipeline.EnterSession(); return enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner; };
+        worker.StagingProvider = () => { using var scope = pipeline.EnterSession(); return toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner; };
         using var staging = pipeline.RegisterHttpSession("real-ai-id");
         var request = new RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<IMcpServer, ServerProxy>())
             { Params = new CallToolRequestParams { Name = "GetSessionState", Arguments = new Dictionary<string, JsonElement>() } };
@@ -230,7 +230,7 @@ public sealed class OperatorSessionTestsPlc
         var result = await pipeline.OperatorTools.Single(t => t.ProtocolTool.Name == "GetSessionState").InvokeAsync(request).AsTask().WaitAsync(Peer.RequestBudget);
         Assert.True((bool?)result.StructuredContent?["ok"]);
         Assert.Null(request.Server.SessionId);
-        Assert.Null(enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.OperatorSession.Value);
+        Assert.Null(toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.OperatorSession.Value);
         using var approval = new DisabledApproval(fixture.Options.BundleRoot);
         request.Params = new CallToolRequestParams { Name = "StageImportFiles", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
             "{\"files\":[{\"fileName\":\"operator.scl\",\"kind\":\"scl\",\"content\":\"FUNCTION Operator : Void\\nBEGIN\\nEND_FUNCTION\"}],\"dryRun\":false}") };
@@ -252,7 +252,7 @@ public sealed class OperatorSessionTestsPlc
     {
         internal readonly string DirectoryPath = Path.Combine(Path.GetTempPath(), "operator-fixture-" + Guid.NewGuid().ToString("N"));
         internal readonly Options Options;
-        private readonly string previousEngineRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        private readonly string previousEngineRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         private readonly string? priorLease = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT");
         private readonly string? priorGate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
         private object? sessionWorker;
@@ -287,7 +287,7 @@ public sealed class OperatorSessionTestsPlc
             ReleaseRunning();
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE", priorGate);
             Environment.SetEnvironmentVariable("TIA_MCP_FIXTURE_LEASE_ROOT", priorLease);
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousEngineRelease;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousEngineRelease;
             AppDomain.CurrentDomain.SetData("TiaOpenness.Shared.BundleLayout.v4", previousBundle);
             Environment.SetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT", previousRootVariable);
             Directory.Delete(DirectoryPath, true);
@@ -430,7 +430,7 @@ public sealed class OperatorSessionTestsPlc
         using var fixture = new Fixture(release); var worker = new GenerationFenceWorker(release); int approvals = 0;
         var tools = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Select(t => (McpServerTool)new TiaMcp.FoundationHost.FoundationV4Tool(t, release,
             () => new ApprovalSettings(false, 1), (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, true, null)); })).ToArray();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, tools);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, tools);
         using var session = new Session(release, "fence fixture", false, pipeline.Tools.ToArray(), pipeline.OperatorTools,
             () => new JsonObject(), pipeline.Dispose);
         await using var ai = await Peer.Ai(session);
@@ -457,7 +457,7 @@ public sealed class OperatorSessionTestsPlc
     {
         var worker = new GenerationFenceWorker(release);
         var tools = TiaMcp.FoundationHost.FoundationTools.Create(worker, release).Select(t => (McpServerTool)new TiaMcp.FoundationHost.FoundationV4Tool(t, release)).ToArray();
-        var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, tools);
+        var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, tools);
         using var fence = GenerationWriteFence.Acquire(worker.SessionKey, "shutdown-run");
         Assert.Equal("shutdown-run", GenerationWriteFence.RefusedRun(worker.SessionKey, "19", "SaveProject", "{}"));
         pipeline.Dispose();
@@ -474,7 +474,7 @@ public sealed class OperatorSessionTestsPlc
             approvals++; fence = GenerationWriteFence.Acquire(worker.SessionKey, "queued-run");
             return Task.FromResult(new ApprovalOutcome(pending, true, null));
         });
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, [tool]);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, [tool]);
         using var session = pipeline.EnterSession();
         var request = new RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<IMcpServer, ServerProxy>()) {
             Params = new CallToolRequestParams { Name = "SaveProject", Arguments = new Dictionary<string, JsonElement> {
@@ -489,7 +489,7 @@ public sealed class OperatorSessionTestsPlc
         }
         finally { fence?.Dispose(); }
     }
-    private sealed class GenerationFenceWorker(string release) : TiaMcp.FoundationHost.IFoundationSessionWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class GenerationFenceWorker(string release) : TiaMcp.FoundationHost.IFoundationSessionWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Writes;
         public object SessionKey { get; } = new();
@@ -508,7 +508,7 @@ public sealed class OperatorSessionTestsPlc
         public JsonObject Snapshot() => new JsonObject { ["readiness"] = new JsonObject { ["ready"] = true } };
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject args, bool preview, CancellationToken token) => throw new NotSupportedException();
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject args, bool preview, CancellationToken token) => throw new NotSupportedException();
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
         {
             if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject { ["ReleaseKey"] = release, ["IsAttached"] = true, ["ProcessId"] = 123, ["ProjectFile"] = "C:/Fixture.ap" + release, ["OwnsProject"] = false, ["IsLocalSession"] = false, ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" });

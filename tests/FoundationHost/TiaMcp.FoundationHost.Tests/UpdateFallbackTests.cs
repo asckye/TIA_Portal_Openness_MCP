@@ -1,7 +1,7 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Net;
 using System.Text.Json.Nodes;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using Xunit;
 
 public sealed class UpdateFallbackTests

@@ -49,8 +49,8 @@ internal static class CatalogGenerator
                 .SetEquals(Strings(Read(root, "manifest/history/contracts-v3/baseline/21.json")["liteTools"])), "Frozen engine lite rosters differ");
         Require(Source(root, "src/Shared/ToolUsageCatalog.cs").Contains("GuideSelection(string topic)", StringComparison.Ordinal)
                 && Source(root, "src/Logic/ModelContextProtocol/ToolRecipes.cs").Contains("ToolUsageCatalog.Sequences(", StringComparison.Ordinal)
-                && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("ToolUsageCatalog.Examples(", StringComparison.Ordinal)
-                && Source(root, "src/EngineHost/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("exampleId", StringComparison.Ordinal),
+                && Source(root, "src/ToolPipeline/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("ToolUsageCatalog.Examples(", StringComparison.Ordinal)
+                && Source(root, "src/ToolPipeline/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("exampleId", StringComparison.Ordinal),
                 "Guide merge proof differs");
         var calls = Read(root, "reference/tool-examples/calls.json")["profiles"]!; var sourceExamples =
             Read(root, "reference/tool-catalog/EngineSourceExamples.json");

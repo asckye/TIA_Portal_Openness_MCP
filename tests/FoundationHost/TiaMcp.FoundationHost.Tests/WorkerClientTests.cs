@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
 using System.Text.Json;
@@ -41,11 +41,11 @@ public sealed class WorkerDispatchTests
         var rows = new List<string>();
         using IFoundationWorker plc = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false };
         TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(rows.Add);
-        enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(rows.Add);
+        toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(rows.Add);
         var previousBinding = TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot;
-        var previousEngineBinding = enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot;
+        var previousEngineBinding = toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot;
         TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot = null;
-        enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot = null;
+        toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot = null;
         try
         {
             using IDisposable request = observed
@@ -66,9 +66,9 @@ public sealed class WorkerDispatchTests
         finally
         {
             TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(null);
-            enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(null);
+            toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(null);
             TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot = previousBinding;
-            enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot = previousEngineBinding;
+            toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.BindingSnapshot = previousEngineBinding;
         }
     }
 
@@ -100,9 +100,9 @@ public sealed class WorkerDispatchTests
     {
         using var worker = new WorkerClient(release, "unused", "unused", false);
         using var sessionWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
-        var context = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker);
+        var context = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker);
         using var exports = context.Exports;
-        using var session = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
+        using var session = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
         IFoundationWorkerResult parking = worker;
         var small = new CallToolResult { Content = new[] { new TextContentBlock { Text = "{}" } } };
         Xunit.Assert.Same(small, parking.ParkResult(small, "GetSessionState"));
@@ -111,7 +111,7 @@ public sealed class WorkerDispatchTests
         var result = parking.ParkResult(large, "GetSessionState");
         var body = JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)!;
         string id = (string)body["meta"]!["exportId"]!;
-        Xunit.Assert.Equal(text, enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(id)!.Content);
+        Xunit.Assert.Equal(text, toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(id)!.Content);
         Xunit.Assert.True(((TextContentBlock)result.Content.Single()).Text.Length < text.Length);
         Xunit.Assert.False(((IFoundationSessionWorker)worker).SharedSession);
     }
@@ -146,10 +146,10 @@ public sealed class WorkerDispatchTests
     [Xunit.Theory, Xunit.InlineData("ListTestSuiteCases", false), Xunit.InlineData("ExchangeTestSuiteCase", true)]
     public void Lost_worker_acknowledgement_maps_to_unknown_for_reads_and_writes(string tool, bool writes)
     {
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
         var lost = new IOException("Worker exited; native outcome is unknown.");
         lost.Data["foundationRequestSent"] = true; lost.Data["workerOutcomeUnknown"] = true;
-        var body = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw lost).StructuredContent!;
+        var body = toolpipeline::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw lost).StructuredContent!;
         Xunit.Assert.Equal(writes ? "unknown" : "read-failed", (string?)body["meta"]?["outcome"]);
         Xunit.Assert.Equal(writes ? "unknown" : "read-only", (string?)body["meta"]?["execution"]);
         Xunit.Assert.Equal(writes, (string?)body["meta"]?["outcome"] == "unknown");
@@ -158,7 +158,7 @@ public sealed class WorkerDispatchTests
         // The same failure before the request was sent stays a pre-operation rejection.
         var unsent = new IOException("Worker exited before the request was sent.");
         unsent.Data["foundationRequestSent"] = false;
-        var refused = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw unsent).StructuredContent!;
+        var refused = toolpipeline::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run(tool, writes, () => throw unsent).StructuredContent!;
         Xunit.Assert.Equal("rejected-before-operation", (string?)refused["meta"]?["outcome"]);
     }
 
@@ -167,7 +167,7 @@ public sealed class WorkerDispatchTests
     [Xunit.Fact]
     public async Task Over_frame_request_is_limit_exceeded_on_shared_and_ported_paths()
     {
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
         using var worker = new foundationhost::TiaMcp.FoundationHost.WorkerClient("21",
             Path.Combine(AppContext.BaseDirectory, "missing-launch-worker.exe"), AppContext.BaseDirectory, true) { Bundled = false };
         var args = new JsonObject { ["softwarePath"] = "PLC", ["regexName"] = new string('x', TiaMcp.WorkerChannel.ChannelLimits.RequestBytes) };
@@ -176,7 +176,7 @@ public sealed class WorkerDispatchTests
         Xunit.Assert.Equal(TiaMcp.WorkerChannel.ChannelLimits.RequestBytes, error.Data["workerLimitBytes"]);
         Xunit.Assert.False(worker.Faulted);
         var shared = foundationhost::TiaMcp.FoundationHost.FoundationV4Result.Failure("21", "ListPlcBlocks", "fixture", true, false, null, error).StructuredContent!;
-        var ported = enginehost::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run("ListTestSuiteCases", false, () => throw error).StructuredContent!;
+        var ported = toolpipeline::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Run("ListTestSuiteCases", false, () => throw error).StructuredContent!;
         foreach (var body in new[] { shared, ported })
         {
             Xunit.Assert.Equal("LIMIT_EXCEEDED", (string?)body["error"]?["code"]);

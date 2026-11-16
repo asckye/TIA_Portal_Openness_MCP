@@ -1,7 +1,7 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Service = enginehost::TiaMcpServer.Siemens.Services.HmiDescribeService;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Service = toolpipeline::TiaMcpServer.Siemens.Services.HmiDescribeService;
 using Xunit;
 
 public sealed class HmiDescribeToolsTests

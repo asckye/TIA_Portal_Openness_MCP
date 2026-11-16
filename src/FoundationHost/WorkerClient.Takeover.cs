@@ -1,8 +1,8 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using HostSession = foundationhost::TiaMcp.FoundationHost.HostSession;
-using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
 #endif
 using System.Collections.Concurrent;
 using System.Text.Json.Nodes;

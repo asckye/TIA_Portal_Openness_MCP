@@ -25,6 +25,6 @@ ADR 0005 决定 V20/V21 改用 FoundationHost。V20/V21 有数百个专有工具
 ## 后果
 
 - 正面：V20/V21 的工具契约与响应基线可以保持逐字节不变；宿主规则在 FoundationHost 中只有一份。
-- 负面与取舍：V20/V21 专有工具在 4.0 中仍由引擎代码执行，宿主侧走链接进 EngineHost 的引擎宿主层包装链，而不是 `FoundationV4Tool`。`--isolate-openness` 等开关已删除，旧文档中的相关说明须改正（DOC-01，P8-63）。
+- 负面与取舍：V20/V21 专有工具在 4.0 中仍由引擎代码执行，宿主侧走链接进 ToolPipeline 的引擎宿主层包装链，而不是 `FoundationV4Tool`。`--isolate-openness` 等开关已删除，旧文档中的相关说明须改正（DOC-01，P8-63）。
 - 后续工作：逐族移植与引擎退役见 ADR 0009（P8-03、P8-04）。
 - 验证方式：契约与响应快照；`--write-tool-catalog` 生成的目录与 worker 哈希核对；无参数运行引擎 EXE 时打印用法并以 64 退出。

@@ -1,9 +1,9 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using AuditCallTool = enginehost::TiaMcpServer.ModelContextProtocol.AuditCallTool;
-using VersionPolicyTool = enginehost::TiaMcpServer.ModelContextProtocol.VersionPolicyTool;
+extern alias toolpipeline;
+using AuditCallTool = toolpipeline::TiaMcpServer.ModelContextProtocol.AuditCallTool;
+using VersionPolicyTool = toolpipeline::TiaMcpServer.ModelContextProtocol.VersionPolicyTool;
 using BatchPlanStore = TiaMcpServer.ModelContextProtocol.BatchPlanStore;
-using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
 #else
 using AuditCallTool = TiaMcpServer.ModelContextProtocol.AuditCallTool;
 using VersionPolicyTool = TiaMcpServer.ModelContextProtocol.VersionPolicyTool;

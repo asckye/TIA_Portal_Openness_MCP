@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -8,8 +8,8 @@ using TiaMcp.FoundationHost;
 using TiaMcp.Logic.ModelContextProtocol;
 using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Pipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
 using Xunit;
 
 [Collection(BundleSelectionCollection.Name)]
@@ -106,12 +106,12 @@ public sealed class OfflineReadinessTests
 
     private sealed class ReleaseScope : IDisposable
     {
-        private readonly string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-        internal ReleaseScope(string release) => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
-        public void Dispose() => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
+        private readonly string previous = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        internal ReleaseScope(string release) => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+        public void Dispose() => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
     }
 
-    private sealed class ForbiddenWorker : IFoundationSessionWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class ForbiddenWorker : IFoundationSessionWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Calls;
         public bool Bundled => true;
@@ -125,7 +125,7 @@ public sealed class OfflineReadinessTests
         public JsonObject Snapshot() => new() { ["readiness"] = Unready() };
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         { Calls++; throw new InvalidOperationException("Offline tool dispatched " + operation); }
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         { Calls++; throw new InvalidOperationException("Offline tool dispatched " + name); }
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new InvalidOperationException();

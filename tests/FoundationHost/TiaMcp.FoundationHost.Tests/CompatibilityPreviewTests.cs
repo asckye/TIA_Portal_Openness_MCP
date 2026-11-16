@@ -1,10 +1,10 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 public sealed class CompatibilityPreviewTests
 {
@@ -13,12 +13,12 @@ public sealed class CompatibilityPreviewTests
     {
         const string project = "C:/Projects/original.ap21";
         string hash = new string('b', 64);
-        var service = new enginehost::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((_, arguments) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((_, arguments) => {
             Assert.True((bool?)arguments["request"]?["DryRun"]);
             return new JsonObject { ["Message"] = "Move preview", ["Meta"] = new JsonObject {
                 ["planHash"] = hash, ["dryRun"] = true, ["operationSuccess"] = true, ["mayHaveChanged"] = false } };
         }, () => true, () => project);
-        var result = new enginehost::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools(service)
+        var result = new toolpipeline::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools(service)
             .MoveBlockToGroupV4("PLC", "Motor", "Target");
         Assert.True((bool?)result.StructuredContent?["ok"]);
         var projection = TiaMcp.Logic.Generation.StepReviewRules.Project(result.StructuredContent!["data"]!.AsObject());
@@ -32,9 +32,9 @@ public sealed class CompatibilityPreviewTests
         using var worker = new PlanWorker();
         using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(null!);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(null!);
         var preview = tools.CreateDeviceV4("article", "version", "Device");
         Assert.True((bool?)preview.StructuredContent?["ok"]);
         string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
@@ -57,7 +57,7 @@ public sealed class CompatibilityPreviewTests
         using var worker = new PlanWorker();
         using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         int calls = 0;
         CallToolResult Execute() { calls++; return Host.V4Result("CreateDevice", new JsonObject(), completed: true); }
@@ -75,7 +75,7 @@ public sealed class CompatibilityPreviewTests
         using var worker = new PlanWorker();
         using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         int calls = 0;
         CallToolResult Execute() { calls++; return Host.V4Result("CreateDevice", new JsonObject(), completed: true); }
@@ -108,7 +108,7 @@ public sealed class CompatibilityPreviewTests
         Assert.Equal("denied", GenerationStepApproval.Match(canonical)!.Reason);
     }
 
-    private sealed class PlanWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class PlanWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal JsonObject Identity = new() { ["identity"] = new JsonObject { ["processId"] = 123, ["projectPath"] = "C:/Projects/original.ap21" } };
         public bool Faulted => false;
@@ -118,7 +118,7 @@ public sealed class CompatibilityPreviewTests
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
         public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
-        public Task<enginehost::TiaMcp.FoundationHost
+        public Task<toolpipeline::TiaMcp.FoundationHost
             .EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new NotSupportedException();
         public void Dispose() { }
     }

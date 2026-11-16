@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -117,7 +117,7 @@ public sealed class ExternalSourceWriterTests
         string path = Path.Combine(Path.GetTempPath(), "vmfix6a-source-" + Guid.NewGuid().ToString("N") + ".scl");
         try
         {
-            var writer = typeof(enginehost::TiaMcp.FoundationHost.EngineHostPipeline).Assembly
+            var writer = typeof(toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline).Assembly
                 .GetType("TiaMcpServer.ModelContextProtocol.PlcOfflineTools", true)!;
             writer.GetMethod("WritePlcSclSourceFile")!.Invoke(Activator.CreateInstance(writer), new object[] { source, path });
             using var input = File.OpenRead(path);

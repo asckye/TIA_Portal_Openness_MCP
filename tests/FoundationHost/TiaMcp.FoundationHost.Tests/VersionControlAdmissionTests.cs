@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using System.Reflection;
 using System.Text.Json;
@@ -9,8 +9,8 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Microsoft.Extensions.DependencyInjection;
 using TiaMcp.FoundationHost;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Services = enginehost::TiaMcpServer.Siemens.Services;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Services = toolpipeline::TiaMcpServer.Siemens.Services;
 using Xunit;
 
 public sealed class VersionControlAdmissionTests
@@ -371,7 +371,7 @@ public sealed class VersionControlAdmissionTests
         internal readonly string Root = Path.Combine(TiaOpenness.Shared.DataLocations.Current.OutputRoot,
             "sec1-fixtures", Guid.NewGuid().ToString("N"));
         private readonly IReadOnlyList<McpServerTool> tools;
-        private readonly enginehost::TiaMcp.FoundationHost.EngineHostPipeline pipeline;
+        private readonly toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline pipeline;
         private readonly string previousRelease;
         private readonly string? previousProfile;
         internal FileToolFixture(string release, bool previewExport = false,
@@ -379,11 +379,11 @@ public sealed class VersionControlAdmissionTests
                 Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null, IFoundationWorker? worker = null,
             Func<Host.IToolCatalogView, Host.IToolCatalogView>? catalogForTest = null, McpServerTool? replacementTool = null)
         {
-            previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+            previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
             previousProfile = catalogForTest == null ? null : Host.McpServer.ResolvedProfile();
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
-            using var registration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
-                new enginehost::TiaMcp.FoundationHost.EngineSessionContext(Worker));
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            using var registration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+                new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(Worker));
             Directory.CreateDirectory(Root);
             IFoundationWorker target = worker ?? (previewExport ? new ExportPreviewWorker() : Worker);
             var registry = LegacyHostToolRegistry.Create(target, release, false, hostPorts: false).ToList();
@@ -398,7 +398,7 @@ public sealed class VersionControlAdmissionTests
             }
             if (replacementTool != null)
                 registry[registry.FindIndex(tool => tool.ProtocolTool.Name == replacementTool.ProtocolTool.Name)] = replacementTool;
-            var engineWorker = target as enginehost::TiaMcp.FoundationHost.IEngineWorker ?? Worker;
+            var engineWorker = target as toolpipeline::TiaMcp.FoundationHost.IEngineWorker ?? Worker;
             pipeline = catalogForTest == null ? new(release, engineWorker, registry)
                 : new("", Path.Combine(Root, "worker.exe"), release, engineWorker, "full", registry, null, catalogForTest);
             tools = catalogForTest == null ? pipeline.AllTools : pipeline.Tools.ToArray();
@@ -410,7 +410,7 @@ public sealed class VersionControlAdmissionTests
         public void Dispose()
         {
             pipeline.Dispose(); Worker.Dispose();
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
             if (previousProfile != null) Host.McpServer.SetProfileOverride(previousProfile);
             foreach (string path in Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories))
                 File.SetAttributes(path, FileAttributes.Normal);

@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 extern alias foundationhost;
 using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
@@ -10,8 +10,8 @@ using TiaMcp.FoundationHost;
 using TiaMcp.Generation.Planning.Tests;
 using TiaMcp.Logic.Generation;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using GenerationSession = enginehost::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using GenerationSession = toolpipeline::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
 using Session = foundationhost::TiaMcp.FoundationHost.HostSession;
 using SessionTests = OperatorSessionTestsPlc;
 
@@ -136,7 +136,7 @@ public sealed class SessionStateTests
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { Bundled = false, SharedSession = true };
         await worker.Call("Attach", new JsonObject { ["processId"] = Environment.ProcessId }, CancellationToken.None);
         var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
         using var scope = pipeline.EnterSession();
         var raw = worker.SharedStatus!;
         Assert.NotNull(raw["binding"]?["processId"]);
@@ -165,7 +165,7 @@ public sealed class SessionStateTests
             var tool = Host.WrapTools(new McpServerTool[] { new HostOnlyTool(_ => {
                 calls++;
                 return ValueTask.FromResult(session.Plan(planner.Package(), GenerationDocuments.Canonical(planner.Machine)));
-            }, "PlanProjectGeneration", enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog!.All["PlanProjectGeneration"].Tool
+            }, "PlanProjectGeneration", toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog!.All["PlanProjectGeneration"].Tool
                 .InputSchema) }).Single();
             var plan = await tool.InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
                 { Params = new() { Name = "PlanProjectGeneration", Arguments = new Dictionary<string, JsonElement> {

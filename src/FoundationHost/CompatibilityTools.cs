@@ -1,7 +1,7 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using VersionPolicyTool = enginehost::TiaMcpServer.ModelContextProtocol.VersionPolicyTool;
-using AuditCallTool = enginehost::TiaMcpServer.ModelContextProtocol.AuditCallTool;
+extern alias toolpipeline;
+using VersionPolicyTool = toolpipeline::TiaMcpServer.ModelContextProtocol.VersionPolicyTool;
+using AuditCallTool = toolpipeline::TiaMcpServer.ModelContextProtocol.AuditCallTool;
 #else
 using VersionPolicyTool = TiaMcpServer.ModelContextProtocol.VersionPolicyTool;
 using AuditCallTool = TiaMcpServer.ModelContextProtocol.AuditCallTool;

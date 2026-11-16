@@ -1,6 +1,6 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
+extern alias toolpipeline;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
 #endif
 namespace TiaMcp.FoundationHost;
 

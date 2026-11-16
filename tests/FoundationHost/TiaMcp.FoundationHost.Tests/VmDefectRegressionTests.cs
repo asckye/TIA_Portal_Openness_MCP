@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters;
@@ -7,7 +7,7 @@ using TiaMcp.FoundationHost;
 using TiaMcp.PlcWorker;
 using TiaMcp.WorkerChannel;
 using TiaMcp.Logic.V4.Inputs;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 public sealed class VmDefectRegressionTests

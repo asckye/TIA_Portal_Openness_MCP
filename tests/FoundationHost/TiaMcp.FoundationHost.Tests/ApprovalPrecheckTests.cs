@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -21,7 +21,7 @@ public sealed class ApprovalPrecheckTests
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
             if (operation == "ListTags" && FoundationWorkerRequest.ToolName == "CreatePlcTag"
-                && enginehost::TiaMcp.FoundationHost.UnsettledCalls.For(this).Snapshot()
+                && toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(this).Snapshot()
                     .Any(call => call.RequestId == FoundationWorkerRequest.CorrelationId))
             {
                 SettlementReads++;

@@ -1,10 +1,10 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using Xunit;
 
 // Ported from ResponseGoldenTests.CaptureBatch: legacy verdicts never cross the
@@ -29,7 +29,7 @@ public sealed class B1BatchGoldenTests
         } };
         if (name != "missing-verdict") data["Meta"]!["success"] = succeeded;
         Assert.Null(Invoke("ResultSucceeded", data));
-        var target = new enginehost::TiaMcpServer.ModelContextProtocol.ResponseMessage { Message = name, Meta = data["Meta"]!.DeepClone().AsObject() };
+        var target = new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage { Message = name, Meta = data["Meta"]!.DeepClone().AsObject() };
         var rejection = Assert.Throws<TargetInvocationException>(() => Invoke("ToolResult", target));
         Assert.True(rejection.InnerException is JsonException or InvalidDataException);
         var factory = typeof(Host).GetMethods(flags).Single(m => m.Name == "V4Result" && m.GetParameters().Length == 8);

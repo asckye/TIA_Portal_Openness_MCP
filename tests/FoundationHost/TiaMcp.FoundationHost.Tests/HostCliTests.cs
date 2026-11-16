@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 using HostCliOptions = foundationhost::TiaMcp.FoundationHost.HostCliOptions;
 using HostCliCommands = foundationhost::TiaMcp.FoundationHost.HostCliCommands;
 using HostDoctorProbe = foundationhost::TiaMcp.FoundationHost.HostDoctorProbe;
-using EnvironmentDoctor = enginehost::TiaMcpServer.Runtime.EnvironmentDoctor;
+using EnvironmentDoctor = toolpipeline::TiaMcpServer.Runtime.EnvironmentDoctor;
 using Installer = foundationhost::TiaMcpServer.Cli.McpConfigInstaller;
 using TiaMcp.Versioning;
 using Xunit;

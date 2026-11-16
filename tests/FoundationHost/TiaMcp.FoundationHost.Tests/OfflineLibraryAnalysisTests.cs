@@ -1,7 +1,7 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class OfflineLibraryAnalysisTests : IDisposable
 {

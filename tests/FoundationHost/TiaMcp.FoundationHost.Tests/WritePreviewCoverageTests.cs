@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,7 +7,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using Xunit;
 using Metadata = TiaMcpServer.ModelContextProtocol.ToolMetadata;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelper output)
@@ -18,7 +18,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void Stale_write_plan_names_the_reconnect_cause(string release)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         int calls = 0;
         CallToolResult Execute() { calls++; return Host.V4Result("EnsureSubnet", new JsonObject(), completed: true); }
@@ -38,7 +38,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void Unbound_preview_says_it_names_no_target(string release)
     {
         using var worker = new PlanWorker { Identity = new JsonObject() };
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         CallToolResult Execute() => throw new InvalidOperationException("Unbound preview must not execute.");
         var args = new { subnetName = "PN", anchorDeviceItemPath = "PLC/CPU" };
@@ -58,7 +58,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public async Task Bound_preview_keeps_its_scope_and_hash(string release)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         var args = new { subnetName = "PN", anchorDeviceItemPath = "PLC/CPU" };
         CallToolResult Execute() => throw new InvalidOperationException("Preview must not execute.");
@@ -81,7 +81,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void Read_action_preview_has_no_target_flag(string release)
     {
         using var worker = new PlanWorker { Identity = new JsonObject() };
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         int calls = 0;
         var preview = Host.RunWritePreview("InvokeObject", true, new { methodName = "GetAttributeInfos" },
@@ -105,10 +105,10 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void Read_only_invoke_keeps_the_requested_dryRun(string release, string tool, bool dryRun)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
             calls++;
             Assert.True((bool?)arguments["dryRun"]);
             Assert.False((bool?)arguments["request"]?["AllowWrite"]);
@@ -117,7 +117,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             return new JsonObject { ["Observation"] = new JsonObject { ["Message"] = "read",
                 ["Meta"] = new JsonObject { ["success"] = true, ["invocationAttempted"] = true } } };
         }, () => throw new InvalidOperationException("A read must not request a write identity."));
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.ReflectionTools(service);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.ReflectionTools(service);
         var args = new[] { new TiaMcp.Logic.V4.Inputs.NativeValue(JsonSerializer.SerializeToElement("Name")) };
         var result = tool == "InvokeObject"
             ? tools.InvokeObjectV4("Project", "", "GetAttribute", args, dryRun: dryRun, allowWrite: false)
@@ -137,7 +137,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public async Task Async_read_only_invoke_keeps_the_requested_dryRun(string release, string tool, bool dryRun)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         int calls = 0;
         var result = await Host.RunWritePreviewAsync(tool, dryRun, new { methodName = "GetAttribute" }, () => {
@@ -159,9 +159,9 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public async Task EnsureSubnet_preview_refuses_an_unknown_type_without_a_plan(string release)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(null!);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(null!);
         var rejected = tools.EnsureSubnet("PLC/CPU", "PROFIBUS", "PN");
         var asyncRejected = await Host.RunWritePreviewAsync("EnsureSubnet", true,
             new { anchorDeviceItemPath = "PLC/CPU", subnetType = "PROFIBUS", subnetName = "PN" },
@@ -190,9 +190,9 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void EnsureSubnet_preview_accepts_the_existing_native_type_values(string subnetType)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
-        var result = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(null!).EnsureSubnet("PLC/CPU", subnetType, "PN");
+        var result = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(null!).EnsureSubnet("PLC/CPU", subnetType, "PN");
         Assert.True((bool?)result.StructuredContent!["ok"]);
         Assert.False((bool?)result.StructuredContent["data"]!["targetVerified"]);
         Assert.Matches("^[0-9a-f]{64}$", (string)result.StructuredContent["data"]!["planHash"]!);
@@ -211,7 +211,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public async Task InputContentsAreBoundAcrossPreviewAndApply(string release)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "preview-files-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -251,7 +251,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void DirectoryPlansBindNestedContentsNamesAndMembershipInSortedOrder()
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "preview-directory-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(root, "nested"));
@@ -291,7 +291,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void SecretPlanHashesAreStableKeyedAndRejectChangedSecrets(string field, string value)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         var arguments = new JsonObject { [field] = field == "nested" ? JsonNode.Parse(value) : JsonValue.Create(value) };
         int calls = 0;
@@ -320,7 +320,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void FileListsAndDirectoryFileNamesUseTheSameInputSelectionAsValidation()
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "preview-selection-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -370,7 +370,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void StructuredSecretsRetainCanonicalArgumentOrdering()
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         string Hash(JsonObject args) => (string)Host.RunWritePreview("DownloadPlc", true, args,
             () => throw new InvalidOperationException("Preview must not execute.")).StructuredContent!["data"]!["planHash"]!;
@@ -383,10 +383,10 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void InvokeServiceReadDispatchesWithoutApprovalInputs()
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
             calls++;
             Assert.True((bool?)arguments["dryRun"]);
             Assert.False((bool?)arguments["request"]?["AllowWrite"]);
@@ -394,7 +394,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             Assert.False(arguments.ContainsKey("confirm"));
             return new JsonObject { ["Observation"] = new JsonObject { ["Message"] = "read", ["Meta"] = new JsonObject { ["success"] = true } } };
         }, () => throw new InvalidOperationException("A read must not request a write identity."));
-        var result = new enginehost::TiaMcpServer.ModelContextProtocol.ReflectionTools(service)
+        var result = new toolpipeline::TiaMcpServer.ModelContextProtocol.ReflectionTools(service)
             .InvokeServiceV4("Project", "", "PlcChecksumProvider", "GetAttributeInfos");
         Assert.True((bool?)result.StructuredContent!["ok"]);
         Assert.Equal(1, calls);
@@ -404,17 +404,17 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void Drive_read_keeps_the_default_dryRun(string release)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.StartdriveService((_, arguments) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.StartdriveService((_, arguments) => {
             calls++;
             Assert.True((bool?)arguments["dryRun"]);
             Assert.False((bool?)arguments["request"]?["IsWrite"]);
             Assert.False(arguments.ContainsKey("confirm"));
             return new JsonObject { ["Message"] = "read", ["Meta"] = new JsonObject { ["success"] = true } };
         }, () => throw new InvalidOperationException("A read must not request the bound write identity."));
-        var result = new enginehost::TiaMcpServer.ModelContextProtocol.StartdriveTools(service)
+        var result = new toolpipeline::TiaMcpServer.ModelContextProtocol.StartdriveTools(service)
             .ManageOnlineDriveFunctions(new[] { "Drive" }, new[] { "Axis" });
         Assert.True((bool?)result.StructuredContent!["ok"]);
         Assert.True((bool?)result.StructuredContent["data"]!["dryRun"]);
@@ -428,10 +428,10 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void ReadExamplesDispatchReadsWithDefaultPreviewFlagAndNoApprovalInputs()
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         int reflectionCalls = 0, driveCalls = 0;
-        var reflection = new enginehost::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
+        var reflection = new toolpipeline::TiaMcpServer.Siemens.Services.ReflectionPortService((_, arguments) => {
             reflectionCalls++;
             Assert.True((bool?)arguments["dryRun"]);
             Assert.False((bool?)arguments["request"]?["AllowWrite"]);
@@ -439,15 +439,15 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             Assert.Equal("GetAttributeInfos", (string?)arguments["request"]?["MethodName"]);
             return new JsonObject { ["Observation"] = new JsonObject { ["Message"] = "read", ["Meta"] = new JsonObject { ["success"] = true } } };
         }, () => throw new InvalidOperationException("A read must not request the bound write identity."));
-        var drives = new enginehost::TiaMcpServer.Siemens.Services.StartdriveService((_, arguments) => {
+        var drives = new toolpipeline::TiaMcpServer.Siemens.Services.StartdriveService((_, arguments) => {
             driveCalls++;
             Assert.True((bool?)arguments["dryRun"]);
             Assert.False((bool?)arguments["request"]?["IsWrite"]);
             Assert.False(arguments.ContainsKey("confirm"));
             return new JsonObject { ["Message"] = "read", ["Meta"] = new JsonObject { ["success"] = true } };
         }, () => throw new InvalidOperationException("A read must not request the bound write identity."));
-        var reflected = new enginehost::TiaMcpServer.ModelContextProtocol.ReflectionTools(reflection).InvokeObjectV4("Project", "", "GetAttributeInfos");
-        var online = new enginehost::TiaMcpServer.ModelContextProtocol.StartdriveTools(drives).ManageOnlineDriveFunctions(new[] { "Drive" }, new[] { "Axis" });
+        var reflected = new toolpipeline::TiaMcpServer.ModelContextProtocol.ReflectionTools(reflection).InvokeObjectV4("Project", "", "GetAttributeInfos");
+        var online = new toolpipeline::TiaMcpServer.ModelContextProtocol.StartdriveTools(drives).ManageOnlineDriveFunctions(new[] { "Drive" }, new[] { "Axis" });
         Assert.True((bool?)reflected.StructuredContent!["ok"]);
         Assert.True((bool?)online.StructuredContent!["ok"]);
         Assert.Equal(1, reflectionCalls);
@@ -460,7 +460,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         using var worker = new PlanWorker();
         using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         int calls = 0;
         CallToolResult Execute() { calls++; return Host.V4Result("EnsureSubnet", new JsonObject(), completed: true); }
@@ -490,7 +490,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         using var worker = new PlanWorker(); using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         int calls = 0;
         Task<CallToolResult> Execute() { calls++; return Task.FromResult(Host.V4Result("DownloadPlc", new JsonObject(), completed: true)); }
@@ -507,9 +507,9 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         using var worker = new PlanWorker(); using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(null!);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(null!);
         var preview = tools.SetDeviceItemAttributeV4("PLC/CPU", "Name", "CPU_2");
         string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
         var stale = tools.SetDeviceItemAttributeV4("PLC/CPU", "Name", "CPU_3", false, hash, "C:/Projects/original.ap21");
@@ -528,7 +528,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         using var worker = new PlanWorker(); using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         int calls = 0;
         CallToolResult Execute() { calls++; return Host.V4Result("EnsureSubnet", new JsonObject(), completed: true); }
@@ -549,7 +549,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         using var worker = new PlanWorker(); using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         int calls = 0;
         CallToolResult Execute() { calls++; return Host.V4Result("EnsureSubnet", new JsonObject(), completed: true); }
@@ -572,7 +572,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         using var worker = new PlanWorker(); using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         int calls = 0;
         var result = Host.RunWritePreview(tool, false, new { action = "read" }, () => {
@@ -586,12 +586,12 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public void In_memory_export_handle_operations_execute_directly_without_a_preview()
     {
         using var worker = new PlanWorker();
-        using var session = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker));
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.ExportTools();
-        string id = enginehost::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "A", "retained", 4).id;
+        using var session = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker));
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.ExportTools();
+        string id = toolpipeline::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "A", "retained", 4).id;
         Assert.True((bool?)tools.DeleteExport(id).StructuredContent!["ok"]);
-        Assert.Null(enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(id));
-        enginehost::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "B", "retained", 4);
+        Assert.Null(toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(id));
+        toolpipeline::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "B", "retained", 4);
         Assert.Equal(1, (int?)tools.ClearExports(0).StructuredContent!["data"]!["deleted"]);
     }
 
@@ -608,34 +608,34 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         using var worker = new PlanWorker();
         var catalog = new HmiTagPathContractTests.DeleteCatalog(release);
-        var current = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog };
-        var other = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog };
-        string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        var current = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog };
+        var other = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog };
+        string previous = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         string currentId = "", otherId = "";
         try
         {
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
             string Park(string target)
             {
                 var response = Host.V4Result("GetSessionState", new JsonObject { ["value"] = target });
-                var parked = enginehost::TiaMcpServer.ModelContextProtocol.ResponseGuardTool.Shrink(
+                var parked = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseGuardTool.Shrink(
                     response, "GetSessionState", target, force: true);
                 return (string)parked.StructuredContent!["data"]!["export"]!["id"]!;
             }
-            using (enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(other)) otherId = Park("other");
-            using (enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(current))
+            using (toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(other)) otherId = Park("other");
+            using (toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(current))
             {
                 currentId = Park("current");
-                var tools = new enginehost::TiaMcpServer.ModelContextProtocol.ExportTools();
+                var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.ExportTools();
                 Assert.Equal(1, (int?)tools.ClearExports(0).StructuredContent!["data"]!["deleted"]);
                 Assert.Equal(0, (int?)tools.ClearExports(0).StructuredContent!["data"]!["deleted"]);
-                Assert.Null(enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(currentId));
+                Assert.Null(toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(currentId));
                 Assert.True(tools.GetExport(otherId).IsError);
             }
-            using (enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(other))
+            using (toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(other))
             {
-                Assert.NotNull(enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(otherId));
-                Assert.False(new enginehost::TiaMcpServer.ModelContextProtocol.ExportTools().GetExport(otherId).IsError ?? false);
+                Assert.NotNull(toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(otherId));
+                Assert.False(new toolpipeline::TiaMcpServer.ModelContextProtocol.ExportTools().GetExport(otherId).IsError ?? false);
             }
         }
         finally
@@ -643,7 +643,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             current.Exports.Dispose(); other.Exports.Dispose();
             TiaMcpServer.ModelContextProtocol.ExportStore.Delete(currentId);
             TiaMcpServer.ModelContextProtocol.ExportStore.Delete(otherId);
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
         }
     }
 
@@ -684,7 +684,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         using var worker = new PlanWorker(); using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         int calls = 0;
         var arguments = new { devicePath = "PLC/CPU", attributeName = "Name", value = "CPU_2", password = "private-value" };
@@ -713,7 +713,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var shared = LegacyHostToolRegistry.Create(worker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         var tool = pipeline.AllTools.Single(t => t.ProtocolTool.Name == name);
         var result = await tool.InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
             Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) }
@@ -777,7 +777,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     private static async Task AssertMaintainedWritePreview(string release, string name)
     {
         using var worker = new PlanWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         var method = typeof(Host).Assembly.GetTypes().SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             .Single(candidate => candidate.GetCustomAttributesData().Any(attribute => attribute.AttributeType.Name == "McpServerToolAttribute"
@@ -785,7 +785,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         // Unconfigured services make any accidental service access fail; published admission is covered separately.
         var constructor = method.DeclaringType!.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Single();
         var target = constructor.Invoke(new object?[constructor.GetParameters().Length]);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), release);
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), release);
         var path = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "reference", "tool-examples", "calls.json");
         var arguments = JsonNode.Parse(File.ReadAllText(path))!["profiles"]!["plc-foundation"]![name]!["arguments"]!.DeepClone().AsObject();
@@ -838,7 +838,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         public void Dispose() => Directory.Delete(root, true);
     }
 
-    internal sealed class PlanWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    internal sealed class PlanWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Calls;
         internal JsonObject Identity = new() { ["identity"] = new JsonObject { ["processId"] = 123, ["projectPath"] = "C:/Projects/original.ap21" } };
@@ -849,7 +849,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
         public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
-        public Task<enginehost::TiaMcp.FoundationHost
+        public Task<toolpipeline::TiaMcp.FoundationHost
             .EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         { Calls++; throw new NotSupportedException(); }
         public void Dispose() { }

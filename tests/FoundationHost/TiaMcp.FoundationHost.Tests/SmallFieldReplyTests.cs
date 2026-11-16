@@ -1,10 +1,10 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.PlcWorker;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Services = enginehost::TiaMcpServer.Siemens.Services;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Services = toolpipeline::TiaMcpServer.Siemens.Services;
 
 public sealed class SmallFieldReplyTests
 {

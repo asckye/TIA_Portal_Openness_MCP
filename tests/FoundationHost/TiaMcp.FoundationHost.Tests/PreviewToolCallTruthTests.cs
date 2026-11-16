@@ -1,11 +1,11 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4.Inputs;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using Context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using Context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
 
 namespace TiaMcp.FoundationHost.Tests;
 
@@ -187,7 +187,7 @@ public sealed class PreviewToolCallTruthTests
 internal sealed class PreviewHostFixture : IDisposable
 {
     internal readonly CachedWorker Worker = new();
-    internal readonly enginehost::TiaMcp.FoundationHost.EngineHostPipeline Pipeline;
+    internal readonly toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline Pipeline;
     private readonly string release = Context.ReleaseKey;
     private readonly string profile = Host.ResolvedProfile();
 
@@ -206,7 +206,7 @@ internal sealed class PreviewHostFixture : IDisposable
         Host.SetProfileOverride(profile);
     }
 
-    internal sealed class CachedWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker, IFoundationWorker
+    internal sealed class CachedWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker, IFoundationWorker
     {
         internal int Calls, NativeCalls;
         internal bool Bound = true;
@@ -228,7 +228,7 @@ internal sealed class PreviewHostFixture : IDisposable
             Calls++; NativeCalls++;
             throw new InvalidOperationException("Diagnostics must use cached session state.");
         }
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(
             string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         {
             Calls++; NativeCalls++;

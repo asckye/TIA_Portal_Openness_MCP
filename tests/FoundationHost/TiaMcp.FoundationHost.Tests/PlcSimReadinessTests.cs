@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -7,7 +7,7 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using Argument = TiaMcp.FoundationHost.Argument;
 
 public sealed class PlcSimReadinessTests

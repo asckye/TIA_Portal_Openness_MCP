@@ -615,7 +615,7 @@ def compare_migration(args):
             for field in ('profile', 'liteTools'):
                 if old.get(field) != new.get(field): problems.append(field + ': must stay unchanged')
             if release in ('20', '21'):
-                fixture = Path(__file__).resolve().parents[2] / ('tests/FoundationHost/TiaMcp.EngineHost.Tests/Fixtures/EngineSource' + release + '.json')
+                fixture = Path(__file__).resolve().parents[2] / ('tests/FoundationHost/TiaMcp.ToolPipeline.Tests/Fixtures/EngineSource' + release + '.json')
                 source = json.loads(fixture.read_text('utf-8'))
                 original = {t['name']: t for t in source['tools']}
                 original_families = {r['family']: set(r['entries']) for r in source['behaviorCapabilities']}
@@ -755,7 +755,7 @@ def verified_contracts(directory, root, parameters=None):
         for r in catalog['behaviorPolicies'] if r['releaseKey'] == release] for release in RELEASES}
     contracts = parameters if parameters is not None else current_parameters(root)
     source_engine = {name for (profile, name) in contracts if profile == 'full-engine'}
-    policy = (root / 'src/EngineHost/SharedToolCatalog.cs').read_text('utf-8')
+    policy = (root / 'src/ToolPipeline/SharedToolCatalog.cs').read_text('utf-8')
     removed = set(re.findall(r'"(\w+)"', policy.split('Removed =', 1)[1].split('};', 1)[0]))
     source_engine = (source_engine | foundation_registered_names(root, contracts)) - removed
     catalog_engine = rosters['20'][0] | rosters['21'][0]

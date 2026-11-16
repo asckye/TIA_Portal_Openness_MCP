@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 extern alias foundationhost;
 using TiaMcp.Engine.Tests.Shared;
 using System.Diagnostics;
@@ -13,7 +13,7 @@ using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
 using TiaMcp.PlcWorker;
 using TiaMcp.WorkerChannel;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Foundation = foundationhost::TiaMcp.FoundationHost;
 using Xunit;
 
@@ -38,7 +38,7 @@ public sealed class FixR1RegressionTests
     {
         using var previewWorker = new WritePreviewCoverageTests.PlanWorker();
         previewWorker.Identity["identity"]!["projectPath"] = "C:/fixture.ap21";
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", previewWorker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", previewWorker, Array.Empty<McpServerTool>());
         using var previewSession = pipeline.EnterSession();
         string root = Path
             .Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build", "fix-r1-seed-" + Guid.NewGuid().ToString("N"));

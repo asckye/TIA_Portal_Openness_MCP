@@ -132,7 +132,7 @@ dotnet run --project build-tools/release -- scorecard -Base v4.0.0-beta.2 -Outpu
 | `prompt-registration` | 195 | 0 |
 | `adapter-contracts` | 1,850 | 0 |
 | `worker-channel` | 275 | 0 |
-| `engine-host` | 159 | 0 |
+| `tool-pipeline` | 159 | 0 |
 | `shared-session` | 6 | 0 |
 | `shared-pipeline` | 6 | 0 |
 | `worker-robustness` | 570 | 0 |
@@ -163,7 +163,7 @@ dotnet run --project build-tools/release -- scorecard -Base v4.0.0-beta.2 -Outpu
 | 合并门：适配器输入与 worker 隔离 | `src/Adapters/build/Test-AdapterInputs.cs`、`Test-WorkerIsolation.cs`：核对八版输入选择与 worker 隔离，必须产生通过的结果记录 |
 | 合并门：原生诊断夹具 | `Test-NativeDiagnostics.py --fixture <诊断测试程序>`：行为检查至少 36 项、拒绝检查至少 5 项，`nativeTiaExecuted` 必须为 false |
 | 合并门：V20/V21 worker | `native-safety`、`usage`（`check_usage`）和 `campaign-inputs`；构建 ApiCompileChecks、Adapters.Diagnostics.Tests 与 Native.Tests。Worker、适配器、工具目录或相应检查变更以及宽范围计划时选择 |
-| 合并门：传输与行为 | `foundation-transport`、`foundation-transport-plc` 在套件之后运行，使用源码宿主、独立数据目录和 V20/V21 SDK worker 夹具。FoundationHost、EngineHost、WorkerChannel、PlcWorker、Shared、传输脚本或夹具变更，以及宽范围计划时选择；HTTP 使用本机回环合成服务 |
+| 合并门：传输与行为 | `foundation-transport`、`foundation-transport-plc` 在套件之后运行，使用源码宿主、独立数据目录和 V20/V21 SDK worker 夹具。FoundationHost、ToolPipeline、WorkerChannel、PlcWorker、Shared、传输脚本或夹具变更，以及宽范围计划时选择；HTTP 使用本机回环合成服务 |
 | 合并门：工作台配置与生态 | `configuration-page` 控制台检查保留至少 157 项；`Test-V21Ecosystem.py --self-test` 保留解码器、PDF 及伴随 PLC Tools 依赖 |
 | 契约与交付字节 | 八版 `Snapshot-ToolContracts.py` 实际捕获后比较工具定义；核对测试过的 `runtime/` 与 ZIP 中的文件一致，包括随包更新器 |
 | 暂存布局 | 交付规则、必需文件、包资源、测试策略程序集拒绝、Openness 用户组运行时及程序集依赖闭包 |

@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -6,8 +6,8 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Service = enginehost::TiaMcpServer.Siemens.Services.PlcOrganisationPortService;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Service = toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService;
 using Xunit;
 
 public sealed class B3HostPortsTests

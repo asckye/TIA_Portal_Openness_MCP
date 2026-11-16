@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
 using System.Text.Json;
@@ -7,8 +7,8 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Engine = enginehost::TiaMcp.FoundationHost;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Engine = toolpipeline::TiaMcp.FoundationHost;
 using Xunit;
 
 public sealed class PortedPortalAdmissionTests
@@ -328,7 +328,7 @@ public sealed class PortedPortalAdmissionTests
         using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker) { Catalog = new Catalog("21") });
         using var held = await worker.Acquire(CancellationToken.None);
         using var cancellation = new CancellationTokenSource();
-        var pending = enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire(name, cancellation.Token);
+        var pending = toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire(name, cancellation.Token);
         try
         {
             Assert.False(pending.IsCompleted);
@@ -342,10 +342,10 @@ public sealed class PortedPortalAdmissionTests
             {
                 held.Dispose();
                 using var acquired = await pending.WaitAsync(TestDeadlines.Hang);
-                enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(acquired);
+                toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(acquired);
                 Assert.Equal(1, worker.Activations);
             }
-            using var local = await enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("BuildDeviceAmlDocument", CancellationToken.None);
+            using var local = await toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("BuildDeviceAmlDocument", CancellationToken.None);
             Assert.Equal(2, worker.Acquires);
         }
         finally
@@ -375,7 +375,7 @@ public sealed class PortedPortalAdmissionTests
             return new Lane(this);
         }
         public void Dispose() => serial.Dispose();
-        private sealed class Lane(QueuedWorker owner) : IDisposable, enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane
+        private sealed class Lane(QueuedWorker owner) : IDisposable, toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane
         {
             private bool disposed;
             public void Activate() => owner.Activations++;

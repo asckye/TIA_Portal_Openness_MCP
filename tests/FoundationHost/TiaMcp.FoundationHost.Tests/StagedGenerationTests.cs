@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -10,10 +10,10 @@ using TiaMcp.Logic.Generation;
 using TiaMcp.Logic.V4.Inputs;
 using TiaOpenness.Shared;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using Descriptor = enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
-using Session = enginehost::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
-using Configuration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using Descriptor = toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
+using Session = toolpipeline::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
+using Configuration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
 
 public sealed class StagedGenerationTests
 {
@@ -33,7 +33,7 @@ public sealed class StagedGenerationTests
         Assert.NotEmpty(plan["steps"]!.AsArray());
         Assert.Equal(0, fixture.Worker.Writes);
         fixture.Planner.Machine.Target.Project.ProjectIdentity = Path.Combine(fixture.Root, "Other.ap" + release);
-        var error = Assert.Throws<enginehost::TiaMcpServer.ModelContextProtocol.GenerationCallRejectionException>(() => fixture.Plan());
+        var error = Assert.Throws<toolpipeline::TiaMcpServer.ModelContextProtocol.GenerationCallRejectionException>(() => fixture.Plan());
         Assert.Contains("Bind the intended existing project", error.Message, StringComparison.Ordinal);
         Assert.Equal(0, fixture.Worker.Writes);
     }
@@ -46,7 +46,7 @@ public sealed class StagedGenerationTests
         fixture.Unbound = state.StartsWith("unbound", StringComparison.Ordinal);
         if (!fixture.Connected || state == "unbound-existing")
         {
-            var error = Assert.Throws<enginehost::TiaMcpServer.ModelContextProtocol.GenerationCallRejectionException>(() => fixture.Plan());
+            var error = Assert.Throws<toolpipeline::TiaMcpServer.ModelContextProtocol.GenerationCallRejectionException>(() => fixture.Plan());
             Assert.Contains(fixture.Connected ? "No project is open" : "No TIA Portal is connected", error.Message, StringComparison.Ordinal);
         }
         else
@@ -94,7 +94,7 @@ public sealed class StagedGenerationTests
         internal readonly Dictionary<string, JsonObject> Tags = new();
         internal readonly HashSet<string> Tables = new(), Groups = new();
         internal bool CompileFails, RecordRace, RecordIo;
-        private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
+        private readonly toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly string previousRelease = Configuration.ReleaseKey;
         private IDisposable? hostScope;
         private Catalog catalog = null!;
@@ -122,7 +122,7 @@ public sealed class StagedGenerationTests
         {
             hostScope?.Dispose();
             Configuration.ReleaseKey = Release;
-            hostScope = Configuration.Enter(new enginehost::TiaMcp.FoundationHost.EngineSessionContext(Worker));
+            hostScope = Configuration.Enter(new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(Worker));
             var tools = new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource" }.Select(name =>
                 new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), Worker), Release,
                     () => new ApprovalSettings(true, 1), (pending, _, _) => {
@@ -132,7 +132,7 @@ public sealed class StagedGenerationTests
             var record = new FoundationV4Tool(new GenerationTool("PublishGenerationRecord", Release, executionSession: Session), Release,
                 () => new ApprovalSettings(true, 1), (pending, _, _) => { StepWaits++; return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Record requested a second approval.")); });
             var registered = tools.Append(record).ToArray(); catalog = new Catalog(registered);
-            Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, registered), () => false, new HashSet<string>());
+            Host.ConfigureToolBridge(catalog, new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, registered), () => false, new HashSet<string>());
         }
         internal void Reconnect()
         {
@@ -249,10 +249,10 @@ public sealed class StagedGenerationTests
         {
             if (name is "CreateDevice" or "CreatePlcBlockGroup" or "MovePlcBlockToGroup")
             {
-                var owner = name == "CreateDevice" ? typeof(enginehost::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools)
-                    : typeof(enginehost::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools);
+                var owner = name == "CreateDevice" ? typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools)
+                    : typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools);
                 string member = name == "MovePlcBlockToGroup" ? "MoveBlockToGroupV4" : name + "V4";
-                enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, owner.GetMethod(member)!,
+                toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, owner.GetMethod(member)!,
                     _ => throw new InvalidOperationException("Metadata only."), out var current, Release);
                 return current;
             }
@@ -260,7 +260,7 @@ public sealed class StagedGenerationTests
             var path = new DirectoryInfo(AppContext.BaseDirectory);
             while (path != null && !File.Exists(Path.Combine(path.FullName, "CLAUDE.md"))) path = path.Parent;
             var schemas = BaselineSchemas(Path.Combine(path!.FullName, "manifest/contracts/v4/baseline", Release + ".json"));
-            return !schemas.TryGetValue(name, out var schema) ? null : new Descriptor(name, "", new Tool { Name = name, InputSchema = schema }, null, "", Array.Empty<enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation");
+            return !schemas.TryGetValue(name, out var schema) ? null : new Descriptor(name, "", new Tool { Name = name, InputSchema = schema }, null, "", Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation");
         }
         // Parse each 10-21 MB baseline once instead of on every step (same reason as GenerationExecutionTests.BaselineSchemas);
         // duplicate tool names still fail.
@@ -278,7 +278,7 @@ public sealed class StagedGenerationTests
             }
         }
     }
-    private sealed class Catalog : enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView
+    private sealed class Catalog : toolpipeline::TiaMcpServer.ModelContextProtocol.IToolCatalogView
     {
         public IReadOnlyDictionary<string, Descriptor> All { get; }
         public IReadOnlyDictionary<string, Descriptor> IncludingUnavailable => All;
@@ -286,9 +286,9 @@ public sealed class StagedGenerationTests
         public JsonArray BehaviorCapabilities => new();
         public Descriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var tool) ? tool : null;
         internal Catalog(IEnumerable<FoundationV4Tool> tools) => All = tools.ToDictionary(t => t.ProtocolTool.Name, t => new Descriptor(t.ProtocolTool.Name,
-            t.ProtocolTool.Description!, t.ProtocolTool, new("L1", "PLC", "WRITE", false, true), "source fixture", Array.Empty<enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation"));
+            t.ProtocolTool.Description!, t.ProtocolTool, new("L1", "PLC", "WRITE", false, true), "source fixture", Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation"));
     }
-    private sealed class Worker(Fixture fixture) : IFoundationSessionWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class Worker(Fixture fixture) : IFoundationSessionWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal readonly Dictionary<string, string> Sources = new();
         internal readonly List<PlcExternalSourceObject> Objects = new();
@@ -311,7 +311,7 @@ public sealed class StagedGenerationTests
         public JsonObject Snapshot() => new() { ["readiness"] = new JsonObject { ["ready"] = true } };
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => Task.FromResult(Snapshot());
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new NotSupportedException();
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new NotSupportedException();
         public void Dispose() { }
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
         {

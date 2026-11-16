@@ -155,7 +155,7 @@
 | 宿主入口、选项、传输 | `src/FoundationHost/Program.cs`、`HostOptions.cs`、`EngineReleaseHost.cs`（`SharedReleaseHost`） |
 | 会话对象、人与 AI 归属、会话视图 | `src/FoundationHost/HostSession.cs`、`SharedSessionState.cs`、`src/Shared/ActorScope.cs` |
 | 工具注册与准入、结果映射 | `src/FoundationHost/FoundationPassiveDiagnostics.cs`（`LegacyHostToolRegistry`）、`FoundationV4Tool.cs`、`FoundationV4Result.cs`、`PortedToolContract.cs`、`src/Logic/V4/HostBehavior.cs`、`src/Shared/SessionBehavior.cs` |
-| 桥接、批次、导出句柄 | `src/EngineHost/EngineHostPipeline.cs`、`src/Shared/Host/McpServer.{ToolBridge,Batch,Exports}.cs`（`Engine` 前缀是历史名称） |
+| 桥接、批次、导出句柄 | `src/ToolPipeline/EngineHostPipeline.cs`、`src/Shared/Host/McpServer.{ToolBridge,Batch,Exports}.cs`（`Engine` 前缀是历史名称） |
 | Openness 通道 | `src/Shared/Host/ToolDispatchLanes.cs` |
 | worker 客户端与 job object | `src/FoundationHost/WorkerClient.cs`、`WorkerJob.cs` |
 | worker 协议 | `src/WorkerChannel/` |
@@ -177,7 +177,7 @@
 
 | 项目 | 现状 | 计划 |
 |---|---|---|
-| 引擎残留 | 引擎程序已删除，宿主以退出码 64 拒绝 `--engine-*`；Q2/Q3 已删除 `src/Engine` 残余源码、宿主引擎客户端和死条件分支；worker 协议的 `ChannelProfile.Engine` 和历史目录名 `src/EngineHost` 仍在 | 后续精简（[开发计划](../plan/plan.md)） |
+| 引擎残留 | 引擎程序已删除，宿主以退出码 64 拒绝 `--engine-*`；Q2/Q3 已删除 `src/Engine` 残余源码、宿主引擎客户端和死条件分支；worker 协议的 `ChannelProfile.Engine` 仍在；共享工具流程目录已改为 `src/ToolPipeline` | 后续精简（[开发计划](../plan/plan.md)） |
 | Studio 桥接与 Studio 适配器 | 工作台项目与版本控制页使用 MCP 操作端；保留的桥接仍使用 WorkerChannel 的 Studio profile，旧桥接与适配器代码待清理 | P8-21f |
 | 八版对外呈现 | 八版默认精简目录、共用服务器说明，公开档案名统一为 `plc-foundation`；工具集合按各版能力提供 | P8-04n1 已合并（N1-PORT）；行为路由统一仍见 UNIFY-1 |
 | 一项功能一个实现 | V21 上部分重复的旧工具失败 | DES-2 |
@@ -213,7 +213,7 @@ runtime/v<发布键>/        （八个发布键相同）
 - 宿主用 EXE 旁的 `release-key.txt` 选择并核对发布键（`--release-key <发布键>` 须与之一致），从 `BundleLayout` 定位 `worker/TiaMcp.PlcWorker.<发布键>.exe`；显式 `--worker-exe` 选择开发 worker。宿主自己生成工具目录，交付包不含引擎程序与 `tool-catalog.json`。
 - 宿主支持 stdio 与带鉴权的 HTTP、`--catalog`、`--public-api`、`--release-key` 和 `--profile`（默认 `lite`，也可用 `TIA_MCP_PROFILE`；八版均有 lite 档，展示名称统一为 `plc-foundation`）。`--offline` 显式禁用原生 worker 调用；正常启动不附着 TIA，worker 在第一次调用原生工具时启动。
 - `CallTool` 是 MCP 工具，不是命令行动词。八版宿主的命令行动词为 `doctor`、`audit verify`、`schema`、`version`、`config`、`install-plc-tools` 和 `help`。
-- 审批请求、审计和调用日志的 host 标记沿用原值：`FoundationV4Tool` 执行的工具为 `foundation`，`src/EngineHost` 的宿主流程（桥接、批次及其审批路径）为 `engine`，八版相同（`src/EngineHost/ReleaseCatalogData.cs`）。
+- 审批请求、审计和调用日志的 host 标记沿用原值：`FoundationV4Tool` 执行的工具为 `foundation`，`src/ToolPipeline` 的宿主流程（桥接、批次及其审批路径）为 `engine`，八版相同（`src/ToolPipeline/ReleaseCatalogData.cs`）。
 
 工具数量由以下目录块生成。
 
@@ -276,7 +276,7 @@ runtime/v<发布键>/        （八个发布键相同）
 | 更新器 | `runtime/tools/TiaMcp.Updater.exe` 及其 `.config` |
 | 命令行模板 | `templates`，默认 HMI 模板 `templates/hmi`；`__BUNDLE__` 引用的具体文件也必须在选定根中 |
 
-- V21 生态目录查询读取 `TiaMcp.EngineHost` 程序集中嵌入的 `TiaMcp.V21Ecosystem.json`，磁盘副本缺失不影响查询；可编辑源是 [`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json)，修改后须重建宿主。
+- V21 生态目录查询读取 `TiaMcp.ToolPipeline` 程序集中嵌入的 `TiaMcp.V21Ecosystem.json`，磁盘副本缺失不影响查询；可编辑源是 [`reference/v21-ecosystem.json`](../../reference/v21-ecosystem.json)，修改后须重建宿主。
 - 伴随 Python 的解释器由 `TIA_MCP_PLC_TOOLS_PYTHON` 指定，缺省为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`；缺失或不可写报 `IO_FAILED` 与具体路径，不在安装目录创建环境。
 - 私人报告与夹具命令行要求 `--workspace-root <已存在的绝对目录>`（独立于 `--bundle-root`）；HMI 模板要求 `--hmi-template-directory`，组件目录分析要求具体的 `--global-library-probe-json-path`。缺输入返回 `INVALID_ARGUMENT`，不猜当前目录、私人模板目录或最新报告。
 

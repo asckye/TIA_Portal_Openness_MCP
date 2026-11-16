@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Reflection;
@@ -21,7 +21,7 @@ public sealed class CanonicalParameterTests
         File.WriteAllText(file, "<Document />");
         try
         {
-            var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(new RefusingExportTool(release), release);
+            var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(new RefusingExportTool(release), release);
             foreach (string field in new[] { "exportFile", "exportPath" })
             {
                 var result = await tool.InvokeAsync(Request(tool, new JsonObject { [field] = file }));
@@ -45,21 +45,21 @@ public sealed class CanonicalParameterTests
     [InlineData("ExportDeviceAml", "exportDirectory", "exportPath")]
     public void Adapter_pointers_translate_only_the_alias_the_caller_used(string name, string canonical, string legacy)
     {
-        var original = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Reject("21", name,
+        var original = toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Reject("21", name,
             new Error("Fixture refusal.", new InvalidArgumentDetails("/" + legacy, Array.Empty<string>(),
                 new[] { "/" + legacy, "/other" }, "fixture target")));
         var input = new JsonObject { [canonical] = "C:/Exports/Target" };
-        var result = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, input, original);
+        var result = toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, input, original);
         Assert.Equal("/" + canonical, (string?)result.StructuredContent!["error"]!["details"]!["parameter"]);
         Assert.Equal(new[] { "/" + canonical, "/other" }, result.StructuredContent["error"]!["details"]!["parameters"]!
             .AsArray().Select(value => (string?)value));
         Assert.Equal("fixture target", (string?)result.StructuredContent["error"]!["details"]!["expected"]);
         Assert.Equal("/" + legacy, (string?)original.StructuredContent!["error"]!["details"]!["parameter"]);
         Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
-        var omitted = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, new JsonObject(), original);
+        var omitted = toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, new JsonObject(), original);
         Assert.Same(original, omitted);
         input[legacy] = "C:/Exports/Legacy";
-        var both = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, input, original);
+        var both = toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Decorate(name, input, original);
         Assert.Equal("/" + legacy, (string?)both.StructuredContent!["error"]!["details"]!["parameter"]);
         Assert.Single(both.StructuredContent["meta"]!["warnings"]!.AsArray());
     }
@@ -72,7 +72,7 @@ public sealed class CanonicalParameterTests
         {
             var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
                 TiaMcp.Adapters.PlcFoundationPolicy.XmlOutput(request.Params!.Arguments!["exportPath"].GetString()!));
-            return ValueTask.FromResult(enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.Reject(release, ProtocolTool.Name,
+            return ValueTask.FromResult(toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Reject(release, ProtocolTool.Name,
                 new Error("Choose a new XML file; existing files are never overwritten.",
                     new InvalidArgumentDetails(refusal.ParamName, Array.Empty<string>()))));
         }
@@ -110,7 +110,7 @@ public sealed class CanonicalParameterTests
     public async Task Canonical_and_legacy_calls_reach_the_same_parameter_and_only_legacy_warns(string release)
     {
         var inner = new CapturingTool("ExportPlcTagTable", "exportPath", true, release);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
         const string path = "C:/Exports/Tags.xml";
         var canonical = await tool.InvokeAsync(Request(tool, new JsonObject { ["exportFile"] = path }));
         Assert.Equal(path, (string?)inner.Last!["exportPath"]);
@@ -132,7 +132,7 @@ public sealed class CanonicalParameterTests
     public async Task Invalid_canonical_forms_are_refused_without_dispatch(string json)
     {
         var inner = new CapturingTool("ExportPlcTagTable", "exportPath", true);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, "21");
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, "21");
         var result = await tool.InvokeAsync(Request(tool, JsonNode.Parse(json)!.AsObject()));
         Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent!["error"]!["code"]);
         Assert.Equal("not-started", (string?)result.StructuredContent!["meta"]!["execution"]);
@@ -143,7 +143,7 @@ public sealed class CanonicalParameterTests
     public async Task Omitted_optional_output_stays_omitted_and_blank_legacy_keeps_its_meaning()
     {
         var inner = new CapturingTool("WritePlcSclSourceFile", "outputPath", false);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, "21");
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, "21");
         await tool.InvokeAsync(Request(tool, new JsonObject()));
         Assert.False(inner.Last!.ContainsKey("outputPath"));
         var legacy = await tool.InvokeAsync(Request(tool, new JsonObject { ["outputPath"] = "" }));
@@ -156,7 +156,7 @@ public sealed class CanonicalParameterTests
     {
         string directory = Path.Combine(Path.GetTempPath(), "des4-default-" + Guid.NewGuid().ToString("N"));
         var inner = new CapturingTool("ExportPlcTagTable", "exportPath", true);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, "21", () => directory);
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, "21", () => directory);
         await tool.InvokeAsync(Request(tool, new JsonObject()));
         string path = (string)inner.Last!["exportPath"]!;
         await tool.InvokeAsync(Request(tool, new JsonObject()));
@@ -173,7 +173,7 @@ public sealed class CanonicalParameterTests
     public async Task Device_array_preserves_group_order_and_legacy_string_warns(string release)
     {
         var inner = new CapturingTool("GetDeviceInfo", "devicePath", true);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
         var canonical = await tool.InvokeAsync(Request(tool, new JsonObject { ["devicePath"] = new JsonArray("Group", "Station") }));
         Assert.Equal("device-groups/Group/devices/Station", (string?)inner.Last!["devicePath"]);
         Assert.Empty(canonical.StructuredContent!["meta"]!["warnings"]!.AsArray());
@@ -202,9 +202,9 @@ public sealed class CanonicalParameterTests
         using var selected = new ReleaseScope(release);
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var shared = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
         using var session = pipeline.EnterSession();
-        var context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Current;
+        var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Current;
         var args = new ToolArguments(JsonSerializer.SerializeToElement(new { exportFile = "C:/Exports/content.txt", exportId = "fixture" }));
         Assert.Null(context.Invoker!.Bind("SaveExportContent", args, out var call));
         Assert.NotNull(call);
@@ -220,12 +220,12 @@ public sealed class CanonicalParameterTests
         using var selected = new ReleaseScope("21");
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var shared = LegacyHostToolRegistry.Create(worker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
-        var context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Current;
+        var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Current;
         context.ExportDirectory = Path.Combine(Path.GetTempPath(), "des4-approval-" + Guid.NewGuid().ToString("N"));
         var input = new ToolArguments(JsonSerializer.SerializeToElement(new { exportId = "fixture" }));
-        var effective = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.ApplyDefaults("SaveExportContent", input);
+        var effective = toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.ApplyDefaults("SaveExportContent", input);
         var approval = TiaOpenness.Shared.PendingApproval.Create("fixture", "21", "SaveExportContent", effective.Json.GetRawText(), null, 30);
         Assert.Equal(Path.Combine(context.ExportDirectory, "SaveExportContent.txt"), Assert.Single(approval.Operations).Target);
         Assert.False(Directory.Exists(context.ExportDirectory));
@@ -254,17 +254,17 @@ public sealed class CanonicalParameterTests
 
     private sealed class ReleaseScope : IDisposable
     {
-        private readonly string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-        private readonly string profile = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ResolvedProfile();
+        private readonly string previous = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        private readonly string profile = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ResolvedProfile();
         internal ReleaseScope(string release)
         {
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
-            enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SetProfileOverride("full");
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.SetProfileOverride("full");
         }
         public void Dispose()
         {
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
-            enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SetProfileOverride(profile);
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
+            toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.SetProfileOverride(profile);
         }
     }
 

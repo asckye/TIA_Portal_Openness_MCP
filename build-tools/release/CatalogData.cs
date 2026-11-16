@@ -119,7 +119,7 @@ internal sealed class CatalogData
             Resolve(historical[key].Where(n => !withheld.Contains(Renames[n])).Concat(Reviewed[key]), registered, Renames);
             Rosters[key] = registered;
         }
-        var policy = CatalogJson.Source(root, "src/EngineHost/SharedToolCatalog.cs");
+        var policy = CatalogJson.Source(root, "src/ToolPipeline/SharedToolCatalog.cs");
         Removed = CatalogJson.Set(CatalogJson.Matches(policy.Split("Removed =", 2)[1].Split("};", 2)[0], "\"(\\w+)\""));
         Bridge = CatalogJson.Set(CatalogJson.Matches(policy.Split("Bridge =", 2)[1].Split("};", 2)[0], "\"(\\w+)\""));
         var extras = Definitions.Where(p => p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport").Select(p => p.Key);

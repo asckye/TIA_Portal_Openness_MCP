@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,7 +7,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class P8RecheckTests
 {

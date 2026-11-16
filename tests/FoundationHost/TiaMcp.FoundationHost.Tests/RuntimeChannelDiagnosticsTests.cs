@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Security;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Engine.Tests.Shared;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 public sealed class RuntimeChannelDiagnosticsTests
@@ -24,8 +24,8 @@ public sealed class RuntimeChannelDiagnosticsTests
     [Theory, MemberData(nameof(ReadFailures))]
     public void Runtime_read_failure_carries_the_redacted_native_line(string release, string tool, bool topLevel)
     {
-        string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+        string previous = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
         try
         {
             using var call = Host.InvocationJournal.Observe("runtime-diagnostic", tool, "host", release, false,
@@ -53,7 +53,7 @@ public sealed class RuntimeChannelDiagnosticsTests
             foreach (string secret in new[] { "fixture-secret", "credential-echo", "private", "project.ap21", "Private.Stack" })
                 Assert.DoesNotContain(secret, wire);
         }
-        finally { enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous; }
+        finally { toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous; }
     }
 
     [Fact]
@@ -181,9 +181,9 @@ public sealed class RuntimeChannelDiagnosticsTests
 
     private sealed class ReleaseScope : IDisposable
     {
-        private readonly string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-        internal ReleaseScope(string release) => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
-        public void Dispose() => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
+        private readonly string previous = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        internal ReleaseScope(string release) => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+        public void Dispose() => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
     }
 
     private sealed class HttpsFixture : IAsyncDisposable

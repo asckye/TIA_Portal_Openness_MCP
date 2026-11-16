@@ -11,8 +11,8 @@ public sealed class TestDeadlineContracts
     [
         "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/StepFailureStatusTests.cs",
         "tests/Repository/TiaMcp.SourceContracts.Tests/NotFoundSources.cs",
-        "tests/FoundationHost/TiaMcp.EngineHost.Tests/ConcurrencyTests.cs",
-        "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs",
+        "tests/FoundationHost/TiaMcp.ToolPipeline.Tests/ConcurrencyTests.cs",
+        "tests/FoundationHost/TiaMcp.ToolPipeline.Tests/PipelineTests.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ConcurrencyTests.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpTakeoverTests.cs",
@@ -64,7 +64,7 @@ public sealed class TestDeadlineContracts
     // Exact statements retain the approved sampling window, expired budgets and fixture behaviour.
     private static readonly HashSet<string> Remains = new(StringComparer.Ordinal)
     {
-        "tests/FoundationHost/TiaMcp.EngineHost.Tests/PipelineTests.cs|while (duration.Elapsed < TimeSpan.FromSeconds(5))",
+        "tests/FoundationHost/TiaMcp.ToolPipeline.Tests/PipelineTests.cs|while (duration.Elapsed < TimeSpan.FromSeconds(5))",
         "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProtocolTests.cs|await " +
             "Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(TimeSpan.FromMilliseconds(40)));",
         "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs|entered.Set(); release.Wait(TimeSpan.FromSeconds(2));",

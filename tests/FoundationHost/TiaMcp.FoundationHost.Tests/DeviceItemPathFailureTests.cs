@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -6,11 +6,11 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using Xunit;
-using HostContract = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract;
-using AddressService = enginehost::TiaMcpServer.ModelContextProtocol.HardwareAddressingService;
-using AddressesTools = enginehost::TiaMcpServer.ModelContextProtocol.AddressesTools;
-using NetworkContract = enginehost::TiaMcpServer.ModelContextProtocol.HardwareToolContract;
-using ResponseJsonReport = enginehost::TiaMcpServer.ModelContextProtocol.ResponseJsonReport;
+using HostContract = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract;
+using AddressService = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareAddressingService;
+using AddressesTools = toolpipeline::TiaMcpServer.ModelContextProtocol.AddressesTools;
+using NetworkContract = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareToolContract;
+using ResponseJsonReport = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseJsonReport;
 using ResponseMeta = TiaMcpServer.ModelContextProtocol.ResponseMeta;
 
 public sealed class DeviceItemPathFailureTests
@@ -23,10 +23,10 @@ public sealed class DeviceItemPathFailureTests
     public void Missing_item_is_not_found_with_the_tried_path(string release)
     {
         using var selected = HostContract.UseRelease(release);
-        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, _) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, _) => {
             Assert.Equal("hardware-devices.HardwareDescribeItemAt", operation); return null;
         }, () => true, () => "C:/Fixture/Fixture.ap21");
-        var tool = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
+        var tool = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
         AssertFailure(tool.GetDeviceItemInfoV4("PLC_A/Missing"), "NOT_FOUND", "PLC_A/Missing");
     }
 
@@ -82,7 +82,7 @@ public sealed class DeviceItemPathFailureTests
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var shared = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
         using var session = pipeline.EnterSession();
         var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == "GeneratePlcLoadableFile");
         var target = tool.ProtocolTool.InputSchema.GetProperty("properties").GetProperty("targetOption");

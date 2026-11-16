@@ -14,7 +14,7 @@ public sealed class EngineSources
 
     public EngineSources(string? root = null, string? nativeDirectory = null)
     {
-        directory = Path.Combine(root ?? Repository.FindRoot(), "src", "EngineHost");
+        directory = Path.Combine(root ?? Repository.FindRoot(), "src", "ToolPipeline");
         foreach (var sourceDirectory in new[] { directory })
         foreach (var path in Directory.Exists(sourceDirectory) ? Directory.EnumerateFiles(sourceDirectory, "*.cs", SearchOption.AllDirectories).Order(Comparer<string>.Create(ComparePaths)) : Enumerable.Empty<string>())
         {

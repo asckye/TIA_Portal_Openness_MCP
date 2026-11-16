@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,8 +7,8 @@ using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using Xunit;
-using Engine = enginehost::TiaMcp.FoundationHost;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Engine = toolpipeline::TiaMcp.FoundationHost;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class ArgumentPointerTests
 {

@@ -1,15 +1,15 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.PlcWorker;
 using Xunit;
-using EngineeringServicesPortService = enginehost::TiaMcpServer.Siemens.Services.EngineeringServicesPortService;
-using ProjectLifecyclePortService = enginehost::TiaMcpServer.Siemens.Services.ProjectLifecyclePortService;
-using ProjectLifecycleProjectTools = enginehost::TiaMcpServer.ModelContextProtocol.ProjectLifecycleProjectTools;
-using HardwareSecurityPortService = enginehost::TiaMcpServer.Siemens.Services.HardwareSecurityPortService;
-using ResponseImportBatch = enginehost::TiaMcpServer.ModelContextProtocol.ResponseImportBatch;
-using ResponseMessage = enginehost::TiaMcpServer.ModelContextProtocol.ResponseMessage;
+using EngineeringServicesPortService = toolpipeline::TiaMcpServer.Siemens.Services.EngineeringServicesPortService;
+using ProjectLifecyclePortService = toolpipeline::TiaMcpServer.Siemens.Services.ProjectLifecyclePortService;
+using ProjectLifecycleProjectTools = toolpipeline::TiaMcpServer.ModelContextProtocol.ProjectLifecycleProjectTools;
+using HardwareSecurityPortService = toolpipeline::TiaMcpServer.Siemens.Services.HardwareSecurityPortService;
+using ResponseImportBatch = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseImportBatch;
+using ResponseMessage = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage;
 
 namespace TiaMcp.FoundationHost.Tests;
 

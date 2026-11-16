@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -9,8 +9,8 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcpServer.ModelContextProtocol;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Services = enginehost::TiaMcpServer.Siemens.Services;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Services = toolpipeline::TiaMcpServer.Siemens.Services;
 
 namespace TiaMcp.FoundationHost.Tests;
 
@@ -115,14 +115,14 @@ public sealed class P870RegressionTests
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         // The 20/21 version policy reads the process-wide engine release; earlier tests in the same shard may leave another one.
-        string previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        string previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         string[] names;
         try
         {
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
             names = LegacyHostToolRegistry.Create(worker, release, false).Select(tool => tool.ProtocolTool.Name).ToArray();
         }
-        finally { enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
+        finally { toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
         foreach (var name in new[] { "GetOpcUaAccessControl", "ManageOpcUaAccessControl" })
         {
             Assert.Equal(available, PortedFamilies.Available(release, name));

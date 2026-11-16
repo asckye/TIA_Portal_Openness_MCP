@@ -1,5 +1,5 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
+extern alias toolpipeline;
 #endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -10,9 +10,9 @@ using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4;
 #if TIA_FOUNDATION_TEST_HOST
-using enginehost::TiaMcpServer.ModelContextProtocol;
-using enginehost::TiaMcpServer.Siemens.Services;
-using OptionalPorts = enginehost::TiaMcp.Shared;
+using toolpipeline::TiaMcpServer.ModelContextProtocol;
+using toolpipeline::TiaMcpServer.Siemens.Services;
+using OptionalPorts = toolpipeline::TiaMcp.Shared;
 #else
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens.Services;

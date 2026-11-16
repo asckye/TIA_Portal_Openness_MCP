@@ -16,7 +16,7 @@ using TiaMcp.Logic.V4;
 using TiaMcpServer.ModelContextProtocol;
 
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost")]
-[assembly: InternalsVisibleTo("TiaMcp.EngineHost.Tests")]
+[assembly: InternalsVisibleTo("TiaMcp.ToolPipeline.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.PlcExchange.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost.Tests")]
 

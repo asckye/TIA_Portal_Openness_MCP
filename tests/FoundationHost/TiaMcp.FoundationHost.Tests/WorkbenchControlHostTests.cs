@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using TiaMcp.Engine.Tests.Shared;
 using System.IO.Pipes;
 using System.Reflection;
@@ -12,7 +12,7 @@ using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
 using Xunit;
 using Taxonomy = TiaMcpServer.ModelContextProtocol.ToolTaxonomy;
-using Descriptor = enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
+using Descriptor = toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
 
 public sealed class WindowsWorkbenchTheoryAttribute : TheoryAttribute
 {
@@ -22,7 +22,7 @@ public sealed class WindowsWorkbenchTheoryAttribute : TheoryAttribute
 
 public sealed class WorkbenchControlHostTests
 {
-    private sealed class Worker : IFoundationSessionWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class Worker : IFoundationSessionWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal string Project = "C:/Projects/Fixture.ap21";
         internal bool EngineIdentity;
@@ -37,7 +37,7 @@ public sealed class WorkbenchControlHostTests
         public Task<JsonObject> Status(CancellationToken token) => throw new Exception("Worker status is forbidden.");
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new Exception("Worker restart is forbidden.");
         public Task<IDisposable> Acquire(CancellationToken token) => throw new Exception("Worker lane is forbidden.");
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new Exception("Engine dispatch is forbidden.");
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new Exception("Engine dispatch is forbidden.");
         public bool Bundled => true;
         public bool SharedSession => false;
         public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => null;
@@ -298,7 +298,7 @@ public sealed class WorkbenchControlHostTests
         Assert.Equal("INVALID_ARGUMENT", (string?)invalid.StructuredContent?["error"]?["code"]);
         Assert.True(server.Verified);
     }
-    private sealed class EmptyCatalog : enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView
+    private sealed class EmptyCatalog : toolpipeline::TiaMcpServer.ModelContextProtocol.IToolCatalogView
     {
         public IReadOnlyDictionary<string, Descriptor> All { get; } = new Dictionary<string, Descriptor>();
         public IReadOnlyDictionary<string, Descriptor> IncludingUnavailable => All;
@@ -322,10 +322,10 @@ public sealed class WorkbenchControlHostTests
     public void All_releases_and_both_host_catalogs_publish_the_eight_classified_tools(string release)
     {
         // The V20/V21 host sets the engine release key before it builds its catalog; old-release hosts set their own.
-        string previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-        if (release is "20" or "21") enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+        string previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        if (release is "20" or "21") toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
         try { PublishesEightClassifiedTools(release); }
-        finally { enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
+        finally { toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
     }
     private static void PublishesEightClassifiedTools(string release)
     {
@@ -338,7 +338,7 @@ public sealed class WorkbenchControlHostTests
             Assert.Equal("Workbench", Taxonomy.For(name).Domain); Assert.Equal("session", Taxonomy.CategoryOf("Workbench"));
         }
         var essentials = WorkbenchControlTools.Names.ToHashSet(StringComparer.Ordinal);
-        var catalog = new enginehost::TiaMcp.FoundationHost.SharedToolCatalog(new EmptyCatalog(), tools, essentials);
+        var catalog = new toolpipeline::TiaMcp.FoundationHost.SharedToolCatalog(new EmptyCatalog(), tools, essentials);
         foreach (string name in WorkbenchControlTools.Names)
         {
             Assert.Contains(catalog.Lite, tool => tool.Name == name);
@@ -401,21 +401,21 @@ public sealed class WorkbenchControlHostTests
     {
         using var worker = new Worker();
         var tools = WorkbenchControlTools.Create(worker, "21").ToArray();
-        var catalog = new enginehost::TiaMcp.FoundationHost.SharedToolCatalog(new EmptyCatalog(), tools, WorkbenchControlTools.Names.ToHashSet());
-        using var engine = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker));
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
-        enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(catalog, new NeverInvoker(), () => false, new HashSet<string>());
-        var error = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ValidateBatch(new[] {
+        var catalog = new toolpipeline::TiaMcp.FoundationHost.SharedToolCatalog(new EmptyCatalog(), tools, WorkbenchControlTools.Names.ToHashSet());
+        using var engine = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker));
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+        toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(catalog, new NeverInvoker(), () => false, new HashSet<string>());
+        var error = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ValidateBatch(new[] {
             new TiaMcp.Logic.V4.Inputs.ToolCall(WorkbenchControlTools.Names[index], new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(Arguments(index)))) }, preview, out _);
         Assert.Equal(ErrorCode.UnsupportedCapability, error!.Code);
         Assert.Equal("workbench-ui-batch", ((UnsupportedCapabilityDetails)error.Details).Capability);
     }
-    private sealed class NeverInvoker : enginehost::TiaMcpServer.ModelContextProtocol.IToolInvoker
+    private sealed class NeverInvoker : toolpipeline::TiaMcpServer.ModelContextProtocol.IToolInvoker
     {
-        public Error? Bind(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, out enginehost::TiaMcpServer.ModelContextProtocol.IBoundToolCall? invocation)
+        public Error? Bind(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, out toolpipeline::TiaMcpServer.ModelContextProtocol.IBoundToolCall? invocation)
             => throw new Exception("Batch binding is forbidden.");
-        public enginehost::TiaMcpServer.ModelContextProtocol.ToolInvocationResult Invoke(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, bool preview) => throw new Exception("Batch dispatch is forbidden.");
-        public Task<enginehost::TiaMcpServer.ModelContextProtocol.ToolInvocationResult> InvokeAsync(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, bool preview) => throw new Exception("Batch dispatch is forbidden.");
+        public toolpipeline::TiaMcpServer.ModelContextProtocol.ToolInvocationResult Invoke(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, bool preview) => throw new Exception("Batch dispatch is forbidden.");
+        public Task<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolInvocationResult> InvokeAsync(string name, TiaMcp.Logic.V4.Inputs.ToolArguments arguments, bool preview) => throw new Exception("Batch dispatch is forbidden.");
         public Error? ValidateArguments(Descriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false) => throw new Exception("Batch validation is forbidden.");
         public McpServerTool CreateTool(Descriptor descriptor) => throw new Exception("Batch factory is forbidden.");
     }
@@ -424,16 +424,16 @@ public sealed class WorkbenchControlHostTests
     public void Stored_UI_batch_is_refused_before_approval_revalidation_or_native_state(int index)
     {
         using var worker = new Worker();
-        var context = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker);
-        using var engine = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+        var context = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker);
+        using var engine = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
         var tools = WorkbenchControlTools.Create(worker, "21").ToArray();
-        var catalog = new enginehost::TiaMcp.FoundationHost.SharedToolCatalog(new EmptyCatalog(), tools, WorkbenchControlTools.Names.ToHashSet());
-        enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(catalog, new NeverInvoker(), () => false, new HashSet<string>());
+        var catalog = new toolpipeline::TiaMcp.FoundationHost.SharedToolCatalog(new EmptyCatalog(), tools, WorkbenchControlTools.Names.ToHashSet());
+        toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ConfigureToolBridge(catalog, new NeverInvoker(), () => false, new HashSet<string>());
         var plan = new TiaMcpServer.ModelContextProtocol.BatchPlanStore.Plan { Operations = new JsonArray(new JsonObject {
             ["name"] = WorkbenchControlTools.Names[index], ["arguments"] = Arguments(index) }) };
         string token = context.BatchPlans.Add(plan, DateTime.UtcNow);
-        var result = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ApplyToolBatch(token).StructuredContent!;
+        var result = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ApplyToolBatch(token).StructuredContent!;
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result["error"]?["code"]);
         Assert.Equal("workbench-ui-batch", (string?)result["error"]?["details"]?["capability"]);
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);

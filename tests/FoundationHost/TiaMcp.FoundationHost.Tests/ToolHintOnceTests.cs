@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -41,14 +41,14 @@ public sealed class ToolHintOnceTests
 internal sealed class DiscoveryFixture : IDisposable
 {
     private readonly HardwareAddressingAdmissionTests.UnboundWorker worker = new();
-    private readonly enginehost::TiaMcp.FoundationHost.EngineHostPipeline pipeline;
-    private readonly string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+    private readonly toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline pipeline;
+    private readonly string previous = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
     internal IReadOnlyList<McpServerTool> Tools => pipeline.Tools.ToArray();
     internal DiscoveryFixture(string release)
     {
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
         var shared = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
-        pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
+        pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
     }
     internal async Task<JsonNode> Call(string name, object args)
     {
@@ -69,6 +69,6 @@ internal sealed class DiscoveryFixture : IDisposable
     public void Dispose()
     {
         pipeline.Dispose(); worker.Dispose();
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
     }
 }

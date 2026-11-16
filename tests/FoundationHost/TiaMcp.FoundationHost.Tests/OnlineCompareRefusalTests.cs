@@ -1,6 +1,6 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class OnlineCompareRefusalTests
 {

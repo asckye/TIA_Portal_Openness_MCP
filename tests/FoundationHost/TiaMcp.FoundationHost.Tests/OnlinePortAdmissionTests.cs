@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using System.Reflection;
@@ -8,9 +8,9 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.WorkerChannel;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Engine = enginehost::TiaMcp.FoundationHost;
-using Service = enginehost::TiaMcpServer.Siemens.Services.OnlineDownloadService;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Engine = toolpipeline::TiaMcp.FoundationHost;
+using Service = toolpipeline::TiaMcpServer.Siemens.Services.OnlineDownloadService;
 
 public sealed class OnlinePortAdmissionTests
 {

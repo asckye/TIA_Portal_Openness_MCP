@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -21,10 +21,10 @@ public sealed class HardwareFamilyAdmissionTests
     [InlineData("21")]
     public void RefusedNetworkLeaseIsTypedAndUnchanged(string release)
     {
-        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => JsonValue.Create(
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => JsonValue.Create(
             "Result: NOT CONNECTED: exclusive access refused; nothing changed. Fixture refusal\nRollback evidence: " +
             "{\"operationSuccess\":false,\"failureCode\":\"PRECONDITION_FAILED\",\"mayHaveChanged\":false}"), () => true, () => "fixture");
-        var result = ApplyConnection(new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service), "PLC", "HMI", release: release).StructuredContent!;
+        var result = ApplyConnection(new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service), "PLC", "HMI", release: release).StructuredContent!;
         Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)result["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
@@ -36,10 +36,10 @@ public sealed class HardwareFamilyAdmissionTests
     [InlineData("21")]
     public void Unattached_connection_refuses_without_claiming_an_unknown_write(string release)
     {
-        using var selected = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
-        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService(
+        using var selected = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareNetworkPortService(
             (_, _) => throw new InvalidOperationException("No native dispatch is expected."), () => false, () => "");
-        var tool = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service);
+        var tool = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service);
         var result = ApplyConnection(tool, "Fixture/CPU", "Fixture/HMI", release: release);
         Assert.Equal("PROJECT_NOT_BOUND", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
@@ -78,21 +78,21 @@ public sealed class HardwareFamilyAdmissionTests
     [InlineData("21")]
     public void A_typed_creation_refusal_is_rejected_before_operation_with_its_candidates(string release)
     {
-        using var selected = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
+        using var selected = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
         using var worker = new CreationPreviewWorker();
         using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, release, false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
         using var session = pipeline.EnterSession();
         var candidates = DeviceCreationRules.CandidateText("6ES7 513-1AM03-0AB0", new[] { "OrderNumber:6ES7 513-1AM03-0AB0/V3.0" });
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, _) =>
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, _) =>
         {
             calls++;
             Assert.Equal("hardware-devices.HardwareCreateDevice", operation);
             throw DeviceCreationRules.TiaRefusal("OrderNumber:6ES7 513-1AM03-0AB0/V9.9", "PLC_2", "Invalid TypeIdentifier", candidates, "orderNumber/version", new InvalidOperationException("native"));
         }, () => true, () => "C:/Fixture/Fixture.ap21");
-        var tool = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
+        var tool = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
         var preview = tool.CreateDeviceV4("6ES7 513-1AM03-0AB0", "V9.9", "PLC_2").StructuredContent!;
         var result = tool.CreateDeviceV4("6ES7 513-1AM03-0AB0", "V9.9", "PLC_2", dryRun: false, confirm: true,
             expectedPlanHash: (string)preview["data"]!["planHash"]!,
@@ -104,7 +104,7 @@ public sealed class HardwareFamilyAdmissionTests
         Assert.Contains("OrderNumber:6ES7 513-1AM03-0AB0/V3.0", (string?)result["error"]?["message"], StringComparison.Ordinal);
     }
 
-    private sealed class CreationPreviewWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class CreationPreviewWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         public bool Faulted => false;
         public JsonNode? Binding { get; } = new JsonObject { ["identity"] = new JsonObject {
@@ -114,7 +114,7 @@ public sealed class HardwareFamilyAdmissionTests
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
         public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview,
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview,
             CancellationToken token) => throw new NotSupportedException();
         public void Dispose() { }
     }
@@ -222,9 +222,9 @@ public sealed class HardwareFamilyAdmissionTests
             "(both nodes read back on subnet 'nothing was changed')", "succeeded", null)]
         public void Connect_result_uses_the_workers_verified_outcome(string report, string outcome, string? code)
         {
-            var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => JsonValue.Create(report), () => true, () =>
+            var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => JsonValue.Create(report), () => true, () =>
                 "fixture");
-            var body = ApplyConnection(new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service), "PLC", "HMI").StructuredContent!;
+            var body = ApplyConnection(new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service), "PLC", "HMI").StructuredContent!;
             Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
             Assert.Equal(code, (string?)body["error"]?["code"]);
             Assert.Equal(outcome == "unknown", (string?)body["meta"]?["outcome"] == "unknown");
@@ -240,20 +240,20 @@ public sealed class HardwareFamilyAdmissionTests
         public void Connect_rejects_control_characters_before_worker_dispatch(string subnet)
         {
             int calls = 0;
-            var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => { calls++;
+            var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((_, _) => { calls++;
                 return JsonValue.Create("Result: ConnectToSubnet: OK"); }, () => true, () => "fixture");
-            var body = ApplyConnection(new enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service), "PLC", "HMI", subnet)
+            var body = ApplyConnection(new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools(service), "PLC", "HMI", subnet)
                 .StructuredContent!;
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
             Assert.Equal(0, calls);
         }
-    private static CallToolResult ApplyConnection(enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools tools,
+    private static CallToolResult ApplyConnection(toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools tools,
         string first, string second, string subnet = "PN_IE_1", string release = "21")
     {
         using var worker = new CreationPreviewWorker();
-        using var selected = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var selected = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         var preview = tools.ConnectDeviceNodesToProfinetSubnet(first, second, subnet).StructuredContent!;
         return tools.ConnectDeviceNodesToProfinetSubnet(first, second, subnet, dryRun: false,

@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 extern alias foundationhost;
 using HostSession = foundationhost::TiaMcp.FoundationHost.HostSession;
 using TiaMcp.Tests.Shared;
@@ -214,7 +214,7 @@ public sealed class FoundationRecoveryTests
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) {
             Bundled = false, SharedSession = release is "20" or "21" };
         var services = FoundationHostPorts.CreateServices(worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
         using var engineSession = pipeline.EnterSession();
         var tools = new[] { "ConnectPortal", "AttachOpenProject", "DisconnectPortal", "GetSessionState" }
             .Select(name => (ModelContextProtocol.Server.McpServerTool)new FoundationV4Tool(
@@ -302,7 +302,7 @@ public sealed class FoundationRecoveryTests
             using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) {
                 Bundled = false, SharedSession = release is "20" or "21" };
             var services = FoundationHostPorts.CreateServices(worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
-            using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
+            using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
             using var engineSession = pipeline.EnterSession();
             await worker.Call("ReadState", new(), CancellationToken.None);
             int previousPid = (int)worker.OperatorSnapshot()["pid"]!;

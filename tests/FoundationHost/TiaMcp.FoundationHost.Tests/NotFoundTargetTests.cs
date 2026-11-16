@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -6,8 +6,8 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
 using Xunit;
-using Engine = enginehost::TiaMcp.FoundationHost;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Engine = toolpipeline::TiaMcp.FoundationHost;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using PortalFailure = TiaMcpServer.Siemens.PortalException;
 using PortalCode = TiaMcpServer.Siemens.PortalErrorCode;
 

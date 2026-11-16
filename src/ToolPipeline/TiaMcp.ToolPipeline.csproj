@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../../Version.props" />
   <PropertyGroup>
+    <AssemblyName>TiaMcp.ToolPipeline</AssemblyName>
+    <RootNamespace>TiaMcp.EngineHost</RootNamespace>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <DefineConstants>$(DefineConstants);TIA_ENGINE_HOST</DefineConstants>
   </PropertyGroup>
-  <Import Project="EngineHostSources.props" />
+  <Import Project="ToolPipelineSources.props" />
   <ItemGroup>
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" />
     <ProjectReference Include="../OnlineChannels/TiaMcp.OnlineChannels.csproj" />

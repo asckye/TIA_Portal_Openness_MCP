@@ -1,8 +1,8 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using ModelContextProtocol.Protocol;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Services = enginehost::TiaMcpServer.Siemens.Services;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Services = toolpipeline::TiaMcpServer.Siemens.Services;
 
 public sealed class DeleteConfirmationTests
 {

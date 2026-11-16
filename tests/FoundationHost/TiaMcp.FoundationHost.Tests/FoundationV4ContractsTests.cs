@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -40,8 +40,8 @@ public sealed class FoundationV4ContractsTests
 
     private static McpServerTool DesignTool(string name, Func<string, JsonObject, JsonNode?> call)
     {
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService(call, () => "C:/Fixture/Project.ap21");
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedHmiService(call, () => "C:/Fixture/Project.ap21");
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
         return name switch {
             "ApplyUnifiedHmiTheme" => McpServerTool.Create(tools.ApplyUnifiedHmiThemeV4),
             "ApplyUnifiedHmiLayout" => McpServerTool.Create(tools.ApplyUnifiedHmiLayoutV4),
@@ -58,13 +58,13 @@ public sealed class FoundationV4ContractsTests
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, _) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, _) => {
             calls++;
             return new JsonObject { ["Value"] = new JsonObject { ["Meta"] = new JsonObject {
                 ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["status"] = "ReadOrWriteFailed",
                 ["nativeMessage"] = "Event script write did not complete: Property Name field is not supported for event script action" } } };
         }, () => "C:/Fixture/Project.ap" + release);
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
         var tool = McpServerTool.Create(tools.EnsureUnifiedHmiButtonActionV4);
         var arguments = new JsonObject {
             ["hmiSoftwarePath"] = "HMI", ["screenName"] = "Overview", ["buttonName"] = "Start",
@@ -204,7 +204,7 @@ public sealed class FoundationV4ContractsTests
         const string source = "first\n   at legitimate text";
         var response = new { Data = new { text = source, ScriptCode = text, GlobalDefinitionAreaScriptCode = text },
             Meta = new { operationSuccess = true, nativeStackTrace = "hidden stack", password = "hidden secret" } };
-        var body = Body(enginehost::TiaMcpServer.ModelContextProtocol.UnifiedHmiContract.Map("ReadUnifiedScriptModule", response, false, true));
+        var body = Body(toolpipeline::TiaMcpServer.ModelContextProtocol.UnifiedHmiContract.Map("ReadUnifiedScriptModule", response, false, true));
         Assert.Equal(source, (string?)body["data"]!["text"]);
         Assert.Equal(text, (string?)body["data"]!["scriptCode"]);
         Assert.Equal(text, (string?)body["data"]!["globalDefinitionAreaScriptCode"]);
@@ -240,18 +240,18 @@ public sealed class FoundationV4ContractsTests
         using var worker = new WritePreviewCoverageTests.PlanWorker();
         using var foundationWorker = new FakeWorker();
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         TiaMcp.Adapters.Contracts.UnifiedHmiRequest? dispatched = null;
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((operation, workerArguments) =>
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedHmiService((operation, workerArguments) =>
         {
             Assert.Equal("hmi-unified.ExecuteUnifiedHmi", operation);
             calls++;
             dispatched = workerArguments["request"]!.Deserialize<TiaMcp.Adapters.Contracts.UnifiedHmiRequest>();
             return new JsonObject { ["Value"] = new JsonObject { ["Meta"] = new JsonObject { ["operationSuccess"] = true } } };
         }, () => "C:/Fixture/Project.ap21");
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
         var tool = McpServerTool.Create(tools.SetUnifiedHmiButtonEventScriptCodeV4);
         var schema = tool.ProtocolTool.InputSchema;
         var properties = schema.GetProperty("properties");

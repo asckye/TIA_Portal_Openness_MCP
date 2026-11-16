@@ -1,9 +1,9 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using TiaMcp.Engine.Tests.Shared;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Metadata = TiaMcpServer.ModelContextProtocol.ToolMetadata;
 
 namespace TiaMcp.FoundationHost.Tests;

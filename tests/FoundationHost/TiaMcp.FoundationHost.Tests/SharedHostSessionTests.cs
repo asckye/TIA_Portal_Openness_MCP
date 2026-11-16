@@ -1,10 +1,10 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using Xunit;
 using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
 using Host = foundationhost::TiaMcp.FoundationHost.SharedReleaseHost;
-using Profile = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using Profile = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
 using SessionTests = OperatorSessionTestsPlc;
 
 [Collection(BundleSelectionCollection.Name)]
@@ -115,11 +115,11 @@ public sealed class SharedHostSessionTests
                 { SharedSession = Profile.Releases[release].SharedSession };
             JsonObject Ready() => new() { ["ready"] = true };
             var services = TiaMcp.FoundationHost.FoundationHostPorts.CreateServices(worker, release, Ready, root);
-            using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services,
+            using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services,
                 Array.Empty<ModelContextProtocol.Server.McpServerTool>());
             using var registration = pipeline.RegisterStagingSession("staging-" + release);
             using var context = pipeline.EnterSession();
-            worker.StagingProvider = () => enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner;
+            worker.StagingProvider = () => toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner;
             var owner = worker.StagingProvider();
             TiaMcp.FoundationHost.FoundationTool Tool(string name) => new(
                 TiaMcp.FoundationHost.FoundationTools.Definitions.Single(d => d.Name == name), worker);
@@ -133,8 +133,8 @@ public sealed class SharedHostSessionTests
             Assert.Equal(owner.SessionId, (string?)stage["data"]?["sessionId"]);
             var foundation = (await Tool("ListStagedImportFiles").InvokeV4Async(Request("ListStagedImportFiles", new JsonObject()),
                 release, "list", CancellationToken.None)).StructuredContent!;
-            using var owned = enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingTools.UseOwnedSession(owner);
-            var host = new enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingTools().ListStagedImportFiles().StructuredContent!;
+            using var owned = toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools.UseOwnedSession(owner);
+            var host = new toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools().ListStagedImportFiles().StructuredContent!;
             Assert.Equal(host["data"]!.ToJsonString(), foundation["data"]!.ToJsonString());
             Assert.Equal("current", (string?)foundation["data"]?["batches"]?[0]?["ownerState"]);
             Assert.Null(worker.OperatorSnapshot()["pid"]);
@@ -167,11 +167,11 @@ public sealed class SharedHostSessionTests
         var worker = fixture.Worker;
         JsonObject Ready() => new() { ["ready"] = true };
         var services = TiaMcp.FoundationHost.FoundationHostPorts.CreateServices(worker, release, Ready, AppContext.BaseDirectory);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services,
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services,
             Array.Empty<ModelContextProtocol.Server.McpServerTool>());
         using var context = pipeline.EnterSession();
         Assert.Null(worker.OperatorSnapshot()["pid"]);
-        var status = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ReadOpennessWorkerStatus();
+        var status = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ReadOpennessWorkerStatus();
         Assert.Equal("Ready", (string?)status.Meta?["worker"]?["state"]);
         Assert.NotNull(worker.OperatorSnapshot()["pid"]);
         Assert.Null(status.Meta?["worker"]?["sessionLocked"]);
@@ -200,10 +200,10 @@ public sealed class SharedHostSessionTests
         JsonObject Ready() => new() { ["ready"] = true };
         var shared = TiaMcp.FoundationHost.LegacyHostToolRegistry.Create(worker, release, true, readinessProvider: Ready, hostPorts: false);
         var services = TiaMcp.FoundationHost.FoundationHostPorts.CreateServices(worker, release, Ready, AppContext.BaseDirectory);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, shared);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services, shared);
         services.ResetExports = pipeline.ResetExports;
 
-        worker.StagingProvider = () => { using var context = pipeline.EnterSession(); return enginehost::TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner; };
+        worker.StagingProvider = () => { using var context = pipeline.EnterSession(); return toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.SharedStagingOwner; };
         using var context = pipeline.EnterSession();
         var definition = TiaMcp.FoundationHost.FoundationTools.Definitions.Single(d => d.Name == "GetSessionState");
         TiaMcp.FoundationHost.FoundationV4Tool Tool(string operation) => new(new TiaMcp.FoundationHost.FoundationTool(definition with { Operation = operation }, worker), release, null, sharedSession: true);
@@ -229,7 +229,7 @@ public sealed class SharedHostSessionTests
             var state = (await Tool("ReadState").InvokeAsync(Request())).StructuredContent!;
             Assert.True((bool?)state["ok"]);
             Assert.Single(state["data"]!["sessionState"]!["unsettled"]!.AsArray());
-            Assert.Single(enginehost::TiaMcpServer.ModelContextProtocol.McpServer.Worker.Unsettled.Snapshot());
+            Assert.Single(toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.Worker.Unsettled.Snapshot());
             var restarted = await services.Restart(true, CancellationToken.None);
             Assert.True((bool?)restarted["success"]);
             Assert.Null(restarted["requiresExplicitRebind"]);

@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -11,7 +11,7 @@ using TiaMcpServer.Siemens;
 using TiaOpenness.Gui.Services;
 using TiaOpenness.Shared;
 using Xunit;
-using EnvironmentDoctor = enginehost::TiaMcpServer.Runtime.EnvironmentDoctor;
+using EnvironmentDoctor = toolpipeline::TiaMcpServer.Runtime.EnvironmentDoctor;
 using HostCliCommands = foundationhost::TiaMcp.FoundationHost.HostCliCommands;
 using HostCliOptions = foundationhost::TiaMcp.FoundationHost.HostCliOptions;
 using HostDoctorGroupOutcome = foundationhost::TiaMcp.FoundationHost.HostDoctorGroupOutcome;
@@ -47,7 +47,7 @@ public sealed class HostDoctorFixTests : IDisposable
             var options = new foundationhost::TiaMcp.FoundationHost.HostOptions { ReleaseKey = release, WorkerExe = "missing-worker",
                 ApiDirectory = api, BundleRoot = Root(), TiaPortalLocation = installation, NativeEnabled = false, BundledWorker = false };
             using var session = await foundationhost::TiaMcp.FoundationHost.SharedReleaseHost.CreateHostSession(options, false);
-            var report = enginehost::TiaMcpServer.ModelContextProtocol.ClassicHmiTemporaryImportPreflightSuite
+            var report = toolpipeline::TiaMcpServer.ModelContextProtocol.ClassicHmiTemporaryImportPreflightSuite
                 .Run(Root(), Path.Combine(scratch, "reports"));
             Assert.Equal(major, Engineering.TiaMajorVersion);
             Assert.Equal(api, (string?)report["environment"]?["publicApiPath"]);

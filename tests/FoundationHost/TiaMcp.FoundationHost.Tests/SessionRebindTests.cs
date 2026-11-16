@@ -1,8 +1,8 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using TiaMcp.FoundationHost;
 using TiaMcp.WorkerChannel;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 namespace TiaMcp.FoundationHost.Tests;

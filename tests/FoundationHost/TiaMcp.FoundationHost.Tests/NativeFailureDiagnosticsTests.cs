@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -6,7 +6,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 public sealed class NativeFailureDiagnosticsTests
@@ -413,7 +413,7 @@ public sealed class NativeFailureDiagnosticsTests
         private readonly HardwareAddressingAdmissionTests.UnboundWorker contextWorker = new();
         private readonly Host.ImportStagingHostLifetime lifetime = new();
         private readonly IDisposable session;
-        private readonly string previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        private readonly string previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         internal string Log { get; }
         internal Fixture(string release, bool wrapped = true)
         {
@@ -426,11 +426,11 @@ public sealed class NativeFailureDiagnosticsTests
             TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(line => File.AppendAllText(Log, line + "\n"));
             previousApproval = TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
             new TiaOpenness.Shared.ApprovalSettings(false, 1).Save(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
             var catalog = new Catalog(release);
-            session = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
-                new enginehost::TiaMcp.FoundationHost.EngineSessionContext(contextWorker) {
-                    Catalog = catalog, Invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, contextWorker, lifetime) });
+            session = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+                new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(contextWorker) {
+                    Catalog = catalog, Invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, contextWorker, lifetime) });
             var tools = new List<McpServerTool>();
             foreach (var entry in new[] {
                 (Owner: typeof(Host.AddressesTools), Method: "GetDeviceAddressingV4", Name: "GetDeviceAddressing"),
@@ -465,7 +465,7 @@ public sealed class NativeFailureDiagnosticsTests
             previousApproval.Save(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
             session.Dispose();
             lifetime.Dispose();
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
             contextWorker.Dispose();
             Worker.Dispose();
             Directory.Delete(root, true);

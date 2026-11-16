@@ -1,5 +1,5 @@
 extern alias enginefixture;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -102,7 +102,7 @@ public sealed class BehaviorParityTests
             // Only a read for this invocation's recorded unknown write supplies settlement evidence.
             // Other reads remain visible to the existing parity counters.
             if (operation == "ListTags" && FoundationWorkerRequest.ToolName == "CreatePlcTag"
-                && enginehost::TiaMcp.FoundationHost.UnsettledCalls.For(this).Snapshot()
+                && toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(this).Snapshot()
                     .Any(call => call.RequestId == FoundationWorkerRequest.CorrelationId))
                 return Task.FromResult<JsonNode?>(new JsonArray(new JsonObject { ["Name"] = "Ready", ["Path"] = "T/Ready",
                     ["Kind"] = "tag", ["DataType"] = "Bool", ["Value"] = "%M0.1" }));
@@ -186,7 +186,7 @@ public sealed class BehaviorParityTests
         await worker.Call("ListTags", new(), CancellationToken.None);
         Assert.Equal(1, worker.Previews);
         Assert.Equal(0, worker.Writes);
-        enginehost::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Record("fixture", "CreatePlcTag", "digest", DateTimeOffset.UtcNow);
+        toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Record("fixture", "CreatePlcTag", "digest", DateTimeOffset.UtcNow);
         var observed = await worker.Call("ListTags", new(), CancellationToken.None);
         Assert.IsType<JsonArray>(observed);
         Assert.Equal("%M0.1", (string?)observed![0]?["Value"]);
@@ -269,9 +269,9 @@ public sealed class BehaviorParityTests
             if (scenario == "unknown")
             {
                 results.Add(await Call("ListPlcTags", new JsonObject { ["plc"] = "PLC_1", ["table"] = "T" }));
-                var unsettled = enginehost::TiaMcp.FoundationHost.UnsettledCalls.For(worker);
+                var unsettled = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker);
                 string requestId = Assert.Single(unsettled.Snapshot()).RequestId;
-                var read = enginehost::TiaMcp.FoundationHost.LateCalls.For(worker).Read(release, requestId, unsettled);
+                var read = toolpipeline::TiaMcp.FoundationHost.LateCalls.For(worker).Read(release, requestId, unsettled);
                 Assert.Equal("OUTCOME_UNKNOWN", (string?)read!.StructuredContent?["error"]?["code"]);
                 results.Add(await Call("CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
                 Assert.Equal("", (string?)results[1]?["code"]);

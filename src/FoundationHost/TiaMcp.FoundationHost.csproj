@@ -24,7 +24,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../EngineHost/TiaMcp.EngineHost.csproj" />
+    <ProjectReference Include="../ToolPipeline/TiaMcp.ToolPipeline.csproj" />
     <ProjectReference Include="../Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
   <ItemGroup>

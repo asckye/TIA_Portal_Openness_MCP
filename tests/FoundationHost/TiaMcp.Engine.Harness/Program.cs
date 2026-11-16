@@ -177,7 +177,7 @@ internal static partial class Program
             if (args.Length >= 2 && new[] { "host-build-no-tia", "packaged-start-no-tia", "http-start-no-tia" }.Contains(args[1]))
                 return FoundationHostChecks.Run(Server, args[1] == "packaged-start-no-tia");
             if (args.Length >= 2 && new[] { "concurrency-only", "staging-sessions-only" }.Contains(args[1]))
-                return FoundationHostChecks.Suites("engine-host");
+                return FoundationHostChecks.Suites("tool-pipeline");
 
             if(args.Length > 1 && args[1] == "test-match-plc-name")
                 return DeveloperChecks.MatchPlcName(Server);

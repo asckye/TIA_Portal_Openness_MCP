@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 extern alias foundationhost;
 using System.Diagnostics;
 using System.Reflection;
@@ -12,7 +12,7 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.WorkerChannel;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 [Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class NoLockRecoveryTests
@@ -254,10 +254,10 @@ public sealed class NoLockRecoveryTests
         using var production = new ProductionWorkerBudgets(scope.Worker);
         await scope.Bind();
         var services = FoundationHostPorts.CreateServices(scope.Worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
-        var context = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(services);
-        using var session = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
+        var context = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(services);
+        using var session = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
         string token = context.BatchPlans.Add(new() { State = "old", Project = scope.ProjectFile }, DateTime.UtcNow);
-        string handle = enginehost::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "fixture", "retained", 4).id;
+        string handle = toolpipeline::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "fixture", "retained", 4).id;
         services.ResetExports = () => {
             context.Exports.Dispose();
             context.Exports = new();
@@ -267,10 +267,10 @@ public sealed class NoLockRecoveryTests
             scope.StopOwnedChild();
             await scope.Worker.Call("ReadBlocks", new(), CancellationToken.None);
             Assert.Throws<ArgumentException>(() => context.BatchPlans.Take(token, DateTime.UtcNow));
-            Assert.Equal("retained", enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(handle)!.Content);
+            Assert.Equal("retained", toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(handle)!.Content);
             var restarted = await services.Restart(true, CancellationToken.None);
             Assert.True((bool?)restarted["restarted"]);
-            Assert.Null(enginehost::TiaMcp.FoundationHost.SessionExportStore.Get(handle));
+            Assert.Null(toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(handle));
         }
         finally { context.Exports.Dispose(); }
     }
@@ -282,7 +282,7 @@ public sealed class NoLockRecoveryTests
         using var production = new ProductionWorkerBudgets(scope.Worker);
         await scope.Bind();
         var services = FoundationHostPorts.CreateServices(scope.Worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services,
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services,
             Array.Empty<ModelContextProtocol.Server.McpServerTool>());
         using var session = pipeline.EnterSession();
         int writes = 0;
@@ -597,7 +597,7 @@ public sealed class NoLockRecoveryTests
         using var scope = new Scope(release: release, shared: shared);
         using var production = new ProductionWorkerBudgets(scope.Worker);
         var services = FoundationHostPorts.CreateServices(scope.Worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services,
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services,
             Array.Empty<ModelContextProtocol.Server.McpServerTool>());
         using var session = pipeline.EnterSession();
         await scope.Bind();

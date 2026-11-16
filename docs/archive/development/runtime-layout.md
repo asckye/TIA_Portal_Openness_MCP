@@ -43,7 +43,7 @@ runtime/v<key>/        （八个发布键相同）
     TiaMcp.Adapter.<key>.dll、TiaMcp.Adapters.Contracts.dll、TiaMcp.WorkerChannel.dll + net48 dependencies
 ```
 
-宿主按所选发布键定位 `worker/TiaMcp.PlcWorker.<key>.exe`；显式 `--worker-exe` 选择开发 worker。工具目录由宿主自身生成，V20/V21 不再读取 `tool-catalog.json`。net10 与 net48 依赖须分目录，不能混放。审批管道仍绑定同一用户 SID 与 `approval.settings` 路径；审批请求、审计和调用日志的 host 标记沿用原值：`FoundationV4Tool` 执行的工具为 `foundation`，`src/EngineHost` 宿主流程（桥接、批次及其审批路径）为 `engine`，八版相同（[`ReleaseCatalogData.cs`](../../../src/EngineHost/ReleaseCatalogData.cs)）。更新器按 `scripts/operations/delivery-files.json` 校验全部必需入口，并按 `legacyCleanup` 清理旧的 V20/V21 根目录引擎文件和 `worker/` 下的引擎文件；用户数据和配置保持原位。
+宿主按所选发布键定位 `worker/TiaMcp.PlcWorker.<key>.exe`；显式 `--worker-exe` 选择开发 worker。工具目录由宿主自身生成，V20/V21 不再读取 `tool-catalog.json`。net10 与 net48 依赖须分目录，不能混放。审批管道仍绑定同一用户 SID 与 `approval.settings` 路径；审批请求、审计和调用日志的 host 标记沿用原值：`FoundationV4Tool` 执行的工具为 `foundation`，`src/EngineHost` 宿主流程（桥接、批次及其审批路径）为 `engine`，八版相同（[`ReleaseCatalogData.cs`](../../../src/ToolPipeline/ReleaseCatalogData.cs)）。更新器按 `scripts/operations/delivery-files.json` 校验全部必需入口，并按 `legacyCleanup` 清理旧的 V20/V21 根目录引擎文件和 `worker/` 下的引擎文件；用户数据和配置保持原位。
 
 ## G7：运行时资源定位
 

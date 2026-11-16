@@ -1,8 +1,8 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using EngineHostConfiguration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
-using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
-using CanonicalParameterTool = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool;
+extern alias toolpipeline;
+using EngineHostConfiguration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
+using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
+using CanonicalParameterTool = toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;

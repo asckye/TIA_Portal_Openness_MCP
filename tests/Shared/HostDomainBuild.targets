@@ -1,12 +1,12 @@
 <Project>
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)../FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj"
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../FoundationHost/TiaMcp.ToolPipeline.Tests/TiaMcp.ToolPipeline.Tests.csproj"
                       ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true"
                       GlobalPropertiesToRemove="TargetFramework;TargetFrameworks;DefineConstants" />
   </ItemGroup>
   <Target Name="CopyHostDomainBuild" AfterTargets="Build">
     <ItemGroup>
-      <HostDomainBuildReference Include="@(_MSBuildProjectReferenceExistent)" Condition="'%(Filename)' == 'TiaMcp.EngineHost.Tests'" />
+      <HostDomainBuildReference Include="@(_MSBuildProjectReferenceExistent)" Condition="'%(Filename)' == 'TiaMcp.ToolPipeline.Tests'" />
     </ItemGroup>
     <MSBuild Projects="@(HostDomainBuildReference)" Targets="GetTargetPath"
              Properties="%(HostDomainBuildReference.SetConfiguration);%(HostDomainBuildReference.SetPlatform);%(HostDomainBuildReference.SetTargetFramework)"
@@ -17,7 +17,7 @@
     <ItemGroup><HostDomainBuildPayload Include="%(HostDomainBuildBinary.RootDir)%(HostDomainBuildBinary.Directory)*" /></ItemGroup>
     <Error Condition="'@(HostDomainBuildPayload->Count())' == '0'" Text="The exact host-domain helper build has no copyable payload." />
     <Copy SourceFiles="@(HostDomainBuildPayload)" DestinationFolder="$(TargetDir)host-domain" SkipUnchangedFiles="true" />
-    <Error Condition="!Exists('$(TargetDir)host-domain/TiaMcp.EngineHost.Tests.dll')" Text="The exact host-domain helper was not copied to the caller's output." />
+    <Error Condition="!Exists('$(TargetDir)host-domain/TiaMcp.ToolPipeline.Tests.dll')" Text="The exact host-domain helper was not copied to the caller's output." />
     <GetFileHash Files="@(HostDomainBuildBinary)" Algorithm="SHA256">
       <Output TaskParameter="Items" ItemName="HostDomainBuildHash" />
     </GetFileHash>

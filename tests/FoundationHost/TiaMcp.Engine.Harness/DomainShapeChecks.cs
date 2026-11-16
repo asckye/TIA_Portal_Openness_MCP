@@ -386,7 +386,7 @@ internal static class DomainShapeChecks
 
     internal static void RunHostDomains(Action<bool, string> check, string mode = "--domain-shape")
     {
-        string binary = System.IO.Path.Combine(AppContext.BaseDirectory, "host-domain", "TiaMcp.EngineHost.Tests.dll");
+        string binary = System.IO.Path.Combine(AppContext.BaseDirectory, "host-domain", "TiaMcp.ToolPipeline.Tests.dll");
         string expectedHash = System.IO.File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "host-domain", "helper.sha256")).Trim();
         using (var sha = System.Security.Cryptography.SHA256.Create())
         using (var stream = System.IO.File.OpenRead(binary))

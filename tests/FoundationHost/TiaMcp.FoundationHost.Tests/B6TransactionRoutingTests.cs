@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
@@ -7,9 +7,9 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4.Inputs;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Engine = enginehost::TiaMcp.FoundationHost;
-using Services = enginehost::TiaMcpServer.Siemens.Services;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Engine = toolpipeline::TiaMcp.FoundationHost;
+using Services = toolpipeline::TiaMcpServer.Siemens.Services;
 using Xunit;
 
 public sealed class B6TransactionRoutingTests
@@ -29,8 +29,8 @@ public sealed class B6TransactionRoutingTests
         using var release = Host.HardwareContract.UseRelease("21");
         using var progress = Host.McpServer.UseProgressRequest(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
             Params = new() { Name = "RunToolTransaction", Arguments = new Dictionary<string, JsonElement>() } }, CancellationToken.None);
-        using var lane = await enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("RunToolTransaction", CancellationToken.None);
-        enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(lane);
+        using var lane = await toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("RunToolTransaction", CancellationToken.None);
+        toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(lane);
         var service = new Services.EngineeringServicesPortService((op, args) => worker.Call(op, args, CancellationToken.None).GetAwaiter().GetResult(), () => "fixture.ap21");
         var calls = new[] {
             ("CreatePlcTypeGroup", "{\"softwarePath\":\"PLC\",\"groupPath\":\"Types\",\"dryRun\":false}"),
@@ -126,7 +126,7 @@ public sealed class B6TransactionRoutingTests
             return Task.FromResult(new Engine.EngineReply(result, true, Binding, null, null));
         }
         public void Dispose() { }
-        private sealed class Lane(Worker owner) : IDisposable, enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane
+        private sealed class Lane(Worker owner) : IDisposable, toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane
         {
             public void Activate() => owner.Active = true;
             public void Dispose() => owner.Active = false;

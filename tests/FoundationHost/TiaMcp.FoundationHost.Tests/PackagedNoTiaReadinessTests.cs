@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,7 +7,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
-using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
+using Pipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
 using Xunit;
 
 // P8-04j2: a packaged V20/V21 host now runs its bundled PlcWorker. Without TIA the PlcWorker cannot start (it needs the release's
@@ -115,7 +115,7 @@ public sealed class PackagedNoTiaReadinessTests
 
     private sealed class Host : IDisposable
     {
-        private readonly string previous = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        private readonly string previous = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         private readonly string scratch = Path.Combine(Path.GetTempPath(), "packaged-no-tia-" + Guid.NewGuid().ToString("N"));
         private readonly Pipeline pipeline;
         internal readonly WorkerClient Worker;
@@ -124,7 +124,7 @@ public sealed class PackagedNoTiaReadinessTests
             // As EngineReleaseHost does before it builds the registry: the version policy that wraps the ported tools reads the
             // process release key. Without it a V21 case depended on the key an earlier test left (the beta.1 release run failed
             // the five V21 cases when a V20 test ran before them in the same shard).
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
             // The packaged layout's bundled worker path, with neither the worker nor any PublicAPI directory present.
             Worker = new WorkerClient(release, Path.Combine(scratch, "runtime", "v" + release, "worker", "TiaMcp.PlcWorker." + release + ".exe"), "", true)
             { Bundled = true, SharedSession = true };
@@ -145,14 +145,14 @@ public sealed class PackagedNoTiaReadinessTests
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
             { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
             // As the MCP server's serialized-call wrapper does: a bridged target is invoked on the current call's server.
-            using var call = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.UseProgressRequest(request, CancellationToken.None);
+            using var call = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.UseProgressRequest(request, CancellationToken.None);
             var result = await tool.InvokeAsync(request);
             return result.StructuredContent?.AsObject() ?? JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)!.AsObject();
         }
         public void Dispose()
         {
             pipeline.Dispose(); Worker.Dispose();
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previous;
             if (Directory.Exists(scratch)) Directory.Delete(scratch, true);
         }
     }

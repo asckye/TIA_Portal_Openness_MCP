@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -7,7 +7,7 @@ using TiaMcp.Logic.V4;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class OutputRootApprovalTests
 {
@@ -82,7 +82,7 @@ public sealed class OutputRootApprovalTests
             using var fixture = new VersionControlAdmissionTests.FileToolFixture(release, approvalWait: Wait);
             using var session = fixture.EnterSession();
             string path = leading ? @" ..\..\Startup\evil.cmd" : Path.Combine(fixture.Root, "out.txt") + " ";
-            string exportId = enginehost::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "fixture", "payload", 4).id;
+            string exportId = toolpipeline::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "fixture", "payload", 4).id;
             var result = await fixture.Call("SaveExportContent", new { outputPath = path, exportId });
             Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
             Assert.Equal(0, cards);
@@ -690,7 +690,7 @@ public sealed class OutputRootApprovalTests
 
     private static object Arguments(string tool, string parent) => tool switch
     {
-        "SaveExportContent" => new { exportId = enginehost::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("test", "test", "export payload", 4).id,
+        "SaveExportContent" => new { exportId = toolpipeline::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("test", "test", "export payload", 4).id,
             outputPath = Path.Combine(parent, "out.txt") },
         "WritePlcSclSourceFile" => new { sclContent = "FUNCTION Test : Void\nEND_FUNCTION", outputPath = Path.Combine(parent, "Test.scl") },
         "GenerateErrorReport" => new { errorCode = "Fixture", summary = "Fixture report", outputDirectory = parent },
@@ -749,7 +749,7 @@ public sealed class OutputRootApprovalTests
         }
     }
 
-    private sealed class PreviewWorker(string release = "19") : IFoundationWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class PreviewWorker(string release = "19") : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Previews, Writes;
         internal string ProjectFile => "C:/Fixture.ap" + release;
@@ -764,7 +764,7 @@ public sealed class OutputRootApprovalTests
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new InvalidOperationException("No restart expected.");
         public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new Lane());
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject args, bool preview, CancellationToken token)
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject args, bool preview, CancellationToken token)
             => throw new InvalidOperationException("No engine write expected.");
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {

@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -9,7 +9,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.Engine.Tests.Shared;
 using Xunit;
 using Foundation = foundationhost::TiaMcp.FoundationHost;
-using EngineHost = enginehost::TiaMcp.FoundationHost;
+using EngineHost = toolpipeline::TiaMcp.FoundationHost;
 
 namespace TiaMcp.FoundationHost.Tests;
 

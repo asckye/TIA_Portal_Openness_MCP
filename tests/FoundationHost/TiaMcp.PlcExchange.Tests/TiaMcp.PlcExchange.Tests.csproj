@@ -12,7 +12,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="global,enginehost" GlobalPropertiesToRemove="EngineRelease;OutputPath;_CommandLineDefinedOutputPath;IntermediateOutputPath" />
+    <ProjectReference Include="../../../src/ToolPipeline/TiaMcp.ToolPipeline.csproj" Aliases="global,toolpipeline" GlobalPropertiesToRemove="EngineRelease;OutputPath;_CommandLineDefinedOutputPath;IntermediateOutputPath" />
     <!-- The host-registered tools (LegacyHostToolRegistry) are the successor subject of the engine reflection rows. -->
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" GlobalPropertiesToRemove="EngineRelease;OutputPath;_CommandLineDefinedOutputPath;IntermediateOutputPath" />
     <Compile Include="../../FoundationHost/TiaMcp.Engine.PlcExchange.Tests/PlcExchangeContractsTests.cs" Link="PlcExchangeContractsTests.cs" />

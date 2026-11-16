@@ -188,8 +188,8 @@
     "maximumSkipped": 0,
     "arguments": []
   },
-  "engine-host": {
-    "project": "tests/FoundationHost/TiaMcp.EngineHost.Tests/TiaMcp.EngineHost.Tests.csproj",
+  "tool-pipeline": {
+    "project": "tests/FoundationHost/TiaMcp.ToolPipeline.Tests/TiaMcp.ToolPipeline.Tests.csproj",
     "minimumPassed": 159,
     "maximumSkipped": 0,
     "arguments": []

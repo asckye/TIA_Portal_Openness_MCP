@@ -1,10 +1,10 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
-using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
-using UnknownSettlement = enginehost::TiaMcp.FoundationHost.UnknownSettlement;
-using WriteDigest = enginehost::TiaMcp.FoundationHost.WriteDigest;
-using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+extern alias toolpipeline;
+using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
+using UnknownSettlement = toolpipeline::TiaMcp.FoundationHost.UnknownSettlement;
+using WriteDigest = toolpipeline::TiaMcp.FoundationHost.WriteDigest;
+using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;

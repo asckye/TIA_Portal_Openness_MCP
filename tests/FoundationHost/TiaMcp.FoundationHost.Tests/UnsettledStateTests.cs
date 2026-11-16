@@ -1,11 +1,11 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using Xunit;
 
 namespace TiaMcp.FoundationHost.Tests;
@@ -43,7 +43,7 @@ public sealed class UnsettledStateTests
             return Task.FromResult(new TiaOpenness.Shared.ApprovalOutcome(pending, false, null));
         };
         using var metadataWorker = new FakeWorker();
-        var schema = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog!.All.TryGetValue(name, out var descriptor)
+        var schema = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Current.Catalog!.All.TryGetValue(name, out var descriptor)
             ? descriptor.Tool.InputSchema : FoundationTools.Create(metadataWorker).Single(item => item.ProtocolTool.Name == name).ProtocolTool.InputSchema;
         var tool = Host.WrapTools(new McpServerTool[] { new SessionStateTests.HostOnlyTool(_ => {
             calls++;

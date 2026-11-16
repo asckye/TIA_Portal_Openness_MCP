@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -9,8 +9,8 @@ using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using TiaOpenness.Shared;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using Context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using Context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
 
 public sealed class CanonicalParameterRound2Tests
 {
@@ -23,7 +23,7 @@ public sealed class CanonicalParameterRound2Tests
         using var fixture = new Fixture(release);
         foreach (string profile in new[] { "full", "lite" })
         {
-            using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("", Path.Combine(fixture.Root, "worker.exe"),
+            using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("", Path.Combine(fixture.Root, "worker.exe"),
                 release, fixture.Worker, profile, fixture.Shared);
             Assert.NotEmpty(pipeline.Tools);
             foreach (var tool in pipeline.Tools)
@@ -77,7 +77,7 @@ public sealed class CanonicalParameterRound2Tests
             Context.Current.ExportDirectory = null;
             Context.Current.OutputRoot = () => locations.OutputRoot;
             var inner = new Capture();
-            var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
+            var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
             var result = await tool.InvokeAsync(Request(tool, new JsonObject()));
             Assert.True((bool?)result.StructuredContent!["ok"], result.StructuredContent.ToJsonString());
             string output = (string)inner.Last!["outputPath"]!;
@@ -100,7 +100,7 @@ public sealed class CanonicalParameterRound2Tests
             Context.Current.ExportDirectory = null;
             Context.Current.OutputRoot = () => missing ? null : blocked;
             var inner = new Capture();
-            var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
+            var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
             var refused = await tool.InvokeAsync(Request(tool, new JsonObject()));
             Assert.False((bool?)refused.StructuredContent!["ok"]);
             Assert.Equal(missing ? "INVALID_ARGUMENT" : "IO_FAILED", (string?)refused.StructuredContent["error"]!["code"]);
@@ -178,7 +178,7 @@ public sealed class CanonicalParameterRound2Tests
         internal readonly string Root = Path.Combine(Path.GetTempPath(), "des4-r2-" + Guid.NewGuid().ToString("N"));
         internal readonly HardwareAddressingAdmissionTests.UnboundWorker Worker = new();
         internal readonly IReadOnlyList<McpServerTool> Shared;
-        internal readonly enginehost::TiaMcp.FoundationHost.EngineHostPipeline Pipeline;
+        internal readonly toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline Pipeline;
         private readonly string release = Context.ReleaseKey;
         private readonly string profile = Host.ResolvedProfile();
         internal Fixture(string key)

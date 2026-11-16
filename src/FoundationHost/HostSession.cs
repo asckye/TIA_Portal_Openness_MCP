@@ -1,7 +1,7 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
-using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+extern alias toolpipeline;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
+using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
 #endif
 using System.Diagnostics;
 using System.Text.Json.Nodes;

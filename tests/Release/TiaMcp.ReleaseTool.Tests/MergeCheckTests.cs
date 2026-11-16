@@ -641,7 +641,7 @@ public sealed class MergeCheckTests
 
     [Theory]
     [InlineData("src/FoundationHost/StdioFrameTransport.cs")]
-    [InlineData("src/EngineHost/EngineHostPipeline.cs")]
+    [InlineData("src/ToolPipeline/EngineHostPipeline.cs")]
     [InlineData("src/WorkerChannel/Channel.cs")]
     [InlineData("src/PlcWorker/Program.cs")]
     [InlineData("src/Shared/ProgressHeartbeat.cs")]

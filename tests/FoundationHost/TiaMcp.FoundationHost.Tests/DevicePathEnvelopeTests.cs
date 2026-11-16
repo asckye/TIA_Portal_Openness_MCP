@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using System.Reflection;
@@ -7,7 +7,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 public sealed class DevicePathEnvelopeTests
@@ -125,7 +125,7 @@ public sealed class DevicePathEnvelopeTests
         using var worker = new AmbiguousWorker();
         string name = read ? "GetDeviceInfo" : "GetDeviceAttributes";
         var inner = new FoundationTool(worker, release, typeof(Host.HardwareDevicesTools).GetMethod(name + "V4")!, name);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(
             new FoundationV4Tool(inner, release, () => new TiaOpenness.Shared.ApprovalSettings(false, 1)), release);
         var args = new JsonObject { ["devicePath"] = new JsonArray("G", "X") };
         var result = await tool.InvokeAsync(new RequestContext<CallToolRequestParams>(

@@ -32,7 +32,7 @@
 | 级别 | 程序集 | 应用方式 |
 |---|---|---|
 | A 契约与共享库 | `TiaMcp.Adapters.Contracts`、`TiaMcp.WorkerChannel`、`TiaMcp.Logic`、`TiaOpenness.Contracts`、`TiaMcp.BuildCommon`、`TiaMcp.OnlineChannels` | 跨进程、跨版本或被多个宿主引用；FDG 的公共 API 规则完整适用，线上 DTO 例外见 U-01 |
-| B 应用 | FoundationHost、EngineHost、PlcWorker、八个适配器、工作台、Updater、WriteGuard、release tool、native-call-weaver | 公共表面最小；FDG 的类型、成员和异常规则作 SHOULD |
+| B 应用 | FoundationHost、ToolPipeline、PlcWorker、八个适配器、工作台、Updater、WriteGuard、release tool、native-call-weaver | 公共表面最小；FDG 的类型、成员和异常规则作 SHOULD |
 | C 测试与脚本 | `tests/`、`scripts/` | 同 B，另按第 5.9 节放宽 |
 
 ### 2.2 C#/.NET 设计
@@ -189,8 +189,8 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 | 路径 | 内容 |
 |---|---|
-| `src/` | 产品源码：八个发布键共用的 FoundationHost 宿主、PlcWorker、按发布键编译的适配器及其契约、WorkerChannel、OnlineChannels、纯逻辑库 `Logic`、共享源码 `Shared`、工作台 `Studio`、Updater 和随包工具。`src/Engine` 残余源码已由 Q2 删除；`src/EngineHost` 是八版共享的宿主包装链代码，保留历史名称 |
-| `tests/` | 测试工程，按 Shared、FoundationHost、Adapters、WorkerChannel、Studio、Generation、Release、Tools、Updater 等分组；`tests/FoundationHost/` 保留迁移工程的工程名、程序集名、命名空间与套件名；`tests/test-suites.json` 是套件注册表 |
+| `src/` | 产品源码：八个发布键共用的 FoundationHost 宿主、PlcWorker、按发布键编译的适配器及其契约、WorkerChannel、OnlineChannels、纯逻辑库 `Logic`、共享源码 `Shared`、工作台 `Studio`、Updater 和随包工具。`src/Engine` 残余源码已由 Q2 删除；`src/ToolPipeline` 是八版共享的工具流程代码 |
+| `tests/` | 测试工程，按 Shared、FoundationHost、Adapters、WorkerChannel、Studio、Generation、Release、Tools、Updater 等分组；`tests/FoundationHost/` 保留迁移工程的命名空间，共享工具流程测试的工程、程序集与套件现分别为 `TiaMcp.ToolPipeline.Tests`、`TiaMcp.ToolPipeline.Tests` 和 `tool-pipeline`；`tests/test-suites.json` 是套件注册表 |
 | `build-tools/` | 全部 C# 构建、检查与发布自动化：`release`（唯一入口）、`common`、`native-call-weaver` |
 | `scripts/` | 只放随包交付的 Python 和手动诊断脚本；开发用的 Python 检查和生成器（`scripts/checks`、`scripts/generate`）正由 P8-10 移植到 `build-tools/release` |
 | `reference/` | 生成器输入和随包参考数据：`tool-examples`（调用、语言文件、结果解释、调用顺序）、`tool-catalog`、固定来源的 Siemens 官方示例与授权记录、`version-feature-matrix.json`、`v21-ecosystem.json`、`schemas/standards/` |
@@ -211,7 +211,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 
 ### 4.1 现行工具归属
 
-- 工具声明与响应映射在 `src/Shared`；不需要 Openness 的宿主工具在 `src/Shared/Host`。FoundationHost 和 EngineHost 链接同一份声明，八个发布键共用一份逻辑（[ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md)）。
+- 工具声明与响应映射在 `src/Shared`；不需要 Openness 的宿主工具在 `src/Shared/Host`。FoundationHost 和 ToolPipeline 链接同一份声明，八个发布键共用一份逻辑（[ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md)）。
 - 原生实现在 `src/Adapters/Native`，经 `IOpennessAdapter` 的 facet 暴露，按发布键编译；版本 API 差异只放在适配器中，用 `TiaFeatures.props` 的特性符号区分（U-26）。
 - 工具分类在 [`ToolMetadata`](../../src/Logic/ModelContextProtocol/ToolMetadata.cs) 或 `[ToolClassification]` 中显式登记。
 - 注册与动作范围以生成目录为准：一个工具在某个发布键上至少有一个动作能在该版 API 上运行时才注册，不支持的动作明确拒绝（[ADR 0012](decisions/0012-old-release-tool-registration.md)、[ADR 0014](decisions/0014-tool-counts-follow-official-api.md)）。

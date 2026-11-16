@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 extern alias adaptertests;
 using System.Reflection;
 using System.Text.Json;
@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Logic.V4;
-using HostParameters = enginehost::TiaMcp.FoundationHost.CanonicalParameterTool;
+using HostParameters = toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool;
 using NativeDevice = adaptertests::Siemens.Engineering.HW.Device;
 using NativeItem = adaptertests::Siemens.Engineering.HW.DeviceItem;
 using NativeGroup = adaptertests::Siemens.Engineering.HW.DeviceUserGroup;

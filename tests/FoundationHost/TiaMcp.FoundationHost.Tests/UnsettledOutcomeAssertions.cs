@@ -1,10 +1,10 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4.Inputs;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 internal static class UnsettledOutcomeAssertions
 {
@@ -19,8 +19,8 @@ internal static class UnsettledOutcomeAssertions
     internal static void Result(string tool, CallToolResult result, bool mutation, bool expectedUnsettled,
         Action<bool, string> check, string message)
     {
-        using var session = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
-            new enginehost::TiaMcp.FoundationHost.EngineSessionContext(new SharedPipelineTests.Worker()));
+        using var session = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(new SharedPipelineTests.Worker()));
         using var scope = new SharedPipelineTests.Scope();
         Host.ObserveSessionOutcome(tool, result, mutation, "{\"dryRun\":false}");
         var calls = scope.Worker.Unsettled.Snapshot();

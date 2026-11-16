@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -6,7 +6,7 @@ using TiaMcp.Adapters;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4.Domain;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class OfflineToolRefusalTests : IDisposable

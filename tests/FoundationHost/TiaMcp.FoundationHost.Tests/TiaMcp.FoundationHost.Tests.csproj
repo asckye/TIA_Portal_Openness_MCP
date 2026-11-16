@@ -18,7 +18,7 @@
     <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.PlcWorker.FaultFixture/TiaMcp.PlcWorker.FaultFixture.csproj" ReferenceOutputAssembly="false" AdditionalProperties="TiaMcpPlcWorkerSdkFixture=true" />
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" GlobalPropertiesToRemove="DefineConstants" />
-    <ProjectReference Include="../../../src/EngineHost/TiaMcp.EngineHost.csproj" Aliases="enginehost" GlobalPropertiesToRemove="DefineConstants" />
+    <ProjectReference Include="../../../src/ToolPipeline/TiaMcp.ToolPipeline.csproj" Aliases="toolpipeline" GlobalPropertiesToRemove="DefineConstants" />
     <ProjectReference Include="../../Fixtures/TiaMcp.Offline.Fixtures/TiaMcp.Offline.Fixtures.csproj" Aliases="enginefixture" />
     <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/BehaviorParityCases.cs" Link="BehaviorParityCases.cs" />
   </ItemGroup>
@@ -148,7 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../../src/Shared/InvocationJournal.cs" Link="Journal/InvocationJournal.Shared.cs" />
-    <Compile Include="../../../src/EngineHost/ModelContextProtocol/InvocationJournal.cs" Link="Journal/InvocationJournal.cs" />
+    <Compile Include="../../../src/ToolPipeline/ModelContextProtocol/InvocationJournal.cs" Link="Journal/InvocationJournal.cs" />
     <Compile Include="../../../src/Shared/CallJournalPayload.cs" Link="Journal/CallJournalPayload.cs" />
   </ItemGroup>
   <!-- The Workbench's doctor fix command and the PlcWorker's group results, read against the host CLI. -->

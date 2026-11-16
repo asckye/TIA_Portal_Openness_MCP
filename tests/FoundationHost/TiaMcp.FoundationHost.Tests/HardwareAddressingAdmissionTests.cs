@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -9,10 +9,10 @@ using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using Xunit;
-using AddressesTools = enginehost::TiaMcpServer.ModelContextProtocol.AddressesTools;
-using AddressService = enginehost::TiaMcpServer.ModelContextProtocol.IHardwareAddressingService;
-using HostContract = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract;
-using HostResponse = enginehost::TiaMcpServer.ModelContextProtocol.ResponseMessage;
+using AddressesTools = toolpipeline::TiaMcpServer.ModelContextProtocol.AddressesTools;
+using AddressService = toolpipeline::TiaMcpServer.ModelContextProtocol.IHardwareAddressingService;
+using HostContract = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract;
+using HostResponse = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage;
 
 public sealed class HardwareAddressingAdmissionTests
 {
@@ -117,44 +117,44 @@ public sealed class HardwareAddressingAdmissionTests
 
     internal sealed class SessionFixture : IDisposable
     {
-        private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
+        private readonly toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly IDisposable scope;
         private readonly string previousRelease;
         internal SessionFixture(UnboundWorker worker, string release)
         {
-            previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
             var catalog = new AddressCatalog();
-            var context = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog,
-                Invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, worker, lifetime) };
-            scope = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
+            var context = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog,
+                Invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, worker, lifetime) };
+            scope = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
         }
         public void Dispose()
         {
             scope.Dispose(); lifetime.Dispose();
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
         }
     }
-    private sealed class AddressCatalog : enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView
+    private sealed class AddressCatalog : toolpipeline::TiaMcpServer.ModelContextProtocol.IToolCatalogView
     {
-        public IReadOnlyDictionary<string, enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor> All { get; }
-        public IReadOnlyDictionary<string, enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor> IncludingUnavailable => All;
-        public IReadOnlyList<enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor> Lite => All.Values.ToArray();
+        public IReadOnlyDictionary<string, toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor> All { get; }
+        public IReadOnlyDictionary<string, toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor> IncludingUnavailable => All;
+        public IReadOnlyList<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor> Lite => All.Values.ToArray();
         public JsonArray BehaviorCapabilities => new();
-        public enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor? Find(string name, bool includeUnavailable = false) => All.GetValueOrDefault(name);
+        public toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor? Find(string name, bool includeUnavailable = false) => All.GetValueOrDefault(name);
         internal AddressCatalog()
         {
-            var descriptors = new Dictionary<string, enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor>();
+            var descriptors = new Dictionary<string, toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor>();
             foreach (var name in PortedFamilies.ForTool("GetDeviceAddressing").Tools)
             {
-                enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name,
+                toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name,
                     typeof(AddressesTools).GetMethod(name + "V4")!, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
                 descriptors.Add(name, descriptor);
             }
             All = descriptors;
         }
     }
-    internal sealed class UnboundWorker : IFoundationWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    internal sealed class UnboundWorker : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Calls;
         public bool Faulted => false;
@@ -164,7 +164,7 @@ public sealed class HardwareAddressingAdmissionTests
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new InvalidOperationException("No engine restart expected.");
         public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new Lane());
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
             => throw new InvalidOperationException("No engine tool dispatch expected.");
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {

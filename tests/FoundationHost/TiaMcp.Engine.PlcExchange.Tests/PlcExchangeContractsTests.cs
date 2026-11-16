@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -94,7 +94,7 @@ namespace PlcExchangeTests
             Assert.Equal(0, (int?)body["data"]?["executionEvidence"]?["issued"]);
         }
 
-        private static readonly Assembly Host = typeof(enginehost::TiaMcp.FoundationHost.EngineHostPipeline).Assembly;
+        private static readonly Assembly Host = typeof(toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline).Assembly;
         private static Type HostType(string name) => Host.GetType(name, true)!;
         public PlcExchangeContractsTests()
         {
@@ -114,7 +114,7 @@ namespace PlcExchangeTests
                 .GetValue(null)!;
             ((IDisposable)context.GetType().GetProperty("Exports", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(context)!).Dispose();
         }
-        private sealed class HostWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+        private sealed class HostWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
         {
             public bool Faulted => false;
             public JsonNode? Binding => null;
@@ -123,7 +123,7 @@ namespace PlcExchangeTests
             public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
             public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
             public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
-            public Task<enginehost::TiaMcp.FoundationHost
+            public Task<toolpipeline::TiaMcp.FoundationHost
                 .EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new NotSupportedException();
             public void Dispose() { }
         }

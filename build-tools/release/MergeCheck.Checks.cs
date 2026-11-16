@@ -59,12 +59,12 @@ internal static partial class MergeCheck
         string? transportFallback)
     {
         bool transport = plan.Wide || changes.Any(path =>
-            new[] { "src/FoundationHost", "src/EngineHost", "src/WorkerChannel", "src/PlcWorker", "src/Shared",
+            new[] { "src/FoundationHost", "src/ToolPipeline", "src/WorkerChannel", "src/PlcWorker", "src/Shared",
                 "tests/WorkerChannel/TiaMcp.WorkerChannel.TransportFixture" }.Any(dir => Under(path, dir))
             || path is "scripts/checks/Test-FoundationTransport.py" or "scripts/checks/Test-ResourceDiscovery.py"
                 or "scripts/checks/Test-StdioFraming.py");
         bool worker = plan.Wide || changes.Any(path =>
-            new[] { "src/PlcWorker", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/EngineHost", "src/FoundationHost",
+            new[] { "src/PlcWorker", "src/WorkerChannel", "src/Adapters", "src/Adapters.Contracts", "src/ToolPipeline", "src/FoundationHost",
                 "src/Shared", "reference/tool-catalog", "reference/tool-examples", "build-tools/native-call-weaver", "tests/FoundationHost/TiaMcp.Engine.Native.Tests",
                 "tests/FoundationHost/TiaMcp.Engine.ApiCompileChecks", "tests/Adapters/TiaMcp.Adapters.Diagnostics.Tests" }.Any(dir => Under(path, dir))
             || path is "scripts/checks/Test-ToolUsage.py" or "scripts/checks/tool_usage_checks.py"

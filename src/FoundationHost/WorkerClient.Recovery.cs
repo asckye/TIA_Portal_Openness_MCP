@@ -1,6 +1,6 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using UnknownSettlement = enginehost::TiaMcp.FoundationHost.UnknownSettlement;
+extern alias toolpipeline;
+using UnknownSettlement = toolpipeline::TiaMcp.FoundationHost.UnknownSettlement;
 #endif
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;

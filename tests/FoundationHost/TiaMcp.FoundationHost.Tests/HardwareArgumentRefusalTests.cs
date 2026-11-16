@@ -1,5 +1,5 @@
 extern alias adaptertests;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -8,9 +8,9 @@ using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using Xunit;
 using NativeEngine = adaptertests::TiaMcp.Adapters.PlcFoundationEngine;
-using HardwareTools = enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools;
-using HardwareService = enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService;
-using HardwareContract = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract;
+using HardwareTools = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools;
+using HardwareService = toolpipeline::TiaMcpServer.Siemens.Services.HardwareNetworkPortService;
+using HardwareContract = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract;
 
 namespace TiaMcp.FoundationHost.Tests.Operator;
 
@@ -111,13 +111,13 @@ public sealed class HardwareArgumentRefusalTests
         Assert.DoesNotContain("PathJson", refusal.Message, StringComparison.Ordinal);
 
         using var worker = new BoundWorker();
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
-        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareServicesPortService((_, _) => JsonSerializer.SerializeToNode(new {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareServicesPortService((_, _) => JsonSerializer.SerializeToNode(new {
             Message = "ManageCommunicationConnection failed", Meta = new { operationSuccess = false, mayHaveChanged = false,
                 status = "InvalidParams", parameter = refusal.ParamName, nativeMessage = refusal.Message }
         }), () => true, () => "fixture");
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareServicesPortTools(service);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareServicesPortTools(service);
         Refusal(tools.ManageCommunicationConnection(new[] { "PLC" }, Array.Empty<string>(), "create", "S7Connection")
             .StructuredContent!, declaredName, "2 nodes");
     }
@@ -128,7 +128,7 @@ public sealed class HardwareArgumentRefusalTests
         var engine = NativeFixture(release);
         using var worker = new BoundWorker();
         using var selected = HardwareContract.UseRelease(release);
-        using var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         int calls = 0;
         var tool = new HardwareTools(new HardwareService((operation, _) => {
@@ -148,8 +148,8 @@ public sealed class HardwareArgumentRefusalTests
         Assert.Equal("subnetType", refused.Meta["parameter"]);
         Assert.Equal(0, engine.HardwareEditAccessCalls);
         var nativeMessage = Assert.IsType<string>(refused.Meta["nativeMessage"]);
-        var body = enginehost::TiaMcpServer.ModelContextProtocol.HardwareToolContract.MapResult("EnsureSubnet",
-            new enginehost::TiaMcpServer.ModelContextProtocol.ResponseMessage {
+        var body = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareToolContract.MapResult("EnsureSubnet",
+            new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage {
                 Message = refused.Message, Meta = JsonSerializer.SerializeToNode(refused.Meta)!.AsObject()
             }, readOnly: false, current: true).StructuredContent!;
         Refusal(body, "subnetType", "PROFINET");
@@ -186,7 +186,7 @@ public sealed class HardwareArgumentRefusalTests
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
     }
 
-    private sealed class BoundWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class BoundWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         public bool Faulted => false;
         public JsonNode? Binding { get; } = new JsonObject { ["identity"] = new JsonObject {
@@ -196,7 +196,7 @@ public sealed class HardwareArgumentRefusalTests
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
         public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview,
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview,
             CancellationToken token) => throw new NotSupportedException();
         public void Dispose() { }
     }

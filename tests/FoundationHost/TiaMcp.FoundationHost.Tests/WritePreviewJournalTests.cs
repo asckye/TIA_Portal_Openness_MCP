@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using TiaMcp.FoundationHost;
 using Xunit;
@@ -10,9 +10,9 @@ public sealed class WritePreviewJournalTests
     public void Refused_hooked_write_maps_to_failed_without_a_session_reset()
     {
         using var worker = new PlanWorker();
-        using var session = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker));
-        var result = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract.Run("SetDeviceItemAttribute", () =>
-            new enginehost::TiaMcpServer.ModelContextProtocol.ResponseMessage { Message = "setter refused", Meta = new JsonObject {
+        using var session = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker));
+        var result = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract.Run("SetDeviceItemAttribute", () =>
+            new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage { Message = "setter refused", Meta = new JsonObject {
                 ["success"] = false, ["operationSuccess"] = false, ["rollbackCompleted"] = true,
                 ["mayHaveChanged"] = false, ["cleanupRequired"] = new JsonArray() } }, true, false);
         Assert.Equal("failed", (string?)result.StructuredContent!["meta"]!["outcome"]);
@@ -35,7 +35,7 @@ public sealed class WritePreviewJournalTests
     public void Button_action_executes_in_one_worker_request_so_creation_and_script_share_rollback()
     {
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((operation, arguments) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedHmiService((operation, arguments) => {
             calls++;
             Assert.Equal("hmi-unified.ExecuteUnifiedHmi", operation);
             Assert.Equal("EnsureUnifiedHmiButtonAction", (string?)arguments["request"]?["Operation"]);
@@ -48,7 +48,7 @@ public sealed class WritePreviewJournalTests
         Assert.Equal(1, calls);
     }
 
-    private sealed class PlanWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class PlanWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal JsonObject Identity = new() { ["identity"] = new JsonObject { ["processId"] = 123, ["projectPath"] = "C:/Projects/original.ap21" } };
         public bool Faulted => false;
@@ -58,7 +58,7 @@ public sealed class WritePreviewJournalTests
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
         public Task<IDisposable> Acquire(CancellationToken token) => throw new NotSupportedException();
-        public Task<enginehost::TiaMcp.FoundationHost
+        public Task<toolpipeline::TiaMcp.FoundationHost
             .EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token) => throw new NotSupportedException();
         public void Dispose() { }
     }

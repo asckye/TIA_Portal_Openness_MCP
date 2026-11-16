@@ -1,7 +1,7 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
-using HostMcp = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+extern alias toolpipeline;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
+using HostMcp = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 #else
 using HostMcp = TiaMcpServer.ModelContextProtocol.McpServer;
 #endif

@@ -131,7 +131,7 @@ public sealed class ReadOnlySourceContracts
     {
         var program = Read("src/FoundationHost/EngineReleaseHost.cs");
         var registration = Sources.TypeText("McpPromptRegistration");
-        var pipeline = Read("src/EngineHost/EngineHostPipeline.cs");
+        var pipeline = Read("src/ToolPipeline/EngineHostPipeline.cs");
         Excludes(Sources.AllText(), "WithPromptsFromAssembly(", "WithToolsFromAssembly failed:");
         // P8-stab-3: HTTP registers the same handlers by release key before any session catalog exists.
         Count(program, "pipeline.RegisterHandlers(mcp);", 1); Count(program, "EngineHostPipeline.RegisterHandlers(mcp, options.ReleaseKey);", 1);
@@ -157,7 +157,7 @@ public sealed class ReadOnlySourceContracts
     public void PromptRecipesUseV4AdmissionApprovalAndRegisteredToolNames()
     {
         var entry = Sources.Sources.Single(p => Path.GetFileName(p.Key) == "McpPrompts.cs");
-        Assert.Equal(Path.GetFullPath(Path.Combine(Root, "src/EngineHost/ModelContextProtocol/McpPrompts.cs")), entry.Key);
+        Assert.Equal(Path.GetFullPath(Path.Combine(Root, "src/ToolPipeline/ModelContextProtocol/McpPrompts.cs")), entry.Key);
         var source = entry.Value;
         Contains(source, "private static string WithV4Rules", "ListPortalProcessProjects", "ConnectPortal with that row's processId, then AttachOpenProject", "schemaVersion 4 envelope", "OUTCOME_UNKNOWN", "D1 native behavior remains current", "L5 is NOT RUN", "Do not save or close a project unless the user explicitly requested that action", "Workbench approval before dispatch", "data/logs/audit", "tia audit verify");
         Excludes(source, "EnsureOpennessUserGroup", "fbBlockJson", "designJson", "ConnectPortal — attach to a running", "meta.success / meta.operationSuccess", "SaveProject — save any pending changes first", "ConnectProject");

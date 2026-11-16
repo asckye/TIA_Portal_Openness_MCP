@@ -1,10 +1,10 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4.Inputs;
-using Examples = enginehost::TiaMcpServer.ModelContextProtocol.ToolExamples;
+using Examples = toolpipeline::TiaMcpServer.ModelContextProtocol.ToolExamples;
 using Preflight = TiaMcpServer.ModelContextProtocol.PreflightLogic;
 using Xunit;
 

@@ -1,10 +1,10 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.PlcWorker;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 public sealed class ExtensionFamilyReplyTests
@@ -16,7 +16,7 @@ public sealed class ExtensionFamilyReplyTests
     public void Unified_preview_has_no_null_members(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService(
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedHmiService(
             (_, _) => throw new InvalidOperationException("An offline preview must not call the worker."), () => "fixture");
         var response = service.EnsureUnifiedHmiScreen("HMI", "Overview");
         var data = Host.UnifiedHmiContract.Map("EnsureUnifiedHmiScreen", response, true, false).StructuredContent!["data"]!.AsObject();
@@ -75,7 +75,7 @@ public sealed class ExtensionFamilyReplyTests
         string savedPages = new JsonArray(data["page"]!.DeepClone()).ToJsonString();
         var pages = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(savedPages);
         TiaMcp.Logic.V4.Domain.DomainValidation.GraphicSelections(pages, pages);
-        var comparison = enginehost::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(savedPages, savedPages);
+        var comparison = toolpipeline::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(savedPages, savedPages);
         Assert.Equal(0, (int)comparison["changedObjectCount"]!);
 
         foreach (string beforeTool in new[] { "GetUnifiedGraphicSelection", "ReadUnifiedGraphicSelection" })
@@ -88,7 +88,7 @@ public sealed class ExtensionFamilyReplyTests
             var before = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(beforeJson);
             var after = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(afterJson);
             TiaMcp.Logic.V4.Domain.DomainValidation.GraphicSelections(before, after);
-            var compatible = enginehost::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(beforeJson, afterJson);
+            var compatible = toolpipeline::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(beforeJson, afterJson);
             Assert.True((bool)compatible["success"]!);
             Assert.Equal(0, (int)compatible["changedObjectCount"]!);
 
@@ -97,7 +97,7 @@ public sealed class ExtensionFamilyReplyTests
             string differentJson = differentScreen.ToJsonString();
             var different = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(differentJson);
             Assert.Throws<ArgumentException>(() => TiaMcp.Logic.V4.Domain.DomainValidation.GraphicSelections(before, different));
-            Assert.Throws<ArgumentException>(() => enginehost::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(beforeJson, differentJson));
+            Assert.Throws<ArgumentException>(() => toolpipeline::TiaMcpServer.Siemens.Services.UnifiedGraphicComparison.Compare(beforeJson, differentJson));
         }
 
 
@@ -114,7 +114,7 @@ public sealed class ExtensionFamilyReplyTests
     {
         using var release = Host.HardwareContract.UseRelease("21");
 
-        var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
                 Failure = new PlcSoftwareFailure { Code = code, Message = "Native result unavailable after a change." },
                 MayHaveChanged = true, OutcomeUnknown = true }));
@@ -136,7 +136,7 @@ public sealed class ExtensionFamilyReplyTests
     {
         using var release = Host.HardwareContract.UseRelease("21");
 
-        var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
                 Failure = new PlcSoftwareFailure { Code = code, Message = "Native result unavailable after a change." },
                 MayHaveChanged = true, OutcomeUnknown = true }));
@@ -189,7 +189,7 @@ public sealed class ExtensionFamilyReplyTests
     {
         using var release = Host.HardwareContract.UseRelease("21");
         const string message = "Export failed: Synthetic native export refusal.";
-        var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply { Message = message,
                 Meta = legacyMeta ? new() { ["success"] = false } : null }));
             WorkerProtocol.ValidateExchangeResult(operation, args, json);
@@ -210,7 +210,7 @@ public sealed class ExtensionFamilyReplyTests
         using var release = Host.HardwareContract.UseRelease("21");
         const string message = "Synthetic OPC UA native refusal.";
 
-        var service = new enginehost::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcB5PortService((operation, args) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcB5Reply {
                 Failure = new PlcSoftwareFailure { Code = code, Message = message } }));
             WorkerProtocol.ValidateExchangeResult(operation, args, json);
@@ -245,7 +245,7 @@ public sealed class ExtensionFamilyReplyTests
     [InlineData(true)]
     public void Projectless_probes_preserve_the_existing_response_shape(bool whitelist)
     {
-        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((operation, _) =>
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((operation, _) =>
             JsonNode.Parse(WorkerJson.Serialize(new HardwareProbeReply {
                 Lines = new[] { "Project is null" }, FailureCode = "PROJECT_NOT_BOUND" })),
             () => true, () => "fixture");
@@ -261,7 +261,7 @@ public sealed class ExtensionFamilyReplyTests
     [InlineData(true)]
     public void Missing_probe_root_is_returned_as_the_not_found_target(bool whitelist)
     {
-        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((operation, _) =>
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareNetworkPortService((operation, _) =>
             JsonNode.Parse(WorkerJson.Serialize(new HardwareProbeReply {
                 Lines = new[] { "HMI root: Missing -> <not found>" }, FailureCode = "NOT_FOUND", Target = "Missing" })),
             () => true, () => "fixture");

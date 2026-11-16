@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -8,9 +8,9 @@ using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.Engine.Tests.Shared;
 using Xunit;
-using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
-using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
-using UnknownSettlement = enginehost::TiaMcp.FoundationHost.UnknownSettlement;
+using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
+using UnknownSettlement = toolpipeline::TiaMcp.FoundationHost.UnknownSettlement;
 
 namespace TiaMcp.FoundationHost.Tests;
 

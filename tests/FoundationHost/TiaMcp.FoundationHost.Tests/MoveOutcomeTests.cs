@@ -1,6 +1,6 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 public sealed class MoveOutcomeTests
@@ -14,7 +14,7 @@ public sealed class MoveOutcomeTests
 
     private static JsonNode Move(JsonObject evidence)
     {
-        var service = new enginehost::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) =>
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) =>
             new JsonObject { ["MayHaveChanged"] = true, ["Failure"] = new JsonObject {
                 ["Code"] = "IOException", ["Message"] = "Target import failed.", ["Evidence"] = evidence } },
             () => true, () => "C:/fixture/Project.ap21");

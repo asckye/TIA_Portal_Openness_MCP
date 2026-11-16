@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
@@ -11,8 +11,8 @@ using TiaMcp.Engine.Tests.Shared;
 using TiaMcp.Logic.V4;
 using Xunit;
 using Foundation = foundationhost::TiaMcp.FoundationHost;
-using Engine = enginehost::TiaMcp.FoundationHost;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Engine = toolpipeline::TiaMcp.FoundationHost;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 [Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class NoLockRunningTests

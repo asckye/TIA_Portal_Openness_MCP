@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -6,8 +6,8 @@ using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4.Inputs;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
-using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Pipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
 using Xunit;
 
 public sealed class B1OldReleaseBridgeTests
@@ -238,7 +238,7 @@ public sealed class B1OldReleaseBridgeTests
         }
         public void Dispose() { }
     }
-    private sealed class BatchWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class BatchWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         private readonly BoundWorker state = new();
         internal int NativeCalls;
@@ -250,14 +250,14 @@ public sealed class B1OldReleaseBridgeTests
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new InvalidOperationException("No restart expected.");
         public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new Lease());
         private sealed class Lease : IDisposable { public void Dispose() { } }
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         {
             NativeCalls++;
             throw new InvalidOperationException("No native dispatch expected: " + name);
         }
         public void Dispose() => state.Dispose();
     }
-    private sealed class BoundWorker : enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class BoundWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         public object SessionKey { get; } = new();
         public bool Faulted => false;
@@ -269,7 +269,7 @@ public sealed class B1OldReleaseBridgeTests
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => Task.FromResult(Snapshot());
         public Task<IDisposable> Acquire(CancellationToken token) => throw new InvalidOperationException("No worker lane expected.");
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
             => throw new InvalidOperationException("No engine route expected.");
         public void Dispose() { }
     }

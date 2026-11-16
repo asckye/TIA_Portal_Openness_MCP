@@ -1,16 +1,16 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using EngineHostPipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
-using IEngineWorker = enginehost::TiaMcp.FoundationHost.IEngineWorker;
-using IEngineWorkerProgress = enginehost::TiaMcp.FoundationHost.IEngineWorkerProgress;
-using IEngineWorkerReadiness = enginehost::TiaMcp.FoundationHost.IEngineWorkerReadiness;
-using EngineReply = enginehost::TiaMcp.FoundationHost.EngineReply;
-using IWorkerLane = enginehost::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane;
-using IHostToolServices = enginehost::TiaMcpServer.ModelContextProtocol.IHostToolServices;
-using ReleaseCatalogData = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
-using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
-using LateCalls = enginehost::TiaMcp.FoundationHost.LateCalls;
-using McpServer = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+extern alias toolpipeline;
+using EngineHostPipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
+using IEngineWorker = toolpipeline::TiaMcp.FoundationHost.IEngineWorker;
+using IEngineWorkerProgress = toolpipeline::TiaMcp.FoundationHost.IEngineWorkerProgress;
+using IEngineWorkerReadiness = toolpipeline::TiaMcp.FoundationHost.IEngineWorkerReadiness;
+using EngineReply = toolpipeline::TiaMcp.FoundationHost.EngineReply;
+using IWorkerLane = toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane;
+using IHostToolServices = toolpipeline::TiaMcpServer.ModelContextProtocol.IHostToolServices;
+using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
+using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
+using McpServer = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using TiaMcpServer.ModelContextProtocol;
 #else
 using IWorkerLane = TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane;

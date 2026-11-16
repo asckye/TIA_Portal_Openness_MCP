@@ -1,12 +1,12 @@
 extern alias adaptertests;
-extern alias enginehost;
+extern alias toolpipeline;
 extern alias foundationhost;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Xunit;
-using HardwareContract = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract;
-using HardwareTools = enginehost::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools;
-using HardwareService = enginehost::TiaMcpServer.Siemens.Services.HardwareNetworkPortService;
+using HardwareContract = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract;
+using HardwareTools = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareNetworkTools;
+using HardwareService = toolpipeline::TiaMcpServer.Siemens.Services.HardwareNetworkPortService;
 
 namespace TiaMcp.FoundationHost.Tests.Operator;
 
@@ -134,12 +134,12 @@ public sealed class HardwareReadFlagsTests
             .GetMethod("NativeFixture", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!;
         var fixture = (System.Runtime.CompilerServices.ITuple)factory.Invoke(null, new object[] { release, true })!;
         var engine = (adaptertests::TiaMcp.Adapters.PlcFoundationEngine)fixture[0]!;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.HardwareServicesPortService((operation, arguments) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareServicesPortService((operation, arguments) => {
             Assert.Equal("hardware-devices.HardwareReadHardwareFeatures", operation);
             return JsonSerializer.SerializeToNode(engine.HardwareReadHardwareFeatures(new[] { "PLC" }, new[] { "CPU" },
                 (int)arguments["offset"]!, (int)arguments["limit"]!));
         }, () => true, () => "fixture");
-        var tools = new enginehost::TiaMcpServer.ModelContextProtocol.HardwareServicesPortTools(service);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareServicesPortTools(service);
         var body = tools.GetHardwareFeatures(new[] { "PLC" }, new[] { "CPU" }).StructuredContent!;
         Assert.True((bool?)body["data"]?["dataComplete"]);
         var unprobed = body["data"]!["records"]!.AsArray().Single(row => (string?)row?["feature"] == "AddressController");

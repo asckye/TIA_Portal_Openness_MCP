@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -9,8 +9,8 @@ using TiaMcp.Adapters.Native.Optional;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
 using Xunit;
-using HostContract = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract;
-using EngineConfiguration = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
+using HostContract = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract;
+using EngineConfiguration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
 
 public sealed class OptionalEngineeringBoundaryTests
 {

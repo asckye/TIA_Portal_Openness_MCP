@@ -4,7 +4,7 @@
     <RootNamespace>TiaMcp.Engine.PromptRegistration.Tests</RootNamespace><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
     <Compile Remove="Fixture/**/*.cs;OptionalDependency/**/*.cs" />
-    <Compile Include="../../../src/EngineHost/ModelContextProtocol/McpPrompts.cs" Link="McpPrompts.cs" />
+    <Compile Include="../../../src/ToolPipeline/ModelContextProtocol/McpPrompts.cs" Link="McpPrompts.cs" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <ProjectReference Include="Fixture/Fixture.csproj" ReferenceOutputAssembly="false" />

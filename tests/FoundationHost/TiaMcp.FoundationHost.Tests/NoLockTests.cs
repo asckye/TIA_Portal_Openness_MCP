@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,7 +7,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
 using Xunit;
-using UnsettledCalls = enginehost::TiaMcp.FoundationHost.UnsettledCalls;
+using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
 
 namespace TiaMcp.FoundationHost.Tests;
 
@@ -94,7 +94,7 @@ public sealed class NoLockTests
     private static async Task<IDisposable> ReadUnknown(IFoundationWorker worker, string release, string id)
     {
         var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, null);
-        var pipeline = new enginehost::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
+        var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
         var lookup = pipeline.AllTools.Single(tool => tool.ProtocolTool.Name == "GetCallResult");
         var result = Body(await lookup.InvokeAsync(Request("GetCallResult", new() { ["requestId"] = id })));
         Assert.Equal("unknown", (string?)result["meta"]?["outcome"]);
@@ -178,9 +178,9 @@ public sealed class NoLockTests
         Assert.True(UnsettledCalls.IsReviewedApply(arguments));
         var result = FoundationV4Result.Failure("21", "SaveProject", "invalid-dry-run", true, true, null,
             new WorkerOperationException("Synthetic write outcome unknown.", -32603, "unknown"));
-        enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome("SaveProject", result, true, arguments.ToJsonString());
+        toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome("SaveProject", result, true, arguments.ToJsonString());
         Assert.Equal("invalid-dry-run", Assert.Single(scope.Worker.Unsettled.Snapshot()).RequestId);
-        var next = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.CallTool(SessionFixtureTool.Name,
+        var next = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.CallTool(SessionFixtureTool.Name,
             new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())));
         Assert.True((bool?)next.StructuredContent?["ok"]);
         Assert.Equal(1, scope.Worker.EngineCalls);
@@ -195,12 +195,12 @@ public sealed class NoLockTests
         var result = FoundationV4Result.Failure("21", "SaveExportContent", "unprepared-unknown", true, true, null,
             new WorkerOperationException("Synthetic unknown write.", -32603, "unknown"));
         var arguments = new JsonObject { ["outputPath"] = outputPath, ["content"] = "payload", ["dryRun"] = false };
-        enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome(
+        toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome(
             "SaveExportContent", result, true, arguments.ToJsonString());
         var call = Assert.Single(scope.Worker.Unsettled.Snapshot());
         Assert.Equal("unprepared-unknown", call.RequestId);
         Assert.Equal(hasDigest, call.Digest != null);
-        var read = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.GetCallResult(call.RequestId);
+        var read = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.GetCallResult(call.RequestId);
         Assert.Equal("unknown", (string?)read.StructuredContent?["meta"]?["outcome"]);
         Assert.Single(scope.Worker.Unsettled.Snapshot());
     }
@@ -211,18 +211,18 @@ public sealed class NoLockTests
         using var scope = new SharedPipelineTests.Scope();
         scope.Worker.FoundationUnknown = true;
         scope.RegisterShared(scope.Foundation("ExportPlcBlocks"));
-        using var request = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.UseProgressRequest(Request("CallTool", new()), CancellationToken.None);
+        using var request = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.UseProgressRequest(Request("CallTool", new()), CancellationToken.None);
         var arguments = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["exportPath"] = Path.GetTempPath(),
             ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = "C:/fixture.ap21", ["expectedInventoryHash"] = new string('a', 64) };
-        var unknown = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.CallTool("ExportPlcBlocks",
+        var unknown = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.CallTool("ExportPlcBlocks",
             new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)));
         Assert.Equal("unknown", (string?)unknown.StructuredContent?["meta"]?["outcome"]);
         Assert.Single(scope.Worker.Unsettled.Snapshot());
-        var replay = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.CallTool("ExportPlcBlocks",
+        var replay = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.CallTool("ExportPlcBlocks",
             new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)));
         Assert.Equal("same-call-unsettled", (string?)replay.StructuredContent?["error"]?["details"]?["condition"]);
         Assert.Equal(1, scope.Worker.FoundationCalls);
-        var next = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.CallTool(SessionFixtureTool.Name,
+        var next = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.CallTool(SessionFixtureTool.Name,
             new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())));
         Assert.True((bool?)next.StructuredContent?["ok"]);
         Assert.Equal(1, scope.Worker.EngineCalls);
@@ -317,7 +317,7 @@ public sealed class NoLockTests
         var inner = PortedToolContract.Create(worker, release).OfType<FoundationTool>()
             .SingleOrDefault(tool => tool.ProtocolTool.Name == "SaveProjectCopy")
             ?? new FoundationTool(worker, release,
-                typeof(enginehost::TiaMcpServer.ModelContextProtocol.ProjectLifecycleProjectTools).GetMethod("SaveProjectCopyV4")!, "SaveProjectCopy");
+                typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.ProjectLifecycleProjectTools).GetMethod("SaveProjectCopyV4")!, "SaveProjectCopy");
         var copy = new FoundationV4Tool(inner, release, () => new(false, 1));
         var result = Body(await copy.InvokeAsync(Request("SaveProjectCopy", new() { ["newProjectPath"] = "C:/copy" })));
         bool supported = release != "14sp1";
@@ -350,9 +350,9 @@ public sealed class NoLockTests
     {
         using var fixture = new PreviewHostFixture(release);
         using var session = fixture.Pipeline.EnterSession();
-        var worker = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.Worker;
+        var worker = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.Worker;
         var result = FoundationV4Result.Failure(release, "CompilePlcSoftware", "preview", true, true, null);
-        enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome("CompilePlcSoftware", result, true, "{}");
+        toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome("CompilePlcSoftware", result, true, "{}");
         Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.Empty(worker.Unsettled.Snapshot());
     }
@@ -362,9 +362,9 @@ public sealed class NoLockTests
     {
         using var fixture = new PreviewHostFixture(release);
         using var session = fixture.Pipeline.EnterSession();
-        var store = enginehost::TiaMcpServer.ModelContextProtocol.McpServer.Worker.Unsettled;
+        var store = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.Worker.Unsettled;
         store.Record("prior-write", "CreatePlcTag", "digest", DateTimeOffset.UtcNow);
-        var result = Body(enginehost::TiaMcpServer.ModelContextProtocol.McpServer.PreviewToolCall("SaveProjectCopy",
+        var result = Body(toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.PreviewToolCall("SaveProjectCopy",
             new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(new { newProjectPath = "C:/Projects/Copy" }))));
         Assert.True((bool?)result["ok"]);
         var warning = Assert.Single(result["meta"]!["warnings"]!.AsArray(), item => (string?)item?["code"] == "UNSETTLED_CALLS")!;
@@ -387,8 +387,8 @@ public sealed class NoLockTests
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
-        enginehost::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome(name, result, write, "{\"dryRun\":false}");
-        Assert.Empty(((enginehost::TiaMcp.FoundationHost.IEngineWorker)worker).Unsettled.Snapshot());
+        toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ObserveSessionOutcome(name, result, write, "{\"dryRun\":false}");
+        Assert.Empty(((toolpipeline::TiaMcp.FoundationHost.IEngineWorker)worker).Unsettled.Snapshot());
     }
 
     [Theory, MemberData(nameof(Releases))]

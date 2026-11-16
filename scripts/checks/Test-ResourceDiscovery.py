@@ -218,7 +218,7 @@ def stdio_reader_failure_self_test():
 def prompt_requirements(root):
     """Derive dependencies from the prompt source, including shared rules and forwarding methods."""
     from engine_sources import block_after
-    source = (root / 'src/EngineHost/ModelContextProtocol/McpPrompts.cs').read_text(encoding='utf-8-sig')
+    source = (root / 'src/ToolPipeline/ModelContextProtocol/McpPrompts.cs').read_text(encoding='utf-8-sig')
     universe = set()
     for path in (root / 'manifest/contracts/v4/baseline').glob('*.json'):
         universe.update(tool['name'] for tool in json.loads(path.read_text(encoding='utf-8'))['tools'])

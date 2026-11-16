@@ -1,8 +1,8 @@
 #if TIA_FOUNDATION_TEST_HOST
-extern alias enginehost;
-using GenerationTools = enginehost::TiaMcpServer.ModelContextProtocol.GenerationTools;
-using DeclaredToolMetadata = enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
-using GenerationExecutionSession = enginehost::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
+extern alias toolpipeline;
+using GenerationTools = toolpipeline::TiaMcpServer.ModelContextProtocol.GenerationTools;
+using DeclaredToolMetadata = toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
+using GenerationExecutionSession = toolpipeline::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession;
 #endif
 using System.Reflection;
 using System.Text.Json;

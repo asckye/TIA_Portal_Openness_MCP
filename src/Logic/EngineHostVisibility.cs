@@ -1,4 +1,4 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("TiaMcp.EngineHost")]
-[assembly: InternalsVisibleTo("TiaMcp.EngineHost.Tests")]
+[assembly: InternalsVisibleTo("TiaMcp.ToolPipeline")]
+[assembly: InternalsVisibleTo("TiaMcp.ToolPipeline.Tests")]

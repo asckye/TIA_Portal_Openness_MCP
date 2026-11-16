@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -9,8 +9,8 @@ using TiaMcp.Logic.Generation;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using Context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using Context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class CanonicalParameterRound3Tests
@@ -35,7 +35,7 @@ public sealed class CanonicalParameterRound3Tests
         Assert.False((bool?)refused.StructuredContent!["data"]!["ok"]);
         Assert.Contains("requires an existing directory", (string?)refused.StructuredContent["data"]!["summary"]);
         var inner = new Capture("ExportDeviceAml", "exportPath", true, "devicePath");
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
         Assert.True((bool?)(await tool.InvokeAsync(Request(tool, args))).StructuredContent!["ok"]);
         Assert.Equal(planned, inner.Last!.Arguments!["exportPath"].GetString());
         Assert.True(Directory.Exists(planned));
@@ -46,7 +46,7 @@ public sealed class CanonicalParameterRound3Tests
     {
         using var fixture = new Fixture(release);
         var inner = new Capture("ManageMachineDescription", "outputPath", false, "action", "format", "inputPath");
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
         var args = new JsonObject { ["action"] = "import", ["format"] = "csv", ["inputPath"] = fixture.Root };
         string output = Path.Combine(fixture.Root, "machine.json");
         foreach (string name in new[] { "outputPath", "exportFile" })
@@ -73,7 +73,7 @@ public sealed class CanonicalParameterRound3Tests
         machine["target"]!["release"] = release;
         string csv = Path.Combine(fixture.Root, "csv"); Directory.CreateDirectory(csv);
         foreach (var file in MachineCsv.Export(package, machine.ToJsonString())) File.WriteAllBytes(Path.Combine(csv, file.Key), file.Value);
-        var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(
             new GenerationTool("ManageMachineDescription", release, () => store), release);
         string target = Path.Combine(fixture.Root, "machine.json");
         var args = new JsonObject { ["packageId"] = "tiamcp.basic", ["version"] = "1.0.0", ["action"] = "import",
@@ -99,14 +99,14 @@ public sealed class CanonicalParameterRound3Tests
         foreach (bool outer in new[] { false, true })
         {
             var inner = new Capture("SaveExportContent", "outputPath", true);
-            var tool = new enginehost::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
+            var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release);
             var request = Request(tool, new JsonObject { [outer ? "outputPath" : "exportFile"] = Path.Combine(fixture.Root, "out.txt") });
             request.Params = JsonSerializer.Deserialize<CallToolRequestParams>(
                 JsonSerializer.Serialize(request.Params).TrimEnd('}') + ",\"_meta\":{\"progressToken\":42,\"trace\":\"fixture\"}}");
             var original = request.Params!;
             Assert.NotNull(original.ProgressToken);
             using var cancellation = new CancellationTokenSource();
-            if (outer) await enginehost::TiaMcp.FoundationHost.CanonicalParameterTool.InvokeWithDefaults(inner, request, cancellation.Token);
+            if (outer) await toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.InvokeWithDefaults(inner, request, cancellation.Token);
             else await tool.InvokeAsync(request, cancellation.Token);
             Assert.Same(original, request.Params);
             Assert.Equal(cancellation.Token, inner.Cancellation);
@@ -124,7 +124,7 @@ public sealed class CanonicalParameterRound3Tests
     {
         internal readonly string Root = Path.Combine(Path.GetTempPath(), "des4-r3-" + Guid.NewGuid().ToString("N"));
         private readonly HardwareAddressingAdmissionTests.UnboundWorker worker = new();
-        internal readonly enginehost::TiaMcp.FoundationHost.EngineHostPipeline Pipeline;
+        internal readonly toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline Pipeline;
         private readonly string release = Context.ReleaseKey;
         private readonly string profile = Host.ResolvedProfile();
         internal Fixture(string key)
@@ -159,8 +159,8 @@ public sealed class CanonicalParameterRound3Tests
             CancellationToken cancellationToken = default)
         {
             Last = request.Params; Cancellation = cancellationToken; Calls++;
-            using var heartbeat = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat.Begin(request);
-            HeartbeatAvailable = enginehost::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat.CaptureSender() != null;
+            using var heartbeat = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat.Begin(request);
+            HeartbeatAvailable = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat.CaptureSender() != null;
             var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { written = true }, null,
                 new Meta(DateTimeOffset.UtcNow, "21", ProtocolTool.Name, "test", Outcome.Succeeded, Execution.Completed, BehaviorPolicy.NotApplicable,
                         Completeness.Complete, null, Array.Empty<Warning>()))))!;

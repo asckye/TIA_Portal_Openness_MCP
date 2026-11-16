@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -124,7 +124,7 @@ public sealed class SensitiveArgumentDigestTests
     [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
     public void Every_sensitive_tool_argument_is_excluded_from_approval_and_audit_digests(string release)
     {
-        var parameters = enginehost::TiaMcpServer.ModelContextProtocol.PortedToolDeclarations.Methods(release)
+        var parameters = toolpipeline::TiaMcpServer.ModelContextProtocol.PortedToolDeclarations.Methods(release)
             .SelectMany(method => method.GetParameters().Where(p => p.ParameterType == typeof(string) && CallJournalPayload.Sensitive(p.Name!))
                 .Select(p => (Tool: method.GetCustomAttribute<ModelContextProtocol.Server.McpServerToolAttribute>()!.Name!, Parameter: p.Name!)))
             .Concat(FoundationTools.Definitions.Select(d => FoundationTools.ForRelease(d, release))

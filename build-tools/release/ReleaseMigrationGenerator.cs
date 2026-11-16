@@ -65,7 +65,7 @@ internal static class ReleaseMigrationGenerator
         }
         var oldNames = Set(oldDocs.Values.SelectMany(d => d["tools"]!.AsArray().Select(t => Text(t!["name"]))));
         Require(Set(mapping.Keys).SetEquals(oldNames), "Frozen rename coverage differs from archived contracts");
-        var policy = Source(root, "src/EngineHost/SharedToolCatalog.cs"); var removed =
+        var policy = Source(root, "src/ToolPipeline/SharedToolCatalog.cs"); var removed =
             Set(Matches(policy.Split("Removed =", 2)[1].Split("};", 2)[0], "\"(\\w+)\""));
         var lines = new List<string> {
             "# 4.0.0 tool and input migration tables", "",

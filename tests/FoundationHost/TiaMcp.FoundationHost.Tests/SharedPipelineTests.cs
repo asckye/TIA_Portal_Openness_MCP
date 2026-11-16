@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -9,9 +9,9 @@ using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using TiaOpenness.Shared;
 using Xunit;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using Descriptor = enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
-using View = enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using Descriptor = toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
+using View = toolpipeline::TiaMcpServer.ModelContextProtocol.IToolCatalogView;
 
 public sealed class SharedPipelineTests
 {
@@ -29,10 +29,10 @@ public sealed class SharedPipelineTests
                 OutputSchema = FoundationV4Result.Schema };
             All = new Dictionary<string, Descriptor> { [tool.Name] = new(tool.Name, tool.Description, tool,
                 new("L1", "Hardware", "WRITE", false, true), SessionFixtureTool.Name + "()",
-                Array.Empty<enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(false, false), null, "worker") };
+                Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(false, false), null, "worker") };
         }
     }
-    internal sealed class Worker : IFoundationSessionWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    internal sealed class Worker : IFoundationSessionWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal bool EngineUnknown, FoundationUnknown;
         internal int FoundationCalls, EngineCalls, FoundationPreviews, FoundationWrites;
@@ -41,7 +41,7 @@ public sealed class SharedPipelineTests
         public JsonNode? Binding => new JsonObject { ["projectPath"] = "C:/fixture.ap21" };
         public object SessionKey { get; } = new();
         public string ApprovalIdentity => Binding!.ToJsonString();
-        public enginehost::TiaMcp.FoundationHost.UnsettledCalls Unsettled { get; } = new();
+        public toolpipeline::TiaMcp.FoundationHost.UnsettledCalls Unsettled { get; } = new();
         public bool Bundled => false;
         public bool SharedSession => true;
         public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => null;
@@ -62,26 +62,26 @@ public sealed class SharedPipelineTests
             return Task.FromResult<JsonNode?>(operation == "ReadState" ? new JsonObject { ["ReleaseKey"] = "21", ["IsAttached"] = true }
                 : new JsonObject { ["Executed"] = (bool?)arguments["dryRun"] != true, ["ProjectFile"] = "C:/fixture.ap21" });
         }
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         {
             EngineCalls++; EngineId = id;
             var result = EngineUnknown ? Host.V4Result(name, new JsonObject { ["nativeOutcomeUnknown"] = true },
                 new Error("fixture interruption", new OutcomeUnknownDetails("engine", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown)
                 : Host.V4Result(name, Binding!.AsObject());
-            return Task.FromResult(new enginehost::TiaMcp.FoundationHost.EngineReply(result, true, Binding, null, null));
+            return Task.FromResult(new toolpipeline::TiaMcp.FoundationHost.EngineReply(result, true, Binding, null, null));
         }
         public void Dispose() { }
     }
     internal sealed class Scope : IDisposable
     {
         internal readonly Worker Worker = new();
-        private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
+        private readonly toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         internal Scope()
         {
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Worker = Worker;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker = Worker;
             var catalog = new Catalog();
-            Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime), () => false, new HashSet<string>());
+            Host.ConfigureToolBridge(catalog, new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime), () => false, new HashSet<string>());
         }
         internal FoundationV4Tool Foundation(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), Worker), "21", () => new(false, 1));
         internal void RegisterShared(FoundationV4Tool tool)
@@ -89,8 +89,8 @@ public sealed class SharedPipelineTests
             var catalog = new Catalog();
             ((Dictionary<string, Descriptor>)catalog.All)[tool.ProtocolTool.Name] = new(tool.ProtocolTool.Name,
                 tool.ProtocolTool.Description!, tool.ProtocolTool, new("L1", "PLC", "WRITE", false, true), "shared fixture",
-                Array.Empty<enginehost::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(false, false), null, "foundation");
-            Host.ConfigureToolBridge(catalog, new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, new[] { tool }), () => false, new HashSet<string>());
+                Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(false, false), null, "foundation");
+            Host.ConfigureToolBridge(catalog, new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, new[] { tool }), () => false, new HashSet<string>());
         }
         internal static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments) => new(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
         { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
@@ -142,7 +142,7 @@ public sealed class SharedPipelineTests
     {
         using var scope = new Scope(); const string id = "abcdef0123456789abcdef0123456789";
         using var foundationJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(id);
-        using var engineJournal = enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(id);
+        using var engineJournal = toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation(id);
         var shared = await scope.Foundation("GetSessionState").InvokeAsync(Scope.Request("GetSessionState", new()));
         Host.ToolInvoker.Invoke(SessionFixtureTool.Name, new ToolArguments(JsonSerializer.SerializeToElement(new JsonObject())), false);
         Assert.Equal(id, (string?)shared.StructuredContent?["meta"]?["requestId"]);

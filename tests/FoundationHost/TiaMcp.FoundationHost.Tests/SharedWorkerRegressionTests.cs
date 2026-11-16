@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using TiaMcp.Engine.Tests.Shared;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -11,8 +11,8 @@ using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.WorkerChannel;
 using Xunit;
-using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
-using Server = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
+using Pipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
+using Server = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class SharedWorkerRegressionTests
@@ -27,7 +27,7 @@ public sealed class SharedWorkerRegressionTests
         var services = FoundationHostPorts.CreateServices(fixture.Worker, release, () => new JsonObject { ["ready"] = true }, null);
         using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
         using var context = pipeline.EnterSession();
-        var response = new enginehost::TiaMcpServer.ModelContextProtocol.HostMetaTools().RunOnlineMonitoringSafetySelfTest();
+        var response = new toolpipeline::TiaMcpServer.ModelContextProtocol.HostMetaTools().RunOnlineMonitoringSafetySelfTest();
         Assert.Equal("pass", Assert.Single(response.Items!, item => item.Id == "safety.reflection-hard-deny-semantics").Status);
     }
 
@@ -39,7 +39,7 @@ public sealed class SharedWorkerRegressionTests
         using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
         using var context = pipeline.EnterSession();
         string directory = Path.Combine(fixture.Root, "acceptance");
-        var response = await new enginehost::TiaMcpServer.ModelContextProtocol.HostMetaTools().GenerateAcceptanceReport(directory);
+        var response = await new toolpipeline::TiaMcpServer.ModelContextProtocol.HostMetaTools().GenerateAcceptanceReport(directory);
         Assert.True(File.Exists(response.MarkdownPath));
         Assert.True(File.Exists(response.JsonPath));
         Assert.NotEmpty(File.ReadAllText(response.MarkdownPath));
@@ -63,7 +63,7 @@ public sealed class SharedWorkerRegressionTests
         using var context = pipeline.EnterSession();
         var observed = await services.Observe("assemblies", new(), CancellationToken.None);
         Assert.Equal(copied, (string?)Assert.Single(observed!.AsArray())!["location"]);
-        var response = new enginehost::TiaMcpServer.ModelContextProtocol.EngineeringDiagnosticsTools().GetOpennessCompatibilityV4();
+        var response = new toolpipeline::TiaMcpServer.ModelContextProtocol.EngineeringDiagnosticsTools().GetOpennessCompatibilityV4();
         Assert.False(response.IsError == true, response.StructuredContent?.ToJsonString());
     }
 
@@ -200,14 +200,14 @@ public sealed class SharedWorkerRegressionTests
         }
         else if (diagnostic == "self-test")
         {
-            var result = await new enginehost::TiaMcpServer.ModelContextProtocol.HostMetaTools().RunCapabilitySelfTest();
+            var result = await new toolpipeline::TiaMcpServer.ModelContextProtocol.HostMetaTools().RunCapabilitySelfTest();
             var group = Assert.Single(result.Items!, item => item.Id == "openness.user-group");
             Assert.Equal("fail", group.Status);
             Assert.Equal("Current user is not in the Openness group, or membership could not be confirmed.", group.Detail);
         }
         else
         {
-            var result = new enginehost::TiaMcpServer.ModelContextProtocol.EngineeringDiagnosticsTools().GetOpennessCompatibilityV4();
+            var result = new toolpipeline::TiaMcpServer.ModelContextProtocol.EngineeringDiagnosticsTools().GetOpennessCompatibilityV4();
             Assert.False(result.IsError == true, result.StructuredContent?.ToJsonString());
         }
         Assert.Null(worker.OperatorSnapshot()["pid"]);

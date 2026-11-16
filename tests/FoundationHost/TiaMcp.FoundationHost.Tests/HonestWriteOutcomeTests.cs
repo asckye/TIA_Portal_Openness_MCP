@@ -1,14 +1,14 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters;
 using TiaMcp.FoundationHost;
 using TiaMcp.PlcWorker;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 using ModelContextProtocol.Protocol;
-using Services = enginehost::TiaMcpServer.Siemens.Services;
+using Services = toolpipeline::TiaMcpServer.Siemens.Services;
 
 public sealed class HonestWriteOutcomeTests
 {
@@ -434,7 +434,7 @@ public sealed class HonestWriteOutcomeTests
     {
         using var release = Host.HardwareContract.UseRelease("21");
 
-        var service = new enginehost::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) => {
             var json = JsonNode.Parse(WorkerJson.Serialize(new PlcSoftwareReply {
                 Failure = new PlcSoftwareFailure { Code = nameof(AdapterPreconditionException), Message = "TIA Portal did not grant exclusive access." },
                 MayHaveChanged = false, OutcomeUnknown = false }));

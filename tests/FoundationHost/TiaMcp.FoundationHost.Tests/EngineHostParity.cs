@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 extern alias enginefixture;
 using System.Reflection;
 using System.Text.Json;
@@ -6,12 +6,12 @@ using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.ModelContextProtocol;
 using TiaOpenness.Shared;
-using HostMcp = enginehost::TiaMcpServer.ModelContextProtocol.McpServer;
-using Descriptor = enginehost::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
-using CatalogView = enginehost::TiaMcpServer.ModelContextProtocol.IToolCatalogView;
-using Invoker = enginehost::TiaMcp.FoundationHost.WorkerToolInvoker;
-using IEngineWorker = enginehost::TiaMcp.FoundationHost.IEngineWorker;
-using EngineReply = enginehost::TiaMcp.FoundationHost.EngineReply;
+using HostMcp = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using Descriptor = toolpipeline::TiaMcpServer.ModelContextProtocol.ToolDescriptor;
+using CatalogView = toolpipeline::TiaMcpServer.ModelContextProtocol.IToolCatalogView;
+using Invoker = toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker;
+using IEngineWorker = toolpipeline::TiaMcp.FoundationHost.IEngineWorker;
+using EngineReply = toolpipeline::TiaMcp.FoundationHost.EngineReply;
 using EngineFixture = enginefixture::TiaMcp.Engine.Tests.BehaviorParityEngine;
 
 internal static class EngineHostParity
@@ -56,11 +56,11 @@ internal static class EngineHostParity
             var all = JsonSerializer.Deserialize<Descriptor[]>(EngineFixture.CatalogJson(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!
                 .ToDictionary(d => d.Name, StringComparer.OrdinalIgnoreCase);
             if (complete)
-                foreach (var method in enginehost::TiaMcpServer.ModelContextProtocol.PortedToolDeclarations.Methods(release))
+                foreach (var method in toolpipeline::TiaMcpServer.ModelContextProtocol.PortedToolDeclarations.Methods(release))
                 {
                     var name = method.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>()!.Name!;
                     if (all.ContainsKey(name)) continue;
-                    enginehost::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
+                    toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
                     all.Add(name, descriptor);
                 }
             if (plcWorker)
@@ -75,24 +75,24 @@ internal static class EngineHostParity
 
     private sealed class Scope : IDisposable
     {
-        private readonly enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
+        private readonly toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly bool context;
         private readonly bool approvalContext;
         internal Scope(bool approvalContext, bool complete = false, bool plcWorker = false)
         {
             var type = typeof(EngineFixture).Assembly.GetType("TiaMcpServer.ModelContextProtocol.McpServer")!;
             string release = (string)type.GetProperty("ReleaseKey", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Worker = new Worker();
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker = new Worker();
             var catalog = new Catalog(release, complete, plcWorker);
             // Shared-adapter route: each probe is wrapped exactly like a V20/V21 ported shared tool
             // (PortedToolContract.Wrap: McpServer.WrapTools over the validated declaration).
-            var invoker = new Invoker(catalog, enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Worker, lifetime,
+            var invoker = new Invoker(catalog, toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker, lifetime,
                 plcWorker ? catalog.All.Values.Where(tool => tool.Execution == "foundation").Select(tool => HostMcp.WrapTools(new global::ModelContextProtocol.Server.McpServerTool[] {
-                    new enginehost::TiaMcpServer.ModelContextProtocol.InfrastructureInputTool(new SharedProbe(tool), tool) }).Single()).ToArray() : null);
+                    new toolpipeline::TiaMcpServer.ModelContextProtocol.InfrastructureInputTool(new SharedProbe(tool), tool) }).Single()).ToArray() : null);
             if (EngineFixture.ExternalStagingStore is ImportStagingStore store)
-                invoker.SetLocalTarget(typeof(enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingTools),
-                    new enginehost::TiaMcpServer.ModelContextProtocol.ImportStagingTools(store));
+                invoker.SetLocalTarget(typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools),
+                    new toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools(store));
             HostMcp.ConfigureToolBridge(catalog, invoker, () => false, new HashSet<string>());
             HostMcp.ApprovalWaitOverrideForTests = (pending, settings, token) =>
                 ((Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>>)type.GetProperty("ApprovalWaitOverrideForTests", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!)(pending, settings, token);
@@ -114,7 +114,7 @@ internal static class EngineHostParity
         {
             var args = JsonSerializer.SerializeToNode(request.Params!.Arguments)!.AsObject();
             var reply = EngineFixture.InvokeBody("fixture", descriptor.Name, args.ToJsonString(), HostMcp.IsReadOnlyApprovalPreview);
-            if (reply.NativeCallIssued) enginehost::TiaMcpServer.ModelContextProtocol.InvocationJournal.NativeCallStarted();
+            if (reply.NativeCallIssued) toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.NativeCallStarted();
             return ValueTask.FromResult(JsonSerializer.Deserialize<CallToolResult>(reply.Result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!);
         }
     }

@@ -23,7 +23,7 @@
 
 ## 4.0.0-beta.3（已发布，2026-11-04）
 
-beta.3 已于 2026-11-04 在 `1d57c277` 发布，含 PIPE-INT/SLIM-1、VMFIX-2、新发布路径、SEC-1、Q1–Q9、CPM、NEW-REL-2/3、THIRD-1 和整理工作，见[发布说明](../releases/v4.0.0-beta.3.md)。依赖仍在开发的产品文件的拆分、`src/EngineHost` 改名与长行合并门已移至 beta.5，等 DES-4 Parts 2、3 合并。
+beta.3 已于 2026-11-04 在 `1d57c277` 发布，含 PIPE-INT/SLIM-1、VMFIX-2、新发布路径、SEC-1、Q1–Q9、CPM、NEW-REL-2/3、THIRD-1 和整理工作，见[发布说明](../releases/v4.0.0-beta.3.md)。依赖仍在开发的产品文件的拆分、共享工具流程目录改名与长行合并门已移至 beta.5，等 DES-4 Parts 2、3 合并。
 
 ### 发布前顺序
 
@@ -172,7 +172,7 @@ TIDY-7、HOST-RENAME 和 LONG-LINE-GATE 必须等 DES-4R2、DES-4R3 合并，拆
 | VMFIX-11 | beta.4 回归的低优先级余项，按文件区域分组 | 未写说明 | 2026-11-05 |
 | EXAMPLES-B4B | 示例中的工程名统一为 `ExampleProject`（EXAMPLES-B4 的 D4）；会改 V19/V20/V21 三份契约基线，须重新捕获 | 说明已写 | 2026-11-11 |
 | TIDY-7 | 剩余大文件拆分与新增长行整理，保持行为和 IL | 说明已写，排队（DES-4R2、DES-4R3 合并后） | 2026-11-05 |
-| HOST-RENAME | `src/EngineHost` 改名，同步链接源、工程与文档路径 | 未写说明，排队（同上） | 2026-11-05 |
+| HOST-RENAME | 共享工具流程改名为 `src/ToolPipeline`，同步链接源、工程与文档路径；C# 类型与命名空间保持 | 已实现，待主机合并门验证 | 2026-11-16 |
 | LONG-LINE-GATE | 将 `wrap-long-lines -Check` 接入合并门 | 未写说明，排队（上述拆分与改名后） | 2026-11-05 |
 | MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 说明已写，排队 | 2026-11-01 |
 | P8-97b | 单块、块组编译 | 并入 API-P1b（beta.6） | 2026-10-27 |

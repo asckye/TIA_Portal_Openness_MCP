@@ -447,7 +447,7 @@ namespace TiaMcp.Engine.Tests.Shared
             Path.GetFileNameWithoutExtension(project) == "TiaMcp.FoundationHost.Tests" ? 2 : 1;
 
         public static bool ReserveShard(string project) => Path.GetFileNameWithoutExtension(project) is
-            "TiaMcp.FoundationHost.Tests" or "TiaMcp.EngineHost.Tests" or "TiaMcp.Engine.Tests" or "TiaMcp.KeptCode.Tests" or
+            "TiaMcp.FoundationHost.Tests" or "TiaMcp.ToolPipeline.Tests" or "TiaMcp.Engine.Tests" or "TiaMcp.KeptCode.Tests" or
             "TiaMcp.WorkerChannel.Tests" or "TiaMcp.WorkbenchControl.Tests" or "TiaOpenness.Core.Tests" or
             "TiaOpenness.Gui.Tests" or "TiaMcp.ShippedTools.Tests" or "TiaMcp.Updater.Tests" or
             "TiaMcp.SourceContracts.Tests" or "TiaMcp.ReleaseTool.Tests" or "TiaMcp.Engine.PromptRegistration.Tests";

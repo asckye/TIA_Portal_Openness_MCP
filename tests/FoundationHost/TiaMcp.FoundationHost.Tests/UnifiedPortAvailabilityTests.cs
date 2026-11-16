@@ -1,9 +1,9 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
-using Services = enginehost::TiaMcpServer.Siemens.Services;
-using Siemens = enginehost::TiaMcpServer.Siemens;
+using Services = toolpipeline::TiaMcpServer.Siemens.Services;
+using Siemens = toolpipeline::TiaMcpServer.Siemens;
 using Xunit;
 
 [Collection(BundleSelectionCollection.Name)]
@@ -62,15 +62,15 @@ public sealed class UnifiedPortAvailabilityTests
             operation = name; arguments = args;
             return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "released", ["Meta"] = new JsonObject { ["success"] = true, ["released"] = false } } };
         }, () => "fixture");
-        string previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        string previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         try
         {
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "19";
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "19";
             service.ReleaseUnifiedReadCursor("collection");
         }
         finally
         {
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
         }
         Assert.Equal("hmi-unified-exchange.ReleaseUnifiedReadCursor", operation);
         Assert.Equal("collection", (string?)arguments!["cursor"]);

@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -6,35 +6,35 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts.Paging;
 using TiaMcp.FoundationHost;
-using Pipeline = enginehost::TiaMcp.FoundationHost.EngineHostPipeline;
+using Pipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
 using Xunit;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class Round2BlockPageTests : IDisposable
 {
-    private readonly string previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-    public Round2BlockPageTests() => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
-    public void Dispose() => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+    private readonly string previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+    public Round2BlockPageTests() => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+    public void Dispose() => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
 
     [Fact]
     public async Task Generation_fixture_restores_the_host_context_before_paging_and_decoder_tests()
     {
-        var previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+        var previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
-        var context = new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker);
-        using var scope = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
+        var context = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker);
+        using var scope = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
         try
         {
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = "21";
             new StagedGenerationTests().FirstPreviewRefusalDoesNotConsumeAndCanRunAgain("17");
             await Default_native_pages_fit_and_keep_cursor_through_CallTool(false);
             await Default_native_pages_fit_and_keep_cursor_through_CallTool(true);
             await Missing_or_invalid_decoder_runtime_is_rejected_without_install_path(false);
             await Missing_or_invalid_decoder_runtime_is_rejected_without_install_path(true);
-            Assert.Equal("21", enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey);
-            Assert.Same(context, enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull);
+            Assert.Equal("21", toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey);
+            Assert.Same(context, toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull);
         }
-        finally { enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
+        finally { toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease; }
     }
 
     private sealed class Worker(JsonNode? malformed = null) : IFoundationWorker

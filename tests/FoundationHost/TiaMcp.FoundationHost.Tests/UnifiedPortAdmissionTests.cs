@@ -1,4 +1,4 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,7 +7,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
 using TiaMcp.FoundationHost;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 // The fixture mutates process-wide release and approval state; run it alone.
@@ -19,7 +19,7 @@ public sealed class UnifiedPortAdmissionTests
     {
         int requested = 0;
         using var release = Host.HardwareContract.UseRelease("21");
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, args) => {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, args) => {
             requested = (int)args["request"]!["Limit"]!;
             return new JsonObject { ["Value"] = new JsonArray(Enumerable.Range(0, Math.Min(requested, 6))
                 .Select(n => (JsonNode)JsonValue.Create("class: Siemens.Engineering.HmiUnified.Type" + n)!).ToArray()) };
@@ -54,9 +54,9 @@ public sealed class UnifiedPortAdmissionTests
         using var sessionWorker = new ApprovalWorker();
         using var lifetime = new Host.ImportStagingHostLifetime();
         var catalog = new ApprovalCatalog("21");
-        using var context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
-            new enginehost::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker) { Catalog = catalog,
-                Invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, sessionWorker, lifetime) });
+        using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker) { Catalog = catalog,
+                Invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, sessionWorker, lifetime) });
         var tool = new FoundationTool(worker, "21", Method(name), name).ValidatedTool();
         var arguments = Arguments(name);
         arguments["softwarePath"] = "HMI";
@@ -154,13 +154,13 @@ public sealed class UnifiedPortAdmissionTests
         Assert.Equal("Overview", (string?)path[0]!["name"]);
         Assert.Equal("ScreenItems", (string?)path[1]!["property"]);
         Assert.Equal("StartButton", (string?)path[1]!["name"]);
-        enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress(EngineeringInputValidation.ObjectPathExample);
-        var unified = Assert.Throws<ArgumentException>(() => enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress("{}"));
+        toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress(EngineeringInputValidation.ObjectPathExample);
+        var unified = Assert.Throws<ArgumentException>(() => toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress("{}"));
         Assert.Contains(EngineeringInputValidation.ObjectPathExample, unified.Message);
         Assert.DoesNotContain("ScreenFolder", unified.Message);
         Assert.DoesNotContain("TagFolder", unified.Message);
-        enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress(EngineeringInputValidation.OptionalObjectPathExample, optional: true);
-        var optional = Assert.Throws<ArgumentException>(() => enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress("{}", optional: true));
+        toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress(EngineeringInputValidation.OptionalObjectPathExample, optional: true);
+        var optional = Assert.Throws<ArgumentException>(() => toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress("{}", optional: true));
         Assert.Contains("[] (the typed DCC/SiVArc root)", optional.Message);
         Assert.DoesNotContain("Screens", optional.Message);
     }
@@ -168,8 +168,8 @@ public sealed class UnifiedPortAdmissionTests
     [Fact]
     public void Malformed_branch_JSON_uses_the_branch_grammar_in_its_refusal_example()
     {
-        enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress(EngineeringInputValidation.BranchPathExample, branch: true);
-        var error = Assert.Throws<ArgumentException>(() => enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress("{", branch: true));
+        toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress(EngineeringInputValidation.BranchPathExample, branch: true);
+        var error = Assert.Throws<ArgumentException>(() => toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress("{", branch: true));
         Assert.Contains(EngineeringInputValidation.BranchPathExample, error.Message);
         Assert.DoesNotContain(EngineeringInputValidation.ObjectPathExample, error.Message);
     }
@@ -196,8 +196,8 @@ public sealed class UnifiedPortAdmissionTests
         Assert.Equal(0, worker.Calls);
     }
 
-    private static readonly Type[] AddressServices = { typeof(enginehost::TiaMcpServer.Siemens.Services.UnifiedUiModelService), typeof(enginehost::TiaMcpServer.Siemens.Services.UnifiedObjectServicesService),
-        typeof(enginehost::TiaMcpServer.Siemens.Services.UnifiedEventsService), typeof(enginehost::TiaMcpServer.Siemens.Services.MigrationReadService), typeof(enginehost::TiaMcpServer.Siemens.Services.DccService), typeof(enginehost::TiaMcpServer.Siemens.Services.OptionalEngineeringService) };
+    private static readonly Type[] AddressServices = { typeof(toolpipeline::TiaMcpServer.Siemens.Services.UnifiedUiModelService), typeof(toolpipeline::TiaMcpServer.Siemens.Services.UnifiedObjectServicesService),
+        typeof(toolpipeline::TiaMcpServer.Siemens.Services.UnifiedEventsService), typeof(toolpipeline::TiaMcpServer.Siemens.Services.MigrationReadService), typeof(toolpipeline::TiaMcpServer.Siemens.Services.DccService), typeof(toolpipeline::TiaMcpServer.Siemens.Services.OptionalEngineeringService) };
     private static readonly string[] AddressParameters = { "objectPathJson", "branchJson", "collectionPathJson", "tagPathJson", "durationPathJson" };
     public static IEnumerable<object[]> ServiceAddressCases => from type in AddressServices
         from method in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
@@ -233,7 +233,7 @@ public sealed class UnifiedPortAdmissionTests
     public void Properties_are_validated_before_dispatch_even_for_delete_preview(string properties)
     {
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedUiModelService((_, _) => { calls++; throw new InvalidOperationException(); }, () => "fixture.ap21");
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedUiModelService((_, _) => { calls++; throw new InvalidOperationException(); }, () => "fixture.ap21");
         Assert.Throws<ArgumentException>(() => service.ManageUnifiedObjectParts("HMI", "[]", "delete", propertiesJson: properties));
         Assert.Throws<ArgumentException>(() => service.ManageUnifiedDynamization("HMI", "[]", "Visible", "delete", propertiesJson: properties));
         Assert.Throws<ArgumentException>(() => service.ManageUnifiedScreenLayout("HMI", "[]", "delete", propertiesJson: properties));
@@ -246,7 +246,7 @@ public sealed class UnifiedPortAdmissionTests
     [InlineData("[{\"property\":\"ScreenItems\"},{\"index\":0},{\"attribute\":\"Display name\"}]", true)]
     [InlineData("[{\"name\":\"Overview\",\"key\":\"Name\"}]", true)]
     public void Address_preflight_preserves_the_existing_object_and_branch_grammars(string raw, bool branch)
-        => enginehost::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress(raw, branch);
+        => toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateAddress(raw, branch);
 
 
     [Theory]
@@ -272,7 +272,7 @@ public sealed class UnifiedPortAdmissionTests
             }
             return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "fixture" } };
         }
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService(Call, () => "fixture.ap21");
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedHmiService(Call, () => "fixture.ap21");
         for (int i = 0; i < 2; i++)
         {
             if (ensureTag) service.EnsureUnifiedHmiTag("HMI", "/Hmi%20Tags/Diagnostic/Diag%20Info", "Ready", plcName: "PLC_Source", plcTag: "PlcReady", dryRun: false);
@@ -293,7 +293,7 @@ public sealed class UnifiedPortAdmissionTests
     public void Both_ensure_tools_refuse_invalid_paths_before_dispatch(string path)
     {
         int calls = 0;
-        var service = new enginehost::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, _) => { calls++; throw new InvalidOperationException(); },
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedHmiService((_, _) => { calls++; throw new InvalidOperationException(); },
             () => { calls++; throw new InvalidOperationException(); });
         AssertArgumentRefusal(() => service.EnsureUnifiedHmiTagTable("HMI", path));
         AssertArgumentRefusal(() => service.EnsureUnifiedHmiTag("HMI", path, "Ready", plcName: "PLC_Source", plcTag: "PlcReady"));
@@ -490,7 +490,7 @@ public sealed class UnifiedPortAdmissionTests
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         using var selected = new ReleaseState(release);
         using var lifetime = new Host.ImportStagingHostLifetime();
-        var invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(new ApprovalCatalog(release), worker, lifetime);
+        var invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(new ApprovalCatalog(release), worker, lifetime);
         var arguments = Arguments(name);
         arguments[parameter] = JsonNode.Parse("[{\"property\":\"Parent\"}]");
         var error = invoker.Bind(name, new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(arguments)), out var call);
@@ -579,9 +579,9 @@ public sealed class UnifiedPortAdmissionTests
         using var lifetime = new Host.ImportStagingHostLifetime();
         var tools = LegacyHostToolRegistry.Create(worker, release, false);
         var catalog = new ApprovalCatalog(release);
-        var invoker = new enginehost::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, worker, lifetime, tools);
-        using var context = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
-            new enginehost::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
+        var invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, worker, lifetime, tools);
+        using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
         var previousWait = Host.McpServer.ApprovalWaitOverrideForTests;
         var previousSettings = TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
         new TiaOpenness.Shared.ApprovalSettings(true, 1).Save(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
@@ -651,10 +651,10 @@ public sealed class UnifiedPortAdmissionTests
         private readonly string previousRelease;
         internal ReleaseState(string release)
         {
-            previousRelease = enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
-            enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+            previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
         }
-        public void Dispose() => enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+        public void Dispose() => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
     }
 
     private sealed class ApprovalCatalog : Host.IToolCatalogView
@@ -679,7 +679,7 @@ public sealed class UnifiedPortAdmissionTests
         }
     }
 
-    private sealed class ApprovalWorker : IFoundationWorker, enginehost::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class ApprovalWorker : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Calls, Applies;
         public bool Faulted => false;
@@ -689,7 +689,7 @@ public sealed class UnifiedPortAdmissionTests
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new InvalidOperationException("No restart expected.");
         public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new Lane());
-        public Task<enginehost::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
             => throw new InvalidOperationException("No engine dispatch expected.");
         private sealed class Lane : IDisposable { public void Dispose() { } }
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)

@@ -1,5 +1,5 @@
 extern alias foundationhost;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,8 +8,8 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using Xunit;
-using Catalog = enginehost::TiaMcp.FoundationHost.FoundationCatalog;
-using Data = enginehost::TiaMcp.FoundationHost.ReleaseCatalogData;
+using Catalog = toolpipeline::TiaMcp.FoundationHost.FoundationCatalog;
+using Data = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
 
 namespace TiaMcp.FoundationHost.Tests;
 
@@ -97,11 +97,11 @@ public sealed class HostCatalogTests
         var universe = Data.Releases.Keys.SelectMany(key => ToolUsageCatalog.ProfileEntries(key))
             .Select(row => (string)row!["currentName"]!).ToHashSet(StringComparer.Ordinal);
         var (host, _, _) = Build(release);
-        var requirements = enginehost::TiaMcpServer.ModelContextProtocol.McpPromptRegistration.Requirements(universe);
+        var requirements = toolpipeline::TiaMcpServer.ModelContextProtocol.McpPromptRegistration.Requirements(universe);
         Assert.Equal(30, requirements.Count);
         Assert.All(requirements.Values, tools => Assert.Contains("GetToolUsage", tools));
         var services = new ServiceCollection();
-        enginehost::TiaMcpServer.ModelContextProtocol.McpPromptRegistration.Configure(services.AddMcpServer(), host.All.Keys, universe);
+        toolpipeline::TiaMcpServer.ModelContextProtocol.McpPromptRegistration.Configure(services.AddMcpServer(), host.All.Keys, universe);
         using var provider = services.BuildServiceProvider();
         var actual = provider.GetServices<McpServerPrompt>().Select(prompt => prompt.ProtocolPrompt.Name).OrderBy(name => name, StringComparer.Ordinal);
         var expected = requirements.Where(pair => pair.Value.All(host.All.ContainsKey)).Select(pair => pair.Key).OrderBy(name => name, StringComparer.Ordinal);
@@ -189,7 +189,7 @@ public sealed class HostCatalogTests
 
     private static (Catalog Host, IReadOnlyList<McpServerTool> Shared, ISet<string> Essentials) Build(string release)
     {
-        enginehost::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
+        toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
         using var worker = new MetadataWorker();
         var shared = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
         var essentials = ToolUsageCatalog.ProfileEntries(release)

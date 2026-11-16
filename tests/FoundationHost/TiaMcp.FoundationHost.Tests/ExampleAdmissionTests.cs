@@ -1,11 +1,11 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Logic.V4;
 using TiaMcpServer.ModelContextProtocol;
 using TiaOpenness.Shared;
 using Xunit;
-using Examples = enginehost::TiaMcpServer.ModelContextProtocol.ToolExamples;
+using Examples = toolpipeline::TiaMcpServer.ModelContextProtocol.ToolExamples;
 
 public sealed class ExampleAdmissionTests
 {

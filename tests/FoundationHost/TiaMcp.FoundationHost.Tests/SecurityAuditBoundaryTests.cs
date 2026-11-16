@@ -1,10 +1,10 @@
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using Xunit;
-using HardwareContract = enginehost::TiaMcpServer.ModelContextProtocol.HardwareContract;
-using HardwareSecurityPortService = enginehost::TiaMcpServer.Siemens.Services.HardwareSecurityPortService;
-using SecurityToolContract = enginehost::TiaMcpServer.ModelContextProtocol.SecurityToolContract;
-using ResponseMessage = enginehost::TiaMcpServer.ModelContextProtocol.ResponseMessage;
+using HardwareContract = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract;
+using HardwareSecurityPortService = toolpipeline::TiaMcpServer.Siemens.Services.HardwareSecurityPortService;
+using SecurityToolContract = toolpipeline::TiaMcpServer.ModelContextProtocol.SecurityToolContract;
+using ResponseMessage = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage;
 
 namespace TiaMcp.FoundationHost.Tests;
 

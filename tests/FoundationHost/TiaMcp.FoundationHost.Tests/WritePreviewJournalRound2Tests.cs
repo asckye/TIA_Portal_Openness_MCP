@@ -1,9 +1,9 @@
 extern alias adaptertests;
-extern alias enginehost;
+extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using Xunit;
 using Native = adaptertests::TiaMcp.Adapters.Contracts.Tests.WriteRollbackProductionTests;
-using Host = enginehost::TiaMcpServer.ModelContextProtocol;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 [Collection(BundleSelectionCollection.Name)]
 public sealed class WritePreviewJournalRound2Tests
