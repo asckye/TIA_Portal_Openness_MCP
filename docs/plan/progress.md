@@ -1,10 +1,12 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-13，已发布 v4.0.0-beta.4（`48abffe8`）
+状态：现行 · 最后核对：2026-11-16，已发布 v4.0.0-beta.4（`48abffe8`），beta.5 未发布
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
+
+- **2026-11-16 beta.5 修复基本完成。** beta.4 V21 回归的全部修复任务（VMFIX-6b 至 11、B21、B27、B28）、NO-LOCK 1–8、DES-4R2/R3、TIDY-7 和 HOST-RENAME 已合并；剩余 LONG-LINE-GATE（实现中），以及需要维护者开启虚拟机的 MTA-1 与 VMFIX-10D，见[开发计划](plan.md#400-beta5)。NO-LOCK 8b 删除了 `meta.requiresSessionReset` 与 `SESSION_RESET_REQUIRED`，读取它们的客户端需改读 `meta.outcome` 和 `GetSessionState.unsettled`，见 CHANGELOG。GitHub CI 的 `validate-bundle` 自 2026-11-05 起失败，CI-RED（`69e5c073`）修复测试样本换行与中文编码后恢复通过。全部变化仍待真机复验。
 
 - **2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归修复、NO-LOCK、DES-4R2/R3 和合并后的整理；API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF 共十项移到 beta.6，4.0 正式版仍以它们完成为条件，见[开发计划](plan.md)。
 
@@ -33,10 +35,10 @@
 | HANG-GUARD、FAST-GATE、TREND-ALERT | 已集成 `bc860ac7`、`1c4031b6`、`47437168`、`3c7a1a4b`，GUI 输入先独占，其余分片随后并行 | 保留所有功能和数量门槛，后续看主机趋势 |
 | CI-FIX4 | 已集成 `1d8eb834`、`327c3d82`、`6e4cc3a0`，会话导出句柄隔离、worker 重启清理、请求版本策略 | 多会话和 worker 重启仍待真机确认 |
 | APPROVAL-GATE | 已集成 `48abffe8`，打包审批检查换用能走到审批的写工具，新增无 Portal 时 `CreateDevice` 先被拒绝的检查 | 待真机复验 |
-| NO-LOCK-1 | 已集成至 `20a8fcc7`，去掉会话锁：结果不明的调用记入未确认清单，后续独立调用不再被拒绝，ADR 0034 | 第 4、6、7、8 部分未完成 |
+| NO-LOCK-1 | 已集成至 `20a8fcc7`，去掉会话锁：结果不明的调用记入未确认清单，后续独立调用不再被拒绝，ADR 0034 | 第 4、6、7、8 部分已于 2026-11-14 至 11-15 合并（至 `26f8b9cd`） |
 | NO-LOCK-2 | 已集成 `3295dad1`–`1dd4df49`，超时不再判故障或结束 worker：回答执行中，`GetCallResult` 取迟到结果，执行中拒绝重启和断开，同一写入未读前拒绝重发 | 待真机复验 |
 | MEMBER-COMMENT | 已集成 `ace1ce4c`–`7d9886b3`，`PatchPlcBlockDocument` 的 `setMemberComment` 为 DB、FB/FC 接口和 UDT 成员加注释，八版 | UDT 无校验导入；待真机复验 |
-| NO-LOCK-3 | 已集成至 `7cfe4acb`，租约改为记录并带上一任未确认请求，断开后可在同一会话以新代次重连，去掉 `RequiresTiaRestart` 等需重启字段，新增 `PREVIOUS_OWNER_UNCLEAN` 警告 | 第 4 部分进行中；待真机复验 |
+| NO-LOCK-3 | 已集成至 `7cfe4acb`，租约改为记录并带上一任未确认请求，断开后可在同一会话以新代次重连，去掉 `RequiresTiaRestart` 等需重启字段，新增 `PREVIOUS_OWNER_UNCLEAN` 警告 | 待真机复验 |
 | NO-LOCK-5 | 已集成至 `cc6e6d2e`，TIA 对话框随执行中答复报告，只应答仅「确定」的提示框，只读读取窗口标题，编译、下载、导入导出、归档与库更新预算 300 秒 | 待真机复验 |
 | DES-4R2 | 已集成 `46d02fd4`–`e356c135`，参数错误用 RFC 6901 指针定位字段，新增 `details.expected`，`CompareProjects.kind` 与 `ExportUnifiedEngineeringList.category` 声明枚举；未声明的调用方键名在八版所有路径上都不回显 | 八版契约基线已重新捕获；待真机复验 |
 | VMFIX-6a、7A、7B、8、8B、9A、9B、10A、10B、10C | 已集成，beta.4 V21 回归的确定结果误报、Unified 绑定与模板、可选组件加载、实时监视与删除确认、Classic HMI 绝对路径等 | 2026-11-13 对照 master 核实；待真机复验 |

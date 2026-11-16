@@ -123,7 +123,7 @@ beta.3 之后已合并：CI-FIX（`67ca6816`）、PREP-SLIM（`ccc8f7aa`、`d1a7
 - FAST-GATE D1、D2、D4 批准，D3 仅在 Part 2 后仍超过 10 分钟时考虑，D5–D8 暂不实施。HANG-GUARD 的等待、已列速度断言和预算调整获批，WriteGuard 的 15、20 秒保持，先于 FAST-GATE Part 2 合并。GUI 输入通道独占，其余三分片随后并行。传输保持 full，每组最多八版，遇 WinError 10055 写主 checkout 持久标记后降至四版。测试管道隔离来自每个分片独立设置路径派生的名称。
 - TREND-ALERT 只提示测试与成功作业超过近期中位数两倍的耗时，至少五条历史，比较最近至多二十条。历史缺失、坏行和读写失败不改变退出码。每次发布前在 prepare 摘要中报告最近提示及其提交、时间与当前 HEAD 的关系。
 - 整理与审查。TIDY-7、HOST-RENAME、LONG-LINE-GATE 移到 beta.5 开头，在 DES-4 Parts 2、3 合并之后执行，避免仍开的分支无法跟随文件拆分或改名。只有 High、Medium 触发返工，Low 合并后排期。超过三轮审查先停下复核设计并告知维护者。
-- 取消锁会话。2026-11-05 维护者决定全面取消锁会话，以及对重启 TIA、worker 和 MCP 的要求，八版一致，取代 [ADR 0008](../standards/decisions/0008-worker-timeouts-and-faults.md) 的显式恢复。任何调用都不因之前的调用出错而被拒绝；确实未知的写入只对该次调用如实报告，不重放、不自动保存；worker 故障自动恢复并重新绑定；到期不终止仍在运行原生调用的 worker；租约随持有者结束，空闲的遗弃会话让出 TIA。任务 NO-LOCK，落地时写 ADR 0034；代码尚未改动，ADR 0008 在此之前仍描述当前行为。
+- 取消锁会话。2026-11-05 维护者决定全面取消锁会话，以及对重启 TIA、worker 和 MCP 的要求，八版一致，取代 [ADR 0008](../standards/decisions/0008-worker-timeouts-and-faults.md) 的显式恢复。任何调用都不因之前的调用出错而被拒绝；确实未知的写入只对该次调用如实报告，不重放、不自动保存；worker 故障自动恢复并重新绑定；到期不终止仍在运行原生调用的 worker；租约随持有者结束，空闲的遗弃会话让出 TIA。任务 NO-LOCK 的 8 个部分已于 2026-11-15 全部合并，决定见 ADR 0034。
 - 暂停。2026-11-05 维护者决定 beta.4 回归的分析结束后暂停开发，以后再继续。
 - 回归修复决定。2026-11-11 维护者恢复开发，批准 VMFIX-7、8、9、10A、10B，NO-LOCK 和 EXAMPLES-B4 的全部 34 项建议，含其中列出的断言、检查与阈值变更：只读调用丢失回复报读取失败；弹窗只自动确认仅有“确定”的提示，“是”永不代答；一直不返回的调用只能由人结束；worker 长操作预算 1800 秒改为 300 秒；`mcp/` 草案 WS-23、WS-24、WS-41 在 ADR 0034 登记为有意偏离；离线发布校验的 5 个工具另立任务撤回；PUT/GET 与可下载文件、块指纹工具先保留，真机探查后再定。
 
@@ -133,48 +133,34 @@ beta.3 之后已合并：CI-FIX（`67ca6816`）、PREP-SLIM（`ccc8f7aa`、`d1a7
 
 TIDY-7、HOST-RENAME 和 LONG-LINE-GATE 必须等 DES-4R2、DES-4R3 合并，拆分与改名后的文件无法靠重命名检测跟随仍开的分支。许可沿用 2026-10-30 决定。
 
-本表状态于 2026-11-13 逐条对照 master（`e356c135`）核实：判据是任务说明点名的源文件与测试是否存在并具备所述行为，辅以 `build-tools/release/baselines/approved-check-changes.json` 的 `task` 字段。提交信息不带任务编号，不能据此判断。
+本表状态于 2026-11-16 对照 master（`31bcea9a`）核实：判据是任务说明点名的源文件与测试是否存在并具备所述行为，辅以 `build-tools/release/baselines/approved-check-changes.json` 的 `task` 字段。提交信息不带任务编号，不能据此判断。
 
 ### 已合并
 
 | 编号 | 内容 |
 |---|---|
-| VMFIX-6a | 工具提示去重、成员列表上限、随附示例 |
+| VMFIX-6a、6b | 工具提示去重、成员列表上限、随附示例；参数与结果文字的剩余修正，步骤失败状态与 NOT_FOUND 口径 |
 | VMFIX-7A、7B | 确定的结果被报成未知（移块、工艺对象、交叉引用、批量文档导入、验证导入等） |
-| VMFIX-8 | Unified PLC 绑定变量、按钮事件脚本回归、动态化删除、主题颜色 |
-| VMFIX-8B | 从 VMFIX-8 审查 M3 拆出：Unified 模板布局尺寸、PLC 同步预检理由 |
-| VMFIX-9A | 可选 Openness 程序集按精确 SDK 标识加载，区分未安装与加载失败 |
-| VMFIX-9B | `PreviewToolCall` 与安全自检 |
-| VMFIX-10A | beta.4 回归的中等缺陷（第一批） |
-| VMFIX-10B | 实时监视判定、在线比较拒绝、离线库分析、删除确认 |
-| VMFIX-10C | 从 10A 拆出：Classic HMI 与 SiVArc 绝对路径 |
-| EXAMPLES-B4 | 用 V21 实测参数修正工具示例，只对 V21 标注实测 |
+| VMFIX-8、8B | Unified PLC 绑定变量、按钮事件脚本回归、动态化删除、主题颜色；模板布局尺寸、PLC 同步预检理由 |
+| VMFIX-9A、9B | 可选 Openness 程序集按精确 SDK 标识加载；`PreviewToolCall` 与安全自检 |
+| VMFIX-10A、10B、10C | beta.4 回归的中等缺陷；实时监视判定、在线比较拒绝、离线库分析、删除确认；Classic HMI 与 SiVArc 绝对路径 |
+| VMFIX-11（11a–11j） | beta.4 回归的低优先级余项：写前拒绝不再报未知、硬件与项目调用的类型化错误码和公开参数名、批量调用指针、29 个通用写预览注明目标未核实、Web API 证书与设备联系如实报告、HMI 返回整理、硬件读取完整性、找不到类错误指向声明参数、工具族条件与 ISO 8601 日期、目录上限与工艺对象说明 |
+| EXAMPLES-B4、EXAMPLES-B4B | 工具示例改用 V21 实测参数；示例工程名统一为 `ExampleProject` |
 | MEMBER-COMMENT | `PatchPlcBlockDocument` 的 `setMemberComment`，八版 |
-| GUI-FLAKE | GUI 测试稳定性（`WpfContext.ReadLeftButton`） |
-| NO-LOCK 1 | 一次调用结果不明不再连累后续调用，ADR 0034 |
-| NO-LOCK 2 | 到期不判故障、不结束 worker：回答执行中，`GetCallResult` 取迟到结果 |
-| NO-LOCK 3 | 租约改为记录，断开后可在同一会话重连，去掉需重启 TIA 的字段 |
-| NO-LOCK 5 | TIA 对话框随执行中答复报告，只应答仅「确定」的提示框，长调用预算 300 秒 |
-| DES-4R2 | 参数错误给出准确 JSON 指针、`details.expected` 与枚举允许值；未声明的调用方键名不回显 |
+| GUI-FLAKE、GUI-FOCUS-3 | GUI 测试稳定性；GUI 套件在独立桌面上运行，门禁期间可正常使用电脑 |
+| NO-LOCK 1–8 | 取消锁会话：未知结果只记入未确认清单、到期不结束 worker、租约为记录、worker 自动恢复并重新绑定、对话框随执行中答复报告、遗弃会话让出 TIA、可回读的工具自行确认；8a 只把发出原生写入却无法确认的情况报为未知，去掉适配器内的残留锁；8b 删除 `meta.requiresSessionReset` 与 `SESSION_RESET_REQUIRED`（不兼容改动，八版契约基线已重新捕获），ADR 0034 |
+| DES-4R2、DES-4R3 | 参数错误给出准确 JSON 指针、`details.expected` 与枚举允许值；原生失败带去敏首行与 `innererror`，`GetNativeInvocationLog` 按诊断编号筛选 |
+| B21、B27、B28 | 编译设备预览、导入工艺对象默认不覆盖；硬件路径统一解析并列出候选；修改 Windows 用户组的工具提示更明确 |
+| STDIO-FRAME、TEST-TRIM、CI-RED | STDIO 每条消息整行写出；删除恒绿测试；GitHub `validate-bundle` 恢复通过 |
+| TIDY-7、HOST-RENAME | 拆分剩余大文件，IL 不变；`src/EngineHost` 改名为 `src/ToolPipeline`，C# 类型与命名空间保持 |
 
 ### 未完成
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
-| NO-LOCK 4 | worker 自己恢复并重新绑定工程 | 实现中，第三轮审查 | 2026-11-05 |
-| NO-LOCK 6 | 被遗弃的会话让出 TIA，正在工作的会话受保护 | 未开始（NO-LOCK 4 之后） | 2026-11-05 |
-| NO-LOCK 7 | 能回读确认的工具自己确认结果 | 未开始 | 2026-11-05 |
-| NO-LOCK 8 | 逐处重新归类旧标志，再删除旧名称 | 未开始（DES-4R3 之后） | 2026-11-05 |
-| DES-4R3（原 DES-4 Part 3） | 原生失败带去敏首行、`innererror`（异常类型、HResult、诊断编号），`GetNativeInvocationLog` 按诊断编号筛选和分页 | 说明已写，排在 NO-LOCK 第 4 部分合并之后；旧分支 `refactor/DES-4-P3` 仅作参考 | 2026-11-13 |
-| B21、B27、B28 | 从 DES-4 Part 2 拆出：三个工具补写入预览，硬件路径统一解析，预检预防措施按操作类别推导 | 未写说明，各自独立任务 | 2026-11-13 |
-| VMFIX-6b | 参数与结果文字的剩余修正，步骤失败状态与 NOT_FOUND 口径 | 说明已写（并入 `VMFIX-6A.md`），DES-4R2 已合并，可开工 | 2026-11-05 |
+| LONG-LINE-GATE | 合并门只检查分支新增或改动的行不超过 160 字符，不做全仓重排（维护者 2026-11-16 决定） | 实现中 | 2026-11-16 |
 | VMFIX-10D | S7DCL 准入与 PLC 文档差异（真机缺陷 M11、M13） | 说明已写，需要维护者开启虚拟机 | 2026-11-11 |
-| VMFIX-11 | beta.4 回归的低优先级余项，按文件区域分组 | 未写说明 | 2026-11-05 |
-| EXAMPLES-B4B | 示例中的工程名统一为 `ExampleProject`（EXAMPLES-B4 的 D4）；会改 V19/V20/V21 三份契约基线，须重新捕获 | 说明已写 | 2026-11-11 |
-| TIDY-7 | 剩余大文件拆分与新增长行整理，保持行为和 IL | 说明已写，排队（DES-4R2、DES-4R3 合并后） | 2026-11-05 |
-| HOST-RENAME | 共享工具流程改名为 `src/ToolPipeline`，同步链接源、工程与文档路径；C# 类型与命名空间保持 | 已实现，待主机合并门验证 | 2026-11-16 |
-| LONG-LINE-GATE | 将 `wrap-long-lines -Check` 接入合并门 | 未写说明，排队（上述拆分与改名后） | 2026-11-05 |
-| MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 说明已写，排队 | 2026-11-01 |
+| MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 说明已写，需要维护者开启虚拟机 | 2026-11-01 |
 | P8-97b | 单块、块组编译 | 并入 API-P1b（beta.6） | 2026-10-27 |
 
 ## 4.0.0-beta.6（新功能，2026-11-13 从 beta.5 移入）
