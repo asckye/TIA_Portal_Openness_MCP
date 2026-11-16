@@ -171,8 +171,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (machine.Target.Release != release) throw new ArgumentException("Machine release must match the session release.", "machine.target.release");
             bool newProject = machine.Target.Project.Mode == "new";
             var before = Target(allowUnbound: newProject);
-            if (newProject ? before.Project.Length != 0 : CandidatePrimitives.CanonicalProject(machine.Target.Project.ProjectIdentity!)
-                != CandidatePrimitives.CanonicalProject(before.Project))
+            if (newProject ? before.Project.Length != 0 : GenerationProjectPath.CanonicalIdentity(machine.Target.Project.ProjectIdentity!)
+                != GenerationProjectPath.CanonicalIdentity(before.Project))
                 throw new GenerationCallRejectionException(new Error(newProject ? "New-project planning requires a connected portal without a bound project."
                             : "Bind the intended existing project first and supply its exact project file.",
                             new PreconditionFailedDetails("generation-project", before.Project)));

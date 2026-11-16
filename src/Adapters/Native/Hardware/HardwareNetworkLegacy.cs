@@ -42,17 +42,6 @@ namespace TiaMcp.Adapters
             };
         }
 
-        private static bool HardwareIsSupportedProfinetSubnetType(string subnetType)
-        {
-            var value = (subnetType ?? string.Empty).Trim();
-            return value.Length == 0
-                   || value.Equals("PROFINET", StringComparison.OrdinalIgnoreCase)
-                   || value.Equals("PN", StringComparison.OrdinalIgnoreCase)
-                   || value.Equals("IndustrialEthernet", StringComparison.OrdinalIgnoreCase)
-                   || value.Equals("Industrial Ethernet", StringComparison.OrdinalIgnoreCase)
-                   || value.Equals("PN/IE", StringComparison.OrdinalIgnoreCase);
-        }
-
         private Subnet? HardwareFindSubnet(string subnetName)
         {
             if (project == null || string.IsNullOrWhiteSpace(subnetName)) return null;

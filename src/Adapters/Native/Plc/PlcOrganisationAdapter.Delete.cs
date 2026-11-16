@@ -357,8 +357,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human " +
                         "Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
                 else warnings
-                    .Add("⚠️ Cross-references for this UDT could not be retrieved (" + (crossRefReason ?? "unknown reason")
-                        + "); this **does not mean** the UDT is unused."
+                    .Add("Warning: Cross-references for this UDT could not be retrieved (" + (crossRefReason ?? "unknown reason")
+                        + "); this **does not mean** the UDT is unused. "
                     + "Back up with ExportPlcType before deletion; compile with CompilePlcSoftware afterwards.");
             }
             result["warnings"] = warnings;

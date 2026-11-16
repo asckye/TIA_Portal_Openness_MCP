@@ -13,6 +13,18 @@ namespace TiaMcp.Generation.Planning.Tests
 {
     public sealed class PlanningTests
     {
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void Illegal_project_paths_return_the_observed_identity_failure(bool observed)
+        {
+            var fixture = new PlanningFixture();
+            if (observed) fixture.Observed.ProjectIdentity = "C:/illegal\0/project.ap21";
+            else fixture.Machine.Target.Project.ProjectIdentity = "C:/illegal\0/project.ap21";
+            var error = Assert.Throws<GenerationValidationException>(() => fixture.Build());
+            Assert.Contains(error.Errors, e => e.Path == "/observed/projectIdentity" && e.Rule == "identity");
+        }
+
         public static IEnumerable<object[]> CulturesAndReleases => PlanningFixture.Releases.SelectMany(r => new[] { "en-US", "fr-FR", "tr-TR", "zh-CN" }.Select(c => new object[] { r, c }));
 
         public static IEnumerable<object[]> IdentityReleases => PlanningFixture.Releases.Select(r => new object[] { r });

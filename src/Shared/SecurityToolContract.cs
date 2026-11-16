@@ -55,7 +55,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string status = data["status"]?.ToString() ?? "";
             Outcome outcome; Execution execution; Error? error = null;
             if ((HostBehavior.DocumentedRefusal(data)
-                ?? HostBehavior.KnownRefusalWithMessage(data, success, HardwareContract.ReleaseKey, tool, nativeMessage)) is Error refusal)
+                ?? HostBehavior
+                    .KnownRefusalWithMessage(data, success, HardwareContract.ReleaseKey, tool, nativeMessage, field => McpServer
+                        .MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(data, success))
             { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =

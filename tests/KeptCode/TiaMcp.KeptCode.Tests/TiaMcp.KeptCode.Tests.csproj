@@ -66,6 +66,7 @@
     <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/InfrastructureContractsTestsFixture.cs" />
     <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/HardwareContractsTestsFixture.cs" />
     <Compile Include="../../Fixtures/TiaMcp.Offline.Fixtures/OptionalPackageContractsTestsFixture.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiSnapshot.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiReadSafety.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.Values.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.cs" />

@@ -10,6 +10,44 @@ namespace TiaMcp.Engine.Tests;
 
 public sealed class MigrationResultTests
 {
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("fr-FR")]
+    public void Snapshot_dates_are_round_trip_invariant(string culture)
+    {
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo(culture);
+            var date = new DateTime(2026, 11, 16, 12, 34, 56, DateTimeKind.Utc).AddTicks(1234567);
+            var snapshot = HmiSnapshot.Capture(date);
+            Assert.Equal("2026-11-16T12:34:56.1234567Z", ((HmiArray)snapshot["nodes"]!)[0]!.Field("value"));
+        }
+        finally { System.Globalization.CultureInfo.CurrentCulture = previous; }
+    }
+
+    [Fact]
+    public void Security_device_path_messages_use_the_declared_name()
+    {
+        var error = Assert.Throws<ArgumentException>(() => TiaMcpServer.Siemens.ProjectSecurityLogic.ValidateDevicePath("{}"));
+        Assert.Contains("devicePath", error.Message);
+        Assert.DoesNotContain("devicePathJson", error.Message);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    [InlineData("PN")]
+    [InlineData(" industrial ethernet ")]
+    public void Network_planner_accepts_the_default_and_supported_subnet_types(string subnetType)
+    {
+        var plan = JsonSerializer.Serialize(new { operations = new[] {
+            new { type = "EnsureSubnet", anchorDeviceItemPath = "PLC/CPU", subnetName = "PN", subnetType } } });
+        var result = HardwareNetworkPlanValidator.Validate(plan);
+        Assert.True((bool?)result["ok"], result.ToJsonString());
+        Assert.Empty(result["errors"]!.AsArray());
+    }
+
     public static IEnumerable<object[]> Tools()
     {
         foreach (string release in new[] { "19", "20", "21" })
@@ -57,6 +95,7 @@ public sealed class MigrationResultTests
         Assert.False(string.IsNullOrEmpty(cursor));
         var reply = new GraphicSelectionAdapter(session, adapter)
             .ReadUnifiedGraphicSelection("HMI", "Fixture", "/Overview", "[\"Button\"]", cursor);
+        Assert.Equal("GetUnifiedGraphicSelection", reply.Meta!["tool"]);
         Assert.Equal("GetUnifiedGraphicSelection", reply.Meta!["scope"]!.Field("tool"));
         Assert.Equal(true, reply.Meta["apiCallSuccess"]);
         Assert.Equal(true, reply.Meta["traversalComplete"]);
@@ -127,7 +166,7 @@ public sealed class MigrationResultTests
         public void RecordHmiReadFault(HmiObject meta) => throw new InvalidOperationException("No native fault is expected.");
         public HmiMessage RunHmiStepTool(string tool, Func<HmiObject, string> action, bool requiresProject = true)
         {
-            var meta = new HmiObject();
+            var meta = new HmiObject { ["tool"] = tool };
             return new HmiMessage { Message = action(meta), Meta = meta };
         }
         public void Dispose()

@@ -113,8 +113,13 @@ namespace TiaMcp.Adapters
                 }
                 reply.MayHaveChanged = session.MayHaveChanged;
                 if (reply.Value is HmiMessage message)
-                    reply.OutcomeUnknown = !request.DryRun && session.MayHaveChanged && message.Meta.TryGetValue("operationSuccess", out var success)
-                        && success is false;
+                {
+                    bool partial = message.Meta.TryGetValue("rollbackOutcome", out var outcome) && outcome as string == "partial";
+                    bool restored = !partial && message.Meta.TryGetValue("rollbackCompleted", out var rollback) && rollback is true;
+                    if (restored) reply.MayHaveChanged = false;
+                    reply.OutcomeUnknown = !request.DryRun && session.MayHaveChanged
+                        && (partial || !restored && !partial && message.Meta.TryGetValue("operationSuccess", out var success) && success is false);
+                }
                 if (reply.Value is HmiImportBatch batch && session.MayHaveChanged && batch.Failed.Count != 0)
                     reply.OutcomeUnknown = !request.DryRun;
             }

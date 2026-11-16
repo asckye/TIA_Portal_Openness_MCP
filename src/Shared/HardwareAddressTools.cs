@@ -243,7 +243,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = after != null
                         ? message
-                        : $"⚠ UNVERIFIED: {message}: the write call reported no error, but the updated address could not be read back; "
+                        : $"Warning: UNVERIFIED: {message}: the write call reported no error, but the updated address could not be read back; "
                           + "the address change **cannot be confirmed**. Verify it with GetDeviceItemIoAddresses or the TIA UI; "
                           + "do not treat the operation as completed before verification.",
                     Meta = meta

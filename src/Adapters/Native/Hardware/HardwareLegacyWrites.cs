@@ -1,4 +1,7 @@
 using System;
+#if !TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Logic.Siemens;
+#endif
 using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering.HW;
@@ -34,12 +37,13 @@ namespace TiaMcp.Adapters
                     return new HardwareAddressingReply { Message = "Project is null", Meta = meta };
                 }
 
-                if (!HardwareIsSupportedProfinetSubnetType(subnetType))
+                if (!SubnetTypePolicy.IsSupported(subnetType))
                 {
                     meta["failureCode"] = "INVALID_ARGUMENT";
                     meta["status"] = "InvalidParams";
                     meta["parameter"] = "subnetType";
-                    meta["nativeMessage"] = "subnetType must be one of: PROFINET, PN, IndustrialEthernet, Industrial Ethernet, PN/IE.";
+                    meta["nativeMessage"] = SubnetTypePolicy.Message;
+                    meta["allowedValues"] = SubnetTypePolicy.AllowedValues;
                     meta["error"] = meta["nativeMessage"];
                     return new HardwareAddressingReply { Message = "Invalid subnetType", Meta = meta };
                 }

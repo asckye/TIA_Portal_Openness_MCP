@@ -16,6 +16,34 @@ namespace TiaMcp.FoundationHost.Tests.Operator;
 
 public sealed class HardwareArgumentRefusalTests
 {
+    [Theory]
+    [InlineData("exportOpcUa", true)]
+    [InlineData("exportOpcUa", false)]
+    [InlineData("exportCardReaderPsc", true)]
+    [InlineData("exportCardReaderPsc", false)]
+    public void Wrong_utility_owner_reaches_the_client_as_an_itemPath_refusal(string action, bool dryRun)
+    {
+        using var worker = new BoundWorker();
+        using var selected = HardwareContract.UseRelease("21");
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var engine = NativeFixture("21");
+        string file = Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString("N") + (action == "exportOpcUa" ? ".xml" : ".psc"));
+        var native = engine.HardwareManageHardwareUtilities(action, devicePathJson: new[] { "PLC" },
+            itemPathJson: action == "exportOpcUa" ? Array.Empty<string>() : new[] { "CPU" }, filePath: file, dryRun: dryRun);
+        var result = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareToolContract.MapResult("ManageHardwareUtilities",
+            new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage {
+                Message = native.Message, Meta = JsonSerializer.SerializeToNode(native.Meta)!.AsObject()
+            }, readOnly: dryRun, current: true).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
+        Assert.Equal("/itemPath", (string?)result["error"]?["details"]?["parameter"]);
+        Assert.Equal("rejected-before-operation", (string?)result["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+        Assert.False(native.MayHaveChanged);
+        Assert.False(native.OutcomeUnknown);
+        Assert.False(File.Exists(file));
+    }
+
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(release => new object[] { release });
 
@@ -158,6 +186,10 @@ public sealed class HardwareArgumentRefusalTests
             Assert.Contains(allowed, nativeMessage, StringComparison.Ordinal);
             Assert.Contains(allowed, (string)body["error"]!["message"]!, StringComparison.Ordinal);
         }
+        Assert.Equal((string?)preview["error"]?["message"], (string?)body["error"]?["message"]);
+        var expectedAllowed = new[] { "PROFINET", "PN", "IndustrialEthernet", "Industrial Ethernet", "PN/IE" };
+        Assert.Equal(expectedAllowed, preview["error"]!["details"]!["allowedValues"]!.AsArray().Select(v => (string)v!));
+        Assert.Equal(expectedAllowed, body["error"]!["details"]!["allowedValues"]!.AsArray().Select(v => (string)v!));
         Assert.False((bool?)body["data"]?["mayHaveChanged"]);
 
         var accepted = engine.HardwareEnsureSubnet("PLC/CPU", "PN", "PN_IE_1");

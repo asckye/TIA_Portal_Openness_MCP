@@ -247,7 +247,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = unverified
-                        ? $"⚠ UNVERIFIED: {r.Message}: PlugNew has already been called; the module **may already have been inserted**, "
+                        ? $"Warning: UNVERIFIED: {r.Message}: PlugNew has already been called; the module **may already have been inserted**, "
                           + "but readback confirmation failed, so the outcome cannot be determined. Verify with GetDevicePlugLocations or the TIA UI before " +
                               "continuing; "
                           + "do not retry directly (it would insert a duplicate)."

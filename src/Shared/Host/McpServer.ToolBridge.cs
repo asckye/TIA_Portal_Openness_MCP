@@ -285,7 +285,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 new InvalidArgumentDetails(parameter, allowedValues, expected: expected));
         internal static InvalidArgumentDetails ArgumentDetails(string tool, string? parameter, JsonObject? evidence = null)
         {
-            parameter ??= (string?)(evidence?["parameter"] ?? evidence?["rejectedParameter"]);
+            string? Text(JsonNode? value) => value is JsonValue scalar && scalar.TryGetValue<string>(out var text) ? text : null;
+            parameter ??= Text(evidence?["parameter"]) ?? Text(evidence?["rejectedParameter"]);
             var target = parameter == null ? null : SessionCatalog()?.Find(tool, includeUnavailable: true);
             if (parameter == null || target == null || !target.Tool.InputSchema.GetProperty("properties").TryGetProperty(parameter, out var member))
                 return new InvalidArgumentDetails("", Array.Empty<string>());
@@ -373,7 +374,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var body = ResultBody(result)?.DeepClone() as JsonObject;
             if (body?["data"] is JsonObject data)
             {
-                foreach (var pair in plan) data[pair.Key] = pair.Value?.DeepClone();
+                foreach (var pair in plan)
+                    if (pair.Key is not ("targetVerified" or "scope")) data[pair.Key] = pair.Value?.DeepClone();
                 data["dryRun"] = writing ? false : dryRun;
                 if (!writing) data["readOnlyInvocation"] = true;
                 result.StructuredContent = body;
@@ -386,8 +388,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool != "EnsureSubnet") return null;
             string? subnetType = (string?)JsonSerializer.SerializeToNode(arguments)!["subnetType"];
             return TiaMcp.Logic.Siemens.SubnetTypePolicy.IsSupported(subnetType) ? null
-                : InvalidInput("subnetType", "Industrial Ethernet/PROFINET subnet type",
-                    "", "IndustrialEthernet", "Industrial Ethernet", "PROFINET", "PN", "PN/IE");
+                : new Error(TiaMcp.Logic.Siemens.SubnetTypePolicy.Message,
+                    new InvalidArgumentDetails("subnetType", TiaMcp.Logic.Siemens.SubnetTypePolicy.AllowedValues,
+                        expected: "Industrial Ethernet/PROFINET subnet type"));
         }
         internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
                 string expectedProjectFile = "", bool writing = true)

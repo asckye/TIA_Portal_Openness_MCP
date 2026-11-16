@@ -5,6 +5,7 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         public string ReleaseKey => "21";
+        internal Func<Exception, PlcSoftwareFailure>? EngineeringReflectionFailure => null;
         public HmiMessage NativeReply { get; set; } = new();
         public bool NativeMayHaveChanged { get; set; }
         public int NativeCalls { get; set; }
@@ -91,4 +92,74 @@ namespace TiaMcp.Adapters.Native.Hmi
         public object DeleteUnifiedHmiDynamization(params object?[] args) => session.Invoke();
         public object DeleteEmptyUnifiedHmiScreenGroup(params object?[] args) => session.Invoke();
     }
+}
+
+namespace TiaMcp.Adapters.Native.Hmi
+{
+    internal sealed class HmiDescribeAdapter(HmiSession session)
+    {
+        public object DescribeHmiScreen(params object?[] args) => session.Invoke();
+        public object DescribeHmiScreenItem(params object?[] args) => session.Invoke();
+        public object DescribeHmiSoftware(params object?[] args) => session.Invoke();
+        public object DescribeHmiTag(params object?[] args) => session.Invoke();
+        public object DescribeHmiTagTable(params object?[] args) => session.Invoke();
+        public object GetHmiProgramInfo(params object?[] args) => session.Invoke();
+    }
+    internal sealed class HmiExchangeAdapter(HmiSession session)
+    {
+        public object ExportHmiConnection(params object?[] args) => session.Invoke();
+        public object ExportHmiProgram(params object?[] args) => session.Invoke();
+        public object ExportHmiScreen(params object?[] args) => session.Invoke();
+        public object ExportHmiTagTable(params object?[] args) => session.Invoke();
+        public object GetHmiConnections(params object?[] args) => session.Invoke();
+        public object GetHmiScreens(params object?[] args) => session.Invoke();
+        public object GetHmiTagTables(params object?[] args) => session.Invoke();
+        public object GetHmiTags(params object?[] args) => session.Invoke();
+        public object ImportHmiConnection(params object?[] args) => session.Invoke();
+        public object ImportHmiScreen(params object?[] args) => session.Invoke();
+        public object ImportHmiScreensFromDirectory(params object?[] args) => session.Invoke();
+        public object ImportHmiTagTable(params object?[] args) => session.Invoke();
+        public object ImportHmiTagTablesFromDirectory(params object?[] args) => session.Invoke();
+    }
+    internal sealed class HmiInspectionPortAdapter(HmiSession session)
+    {
+        public object ListHmiScreenPaths(params object?[] args) => session.Invoke();
+        public object ReadHmiScreenSnapshot(params object?[] args) => session.Invoke();
+    }
+    internal sealed class HmiTagDeletionAdapter(HmiSession session)
+    {
+        public object DeleteHmiTag(params object?[] args) => session.Invoke();
+    }
+    internal sealed class ClassicHmiFoldersAdapter(HmiSession session)
+    {
+        public object ManageClassicHmiFolder(params object?[] args) => session.Invoke();
+        public object ManageClassicHmiGraphic(params object?[] args) => session.Invoke();
+        public object ManageClassicHmiScreenObject(params object?[] args) => session.Invoke();
+        public object ReadClassicHmiScreenTree(params object?[] args) => session.Invoke();
+    }
+    internal sealed class MotionProDiagClassicHmiAdapter(HmiSession session)
+    {
+        public object ManageClassicHmiCycle(params object?[] args) => session.Invoke();
+        public object ManageClassicHmiScript(params object?[] args) => session.Invoke();
+        public object ManageClassicHmiTextGraphicList(params object?[] args) => session.Invoke();
+        public object ReadClassicHmiFaceplates(params object?[] args) => session.Invoke();
+        public object ReadClassicHmiGlobalization(params object?[] args) => session.Invoke();
+        public object ReadClassicHmiScripts(params object?[] args) => session.Invoke();
+    }
+}
+
+namespace TiaMcp.Adapters.Native.Plc
+{
+    internal interface IPlcOrganisationSession { FixtureSoftwareContainer? GetSoftwareContainer(string path); }
+    internal sealed class FixtureSoftwareContainer { internal object? Software; }
+    internal static class PlcGroupOperations
+    {
+        internal static object Get(object owner, string name) => throw new NotSupportedException();
+        internal static object? Find(object owner, string name) => throw new NotSupportedException();
+    }
+}
+
+namespace Siemens.Engineering
+{
+    public sealed class NonRecoverableException : Exception { }
 }

@@ -150,7 +150,8 @@ namespace TiaMcp.Adapters.Native.Security
                 if (action == "assignModule" || action == "unassignModule")
                 {
                     module = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem
-                        ?? throw new ArgumentException("assignModule/unassignModule need a DeviceItem (non-empty itemPathJson).");
+                        ?? throw TiaMcp.Adapters.Hardware.HardwareServicesPolicy.Argument("itemPathJson",
+                            "must identify a DeviceItem for assignModule/unassignModule (non-empty path).");
                     meta["module"] = new HmiObject { ["name"] = module.Name, ["ownerPath"] = _session.HardwareOwnerPath(module) };
                     bool assigned = server!.AssignedModules.Contains(module); meta["assignedBefore"] = assigned;
                     if (action == "assignModule" && assigned) throw new InvalidOperationException("Module is already assigned to this syslog server.");

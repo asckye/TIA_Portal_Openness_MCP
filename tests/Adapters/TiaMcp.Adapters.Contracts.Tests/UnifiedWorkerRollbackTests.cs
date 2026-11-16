@@ -37,6 +37,24 @@ public sealed class UnifiedWorkerRollbackTests
         Assert.Equal(reset, reply.OutcomeUnknown);
     }
 
+    [Theory]
+    [InlineData("restored", true, false)]
+    [InlineData("partial", false, true)]
+    [InlineData("unknown", false, true)]
+    public void Classic_worker_retains_only_unsettled_write_outcomes(string outcome, bool restored, bool unknown)
+    {
+        var worker = new Worker { NativeMayHaveChanged = true, NativeReply = new HmiMessage {
+            Meta = new Dictionary<string, object?> { ["operationSuccess"] = false,
+                ["rollbackCompleted"] = restored, ["rollbackOutcome"] = outcome } } };
+        var reply = worker.ExecuteHmi(new HmiRequest { Operation = "ManageClassicHmiFolder", DryRun = false }, false);
+        Assert.Same(worker.NativeReply, reply.Value);
+        Assert.Null(reply.Failure);
+        Assert.Equal(1, worker.NativeCalls);
+        Assert.Equal(!restored, reply.MayHaveChanged);
+        Assert.Equal(unknown, reply.OutcomeUnknown);
+        Assert.Equal(unknown, worker.NativeReply.Meta.ContainsKey("writeOutcomeUnknown"));
+    }
+
     private static UnifiedHmiRequest Request() => new() {
         Operation = "EnsureUnifiedHmiScreen", HmiSoftwarePath = "HMI", ScreenName = "Main", DryRun = false };
 }

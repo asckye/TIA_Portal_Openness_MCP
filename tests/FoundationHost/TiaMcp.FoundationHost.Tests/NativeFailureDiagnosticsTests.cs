@@ -11,6 +11,39 @@ using Xunit;
 
 public sealed class NativeFailureDiagnosticsTests
 {
+    [Theory]
+    [InlineData("x", "Rejected x; exact xylophone unchanged.", "Rejected ••••; exact xylophone unchanged.")]
+    [InlineData("x", "result=x; extra remains.", "result=••••; extra remains.")]
+    [InlineData("p\"w", "Rejected p\\\"w.", "Rejected ••••.")]
+    [InlineData("é", "Rejected \\u00e9.", "Rejected ••••.")]
+    [InlineData("p\"w", "Rejected p%22w.", "Rejected ••••.")]
+    [InlineData("é", "Rejected %c3%a9.", "Rejected ••••.")]
+    public void Scoped_secrets_are_redacted_in_native_diagnostic_echoes(string password, string message, string expected)
+    {
+        using var scope = NativeFailureDiagnostics.Begin("fixture", JsonSerializer.SerializeToElement(new { password }));
+        Assert.Equal(expected, HostBehavior.SafeDiagnostic(message));
+        Assert.Equal(expected, NativeFailureDiagnostics.Text(message));
+    }
+
+    [Theory]
+    [InlineData("\\", "\\\\")]
+    [InlineData("\\", "%5C")]
+    [InlineData("\"", "\\\"")]
+    [InlineData("\"", "%22")]
+    [InlineData("é", "\\u00e9")]
+    [InlineData("é", "%C3%A9")]
+    public void Encoded_single_character_secrets_preserve_embedded_tokens(string password, string form)
+    {
+        using var scope = NativeFailureDiagnostics.Begin("fixture", JsonSerializer.SerializeToElement(new { password }));
+        string message = "prefix" + form + "suffix; start=" + form + "; " + form + "; prefix" + form + " " + form + "suffix; raw=" + password;
+        string expected = "prefix" + form + "suffix; start=••••; ••••; prefix" + form + " " + form + "suffix; raw=••••";
+        var replace = typeof(NativeFailureDiagnostics).GetMethod("ReplaceSecrets", BindingFlags.Static | BindingFlags.NonPublic)!;
+        Assert.Equal(expected, replace.Invoke(null, new object[] { message, new[] { password } }));
+        string diagnostic = password == "\\" && form == "\\\\" ? expected.Replace(" " + form + "suffix;", " <path>;") : expected;
+        Assert.Equal(diagnostic, HostBehavior.SafeDiagnostic(message));
+        Assert.Equal(diagnostic, NativeFailureDiagnostics.Text(message));
+    }
+
     public static IEnumerable<object[]> Releases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(release => new object[] { release });
     public static IEnumerable<object[]> ReleasesAndRoutes() => Releases()
@@ -281,7 +314,10 @@ public sealed class NativeFailureDiagnosticsTests
             Assert.DoesNotContain("echoed-secret", wire);
             Assert.DoesNotContain("old-secret", wire);
             Assert.Contains("PasswordValidity: 9", wire);
-            Assert.Contains("PasswordEnabled: true x", wire);
+            Assert.Contains("PasswordEnabled: true", wire);
+            Assert.DoesNotContain("PasswordEnabled: true x", wire);
+            Assert.Equal("••••", HostBehavior.SafeDiagnostic("x"));
+            Assert.Equal("extra", HostBehavior.SafeDiagnostic("extra"));
             var diagnostic = JsonNode.Parse(wire)!["innererror"];
             Assert.Equal(-9, (int?)diagnostic?["hResult"]);
             Assert.Equal("child", (string?)diagnostic?["diagnosticId"]);

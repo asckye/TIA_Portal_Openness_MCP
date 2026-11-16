@@ -81,8 +81,8 @@ namespace TiaMcp.Logic.Generation
                 this.observed = observed ?? new ProjectModel();
                 if (!this.observed.Complete) throw CanonicalJson.Failure("/observed", "readback-incomplete", "Planning requires complete readback.");
                 if (machine.Target.Project.Mode == "existing" && (observed == null || string.IsNullOrEmpty(observed.ProjectIdentity)
-                    || CandidatePrimitives.CanonicalProject(observed.ProjectIdentity)
-                        != CandidatePrimitives.CanonicalProject(machine.Target.Project.ProjectIdentity!)))
+                    || GenerationProjectPath.CanonicalIdentity(observed.ProjectIdentity)
+                        != GenerationProjectPath.CanonicalIdentity(machine.Target.Project.ProjectIdentity!)))
                     throw CanonicalJson.Failure("/observed/projectIdentity", "identity", "Readback identity does not match the bound target.");
                 namingPart = Part(manifest.Parts.Naming, new NamingPart()); structure = Part(manifest.Parts.Structure, new StructurePart());
                 hardware = Part(manifest.Parts.Hardware, new HardwarePart()); library = Part(manifest.Parts.Library, new LibraryPart());

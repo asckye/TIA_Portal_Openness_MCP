@@ -13,6 +13,52 @@ using PortalCode = TiaMcpServer.Siemens.PortalErrorCode;
 
 public sealed class NotFoundTargetTests
 {
+    [Theory]
+    [InlineData("42")]
+    [InlineData("true")]
+    [InlineData("{}")]
+    [InlineData("[]")]
+    public void Non_string_parameter_evidence_is_absent(string json)
+    {
+        var evidence = new JsonObject { ["parameter"] = JsonNode.Parse(json) };
+        Assert.Null(Host.McpServer.MissingTargetDetails("GetDeviceAddressing", evidence: evidence).Target);
+        Assert.Equal("", Host.McpServer.ArgumentDetails("GetDeviceAddressing", null, evidence).Parameter);
+    }
+
+    [Theory]
+    [InlineData("42")]
+    [InlineData("true")]
+    [InlineData("{}")]
+    [InlineData("[]")]
+    public void Non_string_parameter_evidence_falls_back_to_a_declared_rejectedParameter(string json)
+    {
+        using var worker = new MetadataWorker();
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var catalog = new Engine.FoundationCatalog("21", LegacyHostToolRegistry.Create(worker, "21", false, hostPorts: false));
+        using var session = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(contextWorker) { Catalog = catalog });
+        var evidence = new JsonObject { ["parameter"] = JsonNode.Parse(json), ["rejectedParameter"] = "devicePath" };
+        Assert.Equal("/devicePath", Host.McpServer.ArgumentDetails("GetDeviceAddressing", null, evidence).Parameter);
+        Assert.Equal("/devicePath", Host.McpServer.MissingTargetDetails("GetDeviceAddressing", evidence: evidence).Target);
+    }
+
+    [Theory]
+    [InlineData("devicePath", "/devicePath")]
+    [InlineData("privateCallerKey", null)]
+    public void Already_exists_targets_only_declared_parameters(string parameter, string? expected)
+    {
+        using var worker = new MetadataWorker();
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var catalog = new Engine.FoundationCatalog("21", LegacyHostToolRegistry.Create(worker, "21", false, hostPorts: false));
+        using var session = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(contextWorker) { Catalog = catalog });
+        using var selected = Host.HardwareContract.UseRelease("21");
+        var result = Host.HardwareToolContract.MapResult("GetDeviceAddressing", new Host.ResponseMessage {
+            Meta = new JsonObject { ["status"] = "AlreadyExists", ["parameter"] = parameter,
+                ["operationSuccess"] = false, ["mayHaveChanged"] = false }
+        }, readOnly: true, current: false);
+        Assert.Equal("ALREADY_EXISTS", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal(expected, (string?)result.StructuredContent?["error"]?["details"]?["target"]);
+    }
+
     private static readonly string[] Releases = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"];
     private static readonly (string Family, string Tool, string Parameter)[] Families = [
         ("classic-motion", "GetMotionAxisConfiguration", "softwarePath"),

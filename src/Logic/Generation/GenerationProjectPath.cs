@@ -11,6 +11,15 @@ namespace TiaMcp.Logic.Generation
 {
     public static class GenerationProjectPath
     {
+        public static string CanonicalIdentity(string path)
+        {
+            try { return TiaMcp.Adapters.Contracts.Candidates.CandidatePrimitives.CanonicalProject(path); }
+            catch (Exception error) when (error is ArgumentException || error is NotSupportedException || error is System.IO.PathTooLongException)
+            {
+                throw CanonicalJson.Failure("/observed/projectIdentity", "identity", "Readback identity does not match the bound target.");
+            }
+        }
+
         public static string CreationFile(string release, string directory, string name)
         {
             if (string.IsNullOrWhiteSpace(name) || name == "." || name == ".." || name.Contains("/") || name.Contains("\\"))

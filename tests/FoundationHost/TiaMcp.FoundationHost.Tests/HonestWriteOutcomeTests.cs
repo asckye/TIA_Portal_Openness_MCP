@@ -36,7 +36,7 @@ public sealed class HonestWriteOutcomeTests
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         if (status == "InvalidParams") Assert.Equal("/destinationDirectory", (string?)body["error"]?["details"]?["parameter"]);
-        else Assert.Equal(status == "PreconditionFailed" ? "project-open" : parameter,
+        else Assert.Equal(status == "PreconditionFailed" ? "project-open" : status == "AlreadyExists" ? null : parameter,
             (string?)body["error"]?["details"]?[status == "PreconditionFailed" ? "condition" : "target"]);
         Assert.DoesNotContain("hunter2", body.ToJsonString(), StringComparison.Ordinal);
     }

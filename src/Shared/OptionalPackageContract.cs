@@ -98,7 +98,9 @@ namespace TiaMcpServer.ModelContextProtocol
             bool knownPartial = verificationFailed && imported > 0
                 || success == false && nativeKnown && (data["file"] is JsonObject || data["output"] is JsonObject);
             var refusal = HostBehavior.DocumentedRefusal(data) ?? (outcomeLost ? null
-                : HostBehavior.KnownRefusalWithMessage(data, success, HardwareContract.ReleaseKey, tool, response.Message));
+                : HostBehavior
+                    .KnownRefusalWithMessage(data, success, HardwareContract.ReleaseKey, tool, response.Message, field => McpServer
+                        .MissingTargetDetails(tool, field)));
             Outcome outcome = status == "HmiReadSessionBlocked" ? writes ? Outcome.Unknown : Outcome.ReadFailed
                 : refusal != null ? Outcome.RejectedBeforeOperation : unknown ? Outcome.Unknown : rejection !=
                 null ? Outcome.RejectedBeforeOperation

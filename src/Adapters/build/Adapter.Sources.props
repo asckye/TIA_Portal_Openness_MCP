@@ -23,6 +23,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Upload.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Legitimation.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/DownloadPromptPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Logic/Siemens/SubnetTypePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/LegacyOptionalAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Optional/LegacyOptionalAdapter.Sivarc.cs" />

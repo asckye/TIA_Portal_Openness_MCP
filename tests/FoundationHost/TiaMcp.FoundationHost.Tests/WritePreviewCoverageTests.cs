@@ -12,6 +12,29 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelper output)
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Executed_writes_keep_execution_scope_without_preview_claims(bool asynchronous)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var args = new { anchorDeviceItemPath = "PLC/CPU", subnetType = "PN", subnetName = "PN" };
+        var preview = Host.RunWritePreview("EnsureSubnet", true, args, () => throw new InvalidOperationException());
+        Assert.False((bool?)preview.StructuredContent?["data"]?["targetVerified"]);
+        string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
+        CallToolResult Execute() => Host.V4Result("EnsureSubnet", new JsonObject { ["scope"] = "Native subnet readback", ["applied"] = true });
+        var result = asynchronous
+            ? await Host.RunWritePreviewAsync("EnsureSubnet", false, args, () => Task.FromResult(Execute()), hash, "C:/Projects/original.ap21")
+            : Host.RunWritePreview("EnsureSubnet", false, args, Execute, hash, "C:/Projects/original.ap21");
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent!.ToJsonString());
+        Assert.True((bool?)result.StructuredContent?["data"]?["applied"]);
+        Assert.Null(result.StructuredContent?["data"]?["targetVerified"]);
+        Assert.Equal("Native subnet readback", (string?)result.StructuredContent?["data"]?["scope"]);
+        Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+    }
+
     public static IEnumerable<object[]> Releases() => CanonicalParameterRound2Tests.Releases();
 
     [Theory, MemberData(nameof(Releases))]
@@ -78,7 +101,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     }
 
     [Theory, MemberData(nameof(Releases))]
-    public void Read_action_preview_has_no_target_flag(string release)
+    public void Executed_read_omits_preview_scope_and_target_verification(string release)
     {
         using var worker = new PlanWorker { Identity = new JsonObject() };
         using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
@@ -90,8 +113,8 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.False(preview.StructuredContent["data"]!.AsObject().ContainsKey("targetBound"));
         Assert.True((bool?)preview.StructuredContent["data"]!["dryRun"]);
         Assert.True((bool?)preview.StructuredContent["data"]!["readOnlyInvocation"]);
-        Assert.Equal("Normalized arguments, input file contents and cached target identity; the target is not verified. Native validation/readback occurs during execution.",
-            (string?)preview.StructuredContent["data"]!["scope"]);
+        Assert.Null(preview.StructuredContent["data"]!["scope"]);
+        Assert.Null(preview.StructuredContent["data"]!["targetVerified"]);
         Assert.Equal(1, calls);
         Assert.Equal(0, worker.Calls);
     }
@@ -127,6 +150,8 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.Equal(dryRun, (bool?)body["data"]!["dryRun"]);
         Assert.True((bool?)body["data"]!["readOnlyInvocation"]);
         Assert.True((bool?)body["data"]!["invocationAttempted"]);
+        Assert.Null(body["data"]!["targetVerified"]);
+        Assert.DoesNotContain("target is not verified", body["data"]!.ToJsonString(), StringComparison.OrdinalIgnoreCase);
         Assert.Equal("read-only", (string?)body["meta"]!["execution"]);
         Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
         Assert.Equal(1, calls);
@@ -149,6 +174,8 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.Equal(dryRun, (bool?)body["data"]!["dryRun"]);
         Assert.True((bool?)body["data"]!["readOnlyInvocation"]);
         Assert.True((bool?)body["data"]!["invocationAttempted"]);
+        Assert.Null(body["data"]!["targetVerified"]);
+        Assert.DoesNotContain("target is not verified", body["data"]!.ToJsonString(), StringComparison.OrdinalIgnoreCase);
         Assert.Equal("read-only", (string?)body["meta"]!["execution"]);
         Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
         Assert.Equal(1, calls);

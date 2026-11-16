@@ -505,6 +505,12 @@ namespace TiaMcp.Adapters
                 var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (file.Exists)
                     throw new IOException("Export refuses to overwrite an existing file: " + file.FullName);
                 var owner = ExactHardware(devicePathJson, itemPathJson); meta["ownerPath"] = HardwareOwnerPath(owner); meta["filePath"] = file.FullName;
+                var item = owner as DeviceItem;
+                var device = owner as Device;
+                if (action == "exportOpcUa" && item == null)
+                    throw HardwareServicesPolicy.Argument("itemPathJson", "must identify the PLC DeviceItem for exportOpcUa (nonempty path).");
+                if (action == "exportCardReaderPsc" && device == null)
+                    throw HardwareServicesPolicy.Argument("itemPathJson", "must be empty to identify the Device for exportCardReaderPsc.");
                 if (dryRun) return action + " preview; nothing written ("
                     + (action == "exportOpcUa" ? "OpcUaExportProvider.Export(DeviceItem, FileInfo) writes the PLC data as OPC UA XML"
                         : "CardReaderPscProvider.Export(Device, FileInfo[, SecureString]) creates a .psc card image; f-activated devices refuse on V18 and " +
@@ -513,20 +519,16 @@ namespace TiaMcp.Adapters
                 meta["mayHaveChanged"] = true;
                 if (action == "exportOpcUa")
                 {
-                    var item = owner as DeviceItem ?? throw HardwareServicesPolicy.Argument("itemPathJson",
-                        "must identify the PLC DeviceItem for exportOpcUa (nonempty path).");
                     OpcUaExportProvider provider = HardwareRequireUtility<OpcUaExportProvider>("OPCUAExportProvider");
-                    provider.Export(item, file);
+                    provider.Export(item!, file);
                 }
                 else
                 {
-                    var device = owner as Device ?? throw HardwareServicesPolicy.Argument("itemPathJson",
-                        "must be empty to identify the Device for exportCardReaderPsc.");
 #if PLC_HARDWARE_TRANSFER_AREAS
                     CardReaderPscProvider provider = HardwareRequireUtility<CardReaderPscProvider>("CardReaderPscProvider");
-                    if (string.IsNullOrEmpty(password)) provider.Export(device, file);
+                    if (string.IsNullOrEmpty(password)) provider.Export(device!, file);
 #if PLC_HARDWARE_MRP_INSTANCES
-                    else using (var secure = HardwareSecureString(password)) provider.Export(device, file, secure);
+                    else using (var secure = HardwareSecureString(password)) provider.Export(device!, file, secure);
 #else
                     else throw new NotSupportedException("Encrypted PSC export requires V20.");
 #endif

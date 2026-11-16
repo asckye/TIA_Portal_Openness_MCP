@@ -62,7 +62,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool unknown = Flag(data, "mappingVerified") == false || !readOnly && Flag(data, "writeOutcomeUnknown") == true;
             string status = data["v4FailureCode"]?.ToString() ?? data["status"]?.ToString() ?? "";
             var refusal = HostBehavior.DocumentedRefusal(data)
-                ?? HostBehavior.KnownRefusal(data, success, HardwareContract.ReleaseKey, tool) ?? Refusal(tool, status, data);
+                ?? HostBehavior.KnownRefusal(data, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))
+                    ?? Refusal(tool, status, data);
             Outcome outcome; Execution execution; Error? error;
             if (status == "HmiReadSessionBlocked")
             {

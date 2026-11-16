@@ -67,10 +67,10 @@ namespace TiaMcpServer.Siemens
         {
             JsonArray? names;
             try { names = JsonNode.Parse(devicePathJson ?? "") as JsonArray; }
-            catch (System.Text.Json.JsonException ex) { throw new ArgumentException("devicePathJson must be a JSON array of exact names: " + ex.Message); }
-            if (names == null) throw new ArgumentException("devicePathJson must be a JSON array of exact names.");
+            catch (System.Text.Json.JsonException ex) { throw new ArgumentException("devicePath must be a JSON array of exact names: " + ex.Message); }
+            if (names == null) throw new ArgumentException("devicePath must be a JSON array of exact names.");
             if (names.Count < 1 || names.Count > 64 || names.Any(n => n is not JsonValue || string.IsNullOrWhiteSpace(n!.GetValue<string>())))
-                throw new ArgumentException("devicePathJson needs 1-64 exact nonempty names.");
+                throw new ArgumentException("devicePath needs 1-64 exact nonempty names.");
         }
         internal static void ValidateCategory(string category)
         {
@@ -152,7 +152,7 @@ namespace TiaMcpServer.Siemens
                 bool other = !string.IsNullOrWhiteSpace(targetProjectName);
                 if (other) ValidateDevicePath(targetDevicePathJson);
                 else if (string.IsNullOrWhiteSpace(targetSoftwarePath))
-                    throw new ArgumentException("targetSoftwarePath (same project) or targetProjectName + targetDevicePathJson/targetItemPathJson (other " +
+                    throw new ArgumentException("targetSoftwarePath (same project) or targetProjectName + targetDevicePath/targetItemPath (other " +
                     "open project) required.");
                 else if (string.Equals(softwarePath, targetSoftwarePath, StringComparison.OrdinalIgnoreCase))
                     throw new ArgumentException("Source and target software must differ.");

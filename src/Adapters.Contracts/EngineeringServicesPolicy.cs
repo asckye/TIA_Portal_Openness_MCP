@@ -8,7 +8,7 @@ namespace TiaMcp.Adapters.Contracts
         private static void DevicePath(string[] names)
         {
             if (names == null || names.Length < 1 || names.Length > 64 || names.Any(string.IsNullOrWhiteSpace))
-                throw new ArgumentException("devicePathJson needs 1-64 exact nonempty names.");
+                throw new ArgumentException("devicePath needs 1-64 exact nonempty names.");
         }
         private static void Text(string value, string parameter, int max)
         {
@@ -24,7 +24,7 @@ namespace TiaMcp.Adapters.Contracts
             {
                 DevicePath(devicePath);
                 if (kind == "deviceItem" && (itemPath == null || itemPath.Length == 0))
-                    throw new ArgumentException("kind=deviceItem needs a non-empty itemPathJson.");
+                    throw new ArgumentException("kind=deviceItem needs a non-empty itemPath.");
             }
             else { Text(softwarePath, "softwarePath", 256); Text(objectPath, "objectPath", 1024); }
         }
@@ -45,7 +45,7 @@ namespace TiaMcp.Adapters.Contracts
             {
                 if (!string.IsNullOrWhiteSpace(project)) DevicePath(targetDevice);
                 else if (string.IsNullOrWhiteSpace(targetSoftware))
-                    throw new ArgumentException("targetSoftwarePath (same project) or targetProjectName + targetDevicePathJson/targetItemPathJson (other " +
+                    throw new ArgumentException("targetSoftwarePath (same project) or targetProjectName + targetDevicePath/targetItemPath (other " +
                     "open project) required.");
                 else if (string.Equals(software, targetSoftware, StringComparison.OrdinalIgnoreCase))
                     throw new ArgumentException("Source and target software must differ.");

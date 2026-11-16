@@ -77,7 +77,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                     return;
                 }
                 if (type.IsPrimitive || type.IsEnum || value is decimal || value is DateTime || value is Guid || value is TimeSpan || value is Version)
-                { row["value"] = value.ToString(); return; }
+                {
+                    row["value"] = value is DateTime date ? date.ToString("o", System.Globalization.CultureInfo.InvariantCulture) : value.ToString();
+                    return;
+                }
                 if (seen.TryGetValue(value, out var previous)) { row["referencePath"] = previous; return; }
                 seen[value] = path;
                 if (depth >= maxDepth) { row["status"] = "DepthLimit"; incomplete = limited = true; return; }

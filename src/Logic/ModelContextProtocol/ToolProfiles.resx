@@ -22948,7 +22948,7 @@
             "pageIndex": 0,
             "collectionId": "before-snapshot",
             "scope": {
-              "tool": "ReadUnifiedGraphicSelection",
+              "tool": "GetUnifiedGraphicSelection",
               "softwarePath": "HMI_1",
               "expectedProject": "ExampleProject",
               "project": "ExampleProject",
@@ -23020,7 +23020,7 @@
             "pageIndex": 0,
             "collectionId": "after-snapshot",
             "scope": {
-              "tool": "ReadUnifiedGraphicSelection",
+              "tool": "GetUnifiedGraphicSelection",
               "softwarePath": "HMI_1",
               "expectedProject": "ExampleProject",
               "project": "ExampleProject",
@@ -25611,7 +25611,7 @@
               "pageIndex": 0,
               "collectionId": "before-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -25683,7 +25683,7 @@
               "pageIndex": 0,
               "collectionId": "after-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -35238,7 +35238,7 @@
               "pageIndex": 0,
               "collectionId": "before-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -35310,7 +35310,7 @@
               "pageIndex": 0,
               "collectionId": "after-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -76774,7 +76774,7 @@
               "pageIndex": 0,
               "collectionId": "before-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -76846,7 +76846,7 @@
               "pageIndex": 0,
               "collectionId": "after-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -85656,7 +85656,7 @@
               "pageIndex": 0,
               "collectionId": "before-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -85728,7 +85728,7 @@
               "pageIndex": 0,
               "collectionId": "after-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -93045,7 +93045,7 @@
               "pageIndex": 0,
               "collectionId": "before-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",
@@ -93117,7 +93117,7 @@
               "pageIndex": 0,
               "collectionId": "after-snapshot",
               "scope": {
-                "tool": "ReadUnifiedGraphicSelection",
+                "tool": "GetUnifiedGraphicSelection",
                 "softwarePath": "HMI_1",
                 "expectedProject": "ExampleProject",
                 "project": "ExampleProject",

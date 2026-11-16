@@ -256,7 +256,8 @@ namespace TiaMcp.Logic.V4
                 new NativeOperationFailedDetails(null, message, new Dictionary<string, JsonElement>()));
         }
 
-        internal static Error? KnownRefusal(JsonObject evidence, bool? success, string release, string tool)
+        internal static Error? KnownRefusal(JsonObject evidence, bool? success, string release, string tool,
+            Func<string?, NotFoundDetails>? resolveMissingTarget = null)
         {
             bool? Flag(string key) => evidence[key] is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : (bool?)null;
             if (success == true || Flag("mayHaveChanged") != false || Flag("mayHaveWrittenFiles") == true
@@ -273,8 +274,11 @@ namespace TiaMcp.Logic.V4
                     new TargetAmbiguousDetails(evidence["target"]?.ToString(),
                         (evidence["candidates"] as JsonArray)?.Select(c => c!.GetValue<string>()).ToArray() ?? Array.Empty<string>())),
                 "InvalidParams" or "INVALID_ARGUMENT" => new Error(message ?? "The request argument was refused before operation.",
-                    new InvalidArgumentDetails(parameter ?? "arguments", Array.Empty<string>())),
-                "AlreadyExists" or "ALREADY_EXISTS" => new Error(message ?? "The requested object already exists.", new AlreadyExistsDetails(parameter)),
+                    new InvalidArgumentDetails(parameter ?? "arguments",
+                        evidence["allowedValues"] is JsonArray allowed ? allowed.OfType<JsonValue>()
+                            .Where(v => v.TryGetValue<string>(out _)).Select(v => v.GetValue<string>()).ToArray() : Array.Empty<string>())),
+                "AlreadyExists" or "ALREADY_EXISTS" =>
+                    new Error(message ?? "The requested object already exists.", new AlreadyExistsDetails(resolveMissingTarget?.Invoke(parameter).Target)),
                 "NotSupported" or "NotSupportedOnVersion" or "UNSUPPORTED_CAPABILITY" => new Error(message ?? "This capability is unavailable.",
                     new UnsupportedCapabilityDetails(release, tool, null)),
                 _ => null
@@ -283,9 +287,10 @@ namespace TiaMcp.Logic.V4
             return refusal;
         }
 
-        internal static Error? KnownRefusalWithMessage(JsonObject evidence, bool? success, string release, string tool, string? message)
+        internal static Error? KnownRefusalWithMessage(JsonObject evidence, bool? success, string release, string tool, string? message,
+            Func<string?, NotFoundDetails>? resolveMissingTarget = null)
         {
-            var refusal = KnownRefusal(evidence, success, release, tool);
+            var refusal = KnownRefusal(evidence, success, release, tool, resolveMissingTarget);
             if (refusal == null) return null;
             string? nativeMessage = SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? SafeDiagnostic(message);
             return nativeMessage == null ? refusal : new Error(nativeMessage, refusal.Details);

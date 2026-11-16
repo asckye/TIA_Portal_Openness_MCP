@@ -129,7 +129,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
                 return Result(tool, root, refusal, Outcome.RejectedBeforeOperation, Completeness.None, current, writes);
             if (HostBehavior.KnownRefusal(evidence, Bool(evidence["operationSuccess"]) ?? Bool(evidence["success"]),
-                HardwareContract.ReleaseKey, tool) is Error knownRefusal)
+                HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field)) is Error knownRefusal)
                 return Result(tool, root, knownRefusal, Outcome.RejectedBeforeOperation, Completeness.None, current, writes);
             if (HostBehavior.UnchangedNativeFailure(evidence, Bool(evidence["operationSuccess"]) ?? Bool(evidence["success"])))
                 return Result(tool, root, HostBehavior.UnchangedNativeError(evidence), writes ? Outcome.Failed : Outcome.ReadFailed, Completeness.Complete,

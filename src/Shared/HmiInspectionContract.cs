@@ -75,7 +75,8 @@ namespace TiaMcpServer.ModelContextProtocol
             Error? error = null;
             Outcome outcome;
             if ((HostBehavior.DocumentedRefusal(evidence)
-                ?? HostBehavior.KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool)) is Error refusal)
+                ?? HostBehavior
+                    .KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (unknown) { outcome = Outcome.Unknown; error = Failure(true); }
             else if (compileFailed) {

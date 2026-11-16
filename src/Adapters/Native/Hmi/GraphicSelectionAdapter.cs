@@ -18,7 +18,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage ReadUnifiedGraphicSelection(string softwarePath, string expectedProject, string screenPath,
             string itemNamesJson, string cursor = "", int pageSize = 20, int budgetMs = 5000)
-            => _session.RunHmiStepTool("ReadUnifiedGraphicSelection", meta =>
+            => _session.RunHmiStepTool("GetUnifiedGraphicSelection", meta =>
             {
                 meta["readOnly"] = true; meta["softwarePath"] = softwarePath; meta["screenPath"] = screenPath;
                 var names = UnifiedGraphicSelection.Names(itemNamesJson);

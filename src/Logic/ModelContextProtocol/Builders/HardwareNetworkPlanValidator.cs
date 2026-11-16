@@ -84,8 +84,8 @@ namespace TiaMcpServer.ModelContextProtocol
             RequireNonEmpty(op, "subnetName", index, errors);
 
             var subnetType = op["subnetType"]?.ToString() ?? string.Empty;
-            if (!IsSupportedSubnetType(subnetType))
-                errors.Add($"operations[{index}].subnetType must be IndustrialEthernet/PROFINET/PN/IE.");
+            if (!TiaMcp.Logic.Siemens.SubnetTypePolicy.IsSupported(subnetType))
+                errors.Add($"operations[{index}]." + TiaMcp.Logic.Siemens.SubnetTypePolicy.Message);
 
             ValidateOptionalNetworkFields(op, index, errors, warnings);
         }
@@ -197,16 +197,6 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var lower = value.Trim().ToLowerInvariant();
             return lower is "ip" or "ipaddress" or "ipv4" or "mask" or "subnetmask" or "gateway" or "profinetname" or "devicename";
-        }
-
-        private static bool IsSupportedSubnetType(string subnetType)
-        {
-            var value = (subnetType ?? string.Empty).Trim();
-            return value.Equals("PROFINET", StringComparison.OrdinalIgnoreCase)
-                   || value.Equals("PN", StringComparison.OrdinalIgnoreCase)
-                   || value.Equals("IndustrialEthernet", StringComparison.OrdinalIgnoreCase)
-                   || value.Equals("Industrial Ethernet", StringComparison.OrdinalIgnoreCase)
-                   || value.Equals("PN/IE", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsValidSubnetMask(string value)

@@ -17,6 +17,16 @@ using Configuration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguratio
 
 public sealed class StagedGenerationTests
 {
+    [Fact]
+    public void Illegal_project_identity_fails_before_planning_or_writing()
+    {
+        using var fixture = new Fixture("21");
+        fixture.Planner.Machine.Target.Project.ProjectIdentity = "C:/illegal\0/project.ap21";
+        var error = Assert.Throws<GenerationValidationException>(() => fixture.Plan());
+        Assert.Contains(error.Errors, e => e.Path == "/observed/projectIdentity" && e.Rule == "identity");
+        Assert.Equal(0, fixture.Worker.Writes);
+    }
+
     public static IEnumerable<object[]> Releases => ReleaseEnds.OldestAndNewest(
         PlanningFixture.Releases.Select(r => new object[] { r }), _ => "generation", row => (string)row[0]);
     public static IEnumerable<object[]> PlanningStates => Releases.SelectMany(row =>

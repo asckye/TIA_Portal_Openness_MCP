@@ -51,7 +51,7 @@ namespace TiaMcp.Adapters
             {
                 if (c.Target == null) continue;
                 lines.Add(c.Label
-                    + " | type=" + (c.Target.GetType().FullName ?? c.Target.GetType().Name)
+                    + " | type=" + HardwarePublicType.Name(c.Target)
                     + " | name=" + (TryGetName(c.Target) ?? "<unnamed>"));
             }
 

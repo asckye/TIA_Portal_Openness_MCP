@@ -133,7 +133,7 @@ namespace TiaMcp.Logic.V4
         private static readonly JsonSerializerOptions DiagnosticJson = new JsonSerializerOptions {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-        private static bool Replaceable(string value) => value.Length > 1 && !(value.Length == 2 && char.IsSurrogatePair(value, 0));
+        private static bool Replaceable(string value) => value.Length > 0;
         private static bool NumericOrBoolean(string value) => bool.TryParse(value, out _) || double.TryParse(value,
             System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double number)
             && !double.IsNaN(number) && !double.IsInfinity(number);
@@ -143,12 +143,37 @@ namespace TiaMcp.Logic.V4
 
         private static string ReplaceSecrets(string text, IEnumerable<string> secrets)
         {
-            foreach (string secret in secrets.OrderByDescending(s => s.Length))
+            var forms = new Dictionary<string, bool>(StringComparer.Ordinal);
+            foreach (string secret in secrets)
             {
-                bool multiline = secret.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' }) >= 0;
-                text = text.Replace(secret, multiline ? "••••\n" : "••••");
+                if (!Replaceable(secret)) continue;
+                bool single = secret.Length == 1 || secret.Length == 2 && char.IsSurrogatePair(secret, 0);
+                void AddForm(string form)
+                    => forms[form] = single && (!forms.TryGetValue(form, out var restricted) || restricted);
+                AddForm(secret);
+                foreach (string json in new[] { JsonSerializer.Serialize(secret, DiagnosticJson), JsonSerializer.Serialize(secret) })
+                {
+                    string escaped = json.Substring(1, json.Length - 2);
+                    AddForm(escaped);
+                    AddForm(escaped.Replace("/", "\\/"));
+                    AddForm(Regex.Replace(escaped, @"\\u[0-9a-fA-F]{4}", m => m.Value.ToLowerInvariant(),
+                        RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)));
+                }
+                string url = Uri.EscapeDataString(secret);
+                AddForm(url);
+                AddForm(url.Replace("%20", "+"));
+                AddForm(Regex.Replace(url, @"%[0-9A-F]{2}", m => m.Value.ToLowerInvariant(),
+                    RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)));
             }
-            return text;
+            if (forms.Count == 0) return text;
+            bool WordAt(int index) => index >= 0 && index < text.Length
+                && (char.IsLetter(text[index]) || char.IsNumber(text[index]) || text[index] == '_');
+            string pattern = string.Join("|", forms.Keys.OrderByDescending(s => s.Length).Select(Regex.Escape));
+            return Regex.Replace(text, pattern, match => {
+                if (forms[match.Value] && (WordAt(match.Index - 1) || WordAt(match.Index + match.Length))) return match.Value;
+                bool multiline = match.Value.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' }) >= 0;
+                return multiline ? "••••\n" : "••••";
+            }, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
         }
 
         private static Match ExceptionPrefix(string text)

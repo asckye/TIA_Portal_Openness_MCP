@@ -7,15 +7,21 @@
 ### Changed
 - Typed V4 results rename `data.requiresSessionReset` to `data.outcomeUnknown` for device add, document import and export, batch export, batch document import and export, external-source tools and special export; batch import keeps only `data.nativeOutcomeUnknown`, with all values unchanged.
 - Beta.5 removes `meta.requiresSessionReset` and the `SESSION_RESET_REQUIRED` error code across all eight releases as a hard cut under ADR 0001; `schemaVersion` stays 4. Read `meta.outcome` for each call and `GetSessionState.unsettled` for unconfirmed writes. Inspect the target before repeating an unknown write; never replay it automatically.
-- `GetUnifiedGraphicSelection` writes its public tool name in new page scopes on V19–V21. `CompareUnifiedGraphicSelections` accepts both the new label and the legacy label in saved pages, including comparisons between old and new snapshots.
+- `GetUnifiedGraphicSelection` writes its public tool name at the top level and in new page scopes on V19–V21. `CompareUnifiedGraphicSelections` accepts both the new label and the legacy label in saved pages, including comparisons between old and new snapshots.
 - Across all eight releases, `GetDeviceItemNetworkInfo` reports complete reads and names its attribute-name heuristic in `data.selection`; unreadable attributes retain their names and make the read partial with `INCOMPLETE_DATA`, while enumeration and portal-loss failures report `read-failed`.
 - Across all eight releases, `GetHardwareFeatures` reports `present:null` with a reason for unprobed features, sets `dataComplete` from probe results and page coverage, and names the connected release's API in its scope.
 - Unified HMI replies omit null DTO members while retaining false, zero and empty strings on V19–V21.
-- `GetUnifiedGraphicSelection` returns selection evidence only in `data.page`, retaining the page accepted by `CompareUnifiedGraphicSelections`, on V19–V21.
+- `GetUnifiedGraphicSelection` moves `records` and `nextCursor` under `data.page`, retaining the page accepted by `CompareUnifiedGraphicSelections`, on V19–V21.
 - Unified script, tag-definition, screen-branch, library and faceplate migration pages and request-failure records name their public tools in `scope.tool` and failure paths on V19–V21.
 - `ProbeHardwareHmiConnectionWhitelistedServices` displays public engineering types instead of implementation types across all eight releases.
 
 ### Fixed
+- Executed results omit preview `targetVerified` and preview scope text; scope returned by native execution is preserved.
+- `ALREADY_EXISTS` reports a declared JSON pointer in `details.target`, or null when no catalog can verify the parameter.
+- The network planner accepts an empty `subnetType` as the default. Unsupported subnet-type refusals include the same `allowedValues` on preview and apply.
+- `ManageHardwareUtilities` refuses a wrong item before any write on both preview and apply, identifying `/itemPath`.
+- `GeneratePlcSourceFromBlocks` advises re-saving generated source as ASCII without a BOM before planning or importing it; the import byte rule is unchanged.
+- Native diagnostics redact scoped one-character secrets only as whole tokens, including their JSON-escaped and URL-encoded forms, while preserving embedded ordinary characters and escaped text.
 - `SearchHardwareCatalog.limit` declares its existing 1–100 range in the input schema on V18–V21.
 - `ManageTechnologyObject.typeIdentifier` describes technology-object identifiers such as `TO_PositioningAxis` across all eight releases.
 - Across all eight releases, a missing `GetDeviceItemNetworkInfo` target returns `NOT_FOUND` on `/deviceItemPath`; an unbound host or worker project returns `PROJECT_NOT_BOUND`.
@@ -23,11 +29,11 @@
 - Across all eight releases, adapter argument refusals identify the canonical field supplied by the caller.
 - Across all eight releases, batch admission refusals identify `/operations/<i>/name` and explain that the tool lacks a dry-run preview or batch permission, or is a batch or orchestration tool.
 
-- Offline audit, PLC template expansion and CWC package validation refusals retain actionable reasons and declared parameter pointers before any file write (all eight releases; CWC on V17–V21). Unused template replacement keys stay private.
+- All 17 tools that use the offline analysis runner refuse before any write and retain actionable reasons and declared parameter pointers (all eight releases where registered; CWC on V17–V21). Unused template replacement keys stay private.
 - `RunPlcCompanionTool` identifies missing working directories and unavailable companion runtimes, with setup guidance, across all eight releases.
 - External-source ASCII refusals explain how to re-save without a BOM across all eight releases; the existing byte check is unchanged.
-- `RetrieveProjectArchive` on V15.1–V21 reports open projects/sessions as `PRECONDITION_FAILED`, an existing destination as `ALREADY_EXISTS`,
-  and identifies `archivePath` or `destinationDirectory` in file and argument refusals before retrieval starts.
+- `RetrieveProjectArchive` on V15.1–V21 reports open projects/sessions as `PRECONDITION_FAILED` and an existing destination as `ALREADY_EXISTS`.
+  A disconnected portal returns `PRECONDITION_FAILED` with condition `portal-connected`. File and argument refusals identify `archivePath` or `destinationDirectory` before retrieval starts.
 - `CreateProject` and `OpenProject` refusals name the requested operation on all eight releases.
 - Existing-project generation planning accepts equivalent project paths with forward slashes and different casing on all eight releases.
 - `DeletePlcTagTable`, `DeletePlcBlock` and `DeletePlcType` summaries use `Warning:` for unavailable cross-references and unverified deletion across all eight releases. Tag-table replies also separate tag counts and use a plain HMI-binding warning in `nextActions`.

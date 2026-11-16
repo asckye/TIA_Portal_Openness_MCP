@@ -268,7 +268,6 @@ namespace TiaMcp.Adapters
         private Siemens.Engineering.HW.Subnet? HardwareFindSubnet(string name) => RollbackSubnets.SingleOrDefault(s => s.Name == name);
         private object HardwareBuildSubnetReadbackJson(string name) => new Dictionary<string, object?> { ["name"] = name };
         private string HardwareExceptionDetail(Exception error) => error.ToString();
-        private static bool HardwareIsSupportedProfinetSubnetType(string value) => value == "PN";
         private sealed class NetworkNodeInfo { public object? Node; }
         private IEnumerable<NetworkNodeInfo> FindNetworkNodes(object root) => new[] { new NetworkNodeInfo { Node = RollbackNode } };
         private static string HardwareFormatNodeInfo(NetworkNodeInfo node) => "PN";

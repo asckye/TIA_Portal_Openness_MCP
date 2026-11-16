@@ -89,7 +89,9 @@ namespace TiaMcpServer.ModelContextProtocol
             bool projectMissing = status == "InvalidState" && !evidence.ContainsKey("apiCallSuccess") && !issued;
             Outcome outcome; Error? error = null;
             if ((HostBehavior.DocumentedRefusal(evidence)
-                ?? HostBehavior.KnownRefusalWithMessage(evidence, success, HardwareContract.ReleaseKey, tool, nativeMessage)) is Error refusal)
+                ?? HostBehavior
+                    .KnownRefusalWithMessage(evidence, success, HardwareContract.ReleaseKey, tool, nativeMessage, field => McpServer
+                        .MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
