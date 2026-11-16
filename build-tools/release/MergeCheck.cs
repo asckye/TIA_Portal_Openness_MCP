@@ -147,6 +147,8 @@ internal static partial class MergeCheck
         var plan = Select(changes, options.Has("All"), catalog, closures, Mentions,
             docsOnly ? [] : FileBasedPrograms.Discover(root), dotnet, python, api, output, parallelism, transportFallback);
         if (!plan.DocsOnly) CheckLoosening.AddJobs(plan, options.Get("Base", "master"), dotnet, output);
+        plan.Checks.Add(new("wrap-long-lines", dotnet,
+            [typeof(Program).Assembly.Location, "wrap-long-lines", "-Check", "-Base", options.Get("Base", "master")]));
         Console.Write(Describe(plan, table));
         if (File.Exists(transportFallback) && plan.Checks.Any(job => job.Name.StartsWith("foundation-transport", StringComparison.Ordinal)))
             Console.WriteLine("Transport release concurrency is capped at 4 by " + transportFallback

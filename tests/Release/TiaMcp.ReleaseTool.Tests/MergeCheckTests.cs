@@ -112,6 +112,7 @@ public sealed class MergeCheckTests
         var result = MergeCheck.Run(tree.Root, Options.Parse(["-All", "-MaxParallelism=4", "-PublicApiRoot=" + sdk, "-Python=" + python], Program.BooleanOptions),
             Process, args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "rev-parse" ? Path.Combine(tree.Root, ".git") : "", ""), (_, _) => 0);
         Assert.Equal(failure == "none" ? 0 : 1, result);
+        Assert.True(File.Exists(Path.Combine(tree.Root, "bin-build/merge-check/suites/pipeline/wrap-long-lines.log")));
         Assert.Equal(4, guiCalls); Assert.Equal(4, environments.Distinct().Count());
         var output = Path.Combine(tree.Root, "bin-build/merge-check/suites");
         Assert.True(File.Exists(Path.Combine(output, "studio-gui/studio-gui.trx")));
@@ -220,7 +221,8 @@ public sealed class MergeCheckTests
         Assert.Equal(0, result);
         var rows = File.ReadAllLines(Path.Combine(tree.Root, "bin-build/merge-check/timeline.tsv"));
         Assert.Equal("name\tstart_seconds\tend_seconds\telapsed_seconds\texit_code", rows[0]);
-        var expected = new[] { "selection", "suite-stage", "check-repository", "check-dead-tool-references", "generate-tool-counts" };
+        var expected = new[] { "selection", "suite-stage", "check-repository", "check-dead-tool-references", "generate-tool-counts",
+            "wrap-long-lines" };
         Assert.Equal(expected.Order(), rows.Skip(1).Select(row => row.Split('\t')[0]).Order());
         foreach (var row in rows.Skip(1))
         {
@@ -898,9 +900,15 @@ public sealed class MergeCheckTests
         tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
         tree.Write("tests/one.csproj", "<Project />");
         var commands = new ConcurrentQueue<string>();
-        var result = MergeCheck.Run(tree.Root, Options.Parse([], new HashSet<string>()), (_, arguments, _, _) =>
+        var longLineCommands = new ConcurrentQueue<string[]>();
+        var result = MergeCheck.Run(tree.Root, Options.Parse(["-Base", "review-base"], new HashSet<string>()), (_, arguments, _, _) =>
         {
-            commands.Enqueue(arguments.ElementAt(1));
+            if (arguments.ElementAt(1) == "wrap-long-lines")
+            {
+                Assert.Equal(new[] { "-Check", "-Base", "review-base" }, arguments.Skip(2));
+                longLineCommands.Enqueue(arguments.ToArray());
+            }
+            else commands.Enqueue(arguments.ElementAt(1));
             return new(0, "", "");
         }, args => new(0, args[0] == "merge-base" ? "abc" : args[0] == "diff" ? "README.md\0"
             : args.Contains("--git-common-dir") ? Path.Combine(tree.Root, ".git")
@@ -908,6 +916,8 @@ public sealed class MergeCheckTests
             (_, _) => throw new InvalidOperationException("No decoder preparation for docs"));
         Assert.Equal(0, result);
         Assert.Equal(new[] { "check-dead-tool-references", "check-repository", "generate-tool-counts" }, commands.Order());
+        Assert.Single(longLineCommands);
+        Assert.True(File.Exists(Path.Combine(tree.Root, "bin-build/merge-check/suites/pipeline/wrap-long-lines.log")));
     }
 
     [Theory]
@@ -922,12 +932,17 @@ public sealed class MergeCheckTests
         string main = Path.Combine(tree.Root, "main");
         string history = tree.Write("main/bin-build/trend.jsonl", "{\"metric\":\"previous\",\"value\":1,\"unit\":\"ms\"}\n");
         const string head = "0123456789012345678901234567890123456789";
-        int calls = 0;
+        int calls = 0, longLineCalls = 0;
         CommandResult Process(string executable, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
         {
             Assert.False(File.Exists(Path.Combine(output, "trend.jsonl")));
             string directory = Assert.IsType<string>(env!["TIA_MCP_TEST_TREND_DIR"]);
             Assert.Equal(Path.Combine(output, "trend"), directory);
+            if (arguments.Contains("wrap-long-lines"))
+            {
+                Interlocked.Increment(ref longLineCalls);
+                return new(0, "", "");
+            }
             Directory.CreateDirectory(directory);
             int call = Interlocked.Increment(ref calls);
             File.WriteAllText(Path.Combine(directory, "trend-" + call + ".jsonl"),
@@ -939,11 +954,12 @@ public sealed class MergeCheckTests
         int result = MergeCheck.Run(tree.Root, Options.Parse([], new HashSet<string>()), Process, Git);
         Assert.Equal(failedCheck ? 1 : 0, result);
         Assert.Equal(3, calls);
+        Assert.Equal(1, longLineCalls);
         string[] rows = File.ReadAllLines(Path.Combine(output, "trend.jsonl"));
         Assert.Equal(3, rows.Count(row => ((string?)JsonNode.Parse(row)!["metric"])!.StartsWith("sample-", StringComparison.Ordinal)));
         string[] successfulJobs = failedCheck
-            ? ["selection", "check-dead-tool-references", "generate-tool-counts"]
-            : ["selection", "check-dead-tool-references", "generate-tool-counts", "check-repository", "suite-stage"];
+            ? ["selection", "check-dead-tool-references", "generate-tool-counts", "wrap-long-lines"]
+            : ["selection", "check-dead-tool-references", "generate-tool-counts", "check-repository", "suite-stage", "wrap-long-lines"];
         Assert.Equal(successfulJobs.Order(), rows.Select(row => (string)JsonNode.Parse(row)!["metric"]!)
             .Where(metric => metric.StartsWith("timing:", StringComparison.Ordinal)).Select(metric => metric[7..]).Order());
         Assert.All(rows, row => Assert.False(JsonNode.Parse(row)!.AsObject().ContainsKey("head")));

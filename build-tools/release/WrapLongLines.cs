@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace TiaMcp.ReleaseTool;
 
-internal static class WrapLongLines
+internal static partial class WrapLongLines
 {
     internal static readonly string[] ExcludedFiles =
     [
@@ -59,6 +59,12 @@ internal static class WrapLongLines
         Regex.Replace(source, @"(?m)^[ \t]*#[^\r\n]*", m => new string(' ', m.Length)))
         .Where(t => includeEnd || !t.IsKind(SyntaxKind.EndOfFileToken)).ToArray();
 
+    // The parser combines contextual operators (.., >>, >>>) that ParseTokens leaves separate.
+    private static SyntaxToken[] ParsedTokens(string source) => CSharpSyntaxTree.ParseText(
+        Regex.Replace(source, @"(?m)^[ \t]*#[^\r\n]*", m => new string(' ', m.Length)))
+        .GetRoot().DescendantTokens(descendIntoTrivia: true)
+        .Where(t => !t.IsKind(SyntaxKind.EndOfFileToken)).ToArray();
+
     private static bool Plain(SyntaxToken token) => token.IsKind(SyntaxKind.StringLiteralToken)
         && token.Text.StartsWith('"') && !token.Text.StartsWith("\"\"\"", StringComparison.Ordinal);
 
@@ -66,7 +72,7 @@ internal static class WrapLongLines
     // accidentally bless changed escapes, comments or unrelated token substitutions.
     internal static bool Equivalent(string before, string after)
     {
-        var left = Lex(before); var right = Lex(after);
+        var left = ParsedTokens(before); var right = ParsedTokens(after);
         int j = 0;
         foreach (var token in left)
         {
@@ -89,10 +95,12 @@ internal static class WrapLongLines
                 .SequenceEqual(Regex.Matches(after, @"(?m)^[ \t]*#[^\r\n]*").Select(m => m.Value));
     }
 
-    internal static string Format(string source, string path, int maximum = 160)
+    internal static string Format(string source, string path, int maximum = 160) => Format(source, path, maximum, null);
+
+    private static string Format(string source, string path, int maximum, IDictionary<int, TextSpan>? formattedLines)
     {
         if (maximum < 1) throw new ReleaseException("-MaxLength must be positive", 64);
-        if (Matches(path, ExcludedFiles)) return source;
+        if (ExcludedSource(source, path)) return source;
         var lines = SourceText.From(source).Lines;
         var tokens = Lex(source, true);
         var protectedLines = new HashSet<int>();
@@ -114,7 +122,9 @@ internal static class WrapLongLines
             while (after < tokens.Length && tokens[after].SpanStart < line.End) after++;
             string? preceding = tokenIndex > 0 ? tokens[tokenIndex - 1].Text : null;
             string? following = after < tokens.Length ? tokens[after].Text : null;
-            output.Append(protect ? value : Wrap(value, maximum, !Matches(path, NoLiteralSplitFiles), preceding, following));
+            string formatted = protect ? value : Wrap(value, maximum, !Matches(path, NoLiteralSplitFiles), preceding, following);
+            if (formattedLines != null) formattedLines[line.LineNumber] = new TextSpan(output.Length, formatted.Length);
+            output.Append(formatted);
             output.Append(source.AsSpan(line.End, line.EndIncludingLineBreak - line.End));
         }
         string result = output.ToString();
@@ -160,7 +170,10 @@ internal static class WrapLongLines
             }
         }
         // Keep comments on the final fragment, following the same last token.
+        var atomicTokens = ParsedTokens(line);
         var usable = candidates.Where(c => c.Position > indent && c.Position < tokens[^1].Span.End
+            && !(line[c.Position - 1] == '.' && line[c.Position] == '.')
+            && !atomicTokens.Any(t => t.SpanStart < c.Position && c.Position < t.Span.End)
             && line[..c.Position].TrimEnd().Length < line.TrimEnd().Length).ToArray();
         if (usable.Length > 0)
         {
@@ -232,12 +245,17 @@ internal static class WrapLongLines
     {
         root = Path.GetFullPath(options.Get("Root", root));
         int maximum = int.Parse(options.Get("MaxLength", "160"), System.Globalization.CultureInfo.InvariantCulture);
+        if (maximum < 1) throw new ReleaseException("-MaxLength must be positive", 64);
+        if (options.Get("Base") is { } basis)
+        {
+            if (!options.Has("Check")) throw new ReleaseException("-Base requires -Check", 64);
+            return CheckChanges(root, options, basis, maximum);
+        }
         var paths = options.All("Path");
         if (paths.Count == 0) throw new ReleaseException("At least one -Path is required", 64);
         var files = paths.Select(p => Path.GetFullPath(p, root)).SelectMany(p => Directory.Exists(p)
             ? Directory.EnumerateFiles(p, "*.cs", SearchOption.AllDirectories) : File.Exists(p) ? [p] : throw new FileNotFoundException(p))
-            .Where(p => p.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
-                && !Path.GetRelativePath(root, p).Split(Path.DirectorySeparatorChar).Any(c => c is "bin" or "obj"))
+            .Where(p => SourcePath(Path.GetRelativePath(root, p)))
             .Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal).ToArray();
         int changed = 0;
         var remaining = new Dictionary<string, List<string>>(StringComparer.Ordinal);
@@ -247,21 +265,7 @@ internal static class WrapLongLines
             string result = "";
             if (Rewrite(file, source => result = Format(source, path, maximum), options.Has("Check"))) changed++;
             var resultLines = SourceText.From(result).Lines;
-            var multilineReasons = new Dictionary<int, string>();
-            foreach (var token in Lex(result, true))
-            {
-                string? kind = token.Text.StartsWith("@\"", StringComparison.Ordinal)
-                    || token.Text.StartsWith("\"\"\"", StringComparison.Ordinal) ? "verbatim-or-raw" : null;
-                if (kind != null)
-                    for (int n = resultLines.GetLineFromPosition(token.SpanStart).LineNumber;
-                        n <= resultLines.GetLineFromPosition(Math.Max(token.SpanStart, token.Span.End - 1)).LineNumber; n++)
-                        multilineReasons[n] = kind;
-                foreach (var trivia in token.LeadingTrivia.Concat(token.TrailingTrivia).Where(t =>
-                    t.IsKind(SyntaxKind.MultiLineCommentTrivia) || t.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia)))
-                    for (int n = resultLines.GetLineFromPosition(trivia.SpanStart).LineNumber;
-                        n <= resultLines.GetLineFromPosition(Math.Max(trivia.SpanStart, trivia.Span.End - 1)).LineNumber; n++)
-                        multilineReasons[n] = "comment";
-            }
+            var multilineReasons = MultilineReasons(resultLines, result);
             int number = 0;
             foreach (var line in resultLines)
             {

@@ -6,6 +6,8 @@
 
 ## 合并检查
 
+维护者于 2026-11-16 决定：新增源码行不得超过 160 字符；修改行只有在超过 160 字符，且旧行未超限或比旧行更长时才失败。同一差异块的新旧行数相等时按位置配对，否则每个新行与该块最长的删除行比较；没有删除行时按新增行处理。每次 `merge-check` 运行 `wrap-long-lines -Check -Base master`（指定 `-Base` 时复用该基准），只检查相对 merge-base 的新增、修改行，包括未跟踪源码，纯重命名不计入。对改动的文件运行 `dotnet run --project build-tools/release -- wrap-long-lines -Path <file>` 整理长行；生成文件和源码表格不计入门禁；行级例外只在内存中格式化后仍有超限片段，且这些片段均属于格式器报告的保留例外时豁免，命令输出列出排除范围，日志位于 `bin-build/merge-check/suites/pipeline/`。
+
 合并门 `merge-check` 使用普通 `dotnet build` 和 `dotnet test` 构建、测试受影响的项目，再检查生成内容和仓库规则。FAST-GATE 目标约 10 分钟；2026-11-05 宽范围改动实测 731 秒（约 12 分钟），优化前约 21 分钟。从仓库根目录运行以下命令。
 
 ```powershell
@@ -43,7 +45,7 @@ dotnet test tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.
 | 38 条数据流规则 | `prepare` 构建，属性 `TiaSecurityAnalysisProfile=release` | 仅物理 `src/` 源文件，包含链接源文件 | 不增加合并门成本 |
 | `check-vulnerable-packages [-Output <file>]` | 完整 `prepare` 首步、独立 CI 工作流 | `-BuildOnly` 跳过；合并门不联网 | 不增加合并门成本 |
 
-纯文档计划仍只运行原来的三个检查。复杂度报告按方法超过 60 行或估算圈复杂度超过 15、文件超过 600 行列出，新增超限项排在前面；它是 Roslyn 语法估算，包含条件编译分支和注释行，不是新门禁。不带 `-Base` 时扫描已跟踪的 C# 文件，排除 `third_party/`、`reference/`、`archive/`，供后续评分使用。
+纯文档计划运行原来的三个检查和长行差异检查。复杂度报告按方法超过 60 行或估算圈复杂度超过 15、文件超过 600 行列出，新增超限项排在前面；它是 Roslyn 语法估算，包含条件编译分支和注释行，不是新门禁。不带 `-Base` 时扫描已跟踪的 C# 文件，排除 `third_party/`、`reference/`、`archive/`，供后续评分使用。
 
 ### 检查变更审批
 
