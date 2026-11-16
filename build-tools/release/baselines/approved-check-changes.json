@@ -4444,6 +4444,223 @@
           "identifier": "TiaMcp.SourceContracts.Tests.NotFoundSources/Vm_sample_sites_use_typed_refusals( string path , string expected ):d789d074c672941403ff1cfe333d60bec6e41135c388a4f6cfd7d1a77d41f15c:1"
         }
       ]
+    },
+    {
+      "task": "HOST-RENAME",
+      "maintainerDate": "2026-11-16",
+      "reason": "2026-11-15/16 maintainer approved: src/EngineHost renamed to src/ToolPipeline; 18 test Compile Include paths, 23 extern alias and path assertions, and the engine-host suite id renamed to tool-pipeline with identical thresholds; no assertion content changed. Analyzer baseline: 26 entries change only the project name in their contexts, paths and fingerprints unchanged, count 217 unchanged",
+      "items": [
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:03d0fc210d326777b9588583c2746184b8de0805f44cd157d3503ced4cbb9e1b"
+        },
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:59d1135379fc50662a28e3e95e95b13266f9b734eaee3af4e801064b2a8f4553"
+        },
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:62b8e1bc340ae40d0f797ba5ce2c558ec65414e19c69a60c6454209a20f696aa"
+        },
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:78bed382bc5e2a628528d85000ab6696a29a3bef0622d84a395ca3363d39b9fa"
+        },
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:d54d37ac36fd0e6eba9849025330ee181866696c3ef225c184c7736945c9c701"
+        },
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:df7747be3384de70b6031c60ca5ead0e03254327860870f2675d773ce94e105d"
+        },
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:e4501abda25074f02408b5d78c32033edba4d68159c2fb738b98ee2872ac0382"
+        },
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:e658b0f5a3c8e3541eb76755d2defa009b98a5ee3ba5db77a7bc3e20efab4d5e"
+        },
+        {
+          "path": "tests/Fixtures/TiaMcp.Offline.Fixtures/OfflineFixtureSources.props",
+          "kind": "test-excluded",
+          "identifier": "compile-include:fb4ec5050f0ea9f9e1f534c2be6ae6a8874cdb1cdf20d0ec44b728d532eb3237"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/TiaMcp.Engine.Diagnostics.Tests.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:731e699405cc4d271fce613cf7246be06c404712fae76a4b1edaafe642183833"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.Engine.PromptRegistration.Tests/Fixture/Fixture.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:19762a9d47cebfd6e7010ea50bb06e5d7291d144f181ed00ec748bedfbb9663a"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.Engine.PromptRegistration.Tests/Fixture/Fixture.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:a7e1373b7d46c66d80b937efb7869d32e2deac82ee70f7233259c005ddc8f1b9"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.Engine.PromptRegistration.Tests/TiaMcp.Engine.PromptRegistration.Tests.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:ce74ca7e01ca1b3d00b14700f509f1a2a4b6b4aaf58f8c6a1ca177591a668f41"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.Engine.VersionPolicy.Tests/TiaMcp.Engine.VersionPolicy.Tests.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:e6a902b74d0f2f77955eb41c2752d63f45c7a77cd10656fe7bc7f0b9f4cfe1b9"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CompatibilityToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CompatibilityToolsTests/Registry_contracts_use_the_requested_release_when_the_host_default_differs( string release ):f50728b1842b3b1bb09afb1fbdaf81a7e9c1bece5b08f789fcd1700b000a4dbf:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CompatibilityToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CompatibilityToolsTests/Registry_contracts_use_the_requested_release_when_the_host_default_differs( string release ):f50728b1842b3b1bb09afb1fbdaf81a7e9c1bece5b08f789fcd1700b000a4dbf:2"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CompatibilityToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CompatibilityToolsTests/Retained_batches_and_every_available_alias_have_one_target( string release ):ed061f2d32711180362a1234fa8c25f7639f352f3c3ab03ca6e287c0f1f98bc9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ExtensionFamilyReplyTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ExtensionFamilyReplyTests/Graphic_selection_page_appears_once( string release ):cc379945d7ec5d0ef6b40f17c553f27150332792882954b13d907b08ef5e2120:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRecoveryTests/Automatic_restart_preserves_exports_and_invalidates_plans_and_explicit_restart_clears_exports( string release ):0cc0c11ed520d3fee08b3a6e81928e3c7106976f8bd218d4f254261caa4b03f4:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRecoveryTests/Automatic_restart_preserves_exports_and_invalidates_plans_and_explicit_restart_clears_exports( string release ):8f728b1cab1d0ef58b901c6cd06fc5426191f723ca2958774944cfe07e3ffc4f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.NoLockTests/RemainsSettled( string release , string name , CallToolResult result , bool write ):e81243ae8ee28724c0e05e33d28490a247cae41239842422538d06430d452338:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OperatorSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OperatorSessionTestsPlc/Engine_operator_view_does_not_forge_or_accept_another_ai_session_id( ):cc93b91ecd2e0029f8b4dfd5eb1dd2903737211a88d22c0238f9e1d31fefd793:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Round2BlockPageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "Round2BlockPageTests/Generation_fixture_restores_the_host_context_before_paging_and_decoder_tests( ):37ad907cc601e283717ce88419acc5af244cdb23a3b30db59564714582bb4836:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Round2BlockPageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "Round2BlockPageTests/Generation_fixture_restores_the_host_context_before_paging_and_decoder_tests( ):cf06938dd4f26280d64c4d3a36bfe06dd3611de1f214cc42c2a527b1249106d3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedHostSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedHostSessionTests/Plc_shared_unknown_locks_the_pipeline_until_an_explicit_restart( string release ):7f0b6724e72b860181269c9a2c293667c3bc12ac50aeb27967b1d69f2cff3a52:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/StagedGenerationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "StagedGenerationTests/Existing_project_identity_matches_with_forward_slashes_and_case( string release ):b1f6244763c49370caa0eb84e79bf8a6215d4e41b527e8bc2ce41bd7ad9266fe:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/StagedGenerationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "StagedGenerationTests/Planning_uses_the_real_connection_and_project_state( string release , string state ):b1f6244763c49370caa0eb84e79bf8a6215d4e41b527e8bc2ce41bd7ad9266fe:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:731e699405cc4d271fce613cf7246be06c404712fae76a4b1edaafe642183833"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "UnifiedPortAdmissionTests/Malformed_branch_JSON_uses_the_branch_grammar_in_its_refusal_example( ):82e6c892846fba3d26e2b51c7b0042fd9abd778322b8b5a40a88d3fe661277fd:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "UnifiedPortAdmissionTests/Refusal_examples_use_Unified_roots_and_keep_optional_domains_separate( ):9c01d9811d193785520b64a09361d48b862f86e19579ed2964821d57701b36b7:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/UnifiedPortAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "UnifiedPortAdmissionTests/Refusal_examples_use_Unified_roots_and_keep_optional_domains_separate( ):ecc228ab7a5a3994af6b7e1d87bc3307c106fdf95875c99646e5fb3a8dd120dd:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WorkerClientTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WorkerDispatchTests/Foundation_result_parking_retains_the_complete_response_and_small_results( string release ):31cae93b3dbdc5800408058f056f511e51edd5bcb884d71f00749b68ce327343:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Clearing_parked_responses_only_deletes_the_calling_sessions_handles( string release ):2e5c2d1216ce02bda642d27d3f49ee1bd832eb3e36091ed4e5e735a0ff265b42:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Clearing_parked_responses_only_deletes_the_calling_sessions_handles( string release ):7d5b7dbed1b7b1230f2e74cc3c44070473b04d0b236f59bc602026b1aeb950ca:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Clearing_parked_responses_only_deletes_the_calling_sessions_handles( string release ):b78089d2753020a53193991df67b6b067c9582c4f7829e9080ef317ecee57be2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/In_memory_export_handle_operations_execute_directly_without_a_preview( ):1df5a33e07c89a25df234087e2f3e208b2b5e10a2a7e16eed658ea5855bf0aea:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:f42701a1598c213e1fb7354d2cff173d50b6b5ed337c8b0cfc2c6c18e901a198"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaMcp.KeptCode.Tests.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:ffab578225ce8212be0d146dcdcd95461ad65c50fc1c741f62e4e2965d6e1d9b"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/TransportInputsSelectTheRealStdioFramingJob( string path ):49469df184031efd84496b3fcc017ae8c22d3bfff10c58120fa9405803790463:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/ReadOnlySourceContracts.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.ReadOnlySourceContracts/PromptRecipesUseV4AdmissionApprovalAndRegisteredToolNames( ):b25bf346a47aff359fc9535af43f29b97946282c15076c4b0c9deb77d1cd5619:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj",
+          "kind": "test-excluded",
+          "identifier": "compile-include:731e699405cc4d271fce613cf7246be06c404712fae76a4b1edaafe642183833"
+        },
+        {
+          "path": "tests/test-suites.json",
+          "kind": "suite-removed",
+          "identifier": "/engine-host:6f1b35a0403276838e574caf541e577e777abd8028fd1731c18c84c82f1b9139"
+        }
+      ]
     }
   ]
 }
