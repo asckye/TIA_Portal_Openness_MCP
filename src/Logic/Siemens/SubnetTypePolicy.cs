@@ -2,11 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-#if TIA_ADAPTER_INTERNAL_VERSIONING
 namespace TiaMcp.Adapters.Hardware;
-#else
-namespace TiaMcp.Logic.Siemens;
-#endif
 
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 internal static class SubnetTypePolicy

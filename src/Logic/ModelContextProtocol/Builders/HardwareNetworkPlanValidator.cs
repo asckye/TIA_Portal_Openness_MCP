@@ -84,8 +84,8 @@ namespace TiaMcpServer.ModelContextProtocol
             RequireNonEmpty(op, "subnetName", index, errors);
 
             var subnetType = op["subnetType"]?.ToString() ?? string.Empty;
-            if (!TiaMcp.Logic.Siemens.SubnetTypePolicy.IsSupported(subnetType))
-                errors.Add($"operations[{index}]." + TiaMcp.Logic.Siemens.SubnetTypePolicy.Message);
+            if (!TiaMcp.Adapters.Hardware.SubnetTypePolicy.IsSupported(subnetType))
+                errors.Add($"operations[{index}]." + TiaMcp.Adapters.Hardware.SubnetTypePolicy.Message);
 
             ValidateOptionalNetworkFields(op, index, errors, warnings);
         }

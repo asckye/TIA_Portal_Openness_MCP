@@ -150,7 +150,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
 namespace TiaMcp.Adapters.Native.Plc
 {
-    internal interface IPlcOrganisationSession { FixtureSoftwareContainer? GetSoftwareContainer(string path); }
+    internal interface IPlcOrganisationSession { public FixtureSoftwareContainer? GetSoftwareContainer(string path); }
     internal sealed class FixtureSoftwareContainer { internal object? Software; }
     internal static class PlcGroupOperations
     {

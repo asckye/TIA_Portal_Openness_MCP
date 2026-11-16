@@ -8,7 +8,7 @@ public sealed class LowBetaRegressionTests
     [Fact]
     public void Subnet_allowed_values_are_exposed_as_a_read_only_list()
     {
-        object values = TiaMcp.Logic.Siemens.SubnetTypePolicy.AllowedValues;
+        object values = TiaMcp.Adapters.Hardware.SubnetTypePolicy.AllowedValues;
         Assert.IsAssignableFrom<IReadOnlyList<string>>(values);
         Assert.False(values is string[]);
         Assert.True(Assert.IsAssignableFrom<ICollection<string>>(values).IsReadOnly);

@@ -387,9 +387,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (tool != "EnsureSubnet") return null;
             string? subnetType = (string?)JsonSerializer.SerializeToNode(arguments)!["subnetType"];
-            return TiaMcp.Logic.Siemens.SubnetTypePolicy.IsSupported(subnetType) ? null
-                : new Error(TiaMcp.Logic.Siemens.SubnetTypePolicy.Message,
-                    new InvalidArgumentDetails("subnetType", TiaMcp.Logic.Siemens.SubnetTypePolicy.AllowedValues,
+            return TiaMcp.Adapters.Hardware.SubnetTypePolicy.IsSupported(subnetType) ? null
+                : new Error(TiaMcp.Adapters.Hardware.SubnetTypePolicy.Message,
+                    new InvalidArgumentDetails("subnetType", TiaMcp.Adapters.Hardware.SubnetTypePolicy.AllowedValues,
                         expected: "Industrial Ethernet/PROFINET subnet type"));
         }
         internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
