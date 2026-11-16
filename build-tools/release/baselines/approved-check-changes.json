@@ -4661,6 +4661,28 @@
           "identifier": "/engine-host:6f1b35a0403276838e574caf541e577e777abd8028fd1731c18c84c82f1b9139"
         }
       ]
+    },
+    {
+      "task": "LOW-B5",
+      "maintainerDate": "2026-11-16",
+      "reason": "2026-11-16 maintainer approved: executed read-only invocations no longer carry the preview scope or targetVerified (8 rows); ALREADY_EXISTS details.target is the declared JSON pointer or null when no catalog verifies it (14 rows); a 1-character secret is redacted as a whole token (1 row)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Retrieval_refusals_retain_code_and_field_identity( string release , string status , bool dryRun ):c70425e3001b1c3cf53d819a43f6f774ed8ba9108e48ca751e6b77f486025f48:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NativeFailureDiagnosticsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NativeFailureDiagnosticsTests/Native_diagnostic_uses_only_current_string_credentials( ):a1ee398dfbdf3740889dac8fb2f03e74f6f77d6e5af26abfd1fc9545b1f23909:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "test-removed",
+          "identifier": "WritePreviewCoverageTests/Read_action_preview_has_no_target_flag( string release ):9058280b4b5446af7be4a10a62f4b9f7af3e06cdc02703dee93119099dd01c81"
+        }
+      ]
     }
   ]
 }
