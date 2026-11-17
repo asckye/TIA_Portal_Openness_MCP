@@ -20073,7 +20073,7 @@
     "ManageSivarcBlockDefinition": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "FC_1",
         "kind": "tagDefinition",
         "confirmDelete": false,
         "dryRun": true,
@@ -23391,7 +23391,7 @@
     "ListSivarcBlockDefinitions": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main"
+        "blockPath": "FC_1"
       },
       "parameters": {
         "includeBlockParameters": {
@@ -44219,7 +44219,7 @@
         "ListSivarcBlockDefinitions": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "Main"
+            "blockPath": "FC_1"
           },
           "parameters": {
             "includeBlockParameters": {
@@ -44235,7 +44235,7 @@
         "ManageSivarcBlockDefinition": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "Main",
+            "blockPath": "FC_1",
             "kind": "tagDefinition",
             "confirmDelete": false,
             "dryRun": true,
@@ -59293,7 +59293,7 @@
         "ManageSivarcBlockDefinition": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "Main",
+            "blockPath": "FC_1",
             "kind": "tagDefinition",
             "confirmDelete": false,
             "dryRun": true,
@@ -62763,7 +62763,7 @@
         "ListSivarcBlockDefinitions": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "Main"
+            "blockPath": "FC_1"
           },
           "parameters": {
             "includeBlockParameters": {
