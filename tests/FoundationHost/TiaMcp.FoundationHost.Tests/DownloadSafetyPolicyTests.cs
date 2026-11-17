@@ -38,7 +38,7 @@ public sealed class DownloadSafetyPolicyTests(Xunit.Abstractions.ITestOutputHelp
             {
                 var arguments = new JsonObject { ["dryRun"] = preview, ["pgPcInterface"] = adapter, ["targetIpAddress"] = target };
                 bool physicalWrite = tool is "WritePlcWebVars" or "SetPlcWebOperatingMode" || tool == "DownloadPlc"
-                    && (target != "192.0.2.10" || adapter == "Intel(R) Ethernet" || collision);
+                    && (target != "192.0.2.10" || adapter != "PLCSIM" || collision);
                 Assert.Equal(enabled || !preview && physicalWrite, HostBehavior.ApprovalRequired(enabled, tool, arguments));
             }
         }
@@ -49,14 +49,15 @@ public sealed class DownloadSafetyPolicyTests(Xunit.Abstractions.ITestOutputHelp
     internal static JsonObject RunningInstance(string ip) => DownloadTargetCases.Listing(ip);
 
     [Theory, MemberData(nameof(DownloadTargetCases.Cases), MemberType = typeof(DownloadTargetCases))]
-    public void Target_evidence_drives_host_kind_and_approval(string name, string adapter, string listingJson, string networkJson, string expected)
+    public void Target_evidence_drives_host_kind_and_approval(string name, string adapter, string target, string listingJson, string networkJson,
+        string expected)
     {
         output.WriteLine(name);
         using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(
             () => JsonNode.Parse(listingJson)!.AsObject(), _ => JsonNode.Parse(networkJson)!.AsObject());
-        Assert.Equal(expected, HostBehavior.DownloadTargetKind(DownloadTargetCases.Target, adapter));
+        Assert.Equal(expected, HostBehavior.DownloadTargetKind(target, adapter));
         Assert.Equal(expected == "physical", HostBehavior.ApprovalRequired(false, "DownloadPlc", new JsonObject {
-            ["targetIpAddress"] = DownloadTargetCases.Target, ["pgPcInterface"] = adapter, ["dryRun"] = false }));
+            ["targetIpAddress"] = target, ["pgPcInterface"] = adapter, ["dryRun"] = false }));
     }
 
     [Fact]

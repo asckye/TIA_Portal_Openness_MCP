@@ -26,11 +26,22 @@ public static class DownloadTargetCases
 
     public static IEnumerable<object[]> Cases()
     {
-        object[] Row(string name, string adapter, JsonObject listing, JsonObject network, string expected)
-            => new object[] { name, adapter, listing.ToJsonString(), network.ToJsonString(), expected };
+        object[] Row(string name, string adapter, JsonObject listing, JsonObject network, string expected, string target = Target)
+            => new object[] { name, adapter, target, listing.ToJsonString(), network.ToJsonString(), expected };
         foreach (string adapter in new[] { "", "PLCSIM", "plcsim", "Softbus", "Siemens PLCSIM Virtual Ethernet Adapter",
             "PLCSIM Virtual Ethernet Adapter", "PLCSIM #1", "PLCSIM (#1)" })
-            yield return Row("running instance / " + adapter, adapter, Listing("198.51.100.1", Target), Network(), "plcsim");
+            yield return Row("running instance / " + adapter, adapter, Listing("198.51.100.1", Target), Network(),
+                adapter.Length == 0 ? "physical" : "plcsim");
+        foreach (string adapter in new[] { "", " ", "\t" })
+            yield return Row("blank interface / exclusive simulator subnet / " + adapter, adapter, Listing(Target),
+                Network(simulatorMask: "255.255.255.0"), "physical");
+        const string softbusTarget = "192.168.0.1";
+        // Gateway 192.168.0.129 can route to the target outside this physical NIC's /25.
+        var gatewayNetwork = LocalNetworkPolicy.Report(softbusTarget, new[] { new LocalNetworkPolicy.Address {
+            Name = "Ethernet", Description = "Intel(R) Ethernet", Type = NetworkInterfaceType.Ethernet,
+            Status = OperationalStatus.Up, Ip = "192.168.0.130", Mask = "255.255.255.128" } });
+        yield return Row("Softbus instance / physical NIC 192.168.0.130/25 / gateway 192.168.0.129 / empty interface", "",
+            Listing(softbusTarget), gatewayNetwork, "physical", softbusTarget);
         foreach (string adapter in new[] { "Intel(R) Ethernet", "Realtek", "automatic", "PLCSIM-compatible Ethernet" })
             yield return Row("explicit physical / " + adapter, adapter, Listing(Target), Network(simulatorMask: "255.255.255.0"), "physical");
         foreach (OperationalStatus status in Enum.GetValues(typeof(OperationalStatus)))

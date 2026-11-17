@@ -48,11 +48,12 @@ public sealed class OnlineDownloadWorkerGuardTests(Xunit.Abstractions.ITestOutpu
     }
 
     [Theory, MemberData(nameof(DownloadTargetCases.Cases), MemberType = typeof(DownloadTargetCases))]
-    public void Raw_worker_target_evidence_matches_host_policy(string name, string adapter, string listingJson, string networkJson, string expected)
+    public void Raw_worker_target_evidence_matches_host_policy(string name, string adapter, string target, string listingJson, string networkJson,
+        string expected)
     {
         output.WriteLine(name);
         var request = new OnlineRequest { Operation = "DownloadPlc", DryRun = false,
-            PgPcInterface = adapter, TargetIpAddress = DownloadTargetCases.Target };
+            PgPcInterface = adapter, TargetIpAddress = target };
         int nativeCalls = 0;
         void Dispatch()
         {

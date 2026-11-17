@@ -42,7 +42,7 @@ namespace TiaMcpServer.Siemens
         }
 
         private static bool SimulatorInterface(string? name)
-            => string.IsNullOrWhiteSpace(name) || Regex.IsMatch(name!.Trim(),
+            => !string.IsNullOrWhiteSpace(name) && Regex.IsMatch(name!.Trim(),
                 @"^(?:(?:Siemens )?PLCSIM Virtual Ethernet Adapter|PLCSIM|Softbus)(?:\s*(?:\(#\d+\)|#\d+))?$",
                 RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 

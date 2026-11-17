@@ -9,6 +9,7 @@ public sealed class DownloadSafetyHostTests
 {
     public static IEnumerable<object[]> CollidingInstances => from nested in new[] { false, true }
         from sample in new[] { ("Intel(R) Ethernet", (System.Net.NetworkInformation.OperationalStatus?)null),
+            ("", (System.Net.NetworkInformation.OperationalStatus?)null),
             ("PLCSIM", System.Net.NetworkInformation.OperationalStatus.Up),
             ("PLCSIM", System.Net.NetworkInformation.OperationalStatus.Down),
             ("", System.Net.NetworkInformation.OperationalStatus.Down) }
@@ -358,8 +359,8 @@ public sealed class DownloadSafetyHostTests
         using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => instances,
             _ => TiaMcp.Engine.Tests.Shared.DownloadTargetCases.Network());
         Assert.Equal(1, worker.Calls);
-        Assert.Equal("plcsim", TiaMcp.Logic.V4.HostBehavior.DownloadTargetKind("192.0.2.10"));
-        Assert.Equal("physical", TiaMcp.Logic.V4.HostBehavior.DownloadTargetKind("192.0.2.11"));
+        Assert.Equal("plcsim", TiaMcp.Logic.V4.HostBehavior.DownloadTargetKind("192.0.2.10", "PLCSIM"));
+        Assert.Equal("physical", TiaMcp.Logic.V4.HostBehavior.DownloadTargetKind("192.0.2.11", "PLCSIM"));
     }
 
     [Theory]
@@ -388,8 +389,17 @@ public sealed class DownloadSafetyHostTests
             if (topic == "download-physical")
                 Assert.All(steps.Where(step => (string?)step!["tool"] == "DownloadPlc"),
                     step => Assert.True((bool?)step!["arguments"]?["confirmPhysicalTarget"]));
+            if (topic == "download-plcsim")
+                Assert.All(steps.Where(step => (string?)step!["tool"] is "DownloadPlc" or "ConnectOnlinePlc"),
+                    step => Assert.Equal("PLCSIM", (string?)step!["arguments"]?["pgPcInterface"]));
             Assert.All(steps.Where(step => step?["arguments"]?["trustDeviceCertificate"] != null),
-                    step => Assert.False((bool?)step!["arguments"]!["trustDeviceCertificate"]));
+                step => Assert.False((bool?)step!["arguments"]!["trustDeviceCertificate"]));
+        }
+        if (release != "14sp1")
+        {
+            var usage = (await fixture.Call("GetToolUsage", new { toolName = "DownloadPlc" })).StructuredContent!;
+            Assert.True((bool?)usage["ok"], usage.ToJsonString());
+            Assert.Equal("PLCSIM", (string?)usage["data"]?["example"]?["request"]?["params"]?["arguments"]?["pgPcInterface"]);
         }
         Assert.Equal(0, fixture.Worker.Calls);
     }

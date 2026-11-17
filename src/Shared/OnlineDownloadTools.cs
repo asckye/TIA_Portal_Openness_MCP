@@ -296,14 +296,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 "allows it."
                 +
             " The approval request lists every prompt answer the call will give (promptAnswerPlan)." +
-            " A simulator target requires an empty or PLCSIM/Softbus PG/PC interface, no non-PLCSIM adapter subnet containing the target " +
+            " PLCSIM downloads must explicitly name the PLCSIM virtual adapter or PLCSIM/Softbus PG/PC interface. An empty interface is physical." +
+            " A simulator target also requires no non-PLCSIM adapter subnet containing the target " +
                 "in any operational state, and either a matching running PLCSIM Advanced instance address or an exclusive PLCSIM adapter subnet " +
                 "with a contiguous /8 or narrower mask. Otherwise the target is physical." +
             " Physical execution requires confirmPhysicalTarget=true and Workbench approval even when approval is switched off." +
             " Unsaved or inconsistent projects are refused; unknown consistency is reported. Online write plans expire after 15 minutes by default." +
             " Local adapters and subnet matches are reported before downloading; no matching local subnet is a warning " +
                 "(routed networks and Softbus may work)." +
-            " On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU);" +
+            " With an empty pgPcInterface the route is picked automatically and the target is treated as physical;" +
             " Meta.pgPcRoute reports which one was used. Override the interface with pgPcInterface when the pick is wrong; the explicit targetIpAddress " +
                 "is required, and a route that ApplyConfiguration does not apply is refused. An address outside the Workbench online-target list is refused."
                 +
@@ -334,8 +335,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("password: optional CPU access password. Required when the CPU has download protection configured. Leave empty for unprotected " +
                 "CPUs.")] string password =
                 "",
-            [Description("pgPcInterface: optional PG/PC interface name (substring, case-insensitive). Select it from ListTransferRoutes. Leave empty " +
-                "to auto-pick the adapter that shares a subnet with the CPU. Run CheckDownloadReadiness to see the available names.")] string pgPcInterface =
+            [Description("pgPcInterface: PG/PC interface name (substring, case-insensitive) from ListTransferRoutes. PLCSIM downloads must explicitly " +
+                "name the PLCSIM virtual adapter or PLCSIM/Softbus interface. Empty enables automatic route selection and is always physical, " +
+                "requiring confirmPhysicalTarget=true and Workbench approval for execution.")] string pgPcInterface =
                 "",
             [Description("userManagementMode: how the UserManagementDownload prompt is answered: keep (default, keeps the online user management data), " +
                 "updateKeepPassword (updates data but keeps online passwords), resetToProject (downloads all user management data and resets to " +
