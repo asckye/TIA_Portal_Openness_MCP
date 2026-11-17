@@ -116,15 +116,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 "ManagePlcTagDefinition/ApplyToolBatch. rows toTable accepts 1..1000 flat scalar objects and optional column order; " +
                 "fromTable returns strings with offset/limit 1..200 (default 50), columns, total and V4 paging; writes no file. " +
                 "CSV is UTF-8 BOM, comma, all cells quoted with doubled quotes and LF; accepts no BOM and CR/LF/CRLF; rejects NUL, broken quotes, " +
-                "uneven nonempty rows and empty/duplicate headers. Empty rows and trailing empty styled cells are ignored. " +
-                "CSV/XLSX export prefixes one apostrophe to cells starting with = + - @, tab or CR; import removes exactly one apostrophe " +
-                "when the next character is one of those. Use XLSX when Excel's locale uses semicolon separators. " +
+                "uneven nonempty rows and empty/duplicate headers. plcTagTable ignores every empty row; rows trims only trailing empty rows. " +
+                "Trailing empty styled XLSX cells are ignored. CSV export adds one apostrophe before = + - @, tab or CR, including when preceded " +
+                "by leading apostrophes; import removes exactly one such prefix. XLSX preserves apostrophes unchanged without a formula guard. " +
+                "Use XLSX when Excel's locale uses semicolon separators. " +
                 "XLSX uses one sheet PlcTagTable/Rows, all inline text cells; reads that sheet or the only sheet, shared/inline strings, raw numbers, " +
                 "booleans and formula cached values; refuses formulas without cache, errors, ambiguous sheets, .xls/.xlsm and encrypted files. " +
-                "Limits: 16 MiB uncompressed, 10000 data rows, 1024 columns, 65536 CSV/32767 XLSX characters per cell. " +
+                "Limits: 16 MiB uncompressed, 10000 data rows, 1024 columns, 65536 CSV/32767 XLSX characters per cell, 64 Mi logical XLSX characters. " +
                 "Default dryRun=true validates and previews columns/counts, changes (first 50 old/new rows) and planned exportFile without writing. " +
                 "false creates a new file, never overwrites; returns path, bytes and SHA-256. Omitted exportFile uses the session output directory, " +
-                "encoded source table name (Rows for rows) and a unique suffix per call. " +
+                "with stable name ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. " +
+                "If it exists, pass exportFile with a new file path; no automatic suffix or overwrite. " +
                 "Output extension must match format (xlsx default/csv), or xml for plcTagTable fromTable. Import the XML with ImportPlcTagTable " +
                 "overwrite=true after preview/approval, binding folderPath to the original table folder; then ListPlcTags readback and compile " +
                 "affected blocks. No TIA calls, imports or compilation.")]
@@ -137,8 +139,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 JsonElement[]? rows = null,
             [Description("Optional unique column order for rows toTable; must include every supplied property.")] string[]? columns = null,
             [Description("xlsx | csv for toTable; default xlsx, text cells preserve addresses and leading zeros.")] string format = "xlsx",
-            [Description("New absolute .xlsx/.csv output, or .xml for plcTagTable fromTable; omitted uses the session directory, encoded table name and " +
-                "unique suffix.")]
+            [Description("New absolute .xlsx/.csv output, or .xml for plcTagTable fromTable; omitted uses the session directory and stable encoded table name. "
+                        +
+                "Pass a new exportFile if the default exists.")]
                 string exportFile = "",
             [Description("Zero-based offset for rows fromTable.")] int offset = 0,
             [Description("Page size 1..200 for rows fromTable; default 50 for PreviewToolBatch.")] int limit = 50,
@@ -178,11 +181,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (!Path.IsPathRooted(path)) throw new ArgumentException("Absolute input path required.", parameter);
                     var file = new FileInfo(path);
                     if (!file.Exists || file.Length > TableFile.MaximumBytes)
-                        throw new ArgumentException(path + ": row 1, column 1: file missing or exceeds 16 MiB.", parameter);
+                        throw TableFile.Error(path, 1, 1, "File missing or exceeds 16 MiB.");
                     return File.ReadAllBytes(path);
                 }
                 System.Xml.Linq.XDocument Xml(string path, string parameter)
-                    => Checked(path, parameter, () => PlcTagTableExchange.Parse(Encoding.UTF8.GetString(Read(path, parameter)).TrimStart('\ufeff')));
+                    => PlcTagTableExchange.Parse(Encoding.UTF8.GetString(Read(path, parameter)).TrimStart('\ufeff'));
                 string sheet = kind == "plcTagTable" ? "PlcTagTable" : "Rows";
                 TableData table;
                 byte[]? outputBytes = null;
@@ -199,10 +202,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    byte[] input = Read(inputPath, nameof(inputPath));
                     string extension = Path.GetExtension(inputPath);
-                    table = Checked(inputPath, nameof(inputPath), () => extension.Equals(".csv", StringComparison.OrdinalIgnoreCase)
-                        ? TableFile.ReadCsv(input, inputPath) : TableFile.ReadXlsx(input, sheet, inputPath));
+                    table = Checked(inputPath, nameof(inputPath), () => {
+                        byte[] input = Read(inputPath, nameof(inputPath));
+                        var emptyRows = kind == "rows" ? EmptyTableRows.TrimTrailing : EmptyTableRows.Skip;
+                        return extension.Equals(".csv", StringComparison.OrdinalIgnoreCase)
+                            ? TableFile.ReadCsv(input, inputPath, emptyRows: emptyRows) : TableFile.ReadXlsx(input, sheet, inputPath, emptyRows);
+                    });
                     if (kind == "rows")
                     {
                         if (offset < 0 || offset > table.Rows.Count) throw new ArgumentException("Offset must be within the table.", nameof(offset));
@@ -213,7 +219,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     else
                     {
-                        var edited = Checked(inputPath, nameof(inputPath), () => PlcTagTableExchange.FromTable(Xml(templatePath, nameof(templatePath)), table));
+                        var template = Checked(templatePath, nameof(templatePath), () => {
+                            var document = Xml(templatePath, nameof(templatePath));
+                            PlcTagTableExchange.ToTable(document); return document;
+                        });
+                        var edited = Checked(inputPath, nameof(inputPath), () => PlcTagTableExchange.FromTable(template, table));
                         data["changes"] = edited.Summary;
                         outputBytes = Checked(exportFile, nameof(exportFile), () => {
                             using var buffer = new MemoryStream();
@@ -231,6 +241,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     string expectedExtension = direction == "fromTable" ? ".xml" : "." + format;
                     if (!string.Equals(Path.GetExtension(exportFile), expectedExtension, StringComparison.OrdinalIgnoreCase))
                         throw new ArgumentException("exportFile must end with " + expectedExtension + ".", nameof(exportFile));
+                    if (File.Exists(exportFile) || Directory.Exists(exportFile))
+                    {
+                        const string conflict = "Output already exists; overwrite refused. Pass exportFile with a new file path.";
+                        meta["nativeMessage"] = conflict; throw new IOException(conflict);
+                    }
                     var output = Siemens.NativeFileOutput.Plan(exportFile);
                     data["exportFile"] = output.FullName;
                     if (kind == "plcTagTable" && direction == "fromTable") data["nextStep"] = new JsonObject {

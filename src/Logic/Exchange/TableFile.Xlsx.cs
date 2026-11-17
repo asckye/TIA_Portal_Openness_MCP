@@ -18,8 +18,10 @@ namespace TiaMcp.Logic.Exchange
         private static readonly XNamespace OfficeRel = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
         private static readonly Regex SpreadsheetEscape = new Regex(@"_x([0-9A-Fa-f]{4})_", RegexOptions.CultureInvariant);
+        private static readonly Regex SpreadsheetLiteral = new Regex(@"_(?=x[0-9A-Fa-f]{4}_)", RegexOptions.CultureInvariant);
+        public const int MaximumWorkbookCharacters = 64 * 1024 * 1024;
 
-        private static string EncodeSpreadsheetText(string text) => SpreadsheetEscape.Replace(text, match => "_x005F_" + match.Value.Substring(1));
+        private static string EncodeSpreadsheetText(string text) => SpreadsheetLiteral.Replace(text, "_x005F_");
         private static string DecodeSpreadsheetText(string text) => SpreadsheetEscape.Replace(text,
             match => ((char)int.Parse(match.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
 
@@ -77,7 +79,7 @@ namespace TiaMcp.Logic.Exchange
                             Start("c"); writer.WriteAttributeString("r", ColumnName(c) + r.ToString(CultureInfo.InvariantCulture));
                             writer.WriteAttributeString("t", "inlineStr"); Start("is"); Start("t");
                             writer.WriteAttributeString("xml", "space", XNamespace.Xml.NamespaceName, "preserve");
-                            writer.WriteString(EncodeSpreadsheetText(ExportCell(cells[c])));
+                            writer.WriteString(EncodeSpreadsheetText(cells[c]));
                             writer.WriteEndElement(); writer.WriteEndElement(); writer.WriteEndElement(); writer.Flush();
                             if (total + sheetBuffer.Length > MaximumBytes) throw Error(file, r, c + 1, "Uncompressed parts exceed 16 MiB.");
                         }
@@ -90,7 +92,7 @@ namespace TiaMcp.Logic.Exchange
             return output.ToArray();
         }
 
-        public static TableData ReadXlsx(byte[] bytes, string sheetName, string file = "table.xlsx")
+        public static TableData ReadXlsx(byte[] bytes, string sheetName, string file = "table.xlsx", EmptyTableRows emptyRows = EmptyTableRows.Skip)
         {
             if (!string.Equals(Path.GetExtension(file), ".xlsx", StringComparison.OrdinalIgnoreCase))
                 throw Error(file, 1, 1, "Only .xlsx workbooks are supported; .xls/.xlsm/encrypted files are refused.");
@@ -141,7 +143,8 @@ namespace TiaMcp.Logic.Exchange
                     : Load(Target(sharedRelation)).Root!.Elements(SheetNs + "si").Select(StringText).ToArray();
                 var sheetData = Load(Target(relation)).Root!.Element(SheetNs + "sheetData")
                     ?? throw Error(file, 1, 1, "Missing worksheet data.");
-                var rows = new List<string[]>(); int previousRow = 0, width = 0;
+                var rows = new List<string[]>(); int previousRow = 0, width = 0, pendingEmptyRows = 0;
+                long logicalCharacters = 0;
                 foreach (var row in sheetData.Elements(SheetNs + "row"))
                 {
                     int r;
@@ -174,20 +177,28 @@ namespace TiaMcp.Logic.Exchange
                         else if (type == "b") value = value == "1" ? "true" : value == "0" ? "false"
                             : throw Error(file, r, c, "Invalid boolean cell.");
                         else if (type != "n" && type != "str" && type != "d") throw Error(file, r, c, "Unsupported cell type.");
-                        cells.Add(c, ImportCell(value ?? ""));
+                        value ??= "";
+                        logicalCharacters += value.Length;
+                        if (logicalCharacters > MaximumWorkbookCharacters) throw Error(file, r, c, "Workbook exceeds 64 Mi logical characters.");
+                        cells.Add(c, value);
                     }
                     if (rows.Count == 0 && cells.Values.Any(value => value.Length != 0))
                     {
                         width = cells.Where(cell => cell.Value.Length != 0).Select(cell => cell.Key).DefaultIfEmpty(0).Max();
                         if (width > MaximumColumns) throw Error(file, r, width, "Too many columns.");
                     }
-                    if (cells.Values.Any(value => value.Length != 0))
+                    bool nonempty = cells.Values.Any(value => value.Length != 0);
+                    if (rows.Count != 0 && emptyRows != EmptyTableRows.Skip) pendingEmptyRows += r - previousRow - 1;
+                    if (nonempty || rows.Count != 0 && emptyRows == EmptyTableRows.Keep)
                     {
                         var extra = cells.FirstOrDefault(cell => cell.Key > width && cell.Value.Length != 0);
                         if (extra.Key != 0) throw Error(file, r, extra.Key, "Row width exceeds header.");
+                        if ((long)rows.Count + pendingEmptyRows > MaximumRows) throw Error(file, r, 1, "More than 10000 data rows.");
+                        while (pendingEmptyRows > 0) { rows.Add(Enumerable.Repeat("", width).ToArray()); pendingEmptyRows--; }
                         rows.Add(Enumerable.Range(1, width).Select(c => cells.TryGetValue(c, out var value) ? value : "").ToArray());
                         if (rows.Count > MaximumRows + 1) throw Error(file, r, 1, "More than 10000 data rows.");
                     }
+                    else if (rows.Count != 0 && emptyRows == EmptyTableRows.TrimTrailing) pendingEmptyRows++;
                     previousRow = r;
                 }
                 var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1));

@@ -229,5 +229,25 @@ namespace TiaMcp.Generation.Tests
             Assert.Equal(new ArgumentException(message, error.ParamName).Message, error.Message);
             Assert.DoesNotContain(directory, error.Message);
         }
+
+        [Theory]
+        [InlineData("-10")]
+        [InlineData("'-'")]
+        [InlineData("'=x")]
+        [InlineData("\u0001")]
+        public void Machine_csv_keeps_legacy_text_bytes_without_formula_guard(string value)
+        {
+            var package = store.Load("tiamcp.basic", "1.0.0");
+            var machine = JsonNode.Parse(MachineCsv.EmptyMachine(package))!;
+            machine["machine"]!["name"]!["en-US"] = value;
+            var files = MachineCsv.Export(package, machine.ToJsonString());
+            string csv = Encoding.UTF8.GetString(files["Machine.csv"]);
+            Assert.Contains("\"" + value + "\"", csv);
+            Assert.DoesNotContain("\"'" + value + "\"", csv);
+            string directory = Path.Combine(root, "legacy-text"); Directory.CreateDirectory(directory);
+            foreach (var file in files) File.WriteAllBytes(Path.Combine(directory, file.Key), file.Value);
+            var imported = JsonNode.Parse(MachineCsv.Import(package, directory))!;
+            Assert.Equal(value, (string?)imported["machine"]?["name"]?["en-US"]);
+        }
     }
 }

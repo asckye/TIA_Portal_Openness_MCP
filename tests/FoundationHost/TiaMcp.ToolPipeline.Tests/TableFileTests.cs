@@ -208,7 +208,13 @@ public sealed class TableFileTests
     [InlineData("@SUM(A1)")]
     [InlineData("\ttext")]
     [InlineData("\rtext")]
-    public void Formula_prefix_is_present_in_both_files_and_removed_exactly_once(string value)
+    [InlineData("'-'")]
+    [InlineData("'=x")]
+    [InlineData("'=x'")]
+    [InlineData("''=x")]
+    [InlineData("-5")]
+    [InlineData("=SUM(A1)")]
+    public void Formula_prefix_is_csv_only_and_removed_exactly_once(string value)
     {
         var table = new TableData(new[] { "Value" }, new[] { new[] { value } });
         byte[] csv = TableFile.WriteCsv(table), xlsx = TableFile.WriteXlsx(table, "Rows");
@@ -216,8 +222,8 @@ public sealed class TableFileTests
         Equal(table, TableFile.ReadCsv(csv)); Equal(table, TableFile.ReadXlsx(xlsx, "Rows"));
         using var zip = new ZipArchive(new MemoryStream(xlsx));
         using var stream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
-        Assert.Equal("'" + value, XDocument.Load(stream).Descendants().Where(e => e.Name.LocalName == "t").Last().Value);
-        Assert.Equal("''" + value, TableFile.ReadCsv(Encoding.UTF8.GetBytes("A\n\"''" + value + "\"\n")).Rows.Single()[0]);
+        Assert.Equal(value, XDocument.Load(stream).Descendants().Where(e => e.Name.LocalName == "t").Last().Value);
+        Assert.Equal("'" + value, TableFile.ReadCsv(Encoding.UTF8.GetBytes("A\n\"''" + value + "\"\n")).Rows.Single()[0]);
     }
 
     public static IEnumerable<object[]> InvalidXmlCharacters() => Enumerable.Range(1, 8).Concat(new[] { 11, 12 })
@@ -238,8 +244,47 @@ public sealed class TableFileTests
     {
         var csv = new TableData(new[] { "A" }, new[] { new[] { "=" + new string('x', 65535) } });
         Equal(csv, TableFile.ReadCsv(TableFile.WriteCsv(csv)));
+        var quotedCsv = new TableData(new[] { "A" }, new[] { new[] { "'=" + new string('x', 65534) } });
+        Equal(quotedCsv, TableFile.ReadCsv(TableFile.WriteCsv(quotedCsv)));
         var xlsx = new TableData(new[] { "A" }, new[] { new[] { "=" + new string('x', 32766) } });
         Equal(xlsx, TableFile.ReadXlsx(TableFile.WriteXlsx(xlsx, "Rows"), "Rows"));
+    }
+
+    [Fact]
+    public void Xlsx_shared_strings_reuse_one_value_and_enforce_the_total_logical_character_cap()
+    {
+        byte[] bytes = File.ReadAllBytes(Fixture("shared-logical-limit.xlsx"));
+        Assert.Equal("large.xlsx: row 2050, column 1: Workbook exceeds 64 Mi logical characters.",
+            Assert.Throws<ArgumentException>(() => TableFile.ReadXlsx(bytes, "Rows", "large.xlsx")).Message);
+        using var buffer = new MemoryStream(); buffer.Write(bytes);
+        using (var zip = new ZipArchive(buffer, ZipArchiveMode.Update, true))
+        {
+            var entry = zip.GetEntry("xl/worksheets/sheet1.xml")!;
+            XDocument document; using (var input = entry.Open()) document = XDocument.Load(input);
+            document.Descendants().Where(e => e.Name.LocalName == "row").Skip(3).Remove();
+            entry.Delete(); using var output = zip.CreateEntry("xl/worksheets/sheet1.xml").Open(); document.Save(output);
+        }
+        var table = TableFile.ReadXlsx(buffer.ToArray(), "Rows");
+        Assert.Equal(2, table.Rows.Count); Assert.Same(table.Rows[0][0], table.Rows[1][0]);
+        Assert.StartsWith("'-", table.Rows[0][0]); Assert.Equal(32767, table.Rows[0][0].Length);
+    }
+
+    [Fact]
+    public void Xlsx_overlapping_literal_escapes_roundtrip()
+    {
+        var table = new TableData(new[] { "A" }, new[] { new[] { "_x0041_x0042_" } });
+        Equal(table, TableFile.ReadXlsx(TableFile.WriteXlsx(table, "Rows"), "Rows"));
+    }
+
+    [Fact]
+    public void Rows_mode_keeps_empty_rows_before_data_and_trims_only_the_tail()
+    {
+        var table = new TableData(new[] { "A" }, new[] { new[] { "" }, new[] { "1" }, new[] { "" }, new[] { "2" }, new[] { "" } });
+        var expected = new TableData(table.Columns, table.Rows.Take(4));
+        Equal(expected, TableFile.ReadCsv(TableFile.WriteCsv(table), emptyRows: EmptyTableRows.TrimTrailing));
+        Equal(expected, TableFile.ReadXlsx(TableFile.WriteXlsx(table, "Rows"), "Rows", emptyRows: EmptyTableRows.TrimTrailing));
+        Assert.Equal(2, TableFile.ReadCsv(TableFile.WriteCsv(table)).Rows.Count);
+        Assert.Equal(2, TableFile.ReadXlsx(TableFile.WriteXlsx(table, "Rows"), "Rows").Rows.Count);
     }
 
     internal static byte[] ModifiedSheet(string rows)

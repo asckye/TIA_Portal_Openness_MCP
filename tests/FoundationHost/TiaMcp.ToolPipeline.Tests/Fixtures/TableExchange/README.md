@@ -14,3 +14,7 @@ Excel-saved real-export workbook when available and retain these regression fixt
 escapes produced by an Excel save: `_x000D_` is CR, `_x005F_x0041_` is the
 literal `_x0041_`, and `_x005F_x005F_` is the literal `_x005F_`. This is a
 synthetic reproduction of the saved format, not a claim of a local Excel run.
+
+`shared-logical-limit.xlsx` is a synthetic workbook with 2,050 cells referencing
+one 32,767-character shared string. It verifies reuse of decoded shared strings
+and rejection at the 64 Mi logical character limit despite small ZIP/XML parts.

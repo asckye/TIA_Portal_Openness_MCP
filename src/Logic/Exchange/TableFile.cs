@@ -7,6 +7,8 @@ using System.Xml;
 
 namespace TiaMcp.Logic.Exchange
 {
+    public enum EmptyTableRows { Skip, TrimTrailing, Keep }
+
     public sealed class TableData
     {
         public string[] Columns { get; }
@@ -28,10 +30,15 @@ namespace TiaMcp.Logic.Exchange
         }
 
         private static bool FormulaStart(char value) => value == '=' || value == '+' || value == '-' || value == '@' || value == '\t' || value == '\r';
-        private static string ExportCell(string value) => value.Length > 0 && FormulaStart(value[0]) ? "'" + value : value;
-        private static string ImportCell(string value) => value.Length > 1 && value[0] == '\'' && FormulaStart(value[1]) ? value.Substring(1) : value;
+        private static bool FormulaText(string value, int start = 0)
+        {
+            while (start < value.Length && value[start] == '\'') start++;
+            return start < value.Length && FormulaStart(value[start]);
+        }
+        private static string ExportCell(string value) => FormulaText(value) ? "'" + value : value;
+        private static string ImportCell(string value) => value.Length > 1 && value[0] == '\'' && FormulaText(value, 1) ? value.Substring(1) : value;
 
-        public static void Validate(TableData table, string file = "table", int maximumCell = 65536)
+        public static void Validate(TableData table, string file = "table", int maximumCell = 65536, bool xmlCharacters = true)
         {
             if (table.Columns.Length == 0 || table.Columns.Length > MaximumColumns)
                 throw Error(file, 1, 1, "Expected 1..1024 columns.");
@@ -50,34 +57,35 @@ namespace TiaMcp.Logic.Exchange
                     if (row[c] == null || row[c].IndexOf('\0') >= 0 || row[c].IndexOf('\ufeff') >= 0)
                         throw Error(file, r, c + 1, "Invalid CSV character.");
                     if (row[c].Length > maximumCell) throw Error(file, r, c + 1, "Cell exceeds " + maximumCell + " characters.");
-                    try { XmlConvert.VerifyXmlChars(row[c]); }
+                    try { if (xmlCharacters) XmlConvert.VerifyXmlChars(row[c]); }
                     catch (XmlException) { throw Error(file, r, c + 1, "XML-invalid character."); }
                 }
             }
         }
 
-        public static byte[] WriteCsv(TableData table, string file = "CSV")
+        public static byte[] WriteCsv(TableData table, string file = "CSV", bool formulaGuard = true, bool xmlCharacters = true)
         {
-            Validate(table, file);
+            Validate(table, file, xmlCharacters: xmlCharacters);
             long length = Utf8.GetPreamble().Length; int row = 0;
             foreach (var cells in new[] { table.Columns }.Concat(table.Rows))
             {
                 row++;
                 for (int c = 0; c < cells.Length; c++)
                 {
-                    string value = ExportCell(cells[c]);
+                    string value = formulaGuard ? ExportCell(cells[c]) : cells[c];
                     length += Utf8.GetByteCount(value) + value.Count(ch => ch == '"') + 3L;
                     if (length > MaximumBytes) throw Error(file, row, c + 1, "File exceeds 16 MiB.");
                 }
             }
             var text = new StringBuilder();
             foreach (var cells in new[] { table.Columns }.Concat(table.Rows))
-                text.Append(string.Join(",", cells.Select(c => "\"" + ExportCell(c).Replace("\"", "\"\"") + "\""))).Append('\n');
+                text.Append(string.Join(",", cells.Select(c => "\"" + (formulaGuard ? ExportCell(c) : c).Replace("\"", "\"\"") + "\""))).Append('\n');
             var bytes = Utf8.GetPreamble().Concat(Utf8.GetBytes(text.ToString())).ToArray();
             return bytes;
         }
 
-        public static TableData ReadCsv(byte[] bytes, string file = "CSV")
+        public static TableData ReadCsv(byte[] bytes, string file = "CSV", bool formulaGuard = true,
+            EmptyTableRows emptyRows = EmptyTableRows.Skip, bool xmlCharacters = true)
         {
             if (bytes.Length > MaximumBytes) throw Error(file, 1, 1, "File exceeds 16 MiB.");
             int offset = bytes.Length >= 3 && bytes[0] == 239 && bytes[1] == 187 && bytes[2] == 191 ? 3 : 0;
@@ -85,15 +93,19 @@ namespace TiaMcp.Logic.Exchange
             try { text = Utf8.GetString(bytes, offset, bytes.Length - offset); }
             catch (DecoderFallbackException) { throw Error(file, 1, 1, "Invalid UTF-8."); }
             var rows = new List<string[]>(); var row = new List<string>(); var cell = new StringBuilder();
-            bool quoted = false, closed = false; int sourceRow = 1;
+            bool quoted = false, closed = false; int sourceRow = 1, pendingEmptyRows = 0;
             ArgumentException Invalid(string message) => Error(file, sourceRow, row.Count + 1, message);
             void AddRow()
             {
-                if (row.Any(value => value.Length != 0))
+                bool nonempty = row.Any(value => value.Length != 0);
+                if (nonempty || emptyRows == EmptyTableRows.Keep)
                 {
                     if (rows.Count != 0 && row.Count != rows[0].Length) throw Invalid("Row width differs from header.");
-                    rows.Add(row.Select(ImportCell).ToArray());
+                    if ((long)rows.Count + pendingEmptyRows > MaximumRows) throw Invalid("CSV row/cell limit exceeded.");
+                    while (pendingEmptyRows > 0) { rows.Add(Enumerable.Repeat("", rows[0].Length).ToArray()); pendingEmptyRows--; }
+                    rows.Add(formulaGuard ? row.Select(ImportCell).ToArray() : row.ToArray());
                 }
+                else if (rows.Count != 0 && emptyRows == EmptyTableRows.TrimTrailing) pendingEmptyRows++;
                 row.Clear(); sourceRow++;
             }
             for (int i = 0; i < text.Length; i++)
@@ -125,13 +137,13 @@ namespace TiaMcp.Logic.Exchange
                     }
                 }
                 else { if (closed) throw Invalid("Unexpected text after a CSV quote."); cell.Append(c); }
-                int wireMaximum = cell.Length > 1 && cell[0] == '\'' && FormulaStart(cell[1]) ? 65537 : 65536;
+                int wireMaximum = formulaGuard && cell.Length > 0 && cell[0] == '\'' ? 65537 : 65536;
                 if (rows.Count > MaximumRows + 1 || cell.Length > wireMaximum) throw Invalid("CSV row/cell limit exceeded.");
             }
             if (quoted) throw Invalid("Unterminated CSV quote.");
             if (cell.Length > 0 || row.Count > 0 || closed) { row.Add(cell.ToString()); AddRow(); }
             var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1));
-            Validate(table, file);
+            Validate(table, file, xmlCharacters: xmlCharacters);
             return table;
         }
     }

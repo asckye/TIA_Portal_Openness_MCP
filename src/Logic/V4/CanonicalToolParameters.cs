@@ -149,10 +149,10 @@ namespace TiaMcp.Logic.V4
                             name = Exchange.PlcTagTableExchange.Name(Exchange.PlcTagTableExchange.Parse(File.ReadAllText(path)));
                         }
                         catch (Exception error) when (error is ArgumentException || error is InvalidOperationException || error is System.Xml.XmlException)
-                        { throw new ArgumentException(Exchange.TableFile.Error(path, 1, 1, error.Message).Message, parameter); }
+                        { throw new ArgumentException(Exchange.TableFile.Error(Path.GetFileName(path), 1, 1,
+                            error.Data["tableReason"] as string ?? error.Message).Message, parameter); }
                     }
                     effective["exportFile"] = Path.Combine(directory, tool + "." + Adapters.Contracts.ObjectFileNameEncoding.Encode(name)
-                        + "." + Guid.NewGuid().ToString("N")
                         + ((string?)input["direction"] == "fromTable" ? ".xml" : (string?)input["format"] == "csv" ? ".csv" : ".xlsx"));
                 }
                 return effective;

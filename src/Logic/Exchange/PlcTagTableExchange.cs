@@ -91,7 +91,16 @@ namespace TiaMcp.Logic.Exchange
             foreach (var row in table.Rows)
                 if (row[1].Length == 0 || !keys.Add(row[1]))
                     throw new ArgumentException("Empty or duplicate template row key.");
-            TableFile.Validate(table); return table;
+            TableFile.Validate(table); TemplateIds(export); return table;
+        }
+
+        private static HashSet<ulong> TemplateIds(XDocument document)
+        {
+            var ids = new HashSet<ulong>();
+            foreach (var id in document.Descendants().Attributes("ID"))
+                if (!ulong.TryParse(id.Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong number) || !ids.Add(number))
+                    throw new ArgumentException("Template IDs must be unique hexadecimal numbers.");
+            return ids;
         }
 
         public static PlcTagTableEdit FromTable(XDocument template, TableData table)
@@ -132,10 +141,7 @@ namespace TiaMcp.Logic.Exchange
             foreach (var pair in rows.Where(p => !byKey.ContainsKey(p.Key)))
                 if (omittedSignatures.Contains(string.Join("\0", comparedColumns.Select(c => pair.Value[c.index]))))
                     throw new ArgumentException("Renamed row key refused; keep the original Name and add new rows separately.");
-            var ids = new HashSet<ulong>();
-            foreach (var id in document.Descendants().Attributes("ID"))
-                if (!ulong.TryParse(id.Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong number) || !ids.Add(number))
-                    throw new ArgumentException("Template IDs must be unique hexadecimal numbers.");
+            var ids = TemplateIds(document);
             ulong next = 0;
             string NewId()
             {

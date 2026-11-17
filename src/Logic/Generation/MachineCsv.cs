@@ -89,7 +89,8 @@ namespace TiaMcp.Logic.Generation
                 var columns = fixedColumns.Concat(rows.SelectMany(r => r.Keys)).Distinct(StringComparer.Ordinal).ToArray();
                 if (rows.Length > MaximumRows - 1 || columns.Length > MaximumColumns) throw new ArgumentException("CSV table exceeds row/column limits.");
                 var bytes = Csv(name + ".csv", file => TableFile.WriteCsv(new TableData(columns,
-                    rows.Select(row => columns.Select(c => row.TryGetValue(c, out var value) ? value : "").ToArray())), file));
+                    rows.Select(row => columns.Select(c => row.TryGetValue(c, out var value) ? value : "").ToArray())), file,
+                    formulaGuard: false, xmlCharacters: false));
                 files.Add(name + ".csv", bytes);
                 if (bytes.Length > 4 * 1024 * 1024) throw new ArgumentException("CSV table exceeds 4 MiB.");
             }
@@ -112,7 +113,7 @@ namespace TiaMcp.Logic.Generation
                 total += input.Length;
                 if (input.Length > 4 * 1024 * 1024 || total > MaximumBytes) throw new ArgumentException("CSV size limit exceeded.", "inputPath");
                 using var output = new MemoryStream(); input.CopyTo(output); var bytes = output.ToArray();
-                var table = Csv(path, file => TableFile.ReadCsv(bytes, file));
+                var table = Csv(path, file => TableFile.ReadCsv(bytes, file, formulaGuard: false, emptyRows: EmptyTableRows.Keep, xmlCharacters: false));
                 var columns = table.Columns;
                 headers[sheet] = columns;
                 sheets[sheet] = table.Rows.Select(row => columns.Select((c, i) => new { c, i })
@@ -184,7 +185,8 @@ namespace TiaMcp.Logic.Generation
             var expected = Export(package, json);
             foreach (var sheet in Sheets)
             {
-                var columns = TableFile.ReadCsv(expected[sheet + ".csv"]).Columns;
+                var columns = TableFile.ReadCsv(expected[sheet + ".csv"], formulaGuard: false,
+                    emptyRows: EmptyTableRows.Keep, xmlCharacters: false).Columns;
                 if (headers[sheet].Any(c => !columns.Contains(c, StringComparer.Ordinal)))
                     throw new ArgumentException("Unknown CSV column in " + sheet + ".", "inputPath");
             }

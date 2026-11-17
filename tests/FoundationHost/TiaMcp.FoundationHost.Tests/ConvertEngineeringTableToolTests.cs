@@ -96,20 +96,26 @@ public sealed class ConvertEngineeringTableToolTests
             rows = new[] { new { Name = "x" } } }));
         Assert.True((bool?)preview["ok"], preview.ToJsonString());
         string path = (string)preview["data"]!["exportFile"]!;
-        Assert.StartsWith("ConvertEngineeringTable.Rows.", Path.GetFileName(path));
+        Assert.Equal("ConvertEngineeringTable.Rows.csv", Path.GetFileName(path));
         Assert.EndsWith(".csv", path);
         Assert.StartsWith(TiaOpenness.Shared.DataLocations.Current.OutputRoot, path);
         Assert.False(File.Exists(path));
         var second = Body(await fixture.Call("ConvertEngineeringTable", new { kind = "rows", direction = "toTable", format = "csv",
             rows = new[] { new { Name = "x" } } }));
         Assert.True((bool?)second["ok"], second.ToJsonString());
-        Assert.NotEqual(path, (string?)second["data"]?["exportFile"]);
+        Assert.Equal(path, (string?)second["data"]?["exportFile"]);
+        var executed = Body(await fixture.Call("ConvertEngineeringTable", new { kind = "rows", direction = "toTable", format = "csv",
+            rows = new[] { new { Name = "x" } }, dryRun = false }));
+        Assert.True((bool?)executed["ok"], executed.ToJsonString());
+        Assert.Equal(path, (string?)executed["data"]?["exportFile"]); Assert.True(File.Exists(path));
+        Assert.Equal(path, (string?)executed["data"]?["output"]?["path"]);
     }
 
     [Theory, MemberData(nameof(Releases))]
-    public async Task Default_table_outputs_include_encoded_names_and_never_collide_in_one_session(string release)
+    public async Task Default_table_outputs_include_encoded_names_and_refuse_existing_targets(string release)
     {
         using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        using var session = fixture.EnterSession();
         var outputs = new HashSet<string>(StringComparer.OrdinalIgnoreCase); int i = 0;
         foreach (string name in new[] { "表/一", "表/二", "表/一" })
         {
@@ -118,12 +124,61 @@ public sealed class ConvertEngineeringTableToolTests
                 + name + "</Name></AttributeList><ObjectList/></SW.Tags.PlcTagTable></Document>");
             var result = Body(await fixture.Call("ConvertEngineeringTable", new { kind = "plcTagTable", direction = "toTable", inputPath = source,
                 format = "csv", dryRun = false }));
+            if (i == 3)
+            {
+                Assert.False((bool?)result["ok"]); Assert.Contains("exportFile", (string?)result["error"]?["message"]);
+                continue;
+            }
             Assert.True((bool?)result["ok"], result.ToJsonString());
             string path = (string)result["data"]!["exportFile"]!;
-            Assert.StartsWith("ConvertEngineeringTable." + ObjectFileNameEncoding.Encode(name) + ".", Path.GetFileName(path));
+            Assert.Equal("ConvertEngineeringTable." + ObjectFileNameEncoding.Encode(name) + ".csv", Path.GetFileName(path));
             Assert.True(outputs.Add(path)); Assert.True(File.Exists(path));
         }
-        Assert.Equal(3, outputs.Count);
+        Assert.Equal(2, outputs.Count);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Default_merge_output_and_next_step_are_identical_in_preview_and_execution(string release)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        using var session = fixture.EnterSession();
+        string template = Path.Combine(fixture.Root, "template.xml"), input = Path.Combine(fixture.Root, "input.csv");
+        string source = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "tests", "FoundationHost", "TiaMcp.ToolPipeline.Tests", "Fixtures", "TableExchange", "tags-v21.xml");
+        File.Copy(source, template);
+        var document = PlcTagTableExchange.Parse(File.ReadAllText(template));
+        File.WriteAllBytes(input, TableFile.WriteCsv(PlcTagTableExchange.ToTable(document)));
+        var args = new JsonObject { ["kind"] = "plcTagTable", ["direction"] = "fromTable", ["inputPath"] = input, ["templatePath"] = template };
+        var preview = Body(await fixture.Call("ConvertEngineeringTable", args));
+        Assert.True((bool?)preview["ok"], preview.ToJsonString());
+        string path = (string)preview["data"]!["exportFile"]!;
+        Assert.Equal("ConvertEngineeringTable." + ObjectFileNameEncoding.Encode(PlcTagTableExchange.Name(document)) + ".xml", Path.GetFileName(path));
+        Assert.Equal(path, (string?)preview["data"]?["nextStep"]?["arguments"]?["importPath"]); Assert.False(File.Exists(path));
+        args["dryRun"] = false;
+        var executed = Body(await fixture.Call("ConvertEngineeringTable", args));
+        Assert.True((bool?)executed["ok"], executed.ToJsonString());
+        Assert.Equal(path, (string?)executed["data"]?["exportFile"]);
+        Assert.Equal(path, (string?)executed["data"]?["output"]?["path"]);
+        Assert.Equal(path, (string?)executed["data"]?["nextStep"]?["arguments"]?["importPath"]);
+        byte[] bytes = File.ReadAllBytes(path);
+        var conflict = Body(await fixture.Call("ConvertEngineeringTable", args));
+        Assert.False((bool?)conflict["ok"]); Assert.Contains("exportFile", (string?)conflict["error"]?["message"]);
+        Assert.Equal(bytes, File.ReadAllBytes(path));
+    }
+
+    [Theory]
+    [InlineData("csv")]
+    [InlineData("xlsx")]
+    public async Task Rows_roundtrip_preserves_an_empty_row_before_data(string format)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21");
+        string output = Path.Combine(fixture.Root, "null-row." + format);
+        var written = Body(await fixture.Call("ConvertEngineeringTable", new { kind = "rows", direction = "toTable", format, exportFile = output,
+            rows = new object[] { new { A = (int?)null }, new { A = (int?)1 } }, dryRun = false }));
+        Assert.True((bool?)written["ok"], written.ToJsonString());
+        var read = Body(await fixture.Call("ConvertEngineeringTable", new { kind = "rows", direction = "fromTable", inputPath = output }));
+        Assert.True((bool?)read["ok"], read.ToJsonString()); Assert.Equal(2, (int?)read["data"]?["total"]);
+        Assert.Equal("", (string?)read["data"]?["rows"]?[0]?["A"]); Assert.Equal("1", (string?)read["data"]?["rows"]?[1]?["A"]);
     }
 
     [Theory, MemberData(nameof(Releases))]
