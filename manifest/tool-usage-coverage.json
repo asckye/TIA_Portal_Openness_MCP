@@ -1,13 +1,13 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "f463e36edfd5023117a6dfa051ff0c9e527eff5b14abf6c1442cc2c8dcbe8fb4",
+  "catalogSha256": "b0e34e605b0a18025de6a08fa3c717a1b92219761c807312368f8e2735eb09cc",
   "uniqueTools": 521,
   "documents": 89,
   "versionToolPairs": 3233,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
-  "callSequences": 45,
+  "callSequences": 46,
   "languages": [
     "scl",
     "scl-sd",
@@ -59,7 +59,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 175,
       "programmingExampleCount": 25,
-      "callSequenceCount": 45,
+      "callSequenceCount": 46,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -3889,7 +3889,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 236,
       "programmingExampleCount": 25,
-      "callSequenceCount": 45,
+      "callSequenceCount": 46,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -8496,7 +8496,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 290,
       "programmingExampleCount": 25,
-      "callSequenceCount": 45,
+      "callSequenceCount": 46,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -13708,7 +13708,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 365,
       "programmingExampleCount": 25,
-      "callSequenceCount": 45,
+      "callSequenceCount": 46,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -19565,7 +19565,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 441,
       "programmingExampleCount": 25,
-      "callSequenceCount": 45,
+      "callSequenceCount": 46,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -26119,7 +26119,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 503,
       "programmingExampleCount": 25,
-      "callSequenceCount": 45,
+      "callSequenceCount": 46,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -33632,7 +33632,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 517,
       "programmingExampleCount": 25,
-      "callSequenceCount": 45,
+      "callSequenceCount": 46,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -41414,8 +41414,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "118062babdc9283942fc67269cddb548588f56b5c52d10a35c02093253809acc",
-      "runtimeSha256": "118062babdc9283942fc67269cddb548588f56b5c52d10a35c02093253809acc",
+      "sdkWorkerSha256": "b93030cc7344f74f4dd7e740354a06730900559c0823b1ba32aab8428ccd782a",
+      "runtimeSha256": "b93030cc7344f74f4dd7e740354a06730900559c0823b1ba32aab8428ccd782a",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -41426,7 +41426,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 565,
       "programmingExampleCount": 25,
-      "callSequenceCount": 45,
+      "callSequenceCount": 46,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -49586,8 +49586,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "2d401eee4b0bf9f967c792e52facd170dd4616251476b9293825195818ae34c4",
-      "runtimeSha256": "2d401eee4b0bf9f967c792e52facd170dd4616251476b9293825195818ae34c4",
+      "sdkWorkerSha256": "2ab4da5a7e2d5e085fe04880ad9dfac634351549bca7dfd7ffec44ffd1775654",
+      "runtimeSha256": "2ab4da5a7e2d5e085fe04880ad9dfac634351549bca7dfd7ffec44ffd1775654",
       "workerModel": "foundation-host-plc-worker"
     }
   }
