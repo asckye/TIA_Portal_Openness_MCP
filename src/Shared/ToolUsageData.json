@@ -3568,6 +3568,13 @@
         }
       ]
     },
+    "ConvertEngineeringTable": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "CreateDevice": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -48212,6 +48219,120 @@
             "Execute with dryRun=false, confirm=true, expectedInventoryHash and expectedProjectFile from this same preview. No overwrite or automatic retry; inspect partial item results before another call."
           ],
           "note": "Use an existing exportDirectory. Copy exact MIN-ESCAPE softwarePath and groupPath from discovery. Optional unitName is available on V16–V21. Re-import each returned file with ImportPlcTagTable, folderPath = parent of objectPath; multiple calls can use PreviewToolBatch/ApplyToolBatch. ImportPlcProgramFromDirectory uses the explicit tagFolderPath and does not reconstruct groups from hashed filenames."
+        },
+        "ConvertEngineeringTable": {
+          "arguments": {
+            "kind": "plcTagTable",
+            "direction": "toTable",
+            "inputPath": "C:/Examples/exports/Tags.xml",
+            "format": "xlsx",
+            "exportFile": "C:/Examples/generated/Tags.xlsx",
+            "dryRun": true
+          },
+          "parameters": {
+            "inputPath": {
+              "requiresBinding": true,
+              "meaning": "Use the exact local XML export for toTable, or the edited CSV/XLSX for fromTable."
+            },
+            "templatePath": {
+              "requiresBinding": true,
+              "meaning": "Use the original exported XML for plcTagTable fromTable."
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for plcTagTable fromTable; omit for session output."
+            }
+          },
+          "operations": {
+            "toTable": {
+              "arguments": {
+                "kind": "plcTagTable",
+                "direction": "toTable",
+                "inputPath": "C:/Examples/exports/Tags.xml",
+                "format": "xlsx",
+                "exportFile": "C:/Examples/generated/Tags.xlsx",
+                "dryRun": true
+              },
+              "argumentsMode": "complete"
+            },
+            "fromTable": {
+              "arguments": {
+                "kind": "plcTagTable",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/Tags.xlsx",
+                "templatePath": "C:/Examples/exports/Tags.xml",
+                "exportFile": "C:/Examples/generated/Tags-edited.xml",
+                "dryRun": true
+              },
+              "argumentsMode": "complete"
+            },
+            "fromTableExecute": {
+              "arguments": {
+                "kind": "plcTagTable",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/Tags.xlsx",
+                "templatePath": "C:/Examples/exports/Tags.xml",
+                "exportFile": "C:/Examples/generated/Tags-edited.xml",
+                "dryRun": false
+              },
+              "argumentsMode": "complete"
+            },
+            "rowsToTable": {
+              "arguments": {
+                "kind": "rows",
+                "direction": "toTable",
+                "rows": [
+                  {
+                    "Name": "Motor",
+                    "Address": "%M0.0",
+                    "Enabled": true
+                  }
+                ],
+                "columns": [
+                  "Name",
+                  "Address",
+                  "Enabled"
+                ],
+                "format": "xlsx",
+                "exportFile": "C:/Examples/generated/Rows.xlsx",
+                "dryRun": false
+              },
+              "argumentsMode": "complete"
+            },
+            "rowsFromTable": {
+              "arguments": {
+                "kind": "rows",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/Rows.xlsx",
+                "offset": 0,
+                "limit": 50,
+                "dryRun": true
+              },
+              "argumentsMode": "complete"
+            }
+          },
+          "validation": "Offline managed fixtures; native import and Excel-saved workbook acceptance NOT RUN. Bind paths to supplied files.",
+          "resultReading": [
+            "Offline file conversion only; no TIA call. dryRun=true validates every input and previews columns/counts and up to 50 changed rows with old/new values; false creates a NEW exportFile and returns output.path/bytes/sha256. No overwrite.",
+            "plcTagTable columns: Kind, Name, DataType, Address, Value; further scalar template attributes in first-seen order, then Comment[culture] ordered by culture. Culture syntax ^[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}$. Keys are exact (Kind,Name), never renamed. SystemConstant rows are read-only; missing rows remain in the template. Empty cells remove editable attributes or a comment culture to TIA defaults. Duplicate keys and unknown columns refuse. Header, Engineering version, DocumentInfo and unrelated XML remain unchanged.",
+            "CSV uses UTF-8 BOM, comma separators, every cell quoted with doubled quotes and LF. Reader accepts BOM or none and CR/LF/CRLF; NUL, misplaced/unterminated quotes, uneven rows and empty/duplicate headers refuse. CSV export adds one apostrophe before = + - @, tab or CR even after leading apostrophes; import removes exactly one such prefix. XLSX inline strings preserve apostrophes unchanged and use no formula guard. Use XLSX when Excel uses semicolon list separators.",
+            "XLSX has one sheet PlcTagTable/Rows, inline text cells. Reader selects that named sheet or the only sheet; accepts inline/shared strings, raw numeric text, true/false booleans and cached formula values. Missing formula cache, errors, ambiguous sheets, .xls/.xlsm and encrypted files refuse. Limits: 16 MiB uncompressed total, 10000 data rows, 1024 columns; 65536 CSV/32767 XLSX characters per cell. Errors name file, row and column.",
+            "rows toTable accepts 1..1000 flat scalar objects and optional columns; scalars become invariant strings, null empty. fromTable returns string objects, columns, total and meta.paging (offset, limit 1..200, default 50, nextOffset). It writes no file, including dryRun=false.",
+            "For XML fromTable, templatePath is the original export. Review changes, execute conversion, then preview/approve ImportPlcTagTable with overwrite=true and importPath=exportFile. Bind softwarePath and folderPath to the original export target; XML alone does not encode its folder. ListPlcTags readback and compile affected blocks. Delete tags explicitly with ManagePlcTagDefinition through ApplyToolBatch.",
+            "rows example: ConvertEngineeringTable({\"kind\":\"rows\",\"direction\":\"toTable\",\"rows\":[{\"Name\":\"Motor\",\"Address\":\"%M0.0\",\"Enabled\":true}],\"columns\":[\"Name\",\"Address\",\"Enabled\"],\"format\":\"xlsx\",\"exportFile\":\"C:/Examples/generated/Rows.xlsx\",\"dryRun\":false}). Read it with kind=rows,direction=fromTable,inputPath=that file,offset=0,limit=50.",
+            "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_."
+          ],
+          "execution": {
+            "arguments": {
+              "kind": "plcTagTable",
+              "direction": "fromTable",
+              "inputPath": "C:/Examples/generated/Tags.xlsx",
+              "templatePath": "C:/Examples/exports/Tags.xml",
+              "exportFile": "C:/Examples/generated/Tags-edited.xml",
+              "dryRun": false
+            },
+            "meaning": "After reviewing fromTable preview, create the new XML with these complete arguments; bind every path."
+          }
         }
       },
       "full-engine": {
@@ -68725,6 +68846,120 @@
             "Execute with dryRun=false, confirm=true, expectedInventoryHash and expectedProjectFile from this same preview. No overwrite or automatic retry; inspect partial item results before another call."
           ],
           "note": "Use an existing exportDirectory. Copy exact MIN-ESCAPE softwarePath and groupPath from discovery. Optional unitName is available on V16–V21. Re-import each returned file with ImportPlcTagTable, folderPath = parent of objectPath; multiple calls can use PreviewToolBatch/ApplyToolBatch. ImportPlcProgramFromDirectory uses the explicit tagFolderPath and does not reconstruct groups from hashed filenames."
+        },
+        "ConvertEngineeringTable": {
+          "arguments": {
+            "kind": "plcTagTable",
+            "direction": "toTable",
+            "inputPath": "C:/Examples/exports/Tags.xml",
+            "format": "xlsx",
+            "exportFile": "C:/Examples/generated/Tags.xlsx",
+            "dryRun": true
+          },
+          "parameters": {
+            "inputPath": {
+              "requiresBinding": true,
+              "meaning": "Use the exact local XML export for toTable, or the edited CSV/XLSX for fromTable."
+            },
+            "templatePath": {
+              "requiresBinding": true,
+              "meaning": "Use the original exported XML for plcTagTable fromTable."
+            },
+            "exportFile": {
+              "requiresBinding": true,
+              "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for plcTagTable fromTable; omit for session output."
+            }
+          },
+          "operations": {
+            "toTable": {
+              "arguments": {
+                "kind": "plcTagTable",
+                "direction": "toTable",
+                "inputPath": "C:/Examples/exports/Tags.xml",
+                "format": "xlsx",
+                "exportFile": "C:/Examples/generated/Tags.xlsx",
+                "dryRun": true
+              },
+              "argumentsMode": "complete"
+            },
+            "fromTable": {
+              "arguments": {
+                "kind": "plcTagTable",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/Tags.xlsx",
+                "templatePath": "C:/Examples/exports/Tags.xml",
+                "exportFile": "C:/Examples/generated/Tags-edited.xml",
+                "dryRun": true
+              },
+              "argumentsMode": "complete"
+            },
+            "fromTableExecute": {
+              "arguments": {
+                "kind": "plcTagTable",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/Tags.xlsx",
+                "templatePath": "C:/Examples/exports/Tags.xml",
+                "exportFile": "C:/Examples/generated/Tags-edited.xml",
+                "dryRun": false
+              },
+              "argumentsMode": "complete"
+            },
+            "rowsToTable": {
+              "arguments": {
+                "kind": "rows",
+                "direction": "toTable",
+                "rows": [
+                  {
+                    "Name": "Motor",
+                    "Address": "%M0.0",
+                    "Enabled": true
+                  }
+                ],
+                "columns": [
+                  "Name",
+                  "Address",
+                  "Enabled"
+                ],
+                "format": "xlsx",
+                "exportFile": "C:/Examples/generated/Rows.xlsx",
+                "dryRun": false
+              },
+              "argumentsMode": "complete"
+            },
+            "rowsFromTable": {
+              "arguments": {
+                "kind": "rows",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/Rows.xlsx",
+                "offset": 0,
+                "limit": 50,
+                "dryRun": true
+              },
+              "argumentsMode": "complete"
+            }
+          },
+          "validation": "Offline managed fixtures; native import and Excel-saved workbook acceptance NOT RUN. Bind paths to supplied files.",
+          "resultReading": [
+            "Offline file conversion only; no TIA call. dryRun=true validates every input and previews columns/counts and up to 50 changed rows with old/new values; false creates a NEW exportFile and returns output.path/bytes/sha256. No overwrite.",
+            "plcTagTable columns: Kind, Name, DataType, Address, Value; further scalar template attributes in first-seen order, then Comment[culture] ordered by culture. Culture syntax ^[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}$. Keys are exact (Kind,Name), never renamed. SystemConstant rows are read-only; missing rows remain in the template. Empty cells remove editable attributes or a comment culture to TIA defaults. Duplicate keys and unknown columns refuse. Header, Engineering version, DocumentInfo and unrelated XML remain unchanged.",
+            "CSV uses UTF-8 BOM, comma separators, every cell quoted with doubled quotes and LF. Reader accepts BOM or none and CR/LF/CRLF; NUL, misplaced/unterminated quotes, uneven rows and empty/duplicate headers refuse. CSV export adds one apostrophe before = + - @, tab or CR even after leading apostrophes; import removes exactly one such prefix. XLSX inline strings preserve apostrophes unchanged and use no formula guard. Use XLSX when Excel uses semicolon list separators.",
+            "XLSX has one sheet PlcTagTable/Rows, inline text cells. Reader selects that named sheet or the only sheet; accepts inline/shared strings, raw numeric text, true/false booleans and cached formula values. Missing formula cache, errors, ambiguous sheets, .xls/.xlsm and encrypted files refuse. Limits: 16 MiB uncompressed total, 10000 data rows, 1024 columns; 65536 CSV/32767 XLSX characters per cell. Errors name file, row and column.",
+            "rows toTable accepts 1..1000 flat scalar objects and optional columns; scalars become invariant strings, null empty. fromTable returns string objects, columns, total and meta.paging (offset, limit 1..200, default 50, nextOffset). It writes no file, including dryRun=false.",
+            "For XML fromTable, templatePath is the original export. Review changes, execute conversion, then preview/approve ImportPlcTagTable with overwrite=true and importPath=exportFile. Bind softwarePath and folderPath to the original export target; XML alone does not encode its folder. ListPlcTags readback and compile affected blocks. Delete tags explicitly with ManagePlcTagDefinition through ApplyToolBatch.",
+            "rows example: ConvertEngineeringTable({\"kind\":\"rows\",\"direction\":\"toTable\",\"rows\":[{\"Name\":\"Motor\",\"Address\":\"%M0.0\",\"Enabled\":true}],\"columns\":[\"Name\",\"Address\",\"Enabled\"],\"format\":\"xlsx\",\"exportFile\":\"C:/Examples/generated/Rows.xlsx\",\"dryRun\":false}). Read it with kind=rows,direction=fromTable,inputPath=that file,offset=0,limit=50.",
+            "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_."
+          ],
+          "execution": {
+            "arguments": {
+              "kind": "plcTagTable",
+              "direction": "fromTable",
+              "inputPath": "C:/Examples/generated/Tags.xlsx",
+              "templatePath": "C:/Examples/exports/Tags.xml",
+              "exportFile": "C:/Examples/generated/Tags-edited.xml",
+              "dryRun": false
+            },
+            "meaning": "After reviewing fromTable preview, create the new XML with these complete arguments; bind every path."
+          }
         }
       }
     }
@@ -73508,6 +73743,112 @@
             "dryRun": false
           },
           "expect": "Show the completed result to the engineer watching TIA Portal, without approval or project changes. Skip this display step when TIA runs without user interface; only display after a successful write and readback, never after an unknown or refused write."
+        }
+      ]
+    },
+    {
+      "id": "sequence/plc-tag-table-excel",
+      "topic": "plc-tag-table-excel",
+      "purpose": "Edit an exported PLC tag table in Excel and re-import through the existing previewed import.",
+      "preconditions": "Bind softwarePath, tableName and folderPath to the same export target; use new output files. Review edits in Excel before fromTable.",
+      "notes": "CSV/XLSX conversion is offline. Missing rows are kept, keys never renamed, SystemConstant rows read-only. Excel locale with semicolon separator: use XLSX. ImportPlcTagTable overwrite=true uses its existing backup and approval. XML does not contain the original folder; never guess it. Native acceptance NOT RUN.",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "Schema and offline fixtures; native acceptance NOT RUN.",
+      "steps": [
+        {
+          "tool": "ExportPlcTagTable",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "exportFile": "C:/Examples/exports/Tags.xml",
+            "dryRun": false,
+            "tagTableName": "<exact table name>",
+            "expectedProjectFile": "C:/Projects/Example.ap{projectExtension}"
+          },
+          "expect": "Export the exact table. For recursive/group exports use ExportPlcTagTables when available; retain its original folder path."
+        },
+        {
+          "tool": "ConvertEngineeringTable",
+          "arguments": {
+            "kind": "plcTagTable",
+            "direction": "toTable",
+            "inputPath": "C:/Examples/exports/Tags.xml",
+            "format": "xlsx",
+            "exportFile": "C:/Examples/generated/Tags.xlsx",
+            "dryRun": false
+          },
+          "expect": "Open in Excel, edit comments/address/access flags and add tags/constants. Save; retain unchanged keys and template."
+        },
+        {
+          "tool": "ConvertEngineeringTable",
+          "arguments": {
+            "kind": "plcTagTable",
+            "direction": "fromTable",
+            "inputPath": "C:/Examples/generated/Tags.xlsx",
+            "templatePath": "C:/Examples/exports/Tags.xml",
+            "exportFile": "C:/Examples/generated/Tags-edited.xml",
+            "dryRun": true
+          },
+          "expect": "Review changes.updated/added/unchanged/keptFromTemplate and first 50 old/new rows; no file written."
+        },
+        {
+          "tool": "ConvertEngineeringTable",
+          "arguments": {
+            "kind": "plcTagTable",
+            "direction": "fromTable",
+            "inputPath": "C:/Examples/generated/Tags.xlsx",
+            "templatePath": "C:/Examples/exports/Tags.xml",
+            "exportFile": "C:/Examples/generated/Tags-edited.xml",
+            "dryRun": false
+          },
+          "expect": "New XML written; inspect output.path, bytes and sha256."
+        },
+        {
+          "tool": "ImportPlcTagTable",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "folderPath": "<original table folder>",
+            "importPath": "C:/Examples/generated/Tags-edited.xml",
+            "overwrite": true,
+            "dryRun": true
+          },
+          "expect": "Review preview and backup/overwrite scope before approval."
+        },
+        {
+          "tool": "ImportPlcTagTable",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "folderPath": "<original table folder>",
+            "importPath": "C:/Examples/generated/Tags-edited.xml",
+            "overwrite": true,
+            "dryRun": false,
+            "expectedProjectFile": "C:/Projects/Example.ap{projectExtension}"
+          },
+          "expect": "Approve the exact import target; inspect backup and result."
+        },
+        {
+          "tool": "ListPlcTags",
+          "arguments": {
+            "softwarePath": "devices/PLC_1"
+          },
+          "expect": "Read back modified and unchanged tags; continue paging as returned."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "devices/PLC_1"
+          },
+          "expect": "Compile when affected tags are used in blocks; inspect diagnostics."
         }
       ]
     }

@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 282,
+      "toolCount": 283,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -44,6 +44,7 @@
         "ConnectDeviceNodesToProfinetSubnet",
         "ConnectIsolatedPortal",
         "ConnectPortal",
+        "ConvertEngineeringTable",
         "CreateDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
@@ -293,7 +294,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 323,
+      "toolCount": 324,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -335,6 +336,7 @@
         "ConnectIsolatedPortal",
         "ConnectOnlinePlc",
         "ConnectPortal",
+        "ConvertEngineeringTable",
         "CreateDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
@@ -622,7 +624,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 352,
+      "toolCount": 353,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -665,6 +667,7 @@
         "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
+        "ConvertEngineeringTable",
         "CreateDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
@@ -980,7 +983,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 375,
+      "toolCount": 376,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1023,6 +1026,7 @@
         "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
+        "ConvertEngineeringTable",
         "CreateDevice",
         "CreateLibraryMasterCopy",
         "CreatePlcBlockGroup",
@@ -1361,7 +1365,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 401,
+      "toolCount": 402,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1407,6 +1411,7 @@
         "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
+        "ConvertEngineeringTable",
         "CreateDevice",
         "CreateGsdDevice",
         "CreateHardwareCatalogDevice",
@@ -1768,7 +1773,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 477,
+      "toolCount": 478,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1825,6 +1830,7 @@
         "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
+        "ConvertEngineeringTable",
         "CreateDevice",
         "CreateGsdDevice",
         "CreateHardwareCatalogDevice",
@@ -2251,7 +2257,7 @@
     },
     "20": {
       "profile": "plc-foundation",
-      "toolCount": 500,
+      "toolCount": 501,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2311,6 +2317,7 @@
         "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
+        "ConvertEngineeringTable",
         "CreateDevice",
         "CreateGsdDevice",
         "CreateHardwareCatalogDevice",
@@ -2757,7 +2764,7 @@
     },
     "21": {
       "profile": "plc-foundation",
-      "toolCount": 515,
+      "toolCount": 516,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2824,6 +2831,7 @@
         "ConnectOnlinePlc",
         "ConnectPortal",
         "ConnectProjectToWorkspace",
+        "ConvertEngineeringTable",
         "CreateDevice",
         "CreateGsdDevice",
         "CreateHardwareCatalogDevice",
@@ -3278,7 +3286,7 @@
     }
   },
   "groupCounts": {
-    "all-releases": 281,
+    "all-releases": 282,
     "shared-subset": 219,
     "release-only": 20
   },
@@ -4117,6 +4125,21 @@
         "21"
       ],
       "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ConvertEngineeringTable",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
