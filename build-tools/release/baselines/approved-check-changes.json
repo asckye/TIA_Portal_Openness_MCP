@@ -4821,6 +4821,33 @@
           "identifier": "WritePreviewCoverageTests/Default_preview_does_not_dispatch_a_native_operation( string name , string json ):6b510a588d2aa42274f3f5bda4365029368ed9890e5b241da49159f1170b07f6:1"
         }
       ]
+    },
+    {
+      "task": "SHOW-EDITOR",
+      "maintainerDate": "2026-11-17",
+      "reason": "Maintainer decision 2026-11-17: ShowObjectInEditor is a UI tool with dryRun default false and may follow the readback or compile step; expectations moved to the last non-UI step",
+      "items": [
+        {
+          "path": "scripts/checks/tool_usage_checks.py",
+          "kind": "assertion-removed",
+          "identifier": "check_usage:10ac5b9c3d79f7a576ccb5027749f05f1ef657a85830b16a03759495cbe8fff4:1"
+        },
+        {
+          "path": "scripts/checks/tool_usage_checks.py",
+          "kind": "assertion-removed",
+          "identifier": "check_usage:bbc7782e68023f056f98f02d66b2a100d8340a9adb87a0e4673010d13476bdff:1"
+        },
+        {
+          "path": "scripts/checks/tool_usage_checks.py",
+          "kind": "assertion-removed",
+          "identifier": "check_usage:c93aab4305f2b2d217e35fe5a849c24c0275120e992ce23b8326a6f4111d1369:1"
+        },
+        {
+          "path": "scripts/checks/tool_usage_checks.py",
+          "kind": "assertion-removed",
+          "identifier": "check_usage:c989b33e5d28b3da18207f84eb8811e257b80fe2e077f0b2c9d034a799ae6f0d:1"
+        }
+      ]
     }
   ]
 }
