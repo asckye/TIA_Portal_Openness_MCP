@@ -4880,6 +4880,23 @@
           "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):f75687baeb7c4d69b53ecf658bcf89c7a3660eb80fff54fbb64f5dcaee1f9c5a:1"
         }
       ]
+    },
+    {
+      "task": "TIA-BATCH-2",
+      "maintainerDate": "2026-11-17",
+      "reason": "Maintainer approval 2026-11-17: IPlcData gains ExportPlcTagTables (16 to 17); output coverage gains the new batch export file tool (56 to 57)",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/AdapterContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "AdapterContractTests/FacetsUseOnlyContractValuesAndCapabilitiesCanBeCombined( ):38decc899ebdb0e48ef6c5d220d6a0c4cb1cf42c6918aa8427975f4150d440a3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/AssertOutputCoverage( Func \u003C string , JsonObject , IEnumerable \u003C string \u003E \u003E targets ):a76656e60320045405f83588cc30eca73b8dda04ca4bec6ea5ebcba4608ba0c6:1"
+        }
+      ]
     }
   ]
 }
