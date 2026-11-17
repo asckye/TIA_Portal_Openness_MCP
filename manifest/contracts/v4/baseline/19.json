@@ -29,6 +29,7 @@
         "ExportPlcBlock",
         "ExportPlcBlocks",
         "ExportPlcTagTable",
+        "ExportPlcTagTables",
         "ExportPlcType",
         "ExportPlcTypes"
       ],
@@ -768,6 +769,7 @@
     "ExportPlcBlock",
     "ExportPlcBlocks",
     "ExportPlcTagTable",
+    "ExportPlcTagTables",
     "ExportPlcType",
     "ExportPlcTypes",
     "ExportPlcWatchTable",
@@ -16277,6 +16279,80 @@
         "type": "object"
       },
       "name": "ExportPlcTagTable",
+      "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "descriptionSha256": "3264becf20cdc9df6894bb266ceb10c1a1a92b4adbff6e51fb8a10467ac1bb5e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedInventoryHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedInventoryHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportDirectory": {
+            "description": "Absolute output directory on the TIA host. Exact foundation argument: exportPath Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "minLength": 1,
+            "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "recursive": {
+            "default": false,
+            "description": "Exact foundation argument: recursive",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Exact standard software unit name, V16–V21; empty selects PLC root.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcTagTables",
       "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
     },
     {
