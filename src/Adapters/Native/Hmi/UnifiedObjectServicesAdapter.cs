@@ -16,6 +16,13 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public UnifiedObjectServicesAdapter(IUnifiedSession session) => _session = session;
 
+        private static void RequireWritableAddress(string objectPathJson)
+        {
+            var steps = UnifiedObjectAddress.Parse(objectPathJson);
+            if (steps.FirstOrDefault()?.Field("property") as string == "RuntimeSettings")
+                throw new NotSupportedException("Use SetUnifiedRuntimeSettings for RuntimeSettings and its preview, confirmation and readback flow.");
+        }
+
         public HmiMessage ReadUnifiedObjectProperties(string softwarePath, string objectPathJson = "[]", int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("GetUnifiedObjectProperties", meta => {
                 UnifiedObjectAddress.Parse(objectPathJson);
@@ -44,15 +51,14 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         public HmiMessage UpdateUnifiedObjectProperties(string softwarePath, string objectPathJson, string propertiesJson, bool dryRun = true)
             => _session.RunHmiStepTool("SetUnifiedObjectProperties", meta => {
-                UnifiedObjectAddress.Parse(objectPathJson);
+                RequireWritableAddress(objectPathJson);
                 var changes = UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if (changes.Count == 0 || changes.ContainsKey("Name") || changes.ContainsKey("Parent"))
                     throw new ArgumentException("Nonempty scalar changes required; renaming/reparenting excluded.");
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 if (target.GetType().Name == "HmiRuntimeSetting")
-                    throw new NotSupportedException("Use SetUnifiedRuntimeSettings for root settings and its confirmation/readback flow; this adapter only " +
-                    "edits nested runtime settings.");
+                    throw new NotSupportedException("Use SetUnifiedRuntimeSettings for RuntimeSettings and its preview, confirmation and readback flow.");
                 // Nested parts (alarm class RaisedState, log Settings/Backup/Segment ...) and System.Drawing.Color leaves are accepted; collections still need their dedicated tools.
                 var prepared = UnifiedUiModelLogic.PrepareNested(target.GetType(), changes, target: target, evidence: meta);
                 meta["softwarePath"] = softwarePath; meta["objectPath"] = UnifiedObjectAddress.Parse(objectPathJson);
@@ -66,7 +72,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage UpdateUnifiedMultilingualProperty(string softwarePath, string objectPathJson, string property, string culture, string rawText,
                 bool dryRun = true)
             => _session.RunHmiStepTool("SetUnifiedMultilingualProperty", meta => {
-                UnifiedObjectAddress.Parse(objectPathJson);
+                RequireWritableAddress(objectPathJson);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 UnifiedMultilingualText.Validate(target, property, culture);

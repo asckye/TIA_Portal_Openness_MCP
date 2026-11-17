@@ -4,6 +4,12 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class UnifiedCapabilities
     {
+        public static bool WritesRuntimeSettings(UnifiedRequest request)
+            => (request.Operation == "SetUnifiedObjectProperties" || request.Operation == "SetUnifiedMultilingualProperty")
+                && request.Inputs.TryGetValue(request.ObjectPathJson, out var address) && address.Error == null
+                && address.Items.FirstOrDefault()?.Properties.TryGetValue("property", out var first) == true
+                && first.Text == "RuntimeSettings";
+
         public static bool UsesPreview(string tool) => new[] {
             "SetUnifiedObjectProperties", "SetUnifiedPlantObject", "SetUnifiedMultilingualProperty", "ExportUnifiedEngineeringList",
             "ManageUnifiedPlantNode", "ManageUnifiedLoggingTag", "ManageUnifiedOpcUaAlarmType", "SetUnifiedLogDuration",
@@ -47,14 +53,16 @@ namespace TiaMcp.Adapters.Contracts
                 var raw = request.Operation == "GetUnifiedRuntimeSettings" ? request.FieldsJson : request.ChangesJson;
                 if (request.Inputs.TryGetValue(raw, out var input) && input.Error == null)
                 {
-                    var fields = input.Kind == "array" ? input.Items.Select(v => v.Text) : input.Properties.Keys;
-                    var missing = release == "19" ? new[] {
-                        "CentralInputHint", "CentralPanning", "CentralZooming", "EnableLanguageCompatibleFontFamilies", "GeneralESIGCommentsStrategy" }
-                        : release == "20" ? new[] { "CentralInputHint", "CentralPanning", "CentralZooming" } : Array.Empty<string>();
-                    var field = fields.FirstOrDefault(f => missing.Contains(f, StringComparer.Ordinal));
-                    if (field != null) return "HmiRuntimeSetting." + field + " is not exposed by the V" + release + " PublicAPI.";
+                    var fields = (input.Kind == "array" ? input.Items.Select(v => v.Text) : input.Properties.Keys).ToArray();
+                    if (fields.Length == 0 || fields.Length > UnifiedRuntimeSettingsFields.MaxFieldsPerCall
+                        || fields.Distinct(StringComparer.Ordinal).Count() != fields.Length)
+                        return "Select 1..12 unique runtime settings.";
+                    foreach (var field in fields)
+                        if (UnifiedRuntimeSettingsFields.Unsupported(release, field) is string reason) return reason;
                 }
             }
+            if (WritesRuntimeSettings(request))
+                return "Use SetUnifiedRuntimeSettings for RuntimeSettings and its preview, confirmation and readback flow.";
             foreach (var input in request.Inputs.Values.Where(v => v.Kind == "array" && v.Error == null))
                 foreach (var step in input.Items.Where(v => v.Kind == "object" && v.Properties.ContainsKey("property")))
                 {

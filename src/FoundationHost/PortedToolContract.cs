@@ -480,11 +480,12 @@ internal sealed partial class FoundationTool
             var unified = BindUnifiedRequest(tool.Name, portedMethod!, arguments);
             UnifiedPortService.DecodeInputs(unified);
             if (UnifiedCapabilities.Unsupported(portedRelease!, unified) is string unifiedReason)
-                return tool.Name == "ManageUnifiedEngineeringObject"
+                return tool.Name is "ManageUnifiedEngineeringObject" or "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings"
+                    || UnifiedCapabilities.WritesRuntimeSettings(unified)
                     ? McpServer.V4TargetReject(tool.Name,
                         new Error(unifiedReason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true)
                     : HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
-            if (tool.Name is "ManageUnifiedEngineeringObject" or "SetUnifiedGlobalScript" && !unified.DryRun)
+            if (tool.Name is "ManageUnifiedEngineeringObject" or "SetUnifiedGlobalScript" or "SetUnifiedRuntimeSettings" && !unified.DryRun)
                 foreach (var field in new[] { "expectedPlanHash", "expectedProjectFile" })
                     if (!arguments.TryGetValue(field, out var value) || value.ValueKind != JsonValueKind.String
                         || string.IsNullOrWhiteSpace(value.GetString()))

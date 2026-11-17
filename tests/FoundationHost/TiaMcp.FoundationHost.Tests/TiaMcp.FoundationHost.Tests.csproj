@@ -88,6 +88,8 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiValues.cs" Link="Native/Hmi/HmiValues.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiReadSafety.cs" Link="Native/Hmi/HmiReadSafety.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestValues.cs" Link="Native/Hmi/UnifiedRequestValues.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRuntimeSettingsAccess.cs" Link="Native/Hmi/UnifiedRuntimeSettingsAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiContentTokenPolicy.cs" Link="Native/Hmi/HmiContentTokenPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedCodecs.cs" Link="Native/Hmi/UnifiedCodecs.cs" />
     <Compile Include="../../../src/Shared/UnifiedScriptFileCodec.cs" Link="UnifiedScriptFileCodec.cs" />
     <Compile Include="../../../src/Shared/NativeInputPolicy.cs" Link="NativeInputPolicy.cs" />

@@ -82,7 +82,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="GetUnifiedObjectProperties"),
                 Description("[L2][HMI-Unified][READ] Bounded property-only JSON path from Unified software: " +
                 "[{property:TagTables,name:Table},{property:Tags,name:Tag}]. Exact names; no Parent/backlinks. Returns scalar values and schema, excludes " +
-                "complex values, live pagination. Nested RuntimeSettings, system collections, logging tags supported by actual property availability.")]
+                "complex values, live pagination. System collections and logging tags supported by actual property availability. For runtime settings " +
+                "use GetUnifiedRuntimeSettings and SetUnifiedRuntimeSettings.")]
         public CallToolResult ReadUnifiedObjectPropertiesV4(string softwarePath, PropertyStep[] objectPath = null!, int offset=0, int limit=100)
             => HmiInspectionContract
                 .Run("GetUnifiedObjectProperties", false, false, () =>
@@ -93,8 +94,9 @@ namespace TiaMcpServer.ModelContextProtocol
         => _service.ReadUnifiedObjectProperties(softwarePath,objectPathJson,offset,limit);
 
         [McpServerTool(Name="SetUnifiedObjectProperties"),
-                Description("[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object or nested settings. dryRun=true; " +
-                "no renaming, parent traversal, root RuntimeSettings edit, save/compile/download. TimeSpan uses invariant c string. Partial changes " +
+                Description("[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object. RuntimeSettings and its " +
+                "entire subtree require SetUnifiedRuntimeSettings. dryRun=true; no renaming, parent traversal, save/compile/download. " +
+                "TimeSpan uses invariant c string. Partial changes " +
                 "reported; readback checked. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult UpdateUnifiedObjectPropertiesV4(string softwarePath, PropertyStep[] objectPath, AttributeMap<Scalar> properties, bool dryRun=true)
             => HmiInspectionContract
@@ -105,8 +107,10 @@ namespace TiaMcpServer.ModelContextProtocol
         => _service.UpdateUnifiedObjectProperties(softwarePath,objectPathJson,propertiesJson,dryRun);
 
         [McpServerTool(Name="SetUnifiedMultilingualProperty"),
-                Description("[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. Raw text preserved; " +
-                "verifies requested language and unchanged other languages. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 " +
+                Description("[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. " +
+                "RuntimeSettings and its entire subtree require SetUnifiedRuntimeSettings. " +
+                "Preserves raw text and verifies requested language and unchanged other languages. Default preview; no save/compile/download. " +
+                "Native behaviorPolicy=current; V4 " +
                 "native acceptance is pending.")]
         public CallToolResult UpdateUnifiedMultilingualPropertyV4(
             string softwarePath,

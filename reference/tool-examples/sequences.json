@@ -4886,5 +4886,82 @@
         "expect": "Compile when affected tags are used in blocks; inspect diagnostics."
       }
     ]
+  },
+  {
+    "id": "sequence/unified-runtime-settings",
+    "topic": "unified-runtime-settings",
+    "purpose": "Read, preview, apply and verify exact nested Unified runtime scalar settings.",
+    "preconditions": "The intended V19-V21 project is bound. Copy the exact project name, project file and HMI softwarePath from GetProjectInfo/GetProjectTree.",
+    "notes": "Use no more than 12 fields per call. Review the before/proposed evidence and capabilities. Integers are range-checked JSON integers; enum names are exact. V20+: telemetry, UPSS and tag settings; V21: tag optimization and exclusive operation. LanguageAndFonts, Windows auto-start and Runtime Manager are outside scope. Workbench approval applies to execution. On failure inspect rollbackCompleted and cleanupRequired; never automatically replay an unknown write. No implicit save, compile, download or runtime restart.",
+    "releaseKeys": [
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "VM NOT RUN",
+    "steps": [
+      {
+        "tool": "GetProjectInfo",
+        "arguments": {},
+        "expect": "Confirm the bound project name and exact project file."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Copy the exact Unified HMI softwarePath."
+      },
+      {
+        "tool": "GetUnifiedRuntimeSettings",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "fields": [
+            "OpcUaServerRuntimeSettings.ActAsOPCServer",
+            "MaxLoginRuntimeSettings.MaxLoginErrors"
+          ]
+        },
+        "expect": "Inspect per-field values, types and capabilities; unsupported fields are refused for the selected release."
+      },
+      {
+        "tool": "SetUnifiedRuntimeSettings",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "changes": {
+            "MaxLoginRuntimeSettings.MaxLoginErrors": 5
+          },
+          "dryRun": true
+        },
+        "expect": "Review before/proposed and copy token, planHash and targetIdentity project file."
+      },
+      {
+        "tool": "SetUnifiedRuntimeSettings",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "changes": {
+            "MaxLoginRuntimeSettings.MaxLoginErrors": 5
+          },
+          "dryRun": false,
+          "previewToken": "<token from the preceding preview>",
+          "expectedPlanHash": "<planHash from the preceding preview>",
+          "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+        },
+        "expect": "Approve the reviewed write. Require verified readback; inspect rollbackCompleted and cleanupRequired on failure."
+      },
+      {
+        "tool": "GetUnifiedRuntimeSettings",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "fields": [
+            "MaxLoginRuntimeSettings.MaxLoginErrors"
+          ]
+        },
+        "expect": "Confirm the requested value is 5; saving/deployment is separate."
+      }
+    ]
   }
 ]

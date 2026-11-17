@@ -11896,7 +11896,7 @@
       "path": "src/Shared/RuntimeSettingsTools.cs",
       "owner": "RuntimeSettingsTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ReadUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            [Description(\"fields: structured string array input.\")] string[] fields = null!)",
+      "signature": "public CallToolResult ReadUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not \" +\n                \"expectedProjectFile.\")] string expectedProject,\n            [Description(\"fields: structured string array input.\")] string[] fields = null!)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -11913,14 +11913,15 @@
           "description": "fields: structured string array input.",
           "value": null
         }
-      }
+      },
+      "description": "[L2][HMI-Unified][READ] Read supported root scalars and nested runtime settings using exact dotted names, e.g. OpcUaServerRuntimeSettings.MaxSessionCount. Select 1..12 unique fields. V20+: Telemetry, UPSS and tag settings; V21: TagOptimizationActive and exclusive operation. Exact expectedProject and softwarePath required. fields is a string array, default [\"StartScreen\",\"ScreenResolution\"]. Returns per-field type/value, public setter availability and exact enum names in capabilities. Coverage is the requested fields only; LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. No save, compile, download or runtime restart. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "SetUnifiedRuntimeSettings": {
       "method": "UpdateUnifiedRuntimeSettingsV4",
       "path": "src/Shared/RuntimeSettingsTools.cs",
       "owner": "RuntimeSettingsTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult UpdateUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.\")] string expectedProject,\n            [Description(\"changes: structured AttributeMap<Scalar> input.\")] AttributeMap<Scalar> changes,\n            bool dryRun = true,\n            string previewToken = \"\")",
+      "signature": "public CallToolResult UpdateUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not \" +\n                \"expectedProjectFile.\")] string expectedProject,\n            [Description(\"changes: structured AttributeMap<Scalar> input.\")] AttributeMap<Scalar> changes,\n            bool dryRun = true,\n            string previewToken = \"\", string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -11945,8 +11946,21 @@
           "type": "string",
           "default": "\"\"",
           "value": ""
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "",
+          "value": ""
         }
-      }
+      },
+      "description": "[L2][HMI-Unified][WRITE] Update 1..12 supported root scalars or exact dotted nested fields using public leaf setters, e.g. MaxLoginRuntimeSettings.MaxLoginErrors. Nested objects are never replaced. V20+: Telemetry, UPSS and tag settings; V21: TagOptimizationActive and exclusive operation. LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. changes is an object, e.g. {\"StartScreen\":\"/Group/Main\",\"ScreenResolution\":\"SR_1920X1080\"}; use exact enum names from GetUnifiedRuntimeSettings. StartScreen MUST be a full readable screen path (old encoded input accepted): validates existence and unique name in the selected HMI before writing the API's name value. Default dryRun=true returns before/proposed/token and planHash. Every execution requires previewToken, expectedPlanHash and expectedProjectFile from the same preview. Integers must be JSON integers in the CLR type range; enum names are exact. Validates all fields before any write and verifies final readback. Captured values are restored on failure; inspect rollbackCompleted and cleanupRequired. Multi-field writes are not atomic. No save, compile, download, runtime restart or close. Unsupported fields are rejected. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "ManagePlcSafety": {
       "method": "ManagePlcSafety",
@@ -15445,7 +15459,8 @@
           "default": "100",
           "value": 100
         }
-      }
+      },
+      "description": "[L2][HMI-Unified][READ] Bounded property-only JSON path from Unified software: [{property:TagTables,name:Table},{property:Tags,name:Tag}]. Exact names; no Parent/backlinks. Returns scalar values and schema, excludes complex values, live pagination. System collections and logging tags supported by actual property availability. For runtime settings use GetUnifiedRuntimeSettings and SetUnifiedRuntimeSettings."
     },
     "SetUnifiedObjectProperties": {
       "method": "UpdateUnifiedObjectPropertiesV4",
@@ -15471,7 +15486,8 @@
           "default": "true",
           "value": true
         }
-      }
+      },
+      "description": "[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object. RuntimeSettings and its entire subtree require SetUnifiedRuntimeSettings. dryRun=true; no renaming, parent traversal, save/compile/download. TimeSpan uses invariant c string. Partial changes reported; readback checked. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "SetUnifiedMultilingualProperty": {
       "method": "UpdateUnifiedMultilingualPropertyV4",
@@ -15507,7 +15523,8 @@
           "default": "true",
           "value": true
         }
-      }
+      },
+      "description": "[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. RuntimeSettings and its entire subtree require SetUnifiedRuntimeSettings. Preserves raw text and verifies requested language and unchanged other languages. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "ValidateUnifiedObject": {
       "method": "ValidateUnifiedObjectV4",

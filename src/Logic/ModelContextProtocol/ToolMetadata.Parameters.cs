@@ -1735,6 +1735,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ["SetUnifiedRuntimeSettings.expectedProject"] = new ParameterHint("\"\\u003Cproject name from GetProjectInfo\\u003E\""),
             ["SetUnifiedRuntimeSettings.changes"] = new ParameterHint("\"\\u003Cchanges\\u003E\""),
             ["SetUnifiedRuntimeSettings.previewToken"] = new ParameterHint("\"\\u003CexpectedToken\\u003E\""),
+            ["SetUnifiedRuntimeSettings.expectedPlanHash"] = new ParameterHint("\"<planHash from SetUnifiedRuntimeSettings preview>\""),
+            ["SetUnifiedRuntimeSettings.expectedProjectFile"] = new ParameterHint("\"C:/Examples/Example.ap{extension}\""),
             ["ShowObjectInEditor.kind"] = new ParameterHint("\"device\"", "device", "deviceItem", "plcBlock", "plcType", "plcTagTable", "plcWatchTable", "plcForceTable"),
             ["ShowObjectInEditor.view"] = new ParameterHint("\"\"", "", "device", "network", "topology"),
             ["ShowObjectInEditor.devicePath"] = new ParameterHint("\"\\u003CdevicePath\\u003E\""),

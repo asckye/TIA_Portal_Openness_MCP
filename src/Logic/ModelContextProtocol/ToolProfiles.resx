@@ -23350,7 +23350,11 @@
       "family": "F28",
       "example": {
         "softwarePath": "HMI_RT_1",
-        "expectedProject": "Example"
+        "expectedProject": "Example",
+        "fields": [
+          "OpcUaServerRuntimeSettings.ActAsOPCServer",
+          "MaxLoginRuntimeSettings.MaxLoginErrors"
+        ]
       }
     },
     {
@@ -23361,8 +23365,7 @@
         "softwarePath": "HMI_RT_1",
         "expectedProject": "Example",
         "changes": {
-          "StartScreen": "/Main",
-          "ScreenResolution": "SR_1920X1080"
+          "MaxLoginRuntimeSettings.MaxLoginErrors": 5
         },
         "dryRun": true
       }
@@ -29041,7 +29044,11 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "expectedProject": "Example"
+          "expectedProject": "Example",
+          "fields": [
+            "OpcUaServerRuntimeSettings.ActAsOPCServer",
+            "MaxLoginRuntimeSettings.MaxLoginErrors"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -33988,8 +33995,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "changes": {
-            "StartScreen": "/Main",
-            "ScreenResolution": "SR_1920X1080"
+            "MaxLoginRuntimeSettings.MaxLoginErrors": 5
           },
           "dryRun": true
         },
@@ -38733,7 +38739,11 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "expectedProject": "Example"
+          "expectedProject": "Example",
+          "fields": [
+            "OpcUaServerRuntimeSettings.ActAsOPCServer",
+            "MaxLoginRuntimeSettings.MaxLoginErrors"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -43813,8 +43823,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "changes": {
-            "StartScreen": "/Main",
-            "ScreenResolution": "SR_1920X1080"
+            "MaxLoginRuntimeSettings.MaxLoginErrors": 5
           },
           "dryRun": true
         },
@@ -80558,7 +80567,11 @@
         ],
         "arguments": {
           "softwarePath": "HMI_RT_1",
-          "expectedProject": "Example"
+          "expectedProject": "Example",
+          "fields": [
+            "OpcUaServerRuntimeSettings.ActAsOPCServer",
+            "MaxLoginRuntimeSettings.MaxLoginErrors"
+          ]
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -85308,8 +85321,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "changes": {
-            "StartScreen": "/Main",
-            "ScreenResolution": "SR_1920X1080"
+            "MaxLoginRuntimeSettings.MaxLoginErrors": 5
           },
           "dryRun": true
         },
@@ -92563,8 +92575,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "changes": {
-            "StartScreen": "/Main",
-            "ScreenResolution": "SR_1920X1080"
+            "MaxLoginRuntimeSettings.MaxLoginErrors": 5
           },
           "dryRun": true
         },
@@ -100074,8 +100085,7 @@
           "softwarePath": "HMI_RT_1",
           "expectedProject": "Example",
           "changes": {
-            "StartScreen": "/Main",
-            "ScreenResolution": "SR_1920X1080"
+            "MaxLoginRuntimeSettings.MaxLoginErrors": 5
           },
           "dryRun": true
         },
