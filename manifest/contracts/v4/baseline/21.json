@@ -32322,7 +32322,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "46df34019ab4ffac7524837d799d9a055a5165f6e7b7dc73df480fbeffd1c127",
+      "descriptionSha256": "b3d588d908c0e70d36814f227d23ae74dd37259c90405d3d69bd323064e8b153",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -33593,13 +33593,13 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d187e0e9ed0acedd5d7b477c8d2c4c39ceebe874016e2684e66e983bba90e398",
+      "descriptionSha256": "16d61eef22e4b328bc545ad49c96774a21918783bdb60fbe2955acec30cd0808",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
-            "description": "read | update. ",
+            "description": "action: read | update.",
             "enum": [
               "read",
               "update"
@@ -33629,6 +33629,7 @@
                 }
               ]
             },
+            "description": "properties: map of setting name to boolean, used by update. Keys: IsSimulationDuringBlockCompilationEnabled (V16+) and IsVirtualPlcDuringBlockCompilationEnabled (V19+).",
             "type": "object"
           }
         },

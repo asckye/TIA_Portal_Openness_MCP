@@ -1,7 +1,7 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T05:12:08.6030894+00:00",
+  "generatedAt": "2026-11-17T09:14:46.6061884+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
@@ -10,7 +10,7 @@
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
     "parameters": 2832,
-    "parametersUndocumented": 846,
+    "parametersUndocumented": 845,
     "parametersFromVocabulary": 695,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
@@ -977,7 +977,7 @@
         "dryRun",
         "properties"
       ],
-      "description": "[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update properties {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageProjectCompilationSettings\"), optionally operation or language.",
+      "description": "[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update the booleans IsSimulationDuringBlockCompilationEnabled (V16 and later) and IsVirtualPlcDuringBlockCompilationEnabled (V19 and later; refused before). V16–V20 use the project properties; V21 removed them and uses the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageProjectCompilationSettings\"), optionally operation or language.",
       "example": "{\"dryRun\":true,\"action\":\"read\"}"
     },
     {
@@ -1293,7 +1293,7 @@
         "confirmValueChange",
         "dryRun"
       ],
-      "description": "[L2][PLC-Online][ONLINE-WRITE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManagePlcDataBlockSnapshot\"), optionally operation or language.",
+      "description": "[L2][PLC-Online][ONLINE-WRITE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. read and exportSnapshot use InterfaceSnapshot (V15.1 and later); createSnapshot and the two load actions use ValueService, which exists only in V21, and are refused on V15.1–V20 before TIA is called. Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManagePlcDataBlockSnapshot\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"action\":\"read\",\"confirmValueChange\":false,\"dryRun\":true}"
     },
     {
