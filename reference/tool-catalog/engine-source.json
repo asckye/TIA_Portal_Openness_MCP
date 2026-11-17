@@ -3632,22 +3632,23 @@
       "path": "src/Shared/HardwareManagementTools.cs",
       "owner": "HardwareManagementTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult ManageHardwareObjectV4(\n            [Description(\"devicePath: JSON array naming the station - [group, ..., station] or the unique station name, e.g. [\\\"PLC_2\\\"].\")] string[] devicePath,\n            [Description(\"action: deleteDevice | deleteItem | moveItem | copyItem.\")] string action,\n            [Description(\"itemPath: JSON array of exact device-item names (deleteItem / moveItem / copyItem); [] for deleteDevice.\")] string[]? itemPath = null,\n            [Description(\"destinationDevicePath: for moveItem / copyItem - JSON array naming the destination station.\")] string[]? destinationDevicePath = null,\n            [Description(\"destinationItemPath: for moveItem / copyItem - JSON array of device-item names of the destination container.\")] string[]? destinationItemPath = null,\n            [Description(\"position: for moveItem / copyItem - target slot / position number (-1 = let TIA pick).\")] int position=-1,\n            [Description(\"dryRun: true (default) previews (CanPlug check only); false executes.\")] bool dryRun=true)",
+      "signature": "public CallToolResult ManageHardwareObjectV4(\n            [Description(\"action: deleteDevice | deleteItem | moveItem | copyItem | changeType (V18+) | createSubnet | deleteSubnet.\")] string action,\n            [Description(\"devicePath: JSON array naming the station - [group, ..., station] or the unique station name, e.g. \" +\n                \"[\\\"PLC_2\\\"]. Required for device/item actions; [] (default) for subnet actions.\")] string[]? devicePath = null,\n            [Description(\"itemPath: exact device-item names for deleteItem/moveItem/copyItem/changeType; [] for deleteDevice and subnet actions.\")]\n                string[]? itemPath = null,\n            [Description(\"destinationDevicePath: for moveItem / copyItem - JSON array naming the destination station.\")] string[]? destinationDevicePath = null,\n            [Description(\"destinationItemPath: for moveItem / copyItem - JSON array of device-item names of the destination container.\")] string[]\n                ? destinationItemPath = null,\n            [Description(\"position: for moveItem / copyItem - target slot / position number (-1 = let TIA pick).\")] int position=-1,\n            [Description(\"dryRun: true (default) validates and previews native impact; false executes the bound plan.\")] bool dryRun=true,\n            [Description(\"typeIdentifier: exact catalog TypeIdentifier for changeType; exact subnet type (e.g. System:Subnet.Ethernet) for createSubnet.\")]\n                string typeIdentifier = \"\",\n            [Description(\"subnetName: exact project subnet name for createSubnet/deleteSubnet; no anchor node is required.\")] string subnetName = \"\",\n            [Description(\"expectedPlanHash: copy data.planHash from the matching preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: absolute project file from the preview's targetIdentity; required when dryRun=false.\")]\n                string expectedProjectFile = \"\")",
       "parameters": {
-        "devicePath": {
-          "type": "string[]",
-          "default": null,
-          "description": "devicePath: JSON array naming the station - [group, ..., station] or the unique station name, e.g. [\"PLC_2\"]."
-        },
         "action": {
           "type": "string",
           "default": null,
-          "description": "action: deleteDevice | deleteItem | moveItem | copyItem."
+          "description": "action: deleteDevice | deleteItem | moveItem | copyItem | changeType (V18+) | createSubnet | deleteSubnet."
+        },
+        "devicePath": {
+          "type": "string[]?",
+          "default": "null",
+          "description": "devicePath: JSON array naming the station - [group, ..., station] or the unique station name, e.g. [\"PLC_2\"]. Required for device/item actions; [] (default) for subnet actions.",
+          "value": null
         },
         "itemPath": {
           "type": "string[]?",
           "default": "null",
-          "description": "itemPath: JSON array of exact device-item names (deleteItem / moveItem / copyItem); [] for deleteDevice.",
+          "description": "itemPath: exact device-item names for deleteItem/moveItem/copyItem/changeType; [] for deleteDevice and subnet actions.",
           "value": null
         },
         "destinationDevicePath": {
@@ -3671,8 +3672,32 @@
         "dryRun": {
           "type": "bool",
           "default": "true",
-          "description": "dryRun: true (default) previews (CanPlug check only); false executes.",
+          "description": "dryRun: true (default) validates and previews native impact; false executes the bound plan.",
           "value": true
+        },
+        "typeIdentifier": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "typeIdentifier: exact catalog TypeIdentifier for changeType; exact subnet type (e.g. System:Subnet.Ethernet) for createSubnet.",
+          "value": ""
+        },
+        "subnetName": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "subnetName: exact project subnet name for createSubnet/deleteSubnet; no anchor node is required.",
+          "value": ""
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: copy data.planHash from the matching preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: absolute project file from the preview's targetIdentity; required when dryRun=false.",
+          "value": ""
         }
       }
     },

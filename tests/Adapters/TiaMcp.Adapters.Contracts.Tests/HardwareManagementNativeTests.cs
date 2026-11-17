@@ -8,6 +8,34 @@ public sealed class HardwareManagementNativeTests
 {
     private const string TargetType = "OrderNumber:6ES7 513-1AM03-0AB0/V3.0";
 
+    [Theory]
+    [InlineData("MoveItem", true)]
+    [InlineData("MoveItem", false)]
+    [InlineData("COPYITEM", true)]
+    [InlineData("COPYITEM", false)]
+    [InlineData("unknown", true)]
+    [InlineData("unknown", false)]
+    [InlineData("", true)]
+    [InlineData("", false)]
+    public void Unknown_action_refuses_before_hardware_lookup_or_edit_access(string action, bool preview)
+    {
+        var fixture = HardwareWriteFailureTests.NativeFixture();
+        fixture.Engine.DeviceInventoryFailure = new InvalidOperationException("Hardware lookup must not run.");
+        int editAccess = fixture.Engine.HardwareEditAccessCalls, exclusive = fixture.Portal.ExclusiveCalls, nativeCalls = 0;
+        fixture.Portal.EngineeringCall = () => nativeCalls++;
+        var result = fixture.Engine.HardwareManageHardwareObject(new[] { "PLC" }, action, new[] { "CPU" }, new[] { "PLC" },
+            Array.Empty<string>(), 2, preview);
+        Assert.Equal("InvalidParams", result.Meta["status"]);
+        Assert.Equal("action", result.Meta["parameter"]);
+        Assert.Equal(false, result.Meta["operationSuccess"]);
+        Assert.False(result.MayHaveChanged);
+        Assert.False(result.OutcomeUnknown);
+        Assert.False(result.Meta.ContainsKey("source"));
+        Assert.Equal(editAccess, fixture.Engine.HardwareEditAccessCalls);
+        Assert.Equal(exclusive, fixture.Portal.ExclusiveCalls);
+        Assert.Equal(0, nativeCalls);
+    }
+
     [Fact]
     public void Type_change_preview_keeps_current_type_order_number_and_the_exact_catalog_entry_without_writing()
     {

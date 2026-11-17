@@ -561,6 +561,9 @@ namespace TiaMcp.Adapters
             string typeIdentifier = "", string subnetName = "")
         {
             var reply = RunHardwareAddressStep("ManageHardwareObject", meta => {
+                if (!new[] { "deleteDevice", "deleteItem", "moveItem", "copyItem", "changeType", "createSubnet", "deleteSubnet" }.Contains(action))
+                    throw new ArgumentException("action must be one of: deleteDevice/deleteItem/moveItem/copyItem/changeType/createSubnet/deleteSubnet " +
+                        "(case-sensitive).", nameof(action));
                 using var access = dryRun ? null : HardwareEditAccess();
                 meta["action"] = action; meta["dryRun"] = dryRun;
                 if (action == "createSubnet" || action == "deleteSubnet")

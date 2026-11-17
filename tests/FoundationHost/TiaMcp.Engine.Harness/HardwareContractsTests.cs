@@ -71,7 +71,7 @@ internal static class HardwareContractsTests
             check((string?)result["error"]!["code"] == code && (string?)result["meta"]!["execution"] == "not-started",
                 "P6-12 rejects before a service is available: " + name + "/" + code);
         }
-        Rejected("ManageHardwareObject", new object?[] { new[] { "PLC_1" }, "moveItem", new[] { "CPU" }, null, null, 0, true });
+        Rejected("ManageHardwareObject", new object?[] { "moveItem", new[] { "PLC_1" }, new[] { "CPU" }, null, null, 0, true, "", "", "", "" });
         var settingsType = surface.Tool("SetPlcCpuSettings").GetParameters()[1].ParameterType;
         var tooManyAttributes = "{\"exactAttributes\":{" + string.Join(",", Enumerable.Range(0, 51).Select(i => "\"A" + i + "\":1")) + "}}";
         Rejected("SetPlcCpuSettings", new object?[] { "CPU", JsonSerializer.Deserialize(tooManyAttributes, settingsType, Json) }, "LIMIT_EXCEEDED");

@@ -13,6 +13,36 @@ public sealed class HardwareManagementValidationTests
     private const string Project = "C:/Projects/Fixture.ap21";
     private const string Type = "OrderNumber:6ES7 513-1AM03-0AB0/V3.0";
 
+    [Fact]
+    public void Catalog_registration_matches_the_declared_signature_and_ordered_parameters()
+    {
+        string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        var entry = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference/tool-catalog/engine-source.json")))!
+            ["registrations"]!["ManageHardwareObject"]!;
+        var registered = entry["parameters"]!.AsObject();
+        var method = typeof(Host.HardwareManagementTools).GetMethod("ManageHardwareObjectV4")!;
+        var parameters = method.GetParameters();
+        Assert.Equal(parameters.Select(p => p.Name), registered.Select(p => p.Key));
+        foreach (var parameter in parameters)
+        {
+            var row = registered[parameter.Name!]!;
+            string type = parameter.ParameterType == typeof(string[]) ? "string[]?"
+                : parameter.ParameterType == typeof(string) ? "string" : parameter.ParameterType == typeof(bool) ? "bool" : "int";
+            Assert.Equal(type, (string?)row["type"]);
+            var description = (System.ComponentModel.DescriptionAttribute)Attribute.GetCustomAttribute(parameter,
+                typeof(System.ComponentModel.DescriptionAttribute))!;
+            Assert.Equal(description.Description, (string?)row["description"]);
+            string? defaultText = !parameter.HasDefaultValue ? null : JsonSerializer.Serialize(parameter.DefaultValue);
+            Assert.Equal(defaultText, (string?)row["default"]);
+            if (parameter.HasDefaultValue)
+                Assert.True(JsonNode.DeepEquals(JsonSerializer.SerializeToNode(parameter.DefaultValue), row["value"]), parameter.Name);
+        }
+        string source = File.ReadAllText(Path.Combine(root, (string)entry["path"]!)).Replace("\r\n", "\n");
+        int start = source.IndexOf("public CallToolResult ManageHardwareObjectV4(", StringComparison.Ordinal);
+        int end = source.IndexOf("\n        {", start, StringComparison.Ordinal);
+        Assert.Equal(source.Substring(start, end - start), (string?)entry["signature"]);
+    }
+
     [Theory]
     [InlineData("other", "PLC", "", "", "", "action")]
     [InlineData("deleteDevice", "", "", "", "", "devicePath")]
