@@ -224,4 +224,17 @@ public sealed class ScopedCompileNativeTests
         Assert.Equal(JsonSerializer.Serialize(original), JsonSerializer.Serialize(routed)); Assert.Equal(0, compiler.Calls);
         Assert.Equal(new[] { typeof(ICompilable), typeof(ICompilable) }, engine.Software.ServiceReads);
     }
+
+    [Theory]
+    [InlineData(true)][InlineData(false)]
+    public void Explicit_software_defaults_are_accepted_by_the_native_worker_route(bool dryRun)
+    {
+        var (engine, _, compiler) = Target("software");
+        var original = engine.CompileSoftware("CPU", dryRun: dryRun);
+        var explicitDefaults = engine.CompileSoftwareScoped("CPU", dryRun: dryRun, scope: "software", scopePath: "", unitName: "");
+        Assert.IsType<PlcCompileResult>(explicitDefaults);
+        Assert.Equal(JsonSerializer.Serialize(original), JsonSerializer.Serialize(explicitDefaults));
+        Assert.Equal(dryRun ? 0 : 2, compiler.Calls);
+        Assert.Equal(new[] { typeof(ICompilable), typeof(ICompilable) }, engine.Software.ServiceReads);
+    }
 }

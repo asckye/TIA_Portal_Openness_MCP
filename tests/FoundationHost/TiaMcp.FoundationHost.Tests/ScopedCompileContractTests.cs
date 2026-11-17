@@ -108,10 +108,59 @@ public sealed class ScopedCompileContractTests
         if (explicitDefaults) { arguments["scope"] = "software"; arguments["scopePath"] = ""; arguments["unitName"] = ""; }
         var response = await tool.InvokeV4Async(Request(name, arguments), "21", "test", CancellationToken.None);
         Assert.False(response.IsError, response.StructuredContent?.ToJsonString());
+        Assert.Equal(8, worker.Arguments!.Count);
+        Assert.Equal("software", (string?)worker.Arguments["scope"]);
+        Assert.Equal("", (string?)worker.Arguments["scopePath"]); Assert.Equal("", (string?)worker.Arguments["unitName"]);
+        // The dispatched request retains all eight fields. Check the original five-field values on a copy as well.
+        worker.Arguments = worker.Arguments.DeepClone().AsObject();
+        Assert.True(worker.Arguments.Remove("scope")); Assert.True(worker.Arguments.Remove("scopePath"));
+        Assert.True(worker.Arguments.Remove("unitName"));
         Assert
             .Equal("{\"softwarePath\":\"CPU\",\"password\":\"\",\"dryRun\":true,\"confirm\":false,\"expectedProjectFile\":\"\"}", worker.Arguments!
                 .ToJsonString());
         Assert.DoesNotContain("compilable", response.StructuredContent!.ToJsonString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("CompilePlcSoftware", true)][InlineData("CompilePlcSoftware", false)]
+    [InlineData("CompilePlcDiagnostics", true)][InlineData("CompilePlcDiagnostics", false)]
+    public void Software_reply_accepts_explicit_default_scope_fields_without_requiring_scoped_target_evidence(string name, bool dryRun)
+    {
+        var arguments = new JsonObject { ["softwarePath"] = "CPU", ["scope"] = "software", ["scopePath"] = "", ["unitName"] = "",
+            ["dryRun"] = dryRun, ["confirm"] = !dryRun, ["expectedProjectFile"] = Project };
+        var result = JsonSerializer.SerializeToNode(new PlcCompileResult { Executed = !dryRun, ProjectFile = Project,
+            State = dryRun ? null : "Success", ErrorCount = dryRun ? null : 0, WarningCount = dryRun ? null : 0 })!.AsObject();
+        var original = V17CompileEnvelope.Wrap(name, result, dryRun, arguments);
+        result["Scope"] = "software"; result["ScopePath"] = ""; result["UnitName"] = "";
+        WorkerProtocol.ValidateExchangeResult("CompileSoftware", arguments, result);
+        var explicitDefaults = V17CompileEnvelope.Wrap(name, result, dryRun, arguments);
+        string meta = McpJsonUtilities.DefaultOptions.PropertyNamingPolicy!.ConvertName("Meta");
+        Assert.NotNull(original[meta]!["timestamp"]); Assert.NotNull(explicitDefaults[meta]!["timestamp"]);
+        original[meta]!["timestamp"] = explicitDefaults[meta]!["timestamp"]!.DeepClone();
+        Assert.True(JsonNode.DeepEquals(original, explicitDefaults));
+    }
+
+    [Theory]
+    [InlineData("CompilePlcSoftware")][InlineData("CompilePlcDiagnostics")]
+    public async Task Software_execution_forwards_declared_scope_defaults_with_existing_confirmation(string name)
+    {
+        using var worker = new Worker(); var tool = Tool(name, worker);
+        var arguments = new JsonObject { ["softwarePath"] = "CPU", ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = Project };
+        var response = await tool.InvokeV4Async(Request(name, arguments), "21", "test", CancellationToken.None);
+        Assert.False(response.IsError, response.StructuredContent?.ToJsonString()); Assert.Equal(1, worker.Calls);
+        Assert.Equal(8, worker.Arguments!.Count); Assert.Equal("software", (string?)worker.Arguments["scope"]);
+        Assert.Equal("", (string?)worker.Arguments["scopePath"]); Assert.Equal("", (string?)worker.Arguments["unitName"]);
+        Assert.True((bool?)worker.Arguments["confirm"]); Assert.Equal(Project, (string?)worker.Arguments["expectedProjectFile"]);
+    }
+
+    [Theory]
+    [InlineData("Scope", "block")][InlineData("ScopePath", "Main")][InlineData("UnitName", "Unit")]
+    public void Software_reply_refuses_a_nondefault_scope_identity(string field, string value)
+    {
+        var arguments = new JsonObject { ["scope"] = "software", ["scopePath"] = "", ["unitName"] = "" };
+        var result = JsonSerializer.SerializeToNode(new PlcCompileResult { ProjectFile = Project })!.AsObject();
+        result["Scope"] = "software"; result["ScopePath"] = ""; result["UnitName"] = ""; result[field] = value;
+        Assert.Throws<IOException>(() => V17CompileEnvelope.Validate(result, true, arguments));
     }
 
     [Theory]

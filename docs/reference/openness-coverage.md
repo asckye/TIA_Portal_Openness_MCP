@@ -19,7 +19,8 @@ Unit scope takes one MIN-ESCAPE encoded unit name in `scopePath`; V14 SP1/V15.1 
 Scoped previews report the resolved identity and `compilable`; absent services block execution without software fallback.
 The SDK XML documents `ICompilable.Compile()` in all eight releases and `PlcUnit` from V16.
 Only the V21 block service was confirmed by the lead's Step 0 probe (`CompileProvider.Compile()`); V18 and group/unit probes are pending.
-Scoped compile native acceptance remains **NOT RUN**. Software defaults preserve the existing worker request and result shape;
+Scoped compile native acceptance remains **NOT RUN**. Software defaults retain compilation behavior and result shape.
+The host forwards every declared optional default to its packaged worker, including software scope and empty scopePath/unitName;
 execution retains confirmation, exact project binding, offline/Safety checks and diagnostics, without a plan hash or WRITE approval.
 
 ## Security coverage deferred beyond 4.0

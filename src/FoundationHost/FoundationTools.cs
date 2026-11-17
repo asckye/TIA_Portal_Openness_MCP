@@ -244,8 +244,6 @@ internal sealed partial class FoundationTool : McpServerTool
         {
             string scope = values["scope"]!.GetValue<string>();
             TiaMcp.Adapters.Contracts.PlcCompileScope.Validate(scope, values["scopePath"]!.GetValue<string>(), values["unitName"]!.GetValue<string>());
-            // Preserve the original software-scope worker request, including callers that explicitly select the defaults.
-            if (scope == "software") { values.Remove("scope"); values.Remove("scopePath"); values.Remove("unitName"); }
         }
         if(definition.ResponseMember=="BlockPage") TiaMcp.Adapters.Contracts.Paging.PlcBlockPaging.Validate(values["limit"]!.GetValue<int>(), values["cursor"]!.GetValue<string>());
         if(definition.ResponseMember=="HardwareCatalog") HardwareCatalogContract.ValidateArguments(values);

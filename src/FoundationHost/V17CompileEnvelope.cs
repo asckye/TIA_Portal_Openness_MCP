@@ -36,7 +36,10 @@ internal static class V17CompileEnvelope
                 result["ApplyBlocked"]?.GetValue<bool>()!=!compilable || (!dryRun && !compilable))
                 throw new IOException("Compiler scope, exact target or service availability conflicts with the request.");
         }
-        else if(result.ContainsKey("Scope")) throw new IOException("Software compiler response unexpectedly contains a scoped target.");
+        else if((result.ContainsKey("Scope") && result["Scope"]?.GetValue<string>()!="software") ||
+            (result.ContainsKey("ScopePath") && result["ScopePath"]?.GetValue<string>()!="") ||
+            (result.ContainsKey("UnitName") && result["UnitName"]?.GetValue<string>()!=""))
+            throw new IOException("Software compiler response unexpectedly contains a scoped target.");
         return result;
     }
     internal static JsonObject Wrap(string tool,JsonNode? payload,bool dryRun,JsonObject? arguments=null)
@@ -55,7 +58,7 @@ internal static class V17CompileEnvelope
             "listed, not asserted Offline. Siemens requires all devices offline before compilation.";
         meta["offlineStateNotExposedByDevices"]=result["OfflineStateNotExposedByDevices"]?.DeepClone() ?? new JsonArray();
         foreach(var name in new[]{"State","ErrorCount","WarningCount"}) envelope[Wire(name)]=result[name]?.DeepClone();
-        if(result.ContainsKey("Scope"))
+        if(result["Scope"]?.GetValue<string>() is string returnedScope && returnedScope!="software")
             foreach(var name in new[]{"Scope","ScopePath","UnitName","ResolvedObject","Compilable","ApplyBlocked"})
                 envelope[Wire(name)]=result[name]!.DeepClone();
         if(tool=="CompilePlcSoftware") envelope[Wire("Messages")]=result["Messages"]!.DeepClone();
