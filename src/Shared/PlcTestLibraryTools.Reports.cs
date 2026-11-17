@@ -21,9 +21,12 @@ namespace TiaMcpServer.ModelContextProtocol
             Description("[L0][Reports][FILE] Export a stored PLC test run as JUnit XML, FAT/SAT acceptance Markdown and JSON, or a reproduction report. " +
                 "All eight releases; host files only, no worker, TIA or PLCSIM calls. Defaults to the session output directory. Explicit targets " +
                 "outside the output root require Workbench approval. Incomplete runs are marked invalid for acceptance. FAT/SAT include audit " +
-                "binding and chain verification plus blank supplier/customer sign-off rows. Reproduction includes only non-passed cases, " +
-                "verbatim library documents and redacted MCP calls; restore matching case hashes if the library changed. Path-bearing case " +
-                "documents cannot produce a verbatim path-free reproduction. Real PLCSIM/Test Suite installation acceptance is pending.")]
+                "binding and chain verification plus blank supplier/customer sign-off rows. Local paths, including paths with spaces, are reduced " +
+                "to file names in all tool report formats. Files have unique operation-id suffixes and never overwrite; Markdown/JSON pairs are " +
+                "staged together and removed on publication failure. Reproduction includes only non-passed cases and redacts sensitive values " +
+                "in both case documents and calls, preserving other source text. It shows preview then execution with preview identity placeholders; " +
+                "restore matching case hashes if the library changed. Path-bearing case documents cannot produce a verbatim path-free reproduction. " +
+                "Real PLCSIM/Test Suite installation acceptance is pending.")]
         public CallToolResult ExportPlcTestReport(
             [Description("Exact stored run id, or latest for the newest valid run.")] string runId = "latest",
             [Description("Report format: junit | fat | sat | repro.")] string format = "fat",
@@ -43,11 +46,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!Path.IsPathFullyQualified(exportDirectory) || exportDirectory != exportDirectory.Trim())
                     throw new ArgumentException("Supply an absolute exportDirectory or use an active session output directory.");
                 var run = PlcTestRunRecord.Read(runsDirectory(), runId);
-                string stem = Path.Combine(exportDirectory, "plc-test-" + run.RunId + "-" + format);
+                string stem = Path.Combine(exportDirectory, "plc-test-" + run.RunId + "-" + format + "-" + Guid.NewGuid().ToString("N"));
+                string[] roots = new[] { DataLocations.Current.Root, DataLocations.Current.OutputRoot };
                 var paths = new JsonArray();
                 if (format == "junit")
                 {
-                    PlcTestRunRecord.WriteAtomic(stem + ".xml", PlcTestJUnitWriter.Write(run));
+                    PublishReport(stem, new[] { (".xml", PlcTestReportBuilder.WriteJUnit(run, roots)) });
                     paths.Add(stem + ".xml");
                 }
                 else
@@ -60,9 +64,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             documents[item.Id] = File.ReadAllText(Path.Combine(libraryDirectory(), "cases", item.Id + ".json"), Encoding.UTF8);
                         }
                     var audit = format == "repro" ? new JsonObject() : ReportAudit(run, DataLocations.Current.AuditReadRoots);
-                    var report = PlcTestReportBuilder.Build(run, format, audit, documents, CallJournalPayload.RedactArguments);
-                    PlcTestRunRecord.WriteAtomic(stem + ".md", report.Markdown);
-                    PlcTestRunRecord.WriteAtomic(stem + ".json", PlcTestCaseDocument.Format(report.Document));
+                    var report = PlcTestReportBuilder.Build(run, format, audit, documents, CallJournalPayload.RedactArguments, roots);
+                    PublishReport(stem, new[] { (".md", report.Markdown), (".json", PlcTestCaseDocument.Format(report.Document)) });
                     paths.Add(stem + ".md"); paths.Add(stem + ".json");
                 }
                 return McpServer.V4Result(tool, new JsonObject { ["runId"] = run.RunId, ["format"] = format,
@@ -77,6 +80,54 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             { return McpServer.V4Reject(tool, new Error("PLC test report file operation failed: " + ex.GetType().Name,
                 new IoFailedDetails("plc-test-report", null))); }
+        }
+
+        // Stage every file before publishing any. Only files moved by this operation participate in rollback.
+        internal static void PublishReport(string stem, (string Extension, string Text)[] files,
+            Action<string, string>? writeStaged = null, Action<string, string>? move = null)
+        {
+            string stage = stem + ".tmp";
+            Directory.CreateDirectory(stage);
+            var published = new List<string>();
+            bool complete = false;
+            try
+            {
+                try
+                {
+                    foreach (var file in files)
+                    {
+                        string temporary = Path.Combine(stage, "report" + file.Extension);
+                        if (writeStaged != null) writeStaged(temporary, file.Text);
+                        else
+                        {
+                            using var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                            using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+                            writer.Write(file.Text);
+                        }
+                    }
+                    foreach (var file in files)
+                    {
+                        string temporary = Path.Combine(stage, "report" + file.Extension);
+                        string destination = stem + file.Extension;
+                        if (move != null) move(temporary, destination); else File.Move(temporary, destination);
+                        published.Add(destination);
+                    }
+                }
+                finally
+                {
+                    foreach (var file in files)
+                    {
+                        string temporary = Path.Combine(stage, "report" + file.Extension);
+                        if (File.Exists(temporary)) File.Delete(temporary);
+                    }
+                    Directory.Delete(stage);
+                }
+                complete = true;
+            }
+            finally
+            {
+                if (!complete) foreach (string path in published) File.Delete(path);
+            }
         }
 
         internal static JsonObject ReportAudit(PlcTestRunRecord run, string[] roots)

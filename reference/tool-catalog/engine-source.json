@@ -18836,7 +18836,8 @@
           "description": "Absolute output directory. Empty uses <OutputRoot>/<session>; targets outside the output root need approval.",
           "value": ""
         }
-      }
+      },
+      "description": "[L0][Reports][FILE] Export a stored PLC test run as JUnit XML, FAT/SAT acceptance Markdown and JSON, or a reproduction report. All eight releases; host files only, no worker, TIA or PLCSIM calls. Defaults to the session output directory. Explicit targets outside the output root require Workbench approval. Incomplete runs are marked invalid for acceptance. FAT/SAT include audit binding and chain verification plus blank supplier/customer sign-off rows. Local paths, including paths with spaces, are reduced to file names in all tool report formats. Files have unique operation-id suffixes and never overwrite; Markdown/JSON pairs are staged together and removed on publication failure. Reproduction includes only non-passed cases and redacts sensitive values in both case documents and calls, preserving other source text. It shows preview then execution with preview identity placeholders; restore matching case hashes if the library changed. Path-bearing case documents cannot produce a verbatim path-free reproduction. Real PLCSIM/Test Suite installation acceptance is pending."
     },
     "ManagePlcTestLibrary": {
       "method": "ManagePlcTestLibrary",

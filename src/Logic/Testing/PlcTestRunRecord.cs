@@ -140,6 +140,14 @@ namespace TiaMcp.Logic.Testing
             return ReadFile(runsDirectory, runId);
         }
 
+        // CLI history must describe the newest run, even when that run cannot be read.
+        public static PlcTestRunRecord ReadNewest(string runsDirectory)
+        {
+            string? id = RunIds(runsDirectory).FirstOrDefault();
+            if (id == null) throw new FileNotFoundException("No PLC test run exists.");
+            return ReadFile(runsDirectory, id);
+        }
+
         private static PlcTestRunRecord ReadFile(string runsDirectory, string runId)
         {
             try

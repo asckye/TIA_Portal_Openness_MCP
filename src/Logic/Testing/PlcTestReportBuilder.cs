@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
@@ -20,15 +22,17 @@ namespace TiaMcp.Logic.Testing
     public static class PlcTestReportBuilder
     {
         public static PlcTestReport Build(PlcTestRunRecord run, string format, JsonObject audit,
-            IReadOnlyDictionary<string, string> documents, Func<JsonNode?, JsonNode?> redactArguments)
+            IReadOnlyDictionary<string, string> documents, Func<JsonNode?, JsonNode?> redactArguments, IEnumerable<string>? pathRoots = null)
         {
             if (format != "fat" && format != "sat" && format != "repro") throw new ArgumentException("Unknown report format.");
+            var privacy = new ReportPrivacy(pathRoots);
+            run = privacy.Run(run);
             string title = format == "fat" ? "Factory Acceptance Test" : format == "sat" ? "Site Acceptance Test" : "PLC Test Reproduction Report";
             var first = run.Cases.FirstOrDefault(c => c.Kind == "plcsimScenario");
             var environment = new JsonObject {
                 ["releaseKey"] = run.ReleaseKey, ["hostVersion"] = run.HostVersion,
                 ["projectFile"] = FileName((string?)run.Project?["file"] ?? ""),
-                ["plcsimApi"] = Safe(first?.Evidence["api"])
+                ["plcsimApi"] = first?.Evidence["api"]?.DeepClone()
             };
             var report = new JsonObject {
                 ["title"] = title, ["runId"] = run.RunId, ["status"] = run.Status,
@@ -56,31 +60,42 @@ namespace TiaMcp.Logic.Testing
                     if (original.Id != item.Id || original.Sha256 != item.CaseSha256)
                         throw new ArgumentException("Stored case differs from the run; restore the original case: " + item.Id);
                     // A verbatim reproduction must not silently change path-bearing input.
-                    if (!JsonNode.DeepEquals(original.Document, Safe(original.Document)))
+                    if (!JsonNode.DeepEquals(original.Document, privacy.Node(original.Document)))
                         throw new ArgumentException("Case contains absolute paths; a verbatim path-free reproduction is unavailable: " + item.Id);
                     var body = JsonNode.Parse(document)!;
                     var args = item.Kind == "plcsimScenario"
                         ? new JsonObject { ["scenario"] = body["scenario"]!.DeepClone(), ["confirmRun"] = true, ["dryRun"] = false }
                         : SuiteArguments(body["testSuite"]!.AsObject());
                     var row = Case(item);
-                    row["testCase"] = body.DeepClone();
-                    row["caseDocument"] = document;
+                    var redacted = redactArguments(body);
+                    string redactedDocument = RedactDocument(document, redacted);
+                    row["testCase"] = redacted;
+                    row["caseDocument"] = redactedDocument;
+                    string name = item.Kind == "plcsimScenario" ? "RunPlcSimAdvancedTestScenario" : "RunTestSuiteCase";
+                    var preview = args.DeepClone().AsObject();
+                    preview["dryRun"] = true;
+                    preview[item.Kind == "plcsimScenario" ? "confirmRun" : "confirmExternalExecution"] = false;
+                    row["previewCall"] = new JsonObject { ["name"] = name, ["arguments"] = redactArguments(preview) };
+                    args["expectedPlanHash"] = "<planHash from preview>";
+                    args["expectedProjectFile"] = "<expectedProjectFile from preview>";
                     row["call"] = new JsonObject {
-                        ["name"] = item.Kind == "plcsimScenario" ? "RunPlcSimAdvancedTestScenario" : "RunTestSuiteCase",
-                        ["arguments"] = Safe(redactArguments(args))
+                        ["name"] = name, ["arguments"] = redactArguments(args)
                     };
                     cases.Add(row);
                     text.Append("## ").Append(Cell(item.Id)).Append("\n\n");
-                    Code(text, document, "json");
+                    Code(text, redactedDocument, "json");
+                    text.Append("Preview the case first:\n\n");
+                    Code(text, row["previewCall"]!.ToJsonString(), "json");
+                    text.Append("After approval, use the plan hash and project identity returned by that preview:\n\n");
                     Code(text, row["call"]!.ToJsonString(), "json");
                     Code(text, row["details"]!.ToString(), "text");
-                    text.Append("Verdict: ").Append(item.Verdict).Append("\n\nMessage: ").Append(Cell(SafeText(item.Message))).Append("\n\n");
+                    text.Append("Verdict: ").Append(item.Verdict).Append("\n\nMessage: ").Append(Cell(item.Message)).Append("\n\n");
                 }
                 if (cases.Count == 0) text.Append("All cases passed. No reproduction cases.\n");
             }
             else
             {
-                report["audit"] = Safe(audit);
+                report["audit"] = privacy.Node(audit, omitIdentity: true);
                 text.Append("## Audit binding\n\n");
                 Code(text, report["audit"]!.ToJsonString(), "json");
                 text.Append("verify with `tia audit verify`\n\n");
@@ -89,7 +104,7 @@ namespace TiaMcp.Logic.Testing
                 {
                     cases.Add(Case(item));
                     text.Append("| ").Append(string.Join(" | ", new[] { item.Id, item.Requirement ?? "", item.Title, item.Verdict,
-                        item.DurationMs.ToString(CultureInfo.InvariantCulture), SafeText(item.Message) }.Select(Cell))).Append(" |\n");
+                        item.DurationMs.ToString(CultureInfo.InvariantCulture), item.Message }.Select(Cell))).Append(" |\n");
                 }
                 foreach (var item in run.Cases.Where(c => c.Verdict != "passed"))
                 {
@@ -105,14 +120,14 @@ namespace TiaMcp.Logic.Testing
 
         private static JsonObject SignOff() => new JsonObject { ["name"] = "", ["role"] = "", ["date"] = "", ["signature"] = "" };
         private static JsonObject Case(PlcTestCaseResult item) => new JsonObject {
-            ["id"] = item.Id, ["requirement"] = item.Requirement, ["title"] = SafeText(item.Title), ["verdict"] = item.Verdict,
-            ["durationMs"] = item.DurationMs, ["message"] = SafeText(item.Message),
+            ["id"] = item.Id, ["requirement"] = item.Requirement, ["title"] = item.Title, ["verdict"] = item.Verdict,
+            ["durationMs"] = item.DurationMs, ["message"] = item.Message,
             ["details"] = Details(item)
         };
         private static string Details(PlcTestCaseResult item)
         {
             string details = PlcTestJUnitWriter.FailureDetails(item);
-            return SafeText(string.IsNullOrWhiteSpace(details) ? item.Message : details);
+            return string.IsNullOrWhiteSpace(details) ? item.Message : details;
         }
         private static JsonObject SuiteArguments(JsonObject selection) => new JsonObject {
             ["category"] = selection["category"]!.DeepClone(), ["kind"] = selection["kind"]?.DeepClone() ?? JsonValue.Create("case"),
@@ -134,22 +149,87 @@ namespace TiaMcp.Logic.Testing
             text.Append(fence).Append(language).Append('\n').Append(value).Append(value.EndsWith("\n", StringComparison.Ordinal) ? "" : "\n")
                 .Append(fence).Append("\n\n");
         }
-        // Keep logical PLC paths, but remove absolute local/UNC paths from free-form evidence and API metadata.
-        private static string SafeText(string value) => Regex.Replace(value,
-            @"[A-Za-z]:[\\/][^\s""<>|,;]*|\\\\[^\s""<>|,;]+|(?<![\w:/])/(?:[^/\s""<>|,;]+/)+[^\s""<>|,;]*",
-            match => FileName(match.Value), RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
-        private static JsonNode? Safe(JsonNode? node)
+        public static string WriteJUnit(PlcTestRunRecord run, IEnumerable<string>? pathRoots = null)
+            => PlcTestJUnitWriter.Write(new ReportPrivacy(pathRoots).Run(run));
+
+        // Replace changed JSON values by token offsets; all other source bytes, including spacing and notes, remain verbatim.
+        private static string RedactDocument(string document, JsonNode? redacted)
         {
-            if (node is JsonObject obj)
+            byte[] source = Encoding.UTF8.GetBytes(document);
+            var reader = new Utf8JsonReader(source);
+            var replacements = new List<(int Start, int Length, string Value)>();
+            reader.Read();
+            CollectRedactions(ref reader, source, redacted, replacements);
+            using var output = new MemoryStream();
+            int copied = 0;
+            foreach (var replacement in replacements)
             {
-                var result = new JsonObject();
-                foreach (var pair in obj)
-                    if (!new[] { "host", "hostname", "user", "username", "machinename" }.Contains(pair.Key.ToLowerInvariant()))
-                        result[pair.Key] = Safe(pair.Value);
-                return result;
+                output.Write(source, copied, replacement.Start - copied);
+                byte[] value = Encoding.UTF8.GetBytes(replacement.Value);
+                output.Write(value, 0, value.Length);
+                copied = replacement.Start + replacement.Length;
             }
-            if (node is JsonArray array) return new JsonArray(array.Select(Safe).ToArray());
-            return node is JsonValue value && value.TryGetValue<string>(out string? text) ? JsonValue.Create(SafeText(text)) : node?.DeepClone();
+            output.Write(source, copied, source.Length - copied);
+            return Encoding.UTF8.GetString(output.ToArray());
+        }
+
+        private static void CollectRedactions(ref Utf8JsonReader reader, byte[] source, JsonNode? redacted,
+            List<(int Start, int Length, string Value)> replacements)
+        {
+            int start = (int)reader.TokenStartIndex;
+            if (reader.TokenType == JsonTokenType.StartObject && redacted is JsonObject obj)
+            {
+                while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+                {
+                    string name = reader.GetString()!;
+                    reader.Read();
+                    CollectRedactions(ref reader, source, obj[name], replacements);
+                }
+            }
+            else if (reader.TokenType == JsonTokenType.StartArray && redacted is JsonArray array)
+            {
+                int index = 0;
+                while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+                    CollectRedactions(ref reader, source, array[index++], replacements);
+            }
+            else
+            {
+                reader.Skip();
+                int length = (int)reader.BytesConsumed - start;
+                var original = JsonNode.Parse(Encoding.UTF8.GetString(source, start, length));
+                if (!JsonNode.DeepEquals(original, redacted)) replacements.Add((start, length, redacted?.ToJsonString() ?? "null"));
+            }
+        }
+
+        private sealed class ReportPrivacy
+        {
+            private readonly Regex paths;
+            internal ReportPrivacy(IEnumerable<string>? roots)
+            {
+                const string tail = @"[^""'<>|\r\n]*";
+                var prefixes = (roots ?? Array.Empty<string>()).Where(root => !string.IsNullOrEmpty(root))
+                    .Select(root => string.Join(@"[\\/]", root.TrimEnd('/', '\\').Split(new[] { '/', '\\' }).Select(Regex.Escape)));
+                string known = string.Join("|", prefixes.Select(prefix => prefix + @"[\\/]" + tail));
+                string absolute = @"[A-Za-z]:[\\/]" + tail + @"|\\\\" + tail
+                    + @"|(?<![\w:/])/(?:[^/\s""'<>|]+/)+" + tail;
+                paths = new Regex(known.Length == 0 ? absolute : known + "|" + absolute,
+                    RegexOptions.CultureInvariant | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+            }
+            private string Text(string value) => paths.Replace(value, match => FileName(match.Value.TrimEnd()));
+            internal PlcTestRunRecord Run(PlcTestRunRecord run) => PlcTestRunRecord.Parse(Node(run.Document, omitIdentity: true)!.ToJsonString());
+            internal JsonNode? Node(JsonNode? node, bool omitIdentity = false)
+            {
+                if (node is JsonObject obj)
+                {
+                    var result = new JsonObject();
+                    foreach (var pair in obj)
+                        if (!omitIdentity || !new[] { "host", "hostname", "user", "username", "machinename" }.Contains(pair.Key.ToLowerInvariant()))
+                            result[pair.Key] = Node(pair.Value, omitIdentity);
+                    return result;
+                }
+                if (node is JsonArray array) return new JsonArray(array.Select(item => Node(item, omitIdentity)).ToArray());
+                return node is JsonValue value && value.TryGetValue<string>(out string? text) ? JsonValue.Create(Text(text)) : node?.DeepClone();
+            }
         }
     }
 }

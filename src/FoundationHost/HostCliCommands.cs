@@ -37,11 +37,13 @@ namespace TiaMcp.FoundationHost
 
         internal static int TestReport(string[] args, string? runsDirectory, TextWriter output, TextWriter errors)
         {
+            string requested = Opt(args, "--run") ?? "latest";
             try
             {
                 runsDirectory ??= TiaOpenness.Shared.DataLocations.Current.TestRunsDirectory;
                 if (File.Exists(runsDirectory)) throw new IOException("The history location is not a directory.");
-                var run = TiaMcp.Logic.Testing.PlcTestRunRecord.Read(runsDirectory, Opt(args, "--run") ?? "latest");
+                var run = requested == "latest" ? TiaMcp.Logic.Testing.PlcTestRunRecord.ReadNewest(runsDirectory)
+                    : TiaMcp.Logic.Testing.PlcTestRunRecord.Read(runsDirectory, requested);
                 string? junit = Opt(args, "--junit");
                 if (junit != null)
                     File.WriteAllText(junit, TiaMcp.Logic.Testing.PlcTestJUnitWriter.Write(run), new System.Text.UTF8Encoding(false));
@@ -51,7 +53,8 @@ namespace TiaMcp.FoundationHost
                 else output.WriteLine($"PLC test run {run.RunId}: {run.Status}; {run.Totals.ToJsonString()}; exitCode={run.ExitCode}");
                 return run.ExitCode;
             }
-            catch (FileNotFoundException) /* swallow(privacy): missing run returns the published rejected exit code without a user path */
+            catch (IOException error) when (error is FileNotFoundException || requested != "latest"
+                && error is TiaMcp.Logic.Testing.PlcTestRunReadException { InnerException: FileNotFoundException or DirectoryNotFoundException })
             { errors.WriteLine("PLC test run was not found."); return 2; }
             catch (ArgumentException error) { errors.WriteLine("ERROR: " + error.Message); return 64; }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)

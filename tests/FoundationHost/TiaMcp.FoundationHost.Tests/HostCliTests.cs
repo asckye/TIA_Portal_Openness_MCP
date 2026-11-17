@@ -59,6 +59,41 @@ public sealed class HostCliTests : IDisposable
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Latest_test_report_never_falls_back_from_an_unreadable_newest_run(bool missingFile)
+    {
+        string history = Path.Combine(scratch, "test-runs");
+        var older = global::PlcTestReportTests.Record("passed"); older.Save(history);
+        var newest = global::PlcTestReportTests.Record("failed");
+        newest.RunId = "20261117-093000-1a2b3c4d"; newest.Save(history);
+        string file = Path.Combine(history, newest.RunId, "run.json");
+        if (missingFile) File.Delete(file); else File.WriteAllText(file, "{invalid");
+        foreach (var args in new[] { new[] { "test", "report", "--json" }, new[] { "test", "report", "--run", "latest", "--json" } })
+        {
+            using var output = new StringWriter(); using var errors = new StringWriter();
+            Assert.Equal(70, HostCliCommands.TestReport(args, history, output, errors));
+            Assert.Empty(output.ToString());
+            Assert.Contains("unavailable", errors.ToString());
+        }
+        Assert.Equal(0, older.ExitCode);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Explicit_test_report_returns_not_found_for_missing_folder_or_run_file(bool folderExists)
+    {
+        var run = global::PlcTestReportTests.Record("passed");
+        string history = Path.Combine(scratch, "test-runs");
+        if (folderExists) Directory.CreateDirectory(Path.Combine(history, run.RunId));
+        using var output = new StringWriter(); using var errors = new StringWriter();
+        Assert.Equal(2, HostCliCommands.TestReport(new[] { "test", "report", "--run", run.RunId }, history, output, errors));
+        Assert.Empty(output.ToString());
+        Assert.Contains("not found", errors.ToString());
+    }
+
+    [Theory]
     [InlineData("test")]
     [InlineData("test", "run")]
     [InlineData("test", "report", "--junit", "relative.xml")]
