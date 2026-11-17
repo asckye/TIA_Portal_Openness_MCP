@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T09:14:46.6061884+00:00",
+  "generatedAt": "2026-11-17T11:10:10.4443724+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "a3345f8212ba6f0579dd50874cc14839f4ba514133a53a1e5c6a7ea29542e26c",
+  "workerSha256": "f9f70309a5b3900d9807f1a1619f6e9cf0e48ae21e0ab07e84ea9e6609ac26f4",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2832,
-    "parametersUndocumented": 845,
+    "parameters": 2835,
+    "parametersUndocumented": 847,
     "parametersFromVocabulary": 695,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
     "enumHints": 256,
-    "defaultHints": 1610,
+    "defaultHints": 1612,
     "examplesCurated": 518,
     "recipes": 40
   },
@@ -2314,7 +2314,7 @@
         "offset",
         "limit"
       ],
-      "description": "[L2][HMI-Unified][READ] Read paginated public scalar properties for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists/systemTags/systemTextLists/auditTrails/opcUaAlarmTypes. Optional exact name. Returns counts, nextOffset, field failures and excluded complex properties. Not a complete export of entries or bindings; live pagination requires unchanged collection. Examples: GetToolUsage(toolName: \"ListUnifiedEngineeringObjects\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][READ] Read paginated public scalar properties for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists/connections/systemTags/systemTextLists/auditTrails/opcUaAlarmTypes. Optional exact name. Returns counts, nextOffset, field failures and excluded complex properties. Not a complete export of entries or bindings; live pagination requires unchanged collection. Examples: GetToolUsage(toolName: \"ListUnifiedEngineeringObjects\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"category\":\"textLists\"}"
     },
     {
@@ -4263,9 +4263,12 @@
         "name",
         "action",
         "dryRun",
-        "properties"
+        "expectedPlanHash",
+        "expectedProjectFile",
+        "properties",
+        "texts"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Native create/update/delete for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists when supported by installed API. Exact name. properties contains public writable scalar properties only, not references/complex text. Default dryRun=true. Preview validates API shape, not TIA semantics. No save/compile/download. Delete impact on references is not analyzed. Partial writes reported, no rollback. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageUnifiedEngineeringObject\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][WRITE] Native create/update/delete for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists when supported by installed API; connections/tagTables support delete only. name is exact, or /Group/Sub/Table for tagTables (preview includes tag count). Lists have no Create; use ImportUnifiedEngineeringList. properties contains writable scalars; TriggerBitAddress/TriggerAddress are read-only. Alarm create/update accepts texts as {EventText|EventText1..9|InfoText:{culture:text}}; AlarmClass must exist and cultures must be active project languages. Default dryRun=true; every execution requires expectedPlanHash and expectedProjectFile from the same preview. Preview checks API shape and bindings, not all TIA semantics. Failed creates delete the new object; updates restore journaled values, with cleanupRequired on incomplete rollback. For bulk alarms use ApplyToolBatch with one call per alarm; stops at first failure, earlier calls stay. No save/compile/download. Delete impact on references is not analyzed. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageUnifiedEngineeringObject\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"category\":\"alarmClasses\",\"name\":\"Example_1\",\"action\":\"create\",\"dryRun\":true}"
     },
     {
