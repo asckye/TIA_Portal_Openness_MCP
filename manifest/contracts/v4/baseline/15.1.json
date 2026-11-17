@@ -15908,17 +15908,29 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "50a80ef7826df648da4c7bff61252f8831273fe28af71b9196a8930581713d72",
+      "descriptionSha256": "f2336ca5c443c47aad17c16b1a81b54ae190ca8de183368ab1d03eb668545eaf",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "action": {
-            "description": "action: the operation to perform - read | copy | compare | delete.",
+            "description": "action: the operation to perform - read | copy | compare | delete | instantiate.",
             "enum": [
               "read",
               "copy",
               "compare",
-              "delete"
+              "delete",
+              "instantiate"
+            ],
+            "type": "string"
+          },
+          "copyMode": {
+            "default": "",
+            "description": "copyMode: empty refuses name clashes; ThrowIfExists | Rename | Replace require V20+ and a PLC target.",
+            "enum": [
+              "",
+              "ThrowIfExists",
+              "Rename",
+              "Replace"
             ],
             "type": "string"
           },
@@ -15937,6 +15949,14 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
+          "expectedPlanHash": {
+            "default": "",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "type": "string"
+          },
           "libraryName": {
             "default": "",
             "description": "libraryName: name of the global library ('' = the project library).",
@@ -15944,6 +15964,31 @@
           },
           "sourcePath": {
             "description": "sourcePath: 'Group/Name' of the source object.",
+            "type": "string"
+          },
+          "targetGroupPath": {
+            "default": "",
+            "description": "targetGroupPath: exact PLC group, tag table (Group/Table), device group or Classic folder; empty=root except tag. Encode each name segment.",
+            "type": "string"
+          },
+          "targetKind": {
+            "default": "",
+            "description": "targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable. blockGroup checks parent group names only; blocks inside the copied group are not checked against PLC-wide names.",
+            "enum": [
+              "",
+              "block",
+              "blockGroup",
+              "tagTable",
+              "tag",
+              "device",
+              "classicScreen",
+              "classicTagTable"
+            ],
+            "type": "string"
+          },
+          "targetSoftwarePath": {
+            "default": "",
+            "description": "targetSoftwarePath: the target PLC software path from GetProjectTree (e.g. 'PLC_1').",
             "type": "string"
           }
         },
@@ -16074,12 +16119,12 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "22a7c7711f9daf3316593b3662859ec380646978ae959ba23a72c6a86bf45400",
+      "descriptionSha256": "14a7f2b494d1f4c5d7529af3a399bfd77b68e95e7a8458d5a7d3229b36a1b9e9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "action": {
-            "description": "action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances.",
+            "description": "action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances | instantiate.",
             "enum": [
               "read",
               "edit",
@@ -16088,7 +16133,8 @@
               "deleteVersion",
               "updateInstances",
               "discard",
-              "findInstances"
+              "findInstances",
+              "instantiate"
             ],
             "type": "string"
           },
@@ -16112,6 +16158,14 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
+          "expectedPlanHash": {
+            "default": "",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "type": "string"
+          },
           "libraryName": {
             "default": "",
             "description": "libraryName: name of the global library ('' = the project library).",
@@ -16119,7 +16173,12 @@
           },
           "newVersion": {
             "default": "",
-            "description": "newVersion: version string of the new type version, e.g. 'V1.0.1'.",
+            "description": "newVersion: version string of the new type version, e.g. '1.0.1'.",
+            "type": "string"
+          },
+          "targetGroupPath": {
+            "default": "",
+            "description": "targetGroupPath: exact destination block group or Classic screen folder; empty selects root. Encode name segments.",
             "type": "string"
           },
           "targetSoftwarePath": {
@@ -16129,6 +16188,17 @@
           },
           "typePath": {
             "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
+            "type": "string"
+          },
+          "updatePathsMode": {
+            "default": "",
+            "description": "updatePathsMode: V20+ code blocks only; empty uses the simple overload, or KeepExistingPathsInTarget | ThrowIfPathsConflict | UpdatePathsInTarget.",
+            "enum": [
+              "",
+              "KeepExistingPathsInTarget",
+              "ThrowIfPathsConflict",
+              "UpdatePathsInTarget"
+            ],
             "type": "string"
           },
           "version": {

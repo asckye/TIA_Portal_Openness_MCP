@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T11:35:07.2954174+00:00",
+  "generatedAt": "2026-11-17T12:01:54.9980402+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "25af856a3d4ab363612513ce6d1f23082716f77a526e6777808b341d46abbbe7",
+  "workerSha256": "8a230c1710bb5997cff28723c67a1e0d7bde6dfe338fe5dcaaf3d3af51aaafe3",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2839,
-    "parametersUndocumented": 847,
-    "parametersFromVocabulary": 695,
+    "parameters": 2849,
+    "parametersUndocumented": 852,
+    "parametersFromVocabulary": 696,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
-    "enumHints": 256,
-    "defaultHints": 1616,
+    "enumHints": 259,
+    "defaultHints": 1626,
     "examplesCurated": 518,
     "recipes": 40
   },
@@ -161,9 +161,15 @@
         "libraryName",
         "destinationLibraryName",
         "destinationPath",
-        "dryRun"
+        "dryRun",
+        "targetKind",
+        "targetSoftwarePath",
+        "targetGroupPath",
+        "copyMode",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Library][WRITE] Exact master-copy read/copy/compare/delete. copy destinationPath is a folder; compare uses exact master-copy path. No overwrites or automatic save. Default preview for mutations. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryMasterCopy\"), optionally operation or language.",
+      "description": "[L2][Library][WRITE] Exact master-copy read/copy/compare/delete/instantiate. instantiate creates block, blockGroup, tagTable, tag, device, classicScreen or classicTagTable in the exact targetSoftwarePath/targetGroupPath; empty group=root, tag needs a table path, device needs no software path. copyMode ThrowIfExists/Rename/Replace is V20+ PLC only; empty refuses name clashes on all releases. blockGroup checks destination parent group names only; blocks inside the copied group are not checked against PLC-wide names. copy destinationPath is a library folder; compare uses exact master-copy path. Mutations require the preview's expectedPlanHash and expectedProjectFile. Default preview; created objects read back; no automatic save or compile. Native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryMasterCopy\"), optionally operation or language.",
       "example": "{\"sourcePath\":\"Examples/Example_1\",\"action\":\"read\",\"dryRun\":true}"
     },
     {
@@ -432,9 +438,13 @@
         "author",
         "comment",
         "targetSoftwarePath",
-        "dryRun"
+        "dryRun",
+        "targetGroupPath",
+        "updatePathsMode",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires exact targetSoftwarePath with a single instance and uses Edit(instanceInfo), while HMI edit uses Edit(). Versions use Major.Minor.Build without a V prefix. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryTypeVersion\"), optionally operation or language.",
+      "description": "[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances/instantiate. instantiate places a released code-block or Classic screen version in exact targetSoftwarePath/targetGroupPath (empty group=root); PLC types/documents use ManagePlcDocuments. updatePathsMode applies to code blocks on V20+ only. Mutations require the preview's expectedPlanHash and expectedProjectFile. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires exact targetSoftwarePath with a single instance and uses Edit(instanceInfo), while HMI edit uses Edit(). Versions use Major.Minor.Build without a V prefix. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryTypeVersion\"), optionally operation or language.",
       "example": "{\"typePath\":\"UDT_Status\",\"version\":\"\\u003Cversion from target discovery\\u003E\",\"action\":\"read\",\"dryRun\":true}"
     },
     {

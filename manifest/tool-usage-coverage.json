@@ -1,6 +1,6 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "685b5fe70a49d3a0be8ab21368b672a91747b3a420ae34009e9fa04a260a7dd8",
+  "catalogSha256": "8221750e94d1d170915d88228505e716e38ebd3d931104f0e5304ae63bcbc8e5",
   "uniqueTools": 518,
   "documents": 89,
   "versionToolPairs": 3210,
@@ -52,7 +52,7 @@
       "checkedToolCount": 281,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 167,
+      "operationExampleCount": 169,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -2686,6 +2686,11 @@
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -2772,6 +2777,11 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -3827,7 +3837,7 @@
       "checkedToolCount": 321,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 227,
+      "operationExampleCount": 229,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -6855,6 +6865,11 @@
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -6941,6 +6956,11 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -8363,7 +8383,7 @@
       "checkedToolCount": 350,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 281,
+      "operationExampleCount": 283,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -11706,6 +11726,11 @@
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -11792,6 +11817,11 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -13504,7 +13534,7 @@
       "checkedToolCount": 373,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 356,
+      "operationExampleCount": 358,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -17047,6 +17077,11 @@
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -17133,6 +17168,11 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -19290,7 +19330,7 @@
       "checkedToolCount": 399,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 432,
+      "operationExampleCount": 434,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -23224,6 +23264,11 @@
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -23310,6 +23355,11 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -25773,7 +25823,7 @@
       "checkedToolCount": 475,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 492,
+      "operationExampleCount": 494,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -30215,6 +30265,11 @@
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -30301,6 +30356,11 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -33204,7 +33264,7 @@
       "checkedToolCount": 498,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 506,
+      "operationExampleCount": 508,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 2,
@@ -37766,6 +37826,11 @@
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -37852,6 +37917,11 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -40906,8 +40976,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "ae71261264b22e5f07ce3ff4c0c1b868788e1e804034ccaf10207a2ff19f127a",
-      "runtimeSha256": "ae71261264b22e5f07ce3ff4c0c1b868788e1e804034ccaf10207a2ff19f127a",
+      "sdkWorkerSha256": "490f1182b4c41c015554360e74bf87dac0a1083cb1279740964181f371342c63",
+      "runtimeSha256": "490f1182b4c41c015554360e74bf87dac0a1083cb1279740964181f371342c63",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -40916,7 +40986,7 @@
       "checkedToolCount": 513,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 554,
+      "operationExampleCount": 556,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 2,
@@ -45581,6 +45651,11 @@
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -45667,6 +45742,11 @@
             },
             {
               "operation": "findInstances",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "instantiate",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
             }
@@ -48996,8 +49076,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "accd01f860373a2e7d6381e8c8bb054fe8edf4b05fc0cadab0edaa446d02a8a2",
-      "runtimeSha256": "accd01f860373a2e7d6381e8c8bb054fe8edf4b05fc0cadab0edaa446d02a8a2",
+      "sdkWorkerSha256": "179836d0522b7afb5d91f796c336dfd7e6a0db28741a8d97a0b3dc4766c90c67",
+      "runtimeSha256": "179836d0522b7afb5d91f796c336dfd7e6a0db28741a8d97a0b3dc4766c90c67",
       "workerModel": "foundation-host-plc-worker"
     }
   }
