@@ -10834,7 +10834,7 @@
       "path": "src/Shared/PlcWatchTools.cs",
       "owner": "PlcWatchTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ExportPlcWatchTablesToDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"dir: output directory\")] string dir,\n            [Description(\"regexName: optional regex filter applied to table name\")] string regexName = \"\", bool dryRun = true, bool confirm = false,\n                string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult ExportPlcWatchTablesToDirectoryV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"dir: output directory\")] string dir,\n            [Description(\"regexName: optional regex filter applied to table name\")] string regexName = \"\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"confirm: must be true together with dryRun=false to execute the previewed change.\")] bool confirm = false,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")]\n                string expectedProjectFile = \"\",\n            [Description(\"tableKind: watch (default) | force; offline configuration only.\")] string tableKind = \"watch\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10855,22 +10855,32 @@
         "dryRun": {
           "type": "bool",
           "default": "true",
+          "description": "dryRun: true (default) previews; false executes.",
           "value": true
         },
         "confirm": {
           "type": "bool",
           "default": "false",
+          "description": "confirm: must be true together with dryRun=false to execute the previewed change.",
           "value": false
         },
         "expectedPlanHash": {
           "type": "string",
           "default": "\"\"",
+          "description": "expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.",
           "value": ""
         },
         "expectedProjectFile": {
           "type": "string",
           "default": "\"\"",
+          "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
           "value": ""
+        },
+        "tableKind": {
+          "type": "string",
+          "default": "\"watch\"",
+          "description": "tableKind: watch (default) | force; offline configuration only.",
+          "value": "watch"
         },
         "exportDirectory": {
           "type": "string",
@@ -11019,7 +11029,7 @@
       "path": "src/Shared/PlcWatchTools.cs",
       "owner": "PlcWatchTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ImportPlcWatchTableOfflineV4(string softwarePath,string filePath,string groupPath=\"\",bool dryRun=true)",
+      "signature": "public CallToolResult ImportPlcWatchTableOfflineV4(string softwarePath, string filePath, string groupPath = \"\", bool dryRun = true,\n            [Description(\"tableKind: watch (default) | force; native SimaticML offline configuration only.\")] string tableKind = \"watch\",\n            [Description(\"expectedPlanHash: planHash from this tool's preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact bound project file from this tool's preview; required when dryRun=false.\")]\n                string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -11038,6 +11048,24 @@
           "type": "bool",
           "default": "true",
           "value": true
+        },
+        "tableKind": {
+          "type": "string",
+          "default": "\"watch\"",
+          "description": "tableKind: watch (default) | force; native SimaticML offline configuration only.",
+          "value": "watch"
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash from this tool's preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact bound project file from this tool's preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -11046,7 +11074,7 @@
       "path": "src/Shared/PlcWatchTools.cs",
       "owner": "PlcWatchTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ManagePlcTableEntriesV4(\n            [Description(\"softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.\")] string softwarePath,\n            [Description(\"tableKind: watch | force.\")] string tableKind,\n            [Description(\"tablePath: 'Group/Table' path under the watch-and-force-table group, e.g. 'MCP_W/MCP_WT' (bare name for a root table).\")] string tablePath,\n            [Description(\"action: read | createComment | deleteEntry | deleteTable (force tables: read only).\")] string action=\"read\",\n            [Description(\"entryIndex: 0-based row index from a read, for deleteEntry.\")] int entryIndex=-1,\n            [Description(\"confirmDelete: must be true together with dryRun=false for deleteEntry / deleteTable.\")] bool confirmDelete=false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun=true,\n            [Description(\"offset: first row to return (paging).\")] int offset=0,\n            [Description(\"limit: maximum rows to return.\")] int limit=200)",
+      "signature": "public CallToolResult ManagePlcTableEntriesV4(\n            [Description(\"softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.\")] string softwarePath,\n            [Description(\"tableKind: watch | force.\")] string tableKind,\n            [Description(\"tablePath: 'Group/Table' path under the watch-and-force-table group, e.g. 'MCP_W/MCP_WT' (bare name for a root \" +\n                \"table).\")] string tablePath,\n            [Description(\"action: read | createTable | createComment | deleteEntry | deleteTable (force tables: read only).\")] string action=\"read\",\n            [Description(\"entryIndex: 0-based row index from a read, for deleteEntry.\")] int entryIndex=-1,\n            [Description(\"confirmDelete: must be true together with dryRun=false for deleteEntry / deleteTable.\")] bool confirmDelete=false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun=true,\n            [Description(\"offset: first row to return (paging).\")] int offset=0,\n            [Description(\"limit: maximum rows to return.\")] int limit=200,\n            [Description(\"expectedPlanHash: planHash from this tool's preview; required for mutation when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact bound project file from this tool's preview; required for mutation when dryRun=false.\")]\n                string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -11066,7 +11094,7 @@
         "action": {
           "type": "string",
           "default": "\"read\"",
-          "description": "action: read | createComment | deleteEntry | deleteTable (force tables: read only).",
+          "description": "action: read | createTable | createComment | deleteEntry | deleteTable (force tables: read only).",
           "value": "read"
         },
         "entryIndex": {
@@ -11098,6 +11126,18 @@
           "default": "200",
           "description": "limit: maximum rows to return.",
           "value": 200
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: planHash from this tool's preview; required for mutation when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact bound project file from this tool's preview; required for mutation when dryRun=false.",
+          "value": ""
         }
       }
     },

@@ -15,6 +15,36 @@ using WatchService = toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisation
 public sealed class B4HostPortsTests
 {
     [Fact]
+    public void Source_catalog_registers_every_served_table_parameter_and_current_binding_description()
+    {
+        string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        var registrations = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference", "tool-catalog", "engine-source.json")))!["registrations"]!;
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var tools = LegacyHostToolRegistry.Create(worker, "21", false).ToDictionary(tool => tool.ProtocolTool.Name);
+        foreach (string name in new[] { "ListPlcForceTables", "ManagePlcTableEntries", "ImportPlcWatchTableOffline", "ExportPlcWatchTablesToDirectory" })
+        {
+            var registration = registrations[name]!;
+            var parameters = registration["parameters"]!.AsObject();
+            foreach (var parameter in tools[name].ProtocolTool.InputSchema.GetProperty("properties").EnumerateObject())
+                Assert.True(parameters.ContainsKey(parameter.Name), name + "/" + parameter.Name);
+            foreach (var parameter in parameters.Where(parameter => parameter.Key != "exportDirectory"))
+                Assert.Contains(parameter.Key, (string)registration["signature"]!);
+        }
+        Assert.Contains("createTable", (string?)registrations["ManagePlcTableEntries"]!["parameters"]!["action"]!["description"]);
+        foreach (string name in new[] { "ImportPlcWatchTableOffline", "ExportPlcWatchTablesToDirectory" })
+        {
+            Assert.Equal("watch", (string?)registrations[name]!["parameters"]!["tableKind"]!["value"]);
+            Assert.Contains("force", (string?)registrations[name]!["parameters"]!["tableKind"]!["description"]);
+        }
+        foreach (string name in new[] { "ImportPlcWatchTableOffline", "ManagePlcTableEntries" })
+            foreach (string parameter in new[] { "expectedPlanHash", "expectedProjectFile" })
+            {
+                Assert.Equal("", (string?)registrations[name]!["parameters"]![parameter]!["value"]);
+                Assert.False(string.IsNullOrWhiteSpace((string?)registrations[name]!["parameters"]![parameter]!["description"]));
+            }
+    }
+
+    [Fact]
     public async Task Force_directory_batch_reaches_the_watch_port_with_native_item_hash_and_confirmation()
     {
         using var worker = new WatchPlanWorker();

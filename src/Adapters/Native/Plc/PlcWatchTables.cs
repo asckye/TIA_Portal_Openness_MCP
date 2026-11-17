@@ -96,12 +96,17 @@ namespace TiaMcp.Adapters.Native.Plc
                     return new PlcSeedHmiReply { Imported = exported, Failed = failed };
                 }
 
-                Directory.CreateDirectory(dir);
                 Regex? regex = null;
                 if (!string.IsNullOrWhiteSpace(regexName))
                 {
                     regex = new Regex(regexName, RegexOptions.IgnoreCase);
                 }
+
+                if (dryRun) return new PlcSeedHmiReply { Imported = exported, Failed = failed,
+                    Meta = new Dictionary<string, object?> { ["dryRun"] = true, ["operationSuccess"] = true, ["mayHaveWrittenFiles"] = false,
+                        ["items"] = names.Where(name => regex == null || regex.IsMatch(name))
+                            .Select(name => Path.Combine(dir, MakeSafeFileName(name) + ".xml")).ToArray() } };
+                Directory.CreateDirectory(dir);
 
                 foreach (var name in names)
                 {
@@ -415,11 +420,24 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!dryRun)
                 {
                     meta["mayHaveChanged"] = true; MutationStarted = true;
-                    EngineeringWriteJournal.Unrestored(softwarePath + "/" + groupPath + ": native " + tableKind + " table import");
                     string[] names;
-                    if (tableKind == "watch") names = WatchNative.Import(WatchNative.WatchTables(group), source, ImportOptions.None)
-                        .Select(WatchNative.Name).ToArray();
-                    else names = WatchNative.Import(PlcBlockPrimitives.ForceTables(group), source, ImportOptions.None).Select(WatchNative.Name).ToArray();
+                    if (tableKind == "watch")
+                    {
+                        var importedNames = new List<string>();
+                        foreach (var table in WatchNative.Import(WatchNative.WatchTables(group), source, ImportOptions.None))
+                        {
+                            string name = WatchNative.Name(table);
+                            EngineeringWriteJournal.Created(table, PlcObjectPath.Format(PlcObjectPath.Parts(groupPath, true).Concat(new[] { name })),
+                                absent: () => WatchNative.Find(WatchNative.WatchTables(FindGroup()), name) == null);
+                            importedNames.Add(name);
+                        }
+                        names = importedNames.ToArray();
+                    }
+                    else
+                    {
+                        EngineeringWriteJournal.Unrestored(softwarePath + "/" + groupPath + ": native force table import");
+                        names = WatchNative.Import(PlcBlockPrimitives.ForceTables(group), source, ImportOptions.None).Select(WatchNative.Name).ToArray();
+                    }
                     meta["actualCount"] = names.Length;
                     meta["names"] = new List<object?>(names.Cast<object?>());
                     var fresh = FindGroup();

@@ -204,7 +204,7 @@ internal static class CanonicalBatchTools
                     var values = Common();
                     if (force)
                     {
-                        values["tableKind"] = "force"; values["dir"] = Text("dir");
+                        values["tableKind"] = "force"; values["dir"] = Path.GetFullPath(Text("dir"));
                         values["regexName"] = "\\A" + Regex.Escape(path) + "\\z";
                         calls.Add((tool.Name, values));
                     }

@@ -7,6 +7,15 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcWatchTables.cs" Link="PlcWatchTables.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcWatchPolicy.cs" Link="PlcWatchPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcIntegrityPolicy.cs" Link="PlcIntegrityPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcObjectPath.cs" Link="PlcObjectPath.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcGroupOperations.cs" Link="PlcGroupOperations.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcGroupCreation.cs" Link="PlcGroupCreation.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwarePath.cs" Link="HardwarePath.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" Link="HardwareAddressingPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" Link="EngineeringWriteJournal.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSpecialExport.cs" Link="PlcSpecialExport.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/WatchTechnologyPrimitives.cs" Link="WatchTechnologyPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />

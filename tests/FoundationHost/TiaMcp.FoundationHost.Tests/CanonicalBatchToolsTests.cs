@@ -10,6 +10,27 @@ using Xunit;
 
 public sealed class CanonicalBatchToolsTests
 {
+    [Fact]
+    public async Task Force_directory_is_resolved_on_the_host_before_item_preview_and_execution()
+    {
+        using var files = new Files(); const string name = "ExportPlcWatchTablesToDirectory";
+        var reader = new Target("ListPlcForceTables") { Inventory = new JsonArray("F") };
+        var native = new Target(name);
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [reader.ProtocolTool.Name] = reader, [name] = native
+        }, "21", () => Binding.DeepClone().AsObject()) {
+            Approve = (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)),
+            CompleteApproval = (_, _) => Task.CompletedTask };
+        var args = files.Arguments(); args["dir"] = Path.GetRelativePath(Environment.CurrentDirectory, files.Directory); args["tableKind"] = "force";
+        var preview = await batch.InvokeAsync(Request(name, args));
+        Assert.True((bool?)preview.StructuredContent?["ok"]);
+        Assert.Equal(Path.GetFullPath(files.Directory), (string?)Assert.Single(native.Arguments)["dir"]);
+        Apply(args, preview.StructuredContent!["data"]!.AsObject());
+        var result = await batch.InvokeAsync(Request(name, args));
+        Assert.True((bool?)result.StructuredContent?["ok"]); Assert.Single(native.Writes);
+        Assert.All(native.Arguments, item => Assert.Equal(Path.GetFullPath(files.Directory), (string?)item["dir"]));
+    }
+
     [Theory]
     [InlineData("15.1", 0, false)]
     [InlineData("21", 0, false)]
