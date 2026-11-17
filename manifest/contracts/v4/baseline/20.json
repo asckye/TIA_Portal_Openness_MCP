@@ -25366,7 +25366,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "71faa0269e098988597bbf5b79add9f9d94b35921383e9f2231dfa6c233c11da",
+      "descriptionSha256": "ace8e482f72bce12c549b43a84d28107620c2da535b061837aa465c10b8d2b86",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -25383,7 +25383,8 @@
               "systemTags",
               "systemTextLists",
               "auditTrails",
-              "opcUaAlarmTypes"
+              "opcUaAlarmTypes",
+              "connections"
             ],
             "type": "string"
           },
@@ -33125,7 +33126,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1dd456390e3fea78e8737822f32171a03fc396cc4fdcac67243c2ef897b5d74f",
+      "descriptionSha256": "5507c16fdbcbe3a43d84e948e79dd300a1ced0d90429b36e5cd743e1bb6c16ed",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -33151,7 +33152,9 @@
               "systemTags",
               "systemTextLists",
               "auditTrails",
-              "opcUaAlarmTypes"
+              "opcUaAlarmTypes",
+              "connections",
+              "tagTables"
             ],
             "type": "string"
           },
@@ -33159,6 +33162,14 @@
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "type": "string"
           },
           "name": {
             "description": "name: exact name of the object (case-sensitive).",
@@ -33187,6 +33198,17 @@
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
             "type": "string"
+          },
+          "texts": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "description": "Alarm text property to culture-to-text map. Empty text clears that culture; omitted cultures stay unchanged.",
+            "type": "object"
           }
         },
         "required": [
