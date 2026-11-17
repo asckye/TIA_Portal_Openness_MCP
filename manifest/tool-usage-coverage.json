@@ -1,6 +1,6 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "a495465afeebd841c76cb1b18db0dad07d1a3ddcc47d2fecc4c762a0cbc812af",
+  "catalogSha256": "9780add80d4eedfcd708a30d0e4125f9d3c2869a61ceeb971dc066a6b05a3195",
   "uniqueTools": 518,
   "documents": 89,
   "versionToolPairs": 3209,
@@ -3826,7 +3826,7 @@
       "checkedToolCount": 321,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 229,
+      "operationExampleCount": 230,
       "programmingExampleCount": 25,
       "callSequenceCount": 41,
       "offlineBuilderExamplesExecuted": 0,
@@ -7387,6 +7387,11 @@
               "releaseProblem": null
             },
             {
+              "operation": "createTable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
               "operation": "createComment",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
@@ -8372,7 +8377,7 @@
       "checkedToolCount": 350,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 283,
+      "operationExampleCount": 284,
       "programmingExampleCount": 25,
       "callSequenceCount": 41,
       "offlineBuilderExamplesExecuted": 0,
@@ -12393,6 +12398,11 @@
               "releaseProblem": null
             },
             {
+              "operation": "createTable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
               "operation": "createComment",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
@@ -13523,7 +13533,7 @@
       "checkedToolCount": 373,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 358,
+      "operationExampleCount": 359,
       "programmingExampleCount": 25,
       "callSequenceCount": 41,
       "offlineBuilderExamplesExecuted": 0,
@@ -17912,6 +17922,11 @@
               "releaseProblem": null
             },
             {
+              "operation": "createTable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
               "operation": "createComment",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
@@ -19319,7 +19334,7 @@
       "checkedToolCount": 399,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 434,
+      "operationExampleCount": 435,
       "programmingExampleCount": 25,
       "callSequenceCount": 41,
       "offlineBuilderExamplesExecuted": 0,
@@ -24148,6 +24163,11 @@
               "releaseProblem": null
             },
             {
+              "operation": "createTable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
               "operation": "createComment",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
@@ -25812,7 +25832,7 @@
       "checkedToolCount": 475,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 494,
+      "operationExampleCount": 495,
       "programmingExampleCount": 25,
       "callSequenceCount": 41,
       "offlineBuilderExamplesExecuted": 0,
@@ -31149,6 +31169,11 @@
               "releaseProblem": null
             },
             {
+              "operation": "createTable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
               "operation": "createComment",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
@@ -33253,7 +33278,7 @@
       "checkedToolCount": 498,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 508,
+      "operationExampleCount": 509,
       "programmingExampleCount": 25,
       "callSequenceCount": 41,
       "offlineBuilderExamplesExecuted": 2,
@@ -38782,6 +38807,11 @@
               "releaseProblem": null
             },
             {
+              "operation": "createTable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
               "operation": "createComment",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
@@ -40965,8 +40995,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "90349dc2fc0041b9f794fd02955f3fe65f3cb41815b35db9543fd380dcf12443",
-      "runtimeSha256": "90349dc2fc0041b9f794fd02955f3fe65f3cb41815b35db9543fd380dcf12443",
+      "sdkWorkerSha256": "77998bfcd9a9456a15d6413db43a6fd634b9d93a7a0d92fbb0ca0d43c21c9bb1",
+      "runtimeSha256": "77998bfcd9a9456a15d6413db43a6fd634b9d93a7a0d92fbb0ca0d43c21c9bb1",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -40975,7 +41005,7 @@
       "checkedToolCount": 513,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 556,
+      "operationExampleCount": 557,
       "programmingExampleCount": 25,
       "callSequenceCount": 41,
       "offlineBuilderExamplesExecuted": 2,
@@ -46690,6 +46720,11 @@
               "releaseProblem": null
             },
             {
+              "operation": "createTable",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
               "operation": "createComment",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
@@ -49065,8 +49100,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "7c9393b91278df6e1936aee70efb7a9e9eea5d878dd012f12b48480f344faa73",
-      "runtimeSha256": "7c9393b91278df6e1936aee70efb7a9e9eea5d878dd012f12b48480f344faa73",
+      "sdkWorkerSha256": "409842aebad4b21cafdc13c9f3ed9edd5c60f73c055231c7d34c09282074fb61",
+      "runtimeSha256": "409842aebad4b21cafdc13c9f3ed9edd5c60f73c055231c7d34c09282074fb61",
       "workerModel": "foundation-host-plc-worker"
     }
   }

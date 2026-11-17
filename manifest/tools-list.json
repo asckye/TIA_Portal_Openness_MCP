@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T14:20:51.5277127+00:00",
+  "generatedAt": "2026-11-17T14:46:24.9882895+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "9711321a649463e41167fea9fe246af8fc3148c304e4b57dae59ea6a0c42bb4c",
+  "workerSha256": "f84b229d0593fd2ed1ad494ce055907bbd2b9874981894a33548b795655e4a12",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2849,
+    "parameters": 2861,
     "parametersUndocumented": 852,
     "parametersFromVocabulary": 696,
     "toolsWithUndocumentedParameters": 215,
-    "toolsWithEnumHints": 164,
-    "enumHints": 259,
-    "defaultHints": 1624,
+    "toolsWithEnumHints": 168,
+    "enumHints": 263,
+    "defaultHints": 1636,
     "examplesCurated": 518,
     "recipes": 41
   },
@@ -1078,10 +1078,12 @@
         "confirmDelete",
         "dryRun",
         "offset",
-        "limit"
+        "limit",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with SetPlcWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"tableKind\":\"watch\",\"tablePath\":\"MCP_W/MCP_WT\",\"action\":\"read\",\"confirmDelete\":false,\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ManagePlcTableEntries\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"tableKind\":\"watch\",\"tablePath\":\"MCP_W/MCP_WT\",\"action\":\"read\",\"confirmDelete\":false,\"dryRun\":true}"
+      "description": "[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createTable (empty table in an exact existing group, no implicit parents), createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with SetPlcWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. All mutating actions require expectedPlanHash and expectedProjectFile from this tool's native dry-run preview. Example: {\"softwarePath\":\"PLC_1\",\"tableKind\":\"watch\",\"tablePath\":\"MCP_W/NewWatch\",\"action\":\"createTable\",\"confirmDelete\":false,\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ManagePlcTableEntries\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"tableKind\":\"watch\",\"tablePath\":\"MCP_W/NewWatch\",\"action\":\"createTable\",\"confirmDelete\":false,\"dryRun\":true}"
     },
     {
       "name": "ManagePlcSupervision",
@@ -2029,10 +2031,13 @@
         "softwarePath",
         "filePath",
         "groupPath",
-        "dryRun"
+        "dryRun",
+        "tableKind",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE] Import native SimaticML watch tables into an exact existing group. Offline-only, no overwrite. Rejects force-table and mixed-object XML and DTD. dryRun=true default. Does not execute modify values, start monitoring, save or download. filePath is on the MCP server. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportPlcWatchTableOffline\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Watch_1.xml\",\"dryRun\":true}"
+      "description": "[L2][PLC-Software][WRITE] Import native SimaticML watch (default) or force tables into an exact existing group. Offline configuration only, no overwrite. Rejects the other table kind, mixed-object XML and DTD. Force entries remain read-only; import never activates forcing or monitoring, executes modify values, saves or downloads. dryRun=true previews the native validation and returns planHash. Execution requires dryRun=false, expectedPlanHash and expectedProjectFile from this preview. filePath is on the MCP server. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportPlcWatchTableOffline\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Watch_1.xml\",\"dryRun\":true,\"tableKind\":\"watch\"}"
     },
     {
       "name": "ImportPlcType",
@@ -2676,7 +2681,7 @@
       "parameters": [
         "softwarePath"
       ],
-      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject][READ] List all force table names in the PLC software. Force tables configure which variables are continuously forced to specific values while the CPU is online. Read-only: this server exposes NO tool for creating or editing force entries — forcing overrides live PLC logic (a forced output stays forced regardless of what the program writes) and is deliberately kept out of the AI tool surface. Create or edit force entries in the TIA Portal UI. For a one-shot value written from a watch table instead, use SetPlcWatchTableModifyValue (the variable reverts to PLC logic afterwards). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ListPlcForceTables\"), optionally operation or language.",
+      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject][READ] List all force table names in the PLC software. Force tables configure which variables are continuously forced to specific values while the CPU is online. Force entries stay read-only. ImportPlcWatchTableOffline tableKind=force imports offline configuration only; it never activates forcing, monitoring, save or download. ExportPlcWatchTablesToDirectory tableKind=force exports that configuration. Use the TIA Portal UI to activate forcing. For a one-shot value written from a watch table instead, use SetPlcWatchTableModifyValue (the variable reverts to PLC logic afterwards). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ListPlcForceTables\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\"}"
     },
     {
@@ -7276,11 +7281,14 @@
         "softwarePath",
         "password",
         "dryRun",
+        "scope",
+        "scopePath",
+        "unitName",
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][EXECUTE] [v17-compile-safe-v1] Preview by default. Actual PLC compilation returns native counts and nested messages; no download. Nonempty safety password requires supplied V17+ SafetyAdministration API and service; never ignored. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CompilePlcSoftware\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][EXECUTE] [v17-compile-safe-v1] Preview by default. Optional scope selects an exact block, group or V16–V21 unit with ICompilable; unavailable services refuse execution. Actual PLC compilation returns native counts and nested messages; no download. Nonempty safety password requires supplied V17+ SafetyAdministration API and service; never ignored. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CompilePlcSoftware\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"dryRun\":true,\"confirm\":false,\"scope\":\"software\",\"scopePath\":\"\",\"unitName\":\"\"}"
     },
     {
       "name": "CompilePlcDiagnostics",
@@ -7295,11 +7303,14 @@
         "softwarePath",
         "password",
         "dryRun",
+        "scope",
+        "scopePath",
+        "unitName",
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][EXECUTE] [v17-compile-safe-v1] Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CompilePlcDiagnostics\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][EXECUTE] [v17-compile-safe-v1] Optional scope selects an exact block, group or V16-V21 standard unit with ICompilable; unavailable services refuse execution without software fallback. Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CompilePlcDiagnostics\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"dryRun\":true,\"confirm\":false,\"scope\":\"software\",\"scopePath\":\"\",\"unitName\":\"\"}"
     },
     {
       "name": "CompileHmiDiagnostics",
@@ -9322,10 +9333,11 @@
         "confirm",
         "expectedPlanHash",
         "expectedProjectFile",
+        "tableKind",
         "exportDirectory"
       ],
-      "description": "[L2][PLC-Software][FILE] Preview the complete exact watch-table inventory and each canonical per-table XML export. One batch plan hash and approval; execute in inventory order, stop on the first failure and report completed/not-started items. Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcWatchTablesToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. Native behaviorPolicy=current; V4 native acceptance is pending. dir and exportDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[L2][PLC-Software][FILE] Preview watch (default) or force table offline configuration exports to new XML files in a directory. tableKind=force uses PlcForceTable.Export with ExportOptions.WithDefaults. Existing files are never overwritten. One ordered batch plan hash and approval; default dryRun=true. Execution requires confirm, expectedPlanHash and expectedProjectFile. Stop on the first failure and report completed/not-started items. No monitoring, forcing, save or download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcWatchTablesToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. Native behaviorPolicy=current; V4 native acceptance is pending. dir and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"tableKind\":\"watch\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportPlcWatchTable",
