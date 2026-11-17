@@ -51,6 +51,13 @@ internal static class FoundationHostPorts
     internal sealed class Services(IFoundationWorker worker, string release, Func<JsonObject> readiness, string? apiDirectory)
         : IEngineWorker, IEngineWorkerProgress, IEngineWorkerReadiness, IHostToolServices
     {
+        public async Task<JsonObject?> ReadSimulatorInstances(CancellationToken token)
+        {
+            if (worker is IEngineWorker engine) return await engine.ReadSimulatorInstances(token).ConfigureAwait(false);
+            return await worker.Call("runtime-channels.ExecutePlcSimAdvanced", new JsonObject {
+                ["request"] = new JsonObject { ["operation"] = "ReadPlcSimAdvancedInstances",
+                    ["arguments"] = new JsonObject { ["includeState"] = true } } }, token).ConfigureAwait(false) as JsonObject;
+        }
         public Task PrepareReadiness(CancellationToken token)
             => worker is IFoundationWorkerReadiness readiness ? readiness.PrepareReadiness(token) : Task.CompletedTask;
         public IDisposable UseProgress(Action<string>? report)

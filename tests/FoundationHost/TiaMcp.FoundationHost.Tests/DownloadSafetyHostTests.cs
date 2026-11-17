@@ -8,6 +8,24 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 public sealed class DownloadSafetyHostTests
 {
     [Theory]
+    [InlineData("14sp1", "192.0.2.10", false)]
+    [InlineData("21", "192.0.2.10", true)]
+    [InlineData("21", "host.invalid", false)]
+    public async Task Simulator_evidence_does_not_dispatch_for_unavailable_or_refused_addresses(string release, string target, bool denied)
+    {
+        using var settings = new OnlineTargetSettingsScope(denied ? "target=198.51.100.1\n" : null);
+        using var worker = new BoundWorker();
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release, worker: worker);
+        using var session = fixture.EnterSession();
+        var args = Arguments("PLCSIM", false);
+        args["targetIpAddress"] = target;
+        var result = await Call(fixture, true, args);
+        Assert.False((bool?)result["ok"]);
+        Assert.Equal(0, worker.Listings);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Physical_confirmation_refuses_before_approval_or_worker(bool nested)
@@ -18,7 +36,7 @@ public sealed class DownloadSafetyHostTests
         using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker,
             approvalWait: (pending, current, token) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, "denied")); });
         using var session = fixture.EnterSession();
-        var args = Arguments("Intel(R) Ethernet", false);
+        var args = Arguments("PLCSIM", false);
         args["dryRun"] = false;
         var result = await Call(fixture, nested, args);
         Assert.False((bool?)result["ok"]);
@@ -93,7 +111,7 @@ public sealed class DownloadSafetyHostTests
                 return Task.FromResult(new ApprovalOutcome(pending, !current.Enabled, null));
             }
             using var waitScope = new ApprovalWaitScope(Wait);
-            using var worker = new BoundWorker();
+            using var worker = new BoundWorker { Simulated = true };
             using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker, approvalWait: Wait);
             using var session = fixture.EnterSession();
             var args = Arguments("Siemens PLCSIM Virtual Ethernet Adapter", false);
@@ -257,6 +275,40 @@ public sealed class DownloadSafetyHostTests
         Assert.Equal("192.0.2.10", (string?)request?["TargetIpAddress"]);
     }
 
+    [Fact]
+    public void Online_write_preview_past_half_life_returns_a_fresh_plan_to_the_caller()
+    {
+        var previousClock = Host.OnlinePlanClockForTests;
+        var now = DateTimeOffset.Parse("2026-11-17T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture);
+        try
+        {
+            Host.OnlinePlanClockForTests = () => now;
+            using var worker = new BoundWorker();
+            using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker);
+            using var session = fixture.EnterSession();
+            var args = new { softwarePath = "PLC_1", targetIpAddress = "192.0.2.10" };
+            var first = Host.RunWritePreview("DownloadPlc", true, args, () => throw new InvalidOperationException()).StructuredContent!["data"]!;
+            now = now.AddSeconds(451);
+            var fresh = Host.RunWritePreview("DownloadPlc", true, args, () => throw new InvalidOperationException()).StructuredContent!["data"]!;
+            Assert.NotEqual((string?)first["planHash"], (string?)fresh["planHash"]);
+            Assert.NotEqual((string?)first["expiresUtc"], (string?)fresh["expiresUtc"]);
+            Assert.Equal(now.AddSeconds(900), DateTimeOffset.Parse((string)fresh["expiresUtc"]!, System.Globalization.CultureInfo.InvariantCulture));
+        }
+        finally { Host.OnlinePlanClockForTests = previousClock; }
+    }
+
+    [Fact]
+    public async Task Host_simulator_evidence_uses_the_existing_instance_listing_with_state()
+    {
+        using var worker = new ListingWorker();
+        var services = FoundationHostPorts.CreateServices(worker, "21", () => new JsonObject(), null);
+        var instances = await services.ReadSimulatorInstances(CancellationToken.None);
+        using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => instances, _ => new JsonObject());
+        Assert.Equal(1, worker.Calls);
+        Assert.Equal("plcsim", TiaMcp.Logic.V4.HostBehavior.DownloadTargetKind("192.0.2.10"));
+        Assert.Equal("physical", TiaMcp.Logic.V4.HostBehavior.DownloadTargetKind("192.0.2.11"));
+    }
+
     [Theory]
     [InlineData("14sp1")]
     [InlineData("15.1")]
@@ -283,6 +335,9 @@ public sealed class DownloadSafetyHostTests
             if (topic == "download-physical")
                 Assert.All(steps.Where(step => (string?)step!["tool"] == "DownloadPlc"),
                     step => Assert.True((bool?)step!["arguments"]?["confirmPhysicalTarget"]));
+            if (topic == "download-physical")
+                Assert.All(steps.Where(step => step?["arguments"]?["trustDeviceCertificate"] != null),
+                    step => Assert.False((bool?)step!["arguments"]!["trustDeviceCertificate"]));
         }
         Assert.Equal(0, fixture.Worker.Calls);
     }
@@ -303,10 +358,30 @@ public sealed class DownloadSafetyHostTests
         public void Dispose() => Host.ApprovalWaitOverrideForTests = previous;
     }
 
+    private sealed class ListingWorker : IFoundationWorker
+    {
+        internal int Calls;
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            Calls++;
+            Assert.Equal("runtime-channels.ExecutePlcSimAdvanced", operation);
+            Assert.Equal("ReadPlcSimAdvancedInstances", (string?)arguments["request"]?["operation"]);
+            Assert.True((bool?)arguments["request"]?["arguments"]?["includeState"]);
+            return Task.FromResult<JsonNode?>(DownloadSafetyPolicyTests.RunningInstance("192.0.2.10"));
+        }
+        public void Dispose() { }
+    }
+
     private sealed class BoundWorker : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal const string Project = "C:/Projects/fixture.ap21";
-        internal int Calls, OnlineCalls;
+        internal int Calls, OnlineCalls, Listings;
+        internal bool Simulated;
+        public Task<JsonObject?> ReadSimulatorInstances(CancellationToken token)
+        {
+            Listings++;
+            return Task.FromResult(Simulated ? DownloadSafetyPolicyTests.RunningInstance("192.0.2.10") : null);
+        }
         public bool Faulted => false;
         public JsonNode? Binding => new JsonObject { ["identity"] = new JsonObject { ["processId"] = 123,
             ["projectPath"] = Project, ["projectName"] = "fixture" } };

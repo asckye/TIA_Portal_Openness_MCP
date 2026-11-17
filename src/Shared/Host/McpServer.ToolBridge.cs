@@ -459,7 +459,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (tool == "DownloadPlc")
             {
-                string kind = HostBehavior.DownloadTargetKind((string?)JsonSerializer.SerializeToNode(arguments)?["pgPcInterface"]);
+                string kind = HostBehavior.DownloadTargetKind((string?)JsonSerializer.SerializeToNode(arguments)?["targetIpAddress"]);
                 plan["targetKind"] = kind;
                 plan["requiresPhysicalConfirmation"] = kind == "physical";
                 if (kind == "physical") plan["executionRequirement"] = "Set confirmPhysicalTarget=true in the reviewed preview and execution. "

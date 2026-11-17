@@ -245,7 +245,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["DisconnectOnlinePlc.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["DownloadPlc.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["DownloadPlc.password"] = new ParameterHint("\"\\u003Cpassword\\u003E\""),
-            ["DownloadPlc.pgPcInterface"] = new ParameterHint("\"PLCSIM\""),
+            ["DownloadPlc.pgPcInterface"] = new ParameterHint("\"\""),
             ["DownloadPlc.targetIpAddress"] = new ParameterHint("\"192.168.0.1\""),
             ["DownloadPlc.userManagementMode"] = new ParameterHint("\"\\u003CuserManagementMode\\u003E\""),
             ["DownloadPlc.promptAnswers"] = new ParameterHint("\"\\u003CpromptAnswers\\u003E\""),

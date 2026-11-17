@@ -295,7 +295,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "allows it."
                 +
             " The approval request lists every prompt answer the call will give (promptAnswerPlan)." +
-            " An interface name containing PLCSIM is simulated; all others, including automatic selection, are physical." +
+            " A simulator target must match a running PLCSIM Advanced instance address or a subnet exclusive to the PLCSIM virtual adapter." +
+            " Otherwise it is physical; the requested PG/PC interface name alone is never simulation evidence." +
             " Physical execution requires confirmPhysicalTarget=true and Workbench approval even when approval is switched off." +
             " Unsaved or inconsistent projects are refused; unknown consistency is reported. Online write plans expire after 15 minutes by default." +
             " Local adapters and subnet matches are reported before downloading; no matching local subnet is a warning " +
@@ -331,8 +332,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("password: optional CPU access password. Required when the CPU has download protection configured. Leave empty for unprotected " +
                 "CPUs.")] string password =
                 "",
-            [Description("pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'. Leave empty to auto-pick " +
-                "the adapter that shares a subnet with the CPU. Run CheckDownloadReadiness to see the available names.")] string pgPcInterface =
+            [Description("pgPcInterface: optional PG/PC interface name (substring, case-insensitive). Select it from ListTransferRoutes. Leave empty " +
+                "to auto-pick the adapter that shares a subnet with the CPU. Run CheckDownloadReadiness to see the available names.")] string pgPcInterface =
                 "",
             [Description("userManagementMode: how the UserManagementDownload prompt is answered: keep (default, keeps the online user management data), " +
                 "updateKeepPassword (updates data but keeps online passwords), resetToProject (downloads all user management data and resets to " +
@@ -380,8 +381,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "",
-            [Description("confirmPhysicalTarget: true explicitly acknowledges downloading to a real PLC. Required for execution unless pgPcInterface " +
-                "contains PLCSIM; automatic interface selection is physical. Include true in the reviewed preview as well. " +
+            [Description("confirmPhysicalTarget: true explicitly acknowledges downloading to a real PLC. Required unless the target IP is verified " +
+                "as a running PLCSIM Advanced instance or an exclusive PLCSIM virtual-adapter subnet. Include true in the reviewed preview as well. " +
                 "Workbench approval is still required.")] bool confirmPhysicalTarget = false)
             => McpServer.RunOnlineNetworkCheck("DownloadPlc", targetIpAddress, () => McpServer
                 .RunWritePreview("DownloadPlc", dryRun, new {

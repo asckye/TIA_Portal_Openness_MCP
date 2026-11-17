@@ -108,7 +108,16 @@ namespace TiaMcp.PlcWorker
                 var values = WorkerJson.ParseArguments(request.ArgumentsJson);
                 if (name == "plc-online.ExecuteOnline" && WorkerJson.Get(values, "request") is var online
                     && online.ValueKind == JsonValueKind.Object)
-                    readOnly |= OnlineCapabilities.IsReadOnly(JsonSerializer.Deserialize<OnlineRequest>(online.GetRawText())!);
+                {
+                    var onlineRequest = JsonSerializer.Deserialize<OnlineRequest>(online.GetRawText())!;
+                    OnlineDownloadGuard.Require(onlineRequest, WorkerJson.Get(values, "dryRun").ValueKind == JsonValueKind.True, target =>
+                    {
+                        var listing = JsonSerializer.SerializeToNode(PlcSimAdvancedWorkerModule.Adapter.ReadPlcSimAdvancedInstances());
+                        return TiaMcpServer.Siemens.DownloadTargetPolicy.Classify(target, listing as System.Text.Json.Nodes.JsonObject,
+                            TiaMcpServer.Siemens.LocalNetworkPolicy.Inspect(target)) == "plcsim";
+                    });
+                    readOnly |= OnlineCapabilities.IsReadOnly(onlineRequest);
+                }
                 string actionName = WorkerJson.Get(values, "action").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "action").GetString()! : "";
                 string scope = WorkerJson.Get(values, "family").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "family").GetString()! : WorkerJson
                     .Get(values, "kind").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "kind").GetString()! : "";

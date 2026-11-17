@@ -673,7 +673,7 @@
           "softwarePath": "PLC_1",
           "pgPcInterface": "<exact physical PG/PC interface>",
           "targetIpAddress": "<CPU IP>",
-          "trustDeviceCertificate": true,
+          "trustDeviceCertificate": false,
           "dryRun": true,
           "confirmPhysicalTarget": true
         },
@@ -685,7 +685,7 @@
           "softwarePath": "PLC_1",
           "pgPcInterface": "<exact physical PG/PC interface>",
           "targetIpAddress": "<CPU IP>",
-          "trustDeviceCertificate": true,
+          "trustDeviceCertificate": false,
           "dryRun": false,
           "expectedPlanHash": "<data.planHash from this same preview>",
           "expectedProjectFile": "<exact bound project file from this same preview's data.targetIdentity>",
@@ -699,7 +699,7 @@
           "softwarePath": "PLC_1",
           "ipAddress": "<CPU IP>",
           "pgPcInterface": "<exact physical PG/PC interface>",
-          "trustDeviceCertificate": true
+          "trustDeviceCertificate": false
         },
         "expect": "Online"
       },

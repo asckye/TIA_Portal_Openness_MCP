@@ -221,6 +221,8 @@ public sealed class ApprovalHostTests
     [InlineData("", "physical", "automatic")]
     public void Download_approval_card_names_the_online_target(string adapter, string kind, string displayAdapter)
     {
+        using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(
+            () => kind == "plcsim" ? DownloadSafetyPolicyTests.RunningInstance("192.0.2.10") : null, _ => new JsonObject());
         var args = new JsonObject { ["softwarePath"] = "PLC_1", ["targetIpAddress"] = "192.0.2.10",
             ["pgPcInterface"] = adapter, ["rhTarget"] = "backup", ["password"] = "fixture-secret" };
         var pending = PendingApproval.Create("foundation", "21", "DownloadPlc", args.ToJsonString(), null, 120);

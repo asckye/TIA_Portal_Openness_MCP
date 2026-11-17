@@ -75,6 +75,9 @@
     <Compile Include="$(WorkerSourceRoot)/WorkerAssemblyResolver.cs" Link="WorkerAssemblyResolver.cs" />
     <Compile Include="../Shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" />
     <Compile Include="$(WorkerSourceRoot)/PlcSimAdvancedWorkerModule.cs" Link="PlcSimAdvancedWorkerModule.cs" />
+    <Compile Include="$(WorkerSourceRoot)/OnlineDownloadGuard.cs" Link="OnlineDownloadGuard.cs" />
+    <Compile Include="$(WorkerSourceRoot)/../Logic/Siemens/DownloadTargetPolicy.cs" Link="Safety/DownloadTargetPolicy.cs" />
+    <Compile Include="$(WorkerSourceRoot)/../Logic/Siemens/LocalNetworkPolicy.cs" Link="Safety/LocalNetworkPolicy.cs" />
     <Compile Include="$(WorkerSourceRoot)/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
     <Compile Include="$(WorkerSourceRoot)/FoundationProcessLease.cs" Link="FoundationProcessLease.cs" />
     <Compile Include="../Logic/Siemens/PortalProcessLease.cs" Link="Shared/PortalProcessLease.cs" />

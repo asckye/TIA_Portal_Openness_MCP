@@ -29,6 +29,7 @@ namespace TiaMcp.FoundationHost
         public bool Faulted { get; }
         public UnsettledCalls Unsettled => UnsettledCalls.For(this);
         public LateCalls LateResults => LateCalls.For(this);
+        public Task<JsonObject?> ReadSimulatorInstances(CancellationToken token) => Task.FromResult<JsonObject?>(null);
         public JsonNode? Binding { get; }
         public object SessionKey { get; }
         public JsonObject Snapshot();
@@ -210,6 +211,30 @@ namespace TiaMcp.FoundationHost
                 staging.Dispose(); EngineHostConfiguration.OperatorSession.Value = previous; session.Dispose();
             }
         }
+        private async Task<(JsonObject? Instances, JsonObject Network)?> DownloadEvidence(
+            RequestContext<CallToolRequestParams> request, CancellationToken token)
+        {
+            string name = request.Params?.Name ?? "";
+            var args = JsonSerializer.SerializeToNode(request.Params?.Arguments ?? new Dictionary<string, JsonElement>())!.AsObject();
+            if (name == "CallTool")
+            {
+                if (args["name"] is not JsonValue targetName || !targetName.TryGetValue<string>(out var requested)) return null;
+                name = requested;
+                args = args["arguments"] as JsonObject ?? new JsonObject();
+            }
+            if (name != "DownloadPlc" || args["targetIpAddress"] is not JsonValue value || !value.TryGetValue<string>(out var target)) return null;
+            var online = new TiaMcp.Adapters.Contracts.OnlineRequest { Operation = name, TargetIpAddress = target };
+            if (TiaMcp.Adapters.Contracts.OnlineCapabilities.Unsupported(EngineHostConfiguration.ReleaseKey, online) != null) return null;
+            TiaMcp.Adapters.Contracts.OnlineTargetList? targets;
+            try { targets = TiaOpenness.Shared.OnlineTargetSettings.Load(TiaOpenness.Shared.OnlineTargetSettings.SettingsPath); }
+            catch (Exception) /* swallow(env-probe): normal admission below produces the typed invalid-list refusal before any worker call. */ { return null; }
+            if (TiaMcp.Adapters.Contracts.OnlineTargetPolicy.Refusal(online, targets) != null) return null;
+            JsonObject? instances = null;
+            try { instances = await context.Worker.ReadSimulatorInstances(token).ConfigureAwait(false); }
+            catch (Exception) /* swallow(env-probe): missing local simulator evidence leaves the target physical unless the subnet proves simulation. */ { }
+            return (instances, TiaMcpServer.Siemens.LocalNetworkPolicy.Inspect(target));
+        }
+
         private sealed class OperatorSessionTool(EngineHostPipeline owner, McpServerTool inner) : McpServerTool
         {
             public override Tool ProtocolTool => inner.ProtocolTool;
@@ -217,6 +242,9 @@ namespace TiaMcp.FoundationHost
                     default)
             {
                 using var session = owner.EnterOperatorSession();
+                var evidence = await owner.DownloadEvidence(request, cancellationToken).ConfigureAwait(false);
+                using var target = evidence is { } observed
+                    ? TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => observed.Instances, _ => observed.Network) : null;
                 return await CanonicalParameterTool.InvokeWithDefaults(inner, request, cancellationToken).ConfigureAwait(false);
             }
         }
@@ -236,6 +264,9 @@ namespace TiaMcp.FoundationHost
                     && !ReferenceEquals(EngineHostConfiguration.OperatorSession.Value, owner.context))
                     throw new InvalidOperationException("The tool belongs to a different MCP engine session.");
                 using var session = owner.EnterSession();
+                var evidence = await owner.DownloadEvidence(request, cancellationToken).ConfigureAwait(false);
+                using var target = evidence is { } observed
+                    ? TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => observed.Instances, _ => observed.Network) : null;
                 return await CanonicalParameterTool.InvokeWithDefaults(inner, request, cancellationToken).ConfigureAwait(false);
             }
         }

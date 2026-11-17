@@ -168,9 +168,9 @@ namespace TiaOpenness.Shared
             if (tool == "DownloadPlc")
                 compact["onlineTarget"] = new JsonObject {
 #if TIA_GENERATION_PLANNER
-                    ["kind"] = TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind((string?)args["pgPcInterface"]),
+                    ["kind"] = TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind((string?)args["targetIpAddress"]),
 #else
-                    ["kind"] = PlcRendering::TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind((string?)args["pgPcInterface"]),
+                    ["kind"] = PlcRendering::TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind((string?)args["targetIpAddress"]),
 #endif
                     ["targetIpAddress"] = args["targetIpAddress"]?.DeepClone(),
                     ["pgPcInterface"] = string.IsNullOrWhiteSpace((string?)args["pgPcInterface"]) ? "automatic" : (string?)args["pgPcInterface"],

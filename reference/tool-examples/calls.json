@@ -15219,7 +15219,7 @@
       "DownloadPlc": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
+          "pgPcInterface": "",
           "targetIpAddress": "192.168.0.3",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
@@ -21887,7 +21887,7 @@
       "DownloadPlc": {
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
+          "pgPcInterface": "",
           "targetIpAddress": "192.168.0.3",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
