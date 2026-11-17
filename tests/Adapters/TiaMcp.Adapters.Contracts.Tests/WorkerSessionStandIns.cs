@@ -25,6 +25,7 @@ namespace Siemens.Engineering {
     }
     public enum TiaPortalMode { WithoutUserInterface, WithUserInterface }
     public sealed class TiaPortal {
+        public NativeHardwareCatalog HardwareCatalog { get; } = new();
         private readonly TiaPortalMode mode;
         private readonly FakeProjects projects = new();
         public Action? EngineeringCall { get; set; }
@@ -35,6 +36,18 @@ namespace Siemens.Engineering {
         public Exception? ExclusiveFailure { get; set; }
         public IDisposable ExclusiveAccess(string text) { EngineeringCall?.Invoke(); ExclusiveCalls++; if (ExclusiveFailure != null) throw ExclusiveFailure;
             return Process.GetCurrentProcess(); }
+    }
+    public sealed class NativeHardwareCatalog
+    {
+        public List<NativeCatalogEntry> Entries { get; } = new();
+        public List<string> Queries { get; } = new();
+        public IEnumerable<NativeCatalogEntry> Find(string filter) { Queries.Add(filter); return Entries; }
+    }
+    public sealed class NativeCatalogEntry
+    {
+        public string TypeIdentifier { get; set; } = "";
+        public string ArticleNumber { get; set; } = "";
+        public string Version { get; set; } = "";
     }
     public sealed partial class Project {
         private FileInfo _path = null!;

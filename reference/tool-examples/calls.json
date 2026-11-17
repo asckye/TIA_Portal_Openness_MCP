@@ -3480,53 +3480,187 @@
         "parameters": {
           "itemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "PLC_1"
             ],
-            "requiresBinding": true
+            "requiresBinding": true,
+            "tools": [
+              "GetDeviceItemTree"
+            ]
           },
           "destinationDevicePath": {
             "exampleValue": [
-              "<exact device name from GetProjectTree>"
+              "PLC_2"
             ],
-            "requiresBinding": true
+            "requiresBinding": true,
+            "tools": [
+              "GetDeviceItemTree"
+            ]
           },
           "destinationItemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "PLC_1"
             ],
-            "requiresBinding": true
+            "requiresBinding": true,
+            "tools": [
+              "GetDeviceItemTree"
+            ]
           },
           "position": {
             "exampleValue": 2
+          },
+          "devicePath": {
+            "exampleValue": [
+              "PLC_1"
+            ],
+            "requiresBinding": true,
+            "tools": [
+              "GetDeviceItemTree"
+            ],
+            "meaning": "Exact station path from GetDeviceItemTree; omit or use [] for subnet actions."
+          },
+          "typeIdentifier": {
+            "exampleValue": "OrderNumber:6ES7 513-1AM03-0AB0/V3.0",
+            "requiresBinding": true,
+            "tools": [
+              "SearchHardwareCatalog"
+            ],
+            "meaning": "For changeType on V18+, copy the exact TypeIdentifier from one SearchHardwareCatalog row, including spaces and version. For createSubnet use an exact subnet type identifier, e.g. System:Subnet.Ethernet or System:Subnet.Profibus; no alias mapping."
+          },
+          "subnetName": {
+            "exampleValue": "PN_IE_1",
+            "requiresBinding": true,
+            "tools": [
+              "GetProjectTopology",
+              "ListIoSystems"
+            ],
+            "meaning": "For deletion copy the exact existing subnet name from topology/IO system readback. For creation choose a free name in Project.Subnets; preview confirms it is free."
+          },
+          "expectedPlanHash": {
+            "exampleValue": "<data.planHash from this same preview>",
+            "requiresBinding": true,
+            "meaning": "Required for all seven actions when dryRun=false; re-preview after changing arguments or project/session binding."
+          },
+          "expectedProjectFile": {
+            "exampleValue": "<absolute projectPath from this preview data.targetIdentity>",
+            "requiresBinding": true,
+            "tools": [
+              "GetSessionState"
+            ],
+            "meaning": "Copy the absolute project file from the same preview targetIdentity; verify the intended bound project."
           }
         },
         "operations": {
           "deleteDevice": {
-            "arguments": {}
+            "argumentsMode": "complete",
+            "arguments": {
+              "devicePath": [
+                "PLC_1"
+              ],
+              "action": "deleteDevice",
+              "dryRun": true
+            }
           },
           "deleteItem": {
+            "argumentsMode": "complete",
             "arguments": {
-              "action": "deleteItem"
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "PLC_1"
+              ],
+              "action": "deleteItem",
+              "dryRun": true
             }
           },
           "moveItem": {
+            "argumentsMode": "complete",
             "arguments": {
-              "action": "moveItem"
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "PLC_1"
+              ],
+              "action": "moveItem",
+              "destinationDevicePath": [
+                "PLC_2"
+              ],
+              "destinationItemPath": [
+                "Rack_0"
+              ],
+              "position": 2,
+              "dryRun": true
             }
           },
           "copyItem": {
+            "argumentsMode": "complete",
             "arguments": {
-              "action": "copyItem"
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "PLC_1"
+              ],
+              "action": "copyItem",
+              "destinationDevicePath": [
+                "PLC_2"
+              ],
+              "destinationItemPath": [
+                "Rack_0"
+              ],
+              "position": 2,
+              "dryRun": true
+            }
+          },
+          "changeType": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "PLC_1"
+              ],
+              "action": "changeType",
+              "typeIdentifier": "OrderNumber:6ES7 513-1AM03-0AB0/V3.0",
+              "dryRun": true
+            }
+          },
+          "createSubnet": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "action": "createSubnet",
+              "typeIdentifier": "System:Subnet.Ethernet",
+              "subnetName": "PN_IE_New",
+              "dryRun": true
+            }
+          },
+          "deleteSubnet": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "action": "deleteSubnet",
+              "subnetName": "PN_IE_1",
+              "dryRun": true
             }
           }
         },
-        "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
+        "validation": "Schema and synthetic port checks cover all eight releases. changeType requires V18+; subnet actions are available on all eight. Bind exact paths, catalog identifiers and subnet names before use. Native execution NOT RUN.",
         "inline": true,
         "resultReading": [
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs."
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
+          "Preview retains current type/catalog target or subnet name availability/connected node interface paths and IO system names in data.evidence, with data.planHash and data.targetIdentity. changeType re-resolves the original item path and verifies TypeIdentifier; a known mismatch or missing path is failed with mayHaveChanged=true. No retry or automatic type undo. createSubnet reads Name/TypeIdentifier/NetType; deleteSubnet requires verifiedAbsent=true. Explicitly SaveProject only after inspecting the result."
         ],
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+. Incompatible change: every ManageHardwareObject execution now requires expectedPlanHash and expectedProjectFile from its matching preview. changeType is refused before native access on V14 SP1-V17. EnsureSubnet is unchanged; Node.DisconnectFromSubnet is outside this scope.",
+        "execution": {
+          "arguments": {
+            "dryRun": false,
+            "expectedPlanHash": "<data.planHash from this same preview>",
+            "expectedProjectFile": "<absolute projectPath from this preview data.targetIdentity>"
+          },
+          "meaning": "Merge into the selected action preview only after reviewing its target and impact. This binding is required for deleteDevice/deleteItem/moveItem/copyItem as well as the three new actions. A real write retains Workbench WRITE approval."
+        }
       },
       "ManageDeviceUserGroup": {
         "arguments": {
@@ -26083,53 +26217,187 @@
         "parameters": {
           "itemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "PLC_1"
             ],
-            "requiresBinding": true
+            "requiresBinding": true,
+            "tools": [
+              "GetDeviceItemTree"
+            ]
           },
           "destinationDevicePath": {
             "exampleValue": [
-              "<exact device name from GetProjectTree>"
+              "PLC_2"
             ],
-            "requiresBinding": true
+            "requiresBinding": true,
+            "tools": [
+              "GetDeviceItemTree"
+            ]
           },
           "destinationItemPath": {
             "exampleValue": [
-              "<exact device item from GetProjectTree>"
+              "PLC_1"
             ],
-            "requiresBinding": true
+            "requiresBinding": true,
+            "tools": [
+              "GetDeviceItemTree"
+            ]
           },
           "position": {
             "exampleValue": 2
+          },
+          "devicePath": {
+            "exampleValue": [
+              "PLC_1"
+            ],
+            "requiresBinding": true,
+            "tools": [
+              "GetDeviceItemTree"
+            ],
+            "meaning": "Exact station path from GetDeviceItemTree; omit or use [] for subnet actions."
+          },
+          "typeIdentifier": {
+            "exampleValue": "OrderNumber:6ES7 513-1AM03-0AB0/V3.0",
+            "requiresBinding": true,
+            "tools": [
+              "SearchHardwareCatalog"
+            ],
+            "meaning": "For changeType on V18+, copy the exact TypeIdentifier from one SearchHardwareCatalog row, including spaces and version. For createSubnet use an exact subnet type identifier, e.g. System:Subnet.Ethernet or System:Subnet.Profibus; no alias mapping."
+          },
+          "subnetName": {
+            "exampleValue": "PN_IE_1",
+            "requiresBinding": true,
+            "tools": [
+              "GetProjectTopology",
+              "ListIoSystems"
+            ],
+            "meaning": "For deletion copy the exact existing subnet name from topology/IO system readback. For creation choose a free name in Project.Subnets; preview confirms it is free."
+          },
+          "expectedPlanHash": {
+            "exampleValue": "<data.planHash from this same preview>",
+            "requiresBinding": true,
+            "meaning": "Required for all seven actions when dryRun=false; re-preview after changing arguments or project/session binding."
+          },
+          "expectedProjectFile": {
+            "exampleValue": "<absolute projectPath from this preview data.targetIdentity>",
+            "requiresBinding": true,
+            "tools": [
+              "GetSessionState"
+            ],
+            "meaning": "Copy the absolute project file from the same preview targetIdentity; verify the intended bound project."
           }
         },
         "operations": {
           "deleteDevice": {
-            "arguments": {}
+            "argumentsMode": "complete",
+            "arguments": {
+              "devicePath": [
+                "PLC_1"
+              ],
+              "action": "deleteDevice",
+              "dryRun": true
+            }
           },
           "deleteItem": {
+            "argumentsMode": "complete",
             "arguments": {
-              "action": "deleteItem"
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "PLC_1"
+              ],
+              "action": "deleteItem",
+              "dryRun": true
             }
           },
           "moveItem": {
+            "argumentsMode": "complete",
             "arguments": {
-              "action": "moveItem"
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "PLC_1"
+              ],
+              "action": "moveItem",
+              "destinationDevicePath": [
+                "PLC_2"
+              ],
+              "destinationItemPath": [
+                "Rack_0"
+              ],
+              "position": 2,
+              "dryRun": true
             }
           },
           "copyItem": {
+            "argumentsMode": "complete",
             "arguments": {
-              "action": "copyItem"
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "PLC_1"
+              ],
+              "action": "copyItem",
+              "destinationDevicePath": [
+                "PLC_2"
+              ],
+              "destinationItemPath": [
+                "Rack_0"
+              ],
+              "position": 2,
+              "dryRun": true
+            }
+          },
+          "changeType": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "devicePath": [
+                "PLC_1"
+              ],
+              "itemPath": [
+                "PLC_1"
+              ],
+              "action": "changeType",
+              "typeIdentifier": "OrderNumber:6ES7 513-1AM03-0AB0/V3.0",
+              "dryRun": true
+            }
+          },
+          "createSubnet": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "action": "createSubnet",
+              "typeIdentifier": "System:Subnet.Ethernet",
+              "subnetName": "PN_IE_New",
+              "dryRun": true
+            }
+          },
+          "deleteSubnet": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "action": "deleteSubnet",
+              "subnetName": "PN_IE_1",
+              "dryRun": true
             }
           }
         },
-        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "validation": "Schema and synthetic port checks cover all eight releases. changeType requires V18+; subnet actions are available on all eight. Bind exact paths, catalog identifiers and subnet names before use. Native execution NOT RUN.",
         "inline": true,
         "resultReading": [
           "Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order.",
-          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs."
+          "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
+          "Preview retains current type/catalog target or subnet name availability/connected node interface paths and IO system names in data.evidence, with data.planHash and data.targetIdentity. changeType re-resolves the original item path and verifies TypeIdentifier; a known mismatch or missing path is failed with mayHaveChanged=true. No retry or automatic type undo. createSubnet reads Name/TypeIdentifier/NetType; deleteSubnet requires verifiedAbsent=true. Explicitly SaveProject only after inspecting the result."
         ],
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Incompatible change: every ManageHardwareObject execution now requires expectedPlanHash and expectedProjectFile from its matching preview. changeType is refused before native access on V14 SP1-V17. EnsureSubnet is unchanged; Node.DisconnectFromSubnet is outside this scope.",
+        "execution": {
+          "arguments": {
+            "dryRun": false,
+            "expectedPlanHash": "<data.planHash from this same preview>",
+            "expectedProjectFile": "<absolute projectPath from this preview data.targetIdentity>"
+          },
+          "meaning": "Merge into the selected action preview only after reviewing its target and impact. This binding is required for deleteDevice/deleteItem/moveItem/copyItem as well as the three new actions. A real write retains Workbench WRITE approval."
+        }
       },
       "ManageHardwareUtilities": {
         "arguments": {

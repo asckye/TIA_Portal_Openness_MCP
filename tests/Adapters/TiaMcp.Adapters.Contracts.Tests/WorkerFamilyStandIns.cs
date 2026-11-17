@@ -39,8 +39,19 @@ namespace Siemens.Engineering.SW.Blocks
         public void Delete() => Parent!.Groups.Remove(this);
     }
 }
-namespace Siemens.Engineering.HW { public sealed class DeviceItem : HardwareObject { public List<Address> Addresses { get; } = new();
-    public ChannelComposition Channels { get; } = new(); } }
+namespace Siemens.Engineering.HW
+{
+    public sealed class DeviceItem : HardwareObject
+    {
+        public List<Address> Addresses { get; } = new();
+        public ChannelComposition Channels { get; } = new();
+        internal int ChangeTypeCalls;
+        internal Action<string>? ChangingType;
+        internal Func<string, object>? AttributeReader;
+        public void ChangeType(string typeIdentifier) { ChangeTypeCalls++; ChangingType?.Invoke(typeIdentifier); }
+        public override object GetAttribute(string name) => AttributeReader?.Invoke(name) ?? base.GetAttribute(name);
+    }
+}
 namespace Siemens.Engineering.Online
 {
     public enum OnlineState { Offline, Online, Unknown }

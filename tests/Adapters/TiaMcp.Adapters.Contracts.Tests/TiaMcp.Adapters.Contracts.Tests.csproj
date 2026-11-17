@@ -5,6 +5,7 @@
   <PropertyGroup>
     <!-- Exercise both current-release callback registrations against managed Siemens stand-ins. -->
     <DefineConstants>$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLC_HARDWARE_CHANGE_TYPE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />

@@ -10,6 +10,10 @@
 
 ## 未发布改动的验收边界
 
+| 改动 | 真机验收 |
+|---|---|
+| API-P1c 型号替换与项目子网（beta.6） | **NOT RUN**。分别用 V21、V18 项目副本，更换 CPU 和信号模块：同系列较新固件及不同订货号各一次；核对原路径重新解析后的 TypeIdentifier、地址/模块/软件影响及随后编译结果。无锚点创建 Ethernet（`System:Subnet.Ethernet`）和 PROFIBUS（`System:Subnet.Profibus`）子网，回读 Name/TypeIdentifier/NetType；删除含两个已连接节点及 IO system 的子网，预览核对节点数、接口路径和 IO system 名称，执行后确认子网不存在并重新读取节点状态。V17 的 changeType 在原生访问前返回 UNSUPPORTED_CAPABILITY。七个动作均核对预览、计划哈希、目标项目与 WRITE 审批，拒绝缺失/过期计划，保留调用顺序及 worker 所属线程；型号替换失败不重试、不自动撤销。最后显式保存并记录结果。 |
+
 VMFIX-3 Round 2：**NOT RUN**。V14 SP1、V15.1、V16、V17、V18、V19、V20 的 ImportDeviceAml 保留原有 ExclusiveAccess 路径；需分别在工程副本上确认导入、失败后的工程状态及设备计数。只有 V21 按已记录的 reset 13 证据在 ExclusiveAccess 外导入，仍需复测。库文档 Override、带目标环境及非 None 选项的失败保持未知结果，不能只凭类型/版本数量未变判为未写入。
 
 VMFIX-3（2026-11-03）：**NOT RUN**。需在 V21 工程副本上复验 ExclusiveAccess 占用拒绝、通道属性未改变读回、三类密码策略拒绝、无 ExclusiveAccess 的 AML 导入、库类型/版本导入失败详情和数量读回、文件夹中的 Unified 屏幕及无名部件创建、文档导入失败后的声明名称查找、PROFINET 连接、报警文本导出、HMI 输入拒绝、未知写入的会话锁存、worker 执行证据、标签注释、强制表列表及下载预览。库导入仍保留 ExclusiveAccess；其他导入族的 ExclusiveAccess 兼容性留待 VM 回归。主题负载和标签绑定功能修复由 VMFIX-5b 负责。本任务仅使用离线与本机合成夹具，没有连接 TIA Portal、PLC 或 VM。

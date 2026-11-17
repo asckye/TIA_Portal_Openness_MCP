@@ -11,6 +11,8 @@ namespace TiaMcp.Adapters.Contracts
         {
             int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
             string name = operation.Substring(operation.LastIndexOf('.') + 1);
+            if ((name == "ManageHardwareObject" || name == "HardwareManageHardwareObject") && action == "changeType" && version < 18)
+                return "DeviceItem.ChangeType requires V18.";
             if ((name == "ListCommunicationConnections" || name == "ManageCommunicationConnection"
                 || name == "HardwareReadCommunicationConnections" || name == "HardwareManageCommunicationConnection") && version < 21)
                 return "CommunicationConnections requires V21.";

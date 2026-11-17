@@ -42,7 +42,7 @@ namespace Siemens.Engineering
         private List<HW.Device> ReadDevices() => DeviceReadFailure == null ? devices : throw DeviceReadFailure;
         public List<HW.DeviceUserGroup> DeviceGroups { get; } = new();
         public HW.DeviceGroup UngroupedDevicesGroup { get; } = new();
-        public List<HW.Subnet> Subnets { get; } = new();
+        public HW.SubnetComposition Subnets { get; } = new();
         public HW.Utilities.HardwareUtilityComposition HwUtilities { get; } = new();
         public Dictionary<Type, object> Services { get; } = new();
         public T? GetService<T>() where T : class, IEngineeringService => Services.TryGetValue(typeof(T), out var value) ? (T)value : null;
@@ -50,7 +50,7 @@ namespace Siemens.Engineering
 }
 namespace Siemens.Engineering.HW
 {
-    public class HardwareObject : IEngineeringObject, IEngineeringServiceProvider
+    public class HardwareObject : IEngineeringObject, IEngineeringInstance, IEngineeringServiceProvider
     {
         public List<DeviceItem> DeviceItems { get; } = new();
         public List<DeviceItem> Items { get; } = new();
@@ -109,7 +109,28 @@ namespace Siemens.Engineering.HW
     }
     public class DeviceGroup : HardwareObject { public List<Device> Devices { get; } = new(); }
     public sealed class DeviceUserGroup : DeviceGroup { public List<DeviceUserGroup> Groups { get; } = new(); }
-    public sealed class Subnet : HardwareObject { public List<IoSystem> IoSystems { get; } = new(); }
+    public sealed class Subnet : HardwareObject
+    {
+        public string TypeIdentifier { get; set; } = "System:Subnet.Ethernet";
+        public string NetType { get; set; } = "Ethernet";
+        public List<Node> Nodes { get; } = new();
+        public List<IoSystem> IoSystems { get; } = new();
+    }
+    public sealed class SubnetComposition : List<Subnet>
+    {
+        public int CreateCalls { get; private set; }
+        public Action<Subnet>? Created { get; set; }
+        public Subnet Create(string typeIdentifier, string name)
+        {
+            CreateCalls++;
+            var subnet = new Subnet { Name = name, TypeIdentifier = typeIdentifier,
+                NetType = typeIdentifier == "System:Subnet.Profibus" ? "Profibus" : "Ethernet" };
+            subnet.Deleting = () => Remove(subnet);
+            Add(subnet);
+            Created?.Invoke(subnet);
+            return subnet;
+        }
+    }
     public sealed class IoSystem : HardwareObject
     {
         public int Number { get; set; }

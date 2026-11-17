@@ -67,12 +67,20 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!available) throw new InputFailureException(new Error("No project is bound.", new ProjectNotBoundDetails()));
         }
 
-        internal static void Management(string action, string[] itemPath, string[] destinationDevicePath, int position)
+        internal static void Management(string action, string[] devicePath, string[] itemPath, string[] destinationDevicePath, int position,
+            string typeIdentifier, string subnetName)
         {
-            if (!new[] { "deleteDevice", "deleteItem", "moveItem", "copyItem" }.Contains(action))
+            if (!new[] { "deleteDevice", "deleteItem", "moveItem", "copyItem", "changeType", "createSubnet", "deleteSubnet" }.Contains(action))
                 throw new InputFailureException(McpServer.InvalidInput("action"));
-            if ((action == "deleteDevice") != (itemPath.Length == 0))
+            bool subnet = action == "createSubnet" || action == "deleteSubnet";
+            if (subnet != (devicePath.Length == 0))
+                throw new InputFailureException(McpServer.InvalidInput("devicePath"));
+            if ((action == "deleteDevice" || subnet) != (itemPath.Length == 0))
                 throw new InputFailureException(McpServer.InvalidInput("itemPath"));
+            if ((action == "changeType" || action == "createSubnet") && string.IsNullOrWhiteSpace(typeIdentifier))
+                throw new InputFailureException(McpServer.InvalidInput("typeIdentifier"));
+            if (subnet && string.IsNullOrWhiteSpace(subnetName))
+                throw new InputFailureException(McpServer.InvalidInput("subnetName"));
             if ((action == "moveItem" || action == "copyItem") && (destinationDevicePath.Length == 0 || position < 0))
                 throw new InputFailureException(McpServer.InvalidInput("destinationDevicePath/position"));
         }

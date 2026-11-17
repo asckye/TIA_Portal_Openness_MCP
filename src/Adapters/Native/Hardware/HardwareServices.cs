@@ -14,6 +14,7 @@ using Siemens.Engineering.HW.Systemdiagnostics.Settings;
 #endif
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Engineering;
 using static TiaMcp.Adapters.Hardware.HardwareAddressPrimitives;
 
 namespace TiaMcp.Adapters
@@ -556,13 +557,59 @@ namespace TiaMcp.Adapters
 #endif
 
         public HardwareAddressingReply HardwareManageHardwareObject(string[] devicePathJson, string action, string[] itemPathJson = null!,
-            string[] destinationDevicePathJson = null!, string[] destinationItemPathJson = null!, int position = -1, bool dryRun = true)
-            => RunHardwareAddressStep("ManageHardwareObject", meta => {
-                if (!new[] { "deleteDevice", "deleteItem", "moveItem", "copyItem" }.Contains(action))
-                    throw new ArgumentException("action must be one of: deleteDevice/deleteItem/moveItem/copyItem (case-sensitive).");
+            string[] destinationDevicePathJson = null!, string[] destinationItemPathJson = null!, int position = -1, bool dryRun = true,
+            string typeIdentifier = "", string subnetName = "")
+        {
+            var reply = RunHardwareAddressStep("ManageHardwareObject", meta => {
                 using var access = dryRun ? null : HardwareEditAccess();
+                meta["action"] = action; meta["dryRun"] = dryRun;
+                if (action == "createSubnet" || action == "deleteSubnet")
+                {
+                    meta["subnetName"] = subnetName;
+                    if (action == "createSubnet")
+                    {
+                        meta["typeIdentifier"] = typeIdentifier;
+                        if (HardwareFindSubnet(subnetName) != null)
+                            throw new AdapterPreconditionException("Subnet already exists; choose a free subnetName and preview again.", "subnetName", false);
+                        meta["nameAvailable"] = true;
+                        if (!dryRun)
+                        {
+                            EngineeringWriteJournal.Creating(() => HardwareFindSubnet(subnetName),
+                                "Project.Subnets/" + ObjectPathEncoding.EncodeSegment(subnetName));
+                            meta["mayHaveChanged"] = true;
+                            project!.Subnets.Create(typeIdentifier: typeIdentifier, name: subnetName);
+                            var created = HardwareFindSubnet(subnetName)
+                                ?? throw new InvalidOperationException("Created subnet was not found in Project.Subnets.");
+                            meta["after"] = HardwareManagementSubnetEvidence(created);
+                            if (!string.Equals(created.Name, subnetName, StringComparison.Ordinal)
+                                || !string.Equals(created.TypeIdentifier, typeIdentifier, StringComparison.Ordinal))
+                                throw new InvalidOperationException("Created subnet name/type readback differs.");
+                            meta["verified"] = true;
+                        }
+                    }
+                    else
+                    {
+                        var subnet = HardwareExactSubnet(subnetName);
+                        var nodes = HardwareGroupOperations.Items(subnet.Nodes).Cast<Node>().Select(node => new Dictionary<string, object?> {
+                            ["name"] = node.Name, ["interfacePath"] = HardwareOwnerPath(node) }).ToArray();
+                        meta["source"] = HardwareManagementSubnetEvidence(subnet);
+                        meta["connectedNodeCount"] = nodes.Length; meta["connectedNodes"] = nodes;
+                        meta["ioSystems"] = HardwareGroupOperations.Items(subnet.IoSystems).Cast<IoSystem>().Select(system => system.Name).ToArray();
+                        meta["dependencyImpact"] = "Deleting this subnet affects its connected nodes and IO systems; inspect them afterwards.";
+                        if (!dryRun)
+                        {
+                            EngineeringWriteJournal.Unrestored("Project.Subnets/" + ObjectPathEncoding.EncodeSegment(subnetName)
+                                + ": Subnet.Delete has no verified public inverse");
+                            meta["mayHaveChanged"] = true;
+                            subnet.Delete();
+                            if (HardwareFindSubnet(subnetName) != null) throw new InvalidOperationException("Subnet remains after Delete.");
+                            meta["verifiedAbsent"] = true;
+                        }
+                    }
+                    return dryRun ? "Subnet preview; no modification." : "Subnet operation read back; project not saved.";
+                }
                 var source = ExactHardware(devicePathJson, itemPathJson);
-                meta["source"] = HardwareScalarEvidence.Read(source); meta["action"] = action; meta["dryRun"] = dryRun;
+                meta["source"] = HardwareScalarEvidence.Read(source);
                 meta["dependencyImpact"] =
                     "Hardware descendants and dependent software/configuration can be affected. No online action or download is performed.";
                 if (action == "deleteDevice")
@@ -595,6 +642,46 @@ namespace TiaMcp.Adapters
                                 throw new InvalidOperationException("Item remains after Delete."); meta["verifiedAbsent"] = true;
                         }
                     }
+                    else if (action == "changeType")
+                    {
+#if PLC_HARDWARE_CHANGE_TYPE
+                        var catalog = portal!.HardwareCatalog.Find(DeviceCreationRules.CatalogFilter(typeIdentifier))
+                            .Where(entry => string.Equals(entry.TypeIdentifier, typeIdentifier, StringComparison.Ordinal)).ToArray();
+                        if (catalog.Length != 1)
+                            throw new AdapterPreconditionException("typeIdentifier must select exactly one HardwareCatalog entry; copy it from " +
+                                "SearchHardwareCatalog without changing its spaces or version.", "typeIdentifier", false);
+                        meta["currentTypeIdentifier"] = ((IEngineeringObject)item).GetAttribute("TypeIdentifier");
+                        meta["orderNumber"] = ((IEngineeringObject)item).GetAttribute("OrderNumber");
+                        meta["targetTypeIdentifier"] = typeIdentifier;
+                        meta["catalogEntry"] = HardwareScalarEvidence.Read(catalog[0]);
+                        meta["dependencyImpact"] = "Changing type can change modules, addresses and dependent software/configuration. " +
+                            "No automatic undo, save, download or online action is performed.";
+                        if (!dryRun)
+                        {
+                            EngineeringWriteJournal.Unrestored("DeviceItem.ChangeType: " + string.Join("/",
+                                HardwareOwnerPath(item).Select(ObjectPathEncoding.EncodeSegment)));
+                            meta["mayHaveChanged"] = true;
+                            item.ChangeType(typeIdentifier);
+                            try
+                            {
+                                var fresh = ExactHardware(devicePathJson, itemPathJson);
+                                meta["after"] = HardwareScalarEvidence.Read(fresh);
+                                var actual = ((IEngineeringObject)fresh).GetAttribute("TypeIdentifier");
+                                meta["readbackTypeIdentifier"] = actual;
+                                meta["verified"] = string.Equals(actual as string, typeIdentifier, StringComparison.Ordinal);
+                                meta["postStateKnown"] = true;
+                            }
+                            catch (HardwareAddressingException error) when (error.Status == "NotFound")
+                            {
+                                meta["after"] = new Dictionary<string, object?> { ["pathResolvable"] = false };
+                                meta["verified"] = false; meta["postStateKnown"] = true;
+                                meta["readbackError"] = error.Message;
+                            }
+                        }
+#else
+                        throw new NotSupportedException("DeviceItem.ChangeType requires V18.");
+#endif
+                    }
                     else
                     {
                         if (position < 0) throw new ArgumentException("A nonnegative destination slot position is required.");
@@ -612,5 +699,17 @@ namespace TiaMcp.Adapters
                 }
                 return dryRun ? "Hardware preview; no modification." : "Hardware operation completed; project not saved or downloaded.";
             });
+            // A completed ChangeType with a readable mismatch/absent path is a known failed verification, not an attempted rollback.
+            if (reply.Meta.TryGetValue("verified", out var verified) && verified is false
+                && reply.Meta.TryGetValue("postStateKnown", out var known) && known is true)
+            {
+                LegacyResponseMetadata.Complete(reply.Meta, false);
+                reply.Message = "ChangeType returned, but the original path did not read back with the requested TypeIdentifier. Inspect the evidence.";
+            }
+            return reply;
+        }
+
+        private static Dictionary<string, object?> HardwareManagementSubnetEvidence(Subnet subnet)
+            => new Dictionary<string, object?> { ["name"] = subnet.Name, ["typeIdentifier"] = subnet.TypeIdentifier, ["netType"] = subnet.NetType.ToString() };
     }
 }

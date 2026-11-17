@@ -14,6 +14,99 @@ using Xunit;
 public sealed class PortedPortalAdmissionTests
 {
     [Theory]
+    [InlineData("changeType")]
+    [InlineData("createSubnet")]
+    [InlineData("deleteSubnet")]
+    public async Task Hardware_management_new_actions_map_through_the_registered_port(string action)
+    {
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(contextWorker, "21");
+        using var worker = new ManagementWorker();
+        using var lifetime = new Host.ImportStagingHostLifetime();
+        var tools = LegacyHostToolRegistry.Create(worker, "21", false);
+        var catalog = new Catalog("21");
+        var invoker = new Engine.WorkerToolInvoker(catalog, contextWorker, lifetime, tools);
+        using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(contextWorker) {
+            Catalog = catalog, Invoker = invoker });
+        var tool = tools.Single(t => t.ProtocolTool.Name == "ManageHardwareObject");
+        var args = new JsonObject { ["action"] = action, ["dryRun"] = true,
+            ["typeIdentifier"] = "System:Subnet.Ethernet", ["subnetName"] = "PN_IE_1" };
+        if (action == "changeType")
+        {
+            args["devicePath"] = new JsonArray("PLC_1"); args["itemPath"] = new JsonArray("PLC_1");
+            args["typeIdentifier"] = "OrderNumber:6ES7 513-1AM03-0AB0/V3.0";
+        }
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+            Params = new() { Name = "ManageHardwareObject",
+                Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
+        var body = (await tool.InvokeAsync(request)).StructuredContent!;
+        Assert.True((bool?)body["ok"], body.ToJsonString());
+        Assert.Matches("^[0-9a-f]{64}$", (string)body["data"]!["planHash"]!);
+        var mapped = Assert.Single(worker.ManagementCalls);
+        Assert.Equal(action, (string?)mapped["action"]);
+        Assert.Equal((string?)args["typeIdentifier"], (string?)mapped["typeIdentifier"]);
+        Assert.Equal("PN_IE_1", (string?)mapped["subnetName"]);
+        Assert.True((bool?)mapped["dryRun"]);
+        Assert.Equal(action == "changeType" ? 1 : 0, mapped["devicePathJson"]!.AsArray().Count);
+    }
+
+    [Theory]
+    [InlineData("deleteDevice")]
+    [InlineData("deleteItem")]
+    [InlineData("moveItem")]
+    [InlineData("copyItem")]
+    [InlineData("changeType")]
+    [InlineData("createSubnet")]
+    [InlineData("deleteSubnet")]
+    public async Task Every_hardware_management_execution_requires_both_plan_fields_before_dispatch(string action)
+    {
+        using var approval = new DisabledApproval();
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(contextWorker, "21");
+        using var worker = new ManagementWorker();
+        using var lifetime = new Host.ImportStagingHostLifetime();
+        var tools = LegacyHostToolRegistry.Create(worker, "21", false);
+        var catalog = new Catalog("21");
+        var invoker = new Engine.WorkerToolInvoker(catalog, contextWorker, lifetime, tools);
+        using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(contextWorker) {
+            Catalog = catalog, Invoker = invoker });
+        var tool = tools.Single(t => t.ProtocolTool.Name == "ManageHardwareObject");
+        foreach (bool projectPresent in new[] { false, true })
+        {
+            var args = new JsonObject { ["action"] = action, ["dryRun"] = false, ["devicePath"] = new JsonArray("PLC_1"),
+                ["itemPath"] = new JsonArray("PLC_1"), ["destinationDevicePath"] = new JsonArray("PLC_2"), ["position"] = 2,
+                ["typeIdentifier"] = "OrderNumber:6ES7 513-1AM03-0AB0/V3.0", ["subnetName"] = "PN_IE_1" };
+            if (action == "deleteDevice") args["itemPath"] = new JsonArray();
+            if (action is "createSubnet" or "deleteSubnet") { args["devicePath"] = new JsonArray(); args["itemPath"] = new JsonArray(); }
+            if (projectPresent) args["expectedProjectFile"] = "C:/Projects/Fixture.ap21";
+            else args["expectedPlanHash"] = new string('a', 64);
+            var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                Params = new() { Name = "ManageHardwareObject",
+                    Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
+            var body = (await tool.InvokeAsync(request)).StructuredContent!;
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+            Assert.Equal(projectPresent ? "/expectedPlanHash" : "/expectedProjectFile", (string?)body["error"]?["details"]?["parameter"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Assert.Empty(worker.ManagementCalls);
+        }
+    }
+
+    private sealed class ManagementWorker : IFoundationWorker
+    {
+        internal readonly List<JsonObject> ManagementCalls = new();
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject {
+                ["ProcessId"] = 42, ["IsAttached"] = true, ["ProjectFile"] = "C:/Projects/Fixture.ap21" });
+            Assert.Equal("hardware-devices.HardwareManageHardwareObject", operation);
+            ManagementCalls.Add((JsonObject)arguments.DeepClone());
+            return Task.FromResult<JsonNode?>(new JsonObject { ["Message"] = "Native hardware preview", ["Meta"] = new JsonObject {
+                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["dryRun"] = true } });
+        }
+        public void Dispose() { }
+    }
+
+    [Theory]
     [InlineData("TO_PositioningAxis", "5.0", false)]
     [InlineData("TO_SpeedAxis", "5.0", false)]
     [InlineData("PID_Compact", "2.3", false)]
@@ -451,7 +544,7 @@ public sealed class PortedPortalAdmissionTests
         "ManagePlcBlockProtection" => "{\"action\":\"read\"}",
         "DeleteHmiTag" => "{\"tagTablePath\":\"/Table\"}",
         "ManagePlcExternalSources" => "{\"action\":\"list\"}",
-        "ManageHardwareObject" => "{\"action\":\"deleteDevice\"}",
+        "ManageHardwareObject" => "{\"action\":\"deleteDevice\",\"devicePath\":[\"Fixture\"]}",
         "ManageDeviceServiceObjects" => "{\"family\":\"certificateServices\"}",
         "ExchangeSystemDiagnosticsSettings" => "{\"action\":\"export\"}",
         "ManageIoSystem" or "ManageNetworkDomain" or "ManageTransferArea" => "{\"action\":\"create\"}",

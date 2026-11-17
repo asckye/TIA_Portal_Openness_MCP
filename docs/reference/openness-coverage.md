@@ -49,6 +49,13 @@ The previous V21 lexical audit (2.7.42) is preserved in [Git history](https://gi
 
 ## Functional review
 
+`ManageHardwareObject` implements `DeviceItem.ChangeType(string)` on V18–V21 and
+`SubnetComposition.Create(typeIdentifier, name)` / `Subnet.Delete()` on all eight releases.
+Each action has a native preview, project/plan binding and readback; the existing delete/move/copy
+actions now require the same binding. Subnet creation needs no anchor node. `EnsureSubnet`
+is unchanged, and `Node.DisconnectFromSubnet` remains outside this addition.
+Native acceptance is **NOT RUN**; see the [unreleased acceptance boundary](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md#未发布改动的验收边界).
+
 Reviewed on 2026-10-03 against the eight supplied SDK XML sets, current source routes
 and the advertised catalogs. The [functional matrix JSON](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json)
 contains exact identifiers, input hashes, source files, tool names and follow-up work

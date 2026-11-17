@@ -28,14 +28,16 @@ namespace TiaMcpServer.Siemens.Services
             return new ResponseMessage { Message = message.GetValue<string>(), Meta = (JsonObject)meta.DeepClone() };
         }
         public ResponseMessage ManageHardwareObject(string devicePathJson, string action, string itemPathJson = "[]",
-            string destinationDevicePathJson = "[]", string destinationItemPathJson = "[]", int position = -1, bool dryRun = true)
+            string destinationDevicePathJson = "[]", string destinationItemPathJson = "[]", int position = -1, bool dryRun = true,
+            string typeIdentifier = "", string subnetName = "")
             =>
                 Step(Invoke("hardware-devices.HardwareManageHardwareObject", new JsonObject {
                         ["devicePathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(devicePathJson)), ["action"] = JsonSerializer
                             .SerializeToNode(action), ["itemPathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(itemPathJson)),
                             ["destinationDevicePathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(destinationDevicePathJson)),
                             ["destinationItemPathJson"] = JsonSerializer.SerializeToNode(V4Json.Deserialize<string[]>(destinationItemPathJson)), ["position"] =
-                            JsonSerializer.SerializeToNode(position), ["dryRun"] = JsonSerializer.SerializeToNode(dryRun)
+                            JsonSerializer.SerializeToNode(position), ["dryRun"] = JsonSerializer.SerializeToNode(dryRun),
+                        ["typeIdentifier"] = typeIdentifier, ["subnetName"] = subnetName
                     }, !dryRun && action != "read"));
     }
 }

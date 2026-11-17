@@ -265,7 +265,8 @@ namespace TiaMcp.Adapters
         private static bool HardwareTryCoerceAttributeValue(string text, object? old, Siemens.Engineering.EngineeringAttributeInfo info,
             out object value, out string problem) { value = int.Parse(text); problem = ""; return true; }
         private object HardwareBuildDeviceItemNetworkReadbackJson(string path) => new Dictionary<string, object?>();
-        private Siemens.Engineering.HW.Subnet? HardwareFindSubnet(string name) => RollbackSubnets.SingleOrDefault(s => s.Name == name);
+        private Siemens.Engineering.HW.Subnet? HardwareFindSubnet(string name)
+            => project?.Subnets.SingleOrDefault(s => s.Name == name) ?? RollbackSubnets.SingleOrDefault(s => s.Name == name);
         private object HardwareBuildSubnetReadbackJson(string name) => new Dictionary<string, object?> { ["name"] = name };
         private string HardwareExceptionDetail(Exception error) => error.ToString();
         private sealed class NetworkNodeInfo { public object? Node; }

@@ -128,6 +128,9 @@ public sealed class HardwareFamilyAdmissionTests
                 ("ExchangeSystemDiagnosticsSettings", "export", "", -1, false, 17),
                 ("CreateHardwareCatalogDevice", "", "", -1, false, 18),
                 ("CreateGsdDevice", "", "", -1, false, 18),
+                ("ManageHardwareObject", "changeType", "", -1, false, 18),
+                ("ManageHardwareObject", "createSubnet", "", -1, false, 14),
+                ("ManageHardwareObject", "deleteSubnet", "", -1, false, 14),
                 ("ListTransferAreas", "", "", -1, false, 15),
                 ("ListNetworkDomains", "", "", -1, false, 16),
                 ("ManageTransferArea", "create", "", 1, false, 16),
@@ -163,6 +166,10 @@ public sealed class HardwareFamilyAdmissionTests
     }
 
     [Theory]
+    [InlineData("14sp1", "ManageHardwareObject", "{\"action\":\"changeType\",\"devicePath\":[\"PLC\"],\"itemPath\":[\"CPU\"],\"typeIdentifier\":\"Exact\"}")]
+    [InlineData("15.1", "ManageHardwareObject", "{\"action\":\"changeType\",\"devicePath\":[\"PLC\"],\"itemPath\":[\"CPU\"],\"typeIdentifier\":\"Exact\"}")]
+    [InlineData("16", "ManageHardwareObject", "{\"action\":\"changeType\",\"devicePath\":[\"PLC\"],\"itemPath\":[\"CPU\"],\"typeIdentifier\":\"Exact\"}")]
+    [InlineData("17", "ManageHardwareObject", "{\"action\":\"changeType\",\"devicePath\":[\"PLC\"],\"itemPath\":[\"CPU\"],\"typeIdentifier\":\"Exact\"}")]
     [InlineData("14sp1", "ManageHardwareUtilities", "{\"action\":\"normalizeTypeIdentifier\",\"typeIdentifier\":\"Fixture\"}")]
     [InlineData("15.1", "ManageTransferArea", "{\"devicePath\":[\"PLC\"],\"itemPath\":[],\"action\":\"create\",\"positionNumber\":1}")]
     [InlineData("15.1", "ListTransferAreas", "{\"devicePath\":[\"PLC\"],\"itemPath\":[],\"extendedPositionNumber\":1}")]
