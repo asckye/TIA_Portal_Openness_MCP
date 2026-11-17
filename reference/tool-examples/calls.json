@@ -319,7 +319,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -376,7 +376,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -872,7 +872,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -951,7 +951,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1036,7 +1036,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1116,7 +1116,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1182,7 +1182,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1252,7 +1252,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1327,7 +1327,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1409,7 +1409,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1440,7 +1440,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1474,7 +1474,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1502,7 +1502,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1531,7 +1531,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1561,7 +1561,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1625,7 +1625,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1653,7 +1653,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1711,7 +1711,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1791,7 +1791,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1822,7 +1822,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1860,7 +1860,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -1947,7 +1947,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -2048,7 +2048,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -2171,7 +2171,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -2254,7 +2254,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -19469,7 +19469,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -19526,7 +19526,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -21204,7 +21204,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -21283,7 +21283,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -21386,7 +21386,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -21466,7 +21466,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -21541,7 +21541,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -21626,7 +21626,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -21759,7 +21759,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -22350,7 +22350,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -22379,7 +22379,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -22458,7 +22458,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -22554,7 +22554,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -22582,7 +22582,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -22640,7 +22640,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -23061,7 +23061,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -23168,7 +23168,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -23339,7 +23339,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -23462,7 +23462,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -23582,7 +23582,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -23919,7 +23919,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -23961,7 +23961,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -23991,7 +23991,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -24024,7 +24024,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
@@ -34064,7 +34064,7 @@
         },
         "parameters": {
           "softwarePath": {
-            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1, or device-groups/+S1/devices/ET 200SP station_1/+S1-K1 for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+            "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
