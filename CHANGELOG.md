@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Changed
+- Tool descriptions now state per-release availability: snapshot read/export on V15.1–V21 and value actions only on V21; compilation simulation flag from V16 and virtual-PLC flag from V19. No behaviour change.
 - PLC and HMI object paths now display Chinese, spaces and other names readably, escaping only path separators, percent signs and control characters. Previously fully encoded paths remain accepted as input. Plan and inventory hashes change for affected names; previews created before this change are refused with a hash mismatch and must be regenerated.
 
 ## [4.0.0-beta.5] - 2026-11-16

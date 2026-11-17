@@ -36,7 +36,7 @@ internal sealed partial class OnlineDownloadAdapter
 #if ONLINE_DOWNLOAD
         private static object RequireEngineeringService(object owner, string typeName)
         {
-            // Type lookup by name so a member absent from V20 compiles on both targets and degrades to NotSupported.
+            // Type lookup by name so a member absent before V21 compiles on all targets and degrades to NotSupported.
             var type = typeof(DataBlock).Assembly.GetType(typeName)
                 ?? throw new NotSupportedException("Native service type unavailable in this Openness version: " + typeName);
             if (owner is not IEngineeringServiceProvider) throw new NotSupportedException("Selected object is not a service provider.");

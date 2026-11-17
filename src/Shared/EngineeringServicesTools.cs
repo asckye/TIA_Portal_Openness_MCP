@@ -112,12 +112,16 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name="ManageProjectCompilationSettings"),
                 Description("[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project " +
-                "properties'): read or update properties {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). " +
-                "V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / " +
+                "properties'): read or update the booleans IsSimulationDuringBlockCompilationEnabled (V16 and later) and " +
+                "IsVirtualPlcDuringBlockCompilationEnabled (V19 and later; refused before). V16–V20 use the project properties; V21 removed them and uses " +
+                "the project's PlcSimulationSettingsProvider / " +
                 "VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. Current native policy; V4 safety behavior is " +
                 "not yet accepted.")]
-        public CallToolResult ManageProjectCompilationSettingsV4([Description("read | update. ")] string action="read", AttributeMap<Scalar> properties = null!,
-                bool dryRun=true)
+        public CallToolResult ManageProjectCompilationSettingsV4(
+            [Description("action: read | update.")] string action="read",
+            [Description("properties: map of setting name to boolean, used by update. Keys: IsSimulationDuringBlockCompilationEnabled (V16+) and " +
+                "IsVirtualPlcDuringBlockCompilationEnabled (V19+).")] AttributeMap<Scalar> properties = null!,
+            bool dryRun=true)
             => EngineeringToolContract
                 .Run("ManageProjectCompilationSettings", !dryRun && action != "read" && action != "list", () =>
                     ManageProjectCompilationSettings(action, EngineeringToolContract.Json(properties), dryRun));

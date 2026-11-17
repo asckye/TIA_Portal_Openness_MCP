@@ -185,7 +185,8 @@ namespace TiaMcp.Adapters
                 meta["action"] = action; meta["dryRun"] = dryRun;
 #if ENGINEERING_COMPILATION_PROPERTIES
                 meta["access"] =
-                    "Project.IsSimulationDuringBlockCompilationEnabled / IsVirtualPlcDuringBlockCompilationEnabled (V20 properties; V21 replaced them by " +
+                    "Project.IsSimulationDuringBlockCompilationEnabled / IsVirtualPlcDuringBlockCompilationEnabled (V16–V20 project properties; " +
+                    "virtual-PLC flag from V19; V21 replaced them by " +
                     "service providers)";
                 Dictionary<string, object?> State() => new Dictionary<string, object?> {
                     ["IsSimulationDuringBlockCompilationEnabled"] = project.IsSimulationDuringBlockCompilationEnabled

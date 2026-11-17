@@ -69,6 +69,17 @@ public sealed class OnlinePortTests
         => Assert.Equal(refused, OnlineCapabilities.Unsupported(release,
             new OnlineRequest { Operation = "ManagePlcDataBlockSnapshot", Action = action }) != null);
 
+    public static IEnumerable<object[]> SnapshotActionCases =>
+        from release in Releases
+        from action in new[] { "read", "exportSnapshot", "createSnapshot", "loadSnapshotAsActualValues", "loadStartValuesAsActualValues" }
+        select new object[] { release, action,
+            release == "14sp1" || release != "21" && action is not ("read" or "exportSnapshot") };
+
+    [Theory, MemberData(nameof(SnapshotActionCases))]
+    public void Every_snapshot_action_follows_its_release_API(string release, string action, bool refused)
+        => Assert.Equal(refused, OnlineCapabilities.Unsupported(release,
+            new OnlineRequest { Operation = "ManagePlcDataBlockSnapshot", Action = action }) != null);
+
     [Fact]
     public void Secure_password_is_read_only_and_credential_errors_do_not_echo_it()
     {

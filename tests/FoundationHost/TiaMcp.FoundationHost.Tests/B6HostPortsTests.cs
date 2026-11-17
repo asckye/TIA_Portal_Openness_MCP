@@ -1,5 +1,6 @@
 extern alias toolpipeline;
 using System.Text.Json.Nodes;
+using System.Reflection;
 using TiaMcp.Adapters.Contracts;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Services = toolpipeline::TiaMcpServer.Siemens.Services;
@@ -8,6 +9,35 @@ using Xunit;
 public sealed class B6HostPortsTests
 {
     private static readonly string[] Releases = { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" };
+
+    [Fact]
+    public void Compilation_settings_descriptions_name_each_flag_and_its_first_release()
+    {
+        var method = typeof(Host.EngineeringServicesTools).GetMethod("ManageProjectCompilationSettingsV4")!;
+        var description = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()!.Description;
+        Assert.Contains("IsSimulationDuringBlockCompilationEnabled (V16 and later)", description);
+        Assert.Contains("IsVirtualPlcDuringBlockCompilationEnabled (V19 and later; refused before)", description);
+        Assert.DoesNotContain("V20 reads / writes", description);
+        var parameters = method.GetParameters();
+        var action = parameters.Single(p => p.Name == "action").GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+        Assert.NotNull(action);
+        Assert.Equal("action: read | update.", action.Description);
+        var properties = parameters.Single(p => p.Name == "properties").GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+        Assert.NotNull(properties);
+        Assert.Contains("IsSimulationDuringBlockCompilationEnabled (V16+)", properties.Description);
+        Assert.Contains("IsVirtualPlcDuringBlockCompilationEnabled (V19+)", properties.Description);
+        Assert.Contains("boolean", properties.Description);
+        Assert.Contains("update", properties.Description);
+    }
+
+    public static IEnumerable<object[]> CompilationSimulationCases =>
+        Releases.Select((release, index) => new object[] { release, index < 2 });
+
+    [Theory, MemberData(nameof(CompilationSimulationCases))]
+    public void Simulation_compilation_setting_requires_V16(string release, bool refused)
+        => Assert.Equal(refused, EngineeringServicesCapabilities.Unsupported(release, "ManageProjectCompilationSettings",
+            properties: new[] { "IsSimulationDuringBlockCompilationEnabled" }) != null);
+
     public static IEnumerable<object[]> RegistrationCases =>
         from release in Releases
         from family in PortedFamilies.All.Where(f => f.Name is "F06" or "F23" or "F35")

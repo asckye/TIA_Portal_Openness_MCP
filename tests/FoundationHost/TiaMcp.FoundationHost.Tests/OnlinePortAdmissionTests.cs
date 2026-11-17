@@ -14,6 +14,37 @@ using Service = toolpipeline::TiaMcpServer.Siemens.Services.OnlineDownloadServic
 
 public sealed class OnlinePortAdmissionTests
 {
+    [Fact]
+    public void Snapshot_description_distinguishes_release_availability_of_both_services()
+    {
+        var method = typeof(Host.OnlineDataTools).GetMethod("ManagePlcDataBlockSnapshotV4")!;
+        var description = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()!.Description;
+        Assert.Contains("read and exportSnapshot use InterfaceSnapshot (V15.1 and later)", description);
+        Assert.Contains("createSnapshot and the two load actions use ValueService, which exists only in V21", description);
+        Assert.Contains("refused on V15.1–V20 before TIA is called", description);
+        Assert.DoesNotContain("V20 returns NotSupported", description);
+    }
+
+    public static IEnumerable<object[]> ValueServiceRefusalCases =>
+        from release in new[] { "15.1", "16", "17", "18", "19", "20" }
+        from action in new[] { "createSnapshot", "loadSnapshotAsActualValues", "loadStartValuesAsActualValues" }
+        select new object[] { release, action };
+
+    [Theory, MemberData(nameof(ValueServiceRefusalCases))]
+    public void Pre_V21_ValueService_actions_refuse_before_worker_dispatch(string release, string action)
+    {
+        string previous = Engine.EngineHostConfiguration.ReleaseKey;
+        try
+        {
+            Engine.EngineHostConfiguration.ReleaseKey = release;
+            int calls = 0;
+            var service = new Service((_, _) => { calls++; throw new InvalidOperationException("Unexpected dispatch"); }, () => "fixture.ap" + release);
+            Assert.Throws<NotSupportedException>(() => service.ManagePlcDataBlockSnapshot("PLC_1", "DB1", action));
+            Assert.Equal(0, calls);
+        }
+        finally { Engine.EngineHostConfiguration.ReleaseKey = previous; }
+    }
+
     [Theory]
     [InlineData("20", "ManagePlcDataBlockSnapshot", "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"DB1\",\"action\":\"createSnapshot\"}")]
     [InlineData("16", "ConnectOnlinePlc", "{\"softwarePath\":\"PLC_1\",\"userName\":\"fixture\"}")]

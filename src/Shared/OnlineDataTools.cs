@@ -18,8 +18,9 @@ internal sealed class OnlineDataTools
                 "one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load " +
                 "actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions " +
                 "require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute " +
-                "file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download. Current native " +
-                "policy; V4 safety behavior is not yet accepted.")]
+                "file and returns its SHA-256. read and exportSnapshot use InterfaceSnapshot (V15.1 and later); createSnapshot and the two load actions " +
+                "use ValueService, which exists only in V21, and are refused on V15.1–V20 before TIA is called. Default preview; no save/compile/download. " +
+                "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ManagePlcDataBlockSnapshotV4(
             string softwarePath,
             string blockPath,
