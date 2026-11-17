@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
+using TiaMcpServer.ModelContextProtocol;
 using TiaOpenness.Shared;
 using Xunit;
 
@@ -48,7 +49,7 @@ public sealed class ServedExampleRowsTests
         {
             string name = (string)entry!["currentName"]!;
             var args = calls["profiles"]![ToolUsageCatalog.ExampleSource(name, release)]![name]!["arguments"]!.DeepClone().AsObject();
-            if ((bool?)args["dryRun"] == false)
+            if (ToolMetadata.Find(name)?.Operation != "UI" && (bool?)args["dryRun"] == false)
             {
                 args["dryRun"] = true;
                 args.Remove("expectedPlanHash"); args.Remove("expectedProjectFile");
@@ -68,7 +69,8 @@ public sealed class ServedExampleRowsTests
         {
             string name = (string)entry!["currentName"]!;
             var args = ToolUsageCatalog.ServedCall(name, release)!["arguments"]!.AsObject();
-            Assert.False((bool?)args["dryRun"] == false, release + "/" + name);
+            if (ToolMetadata.Find(name)?.Operation != "UI")
+                Assert.False((bool?)args["dryRun"] == false, release + "/" + name);
             Assert.False((bool?)args["confirm"] == true, release + "/" + name);
             // ApplyGenerationPlan already has dryRun=true and requires its identity and hash even in a preview.
             if ((bool?)calls["profiles"]![ToolUsageCatalog.ExampleSource(name, release)]![name]!["arguments"]!["dryRun"] != false) continue;

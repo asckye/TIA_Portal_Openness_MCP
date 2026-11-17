@@ -31,8 +31,8 @@ namespace TiaMcp.Adapters.Contracts
         public static void EditorSelection(string kind, string[] devicePath, string[] itemPath, string softwarePath, string objectPath, string view)
         {
             if (!new[] { "", "device", "network", "topology" }.Contains(view, StringComparer.Ordinal))
-                throw new ArgumentException("view must be empty or device/network/topology (case-sensitive).", "view");
-            if (view != "" && kind != "device") throw new ArgumentException("view is only supported for kind=device.", "view");
+                throw new ArgumentException("view must be empty or device/network/topology (case-sensitive).", nameof(view));
+            if (view != "" && kind != "device") throw new ArgumentException("view is only supported for kind=device.", nameof(view));
             if (kind == "plcWatchTable" || kind == "plcForceTable")
             { Text(softwarePath, "softwarePath", 256); Text(objectPath, "objectPath", 1024); }
             else ObjectSelection(kind, devicePath, itemPath, softwarePath, objectPath, "");
