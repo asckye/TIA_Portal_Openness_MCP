@@ -4,7 +4,7 @@ namespace TiaMcp.FoundationHost;
 
 internal sealed class HostCliOptions
 {
-    internal static readonly string[] Verbs = { "doctor", "audit", "schema", "version", "config", "install-plc-tools", "help", "--help", "-h" };
+    internal static readonly string[] Verbs = { "doctor", "audit", "test", "schema", "version", "config", "install-plc-tools", "help", "--help", "-h" };
     private static readonly string[] HostValues = {
         "--release-key", "--tia-major-version", "--tia-version", "--tia-portal-location", "--public-api", "--worker-exe", "--engine-worker", "--engine-catalog",
             "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--logging"
@@ -30,9 +30,10 @@ internal sealed class HostCliOptions
             case "config": allowed.UnionWith(new[] { "--host", "--print" }); break;
             case "install-plc-tools": allowed.UnionWith(new[] { "--python", "--environment-path" }); break;
             case "audit": allowed.Add("--path"); break;
+            case "test": allowed.UnionWith(new[] { "--run", "--junit", "--json" }); break;
         }
         var values = new HashSet<string>(HostValues, StringComparer.OrdinalIgnoreCase);
-        values.UnionWith(new[] { "--host", "--python", "--environment-path", "--path" });
+        values.UnionWith(new[] { "--host", "--python", "--environment-path", "--path", "--run", "--junit" });
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var hostArgs = new List<string>();
         var commandArgs = new List<string> { verb };
@@ -42,6 +43,12 @@ internal sealed class HostCliOptions
         {
             if (args.Length < 2 || args[1] != "verify") throw new ArgumentException("Expected tia audit verify [--path <absolute directory>].");
             commandArgs.Add("verify"); start = 2;
+        }
+        if (verb == "test")
+        {
+            if (args.Length < 2 || args[1] != "report")
+                throw new ArgumentException("Expected tia test report [--run RUN_ID|latest] [--junit ABSOLUTE_FILE] [--json].");
+            commandArgs.Add("report"); start = 2;
         }
         for (int index = start; index < args.Length; index++)
         {
@@ -64,6 +71,8 @@ internal sealed class HostCliOptions
                 release = value; continue;
             }
             if (option == "--path" && !Path.IsPathRooted(value!)) throw new ArgumentException("Expected tia audit verify [--path <absolute directory>].");
+            if (option == "--junit" && (!Path.IsPathFullyQualified(value!) || !Directory.Exists(Path.GetDirectoryName(value))))
+                throw new ArgumentException("--junit requires an absolute file path with an existing parent directory.");
             if (option == "--profile" && !string.Equals(value, "full", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(value, "lite", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("--profile must be full or lite.");
             if (option == "--logging" && (!int.TryParse(value, out int logging) || logging < 0 || logging > 3))

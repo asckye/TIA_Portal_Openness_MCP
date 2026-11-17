@@ -16,6 +16,57 @@ namespace TiaMcp.FoundationHost.Tests;
 
 public sealed class HostCliTests : IDisposable
 {
+    [Theory]
+    [InlineData("passed", "completed", 0)]
+    [InlineData("failed", "completed", 3)]
+    [InlineData("error", "completed", 3)]
+    [InlineData("skipped", "completed", 4)]
+    [InlineData("passed", "running", 5)]
+    [InlineData("unknown", "stopped", 5)]
+    public void Stored_test_report_has_published_exit_code_single_json_object_and_exact_junit(string verdict, string status, int exit)
+    {
+        var run = global::PlcTestReportTests.Record(verdict, status);
+        string history = Path.Combine(scratch, "test-runs");
+        run.Save(history);
+        string junit = Path.Combine(scratch, "junit.xml");
+        File.WriteAllText(junit, "previous CI output");
+        var options = HostCliOptions.Parse(new[] { "test", "report", "--run", run.RunId, "--junit", junit, "--json" }, Root());
+        using var output = new StringWriter(); using var errors = new StringWriter();
+        Assert.Equal(exit, HostCliCommands.TestReport(options.Arguments, history, output, errors));
+        var json = JsonNode.Parse(output.ToString())!;
+        Assert.Equal(run.RunId, (string?)json["runId"]);
+        Assert.Equal(status, (string?)json["status"]);
+        Assert.Equal(exit, (int)json["exitCode"]!);
+        Assert.Equal(junit, (string?)json["junitFile"]);
+        Assert.True(JsonNode.DeepEquals(run.Totals, json["totals"]));
+        Assert.Equal(TiaMcp.Logic.Testing.PlcTestJUnitWriter.Write(run), File.ReadAllText(junit));
+        Assert.False(File.ReadAllBytes(junit).Take(3).SequenceEqual(new byte[] { 0xef, 0xbb, 0xbf }));
+        Assert.Empty(errors.ToString());
+    }
+
+    [Fact]
+    public void Stored_test_report_defaults_to_latest_and_distinguishes_missing_and_unreadable_history()
+    {
+        using var output = new StringWriter(); using var errors = new StringWriter();
+        var options = HostCliOptions.Parse(new[] { "test", "report" }, Root());
+        string history = Path.Combine(scratch, "test-runs");
+        Assert.Equal(2, HostCliCommands.TestReport(options.Arguments, history, output, errors));
+        var run = global::PlcTestReportTests.Record("passed"); run.Save(history);
+        Assert.Equal(0, HostCliCommands.TestReport(options.Arguments, history, output, errors));
+        Assert.Contains(run.RunId, output.ToString());
+        File.WriteAllText(Path.Combine(history, run.RunId, "run.json"), "{invalid");
+        Assert.Equal(70, HostCliCommands.TestReport(options.Arguments, history, output, errors));
+    }
+
+    [Theory]
+    [InlineData("test")]
+    [InlineData("test", "run")]
+    [InlineData("test", "report", "--junit", "relative.xml")]
+    [InlineData("test", "report", "--run")]
+    [InlineData("test", "report", "--json", "--json")]
+    public void Test_report_syntax_is_rejected_by_the_cli_parser(params string[] args)
+        => Assert.Throws<ArgumentException>(() => HostCliOptions.Parse(args, Root()));
+
     private readonly string scratch = Path.Combine(Root(), "bin-build", "cli-test-" + Guid.NewGuid().ToString("N"));
     private static string Root([CallerFilePath] string file = "") => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, "../../.."));
     private static string HostDirectory => Path.Combine(Root(), "src/FoundationHost/bin/Release/net10.0");

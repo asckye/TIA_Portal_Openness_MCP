@@ -18811,6 +18811,33 @@
         }
       }
     },
+    "ExportPlcTestReport": {
+      "method": "ExportPlcTestReport",
+      "path": "src/Shared/PlcTestLibraryTools.Reports.cs",
+      "owner": "PlcTestLibraryTools",
+      "domain": "Reports",
+      "signature": "public CallToolResult ExportPlcTestReport(\n            [Description(\"Exact stored run id, or latest for the newest valid run.\")] string runId = \"latest\",\n            [Description(\"Report format: junit | fat | sat | repro.\")] string format = \"fat\",\n            [Description(\"Absolute output directory. Empty uses <OutputRoot>/<session>; targets outside the output root need approval.\")]\n            string exportDirectory = \"\")",
+      "parameters": {
+        "runId": {
+          "type": "string",
+          "default": "\"latest\"",
+          "description": "Exact stored run id, or latest for the newest valid run.",
+          "value": "latest"
+        },
+        "format": {
+          "type": "string",
+          "default": "\"fat\"",
+          "description": "Report format: junit | fat | sat | repro.",
+          "value": "fat"
+        },
+        "exportDirectory": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Absolute output directory. Empty uses <OutputRoot>/<session>; targets outside the output root need approval.",
+          "value": ""
+        }
+      }
+    },
     "ManagePlcTestLibrary": {
       "method": "ManagePlcTestLibrary",
       "path": "src/Shared/PlcTestLibraryTools.cs",

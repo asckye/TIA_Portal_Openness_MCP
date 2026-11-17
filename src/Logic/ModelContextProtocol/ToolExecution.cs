@@ -166,6 +166,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["FindTools"] = "host",
                 ["GenerateAcceptanceReport"] = "host",
                 ["GenerateBlocksFromExternalSource"] = "worker",
+                ["ExportPlcTestReport"] = "host",
                 ["ManagePlcTestLibrary"] = "host",
                 ["RunPlcTestLibrary"] = "host",
                 ["GenerateErrorReport"] = "host",

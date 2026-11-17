@@ -19509,6 +19509,17 @@
           "21": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures."
         }
       },
+      "ExportPlcTestReport": {
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Managed fixture checks only; native acceptance NOT RUN.",
+        "inline": true,
+        "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+      },
       "ManagePlcTestLibrary": {
         "arguments": {
           "action": "list"
@@ -40179,6 +40190,17 @@
           "20": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures.",
           "21": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures."
         }
+      },
+      "ExportPlcTestReport": {
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "parameters": {},
+        "operations": {},
+        "validation": "Managed fixture checks only; native acceptance NOT RUN.",
+        "inline": true,
+        "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
       },
       "ManagePlcTestLibrary": {
         "arguments": {

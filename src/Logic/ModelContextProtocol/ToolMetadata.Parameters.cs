@@ -450,6 +450,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ["GenerateAcceptanceReport.title"] = new ParameterHint("\"\\u003Ctitle\\u003E\""),
             ["GenerateBlocksFromExternalSource.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["GenerateBlocksFromExternalSource.externalSourceName"] = new ParameterHint("\"\\u003CexternalSourceName\\u003E\""),
+            ["ExportPlcTestReport.runId"] = new ParameterHint("\"latest\""),
+            ["ExportPlcTestReport.format"] = new ParameterHint("\"fat\"", "junit", "fat", "sat", "repro"),
             ["ManagePlcTestLibrary.action"] = new ParameterHint("\"list\"", "list", "read", "save", "delete", "listRuns", "readRun"),
             ["ManagePlcTestLibrary.id"] = new ParameterHint("\"conveyor-start\""),
             ["ManagePlcTestLibrary.runId"] = new ParameterHint("\"latest\""),

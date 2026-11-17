@@ -35,7 +35,7 @@ public sealed class B3HostPortsTests
             DeleteExportHandle DeleteHmiTag DeletePlcBlock DeletePlcTagTable DeletePlcType DescribeHmiScreen DescribeHmiSoftware
             DescribeHmiTag DescribeHmiTagTable DescribeObject DescribeObjectProperty DescribePlcBlockLogic DescribeService
             DisconnectOnlinePlc DisconnectOnlinePlcs EnsureOpennessUserGroup EnsureSubnet ExportDeviceAml ExportHmiConnection
-            ExportHmiProgram ExportHmiScreen ExportHmiTagTable ExportPlcTagTables ExportProjectTexts ExportTechnologyObjectsToDirectory ExtractPlcBlockMetrics
+            ExportPlcTestReport ExportHmiProgram ExportHmiScreen ExportHmiTagTable ExportPlcTagTables ExportProjectTexts ExportTechnologyObjectsToDirectory ExtractPlcBlockMetrics
             FindTools GenerateAcceptanceReport GenerateErrorReport GeneratePlcDocumentation GeneratePlcSourceFromBlocks
             GetClassicHmiGlobalization GetClassicHmiScreenTree GetDeviceAddressing GetDeviceAttributes GetDeviceInfo GetDeviceIpAddress
             GetDeviceItemInfo GetDeviceItemIoAddresses GetDeviceItemNetworkInfo GetDeviceItemTree GetDevicePlugLocations GetDriveParameters

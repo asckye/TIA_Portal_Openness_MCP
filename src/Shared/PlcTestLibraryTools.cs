@@ -14,7 +14,7 @@ using TiaOpenness.Shared;
 namespace TiaMcpServer.ModelContextProtocol
 {
     [McpServerToolType]
-    internal sealed class PlcTestLibraryTools
+    internal sealed partial class PlcTestLibraryTools
     {
         private readonly Func<string> libraryDirectory;
         private readonly Func<string> runsDirectory;

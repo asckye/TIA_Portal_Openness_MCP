@@ -20,6 +20,7 @@ namespace TiaMcp.FoundationHost
                         using (var probe = new HostDoctorProbe(command.Host)) return DoctorCli(args, probe);
                     case "config": return Config(args, command.Host.ReleaseKey);
                     case "install-plc-tools": return InstallPlcToolsCommand.Run(args);
+                    case "test": return TestReport(args, null, Console.Out, Console.Error);
                     case "audit": return TiaOpenness.Shared.AuditCli.Verify(Opt(args, "--path") is string path
                         ? new[] { path } : TiaOpenness.Shared.DataLocations.Current.AuditReadRoots, Console.Out);
                     case "schema": Console.WriteLine(SchemaText); return 0;
@@ -32,6 +33,29 @@ namespace TiaMcp.FoundationHost
                 Console.Error.WriteLine("ERROR: " + error.Message);
                 return error is TiaOpenness.Shared.BundleResourceUnavailableException ? 70 : 3;
             }
+        }
+
+        internal static int TestReport(string[] args, string? runsDirectory, TextWriter output, TextWriter errors)
+        {
+            try
+            {
+                runsDirectory ??= TiaOpenness.Shared.DataLocations.Current.TestRunsDirectory;
+                if (File.Exists(runsDirectory)) throw new IOException("The history location is not a directory.");
+                var run = TiaMcp.Logic.Testing.PlcTestRunRecord.Read(runsDirectory, Opt(args, "--run") ?? "latest");
+                string? junit = Opt(args, "--junit");
+                if (junit != null)
+                    File.WriteAllText(junit, TiaMcp.Logic.Testing.PlcTestJUnitWriter.Write(run), new System.Text.UTF8Encoding(false));
+                if (Flag(args, "--json"))
+                    output.WriteLine(new JsonObject { ["runId"] = run.RunId, ["status"] = run.Status, ["totals"] = run.Totals,
+                        ["exitCode"] = run.ExitCode, ["junitFile"] = junit }.ToJsonString());
+                else output.WriteLine($"PLC test run {run.RunId}: {run.Status}; {run.Totals.ToJsonString()}; exitCode={run.ExitCode}");
+                return run.ExitCode;
+            }
+            catch (FileNotFoundException) /* swallow(privacy): missing run returns the published rejected exit code without a user path */
+            { errors.WriteLine("PLC test run was not found."); return 2; }
+            catch (ArgumentException error) { errors.WriteLine("ERROR: " + error.Message); return 64; }
+            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)
+            { errors.WriteLine("PLC test history or JUnit output is unavailable: " + error.GetType().Name); return 70; }
         }
 
         private static int Config(string[] args, string ver)
@@ -249,6 +273,8 @@ USAGE
   tia doctor [--fix] [--json]                             Inspect installation, API, worker readiness,
                                                           .NET Framework, blocked files, group and AI host configs
   tia audit verify [--path ABSOLUTE_DIRECTORY]              Verify audit chains; JSON, exit 0 intact / 3 broken
+  tia test report [--run RUN_ID|latest] [--junit ABSOLUTE_FILE] [--json]
+                                                          Report stored tests without TIA or PLCSIM execution
   tia schema                                              Print the legacy spec field reference
   tia version
   tia config [--host claude|claude-code|cursor|vscode|codex|gemini|windsurf|cline] [--print] [--full]
@@ -269,7 +295,7 @@ RELEASES: 14sp1, 15.1, 16, 17, 18, 19, 20, 21. Original V14/V15 are unsupported.
   --plc-worker and the worker timeout flags. --fix may prompt UAC; sign out/in afterwards.
   doctor --json prints one JSON object instead of the report: ready, the checks, the group repair
   outcome and the report lines; the exit codes do not change.
-  help, version, schema, audit, config and install-plc-tools need no TIA installation.
+  help, version, schema, audit, test report, config and install-plc-tools need no TIA installation.
 
 RETIRED PROJECT COMMANDS
   gen / patch -> project generation framework (PlanProjectGeneration / ApplyGenerationPlan)
@@ -280,6 +306,7 @@ RETIRED PROJECT COMMANDS
 
 EXIT CODES: 0 success; 2 rejected / doctor not ready / no successful config writes;
   3 failed; 4 partial; 5 unknown; 64 syntax; 70 unavailable runtime resources.
+  test report: 0 all passed, 3 failed or error, 4 skipped cases, 5 unknown or incomplete run, 2 run not found.
   install-plc-tools preserves pip's nonzero exit status.
   The host subset never changes a TIA project. MCP project operations retain their V4 results.
 

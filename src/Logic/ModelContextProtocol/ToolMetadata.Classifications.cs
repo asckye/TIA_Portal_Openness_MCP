@@ -177,6 +177,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["FindTools"] = new Classification("L0", "Meta", "READ", false, true, false),
             ["GenerateAcceptanceReport"] = new Classification("L0", "Reports", "FILE", false, false, false, false, false, false, false),
             ["GenerateBlocksFromExternalSource"] = new Classification("L2", "PLC-Software", "WRITE", false, false, false, false, true, false, false),
+            ["ExportPlcTestReport"] = new Classification("L0", "Reports", "FILE", false, false, false, false, false, false, false),
             ["ManagePlcTestLibrary"] = new Classification("L1", "Simulation", "FILE", false, false, false, false, true, false, false),
             ["RunPlcTestLibrary"] = new Classification("L2", "Simulation", "ONLINE-WRITE", false, false, false, false, true, false, true),
             ["GenerateErrorReport"] = new Classification("L0", "Reports", "FILE", false, false, false, false, false, false, false),

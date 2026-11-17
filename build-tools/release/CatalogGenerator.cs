@@ -12,7 +12,7 @@ internal static class CatalogGenerator
     {
         cli["exe"] = "runtime/v21/TiaMcp.FoundationHost.exe";
         cli["description"] = "Call runtime/<release-directory>/TiaMcp.FoundationHost.exe <verb> --release-key <key> on all eight releases. Project changes use MCP tools and the project generation framework. install-plc-tools preserves pip's exit status.";
-        cli["verbs"] = new JsonArray("doctor", "audit verify", "schema", "version", "config", "install-plc-tools", "help");
+        cli["verbs"] = new JsonArray("doctor", "audit verify", "test report", "schema", "version", "config", "install-plc-tools", "help");
         cli["exitCodes"] = new JsonObject { ["0"] = "success", ["2"] = "rejected, doctor not ready or no successful config writes",
             ["3"] = "failed", ["4"] = "partial", ["5"] = "outcome unknown", ["64"] = "syntax error", ["70"] = "runtime resources unavailable" };
     }
