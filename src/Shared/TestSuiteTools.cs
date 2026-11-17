@@ -94,14 +94,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 "SiOMECompanionSpecification[, interfaceFolderPath absolute directory]); copyScope (RuleSet.CopyScope(target rule set named by targetName)); " +
                 "createFromMasterCopy (RuleSetComposition / TestCaseComposition / SystemTestCaseComposition.CreateFrom(MasterCopy at masterCopyPath in the " +
                 "project library or the open global library libraryName), renamed to name when given); showInEditor (rule sets, test cases, test sets; " +
-                "WithUserInterface sessions). Default preview; readback after the change; no test run or automatic save. Available from V17: styleGuide and " +
+                "WithUserInterface sessions; UI only, no approval or project change). Other mutating actions keep WRITE approval. " +
+                "Other actions default to preview; readback after the change; no test run or automatic save. Available from V17: styleGuide and " +
                 "application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope " +
                 "overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions " +
                 "refuse with UNSUPPORTED_CAPABILITY before native dispatch. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageTestSuiteCase(
             [Description("category: styleGuide | application | system.")] string category,
             string name,
-            [Description("action: the operation to perform - read | rename | setScope | copyScope | createFromMasterCopy | showInEditor.")] string action=
+            [Description("action: read | rename | setScope | copyScope | createFromMasterCopy | showInEditor. " +
+                "showInEditor is UI only without approval; other mutating actions remain WRITE.")] string action=
                 "read",
             string kind="case",
             string newName="",
@@ -116,9 +118,10 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("targetName: exact name of the target object.")] string targetName="",
             string masterCopyPath="",
             string libraryName="",
+            [Description("dryRun: true (default) previews mutating actions; showInEditor always opens the UI without project changes or approval.")]
             bool dryRun=true)
             => OptionalPackageContract
-                .Run("ManageTestSuiteCase", action == "showInEditor" || (!dryRun && action != "read"), () => _testSuite
+                .Run("ManageTestSuiteCase", !dryRun && action != "read" && action != "showInEditor", () => _testSuite
                     .ManageTestSuiteCase(category,name,action,kind,newName,softwarePath,instanceName,executionMode,opcUaServerAddress,serverInterfaceType,
                         interfaceFolderPath,updateOptions,V4Json.Serialize(scope ?? Array.Empty<TestScope>()),targetName,masterCopyPath,libraryName,dryRun));
     }

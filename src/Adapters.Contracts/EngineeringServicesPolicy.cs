@@ -28,6 +28,15 @@ namespace TiaMcp.Adapters.Contracts
             }
             else { Text(softwarePath, "softwarePath", 256); Text(objectPath, "objectPath", 1024); }
         }
+        public static void EditorSelection(string kind, string[] devicePath, string[] itemPath, string softwarePath, string objectPath, string view)
+        {
+            if (!new[] { "", "device", "network", "topology" }.Contains(view, StringComparer.Ordinal))
+                throw new ArgumentException("view must be empty or device/network/topology (case-sensitive).", "view");
+            if (view != "" && kind != "device") throw new ArgumentException("view is only supported for kind=device.", "view");
+            if (kind == "plcWatchTable" || kind == "plcForceTable")
+            { Text(softwarePath, "softwarePath", 256); Text(objectPath, "objectPath", 1024); }
+            else ObjectSelection(kind, devicePath, itemPath, softwarePath, objectPath, "");
+        }
         public static void LibraryPair(string left, string right)
         {
             if (string.IsNullOrEmpty(left) && string.IsNullOrEmpty(right))

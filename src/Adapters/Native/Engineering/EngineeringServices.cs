@@ -108,6 +108,19 @@ namespace TiaMcp.Adapters
                 return hardware;
             }
             var plc = EngineeringPlcSession.ExactPlcForEngineering(softwarePath, false);
+            if (kind == "plcWatchTable" || kind == "plcForceTable")
+            {
+#if PLC_WATCH_READ
+                var tableParts = PlcObjectPath.Parts(objectPath, parameter: "objectPath");
+                var tableGroup = PlcGroupOperations.Group(plc.WatchAndForceTableGroup, PlcObjectPath.Format(tableParts.Take(tableParts.Length - 1)),
+                    pathParts: value => PlcObjectPath.Parts(value, true));
+                var tables = PlcGroupOperations.Get(tableGroup, kind == "plcWatchTable" ? "WatchTables" : "ForceTables");
+                return PlcGroupOperations.Find(tables, tableParts.Last()) as IEngineeringObject
+                    ?? throw new PlcSoftwareException("NotFound", "Exact " + kind + " not found: " + objectPath);
+#else
+                throw new NotSupportedException("PLC watch and force table editors require V15.1 or later.");
+#endif
+            }
             bool plcObject = kind == "plcBlock" || kind == "plcType";
             var parts = plcObject ? PlcObjectPath.Parts(objectPath, parameter: "objectPath") : PlcGroupOperations.Parts(objectPath);
             object root = kind == "plcBlock" ? plc.BlockGroup : kind == "plcType" ? (object)plc.TypeGroup : plc.TagTableGroup;
@@ -157,12 +170,12 @@ namespace TiaMcp.Adapters
 
 #endif
         public HardwareAddressingReply ShowObjectInEditor(string kind, string[] devicePath, string[] itemPath, string softwarePath = "", string objectPath = "",
-                bool dryRun = true)
+                bool dryRun = true, string view = "")
             => RunEngineeringServicesStep("ShowObjectInEditor", meta => {
-                EngineeringServicesPolicy.ObjectSelection(kind, devicePath, itemPath, softwarePath, objectPath, "");
+                EngineeringServicesPolicy.EditorSelection(kind, devicePath, itemPath, softwarePath, objectPath, view);
                 var target = ExactIdentifiableObject(kind, devicePath, itemPath, softwarePath, objectPath, meta);
                 meta["kind"] = kind; meta["dryRun"] = dryRun; meta["object"] = IdentifiedObjectRow(target);
-                IShowable showable = target as IShowable
+                IShowable? showable = view != "" ? null : target as IShowable
                     ?? throw new NotSupportedException(target.GetType().Name
                         + " does not implement IShowable (Device and the STEP 7 blocks / types / tag tables / watch and force tables do).");
                 var mode = portal!.GetCurrentProcess().Mode;
@@ -171,8 +184,10 @@ namespace TiaMcp.Adapters
                     throw new AdapterPreconditionException("ShowObjectInEditor needs a TIA Portal with user interface; this session's TIA Portal runs " + mode
                         + ". Attach to a TIA Portal window (ConnectPortal) or start the isolated portal with the user interface.", isArgument: false);
                 if (dryRun) return "ShowInEditor preview; the TIA Portal UI was not touched.";
-                showable.ShowInEditor(); meta["apiCallSuccess"] = true;
-                return "IShowable.ShowInEditor invoked: the object is opened in the TIA Portal editor (UI only; no project change).";
+                if (view == "") showable!.ShowInEditor();
+                else ((Device)target).ShowInEditor(view == "device" ? View.Device : view == "network" ? View.Network : View.Topology);
+                meta["view"] = view; meta["apiCallSuccess"] = true;
+                return "ShowInEditor invoked: the object is opened in the TIA Portal editor (UI only; no project change).";
             });
 
 #if ENGINEERING_COMPILATION_PROPERTIES || ENGINEERING_COMPILATION_SERVICES

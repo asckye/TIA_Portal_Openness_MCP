@@ -422,6 +422,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ManageTeamcenterWorkflow"] = new Classification("L2", "VersionControl", "WRITE", false, false, true),
             ["ManageTechnologyExtensions"] = new Classification("L2", "Hardware", "WRITE", false, false, true),
             ["ManageTechnologyObject"] = new Classification("L2", "PLC-Software", "WRITE", false, false, true),
+            // Worst-case WRITE; HostBehavior exempts only the UI action showInEditor from approval.
             ["ManageTestSuiteCase"] = new Classification("L2", "Project", "WRITE", false, false, true, false, false, false, false),
             ["ManageTransferArea"] = new Classification("L2", "Hardware", "WRITE", false, false, true),
             ["ManageUmcUsers"] = new Classification("L2", "Security", "WRITE", false, false, true),

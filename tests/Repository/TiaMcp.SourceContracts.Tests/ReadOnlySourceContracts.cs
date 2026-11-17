@@ -14,14 +14,17 @@ public sealed class ReadOnlySourceContracts
     {
         var source = Read("src/Adapters/Native/Engineering/EngineeringServices.cs");
         var show = EngineSources.BlockAfter(source, "public HardwareAddressingReply ShowObjectInEditor(");
-        Contains(show, "EngineeringServicesPolicy.ObjectSelection(", "ExactIdentifiableObject(", "target as IShowable",
+        Contains(show, "EngineeringServicesPolicy.EditorSelection(", "ExactIdentifiableObject(", "target as IShowable",
             "throw new NotSupportedException", "mode != TiaPortalMode.WithUserInterface", "throw new AdapterPreconditionException",
-            "if (dryRun) return", "showable.ShowInEditor();");
+            "if (dryRun) return", "showable!.ShowInEditor();", "((Device)target).ShowInEditor(", "View.Device", "View.Network", "View.Topology");
         Assert.True(show.IndexOf("if (dryRun) return", StringComparison.Ordinal)
-            < show.IndexOf("showable.ShowInEditor();", StringComparison.Ordinal));
+            < show.IndexOf("showable!.ShowInEditor();", StringComparison.Ordinal));
+        Assert.True(show.IndexOf("if (dryRun) return", StringComparison.Ordinal)
+            < show.IndexOf("((Device)target).ShowInEditor(", StringComparison.Ordinal));
         var lookup = EngineSources.BlockAfter(source, "private IEngineeringObject ExactIdentifiableObject(");
         Contains(lookup, "ExactHardware(", "ExactPlcForEngineering(", "PlcObjectPath.Parts(objectPath", "PlcGroupOperations.Find(",
             "throw new PlcSoftwareException(\"NotFound\"");
+        Contains(lookup, "plc.WatchAndForceTableGroup", "PlcObjectPath.Parts(objectPath", "tableParts.Last()", "\"WatchTables\" : \"ForceTables\"");
     }
 
     [Fact]

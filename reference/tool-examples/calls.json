@@ -10873,11 +10873,37 @@
           "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
+          },
+          "view": {
+            "exampleValue": "network"
           }
         },
-        "operations": {},
+        "operations": {
+          "plcWatchTable": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "kind": "plcWatchTable",
+              "softwarePath": "<exact softwarePath from GetProjectTree>",
+              "objectPath": "<exact MIN-ESCAPE table path from ListPlcWatchTables>",
+              "dryRun": false
+            },
+            "note": "V15.1-V21 only; V14 SP1 refuses before native dispatch. UI only; skip when TIA runs without user interface."
+          },
+          "network": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "kind": "device",
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "view": "network",
+              "dryRun": false
+            },
+            "note": "All eight releases: Device.ShowInEditor(View.Network); no approval or project change. Empty view keeps parameterless IShowable.ShowInEditor()."
+          }
+        },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "UI only: opens the exact written object for the engineer without approval or project changes. Available on all eight releases (V14 SP1, V15.1, V16-V21); requires a TIA Portal with user interface and an IShowable target. Skip this display step when TIA runs without user interface. dryRun=true touches no UI. Bind exact MIN-ESCAPE object paths from readback; no plan fields are required."
+        "note": "UI only: opens the exact written object for the engineer without approval or project changes. Available on all eight releases (V14 SP1, V15.1, V16-V21); requires a TIA Portal with user interface and an IShowable target. Skip this display step when TIA runs without user interface. dryRun=true touches no UI. Bind exact MIN-ESCAPE object paths from readback; no plan fields are required. Watch and force table kinds require V15.1+. For kind=device, optional view device/network/topology uses the official Device.ShowInEditor(View) overload on all eight releases; a nonempty view with another kind is refused. Watch-table example: {\"kind\": \"plcWatchTable\", \"softwarePath\": \"<exact softwarePath from GetProjectTree>\", \"objectPath\": \"<exact MIN-ESCAPE table path from ListPlcWatchTables>\", \"dryRun\": false}. Network-view example: {\"kind\": \"device\", \"devicePath\": [\"<exact device name from GetProjectTree>\"], \"view\": \"network\", \"dryRun\": false}."
       },
       "SynchronizeLibrary": {
         "arguments": {
@@ -17513,13 +17539,18 @@
             }
           },
           "showInEditor": {
+            "argumentsMode": "complete",
             "arguments": {
-              "action": "showInEditor"
-            }
+              "category": "styleGuide",
+              "name": "<exact rule set name from ListTestSuiteCases>",
+              "action": "showInEditor",
+              "dryRun": false
+            },
+            "note": "UI only, no approval or project change; requires a TIA Portal with user interface. Rule sets and application test cases V17+; application test sets V20+. System test cases have no ShowInEditor API. Other mutating actions remain WRITE and require approval."
           }
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch. ManageTestSuiteCase action=showInEditor is UI only, without approval or project changes (WithUserInterface required); all other actions retain their policy."
       },
       "ExchangeTestSuiteCase": {
         "arguments": {
@@ -31407,13 +31438,18 @@
             }
           },
           "showInEditor": {
+            "argumentsMode": "complete",
             "arguments": {
-              "action": "showInEditor"
-            }
+              "category": "styleGuide",
+              "name": "<exact rule set name from ListTestSuiteCases>",
+              "action": "showInEditor",
+              "dryRun": false
+            },
+            "note": "UI only, no approval or project change; requires a TIA Portal with user interface. Rule sets and application test cases V17+; application test sets V20+. System test cases have no ShowInEditor API. Other mutating actions remain WRITE and require approval."
           }
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch. ManageTestSuiteCase action=showInEditor is UI only, without approval or project changes (WithUserInterface required); all other actions retain their policy."
       },
       "ManageTransferArea": {
         "arguments": {
@@ -35441,11 +35477,37 @@
           "itemPath": {
             "exampleValue": "[\"<exact device item from GetProjectTree>\"]",
             "requiresBinding": true
+          },
+          "view": {
+            "exampleValue": "network"
           }
         },
-        "operations": {},
+        "operations": {
+          "plcWatchTable": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "kind": "plcWatchTable",
+              "softwarePath": "<exact softwarePath from GetProjectTree>",
+              "objectPath": "<exact MIN-ESCAPE table path from ListPlcWatchTables>",
+              "dryRun": false
+            },
+            "note": "V15.1-V21 only; V14 SP1 refuses before native dispatch. UI only; skip when TIA runs without user interface."
+          },
+          "network": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "kind": "device",
+              "devicePath": [
+                "<exact device name from GetProjectTree>"
+              ],
+              "view": "network",
+              "dryRun": false
+            },
+            "note": "All eight releases: Device.ShowInEditor(View.Network); no approval or project change. Empty view keeps parameterless IShowable.ShowInEditor()."
+          }
+        },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "UI only: opens the exact written object for the engineer without approval or project changes. Available on all eight releases (V14 SP1, V15.1, V16-V21); requires a TIA Portal with user interface and an IShowable target. Skip this display step when TIA runs without user interface. dryRun=true touches no UI. Bind exact MIN-ESCAPE object paths from readback; no plan fields are required."
+        "note": "UI only: opens the exact written object for the engineer without approval or project changes. Available on all eight releases (V14 SP1, V15.1, V16-V21); requires a TIA Portal with user interface and an IShowable target. Skip this display step when TIA runs without user interface. dryRun=true touches no UI. Bind exact MIN-ESCAPE object paths from readback; no plan fields are required. Watch and force table kinds require V15.1+. For kind=device, optional view device/network/topology uses the official Device.ShowInEditor(View) overload on all eight releases; a nonempty view with another kind is refused. Watch-table example: {\"kind\": \"plcWatchTable\", \"softwarePath\": \"<exact softwarePath from GetProjectTree>\", \"objectPath\": \"<exact MIN-ESCAPE table path from ListPlcWatchTables>\", \"dryRun\": false}. Network-view example: {\"kind\": \"device\", \"devicePath\": [\"<exact device name from GetProjectTree>\"], \"view\": \"network\", \"dryRun\": false}."
       },
       "SynchronizeVersionControlWorkspace": {
         "arguments": {

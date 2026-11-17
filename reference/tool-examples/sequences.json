@@ -363,7 +363,7 @@
     "topic": "watch-table",
     "purpose": "Add a row to a watch table and read it back.",
     "preconditions": "connect-project done.",
-    "notes": "tableName may be group-qualified ('MCP_W/MCP_WT'); the row is created through SimaticML, ModifyIntention is read-only (set by TIA). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+    "notes": "tableName may be group-qualified ('MCP_W/MCP_WT'); the row is created through SimaticML, ModifyIntention is read-only (set by TIA). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Show the completed result to the engineer watching TIA Portal, without approval or project changes. Skip this display step when TIA runs without user interface; only display after a successful write and readback, never after an unknown or refused write.",
     "releaseKeys": [
       "20",
       "21"
@@ -414,6 +414,16 @@
           "action": "read"
         },
         "expect": "the new row in native order"
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcWatchTable",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "<exact MIN-ESCAPE table path from ListPlcWatchTables>",
+          "dryRun": false
+        },
+        "expect": "Show the completed result to the engineer watching TIA Portal, without approval or project changes. Skip this display step when TIA runs without user interface; only display after a successful write and readback, never after an unknown or refused write."
       }
     ]
   },
@@ -4735,6 +4745,90 @@
           "dryRun": false
         },
         "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
+      }
+    ]
+  },
+  {
+    "id": "sequence/hardware-network",
+    "topic": "hardware-network",
+    "purpose": "Create a subnet, attach an exact device node, read back and show the official TIA network view.",
+    "preconditions": "Bind the intended project; resolve the exact station/device-item paths and intended interface index. Replace all placeholders.",
+    "notes": "Show the completed result to the engineer watching TIA Portal, without approval or project changes. Skip this display step when TIA runs without user interface; only display after a successful write and readback, never after an unknown or refused write. Available on all eight releases via Device.ShowInEditor(View.Network).",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "kind": "call-sequence",
+    "validation": "Input schemas checked offline; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "EnsureSubnet",
+        "arguments": {
+          "anchorDeviceItemPath": "<exact device item path from GetProjectTree>",
+          "subnetType": "PROFINET",
+          "subnetName": "<intended subnet name>",
+          "dryRun": true
+        },
+        "expect": "Inspect the exact target, planned changes and data.planHash; no write during preview."
+      },
+      {
+        "tool": "EnsureSubnet",
+        "arguments": {
+          "anchorDeviceItemPath": "<exact device item path from GetProjectTree>",
+          "subnetType": "PROFINET",
+          "subnetName": "<intended subnet name>",
+          "dryRun": false,
+          "expectedPlanHash": "<data.planHash from the immediately preceding preview for this exact target>",
+          "expectedProjectFile": "<exact bound project file from this preview>"
+        },
+        "expect": "Obtain WRITE approval and apply this reviewed plan once; inspect native readback and stop on refusal or unknown outcome."
+      },
+      {
+        "tool": "AttachDeviceNodeToSubnet",
+        "arguments": {
+          "deviceItemPath": "<exact device item path from GetProjectTree>",
+          "interfaceIndex": 1,
+          "subnetName": "<same intended subnet name>",
+          "dryRun": true
+        },
+        "expect": "Inspect the exact target, planned changes and data.planHash; no write during preview."
+      },
+      {
+        "tool": "AttachDeviceNodeToSubnet",
+        "arguments": {
+          "deviceItemPath": "<exact device item path from GetProjectTree>",
+          "interfaceIndex": 1,
+          "subnetName": "<same intended subnet name>",
+          "dryRun": false,
+          "expectedPlanHash": "<data.planHash from the immediately preceding preview for this exact target>",
+          "expectedProjectFile": "<exact bound project file from this preview>"
+        },
+        "expect": "Obtain WRITE approval and apply this reviewed plan once; inspect native readback and stop on refusal or unknown outcome."
+      },
+      {
+        "tool": "GetDeviceItemNetworkInfo",
+        "arguments": {
+          "deviceItemPath": "<same exact device item path from GetProjectTree>"
+        },
+        "expect": "Read back the intended interface and subnet before showing the network."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "device",
+          "devicePath": [
+            "<exact station name from GetProjectTree>"
+          ],
+          "view": "network",
+          "dryRun": false
+        },
+        "expect": "Show the completed result to the engineer watching TIA Portal, without approval or project changes. Skip this display step when TIA runs without user interface; only display after a successful write and readback, never after an unknown or refused write."
       }
     ]
   }

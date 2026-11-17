@@ -40,7 +40,7 @@ namespace TiaMcp.Adapters
                     ReadObjectIdentifier(request.Kind, request.DevicePath, request.ItemPath, request.SoftwarePath, request.ObjectPath, request.Identifier),
 #endif
                 "ShowObjectInEditor" =>
-                    ShowObjectInEditor(request.Kind, request.DevicePath, request.ItemPath, request.SoftwarePath, request.ObjectPath, dryRun),
+                    ShowObjectInEditor(request.Kind, request.DevicePath, request.ItemPath, request.SoftwarePath, request.ObjectPath, dryRun, request.View),
 #if ENGINEERING_COMPILATION_PROPERTIES || ENGINEERING_COMPILATION_SERVICES
                 "ManageProjectCompilationSettings" => ManageProjectCompilationSettings(request.Action, request.CompilationSettings, dryRun),
 #endif

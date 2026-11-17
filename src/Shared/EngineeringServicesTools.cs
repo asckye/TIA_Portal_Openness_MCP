@@ -88,28 +88,34 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ShowObjectInEditor"),
                 Description("[L2][Project][UI] IShowable.ShowInEditor opens the exact object in the TIA Portal editor for the engineer. " +
                 "UI only: no project change and no approval. Requires a TIA Portal with user interface. Available on all eight releases " +
-                "(V14 SP1, V15.1, V16-V21); the target must implement IShowable. Opens directly by default; dryRun=true touches no UI.")]
+                "(V14 SP1, V15.1, V16-V21); watch/force tables require V15.1+. Empty view uses IShowable.ShowInEditor(); " +
+                "kind=device also supports device/network/topology via Device.ShowInEditor(View) on all eight releases. " +
+                "Opens directly by default; dryRun=true touches no UI.")]
         public CallToolResult ShowObjectInEditorV4(
-            [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
+            [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable | plcWatchTable | plcForceTable (tables V15.1+).")]
+            string kind="device",
             string[]? devicePath = null,
             string[]? itemPath = null,
             string softwarePath="",
             string objectPath="",
             [Description("dryRun: false (default) opens the editor without approval or project changes; true previews without touching the UI.")]
-            bool dryRun=false)
+            bool dryRun=false,
+            [Description("view: empty (default) uses parameterless ShowInEditor; device | network | topology selects the official device view. " +
+                "Only kind=device; all eight releases. UI only, no approval or project change; requires a Portal with user interface.")] string view="")
             => SessionToolContract
                 .Run("ShowObjectInEditor", false, false, () =>
                     ShowObjectInEditor(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()),
-                        softwarePath, objectPath, dryRun));
+                        softwarePath, objectPath, dryRun, view));
 
         public ResponseMessage ShowObjectInEditor(
-            [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
+            [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable | plcWatchTable | plcForceTable (tables V15.1+).")]
+            string kind="device",
             string devicePathJson="[]",
             string itemPathJson="[]",
             string softwarePath="",
             string objectPath="",
-            bool dryRun=false)
-            => _service.ShowObjectInEditor(kind,devicePathJson,itemPathJson,softwarePath,objectPath,dryRun);
+            bool dryRun=false, string view="")
+            => _service.ShowObjectInEditor(kind,devicePathJson,itemPathJson,softwarePath,objectPath,dryRun,view);
 
         [McpServerTool(Name="ManageProjectCompilationSettings"),
                 Description("[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project " +

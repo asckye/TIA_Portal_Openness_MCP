@@ -73,12 +73,16 @@ namespace TiaMcpServer.Siemens.Services
                 });
 
         public ResponseMessage ShowObjectInEditor(string kind = "device", string devicePathJson = "[]", string itemPathJson = "[]", string softwarePath = "",
-                string objectPath = "", bool dryRun = false)
-            =>
-                Invoke(new EngineeringServicesRequest {
-                    Operation = "ShowObjectInEditor", Kind = kind, DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!, ItemPath = JsonSerializer
-                        .Deserialize<string[]>(itemPathJson)!, SoftwarePath = softwarePath, ObjectPath = objectPath, DryRun = dryRun
-                });
+                string objectPath = "", bool dryRun = false, string view = "")
+        {
+            var devicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!;
+            var itemPath = JsonSerializer.Deserialize<string[]>(itemPathJson)!;
+            EngineeringServicesPolicy.EditorSelection(kind, devicePath, itemPath, softwarePath, objectPath, view);
+            return Invoke(new EngineeringServicesRequest {
+                Operation = "ShowObjectInEditor", Kind = kind, DevicePath = devicePath, ItemPath = itemPath,
+                SoftwarePath = softwarePath, ObjectPath = objectPath, DryRun = dryRun, View = view
+            });
+        }
 
         public ResponseMessage CompareLibraries(string leftLibraryName = "", string rightLibraryName = "", bool includeIdentical = false, int maxDepth = 8,
                 int offset = 0, int limit = 100)

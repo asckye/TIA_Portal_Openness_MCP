@@ -37,6 +37,11 @@ public sealed class ShowObjectInEditorTests
         var served = Assert.Single(result["data"]!["examples"]!.AsArray())!;
         Assert.True((bool?)served["available"], served.ToJsonString());
         Assert.Equal("ShowObjectInEditor", (string?)served["steps"]!.AsArray()[^1]!["tool"]);
+        var networkResult = await fixture.Call("GetToolUsage", new { exampleId = "sequence/hardware-network", exampleKind = "sequence" });
+        Assert.True((bool?)networkResult["ok"], networkResult.ToJsonString());
+        var network = Assert.Single(networkResult["data"]!["examples"]!.AsArray())!;
+        Assert.True((bool?)network["available"], network.ToJsonString());
+        Assert.Equal("network", (string?)network["steps"]!.AsArray()[^1]!["arguments"]!["view"]);
     }
 
     public static IEnumerable<object[]> Calls() =>

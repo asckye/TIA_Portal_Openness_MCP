@@ -349,6 +349,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ManageTeamcenterWorkflow"] = "WRITE",
             ["ManageTechnologyExtensions"] = "WRITE",
             ["ManageTechnologyObjectV4"] = "WRITE",
+            // Mixed actions retain WRITE; showInEditor is UI only at the per-call boundary.
             ["ManageTestSuiteCase"] = "WRITE",
             ["ManageTransferArea"] = "WRITE",
             ["ManageUmcUsers"] = "WRITE",
