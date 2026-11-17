@@ -101,68 +101,68 @@ empirical findings or operations that still require live verification.
 
 | Skill | Description |
 | --- | --- |
-| [`openness-base`](skills/openness-base/SKILL.md) | SDK discovery, assembly references, API versioning, type identifiers, and core prerequisites |
-| [`licensing-and-firewall`](skills/licensing-and-firewall/SKILL.md) | Product licensing, Windows-group access, and Openness firewall authorization |
-| [`change-detection`](skills/change-detection/SKILL.md) | Project timestamps, fingerprints, PLC checksums, and Safety signatures |
-| [`performance-and-caching`](skills/performance-and-caching/SKILL.md) | IPC-aware navigation, batching, caching, reference limits, and bulk-edit performance |
-| [`threading-and-concurrency`](skills/threading-and-concurrency/SKILL.md) | Apartment state, thread affinity, serialization, and safe concurrent request handling |
+| [`openness-base`](../skills/openness-base/SKILL.md) | SDK discovery, assembly references, API versioning, type identifiers, and core prerequisites |
+| [`licensing-and-firewall`](../skills/licensing-and-firewall/SKILL.md) | Product licensing, Windows-group access, and Openness firewall authorization |
+| [`change-detection`](../skills/change-detection/SKILL.md) | Project timestamps, fingerprints, PLC checksums, and Safety signatures |
+| [`performance-and-caching`](../skills/performance-and-caching/SKILL.md) | IPC-aware navigation, batching, caching, reference limits, and bulk-edit performance |
+| [`threading-and-concurrency`](../skills/threading-and-concurrency/SKILL.md) | Apartment state, thread affinity, serialization, and safe concurrent request handling |
 
 ### General
 
 | Skill | Description |
 | --- | --- |
-| [`session-and-project`](skills/session-and-project/SKILL.md) | TIA Portal session lifecycle and project open, save, archive, and close operations |
-| [`engineering-objects`](skills/engineering-objects/SKILL.md) | Exclusive access, transactions, services, attributes, object navigation, and identity |
+| [`session-and-project`](../skills/session-and-project/SKILL.md) | TIA Portal session lifecycle and project open, save, archive, and close operations |
+| [`engineering-objects`](../skills/engineering-objects/SKILL.md) | Exclusive access, transactions, services, attributes, object navigation, and identity |
 
 ### STEP 7
 
 | Skill | Description |
 | --- | --- |
-| [`tags-and-tagtables`](skills/tags-and-tagtables/SKILL.md) | PLC tag and tag-table operations, XML import/export, and user constants |
-| [`blocks`](skills/blocks/SKILL.md) | Program and data blocks, import/export, compilation, protection, and cross-references |
-| [`devices-and-hardware`](skills/devices-and-hardware/SKILL.md) | Device creation, CPU discovery, software containers, networks, and transfer areas |
-| [`online-and-download`](skills/online-and-download/SKILL.md) | Online connections and software download |
-| [`security`](skills/security/SKILL.md) | UMAC roles, users, device-function rights, and PLC protection |
-| [`libraries-and-alarms`](skills/libraries-and-alarms/SKILL.md) | Global libraries, master copies, alarm text lists, Safety administration, and units |
-| [`technology-objects`](skills/technology-objects/SKILL.md) | Technology-object creation, discovery, and parameterization |
-| [`global-library`](skills/global-library/SKILL.md) | Global-library traversal, type classification, placement, and rename patterns |
-| [`sw-units`](skills/sw-units/SKILL.md) | PLC-wide discovery and creation across root and software-unit scopes |
-| [`software-hierarchy`](skills/software-hierarchy/SKILL.md) | PLC software hierarchy and routing through groups and software units |
-| [`openness-testing`](skills/openness-testing/SKILL.md) | Live Openness integration-test architecture and runner prerequisites |
-| [`plc-data-types`](skills/plc-data-types/SKILL.md) | PLC data types, recursive search, and UDT XML structure |
-| [`plc-safety-administration`](skills/plc-safety-administration/SKILL.md) | Fail-safe PLC settings, block-number assignment, and runtime groups |
-| [`simatic-sd`](skills/simatic-sd/SKILL.md) | SIMATIC SD documents, V21 import/export, parsing, and network insertion |
-| [`crash-diagnosis`](skills/crash-diagnosis/SKILL.md) | Hard-crash localization and safer object-tree inspection |
-| [`object-tree-walking`](skills/object-tree-walking/SKILL.md) | Schema-free service, attribute, and composition traversal |
+| [`tags-and-tagtables`](../skills/tags-and-tagtables/SKILL.md) | PLC tag and tag-table operations, XML import/export, and user constants |
+| [`blocks`](../skills/blocks/SKILL.md) | Program and data blocks, import/export, compilation, protection, and cross-references |
+| [`devices-and-hardware`](../skills/devices-and-hardware/SKILL.md) | Device creation, CPU discovery, software containers, networks, and transfer areas |
+| [`online-and-download`](../skills/online-and-download/SKILL.md) | Online connections and software download |
+| [`security`](../skills/security/SKILL.md) | UMAC roles, users, device-function rights, and PLC protection |
+| [`libraries-and-alarms`](../skills/libraries-and-alarms/SKILL.md) | Global libraries, master copies, alarm text lists, Safety administration, and units |
+| [`technology-objects`](../skills/technology-objects/SKILL.md) | Technology-object creation, discovery, and parameterization |
+| [`global-library`](../skills/global-library/SKILL.md) | Global-library traversal, type classification, placement, and rename patterns |
+| [`sw-units`](../skills/sw-units/SKILL.md) | PLC-wide discovery and creation across root and software-unit scopes |
+| [`software-hierarchy`](../skills/software-hierarchy/SKILL.md) | PLC software hierarchy and routing through groups and software units |
+| [`openness-testing`](../skills/openness-testing/SKILL.md) | Live Openness integration-test architecture and runner prerequisites |
+| [`plc-data-types`](../skills/plc-data-types/SKILL.md) | PLC data types, recursive search, and UDT XML structure |
+| [`plc-safety-administration`](../skills/plc-safety-administration/SKILL.md) | Fail-safe PLC settings, block-number assignment, and runtime groups |
+| [`simatic-sd`](../skills/simatic-sd/SKILL.md) | SIMATIC SD documents, V21 import/export, parsing, and network insertion |
+| [`crash-diagnosis`](../skills/crash-diagnosis/SKILL.md) | Hard-crash localization and safer object-tree inspection |
+| [`object-tree-walking`](../skills/object-tree-walking/SKILL.md) | Schema-free service, attribute, and composition traversal |
 
 ### Startdrive
 
 | Skill | Description |
 | --- | --- |
-| [`drive-objects`](skills/drive-objects/SKILL.md) | Drive-object access, activation, parameters, hardware projection, and online operations |
-| [`hardware-and-modules`](skills/hardware-and-modules/SKILL.md) | Motors, encoders, hardware catalog search, insertion, and type changes |
-| [`parameters`](skills/parameters/SKILL.md) | Drive parameters, indexed values, bits, and BiCo wiring |
-| [`telegrams`](skills/telegrams/SKILL.md) | Main, safety, additional, and supplementary telegram configuration |
-| [`networks-and-drivecliq`](skills/networks-and-drivecliq/SKILL.md) | PROFINET and DriveCliq port connections |
-| [`safety-commissioning`](skills/safety-commissioning/SKILL.md) | SINAMICS safety functions, checksums, and acceptance tests |
+| [`drive-objects`](../skills/drive-objects/SKILL.md) | Drive-object access, activation, parameters, hardware projection, and online operations |
+| [`hardware-and-modules`](../skills/hardware-and-modules/SKILL.md) | Motors, encoders, hardware catalog search, insertion, and type changes |
+| [`parameters`](../skills/parameters/SKILL.md) | Drive parameters, indexed values, bits, and BiCo wiring |
+| [`telegrams`](../skills/telegrams/SKILL.md) | Main, safety, additional, and supplementary telegram configuration |
+| [`networks-and-drivecliq`](../skills/networks-and-drivecliq/SKILL.md) | PROFINET and DriveCliq port connections |
+| [`safety-commissioning`](../skills/safety-commissioning/SKILL.md) | SINAMICS safety functions, checksums, and acceptance tests |
 
 ### DCC
 
 | Skill | Description |
 | --- | --- |
-| [`drive-control-charts`](skills/drive-control-charts/SKILL.md) | DCC chart import/export, blocks, pins, and parameter interconnection |
+| [`drive-control-charts`](../skills/drive-control-charts/SKILL.md) | DCC chart import/export, blocks, pins, and parameter interconnection |
 
 ### Add-in development
 
 | Skill | Description |
 | --- | --- |
-| [`tia-addin-scaffold`](skills/tia-addin-scaffold/SKILL.md) | Guided creation of packaged add-ins and standalone Openness applications |
+| [`tia-addin-scaffold`](../skills/tia-addin-scaffold/SKILL.md) | Guided creation of packaged add-ins and standalone Openness applications |
 
 ### Discovery
 
 | Skill | Description |
 | --- | --- |
-| [`openness-overview`](skills/openness-overview/SKILL.md) | Overview and routing help for all skills in this plugin |
+| [`openness-overview`](../skills/openness-overview/SKILL.md) | Overview and routing help for all skills in this plugin |
 
 ## Support
 

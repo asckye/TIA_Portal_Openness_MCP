@@ -149,6 +149,7 @@
   },
   "OPENNESS_REFERENCE_NAMES": {
     "Connect": "Siemens Openness member name used only in upstream API reference documentation",
-    "Disconnect": "Siemens Openness member name used only in upstream API reference documentation"
+    "Disconnect": "Siemens Openness member name used only in upstream API reference documentation",
+    "GetTypes": ".NET reflection member name used only in upstream Siemens guide text (openness-testing skill)"
   }
 }
