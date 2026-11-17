@@ -136,7 +136,7 @@ NO-LOCK Part 4 的真机核对当前为 NOT RUN。获准连接测试环境后，
 
 | 来源 | 固定提交 | 许可 | 范围 |
 |---|---|---|---|
-| [Siemens TIA Portal AI extensions](https://github.com/siemens/tia-portal-ai-extensions) | `b5c7041648dc10f9225ef082306ade6c335b8771` | MIT，© Siemens AG，[许可证](../../reference/siemens-openness/LICENSE) | 32 组指南（36 个 Markdown 文件），在 `reference/siemens-openness` |
+| [Siemens TIA Portal AI extensions](https://github.com/siemens/tia-portal-ai-extensions) | `6aa36504d76ddb9f92e3e52c1f7ff0cc571c4d48` | MIT，© Siemens AG，[许可证](../../reference/siemens-openness/LICENSE) | 32 组指南（36 个 Markdown 文件），在 `reference/siemens-openness` |
 | [Siemens TIA Portal Openness Code Snippets](https://github.com/siemens/tia-portal-openness-code-snippets) | `4a8cc79d0666633e524e52f3335d99ff993f8830` | 源码按许可证第 2 节为 MIT，完整[许可证](../licenses/SiemensCodeSnippets-LICENSE.md)保留 | 41 个 C# 文件、8 个项目文件、README、许可证和 2 个构建文件，在 `reference/siemens-code-snippets` |
 
 Code Snippets 的夹具选 V21 而 README 写 V20，两者都不证明旧版本兼容。语料不是 Siemens 发布过的全部示例；示例模板覆盖已注册的工具，不等于每个调用都针对具体目标完成或经过真机核对。动态属性必须先读取对象的自描述，示例不能让编造的属性名生效。
