@@ -7,10 +7,12 @@
     <DefineConstants>$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />
     <ProjectReference Include="../../Fixtures/TiaMcp.UnifiedWorker.Fixture/TiaMcp.UnifiedWorker.Fixture.csproj" Aliases="unifiedworkerfixture" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareLegacyWrites.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkLegacy.Read.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcOrganisationGroups.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcObjectPath.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcGroupOperations.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcGroupCreation.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareValues.cs" />

@@ -135,21 +135,21 @@ namespace TiaMcp.Adapters.Native.Plc
             if (kind == "UDT")
             {
                 PlcTypeGroup current = PlcUnitScope.Types(software, unit);
-                foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment))
+                foreach (var segment in PlcObjectPath.Parts(groupPath, true)) current = current.Groups.Find(segment)
                     ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination type group is unavailable.", "groupPath");
                 group = current;
             }
             else if (kind == "TagTable")
             {
                 PlcTagTableGroup current = PlcUnitScope.Tags(software, unit);
-                foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment))
+                foreach (var segment in PlcObjectPath.Parts(groupPath, true)) current = current.Groups.Find(segment)
                     ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination tag group is unavailable.", "groupPath");
                 group = current;
             }
             else
             {
                 PlcBlockGroup current = PlcUnitScope.Blocks(software, unit);
-                foreach (var segment in groupPath.Split('/').Where(s => s.Length > 0)) current = current.Groups.Find(Uri.UnescapeDataString(segment))
+                foreach (var segment in PlcObjectPath.Parts(groupPath, true)) current = current.Groups.Find(segment)
                     ?? throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Destination block group is unavailable.", "groupPath");
                 group = current;
             }

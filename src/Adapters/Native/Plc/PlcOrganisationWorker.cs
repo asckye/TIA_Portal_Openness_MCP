@@ -227,12 +227,15 @@ namespace TiaMcp.Adapters
             catch (Exception error) when (error.GetBaseException() is not NonRecoverableException)
             {
                 reply.Failure = new PlcSoftwareFailure {
-                    Code = error is PlcSoftwareException native ? native.Code : error.GetType().Name, Message = error.Message,
+                    Code = error is PlcSoftwareException native ? native.Code : request.Operation == "DescribePlcBlockLogic"
+                        && error is AdapterPreconditionException { Condition: "not-found" } or AdapterPreconditionException { IsArgument: true }
+                        ? StepFailureStatus.Of(error) : error.GetType().Name, Message = error.Message,
                     Candidates = (error as PlcSoftwareException)?.Candidates?.ToArray() };
                 reply.Failure.Evidence["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
                 reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
                 reply.Failure.Evidence["mayHaveChanged"] = adapter.MutationStarted;
                 reply.Failure.Evidence["status"] = StepFailureStatus.Of(error);
+                if (StepFailureStatus.Parameter(error) is string parameter) reply.Failure.Evidence["parameter"] = parameter;
                 StepFailureStatus.RecordTarget(error, reply.Failure.Evidence);
                 reply.MayHaveChanged = adapter.MutationStarted; reply.OutcomeUnknown = adapter.MutationStarted;
                 if (request.Operation == "MovePlcBlockToGroup") reply.Failure.Evidence["deleteStarted"] = adapter.MutationStarted;
@@ -242,7 +245,7 @@ namespace TiaMcp.Adapters
             return reply;
         }
 
-        private sealed class OrganisationSession : IPlcOrganisationSession
+        private sealed partial class OrganisationSession : IPlcOrganisationSession
         {
             private readonly PlcFoundationEngine engine;
             internal OrganisationSession(PlcFoundationEngine engine) => this.engine = engine;
@@ -255,19 +258,6 @@ namespace TiaMcp.Adapters
             public void RecordExportFailure(Exception error) => engine.OrganisationExportFailure?.Invoke(error);
             public void LogEngineeringFailure(Exception error, string message) => engine.OrganisationLogFailure?.Invoke(error, message);
             public void RecordExportPath(string? path) => engine.EngineeringRecordExportPath?.Invoke(path);
-            public PlcTypeGroup? GetPlcTypeGroupByPath(string path, string groupPath)
-            {
-                object root = engine.ReadSelection(path).Value.TypeGroup;
-                foreach (var part in PlcGroupOperations.Parts(groupPath, true)) {
-                    var next = PlcGroupOperations.Find(PlcGroupOperations.Get(root, "Groups"), part); if (next == null) return null; root = next; }
-                return (PlcTypeGroup)root;
-            }
-            public string GetPlcBlockGroupPath(PlcBlockGroup group)
-            {
-                var names = new List<string>(); object? value = group;
-                while (value is PlcBlockUserGroup child) { names.Insert(0, child.Name); value = child.Parent; }
-                return string.Join("/", names);
-            }
             public bool IsProjectNull() => engine.HardwareProjectMissing();
             public TiaPortal? CurrentPortal => engine.portal;
             public char[] RegexChars => new[] { '.', '*', '+', '?', '^', '$', '[', ']', '(', ')', '{', '}', '|', '\\' };
@@ -385,8 +375,10 @@ namespace TiaMcp.Adapters
             }
             public object ExactObjectUnder(object root, string path, string collection, string label)
             {
-                var parts = PlcGroupOperations.Parts(path);
-                var group = PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)));
+                var parts = collection == "Blocks" || collection == "Types"
+                    ? PlcObjectPath.Parts(path, parameter: collection == "Blocks" ? "blockPath" : "typePath") : PlcGroupOperations.Parts(path);
+                var group = PlcGroupOperations.Group(root, PlcObjectPath.Format(parts.Take(parts.Length - 1)),
+                    pathParts: value => PlcObjectPath.Parts(value, true));
                 return PlcGroupOperations.Find(PlcGroupOperations.Get(group, collection), parts.Last())
                     ?? throw new PlcSoftwareException("NotFound", "Exact " + label + " not found: " + path);
             }
@@ -395,36 +387,13 @@ namespace TiaMcp.Adapters
                 .Get(unit, "BlockGroup");
             public PlcTypeGroup TypeRootOf(PlcSoftware plc, object? unit) => unit == null ? plc.TypeGroup : (PlcTypeGroup)PlcGroupOperations
                 .Get(unit, "TypeGroup");
-            public PlcBlock? GetBlock(string path, string blockPath)
-            {
-                var parts = PlcGroupOperations.Parts(blockPath); var root = engine.ReadSelection(path).Value.BlockGroup;
-                return ((PlcBlockGroup)PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)))).Blocks.Find(parts.Last());
-            }
             public List<PlcBlock>? GetBlocks(string path, string regex = "")
             {
                 var all = engine.Blocks(path).Select(x => x.Value);
                 return (regex.Length == 0 ? all : all.Where(b => Regex.IsMatch(b.Name, regex, RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)))).ToList();
             }
-            public PlcType? GetType(string path, string typePath)
-            {
-                var parts = PlcGroupOperations.Parts(typePath); var root = engine.ReadSelection(path).Value.TypeGroup;
-                return ((PlcTypeGroup)PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)))).Types.Find(parts.Last());
-            }
-            public string GetBlockPath(PlcBlock block)
-            {
-                var names = new List<string> { block.Name }; object? parent = block.Parent;
-                while (parent is PlcBlockUserGroup group) { names.Insert(0, group.Name); parent = group.Parent; }
-                return string.Join("/", names);
-            }
             public void GetBlocksRecursive(PlcBlockGroup root, List<PlcBlock> result)
                 => result.AddRange(BlockGroups(root).SelectMany(g => g.Value.Blocks));
-            public PlcBlockGroup? GetPlcBlockGroupByPath(string path, string groupPath)
-            {
-                object current = engine.ReadSelection(path).Value.BlockGroup;
-                foreach (var segment in PlcGroupOperations.Parts(groupPath, true))
-                { var next = PlcGroupOperations.Find(PlcGroupOperations.Get(current, "Groups"), segment); if (next == null) return null; current = next; }
-                return (PlcBlockGroup)current;
-            }
             public List<string>? GetPlcTagTables(string path, out string? reason)
             { reason = null; return engine.Tables(path).Select(t => t.Path).ToList(); }
             public string AvailablePlcPathsSuffix() => " Available PLC paths: " + string.Join(", ", engine.Plcs().Select(p => p.Path));

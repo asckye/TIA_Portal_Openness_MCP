@@ -107,9 +107,13 @@ namespace TiaMcp.Adapters
                     .HardwareOwnerPath(hardware);
                 return hardware;
             }
-            var plc = EngineeringPlcSession.ExactPlcForEngineering(softwarePath, false); var parts = PlcGroupOperations.Parts(objectPath);
+            var plc = EngineeringPlcSession.ExactPlcForEngineering(softwarePath, false);
+            bool plcObject = kind == "plcBlock" || kind == "plcType";
+            var parts = plcObject ? PlcObjectPath.Parts(objectPath, parameter: "objectPath") : PlcGroupOperations.Parts(objectPath);
             object root = kind == "plcBlock" ? plc.BlockGroup : kind == "plcType" ? (object)plc.TypeGroup : plc.TagTableGroup;
-            var group = PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)));
+            var group = plcObject
+                ? PlcGroupOperations.Group(root, PlcObjectPath.Format(parts.Take(parts.Length - 1)), pathParts: value => PlcObjectPath.Parts(value, true))
+                : PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)));
             var collection = PlcGroupOperations.Get(group, kind == "plcBlock" ? "Blocks" : kind == "plcType" ? "Types" : "TagTables");
             return PlcGroupOperations.Find(collection, parts.Last()) as IEngineeringObject
                 ?? throw new PlcSoftwareException("NotFound", "Exact " + kind + " not found: " + objectPath);

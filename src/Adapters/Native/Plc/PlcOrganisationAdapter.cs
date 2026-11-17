@@ -158,7 +158,7 @@ namespace TiaMcp.Adapters.Native.Plc
             string recoveryPath = "", bool dryRun = true, string expectedPlanHash = "")
         {
             if (IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project is open in TIA Portal");
-            PlcGroupOperations.Parts(targetGroupPath, true);
+            PlcObjectPath.Parts(targetGroupPath, true, "targetGroupPath");
             var block = _session.GetBlock(softwarePath, blockName)
                 ?? throw new PlcSoftwareException("NotFound", $"Block '{blockName}' not found in '{softwarePath}'");
             var parent = PlcOrganisationPrimitives.Parent(block);
@@ -235,7 +235,8 @@ namespace TiaMcp.Adapters.Native.Plc
                         throw new IOException("Source block remains after delete.");
                 }, () => {
                     if (target == null) {
-                        var groups = PlcGroupOperations.Manage(PlcOrganisationPrimitives.BlockGroup(movePlc), targetGroupPath, "create", "", false, "Blocks");
+                        var groups = PlcGroupOperations.Manage(PlcOrganisationPrimitives.BlockGroup(movePlc), targetGroupPath, "create", "", false, "Blocks",
+                            pathParts: value => PlcObjectPath.Parts(value));
                         targetGroupsCreated = ((IEnumerable<object?>)groups["createdPaths"]!).ToArray();
                         target = _session.GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
                     }

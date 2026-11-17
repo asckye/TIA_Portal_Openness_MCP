@@ -13,14 +13,15 @@ namespace TiaMcp.Adapters.Native.Plc
             => _session.RunHmiStepTool("ImportPlcBlockVerified", meta => {
                 string softwarePath = request.SoftwarePath, blockPath = request.Path;
                 var candidate = validate(request);
-                var parts = PlcGroupOperations.Parts(blockPath);
+                var parts = PlcObjectPath.Parts(blockPath, parameter: "blockPath");
                 if (parts.Length == 0 || parts.Last() != candidate.Name) throw new ArgumentException("Exact blockPath must end with candidate Name.");
                 meta["mayHaveChanged"] = false; meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath;
                 IDisposable? exclusive = null;
                 try {
                     exclusive = _session.AcquireHmiEditAccess();
                     var plc = _session.ExactPlcForEngineering(softwarePath, true); // Offline even for export preview.
-                    var group = (PlcBlockGroup)PlcGroupOperations.Group(PlcBlockPrimitives.BlockGroup(plc), string.Join("/", parts.Take(parts.Length - 1)));
+                    var group = (PlcBlockGroup)PlcGroupOperations.Group(PlcBlockPrimitives.BlockGroup(plc), PlcObjectPath.Format(parts.Take(parts.Length - 1)),
+                        pathParts: value => PlcObjectPath.Parts(value, true));
                     PlcBlock Resolve() => PlcBlockPrimitives.Find(PlcBlockPrimitives.Blocks(group), parts.Last())
                         ?? throw new PlcSoftwareException("NotFound", "Exact existing block not found in its target group.");
                     void Check() { _session.VerifyBinding("ImportPlcBlockVerified"); _session.ExactPlcForEngineering(softwarePath, true); }

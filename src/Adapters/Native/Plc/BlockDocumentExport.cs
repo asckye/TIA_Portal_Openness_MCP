@@ -34,7 +34,7 @@ namespace TiaMcp.Adapters
                 var block = session.GetBlock(softwarePath, blockPath);
                 if (block == null) return new BlockDocumentExportReply { Status = "NotFound", Message = "Block not found: '" + blockPath + "'" };
                 var groupPath = block.Parent is PlcBlockGroup parent ? session.GetPlcBlockGroupPath(parent) : "";
-                var exportPath = Path.Combine(tempDir, block.Name + ".xml");
+                var exportPath = Path.Combine(tempDir, Uri.EscapeDataString(block.Name) + ".xml");
                 TiaOpenness.Shared.NativeExportPolicy
                     .RequireConsistent("blocks", block.IsConsistent ? Array.Empty<string>() : new[] { blockPath }, "blockPath");
                 if (File.Exists(exportPath)) File.Delete(exportPath);

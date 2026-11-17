@@ -399,7 +399,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 bool dryRun = true)
             => _session.RunHmiStepTool("SetPlcUnitObjectAccess", meta => {
                 meta["mayHaveChanged"] = false;
-                var parts = PlcGroupOperations.Parts(objectPath);
+                var parts = PlcObjectPath.Parts(objectPath, parameter: "objectPath");
                 if (objectKind != "block" && objectKind != "type") throw new ArgumentException("objectKind must be block or type.");
                 var desired = (UnitAccessType)HardwareAddressingPolicy
                     .ConvertValue(new HardwareScalar { Kind = "string", Text = access }, typeof(UnitAccessType))!;
@@ -411,7 +411,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 PlcUnitBase unit = (PlcUnitBase?)unitGroup.Units.Find(unitName) ?? PlcUnitScope.FindSafety(unitGroup, unitName)
                     ?? throw new PlcSoftwareException("NotFound", "Exact software / safety unit not found: " + unitName);
                 var root = objectKind == "block" ? (object)unit.BlockGroup : unit.TypeGroup;
-                var group = PlcGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)));
+                var group = PlcGroupOperations.Group(root, PlcObjectPath.Format(parts.Take(parts.Length - 1)),
+                    pathParts: value => PlcObjectPath.Parts(value, true));
                 var target = PlcGroupOperations.Find(PlcGroupOperations.Get(group, objectKind == "block" ? "Blocks" : "Types"), parts.Last()) as global::Siemens
                     .Engineering.IEngineeringObject
                     ?? throw new PlcSoftwareException("NotFound", "Exact object under unit not found.");

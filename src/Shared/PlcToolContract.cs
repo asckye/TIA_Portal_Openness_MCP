@@ -62,6 +62,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     var safeEvidence = (JsonObject)nativeEvidence.DeepClone();
                     HostBehavior.SanitizeEvidence(safeEvidence);
+                    if (tool == "DescribePlcBlockLogic" && HostBehavior.KnownRefusal(safeEvidence, false, HardwareContract.ReleaseKey, tool,
+                            field => McpServer.MissingTargetDetails(tool, field)) is Error readRefusal)
+                    {
+                        if (readRefusal.Details is NotFoundDetails)
+                            readRefusal = new Error(readRefusal.Message, McpServer.MissingTargetDetails(tool, evidence: safeEvidence));
+                        else if (readRefusal.Details is InvalidArgumentDetails)
+                            readRefusal = new Error(readRefusal.Message, McpServer.ArgumentDetails(tool, null, safeEvidence));
+                        return Result(tool, null, readRefusal, Outcome.RejectedBeforeOperation, Completeness.None, current);
+                    }
                     if (tool == "MovePlcBlockToGroup") moveEvidence ??= safeEvidence;
                     if (tool == "MovePlcBlockToGroup" && (bool?)safeEvidence["deleteStarted"] == false)
                     {

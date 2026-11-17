@@ -44,6 +44,7 @@ namespace TiaMcp.Adapters.Native.Plc
         public PlcBlockGroup BlockRootOf(PlcSoftware plc, object? unit);
         public PlcTypeGroup TypeRootOf(PlcSoftware plc, object? unit);
         public PlcBlock? GetBlock(string softwarePath, string blockPath);
+        public PlcBlock GetBlockForRead(string softwarePath, string blockPath);
         public List<PlcBlock>? GetBlocks(string softwarePath, string regex = "");
         public PlcType? GetType(string softwarePath, string typePath);
         public string GetBlockPath(PlcBlock block);

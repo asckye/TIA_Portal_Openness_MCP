@@ -26,7 +26,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     ?? throw new ArgumentException("fbPath must identify an FB, not an FC or DB.");
                 var sourceRefusal = PlcInstanceDbPolicy.SourceRefusal(_session.ReleaseKey, fb.ProgrammingLanguage.ToString());
                 if (sourceRefusal != null) throw new NotSupportedException(sourceRefusal);
-                var group = (PlcBlockGroup)PlcGroupOperations.Group(plc.BlockGroup, groupPath);
+                var group = (PlcBlockGroup)PlcGroupOperations.Group(plc.BlockGroup, groupPath, pathParts: value => PlcObjectPath.Parts(value, true));
                 if (group.Blocks.Find(name) != null) throw new InvalidOperationException("Destination DB name already exists.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["fbPath"] = fbPath; meta["groupPath"] = groupPath; meta["name"] = name;
                 if (!dryRun)

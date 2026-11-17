@@ -29,17 +29,9 @@ namespace TiaMcp.Adapters
         }
         internal static string ObjectPath(string path,bool allowRoot=false,string parameter="groupPath")
         {
-            if(path=="" && allowRoot) return "";
-            if(string.IsNullOrWhiteSpace(path) || path.Contains("\\"))
-                throw new AdapterPreconditionException("Use a nonempty slash-separated object path.",parameter);
-            return string.Join("/",path.Split('/').Select(segment=>
-            {
-                var name=Uri.UnescapeDataString(segment);
-                if(string.IsNullOrWhiteSpace(name) || name=="." || name=="..")
-                    throw new AdapterPreconditionException("Empty and traversal object path segments are refused.",parameter);
-                return Uri.EscapeDataString(name);
-            }));
+            return Native.Plc.PlcObjectPath.Format(Native.Plc.PlcObjectPath.Parts(path, allowRoot, parameter));
         }
+
         internal static FileInfo ExportDestination(string directory,string objectPath,bool preservePath)
         {
             var root=new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(directory));

@@ -25,7 +25,9 @@ namespace TiaMcp.Adapters.Native.Plc
                     "tags" => ("TagTableGroup", "TagTables"), "technology" => ("TechnologicalObjectGroup", "TechnologicalObjects"),
                     "watchTables" => ("WatchAndForceTableGroup", "WatchTables,ForceTables"), "externalSources" => ("ExternalSourceGroup", "ExternalSources"),
                     _ => throw new ArgumentException("family must be blocks, types, tags, technology, watchTables or externalSources.") };
-                PlcGroupOperations.Parts(groupPath);
+                Func<string, string[]>? pathParts = family == "blocks" || family == "types"
+                    ? value => PlcObjectPath.Parts(value, true) : null;
+                var parts = pathParts != null ? PlcObjectPath.Parts(groupPath) : PlcGroupOperations.Parts(groupPath);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var plc = PlcOrganisationPrimitives.SoftwareOrNull(_session.ResolveSoftwareContainerUncached(softwarePath)) as PlcSoftware
                     ?? throw new PlcSoftwareException("NotFound", "PLC software not found: " + softwarePath);
@@ -34,14 +36,18 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!dryRun && PlcOrganisationPrimitives.StateOrNull(_session.ResolvePlcService<OnlineProvider>(softwarePath, plc))?.ToString() != "Offline")
                     throw new PlcSoftwareException("InvalidState", "Confirmed Offline state is required for group editing.");
                 if (!dryRun) meta["mayHaveChanged"] = true;
-                meta["result"] = PlcGroupOperations.Manage(PlcGroupOperations.Get(plc, shape.Item1), groupPath, action, newName, dryRun, shape.Item2);
+                meta["result"] = PlcGroupOperations
+                    .Manage(PlcGroupOperations.Get(plc, shape.Item1), groupPath, action, newName, dryRun, shape.Item2, pathParts: pathParts);
                 if (action != "deleteEmpty" || dryRun) {
                     try {
-                        meta["group"] =
-                            UserGroupRow(PlcGroupOperations
-                                .Group(PlcGroupOperations.Get(plc, shape.Item1), action == "rename" && !dryRun ? string
-                                    .Join("/", PlcGroupOperations.Parts(groupPath).Take(PlcGroupOperations.Parts(groupPath).Length - 1).Append(newName))
-                                    : groupPath));
+                        string resolvedGroupPath = groupPath;
+                        if (action == "rename" && !dryRun)
+                        {
+                            var renamedParts = parts.Take(parts.Length - 1).Append(newName);
+                            resolvedGroupPath = pathParts != null ? PlcObjectPath.Format(renamedParts) : string.Join("/", renamedParts);
+                        }
+                        meta["group"] = UserGroupRow(PlcGroupOperations.Group(PlcGroupOperations.Get(plc, shape.Item1), resolvedGroupPath,
+                            pathParts: pathParts));
                     } catch (Exception ex) { meta["groupError"] = ex.GetBaseException().Message; }
                 }
                 return dryRun ? "Group operation preview; nothing changed." : "Group operation completed. Project not saved.";

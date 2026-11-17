@@ -61,7 +61,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
-                var group = (PlcBlockGroup)EngineeringGroupOperations.Group(_session.BlockRootOf(plc, unit), groupPath);
+                var group = (PlcBlockGroup)EngineeringGroupOperations.Group(_session.BlockRootOf(plc, unit), groupPath,
+                    pathParts: value => PlcObjectPath.Parts(value, true));
                 meta["unitName"] = unitName; meta["unitKind"] = unitName == "" ? "root" : unitKind; meta["groupPath"] = groupPath;
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 if (action == "list")
