@@ -1676,6 +1676,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["SetUnifiedGlobalScript.moduleName"] = new ParameterHint("\"Navigation\""),
             ["SetUnifiedGlobalScript.scriptCode"] = new ParameterHint("\"\\u003CscriptCode\\u003E\""),
             ["SetUnifiedGlobalScript.previewToken"] = new ParameterHint("\"\\u003CexpectedToken\\u003E\""),
+            ["SetUnifiedGlobalScript.action"] = new ParameterHint("\"update\"", "update", "create"),
             ["SetUnifiedHmiButtonEventScriptCode.hmiSoftwarePath"] = new ParameterHint("\"HMI_RT_1\""),
             ["SetUnifiedHmiButtonEventScriptCode.screenName"] = new ParameterHint("\"\\u003CscreenName\\u003E\""),
             ["SetUnifiedHmiButtonEventScriptCode.buttonName"] = new ParameterHint("\"\\u003CbuttonName\\u003E\""),

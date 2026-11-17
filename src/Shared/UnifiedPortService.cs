@@ -31,6 +31,11 @@ namespace TiaMcpServer.Siemens.Services
         internal static Error? ValidateNavigation(string tool, JsonElement schema, JsonElement args)
         {
             if (args.ValueKind != JsonValueKind.Object) return null;
+            if (tool == "SetUnifiedGlobalScript" && args.TryGetProperty("action", out var scriptAction)
+                && scriptAction.ValueKind == JsonValueKind.String)
+                try { EngineeringInputValidation.Action(scriptAction.GetString()!, "update", "create"); }
+                catch (ArgumentException error)
+                { return new Error(error.Message, new InvalidArgumentDetails("action", Array.Empty<string>(), expected: "update | create")); }
             if (args.TryGetProperty("expectedProject", out var expectedProject) && expectedProject.ValueKind == JsonValueKind.String
                 && HostBehavior.ExpectedProjectArgument(expectedProject.GetString()) is { } projectError) return projectError;
             if (tool is "EnsureUnifiedHmiTagTable" or "EnsureUnifiedHmiTag" or "EnsureUnifiedHmiScreen" or "SetUnifiedHmiRuntimeState")

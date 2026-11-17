@@ -5,6 +5,7 @@ namespace TiaMcp.Adapters.Contracts
     public interface IUnifiedCodecs
     {
         public Func<string, string, UnifiedScriptPair>? ReadUnifiedScriptPair { get; }
+        public Func<string, string, string, UnifiedScriptPair>? ComposeUnifiedScriptPair { get; }
         public Action<string, string>? RequireUnifiedPlainFile { get; }
         public Action<string>? ValidateUnifiedScript { get; }
         public Func<string, string, string, IEnumerable<Dictionary<string, object?>>>? DecodeUnifiedDocument { get; }

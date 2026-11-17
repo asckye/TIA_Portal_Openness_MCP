@@ -9,8 +9,8 @@ using System.Text;
 
 namespace TiaMcp.Adapters.Native.Hmi
 {
-    // Only a selected, already-existing module is exported/imported. Native YAML
-    // is preserved byte-for-byte; unknown native shapes are refused, not guessed.
+    // Updates preserve the exported native pair. Creates import an isolated pair
+    // and disclose that Openness provides no module delete for rollback.
     internal static class UnifiedGlobalScriptEdit
     {
         private const int MaxBytes = 1024 * 1024;
@@ -48,6 +48,81 @@ namespace TiaMcp.Adapters.Native.Hmi
                 || !capture.Paths.Select(Path.GetFullPath).Contains(Path.Combine(directory, pair.YamlName), StringComparer.OrdinalIgnoreCase))
                 throw new NotSupportedException("Native returned paths do not match the exported JS/YAML pair.");
             return pair;
+        }
+        private static object RequireAbsent(Func<object> resolveHmi, string moduleName)
+        {
+            var scripts = UnifiedScriptAccess.Scripts(resolveHmi());
+            int count = MigrationRead.Count(scripts);
+            for (int i = 0; i < count; i++)
+            {
+                var name = MigrationRead.Get(MigrationRead.At(scripts, i), "Name")?.ToString();
+                if (string.Equals(name, moduleName, StringComparison.Ordinal))
+                    throw new ArgumentException("Script module already exists: " + name, nameof(moduleName));
+                if (string.Equals(name, moduleName, StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("Script module name conflicts with existing case variant: " + name, nameof(moduleName));
+            }
+            return scripts;
+        }
+        internal static string Create(Func<object> resolveHmi, string project, string softwarePath, string moduleName,
+            string scriptCode, bool dryRun, string expectedToken, HmiObject meta)
+        {
+            meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["verificationSuccess"] = false;
+            meta["importAttempted"] = false; meta["mayHaveChanged"] = false; meta["dryRun"] = dryRun;
+            meta["expectedProject"] = project; meta["softwarePath"] = softwarePath;
+            meta["moduleName"] = moduleName; meta["modulePath"] = "/Scripts/" + MigrationRead.Segment(moduleName);
+            meta["persistence"] = "No project save, compile, download or page deletion is performed.";
+            meta["navigationTargetsVerified"] = false;
+            meta["irreversible"] = "No Openness delete exists for script modules; remove manually in TIA if needed.";
+            if (string.IsNullOrWhiteSpace(scriptCode) || scriptCode.Length > MaxBytes || Utf8.GetByteCount(scriptCode) > MaxBytes)
+                throw new ArgumentException("Supply the COMPLETE nonempty native .hmi.js text, at most 1 MiB; not just a function body.");
+            meta["phase"] = "parseProposedText";
+            UnifiedCodecs.ValidateScript(scriptCode);
+            meta["syntaxValidation"] = "Esprima parse only; no script execution or TIA SyntaxCheck. Runtime references remain unverified.";
+            var work = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
+            var candidate = Path.Combine(work, "candidate"); Directory.CreateDirectory(candidate);
+            var pair = UnifiedCodecs.ComposePair(candidate, moduleName, scriptCode);
+            meta["candidateDirectory"] = candidate;
+            meta["candidateRetention"] = "Native files stay on the MCP machine and may contain private project source; remove manually when no longer needed.";
+            meta["after"] = pair.Evidence();
+            var scope = new HmiObject { ["project"] = project, ["softwarePath"] = softwarePath, ["moduleName"] = moduleName,
+                ["afterJs"] = Hash(pair.Js), ["afterYaml"] = Hash(pair.Yaml) };
+            var token = HmiExactAccess.Token("CreateUnifiedGlobalScript/v1", scope);
+            meta["token"] = token;
+            meta["phase"] = "checkAbsence";
+            if (dryRun)
+            {
+                RequireAbsent(resolveHmi, moduleName);
+                meta["apiCallSuccess"] = true;
+                meta["status"] = "Preview"; meta["operationSuccess"] = true;
+                return "Review the complete proposed text and irreversible create. No import performed; apply the SAME content with this previewToken.";
+            }
+            HmiExactAccess.RequireToken(expectedToken, token);
+            var scripts = RequireAbsent(resolveHmi, moduleName);
+            var import = scripts.GetType().GetMethod("Import", new[] { typeof(DirectoryInfo) });
+            if (import == null || import.ReturnType != typeof(bool))
+                throw new NotSupportedException("Official Scripts.Import(DirectoryInfo) -> bool is unavailable.");
+            meta["phase"] = "import"; meta["importMethod"] = "HmiSoftware.Scripts.Import(DirectoryInfo)";
+            meta["apiCallSuccess"] = false; meta["importAttempted"] = true; meta["mayHaveChanged"] = true;
+            EngineeringWriteJournal.Record(softwarePath + "/Scripts/" + moduleName + ": no Openness delete; remove manually in TIA if needed",
+                () => throw new NotSupportedException("Native script module create has no verified inverse; delete manually in TIA."));
+            bool returned = (bool)import.Invoke(scripts, new object[] { new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(candidate)) })!;
+            meta["apiCallSuccess"] = true; meta["importReturned"] = returned;
+            if (!returned)
+            {
+                meta["status"] = "ImportRejected";
+                return "Native Import returned false. Partial changes cannot be excluded; inspect TIA and retained candidate files. No automatic retry; " +
+                    "remove the module manually in TIA if needed.";
+            }
+            var verified = Export(resolveHmi, moduleName, Path.Combine(work, "verify"), "exportAfter", meta);
+            if (verified == null)
+                return "Import returned true, but readback export failed. Changes may exist; success is not established. Do not retry automatically.";
+            meta["readback"] = verified.Evidence();
+            bool match = string.Equals(verified.Text, scriptCode, StringComparison.Ordinal);
+            meta["verificationSuccess"] = match; meta["operationSuccess"] = match;
+            meta["status"] = match ? "Verified" : "ReadbackMismatch";
+            return match
+                ? "New module imported and exact full-text readback verified. Project remains unsaved."
+                : "Import returned true but complete script text differs on readback. Inspect candidate/readback; remove manually in TIA if needed.";
         }
         internal static string Execute(Func<object> resolveHmi, string project, string softwarePath, string moduleName,
             string scriptCode, bool dryRun, string expectedToken, HmiObject meta)

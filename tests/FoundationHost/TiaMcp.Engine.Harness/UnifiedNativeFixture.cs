@@ -43,6 +43,7 @@ internal static class UnifiedNativeFixture
     private sealed class Codecs : IUnifiedCodecs
     {
         public Func<string, string, UnifiedScriptPair>? ReadUnifiedScriptPair { get; }
+        public Func<string, string, string, UnifiedScriptPair>? ComposeUnifiedScriptPair { get; }
         public Action<string, string>? RequireUnifiedPlainFile { get; }
         public Action<string>? ValidateUnifiedScript { get; }
         public Func<string, string, string, IEnumerable<Dictionary<string, object?>>>? DecodeUnifiedDocument { get; }
@@ -51,6 +52,8 @@ internal static class UnifiedNativeFixture
         {
             var files = server.GetType("TiaMcpServer.Siemens.Services.UnifiedScriptFileCodec", true)!;
             ReadUnifiedScriptPair = (Func<string, string, UnifiedScriptPair>)Delegate.CreateDelegate(typeof(Func<string, string, UnifiedScriptPair>), files.GetMethod("ReadPair", All)!);
+            ComposeUnifiedScriptPair = (Func<string, string, string, UnifiedScriptPair>)Delegate.CreateDelegate(
+                typeof(Func<string, string, string, UnifiedScriptPair>), files.GetMethod("ComposePair", All)!);
             RequireUnifiedPlainFile = (Action<string, string>)Delegate.CreateDelegate(typeof(Action<string, string>), files.GetMethod("RequirePlainFile", All)!);
             ValidateUnifiedScript = (Action<string>)Delegate.CreateDelegate(typeof(Action<string>), files.GetMethod("ValidateScript", All)!);
             var documents = server.GetType("TiaMcpServer.Siemens.Services.UnifiedDocumentCodec", true)!;

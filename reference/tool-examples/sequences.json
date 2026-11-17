@@ -4401,5 +4401,66 @@
         "expect": "Read back all five tag declarations and compare their names, types and addresses."
       }
     ]
+  },
+  {
+    "id": "sequence/unified-script-module-create",
+    "topic": "unified-script-module-create",
+    "purpose": "Create one Unified global script module from complete JavaScript source using a reviewed native import.",
+    "preconditions": "Bind the intended project and exact Unified software path; choose a new module name. Stop if the name or a case variant already exists.",
+    "notes": "No Openness delete exists for script modules; remove an unwanted create manually in TIA. Inspect failed or unknown imports in TIA before any further write; do not automatically retry. The tool does not save or compile.",
+    "releaseKeys": [
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "VM NOT RUN",
+    "steps": [
+      {
+        "tool": "ListUnifiedGlobalScripts",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example"
+        },
+        "expect": "Inspect all pages for existing names, including case variants. Existing module content can be read with GetUnifiedGlobalScript."
+      },
+      {
+        "tool": "SetUnifiedGlobalScript",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "moduleName": "NewStatus",
+          "action": "create",
+          "scriptCode": "export function Status() {\n  return 1;\n}\n",
+          "dryRun": true
+        },
+        "expect": "Review data.after.scriptCode, JS/YAML hashes, irreversible warning, data.token, data.planHash and targetIdentity."
+      },
+      {
+        "tool": "SetUnifiedGlobalScript",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "moduleName": "NewStatus",
+          "action": "create",
+          "scriptCode": "export function Status() {\n  return 1;\n}\n",
+          "dryRun": false,
+          "previewToken": "<data.token from the matching SetUnifiedGlobalScript preview>",
+          "expectedPlanHash": "<data.planHash from the matching preview>",
+          "expectedProjectFile": "C:/Projects/Example/Example.ap{extension}"
+        },
+        "expect": "Use unchanged preview arguments and copied token/hash/project file. Require Verified and exact exported full-text readback; project remains unsaved."
+      },
+      {
+        "tool": "GetUnifiedGlobalScript",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "moduleName": "NewStatus"
+        },
+        "expect": "Read all pages and verify the created module text. Native TIA acceptance remains NOT RUN until a VM test."
+      }
+    ]
   }
 ]

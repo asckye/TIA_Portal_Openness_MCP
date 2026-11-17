@@ -89,6 +89,11 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiReadSafety.cs" Link="Native/Hmi/HmiReadSafety.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestValues.cs" Link="Native/Hmi/UnifiedRequestValues.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedCodecs.cs" Link="Native/Hmi/UnifiedCodecs.cs" />
+    <Compile Include="../../../src/Shared/UnifiedScriptFileCodec.cs" Link="UnifiedScriptFileCodec.cs" />
+    <Compile Include="../../../src/Shared/NativeInputPolicy.cs" Link="NativeInputPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" Link="NativePathSelection.cs" />
+    <PackageReference Include="Esprima" />
+    <PackageReference Include="YamlDotNet" />
     <Compile Include="../../../src/Adapters/Native/Hmi/MigrationRead.cs" Link="Native/Hmi/MigrationRead.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/MigrationPages.cs" Link="Native/Hmi/MigrationPages.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareValues.cs" Link="Native/Plc/PlcSoftwareValues.cs" />

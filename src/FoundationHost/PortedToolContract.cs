@@ -479,7 +479,7 @@ internal sealed partial class FoundationTool
                     ? McpServer.V4TargetReject(tool.Name,
                         new Error(unifiedReason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true)
                     : HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
-            if (tool.Name == "ManageUnifiedEngineeringObject" && !unified.DryRun)
+            if (tool.Name is "ManageUnifiedEngineeringObject" or "SetUnifiedGlobalScript" && !unified.DryRun)
                 foreach (var field in new[] { "expectedPlanHash", "expectedProjectFile" })
                     if (!arguments.TryGetValue(field, out var value) || value.ValueKind != JsonValueKind.String
                         || string.IsNullOrWhiteSpace(value.GetString()))

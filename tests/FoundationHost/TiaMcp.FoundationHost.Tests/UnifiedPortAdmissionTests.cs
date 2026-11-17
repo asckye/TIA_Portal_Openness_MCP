@@ -15,6 +15,103 @@ using Xunit;
 public sealed class UnifiedPortAdmissionTests
 {
     [Theory]
+    [InlineData("14sp1", false)]
+    [InlineData("15.1", false)]
+    [InlineData("16", false)]
+    [InlineData("17", false)]
+    [InlineData("18", false)]
+    [InlineData("19", true)]
+    [InlineData("20", true)]
+    [InlineData("21", true)]
+    public void Script_create_sequence_has_exact_release_scope_and_valid_served_schemas(string release, bool available)
+    {
+        using var worker = new ApprovalWorker();
+        var tools = LegacyHostToolRegistry.Create(worker, release, false).ToDictionary(t => t.ProtocolTool.Name);
+        var usage = TiaOpenness.Shared.ToolUsageCatalog.Examples(release, "plc-foundation", tools.Keys,
+            exampleId: "sequence/unified-script-module-create", schemaFor: name => tools.TryGetValue(name, out var tool)
+                ? JsonNode.Parse(tool.ProtocolTool.InputSchema.GetRawText())!.AsObject() : null);
+        var sequence = Assert.Single(usage["examples"]!.AsArray())!;
+        Assert.Equal(available, (bool?)sequence["releaseMatches"]);
+        Assert.Equal(available, (bool?)sequence["available"]);
+        Assert.Equal("VM NOT RUN", (string?)sequence["validation"]);
+        if (available)
+        {
+            Assert.True((bool?)sequence["profileMatches"]);
+            Assert.Equal(new[] { "update", "create" }, tools["SetUnifiedGlobalScript"].ProtocolTool.InputSchema
+                .GetProperty("properties").GetProperty("action").GetProperty("enum").EnumerateArray().Select(v => v.GetString()));
+            var steps = sequence["steps"]!.AsArray();
+            Assert.Equal("ListUnifiedGlobalScripts", (string?)steps[0]?["tool"]);
+            Assert.Equal("create", (string?)steps[1]?["arguments"]?["action"]);
+            Assert.True((bool?)steps[1]?["arguments"]?["dryRun"]);
+            Assert.False((bool?)steps[2]?["arguments"]?["dryRun"]);
+            Assert.Equal("GetUnifiedGlobalScript", (string?)steps[^1]?["tool"]);
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Script_create_is_admitted_and_preserves_action(string release)
+    {
+        using var worker = new ApprovalWorker(bound: true);
+        using var releaseState = new ReleaseState(release);
+        using var lifetime = new Host.ImportStagingHostLifetime();
+        var catalog = new ApprovalCatalog(release);
+        using var session = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog,
+                Invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, worker, lifetime) });
+        const string name = "SetUnifiedGlobalScript";
+        var method = Method(name);
+        var arguments = Arguments(name); arguments["action"] = "create";
+        var mapped = FoundationTool.BindUnifiedRequest(name, method,
+            JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString())!);
+        Assert.Equal("create", mapped.Action);
+        var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name);
+        var result = await tool.InvokeAsync(Request(name, arguments));
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent!.ToJsonString());
+        Assert.NotEmpty((string)result.StructuredContent!["data"]!["planHash"]!);
+        Assert.True(worker.Calls > 0);
+        Assert.Equal(0, worker.Applies);
+    }
+
+    [Theory]
+    [InlineData("14sp1")]
+    [InlineData("15.1")]
+    [InlineData("16")]
+    [InlineData("17")]
+    [InlineData("18")]
+    public void Script_create_is_not_registered_before_V19(string release)
+    {
+        using var worker = new ApprovalWorker();
+        Assert.DoesNotContain(LegacyHostToolRegistry.Create(worker, release, false), t => t.ProtocolTool.Name == "SetUnifiedGlobalScript");
+        Assert.False(PortedFamilies.Available(release, "SetUnifiedGlobalScript"));
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19", "delete", true)]
+    [InlineData("20", "delete", true)]
+    [InlineData("21", "delete", true)]
+    [InlineData("19", "create", false)]
+    [InlineData("20", "update", false)]
+    [InlineData("21", "create", false)]
+    public async Task Script_invalid_action_or_missing_plan_refuses_before_worker_dispatch(string release, string action, bool preview)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        const string name = "SetUnifiedGlobalScript";
+        var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name);
+        var arguments = Arguments(name); arguments["action"] = action; arguments["dryRun"] = preview;
+        var result = await tool.InvokeAsync(Request(name, arguments));
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
     [InlineData("connections")]
     [InlineData("tagTables")]
     [InlineData("discreteAlarms")]
@@ -722,7 +819,7 @@ public sealed class UnifiedPortAdmissionTests
         if (release == "19") arguments = TiaMcp.Logic.V4.CanonicalToolParameters.LegacyArguments(name, arguments);
         try
         {
-            if (name == "ManageUnifiedEngineeringObject" && !preview)
+            if (name is "ManageUnifiedEngineeringObject" or "SetUnifiedGlobalScript" && !preview)
             {
                 arguments["dryRun"] = true;
                 var plan = await tool.InvokeAsync(Request(name, arguments));

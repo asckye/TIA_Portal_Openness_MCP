@@ -22920,7 +22920,8 @@
         "expectedProject": "Example",
         "moduleName": "Status",
         "scriptCode": "&lt;complete scriptCode from GetUnifiedGlobalScript with the intended edit&gt;",
-        "dryRun": true
+        "dryRun": true,
+        "action": "update"
       }
     },
     {
@@ -33512,7 +33513,8 @@
           "expectedProject": "Example",
           "moduleName": "Status",
           "scriptCode": "&lt;complete scriptCode from GetUnifiedGlobalScript with the intended edit&gt;",
-          "dryRun": true
+          "dryRun": true,
+          "action": "update"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -43279,7 +43281,8 @@
           "expectedProject": "Example",
           "moduleName": "Status",
           "scriptCode": "&lt;complete scriptCode from GetUnifiedGlobalScript with the intended edit&gt;",
-          "dryRun": true
+          "dryRun": true,
+          "action": "update"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -84431,7 +84434,8 @@
           "expectedProject": "Example",
           "moduleName": "Status",
           "scriptCode": "&lt;complete scriptCode from GetUnifiedGlobalScript with the intended edit&gt;",
-          "dryRun": true
+          "dryRun": true,
+          "action": "update"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"

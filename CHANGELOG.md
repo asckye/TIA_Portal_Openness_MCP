@@ -4,7 +4,11 @@
 
 ## [Unreleased]
 
+### Added
+- V19–V21 `SetUnifiedGlobalScript action=create` adds one absent global script module from complete JavaScript through native JS/YAML import, with preview, collision refusal and exact export readback. Openness has no script-module delete; remove an unwanted create manually in TIA. Native acceptance is NOT RUN.
+
 ### Changed
+- **Breaking:** every `SetUnifiedGlobalScript` execution, including existing `action=update` callers, now requires the preview's `expectedPlanHash` and absolute `expectedProjectFile` in addition to `previewToken`.
 - `ApplyToolBatch` fills missing plan bindings from each item's stored preview; PLC tag-table imports and Unified tag creation now support the batch route.
 - **Breaking:** `ConnectOnlinePlc` requires an explicit IPv4 `ipAddress`; `DownloadPlc` and `UploadDeviceParameters` require an explicit IPv4 `targetIpAddress`, including previews. Openness online targets obey the optional `online-targets.settings` address/CIDR allow-list; invalid or unreadable lists fail closed and an empty list denies all targets. MCP cannot write the list or `secrets.vault`; a Workbench editor follows in a later beta. `ConnectOnlinePlc` is removed from V14 SP1; V15.1–V20 apply the supplied address before connecting and V21 uses the address overload.
 - `RenderPlcVisualDiff` adds `data.interfaceDifferences` with member field changes across all eight releases and treats omitted XML member defaults as equal to explicit defaults. `ComparePlcBlockDocuments.identicalAfterNormalization` now includes non-default member attributes, start values, comments and subelement start values when both documents are XML.

@@ -12,6 +12,7 @@ namespace TiaMcpServer.Siemens.Services
         internal static void Configure(PlcFoundationEngine engine)
         {
             engine.ReadUnifiedScriptPair = UnifiedScriptFileCodec.ReadPair;
+            engine.ComposeUnifiedScriptPair = UnifiedScriptFileCodec.ComposePair;
             engine.RequireUnifiedPlainFile = UnifiedScriptFileCodec.RequirePlainFile;
             engine.ValidateUnifiedScript = UnifiedScriptFileCodec.ValidateScript;
             engine.DecodeUnifiedDocument = UnifiedDocumentCodec.Document;

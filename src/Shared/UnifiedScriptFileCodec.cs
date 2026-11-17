@@ -9,8 +9,8 @@ using YamlDotNet.RepresentationModel;
 
 namespace TiaMcpServer.Siemens.Services
 {
-    // Only a selected, already-existing module is exported/imported. Native YAML
-    // is preserved byte-for-byte; unknown native shapes are refused, not guessed.
+    // Updates preserve native YAML byte-for-byte; creates use the same minimal
+    // single-module shape and validate it through ReadPair.
     internal static class UnifiedScriptFileCodec
     {
         private const int MaxBytes = 1024 * 1024;
@@ -41,6 +41,27 @@ namespace TiaMcpServer.Siemens.Services
                 throw new NotSupportedException("Native export contains a file outside its isolated directory or a reparse point.");
             if (new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)).Length > MaxBytes)
                 throw new NotSupportedException("Native file exceeds the 1 MiB edit limit.");
+        }
+        internal static TiaMcp.Adapters.Contracts.UnifiedScriptPair ComposePair(string directory, string moduleName, string scriptCode)
+        {
+            if (string.IsNullOrEmpty(moduleName) || moduleName.Length > 128 || moduleName != moduleName.Trim()
+                || moduleName.Any(c => char.IsControl(c) || "/\\:*?\"<>|".IndexOf(c) >= 0))
+                throw new ArgumentException("moduleName must be 1..128 characters without filename separators, controls or surrounding spaces.",
+                    nameof(moduleName));
+            if (Directory.EnumerateFileSystemEntries(directory).Any())
+                throw new ArgumentException("ComposePair requires an existing empty directory.", nameof(directory));
+            var yaml = new YamlStream(new YamlDocument(new YamlMappingNode {
+                { "ScriptModules", new YamlMappingNode {
+                    { moduleName, new YamlMappingNode { { "ScriptFile", moduleName + ".hmi.js" } } }
+                } }
+            }));
+            using (var writer = new StringWriter())
+            {
+                yaml.Save(writer, assignAnchors: false);
+                File.WriteAllText(Path.Combine(directory, moduleName + ".hmi.yml"), writer.ToString().Replace("\r\n", "\n"), Utf8);
+            }
+            File.WriteAllText(Path.Combine(directory, moduleName + ".hmi.js"), scriptCode, Utf8);
+            return ReadPair(directory, moduleName);
         }
         internal static TiaMcp.Adapters.Contracts.UnifiedScriptPair ReadPair(string directory, string moduleName)
         {

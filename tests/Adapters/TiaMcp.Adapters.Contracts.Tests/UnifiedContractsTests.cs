@@ -7,6 +7,20 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class UnifiedContractsTests
 {
     [Theory]
+    [InlineData("update")]
+    [InlineData("create")]
+    public void Global_script_accepts_only_the_two_supported_actions(string action)
+        => EngineeringInputValidation.Request(new UnifiedRequest { Operation = "SetUnifiedGlobalScript", Action = action });
+
+    [Theory]
+    [InlineData("delete")]
+    [InlineData("")]
+    [InlineData("Create")]
+    public void Global_script_invalid_action_is_refused_before_native_dispatch(string action)
+        => Assert.Throws<ArgumentException>(() => EngineeringInputValidation.Request(new UnifiedRequest {
+            Operation = "SetUnifiedGlobalScript", Action = action }));
+
+    [Theory]
     [InlineData("EventText")]
     [InlineData("EventText1")]
     [InlineData("EventText9")]

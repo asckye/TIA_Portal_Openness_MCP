@@ -44,6 +44,8 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedNativeRead.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedTagDefinitions.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScriptAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedGlobalScriptEdit.cs" />
+    <Compile Include="../../../src/Shared/UnifiedScriptFileCodec.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/NativeExportCapture.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwarePath.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryPolicy.cs" />

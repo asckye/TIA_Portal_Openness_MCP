@@ -9,11 +9,11 @@ namespace TiaMcpServer.Siemens.Services
         public GlobalScriptEditService() { }
         internal GlobalScriptEditService(Func<string, JsonObject, JsonNode?> call, Func<string> identity) : base(call, identity) { }
         public ResponseMessage UpdateUnifiedGlobalScript(string softwarePath, string expectedProject, string moduleName,
-            string scriptCode, bool dryRun = true, string expectedToken = "")
+            string scriptCode, bool dryRun = true, string expectedToken = "", string action = "update")
             =>
                 Invoke(new UnifiedRequest {
                     Operation = "SetUnifiedGlobalScript", SoftwarePath = softwarePath, ExpectedProject = expectedProject, ModuleName = moduleName, ScriptCode =
-                        scriptCode, DryRun = dryRun, ExpectedToken = expectedToken
+                        scriptCode, DryRun = dryRun, ExpectedToken = expectedToken, Action = action
                 }, dryRun);
     }
 }

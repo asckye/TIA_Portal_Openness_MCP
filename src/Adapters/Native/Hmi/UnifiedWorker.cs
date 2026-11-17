@@ -14,6 +14,7 @@ namespace TiaMcp.Adapters
         private MigrationPages? unifiedPages;
         internal MigrationPages UnifiedPages => unifiedPages ??= new MigrationPages();
         public Func<string, string, UnifiedScriptPair>? ReadUnifiedScriptPair { get; set; }
+        public Func<string, string, string, UnifiedScriptPair>? ComposeUnifiedScriptPair { get; set; }
         public Action<string, string>? RequireUnifiedPlainFile { get; set; }
         public Action<string>? ValidateUnifiedScript { get; set; }
         public Func<string, string, string, IEnumerable<Dictionary<string, object?>>>? DecodeUnifiedDocument { get; set; }
@@ -139,7 +140,7 @@ namespace TiaMcp.Adapters
                     break;
                     case "SetUnifiedGlobalScript": reply.Value = new GlobalScriptEditAdapter(session)
                         .UpdateUnifiedGlobalScript(request.SoftwarePath, request.ExpectedProject, request.ModuleName, request.ScriptCode, request.DryRun,
-                            request.ExpectedToken);
+                            request.ExpectedToken, request.Action);
                     break;
                     case "GetUnifiedGraphicSelection": reply.Value = new GraphicSelectionAdapter(session, new MigrationReadAdapter(session))
                         .ReadUnifiedGraphicSelection(request.SoftwarePath, request.ExpectedProject, request.ScreenPath, request.ItemNamesJson, request.Cursor,

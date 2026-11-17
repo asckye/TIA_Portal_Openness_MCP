@@ -13,6 +13,56 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelper output)
 {
     [Theory]
+    [InlineData("19", "update")]
+    [InlineData("20", "update")]
+    [InlineData("21", "update")]
+    [InlineData("19", "create")]
+    [InlineData("20", "create")]
+    [InlineData("21", "create")]
+    public void Script_preview_binds_arguments_and_project_before_native_execution(string release, string action)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        using var releaseState = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
+        int previews = 0, executions = 0;
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.GlobalScriptEditService((_, args) => {
+            if ((bool)args["dryRun"]!) previews++; else executions++;
+            Assert.Equal(action, (string?)args["request"]?["Action"]);
+            return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "native fixture", ["Meta"] = new JsonObject {
+                ["success"] = true, ["operationSuccess"] = true, ["apiCallSuccess"] = true, ["token"] = "native-token",
+                ["mayHaveChanged"] = !(bool)args["dryRun"]! } } };
+        }, () => "C:/Projects/original.ap21");
+        var tool = new toolpipeline::TiaMcpServer.ModelContextProtocol.GlobalScriptEditTools(service);
+        const string code = "export function Status() { return 1; }";
+        var preview = tool.UpdateUnifiedGlobalScriptV4("HMI", "Fixture", "Status", code, action: action);
+        Assert.True((bool?)preview.StructuredContent?["ok"], preview.StructuredContent!.ToJsonString());
+        var data = preview.StructuredContent!["data"]!;
+        string hash = (string)data["planHash"]!;
+        Assert.Matches("^[0-9a-f]{64}$", hash);
+        Assert.Equal(action, (string?)data["plannedChanges"]?["action"]);
+        foreach (var excluded in new[] { "dryRun", "expectedPlanHash", "expectedProjectFile", "previewToken" })
+            Assert.Null(data["plannedChanges"]?[excluded]);
+        foreach (var (expectedHash, project, expectedCode) in new[] {
+            (new string('0', 64), "C:/Projects/original.ap21", "PLAN_STALE"),
+            (hash, "C:/Projects/other.ap21", "IDENTITY_MISMATCH")
+        })
+        {
+            var refused = tool.UpdateUnifiedGlobalScriptV4("HMI", "Fixture", "Status", code, false, "native-token", action, expectedHash, project);
+            Assert.Equal(expectedCode, (string?)refused.StructuredContent?["error"]?["code"]);
+            Assert.Equal("not-started", (string?)refused.StructuredContent?["meta"]?["execution"]);
+            Assert.Equal(0, executions);
+            Assert.Equal(1, previews);
+        }
+        var applied = tool.UpdateUnifiedGlobalScriptV4("HMI", "Fixture", "Status", code, false, "native-token", action,
+            hash, "C:/Projects/original.ap21");
+        Assert.True((bool?)applied.StructuredContent?["ok"], applied.StructuredContent!.ToJsonString());
+        Assert.Equal(1, executions);
+        Assert.Equal(1, previews);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Executed_writes_keep_execution_scope_without_preview_claims(bool asynchronous)

@@ -104,6 +104,7 @@ namespace TiaMcp.Adapters.Contracts
             if (request.Operation == "ListUnifiedLibraryFolderEntries") AbsoluteHmiPath(request.FolderPath, rootAllowed: true);
             switch (request.Operation)
             {
+                case "SetUnifiedGlobalScript": Action(request.Action, "update", "create"); break;
                 case "GetUnifiedAlarmCommon": Category(request.Category, "alarmClasses", "discreteAlarms", "analogAlarms"); break;
                 case "GetUnifiedAuditSettings": Category(request.Category, "alarmAuditClasses", "auditTrails"); break;
                 case "ManageUnifiedListEntries":

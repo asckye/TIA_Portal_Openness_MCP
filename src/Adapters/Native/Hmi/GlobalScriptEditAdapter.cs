@@ -12,8 +12,9 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         private readonly object _globalScriptEditGate = new object();
         public HmiMessage UpdateUnifiedGlobalScript(string softwarePath, string expectedProject, string moduleName,
-            string scriptCode, bool dryRun = true, string expectedToken = "")
+            string scriptCode, bool dryRun = true, string expectedToken = "", string action = "update")
         {
+            EngineeringInputValidation.Action(action, "update", "create");
             lock (_globalScriptEditGate)
                 return _session.RunHmiStepTool("SetUnifiedGlobalScript", meta =>
                 {
@@ -26,8 +27,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                         if (!dryRun) exclusive = _session.AcquireHmiEditAccess();
                         if (!string.Equals(MigrationRead.Get(_session.CurrentProject!, "Name")?.ToString(), expectedProject, StringComparison.Ordinal))
                             throw new InvalidOperationException("Exact expectedProject mismatch; no script operation attempted.");
-                        var message = UnifiedGlobalScriptEdit.Execute(() => _session.ResolveHmiSoftwareOrThrow(softwarePath), expectedProject,
-                            softwarePath, moduleName, scriptCode, dryRun, expectedToken, meta);
+                        var message = action == "create"
+                            ? UnifiedGlobalScriptEdit.Create(() => _session.ResolveHmiSoftwareOrThrow(softwarePath), expectedProject,
+                                softwarePath, moduleName, scriptCode, dryRun, expectedToken, meta)
+                            : UnifiedGlobalScriptEdit.Execute(() => _session.ResolveHmiSoftwareOrThrow(softwarePath), expectedProject,
+                                softwarePath, moduleName, scriptCode, dryRun, expectedToken, meta);
                         if (meta["connectionUnavailable"]?.GetValue<bool>() == true) _session.RecordHmiReadFault(meta);
                         return message;
                     }

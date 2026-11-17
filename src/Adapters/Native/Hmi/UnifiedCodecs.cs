@@ -9,6 +9,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         [ThreadStatic] internal static IUnifiedCodecs? Current;
         internal static UnifiedScriptPair ReadPair(string directory, string name) =>
             (Current?.ReadUnifiedScriptPair ?? throw new InvalidOperationException("Unified script file codec unavailable."))(directory, name);
+        internal static UnifiedScriptPair ComposePair(string directory, string name, string code) =>
+            (Current?.ComposeUnifiedScriptPair ?? throw new InvalidOperationException("Unified script file codec unavailable."))(directory, name, code);
         internal static void RequirePlainFile(string path, string directory) =>
             (Current?.RequireUnifiedPlainFile ?? throw new InvalidOperationException("Unified file validation unavailable."))(path, directory);
         internal static void ValidateScript(string code) =>
