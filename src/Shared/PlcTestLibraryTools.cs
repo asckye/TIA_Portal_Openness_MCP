@@ -51,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 if (!dryRun && string.IsNullOrWhiteSpace(expectedPlanHash)) return McpServer.V4Reject(tool, McpServer.InvalidInput("expectedPlanHash"));
-                var entries = PlcTestLibraryRunner.Select(libraryDirectory(), McpServer.ReleaseKey, ids, tags);
+                var entries = PlcTestLibraryRunner.Select(libraryDirectory(), McpServer.ReleaseKey, ids, tags, out var skippedFiles);
                 var orderedPlan = PlcTestLibraryRunner.Plan(entries);
                 if (entries.All(e => e.Unsupported != null)) return McpServer.V4Reject(tool,
                     new Error("Every selected entry is unsupported on this release.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)),
@@ -68,7 +68,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (result.StructuredContent?["data"] is JsonObject data)
                 {
                     data["dryRun"] = dryRun;
-                    if (dryRun && (bool?)result.StructuredContent["ok"] == true) data["plan"] = new JsonObject { ["cases"] = orderedPlan };
+                    if (dryRun && (bool?)result.StructuredContent["ok"] == true)
+                        data["plan"] = new JsonObject { ["cases"] = orderedPlan, ["skippedFiles"] = skippedFiles };
                     if (!dryRun) data.Remove("readOnlyInvocation");
                     result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(result.StructuredContent) } };
                 }
@@ -77,9 +78,8 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (!started && (ex is ArgumentException || ex is JsonException || ex is InputRejectionException
                 || ex is IOException || ex is UnauthorizedAccessException))
             {
-                if (expectedPlanHash.Length > 0) return McpServer.V4Reject(tool,
-                    new Error("Selected cases changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")));
-                return McpServer.V4Reject(tool, new Error("Invalid selection or stored test case: " + ex.Message,
+                string message = ex is IOException || ex is UnauthorizedAccessException ? ex.GetType().Name : PlcTestEvidence.Scrub(ex.Message);
+                return McpServer.V4Reject(tool, new Error("Invalid selection or stored test case: " + message,
                     new InvalidArgumentDetails("", Array.Empty<string>())));
             }
         }
@@ -93,6 +93,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["runDirectory"] = Path.Combine(directory, run.RunId), ["junitFile"] = Path.Combine(directory, run.RunId, "junit.xml"),
                 ["cases"] = JsonSerializer.SerializeToNode(run.Cases.Select(c => new { id = c.Id, verdict = c.Verdict, message = c.Message }))
             };
+            if (run.Status == "stopped" && run.Cases.All(c => c.Verdict != "unknown"))
+            {
+                var refusal = new Error("A case was refused before dispatch; remaining cases were not executed.",
+                    new PreconditionFailedDetails("case-not-started", null));
+                return run.Cases.All(c => c.Verdict == "skipped") ? McpServer.V4Reject("RunPlcTestLibrary", refusal, data)
+                    : McpServer.V4Result("RunPlcTestLibrary", data,
+                        new Error(refusal.Message, new PartialFailureDetails(run.Cases.Count(c => c.Verdict == "passed"),
+                            run.Cases.Count(c => c.Verdict is "failed" or "error"), run.Cases.Count(c => c.Verdict == "skipped"))),
+                        Outcome.Partial, Execution.Partial, Completeness.Partial);
+            }
             return run.Status == "completed" ? McpServer.V4Result("RunPlcTestLibrary", data, completed: true)
                 : McpServer.V4Result("RunPlcTestLibrary", data,
                     new Error("A case ended with an unknown outcome. Inspect the target; do not replay the run.",

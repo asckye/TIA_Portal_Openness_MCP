@@ -122,7 +122,8 @@ namespace TiaMcpServer.ModelContextProtocol
 #if TIA_ENGINE_HOST
                 if (Worker.LateResults.Running is { } running && !Worker.LateResults.ContinuesCurrentCall
                     && ToolTaxonomy.UsesOpennessLane(name)
-                    && name is not ("GetSessionState" or "GetOpennessWorkerStatus") && !ToolTaxonomy.DispatchesTargets(name))
+                    && name is not ("GetSessionState" or "GetOpennessWorkerStatus")
+                    && (!ToolTaxonomy.DispatchesTargets(name) || name == "RunPlcTestLibrary"))
                     return V4Reject(name, TiaMcp.FoundationHost.LateCalls.BusyError(running));
 #endif
             }

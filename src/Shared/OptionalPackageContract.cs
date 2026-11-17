@@ -53,11 +53,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        internal static CallToolResult Run(string tool, bool writes, Func<ResponseMessage> operation, int? offset = null, int? limit = null)
+        internal static CallToolResult Run(string tool, bool writes, Func<ResponseMessage> operation, int? offset = null, int? limit = null,
+            bool? dispatched = null)
         {
             try { return Map(tool, operation(), writes, offset, limit); }
             catch (Exception ex)
             {
+                if (dispatched.HasValue) return McpServer.TargetFailure(tool, ex, dispatched.Value);
                 var evidence = new JsonObject();
                 RecordFailure(evidence, ex);
                 return MapOutcome(tool, new ResponseMessage { Meta = evidence }, writes, offset, limit, writes && WorkerOutcomeLost(ex));

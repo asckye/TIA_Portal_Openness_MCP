@@ -39,12 +39,13 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!preview && !confirmed) throw new InputFailureException(new Error("Explicit confirmation is required.", new ConfirmationRequiredDetails(null)));
         }
 
-        internal static CallToolResult Run(string tool, bool readOnly, bool current, Func<object> operation)
+        internal static CallToolResult Run(string tool, bool readOnly, bool current, Func<object> operation, bool? dispatched = null)
         {
             try { return Map(tool, operation(), readOnly, current); }
             catch (InputFailureException failure) { return Result(tool, null, failure.Error, Outcome.RejectedBeforeOperation, Completeness.None, current); }
             catch (Exception ex)
             {
+                if (dispatched.HasValue) return McpServer.TargetFailure(tool, ex, dispatched.Value);
                 if (HostBehavior.DevicePathRefusal(ex) is { } refusal)
                     return Result(tool, null, refusal, Outcome.RejectedBeforeOperation, Completeness.None, current);
                 // A wrapped native exception can occur after a write was issued. Its

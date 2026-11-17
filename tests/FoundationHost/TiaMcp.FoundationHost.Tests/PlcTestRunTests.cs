@@ -21,6 +21,168 @@ using Approval = TiaOpenness.Shared.ApprovalOutcome;
 public sealed class PlcTestRunTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Shared_unknown_outcomes_stop_finalize_and_mark_the_session_unsettled(bool suite)
+    {
+        using var fixture = new Fixture(bound: suite); fixture.Save("a", suite: suite); fixture.Save("b");
+        fixture.Reply = _ => {
+            var reply = suite ? SuiteReply("Success") : ScenarioReply("passed");
+            if (suite) { reply["Meta"]!["writeOutcomeUnknown"] = true; reply["Meta"]!["mayHaveChanged"] = true;
+                reply["Meta"]!["operationSuccess"] = false; }
+            else reply["Data"]!["operatingModeRestoreError"] = "Synthetic restore failed at C:\\private\\mode.cs\n   at Native.Restore()";
+            return reply;
+        };
+        var result = await fixture.Execute();
+        Assert.Equal("unknown", (string?)result["meta"]?["outcome"]); Assert.Equal(1, fixture.Calls);
+        var run = fixture.Read(); Assert.Equal("stopped", run.Status); Assert.NotNull(run.FinishedUtc);
+        Assert.Equal(new[] { "unknown", "skipped" }, run.Cases.Select(c => c.Verdict));
+        Assert.StartsWith("NOT_EXECUTED:", run.Cases[1].Message);
+        Assert.Single(fixture.Worker.Unsettled.Snapshot());
+        if (!suite) Assert.Contains("restore failed", (string)run.Cases[0].Evidence["message"]!);
+        Assert.True(File.Exists((string)result["data"]!["junitFile"]!));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Native_exception_strings_are_normalized_without_paths_or_stack_traces(bool suite)
+    {
+        using var fixture = new Fixture(bound: suite); fixture.Save("a", suite: suite);
+        fixture.Reply = _ => new JsonObject { ["Ok"] = false, ["Message"] = "Synthetic native failure", ["Data"] = new JsonObject(),
+            ["Meta"] = new JsonObject { ["success"] = false, ["operationSuccess"] = false, ["apiCallSuccess"] = false,
+                ["mayHaveChanged"] = false, ["operationNotStarted"] = true, ["status"] = suite ? "ReadOrWriteFailed" : "ApiNotFound",
+                ["error"] = "System.InvalidOperationException: license missing at C:\\private\\project.ap21\n"
+                    + "   at Native.Run() in D:\\src\\native.cs:line 58" } };
+        var result = await fixture.Execute();
+        var run = fixture.Read(); var item = Assert.Single(run.Cases);
+        Assert.Equal("error", item.Verdict);
+        Assert.Equal(new[] { "code", "message", "details" }, item.Evidence.Select(p => p.Key));
+        Assert.Contains("license missing", (string)item.Evidence["message"]!);
+        Assert.DoesNotContain(":\\", run.CanonicalJson); Assert.DoesNotContain("at Native.Run", run.CanonicalJson);
+        Assert.True(File.Exists((string)result["data"]!["junitFile"]!));
+        Assert.Single(XDocument.Load((string)result["data"]!["junitFile"]!).Descendants("error"));
+    }
+
+    [Theory]
+    [InlineData(false, "cancel")]
+    [InlineData(false, "timeout")]
+    [InlineData(false, "worker")]
+    [InlineData(false, "missing")]
+    [InlineData(true, "cancel")]
+    [InlineData(true, "timeout")]
+    [InlineData(true, "worker")]
+    [InlineData(true, "missing")]
+    [InlineData(false, "busy")]
+    [InlineData(true, "busy")]
+    [InlineData(false, "not-sent")]
+    [InlineData(true, "not-sent")]
+    public async Task Case_call_exceptions_always_finalize_and_stop_with_the_shared_outcome(bool suite, string failure)
+    {
+        using var fixture = new Fixture(bound: suite); fixture.Save("a", suite: suite); fixture.Save("b");
+        fixture.Reply = _ => failure switch {
+            "cancel" => throw new OperationCanceledException("Synthetic cancellation"),
+            "timeout" => throw new TimeoutException("Synthetic timeout"),
+            "worker" => throw new WorkerOperationException("Synthetic lost write", -32603, "unknown"),
+            "busy" => throw new AdapterPreconditionException("Synthetic busy refusal", "worker-call-running", null),
+            "not-sent" => throw NotSent(),
+            _ => null!
+        };
+        var result = await fixture.Execute(); var run = fixture.Read();
+        Assert.Equal("stopped", run.Status); Assert.NotNull(run.FinishedUtc); Assert.Equal(1, fixture.Calls);
+        bool refused = failure is "busy" or "not-sent";
+        Assert.Equal(refused ? "skipped" : "unknown", run.Cases[0].Verdict);
+        Assert.Equal("skipped", run.Cases[1].Verdict);
+        Assert.Equal(refused ? "rejected-before-operation" : "unknown", (string?)result["meta"]?["outcome"]);
+        Assert.Equal(refused ? 0 : 1, fixture.Worker.Unsettled.Snapshot().Count);
+        Assert.True(File.Exists((string)result["data"]!["junitFile"]!));
+    }
+
+    private static Exception NotSent()
+    {
+        var error = new OperationCanceledException("Synthetic cancellation before dispatch");
+        error.Data["foundationRequestSent"] = false;
+        return error;
+    }
+
+    [Fact]
+    public async Task Busy_refusal_after_a_completed_case_is_partial_without_an_unknown_session()
+    {
+        using var fixture = new Fixture(); fixture.Save("a"); fixture.Save("b"); fixture.Save("c");
+        fixture.Reply = call => call == 1 ? ScenarioReply("passed")
+            : throw new AdapterPreconditionException("Synthetic busy refusal", "worker-call-running", null);
+        var result = await fixture.Execute();
+        Assert.Equal("partial", (string?)result["meta"]?["outcome"]);
+        Assert.Equal("stopped", fixture.Read().Status); Assert.Equal(2, fixture.Calls);
+        Assert.Equal(new[] { "passed", "skipped", "skipped" }, fixture.Read().Cases.Select(c => c.Verdict));
+        Assert.Empty(fixture.Worker.Unsettled.Snapshot());
+        Assert.True(File.Exists((string)result["data"]!["junitFile"]!));
+    }
+
+    [Fact]
+    public async Task Running_late_call_is_refused_before_any_approval()
+    {
+        using var fixture = new Fixture(); fixture.Save("a"); string hash = await fixture.Preview();
+        using var running = Engine.LateCalls.For(fixture.Worker).CreateInvocation("SaveProject", "owned-late-fixture", CancellationToken.None);
+        using (running.Enter()) Engine.LateCalls.Detach(new JsonObject { ["requestId"] = "owned-late-fixture", ["tool"] = "SaveProject" });
+        var result = await fixture.Call(new { dryRun = false, expectedPlanHash = hash });
+        Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
+        Assert.Equal("worker-call-running", (string?)result["error"]?["details"]?["condition"]);
+        Assert.Equal(0, fixture.Approvals); Assert.Equal(0, fixture.Calls); Assert.False(Directory.Exists(fixture.Runs));
+    }
+
+    [Fact]
+    public async Task Invalid_unnamed_files_are_plan_notes_but_named_invalid_ids_are_refused()
+    {
+        using var fixture = new Fixture(); fixture.Save("a");
+        File.WriteAllText(Path.Combine(fixture.Library, "cases", "broken.json"), "{broken");
+        foreach (var arguments in new object[] { new { }, new { tags = new[] { "fat" } } })
+        {
+            var preview = await fixture.Call(arguments); Assert.True((bool?)preview["ok"], preview.ToJsonString());
+            Assert.Equal("broken", (string?)Assert.Single(preview["data"]!["plan"]!["skippedFiles"]!.AsArray())?["id"]);
+        }
+        var result = await fixture.Execute(); Assert.Equal(1, fixture.Calls); Assert.True((bool?)result["ok"]);
+        var rejected = await fixture.Call(new { ids = new[] { "broken" }, expectedPlanHash = "caller-error" });
+        Assert.Equal("INVALID_ARGUMENT", (string?)rejected["error"]?["code"]);
+        var caller = await fixture.Call(new { tags = new[] { "" }, dryRun = false, expectedPlanHash = "caller-error" });
+        Assert.Equal("INVALID_ARGUMENT", (string?)caller["error"]?["code"]);
+    }
+
+    [Fact]
+    public async Task Native_unsupported_rejection_is_skipped_without_blocking_later_cases()
+    {
+        using var fixture = new Fixture(bound: true); fixture.Save("a", suite: true); fixture.Save("b");
+        fixture.Reply = call => call == 1 ? new JsonObject { ["Message"] = "Synthetic unsupported selection", ["Meta"] = new JsonObject {
+            ["rejectionCode"] = "UNSUPPORTED_CAPABILITY", ["operationNotStarted"] = true, ["mayHaveChanged"] = false } } : ScenarioReply("passed");
+        var result = await fixture.Execute(); Assert.True((bool?)result["ok"], result.ToJsonString());
+        Assert.Equal(new[] { "skipped", "passed" }, fixture.Read().Cases.Select(c => c.Verdict));
+        Assert.Equal(4, (int)result["data"]!["exitCode"]!);
+    }
+
+    [Theory]
+    [InlineData("Success")]
+    [InlineData("Information")]
+    [InlineData("Warning")]
+    [InlineData("Error")]
+    public async Task Native_test_suite_result_flags_follow_the_reused_tool_outcome(string state)
+    {
+        using var fixture = new Fixture(bound: true); fixture.Save("suite", suite: true);
+        var reply = SuiteReply(state);
+        reply["Meta"]!["nativeResultReturned"] = true; reply["Meta"]!["nativeState"] = state;
+        reply["Meta"]!["nativeStateType"] = NativeResultStates.TestSuite;
+        reply["Meta"]!["mayHaveChanged"] = true;
+        fixture.Reply = _ => reply.DeepClone().AsObject();
+        JsonNode expected;
+        using (fixture.Pipeline.EnterSession())
+            expected = toolpipeline::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Map("RunTestSuiteCase",
+                new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage {
+                    Message = (string?)reply["Message"], Meta = reply["Meta"]!.DeepClone().AsObject() }, true).StructuredContent!;
+        var result = await fixture.Execute();
+        Assert.Equal((string?)expected["meta"]?["outcome"], (string?)result["meta"]?["outcome"]);
+        Assert.Equal((string?)expected["meta"]?["outcome"] == "unknown" ? "unknown" : "passed", fixture.Read().Cases[0].Verdict);
+    }
+
+    [Theory]
     [InlineData("14sp1")]
     [InlineData("15.1")]
     [InlineData("16")]
@@ -67,7 +229,7 @@ public sealed class PlcTestRunTests
         else if (change == "whitespace") File.AppendAllText(path, "\n");
         else fixture.Save(change == "add" ? "b" : "a", title: "changed");
         var result = await fixture.Call(new { dryRun = false, expectedPlanHash = hash });
-        Assert.Equal("PLAN_STALE", (string?)result["error"]?["code"]);
+        Assert.Equal(change is "delete" or "malformed" ? "INVALID_ARGUMENT" : "PLAN_STALE", (string?)result["error"]?["code"]);
         Assert.Equal(0, fixture.Calls); Assert.False(Directory.Exists(fixture.Runs));
     }
 
@@ -151,7 +313,8 @@ public sealed class PlcTestRunTests
         var run = fixture.Read();
         Assert.Equal(new[] { verdict, "passed" }, run.Cases.Select(c => c.Verdict));
         Assert.Equal("completed", run.Status);
-        Assert.True(JsonNode.DeepEquals(ScenarioReply(verdict)["Data"], run.Cases[0].Evidence));
+        Assert.True(JsonNode.DeepEquals(ScenarioReply(verdict)["Data"]!["steps"], run.Cases[0].Evidence["details"]!["steps"]));
+        Assert.Equal(new[] { "code", "message", "details" }, run.Cases[0].Evidence.Select(p => p.Key));
         Assert.NotEmpty(run.Cases[0].Message);
     }
 
@@ -177,9 +340,10 @@ public sealed class PlcTestRunTests
         using var fixture = new Fixture(bound: suite); fixture.Save("a", suite: suite); fixture.Save("b");
         fixture.Reply = call => call == 2 ? ScenarioReply("passed") : suite
             ? new JsonObject { ["Message"] = "Synthetic LicenseNotFoundException", ["Meta"] = new JsonObject {
-                ["apiCallSuccess"] = false, ["operationSuccess"] = false, ["errorCode"] = "NATIVE_OPERATION_FAILED" } }
+                ["apiCallSuccess"] = false, ["operationSuccess"] = false, ["operationNotStarted"] = true,
+                ["mayHaveChanged"] = false, ["errorCode"] = "NATIVE_OPERATION_FAILED" } }
             : new JsonObject { ["Ok"] = false, ["Message"] = "Synthetic API missing", ["Data"] = new JsonObject(),
-                ["Meta"] = new JsonObject { ["operationSuccess"] = false, ["success"] = false } };
+                ["Meta"] = new JsonObject { ["operationSuccess"] = false, ["success"] = false, ["status"] = "ApiNotFound" } };
         var result = await fixture.Execute();
         Assert.True((bool?)result["ok"], result.ToJsonString()); Assert.Equal(2, fixture.Calls);
         var run = fixture.Read(); Assert.Equal(3, run.ExitCode);
@@ -224,6 +388,7 @@ public sealed class PlcTestRunTests
         Assert.True((bool?)result["ok"], result.ToJsonString());
         Assert.Equal(1, fixture.Calls); Assert.Equal(4, (int)result["data"]!["exitCode"]!);
         Assert.StartsWith("UNSUPPORTED_CAPABILITY:", fixture.Read().Cases.Single(c => c.Id == "suite").Message);
+        Assert.Null(fixture.Read().Project);
     }
 
     [Theory]
@@ -248,12 +413,14 @@ public sealed class PlcTestRunTests
         Assert.False((bool?)request["request"]?["DryRun"]);
         Assert.Equal(Fixture.Project, (string?)request["expectedProjectFile"]);
         var run = fixture.Read(); Assert.Equal(verdict, Assert.Single(run.Cases).Verdict);
-        Assert.Equal(Fixture.Project, (string?)run.Project?["file"]);
-        Assert.True(JsonNode.DeepEquals(SuiteReply(state)["Meta"], run.Cases[0].Evidence));
+        Assert.Equal(Path.GetFileName(Fixture.Project), (string?)run.Project?["file"]);
+        Assert.True(JsonNode.DeepEquals(SuiteReply(state)["Meta"]!["result"], run.Cases[0].Evidence["details"]!["result"]),
+            "Expected: " + SuiteReply(state)["Meta"]!["result"] + "\nActual: " + run.Cases[0].Evidence["details"]!["result"]);
+        Assert.Equal(new[] { "code", "message", "details" }, run.Cases[0].Evidence.Select(p => p.Key));
     }
 
     [Fact]
-    public async Task Interrupted_second_reply_leaves_the_first_case_in_a_running_record()
+    public async Task Interrupted_second_reply_preserves_the_checkpoint_and_finalizes_a_stopped_record()
     {
         using var fixture = new Fixture(); fixture.Save("a"); fixture.Save("b");
         fixture.Reply = call => {
@@ -264,8 +431,10 @@ public sealed class PlcTestRunTests
         };
         var result = await fixture.Execute();
         Assert.False((bool?)result["ok"]);
-        var run = fixture.Read(); Assert.Equal("running", run.Status); Assert.Equal(5, run.ExitCode);
-        Assert.Equal("passed", run.Cases[0].Verdict); Assert.Null(run.FinishedUtc);
+        var run = fixture.Read(); Assert.Equal("stopped", run.Status); Assert.Equal(5, run.ExitCode);
+        Assert.Equal("passed", run.Cases[0].Verdict); Assert.NotNull(run.FinishedUtc);
+        Assert.Equal("unknown", run.Cases[1].Verdict);
+        Assert.True(File.Exists((string)result["data"]!["junitFile"]!));
         using var scope = fixture.Pipeline.EnterSession();
         var history = fixture.Tools.ManagePlcTestLibrary("readRun").StructuredContent!;
         Assert.Equal(5, (int)history["data"]!["run"]!["exitCode"]!);
@@ -305,7 +474,7 @@ public sealed class PlcTestRunTests
             ["result"] = new JsonObject { ["state"] = state, ["errorCount"] = state == "Error" ? 1 : 0,
                 ["warningCount"] = state == "Warning" ? 1 : 0, ["messageCount"] = 1,
                 ["messages"] = new JsonArray(new JsonObject { ["path"] = "TC_A", ["state"] = state,
-                    ["description"] = "Synthetic native result", ["dateTimeUtc"] = "2026-11-17T08:30:00Z",
+                    ["description"] = "Synthetic native result", ["dateTimeUtc"] = "2026-11-17T08:30:00.0000000Z",
                     ["errorCount"] = 0, ["warningCount"] = 0, ["messages"] = new JsonArray() }) } } };
 
     private sealed class Fixture : IDisposable

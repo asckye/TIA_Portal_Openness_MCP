@@ -79,8 +79,9 @@ namespace TiaMcp.Logic.Testing
                 if (item.Verdict != "skipped")
                 {
                     string type = item.Verdict == "unknown" ? "OUTCOME_UNKNOWN" : item.Verdict == "failed"
-                        ? item.Kind == "plcsimScenario" ? "AssertionFailed" : "TestSuite." + (string?)Result(item.Evidence)?["state"]
-                        : (string?)item.Evidence["error"]?["code"] ?? (string?)item.Evidence["errorCode"] ?? "TEST_ERROR";
+                        ? item.Kind == "plcsimScenario" ? "AssertionFailed" : "TestSuite." + Text(Result(item.Evidence)?["state"])
+                        : Text(item.Evidence["code"]) ?? Text((item.Evidence["error"] as JsonObject)?["code"])
+                            ?? Text(item.Evidence["errorCode"]) ?? "TEST_ERROR";
                     Attribute(xml, "type", type);
                 }
                 Attribute(xml, "message", item.Message);
@@ -92,23 +93,27 @@ namespace TiaMcp.Logic.Testing
 
         public static string FailureDetails(PlcTestCaseResult item)
         {
+            var evidence = item.Evidence["details"] as JsonObject ?? item.Evidence;
             if (item.Kind == "testSuite")
             {
                 var messages = Result(item.Evidence)?["messages"] as JsonArray;
                 return messages == null ? item.Message : string.Join("\n", messages
-                    .Where(m => (string?)m?["state"] == "Error" || (string?)m?["state"] == "Warning")
-                    .Select(m => (string?)m?["path"] + ": " + (string?)m?["description"]));
+                    .OfType<JsonObject>().Where(m => Text(m["state"]) == "Error" || Text(m["state"]) == "Warning")
+                    .Select(m => Text(m["path"]) + ": " + Text(m["description"])));
             }
-            var steps = item.Evidence["steps"] as JsonArray;
+            var steps = evidence["steps"] as JsonArray;
             if (steps == null) return item.Message;
-            return string.Join("\n", steps.Where(s => (bool?)s?["ok"] == false).SelectMany(s =>
-                s?["checks"] is JsonArray checks ? checks.Where(c => (bool?)c?["ok"] == false)
-                    .Select(c => "step " + s["index"] + " assert " + c!["name"] + ": expected "
+            return string.Join("\n", steps.OfType<JsonObject>().Where(s => Failed(s["ok"])).SelectMany(s =>
+                s["checks"] is JsonArray checks ? checks.OfType<JsonObject>().Where(c => Failed(c["ok"]))
+                    .Select(c => "step " + Value(s["index"]) + " assert " + Text(c["name"]) + ": expected "
                         + Value(c["expected"]) + ", actual " + Value(c["actual"]))
-                    : new[] { "step " + s?["index"] + " " + s?["kind"] + ": " + s?["error"] }));
+                    : new[] { "step " + Value(s["index"]) + " " + Text(s["kind"]) + ": " + Value(s["error"]) }));
         }
 
-        private static JsonObject? Result(JsonObject evidence) => evidence["result"] as JsonObject ?? evidence["meta"]?["result"] as JsonObject;
+        private static JsonObject? Result(JsonObject evidence) => evidence["result"] as JsonObject
+            ?? (evidence["details"] as JsonObject)?["result"] as JsonObject ?? (evidence["meta"] as JsonObject)?["result"] as JsonObject;
+        private static string? Text(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;
+        private static bool Failed(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out var flag) && !flag;
         private static string Value(JsonNode? value) => value?.ToJsonString() ?? "null";
         private static string Seconds(double value) => value.ToString("F3", CultureInfo.InvariantCulture);
 

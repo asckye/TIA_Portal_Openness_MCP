@@ -239,7 +239,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return V4Reject(tool, new Error(running.Message,
                     new PreconditionFailedDetails(running.Condition, null, running.ParamName)));
 #endif
-            if (error.Data["workerRequestSent"] is false) issued = false;
+            if (error.Data["workerRequestSent"] is false || error.Data["foundationRequestSent"] is false) issued = false;
             if (!issued && error.Data["workerLimitBytes"] is int workerLimit)
                 return V4Reject(tool,
                         new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)));
