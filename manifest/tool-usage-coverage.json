@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "e0ea7e284cdfb2a1f3ec91a6fa8cb3342b20c8d53020024b1cefabaaaeaea846",
-  "uniqueTools": 518,
+  "catalogSha256": "0e12ea23567cc698b090d8d193dc909dee4406f156570b3acb011e7bd8ad8771",
+  "uniqueTools": 519,
   "documents": 89,
-  "versionToolPairs": 3209,
+  "versionToolPairs": 3217,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 260,
-  "noDirectVendoredExampleMappings": 258,
+  "noDirectVendoredExampleMappings": 259,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -35,7 +35,7 @@
       "upstreamSkillsPath": "openness_development/skills",
       "scope": "Reference material only; not installed or executed. Upstream guides target TIA Portal V21 and contain instructions addressed to coding assistants that write Openness client code (for example to ask for the TIA version and to reject versions below V21). They are not instructions for calling this server, which serves V14 SP1-V21 with per-release tool contracts.",
       "scopeNotes": [
-        "Local snapshot layout: upstream openness_development/skills is relocated to reference/siemens-openness/skills. The 32 relative skills/*/SKILL.md links in openness_development/README.md therefore do not resolve locally; read the same guides under reference/siemens-openness/skills. Upstream plugin.json, marketplace metadata and validation scripts are not included. This reference snapshot is not an installable upstream plugin."
+        "Local snapshot layout: upstream openness_development/skills is relocated to reference/siemens-openness/skills. The 32 relative skills/*/SKILL.md links in openness_development/README.md are rewritten to ../skills/*/SKILL.md so they resolve locally; no other text is changed. Upstream plugin.json, marketplace metadata and validation scripts are not included. This reference snapshot is not an installable upstream plugin."
       ],
       "id": "guides"
     },
@@ -53,11 +53,11 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 280,
-      "checkedToolCount": 280,
+      "registeredToolCount": 281,
+      "checkedToolCount": 281,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 169,
+      "operationExampleCount": 175,
       "programmingExampleCount": 25,
       "callSequenceCount": 44,
       "offlineBuilderExamplesExecuted": 0,
@@ -3041,6 +3041,45 @@
           ]
         },
         {
+          "toolName": "ManagePlcTestLibrary",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "save",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "listRuns",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "readRun",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcUserGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -3828,11 +3867,11 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 321,
-      "checkedToolCount": 321,
+      "registeredToolCount": 322,
+      "checkedToolCount": 322,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 230,
+      "operationExampleCount": 236,
       "programmingExampleCount": 25,
       "callSequenceCount": 44,
       "offlineBuilderExamplesExecuted": 0,
@@ -7446,6 +7485,45 @@
           ]
         },
         {
+          "toolName": "ManagePlcTestLibrary",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "save",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "listRuns",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "readRun",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcUserGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -8380,11 +8458,11 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 350,
-      "checkedToolCount": 350,
+      "registeredToolCount": 351,
+      "checkedToolCount": 351,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 284,
+      "operationExampleCount": 290,
       "programmingExampleCount": 25,
       "callSequenceCount": 44,
       "offlineBuilderExamplesExecuted": 0,
@@ -12458,6 +12536,45 @@
           ]
         },
         {
+          "toolName": "ManagePlcTestLibrary",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "save",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "listRuns",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "readRun",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcUserGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -13537,11 +13654,11 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 373,
-      "checkedToolCount": 373,
+      "registeredToolCount": 374,
+      "checkedToolCount": 374,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 359,
+      "operationExampleCount": 365,
       "programmingExampleCount": 25,
       "callSequenceCount": 44,
       "offlineBuilderExamplesExecuted": 0,
@@ -17983,6 +18100,45 @@
           ]
         },
         {
+          "toolName": "ManagePlcTestLibrary",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "save",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "listRuns",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "readRun",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcUserGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -19339,11 +19495,11 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 399,
-      "checkedToolCount": 399,
+      "registeredToolCount": 400,
+      "checkedToolCount": 400,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 435,
+      "operationExampleCount": 441,
       "programmingExampleCount": 25,
       "callSequenceCount": 44,
       "offlineBuilderExamplesExecuted": 0,
@@ -24225,6 +24381,45 @@
           ]
         },
         {
+          "toolName": "ManagePlcTestLibrary",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "save",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "listRuns",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "readRun",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcUserGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -25838,11 +26033,11 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 475,
-      "checkedToolCount": 475,
+      "registeredToolCount": 476,
+      "checkedToolCount": 476,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 497,
+      "operationExampleCount": 503,
       "programmingExampleCount": 25,
       "callSequenceCount": 44,
       "offlineBuilderExamplesExecuted": 0,
@@ -31232,6 +31427,45 @@
           ]
         },
         {
+          "toolName": "ManagePlcTestLibrary",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "save",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "listRuns",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "readRun",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcUserGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -33296,11 +33530,11 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 498,
-      "checkedToolCount": 498,
+      "registeredToolCount": 499,
+      "checkedToolCount": 499,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 511,
+      "operationExampleCount": 517,
       "programmingExampleCount": 25,
       "callSequenceCount": 44,
       "offlineBuilderExamplesExecuted": 2,
@@ -38882,6 +39116,45 @@
           ]
         },
         {
+          "toolName": "ManagePlcTestLibrary",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "save",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "listRuns",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "readRun",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcUserGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -41029,17 +41302,17 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "fc5e73e42a948848260361571288163d89b0f1c54224d3fae50b7afc125d9bfa",
-      "runtimeSha256": "fc5e73e42a948848260361571288163d89b0f1c54224d3fae50b7afc125d9bfa",
+      "sdkWorkerSha256": "29c2753ad5a8bd5d48dfe56f9fc01f9dfa283898ea9afe41be623e8855657664",
+      "runtimeSha256": "29c2753ad5a8bd5d48dfe56f9fc01f9dfa283898ea9afe41be623e8855657664",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 513,
-      "checkedToolCount": 513,
+      "registeredToolCount": 514,
+      "checkedToolCount": 514,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 559,
+      "operationExampleCount": 565,
       "programmingExampleCount": 25,
       "callSequenceCount": 44,
       "offlineBuilderExamplesExecuted": 2,
@@ -46807,6 +47080,45 @@
           ]
         },
         {
+          "toolName": "ManagePlcTestLibrary",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": [
+            {
+              "operation": "list",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "read",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "save",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "delete",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "listRuns",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "readRun",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
+        },
+        {
           "toolName": "ManagePlcUserGroup",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -49146,8 +49458,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "f2c754a4556ad719753bc0946cfdef7c2e02aae154a504fda63c11ce03342e89",
-      "runtimeSha256": "f2c754a4556ad719753bc0946cfdef7c2e02aae154a504fda63c11ce03342e89",
+      "sdkWorkerSha256": "6b3462fad1cb44e508b5da5198ac38f31136113397ab5db5104eb2172e85cf79",
+      "runtimeSha256": "6b3462fad1cb44e508b5da5198ac38f31136113397ab5db5104eb2172e85cf79",
       "workerModel": "foundation-host-plc-worker"
     }
   }
