@@ -2815,7 +2815,7 @@
             "type": "object"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           }
         },
@@ -3262,7 +3262,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "strict": {
@@ -3302,7 +3302,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "theme": {
@@ -3688,7 +3688,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "tagName": {
@@ -13803,7 +13803,7 @@
             "type": "integer"
           },
           "screenName": {
-            "description": "screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names repeat.",
+            "description": "screenName: absolute /Group/Sub/Screen path (readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted), or an unambiguous exact name; use a path when names repeat.",
             "type": "string"
           },
           "softwarePath": {
@@ -13997,7 +13997,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "softwarePath": {
@@ -14135,7 +14135,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "serviceTypeSuffix": {
@@ -14216,7 +14216,7 @@
             "type": "integer"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           }
         },
@@ -14657,7 +14657,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "syntaxCheck": {
@@ -14712,7 +14712,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           }
         },
@@ -14800,7 +14800,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           }
         },
@@ -14841,7 +14841,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "width": {
@@ -14899,7 +14899,7 @@
             "type": "integer"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "text": {
@@ -14981,7 +14981,7 @@
             "type": "string"
           },
           "tagTableName": {
-            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused.",
+            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent folders must already exist; relative or backslash paths and missing folders are refused.",
             "type": "string"
           }
         },
@@ -15018,7 +15018,7 @@
             "type": "string"
           },
           "tagTableName": {
-            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused.",
+            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent folders must already exist; relative or backslash paths and missing folders are refused.",
             "type": "string"
           }
         },
@@ -18608,7 +18608,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "propertyPath": {
@@ -21046,7 +21046,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "65a9a4ff9f3ac535a6e4aeb543e11e1a2dd083010f58790c836341822a78f2a3",
+      "descriptionSha256": "4c6873a0c7d7823787920908e5f8b0008e9f38c6fa8c6df10c8ce36f6e7e8b3d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21496,7 +21496,7 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
+            "description": "folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
               ""
             ],
@@ -21563,7 +21563,7 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
+            "description": "folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "type": "string"
           },
           "overwrite": {
@@ -21626,7 +21626,7 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
+            "description": "folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
               ""
             ],
@@ -21693,7 +21693,7 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
+            "description": "folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "type": "string"
           },
           "overwrite": {
@@ -23366,7 +23366,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "softwarePath": {
@@ -23510,7 +23510,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "serviceTypeSuffix": {
@@ -24582,7 +24582,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "softwarePath": {
@@ -33323,7 +33323,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3f6f143314cf9958c9468a35c78dc978e0bdaf457969523b4e17b10ccb801a4f",
+      "descriptionSha256": "430a1057d45d7c5a7dbac4eb4dfd76638a51141137c2d08c39f355127beaca7c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -37614,7 +37614,7 @@
             "type": "string"
           },
           "screenName": {
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused.",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused.",
             "type": "string"
           },
           "scriptCode": {
@@ -37681,12 +37681,12 @@
           },
           "screenName": {
             "default": "Main",
-            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative or backslash paths are refused. (default 'Main')",
+            "description": "screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent groups must already exist; relative or backslash paths are refused. (default 'Main')",
             "type": "string"
           },
           "tagTableName": {
             "default": "默认变量表",
-            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)",
+            "description": "tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. Parent folders must already exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)",
             "type": "string"
           }
         },
@@ -38077,7 +38077,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "978090b07651eb612c2ee575845f629781b5284a0b338a53c88ed3cd94075668",
+      "descriptionSha256": "156189f3593dcf2e7856f3be6a7b53cf9275d3c149034becd3065cdd4607b80c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T03:13:15.4817664+00:00",
+  "generatedAt": "2026-11-17T05:12:08.6030894+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "25843e3bdb35e068105fca2570a2a41cf22fdef74ffb1d1330630ad7e43ff304",
+  "workerSha256": "a3345f8212ba6f0579dd50874cc14839f4ba514133a53a1e5c6a7ea29542e26c",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -3963,7 +3963,7 @@
         "previewToken",
         "changes"
       ],
-      "description": "[L2][HMI-Unified][WRITE]4.0 writes root scalars only; nested runtime settings are not exposed. Update supported root HMI Runtime settings using public Openness setters. changes is an object, e.g. {\"StartScreen\":\"/Group/Main\",\"ScreenResolution\":\"SR_1920X1080\"}; use exact enum names from GetUnifiedRuntimeSettings. StartScreen MUST be a full URI-escaped screen path: validates existence and unique name in the selected HMI before writing the API's name value. Default dryRun=true returns before/proposed/token. Apply identical changes with dryRun=false and previewToken. Validates all requested fields before any write and verifies final readback. On failure inspect appliedFields/mayHaveChanged; multi-field writes are not atomic. No automatic rollback, save, compile, download, runtime restart or close. Unsupported/nested fields are rejected. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetUnifiedRuntimeSettings\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][WRITE]4.0 writes root scalars only; nested runtime settings are not exposed. Update supported root HMI Runtime settings using public Openness setters. changes is an object, e.g. {\"StartScreen\":\"/Group/Main\",\"ScreenResolution\":\"SR_1920X1080\"}; use exact enum names from GetUnifiedRuntimeSettings. StartScreen MUST be a full readable screen path (old encoded input accepted): validates existence and unique name in the selected HMI before writing the API's name value. Default dryRun=true returns before/proposed/token. Apply identical changes with dryRun=false and previewToken. Validates all requested fields before any write and verifies final readback. On failure inspect appliedFields/mayHaveChanged; multi-field writes are not atomic. No automatic rollback, save, compile, download, runtime restart or close. Unsupported/nested fields are rejected. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetUnifiedRuntimeSettings\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"changes\":{\"StartScreen\":\"/Main\",\"ScreenResolution\":\"SR_1920X1080\"},\"dryRun\":true}"
     },
     {
@@ -4223,7 +4223,7 @@
         "newName",
         "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Create, rename or deleteEmpty a user folder. family=screens/tags; groupPath is an absolute /Group/Sub path with URI-escaped segments; relative and backslash paths are refused. newName is one segment for rename. Default dryRun=true. Missing parents created, root/nonempty deletion refused. No save/compile/download. Unified script folders are not exposed by the supported API. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedHmiGroup\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][WRITE] Create, rename or deleteEmpty a user folder. family=screens/tags; groupPath is an absolute /Group/Sub path with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; relative and backslash paths are refused. newName is one segment for rename. Default dryRun=true. Missing parents created, root/nonempty deletion refused. No save/compile/download. Unified script folders are not exposed by the supported API. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageUnifiedHmiGroup\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"family\":\"screens\",\"groupPath\":\"/Examples\",\"action\":\"create\",\"dryRun\":true}"
     },
     {
@@ -8679,7 +8679,7 @@
         "budgetMs",
         "branch"
       ],
-      "description": "[L2][HMI-Unified][READ]Read an exact screen/item branch with continuation. screenPath is /Group/Screen with URI-escaped names. branch is an array of at most 64 steps: {property}, {attribute}, {index} or {name,key?}. [] reads the selected subtree, never Parent. No writes or arbitrary method invocation. Examples: GetToolUsage(toolName: \"GetUnifiedScreenBranch\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][READ]Read an exact screen/item branch with continuation. screenPath is /Group/Screen with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted. branch is an array of at most 64 steps: {property}, {attribute}, {index} or {name,key?}. [] reads the selected subtree, never Parent. No writes or arbitrary method invocation. Examples: GetToolUsage(toolName: \"GetUnifiedScreenBranch\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"screenPath\":\"/Overview\"}"
     },
     {

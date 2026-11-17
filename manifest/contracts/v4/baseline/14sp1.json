@@ -6868,7 +6868,7 @@
             "type": "integer"
           },
           "screenName": {
-            "description": "screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names repeat.",
+            "description": "screenName: absolute /Group/Sub/Screen path (readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted), or an unambiguous exact name; use a path when names repeat.",
             "type": "string"
           },
           "softwarePath": {
@@ -7023,7 +7023,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "softwarePath": {
@@ -7161,7 +7161,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "serviceTypeSuffix": {
@@ -9338,7 +9338,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "propertyPath": {
@@ -10618,7 +10618,7 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
+            "description": "folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
               ""
             ],
@@ -10685,7 +10685,7 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
+            "description": "folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "type": "string"
           },
           "overwrite": {
@@ -10748,7 +10748,7 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
+            "description": "folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "examples": [
               ""
             ],
@@ -10815,7 +10815,7 @@
             "type": "string"
           },
           "folderPath": {
-            "description": "folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
+            "description": "folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; / selects the root (empty retains the legacy root selection). Relative and backslash paths are refused.",
             "type": "string"
           },
           "overwrite": {
@@ -11674,7 +11674,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "softwarePath": {
@@ -11818,7 +11818,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "serviceTypeSuffix": {
@@ -12786,7 +12786,7 @@
             "type": "string"
           },
           "objectPath": {
-            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.",
+            "description": "Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with softwarePath.",
             "type": "string"
           },
           "softwarePath": {
