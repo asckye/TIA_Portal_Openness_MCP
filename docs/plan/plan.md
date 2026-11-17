@@ -181,7 +181,7 @@ TIDY-7、HOST-RENAME 和 LONG-LINE-GATE 必须等 DES-4R2、DES-4R3 合并，拆
 | TIA-BATCH | 批量与递归的块、变量、UDT、HMI 变量操作；变量 CSV/Excel 交换，扩到 HMI 变量与报警、文本列表、DB 起始值 | 未开始 | 2026-10-30 |
 | TIA-GAPS | API-P1 未覆盖的其余缺口：建脚本模块、嵌套运行设置（维护者 2026-11-03 排 beta.5，2026-11-13 随新功能移至 beta.6）、工程概览与新建/打开选项、专题使用指南 | 未开始 | 2026-10-30 |
 | ECO-S | Siemens 官方 tia-portal-ai-extensions 技能进入 `GetToolUsage`（MIT，署名）；参数预设与强制预设；导出时剥离易变节点（可选编译成功后自动提交） | 未开始 | 2026-10-30 |
-| SELF | `ManagePlcDataBlockSnapshot` 的注册范围与官方 API 核对（ValueService 只在 V21 文档化）；`ManageProjectCompilationSettings` 从 V16 起注册并修正描述 | 未开始 | 2026-11-01 |
+| SELF | `ManagePlcDataBlockSnapshot` 的注册范围与官方 API 核对（ValueService 只在 V21 文档化）；`ManageProjectCompilationSettings` 从 V16 起注册并修正描述 | 已合并：注册早已符合官方 API（快照 V15.1 起、值服务动作仅 V21；编译设置 V16 起），本次只修正两个工具的说明 | 2026-11-17 |
 
 ## 4.0 正式版（rc → 4.0.0）
 
