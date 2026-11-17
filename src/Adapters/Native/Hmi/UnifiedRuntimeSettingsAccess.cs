@@ -25,9 +25,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             CheckJson(json);
             var array = UnifiedRequestValues.Parse(json) as HmiArray ?? throw new ArgumentException("fieldsJson must be a string array.");
             var fields = array.Select(v => v?.GetValue<string>() ?? "").ToArray();
-            if (fields.Length == 0 || fields.Length > MaxFieldsPerCall || fields.Distinct(StringComparer.Ordinal).Count() != fields.Length)
-                throw new ArgumentException("Select 1..12 unique settings.");
-            foreach (var field in fields) CheckField(field);
+            if (UnifiedRuntimeSettingsFields.Invalid(fields) is string reason) throw new ArgumentException(reason, nameof(json));
             return fields;
         }
         internal static HmiObject Changes(string json)
@@ -35,15 +33,13 @@ namespace TiaMcp.Adapters.Native.Hmi
             CheckJson(json);
             var changes = UnifiedRequestValues.Parse(json) as HmiObject ?? throw new ArgumentException("changesJson must be a JSON object.");
             var names = changes.Keys.ToArray();
-            if (names.Length == 0 || names.Length > MaxFieldsPerCall)
-                throw new ArgumentException("Supply 1..12 distinct setting names; duplicate JSON keys are invalid.");
-            foreach (var name in names) CheckField(name);
+            if (UnifiedRuntimeSettingsFields.Invalid(names) is string reason) throw new ArgumentException(reason, nameof(json));
             return changes;
         }
         private static void CheckField(string name)
         {
             if (!Allowed.Contains(name, StringComparer.Ordinal))
-                throw new NotSupportedException("Setting is outside the supported field list: " + name);
+                throw new ArgumentException("Unknown runtime setting name.");
         }
         private static string Path(string field) => "/RuntimeSettings/" + field.Replace('.', '/');
         private static (object owner, PropertyInfo p) Property(object settings, string name, bool write, HmiReadTrace trace)
@@ -52,13 +48,17 @@ namespace TiaMcp.Adapters.Native.Hmi
             var parts = name.Split('.');
             var owner = parts.Length == 1 ? settings : Call(trace, Path(parts[0]), () => MigrationRead.Get(settings, parts[0]))
                 ?? throw new NotSupportedException("Nested settings object unavailable: " + parts[0]);
-            var p = owner.GetType().GetProperty(parts[parts.Length - 1], BindingFlags.Instance | BindingFlags.Public);
+            return (owner, ScalarProperty(owner.GetType(), parts[parts.Length - 1], name, write));
+        }
+        private static PropertyInfo ScalarProperty(Type ownerType, string leaf, string name, bool write)
+        {
+            var p = ownerType.GetProperty(leaf, BindingFlags.Instance | BindingFlags.Public);
             if (p?.GetMethod?.IsPublic != true || p.GetIndexParameters().Length != 0 || (write && p.SetMethod?.IsPublic != true)
                 || !(p.PropertyType == typeof(string) || p.PropertyType == typeof(bool) || p.PropertyType.IsEnum
                     || p.PropertyType == typeof(int) || p.PropertyType == typeof(uint)))
-                throw new NotSupportedException("Public " + (write ? "read/write" : "read") + " scalar API unavailable for " + name + " on " + settings
-                        .GetType().FullName);
-            return (owner, p);
+                throw new NotSupportedException("Public " + (write ? "read/write" : "read") + " scalar API unavailable for " + name + " on "
+                    + ownerType.FullName);
+            return p;
         }
         private static object? Call(HmiReadTrace trace, string path, Func<object?> action)
         {
@@ -79,14 +79,23 @@ namespace TiaMcp.Adapters.Native.Hmi
                     .IsPublic == true
             };
         }
-        private static HmiArray Capabilities(object settings, HmiReadTrace trace)
+        private static HmiArray Capabilities(Type settingsType)
         {
             var result = new HmiArray();
             foreach (var field in Allowed)
             {
                 try
                 {
-                    var p = Property(settings, field, false, trace).p;
+                    var parts = field.Split('.');
+                    var ownerType = settingsType;
+                    if (parts.Length > 1)
+                    {
+                        var owner = settingsType.GetProperty(parts[0], BindingFlags.Instance | BindingFlags.Public);
+                        if (owner?.GetMethod?.IsPublic != true || owner.GetIndexParameters().Length != 0)
+                            throw new NotSupportedException("Nested settings API unavailable: " + parts[0]);
+                        ownerType = owner.PropertyType;
+                    }
+                    var p = ScalarProperty(ownerType, parts[parts.Length - 1], field, false);
                     result.Add(new HmiObject { ["field"] = field, ["type"] = p.PropertyType.FullName, ["readable"] = true,
                         ["writable"] = p.SetMethod?.IsPublic == true, ["allowedValues"] = p.PropertyType.IsEnum
                             ? new HmiArray(Enum.GetNames(p.PropertyType).Select(n => (object)HmiValues.Value(n)!).ToArray()) : null });
@@ -101,7 +110,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["readOnly"] = true; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
             meta["expectedCount"] = fields.Length; meta["actualCount"] = 0; meta["truncated"] = false; meta["nextCursor"] = null;
             var rows = new HmiObject(); var failures = new HmiArray(); meta["settings"] = rows; meta["failures"] = failures;
-            var settings = Settings(hmi, trace); meta["capabilities"] = Capabilities(settings, trace);
+            var settings = Settings(hmi, trace); meta["capabilities"] = Capabilities(settings.GetType());
             foreach (var field in fields)
             {
                 try {
@@ -227,8 +236,6 @@ namespace TiaMcp.Adapters.Native.Hmi
             HmiExactAccess.RequireToken(expectedToken, token);
             var applied = new HmiArray(); var readback = new HmiObject(); meta["appliedFields"] = applied; meta["readback"] = readback;
             meta["dataComplete"] = false; meta["actualCount"] = 0;
-            foreach (var group in writes.GroupBy(write => write.owner))
-                EngineeringWriteJournal.CaptureProperties(group.Key, group.Select(write => write.p));
             // A setter can change another requested field even when that field was initially unchanged.
             foreach (var write in writes) EngineeringWriteJournal.Property(write.owner, write.p);
             foreach (var write in writes)

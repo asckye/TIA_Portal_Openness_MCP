@@ -479,6 +479,9 @@ internal sealed partial class FoundationTool
         {
             var unified = BindUnifiedRequest(tool.Name, portedMethod!, arguments);
             UnifiedPortService.DecodeInputs(unified);
+            if (UnifiedCapabilities.InvalidRuntimeSettings(unified) is string invalidSettings)
+                return McpServer.V4TargetReject(tool.Name, new Error(invalidSettings,
+                    new InvalidArgumentDetails(tool.Name == "GetUnifiedRuntimeSettings" ? "/fields" : "/changes", Array.Empty<string>())), current: true);
             if (UnifiedCapabilities.Unsupported(portedRelease!, unified) is string unifiedReason)
                 return tool.Name is "ManageUnifiedEngineeringObject" or "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings"
                     || UnifiedCapabilities.WritesRuntimeSettings(unified)

@@ -64,9 +64,26 @@ public static class UnifiedRuntimeSettingsFields
         "HmiExclusiveOperationSettings.ExclusiveOperationStatusTag"
     });
 
+    public static string? Invalid(IEnumerable<string> fields)
+    {
+        var names = fields.ToArray();
+        if (names.Length == 0) return "Select at least one runtime setting (1..12 fields).";
+        if (names.Length > MaxFieldsPerCall) return "Too many runtime settings; select 1..12 fields.";
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var name in names)
+        {
+            if (!seen.Add(name)) return "Duplicate runtime setting name.";
+            if (!Known(name)) return "Unknown runtime setting name.";
+        }
+        return null;
+    }
+
+    private static bool Known(string field) => Root.Contains(field, StringComparer.Ordinal) || Nested.Contains(field, StringComparer.Ordinal);
+
     public static string? Unsupported(string release, string field)
     {
-        bool available = Root.Contains(field, StringComparer.Ordinal) || Nested.Contains(field, StringComparer.Ordinal);
+        if (!Known(field)) return null;
+        bool available = true;
         if (release == "19" || release == "20")
             available &= field != "CentralInputHint" && field != "CentralPanning" && field != "CentralZooming"
                 && field != "HmiUnifiedTagSettings.TagOptimizationActive"

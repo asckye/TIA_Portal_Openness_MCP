@@ -22,6 +22,8 @@ namespace TiaMcpServer.Siemens.Services
             ValidateInputs(request);
             DecodeInputs(request);
             EngineeringInputValidation.Request(request);
+            if (UnifiedCapabilities.InvalidRuntimeSettings(request) is string invalidSettings)
+                throw new ArgumentException(invalidSettings, request.Operation == "GetUnifiedRuntimeSettings" ? "fields" : "changes");
             var unavailable = UnifiedCapabilities.Unsupported(HardwareContract.ReleaseKey, request);
             if (unavailable != null) throw new PortalException(PortalErrorCode.NotSupportedOnVersion, unavailable);
             return Dispatch(request, dryRun);
@@ -36,6 +38,20 @@ namespace TiaMcpServer.Siemens.Services
                 try { EngineeringInputValidation.Action(scriptAction.GetString()!, "update", "create"); }
                 catch (ArgumentException error)
                 { return new Error(error.Message, new InvalidArgumentDetails("action", Array.Empty<string>(), expected: "update | create")); }
+            if (tool is "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings")
+            {
+                string parameter = tool == "GetUnifiedRuntimeSettings" ? "fields" : "changes";
+                if (args.TryGetProperty(parameter, out var settings)
+                    && (parameter == "fields" ? settings.ValueKind == JsonValueKind.Array
+                        && settings.EnumerateArray().All(v => v.ValueKind == JsonValueKind.String) : settings.ValueKind == JsonValueKind.Object))
+                {
+                    var details = new InvalidArgumentDetails("/" + parameter, Array.Empty<string>());
+                    if (UnifiedInputCodec.HasDuplicateKeys(settings)) return new Error("Duplicate runtime setting name.", details);
+                    var input = UnifiedInputCodec.Decode(settings);
+                    if (UnifiedRuntimeSettingsFields.Invalid(parameter == "fields" ? input.Items.Select(v => v.Text) : input.Properties.Keys)
+                        is string invalidSettings) return new Error(invalidSettings, details);
+                }
+            }
             if (args.TryGetProperty("expectedProject", out var expectedProject) && expectedProject.ValueKind == JsonValueKind.String
                 && HostBehavior.ExpectedProjectArgument(expectedProject.GetString()) is { } projectError) return projectError;
             if (tool is "EnsureUnifiedHmiTagTable" or "EnsureUnifiedHmiTag" or "EnsureUnifiedHmiScreen" or "SetUnifiedHmiRuntimeState")

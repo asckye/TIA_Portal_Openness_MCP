@@ -1,4 +1,5 @@
 extern alias toolpipeline;
+using System.Reflection;
 using System.Text.Json;
 using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Native.Hmi;
@@ -74,6 +75,37 @@ public sealed class UnifiedRuntimeSettingsNestedTests : IDisposable
         Assert.Equal(2, hmi.RuntimeSettings.OpcUaServerRuntimeSettings.MaxSessionCount);
         Assert.Equal(3u, hmi.RuntimeSettings.MaxLoginRuntimeSettings.MaxLoginErrors);
         Assert.Equal(0, hmi.RuntimeSettings.OwnerSetterCalls);
+    }
+
+    [Fact]
+    public void Capabilities_do_not_invoke_an_unrequested_throwing_nested_owner_getter()
+    {
+        var hmi = new ThrowingSoftware();
+        var meta = new HmiObject();
+        UnifiedRuntimeSettingsAccess.Read(hmi, new[] { "StartScreen" }, meta, new HmiReadTrace());
+        Assert.True((bool)meta["operationSuccess"]!);
+        Assert.True((bool)meta["dataComplete"]!);
+        Assert.Equal("Main", ((HmiObject)meta["settings"]!)["StartScreen"]!.Field("value"));
+        Assert.Equal(0, hmi.RuntimeSettings.OwnerGetterCalls);
+        Assert.Contains(((HmiArray)meta["capabilities"]!).Cast<HmiObject>(),
+            row => (string?)row["field"] == "OpcUaServerRuntimeSettings.MaxSessionCount" && (bool)row["readable"]!);
+        var error = Assert.Throws<TargetInvocationException>(() => typeof(ThrowingSettings)
+            .GetProperty(nameof(ThrowingSettings.OpcUaServerRuntimeSettings))!.GetValue(hmi.RuntimeSettings));
+        Assert.IsType<InvalidOperationException>(error.InnerException);
+    }
+
+    [Fact]
+    public void Requested_throwing_nested_owner_is_isolated_from_other_fields()
+    {
+        var hmi = new ThrowingSoftware();
+        var meta = new HmiObject();
+        UnifiedRuntimeSettingsAccess.Read(hmi, new[] { "OpcUaServerRuntimeSettings.MaxSessionCount", "StartScreen" }, meta, new HmiReadTrace());
+        Assert.True((bool)meta["apiCallSuccess"]!);
+        Assert.False((bool)meta["dataComplete"]!);
+        Assert.Equal(1, meta["failureCount"]);
+        Assert.Equal(1, meta["actualCount"]);
+        Assert.Equal("Main", ((HmiObject)meta["settings"]!)["StartScreen"]!.Field("value"));
+        Assert.Equal(1, hmi.RuntimeSettings.OwnerGetterCalls);
     }
 
     [Theory]
@@ -163,6 +195,15 @@ public sealed class UnifiedRuntimeSettingsNestedTests : IDisposable
     }
 
     public sealed class Software { public Settings RuntimeSettings { get; } = new(); }
+    public sealed class ThrowingSoftware { public ThrowingSettings RuntimeSettings { get; } = new(); }
+    public sealed class ThrowingSettings
+    {
+        public string StartScreen => "Main";
+        public int OwnerGetterCalls { get; private set; }
+        public OpcUa OpcUaServerRuntimeSettings {
+            get { OwnerGetterCalls++; throw new InvalidOperationException("Nested owner getter failed."); }
+        }
+    }
     public sealed class Settings
     {
         private readonly OpcUa _opc = new();

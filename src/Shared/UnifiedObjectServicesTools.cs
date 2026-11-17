@@ -94,8 +94,9 @@ namespace TiaMcpServer.ModelContextProtocol
         => _service.ReadUnifiedObjectProperties(softwarePath,objectPathJson,offset,limit);
 
         [McpServerTool(Name="SetUnifiedObjectProperties"),
-                Description("[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object. RuntimeSettings and its " +
-                "entire subtree require SetUnifiedRuntimeSettings. dryRun=true; no renaming, parent traversal, save/compile/download. " +
+                Description("[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object. RuntimeSettings scalar fields " +
+                "require SetUnifiedRuntimeSettings; use ManageUnifiedObjectParts for the LanguageAndFonts collection. " +
+                "dryRun=true; no renaming, parent traversal, save/compile/download. " +
                 "TimeSpan uses invariant c string. Partial changes " +
                 "reported; readback checked. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult UpdateUnifiedObjectPropertiesV4(string softwarePath, PropertyStep[] objectPath, AttributeMap<Scalar> properties, bool dryRun=true)
@@ -108,7 +109,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name="SetUnifiedMultilingualProperty"),
                 Description("[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. " +
-                "RuntimeSettings and its entire subtree require SetUnifiedRuntimeSettings. " +
+                "RuntimeSettings scalar fields require SetUnifiedRuntimeSettings; use ManageUnifiedObjectParts for the LanguageAndFonts collection. " +
                 "Preserves raw text and verifies requested language and unchanged other languages. Default preview; no save/compile/download. " +
                 "Native behaviorPolicy=current; V4 " +
                 "native acceptance is pending.")]

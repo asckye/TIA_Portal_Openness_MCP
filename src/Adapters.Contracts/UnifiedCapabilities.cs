@@ -17,6 +17,14 @@ namespace TiaMcp.Adapters.Contracts
             "ManageUnifiedObjectParts", "ManageUnifiedScreenLayout", "ManageUnifiedListEntries", "ExchangeUnifiedTags",
             "ExchangeUnifiedScriptModules", "ImportUnifiedOpcUaAlarms", "SetUnifiedGlobalScript", "SetUnifiedRuntimeSettings"
         }.Contains(tool, StringComparer.Ordinal);
+        public static string? InvalidRuntimeSettings(UnifiedRequest request)
+        {
+            if (request.Operation != "GetUnifiedRuntimeSettings" && request.Operation != "SetUnifiedRuntimeSettings") return null;
+            var raw = request.Operation == "GetUnifiedRuntimeSettings" ? request.FieldsJson : request.ChangesJson;
+            if (!request.Inputs.TryGetValue(raw, out var input)) return null;
+            if (input.Error != null) return input.Error;
+            return UnifiedRuntimeSettingsFields.Invalid(input.Kind == "array" ? input.Items.Select(v => v.Text) : input.Properties.Keys);
+        }
         public static string? Unsupported(string release, UnifiedRequest request)
         {
             if (release != "19" && release != "20" && release != "21")
@@ -54,9 +62,6 @@ namespace TiaMcp.Adapters.Contracts
                 if (request.Inputs.TryGetValue(raw, out var input) && input.Error == null)
                 {
                     var fields = (input.Kind == "array" ? input.Items.Select(v => v.Text) : input.Properties.Keys).ToArray();
-                    if (fields.Length == 0 || fields.Length > UnifiedRuntimeSettingsFields.MaxFieldsPerCall
-                        || fields.Distinct(StringComparer.Ordinal).Count() != fields.Length)
-                        return "Select 1..12 unique runtime settings.";
                     foreach (var field in fields)
                         if (UnifiedRuntimeSettingsFields.Unsupported(release, field) is string reason) return reason;
                 }

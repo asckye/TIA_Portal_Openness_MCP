@@ -15487,7 +15487,7 @@
           "value": true
         }
       },
-      "description": "[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object. RuntimeSettings and its entire subtree require SetUnifiedRuntimeSettings. dryRun=true; no renaming, parent traversal, save/compile/download. TimeSpan uses invariant c string. Partial changes reported; readback checked. Native behaviorPolicy=current; V4 native acceptance is pending."
+      "description": "[L2][HMI-Unified][WRITE] Edit public scalar properties on a precisely addressed Unified object. RuntimeSettings scalar fields require SetUnifiedRuntimeSettings; use ManageUnifiedObjectParts for the LanguageAndFonts collection. dryRun=true; no renaming, parent traversal, save/compile/download. TimeSpan uses invariant c string. Partial changes reported; readback checked. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "SetUnifiedMultilingualProperty": {
       "method": "UpdateUnifiedMultilingualPropertyV4",
@@ -15524,7 +15524,7 @@
           "value": true
         }
       },
-      "description": "[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. RuntimeSettings and its entire subtree require SetUnifiedRuntimeSettings. Preserves raw text and verifies requested language and unchanged other languages. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending."
+      "description": "[L2][HMI-Unified][WRITE] Edit one existing language entry of a precisely addressed Unified object property. RuntimeSettings scalar fields require SetUnifiedRuntimeSettings; use ManageUnifiedObjectParts for the LanguageAndFonts collection. Preserves raw text and verifies requested language and unchanged other languages. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "ValidateUnifiedObject": {
       "method": "ValidateUnifiedObjectV4",

@@ -76,9 +76,9 @@ public sealed class UnifiedRuntimeSettingsFieldsTests
     [InlineData("MaxLoginRuntimeSettings.maxLoginErrors")]
     public void Fields_outside_the_exact_table_are_refused(string field)
     {
+        Assert.Equal("Unknown runtime setting name.", UnifiedRuntimeSettingsFields.Invalid(new[] { field }));
         foreach (string release in new[] { "19", "20", "21" })
-            Assert.Equal("HmiRuntimeSetting." + field + " is not exposed by the V" + release + " PublicAPI.",
-                UnifiedRuntimeSettingsFields.Unsupported(release, field));
+            Assert.Null(UnifiedRuntimeSettingsFields.Unsupported(release, field));
     }
 
     [Fact]
