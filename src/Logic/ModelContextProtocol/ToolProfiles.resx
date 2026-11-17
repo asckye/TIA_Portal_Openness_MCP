@@ -9510,6 +9510,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
+        "tableKind": "watch",
         "dryRun": true,
         "confirm": false
       }
@@ -9530,7 +9531,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-        "dryRun": true
+        "dryRun": true,
+        "tableKind": "watch"
       }
     },
     {
@@ -9548,8 +9550,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "tableKind": "watch",
-        "tablePath": "MCP_W/MCP_WT",
-        "action": "createComment",
+        "tablePath": "MCP_W/NewWatch",
+        "action": "createTable",
         "confirmDelete": false,
         "dryRun": true
       }
@@ -12349,6 +12351,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
+        "tableKind": "watch",
         "dryRun": true,
         "confirm": false
       }
@@ -12369,7 +12372,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-        "dryRun": true
+        "dryRun": true,
+        "tableKind": "watch"
       }
     },
     {
@@ -12387,8 +12391,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "tableKind": "watch",
-        "tablePath": "MCP_W/MCP_WT",
-        "action": "createComment",
+        "tablePath": "MCP_W/NewWatch",
+        "action": "createTable",
         "confirmDelete": false,
         "dryRun": true
       }
@@ -15482,6 +15486,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
+        "tableKind": "watch",
         "dryRun": true,
         "confirm": false
       }
@@ -15502,7 +15507,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-        "dryRun": true
+        "dryRun": true,
+        "tableKind": "watch"
       }
     },
     {
@@ -15520,8 +15526,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "tableKind": "watch",
-        "tablePath": "MCP_W/MCP_WT",
-        "action": "createComment",
+        "tablePath": "MCP_W/NewWatch",
+        "action": "createTable",
         "confirmDelete": false,
         "dryRun": true
       }
@@ -18985,6 +18991,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
+        "tableKind": "watch",
         "dryRun": true,
         "confirm": false
       }
@@ -19005,7 +19012,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-        "dryRun": true
+        "dryRun": true,
+        "tableKind": "watch"
       }
     },
     {
@@ -19023,8 +19031,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "tableKind": "watch",
-        "tablePath": "MCP_W/MCP_WT",
-        "action": "createComment",
+        "tablePath": "MCP_W/NewWatch",
+        "action": "createTable",
         "confirmDelete": false,
         "dryRun": true
       }
@@ -23661,6 +23669,7 @@
       "example": {
         "softwarePath": "PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
+        "tableKind": "watch",
         "dryRun": true,
         "confirm": false
       }
@@ -23681,7 +23690,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-        "dryRun": true
+        "dryRun": true,
+        "tableKind": "watch"
       }
     },
     {
@@ -23699,8 +23709,8 @@
       "example": {
         "softwarePath": "PLC_1",
         "tableKind": "watch",
-        "tablePath": "MCP_W/MCP_WT",
-        "action": "createComment",
+        "tablePath": "MCP_W/NewWatch",
+        "action": "createTable",
         "confirmDelete": false,
         "dryRun": true
       }
@@ -27219,6 +27229,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
+          "tableKind": "watch",
           "dryRun": true,
           "confirm": false
         },
@@ -29251,7 +29262,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true
+          "dryRun": true,
+          "tableKind": "watch"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -31094,8 +31106,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },
@@ -36846,6 +36858,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
+          "tableKind": "watch",
           "dryRun": true,
           "confirm": false
         },
@@ -38877,7 +38890,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true
+          "dryRun": true,
+          "tableKind": "watch"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -40809,8 +40823,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },
@@ -50605,6 +50619,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
+          "tableKind": "watch",
           "dryRun": true,
           "confirm": false
         },
@@ -52047,7 +52062,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true
+          "dryRun": true,
+          "tableKind": "watch"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -53208,8 +53224,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },
@@ -56674,6 +56690,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
+          "tableKind": "watch",
           "dryRun": true,
           "confirm": false
         },
@@ -58220,7 +58237,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true
+          "dryRun": true,
+          "tableKind": "watch"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -59586,8 +59604,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },
@@ -63262,6 +63280,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
+          "tableKind": "watch",
           "dryRun": true,
           "confirm": false
         },
@@ -64883,7 +64902,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true
+          "dryRun": true,
+          "tableKind": "watch"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -66342,8 +66362,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },
@@ -70277,6 +70297,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
+          "tableKind": "watch",
           "dryRun": true,
           "confirm": false
         },
@@ -71936,7 +71957,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true
+          "dryRun": true,
+          "tableKind": "watch"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -73582,8 +73604,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },
@@ -78316,6 +78338,7 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
+          "tableKind": "watch",
           "dryRun": true,
           "confirm": false
         },
@@ -80254,7 +80277,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-          "dryRun": true
+          "dryRun": true,
+          "tableKind": "watch"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -82031,8 +82055,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },
@@ -90061,8 +90085,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },
@@ -97516,8 +97540,8 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "tableKind": "watch",
-          "tablePath": "MCP_W/MCP_WT",
-          "action": "read",
+          "tablePath": "MCP_W/NewWatch",
+          "action": "createTable",
           "confirmDelete": false,
           "dryRun": true
         },

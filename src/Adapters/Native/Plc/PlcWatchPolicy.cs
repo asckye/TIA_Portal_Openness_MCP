@@ -12,7 +12,7 @@ namespace TiaMcp.Adapters.Native.Plc
         }
         // ---- watch / force table entries -----------------------------------------------------------------------------------------------
         internal static readonly string[] TableKinds = { "watch", "force" };
-        internal static readonly string[] TableEntryActions = { "read", "createComment", "deleteEntry", "deleteTable" };
+        internal static readonly string[] TableEntryActions = { "read", "createTable", "createComment", "deleteEntry", "deleteTable" };
         internal static bool ValidateTableEntryRequest(string tableKind, string tablePath, string action, int entryIndex, bool confirmDelete, bool dryRun,
                 int offset, int limit)
         {
@@ -20,10 +20,10 @@ namespace TiaMcp.Adapters.Native.Plc
             RequireName(tablePath, "tablePath", 1024);
             RequireOneOf(action, TableEntryActions, "action");
             HardwareAddressingPolicy.ValidatePage(offset, limit);
-            // Force tables stay read-only on purpose: forcing bypasses the program and PlcForceTableEntry writes are deliberately not offered.
+            // Force entries remain read-only; offline force configuration is imported through the separate native import tool.
             if (tableKind == "force" && action != "read")
                 throw new ArgumentException("Force tables are read-only here (PlcForceTableEntry writes are deliberately not offered); createComment / " +
-                "deleteEntry apply to watch tables.");
+                "deleteEntry / createTable / deleteTable apply to watch tables. The API has no force-table Create.");
             if (action == "deleteEntry") { if (entryIndex < 0) throw new ArgumentException("deleteEntry needs the 0-based entryIndex from a read."); }
             else if (entryIndex >= 0) throw new ArgumentException("entryIndex applies to deleteEntry only.");
             if (action == "read") return false;

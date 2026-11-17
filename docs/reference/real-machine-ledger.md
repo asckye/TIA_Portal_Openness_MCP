@@ -14,6 +14,7 @@
 |---|---|
 | API-P1c 型号替换与项目子网（beta.6） | **NOT RUN**。分别用 V21、V18 项目副本，更换 CPU 和信号模块：同系列较新固件及不同订货号各一次；核对原路径重新解析后的 TypeIdentifier、地址/模块/软件影响及随后编译结果。无锚点创建 Ethernet（`System:Subnet.Ethernet`）和 PROFIBUS（`System:Subnet.Profibus`）子网，回读 Name/TypeIdentifier/NetType；删除含两个已连接节点及 IO system 的子网，预览核对节点数、接口路径和 IO system 名称，执行后确认子网不存在并重新读取节点状态。**V17 拒绝核对**：在 V17 项目副本上预览和执行 changeType，均须在原生访问前返回 UNSUPPORTED_CAPABILITY，确认项目未改变。七个动作均核对预览、计划哈希、目标项目与 WRITE 审批，拒绝缺失/过期计划，保留调用顺序及 worker 所属线程；型号替换失败不重试、不自动撤销。**显式保存核对**：完成上述 V21、V18 回读和编译后，分别独立调用 SaveProject 显式保存项目副本，记录保存结果；ManageHardwareObject 不自动保存。 |
 TIA-BATCH-1：**NOT RUN**。在 V14 SP1 或 V15.1 与 V21 工程副本上，用一次 PreviewToolBatch/ApplyToolBatch 删除 3 个块、新建 5 个变量；V21 再批量建 3 个 Unified 变量；确认需要计划哈希的工具在批处理中直接执行、第一个失败项整体回滚且后续项为 NOT_EXECUTED；记录请求 ID 与原生消息。还需确认：带自身计划哈希的工具在逐项执行时复核并拒绝变更的输入文件；ImportPlcTagTable 及现有不带自身计划哈希的批量导入只在批次复验证阶段检查输入文件，复验证之后的变化不受逐项计划哈希保护。
+API-P1b（beta.6）：**NOT RUN**。在 V21、V18 的一次性工程副本中核对现有监控表组的 createTable 预览、计划哈希和项目绑定执行、名称与数量读回、同组 watch/force 重名拒绝及缺失父组拒绝；验证 force 目录导出的整批预览、tableKind/清单/项目绑定哈希、单次审批、审批后复查与首错停止 → 导入另一现有组 → 按返回名称重新查找，watch XML 按 force 导入必须拒绝，保留原文件与失败后的工程状态。确认全程没有在线监视、激活强制、下载或自动保存；最后由测试者显式保存。Part B 由负责人决定推迟至后续轮次，当前未实施；负责人先执行 Step 0 的 V21/V18 块 ICompilable 探针：证据通过后再核对 block/group/unit 各范围的预览 compilable、精确对象、完整嵌套诊断、离线检查与 Safety 登录/清理顺序；Step 0b 的组和单元探针仍由负责人执行。
 
 VMFIX-3 Round 2：**NOT RUN**。V14 SP1、V15.1、V16、V17、V18、V19、V20 的 ImportDeviceAml 保留原有 ExclusiveAccess 路径；需分别在工程副本上确认导入、失败后的工程状态及设备计数。只有 V21 按已记录的 reset 13 证据在 ExclusiveAccess 外导入，仍需复测。库文档 Override、带目标环境及非 None 选项的失败保持未知结果，不能只凭类型/版本数量未变判为未写入。
 

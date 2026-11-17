@@ -18,6 +18,7 @@ using Siemens.Engineering.SW.TechnologicalObjects;
 using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Engineering;
 using Logic = TiaMcp.Adapters.Native.Plc.PlcMotionPolicy;
 using WatchNative = TiaMcp.Adapters.WatchTechnologyPrimitives;
 
@@ -69,14 +70,17 @@ namespace TiaMcp.Adapters.Native.Plc
             if (table == null) return false;
             if (table is global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTable watch)
                 RequireWatchExport(watch);
-            return Equals(TechnologyExport(table, TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath))["success"], true);
+            return Equals(TechnologyExport(table, TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath), false)["success"], true);
         }
 
         public static void RequireWatchExport(PlcWatchTable watch)
             => TiaOpenness.Shared.NativeExportPolicy.RequireApply(watch.IsConsistent ? "planned" : "inconsistent");
 
-        public PlcSeedHmiReply ExportPlcWatchTablesToDirectory(string softwarePath, string dir, string regexName = "")
+        public PlcSeedHmiReply ExportPlcWatchTablesToDirectory(string softwarePath, string dir, string regexName = "", string tableKind = "watch",
+            bool dryRun = true, string expectedPlanHash = "")
         {
+            if (tableKind != "watch" && tableKind != "force") throw new ArgumentException("tableKind must be watch or force.", nameof(tableKind));
+            if (tableKind == "force") return ExportPlcForceTablesToDirectory(softwarePath, dir, regexName, dryRun, expectedPlanHash);
             if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
                 _session.PlcSoftwarePath(_session.GetPlcSoftware(softwarePath)), true);
 
@@ -116,6 +120,67 @@ namespace TiaMcp.Adapters.Native.Plc
             }
         }
 
+        private PlcSeedHmiReply ExportPlcForceTablesToDirectory(string softwarePath, string dir, string regexName, bool dryRun, string expectedPlanHash)
+        {
+            if (IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project open.");
+            var plc = _session.GetPlcSoftware(softwarePath) ?? throw new PlcSoftwareException("NotFound", "PLC software not found.");
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath, _session.PlcSoftwarePath(plc), true);
+            string root = Path.GetFullPath(dir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var regex = string.IsNullOrWhiteSpace(regexName) ? null : new Regex(regexName, RegexOptions.IgnoreCase);
+            var names = GetPlcForceTables(softwarePath)!.Where(path => regex == null || regex.IsMatch(path)).ToArray();
+            var selected = new List<PlcForceTable>();
+            var plan = new List<Dictionary<string, object?>>();
+            foreach (string name in names)
+            {
+                var parts = PlcObjectPath.Parts(name, parameter: "tablePath");
+                if (parts.Any(part => part.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || part.Contains('/') || part.Contains('\\')))
+                    throw new AdapterPreconditionException("Export group and object names must be ordinary path components.");
+                var group = (PlcWatchAndForceTableGroup)PlcGroupOperations.Group(WatchNative.WatchGroup(plc),
+                    PlcObjectPath.Format(parts.Take(parts.Length - 1)), pathParts: path => PlcObjectPath.Parts(path, true));
+                var table = (PlcForceTable)PlcGroupOperations.Call(PlcBlockPrimitives.ForceTables(group), "Find", new[] { typeof(string) }, parts.Last());
+                TiaOpenness.Shared.NativeExportPolicy.RequireApply(WatchNative.IsConsistent(table) ? "planned" : "inconsistent");
+                string output = Path.GetFullPath(Path.Combine(root, Path.Combine(parts) + ".xml"));
+                if (!output.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new AdapterPreconditionException("Export escapes its directory.");
+                PlcSpecialExportPolicy.Output(output, true);
+                selected.Add(table);
+                plan.Add(new Dictionary<string, object?> { ["objectPath"] = name, ["outputFile"] = output, ["status"] = "planned" });
+            }
+            string hash = PlcSpecialExportPolicy.Hash(_session.ReleaseKey, softwarePath, root, _session.BindingIdentity(),
+                _session.SerializeEvidence(new Dictionary<string, object?> { ["tableKind"] = "force", ["regexName"] = regexName, ["items"] = plan }));
+            var meta = new Dictionary<string, object?> { ["planHash"] = hash, ["tableKind"] = "force", ["items"] = plan, ["dryRun"] = dryRun,
+                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false, ["nativeRoute"] = "PlcForceTable.Export" };
+            var exported = new List<string>(); var failed = new List<PlcSeedImportFailure>();
+            if (dryRun) return new PlcSeedHmiReply { Imported = exported, Failed = failed, Meta = meta };
+            if (hash != expectedPlanHash) throw new AdapterPreconditionException("Force table export plan changed; preview again.");
+            _session.ExactPlcForEngineering(softwarePath, false);
+            for (int index = 0; index < selected.Count; index++)
+            {
+                var row = plan[index]; string output = (string)row["outputFile"]!;
+                try
+                {
+                    PlcSpecialExportPolicy.Output(output, true);
+                    Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+                    PlcSpecialExportPolicy.Output(output, true);
+                    var temporary = new FileInfo(Path.Combine(Path.GetDirectoryName(output)!, ".tia-export-" + Guid.NewGuid().ToString("N") + ".xml"));
+                    row["temporaryPath"] = temporary.FullName; meta["mayHaveWrittenFiles"] = true;
+                    WatchNative.Export(selected[index], temporary, ExportOptions.WithDefaults);
+                    temporary.Refresh();
+                    if (!temporary.Exists || temporary.Length == 0)
+                        throw new IOException("Force table export produced no non-empty file: " + temporary.FullName);
+                    File.Move(temporary.FullName, output);
+                    row["temporaryPath"] = null; row["status"] = "completed"; exported.Add(output);
+                }
+                catch (Exception error)
+                {
+                    row["status"] = "failed"; meta["operationSuccess"] = false;
+                    failed.Add(new PlcSeedImportFailure { Path = output, Error = error.Message });
+                    foreach (var pending in plan.Skip(index + 1)) pending["status"] = "not-started";
+                    break;
+                }
+            }
+            return new PlcSeedHmiReply { Imported = exported, Failed = failed, Meta = meta };
+        }
+
         // ── Force Tables ──────────────────────────────────────────────────────
 
         public List<string>? GetPlcForceTables(string softwarePath)
@@ -144,7 +209,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 {
                     if (t == null) continue;
                     var name = WatchProperty(t, "Name")?.ToString() ?? string.Empty;
-                    result.Add(string.IsNullOrEmpty(prefix) ? name : prefix + "/" + name);
+                    var segment = ObjectPathEncoding.EncodeSegment(name);
+                    result.Add(string.IsNullOrEmpty(prefix) ? segment : prefix + "/" + segment);
                 }
             }
 
@@ -155,7 +221,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 {
                     if (sub == null) continue;
                     var gname = WatchProperty(sub, "Name")?.ToString() ?? string.Empty;
-                    var next = string.IsNullOrEmpty(prefix) ? gname : prefix + "/" + gname;
+                    var segment = ObjectPathEncoding.EncodeSegment(gname);
+                    var next = string.IsNullOrEmpty(prefix) ? segment : prefix + "/" + segment;
                     CollectForceTableNames(sub, next, result, visited);
                 }
             }
@@ -332,27 +399,41 @@ namespace TiaMcp.Adapters.Native.Plc
             return (null, group, wanted, null);
         }
 
-        public HardwareAddressingReply ImportPlcWatchTableOffline(string softwarePath, string filePath, string groupPath = "", bool dryRun = true)
+        public HardwareAddressingReply ImportPlcWatchTableOffline(string softwarePath, string filePath, string groupPath = "", bool dryRun = true,
+            string tableKind = "watch")
             => _session.RunHmiStepTool("ImportPlcWatchTableOffline", meta => {
                 var source = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!source.Exists)
-                    throw new FileNotFoundException("Watch table XML missing.", filePath);
-                meta["expectedCount"] = WatchTableImportValidation.Validate(source.FullName);
+                    throw new FileNotFoundException("Table XML missing.", filePath);
+                meta["expectedCount"] = WatchTableImportValidation.Validate(source.FullName, tableKind);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var plc = _session.ExactPlcForEngineering(softwarePath, !dryRun);
-                var group = (PlcWatchAndForceTableGroup)PlcGroupOperations.Group(WatchNative.WatchGroup(plc), groupPath);
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                PlcWatchAndForceTableGroup FindGroup() => (PlcWatchAndForceTableGroup)PlcGroupOperations.Group(WatchNative.WatchGroup(plc), groupPath,
+                    pathParts: path => PlcObjectPath.Parts(path, true));
+                var group = FindGroup();
+                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["tableKind"] = tableKind;
+                meta["groupPath"] = PlcObjectPath.Format(PlcObjectPath.Parts(groupPath, true));
                 if (!dryRun)
                 {
                     meta["mayHaveChanged"] = true; MutationStarted = true;
-                    var imported = WatchNative.Import(WatchNative.WatchTables(group), source, ImportOptions.None).ToArray();
-                    meta["actualCount"] = imported.Length;
-                    meta["names"] = new List<object?>(imported.Select(x => (object?)WatchNative.Name(x)).ToArray());
-                    meta["dataComplete"] = imported.Length == (int)meta["expectedCount"]!;
+                    EngineeringWriteJournal.Unrestored(softwarePath + "/" + groupPath + ": native " + tableKind + " table import");
+                    string[] names;
+                    if (tableKind == "watch") names = WatchNative.Import(WatchNative.WatchTables(group), source, ImportOptions.None)
+                        .Select(WatchNative.Name).ToArray();
+                    else names = WatchNative.Import(PlcBlockPrimitives.ForceTables(group), source, ImportOptions.None).Select(WatchNative.Name).ToArray();
+                    meta["actualCount"] = names.Length;
+                    meta["names"] = new List<object?>(names.Cast<object?>());
+                    var fresh = FindGroup();
+                    var readback = names.Select(name => tableKind == "watch"
+                        ? WatchNative.Find(WatchNative.WatchTables(fresh), name) is PlcWatchTable watch && WatchNative.Name(watch) == name
+                        : PlcGroupOperations.Call(PlcBlockPrimitives.ForceTables(fresh), "Find", new[] { typeof(string) }, name) is PlcForceTable force
+                            && WatchNative.Name(force) == name).ToArray();
+                    meta["readbackVerified"] = readback.All(found => found);
+                    meta["dataComplete"] = names.Length == (int)meta["expectedCount"]! && readback.All(found => found);
                     if (!Equals(meta["dataComplete"], true))
-                        throw new InvalidOperationException("Import returned a different number of watch tables; inspect project before retry.");
+                        throw new InvalidOperationException("Imported table count or fresh name readback differs; inspect project before retry.");
                 }
-                return dryRun ? "Offline watch table import preview. No online monitoring or force operations."
-                    : "Offline watch table import completed without overwrite, save, online action or download.";
+                return dryRun ? "Offline " + tableKind + " table import preview. No online monitoring or forcing."
+                    : "Offline " + tableKind + " table configuration imported and read back without overwrite, save, online action or download.";
             });
 
         // ---- tag table constants ----------------------------------------------------------------------------------------------------------
@@ -388,6 +469,33 @@ namespace TiaMcp.Adapters.Native.Plc
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
                 PlcWatchAndForceTableGroup root = WatchNative.WatchGroup(plc);
+                if (action == "createTable")
+                {
+                    var parts = PlcObjectPath.Parts(tablePath, parameter: "tablePath");
+                    string groupPath = PlcObjectPath.Format(parts.Take(parts.Length - 1)), name = parts.Last();
+                    PlcWatchAndForceTableGroup FindGroup() => (PlcWatchAndForceTableGroup)PlcGroupOperations.Group(WatchNative.WatchGroup(plc), groupPath,
+                        pathParts: path => PlcObjectPath.Parts(path, true));
+                    var group = FindGroup();
+                    var tables = WatchNative.WatchTables(group);
+                    if (WatchNative.Find(tables, name) != null || PlcGroupOperations.Find(PlcBlockPrimitives.ForceTables(group), name) != null)
+                        throw new ArgumentException("A watch or force table already uses this exact name in the target group.", nameof(tablePath));
+                    int before = PlcBlockPrimitives.Count(tables);
+                    meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                    meta["groupPath"] = groupPath; meta["tablePath"] = PlcObjectPath.Format(parts); meta["tableKind"] = tableKind;
+                    meta["tableCountBefore"] = before; meta["name"] = name;
+                    if (!writing) return "Empty watch table creation preview in the existing group; no changes.";
+                    EngineeringWriteJournal.Creating(() => WatchNative.Find(WatchNative.WatchTables(FindGroup()), name), PlcObjectPath.Format(parts));
+                    meta["mayHaveChanged"] = true; MutationStarted = true;
+                    WatchNative.Create(tables, name); meta["apiCallSuccess"] = true;
+                    var fresh = WatchNative.WatchTables(FindGroup());
+                    var found = WatchNative.Find(fresh, name);
+                    int after = PlcBlockPrimitives.Count(fresh);
+                    meta["tableCountAfter"] = after;
+                    bool verified = after == before + 1 && found != null && WatchNative.Name(found) == name;
+                    meta["readbackVerified"] = verified;
+                    if (!verified) throw new InvalidOperationException("Watch table creation count or fresh name readback differs.");
+                    return "Empty watch table created and read back; project not saved.";
+                }
                 PlcTableCommentEntryComposition entries; string tableName; bool consistent; PlcWatchTable? watchTable = null;
                 if (tableKind == "watch") {
                     var table = (PlcWatchTable)_session.ExactObjectUnder(root, tablePath, "WatchTables", "watch table"); watchTable = table; entries =

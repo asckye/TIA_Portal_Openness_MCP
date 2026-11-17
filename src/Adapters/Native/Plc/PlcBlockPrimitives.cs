@@ -18,6 +18,8 @@ using Siemens.Engineering.Safety;
 using Siemens.Engineering.CrossReference;
 using Siemens.Engineering.Online;
 using Siemens.Engineering.SW.ExternalSources;
+#endif
+#if PLC_WATCH_READ || STUDIO_VCI_MODERN
 using Siemens.Engineering.SW.WatchAndForceTables;
 #endif
 
@@ -60,6 +62,10 @@ namespace TiaMcp.Adapters.Native.Plc
         public static int ErrorCount(CompilerResultMessage value) => value.ErrorCount;
         public static int WarningCount(CompilerResultMessage value) => value.WarningCount;
         public static DateTime DateTime(CompilerResultMessage value) => value.DateTime;
+#if PLC_WATCH_READ || STUDIO_VCI_MODERN
+        public static int Count(PlcWatchTableComposition value) => value.Count;
+        public static PlcForceTableComposition ForceTables(PlcWatchAndForceTableGroup value) => value.ForceTables;
+#endif
 #if PLC_SAFETY
         public static SafetyAdministration SafetyOrNull(DeviceItem value) => value?.GetService<SafetyAdministration>();
         public static bool IsLoggedOn(SafetyAdministration value) => value.IsLoggedOnToSafetyOfflineProgram;
@@ -90,7 +96,6 @@ namespace TiaMcp.Adapters.Native.Plc
         public static int Count(PlcTagTableUserGroupComposition value) => value.Count;
         public static string Name(PlcTagTableUserGroup value) => value.Name;
         public static PlcTagTableUserGroupComposition Groups(PlcTagTableGroup value) => value.Groups;
-        public static int Count(PlcWatchTableComposition value) => value.Count;
         public static int Count(PlcForceTableComposition value) => value.Count;
         public static int Count(PlcWatchAndForceTableUserGroupComposition value) => value.Count;
         public static string Name(PlcWatchAndForceTableUserGroup value) => value.Name;
@@ -100,7 +105,6 @@ namespace TiaMcp.Adapters.Native.Plc
         public static string Name(PlcExternalSourceUserGroup value) => value.Name;
         public static PlcExternalSourceUserGroupComposition Groups(PlcExternalSourceGroup value) => value.Groups;
         public static PlcWatchTableComposition WatchTables(PlcWatchAndForceTableGroup value) => value.WatchTables;
-        public static PlcForceTableComposition ForceTables(PlcWatchAndForceTableGroup value) => value.ForceTables;
         public static PlcExternalSourceComposition ExternalSources(PlcExternalSourceGroup value) => value.ExternalSources;
         public static PlcBlockUserGroup Create(PlcBlockUserGroupComposition value, string name) => value.Create(name);
         public static PlcTypeUserGroup Create(PlcTypeUserGroupComposition value, string name) => value.Create(name);

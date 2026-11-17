@@ -34,9 +34,9 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject]" +
             " List all force table names in the PLC software." +
             " Force tables configure which variables are continuously forced to specific values while the CPU is online." +
-            " Read-only: this server exposes NO tool for creating or editing force entries — forcing overrides live PLC logic" +
-            " (a forced output stays forced regardless of what the program writes) and is deliberately kept out of the AI tool surface." +
-            " Create or edit force entries in the TIA Portal UI. For a one-shot value written from a watch table instead," +
+            " Force entries stay read-only. ImportPlcWatchTableOffline tableKind=force imports offline configuration only;" +
+            " it never activates forcing, monitoring, save or download. ExportPlcWatchTablesToDirectory tableKind=force exports that configuration." +
+            " Use the TIA Portal UI to activate forcing. For a one-shot value written from a watch table instead," +
             " use SetPlcWatchTableModifyValue (the variable reverts to PLC logic afterwards). Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult GetPlcForceTablesV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath)
@@ -140,8 +140,10 @@ namespace TiaMcpServer.ModelContextProtocol
         // (see RunOnlineMonitoringSafetySelfTest / Test_OnlineMonitoringNoUnsafeToolNames). Use TIA Portal
         // directly for commissioning forces.
         [McpServerTool(Name = "ExportPlcWatchTablesToDirectory"),
-                Description("[L2][PLC-Software][WRITE] Preview the complete exact watch-table inventory and each canonical per-table XML export. One batch " +
-                "plan hash and approval; execute in inventory order, stop on the first failure and report completed/not-started items. Default dryRun=true. " +
+                Description("[L2][PLC-Software][WRITE] Preview watch (default) or force table offline configuration exports to new XML files in a directory. " +
+                "tableKind=force uses PlcForceTable.Export with ExportOptions.WithDefaults. Existing files are never overwritten. " +
+                "One ordered batch plan hash and approval; default dryRun=true. Execution requires confirm, expectedPlanHash and expectedProjectFile. " +
+                "Stop on the first failure and report completed/not-started items. No monitoring, forcing, save or download. " +
                 "Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportPlcWatchTablesToDirectoryV4(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
@@ -150,27 +152,26 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
             [Description("confirm: must be true together with dryRun=false to execute the previewed change.")] bool confirm = false,
             [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
-            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
-                "dryRun=false.")] string expectedProjectFile =
-                "")
-            => PlcToolContract.Run("ExportPlcWatchTablesToDirectory", true, true, () => ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName));
-
+            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.")]
+                string expectedProjectFile = "",
+            [Description("tableKind: watch (default) | force; offline configuration only.")] string tableKind = "watch")
+            => PlcToolContract.Run("ExportPlcWatchTablesToDirectory", !dryRun, true,
+                () => ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName, tableKind, dryRun, expectedPlanHash, confirm, expectedProjectFile));
 
         public ResponseImportBatch ExportPlcWatchTablesToDirectory(
             string softwarePath,
             string dir,
-            string regexName = "")
+            string regexName = "",
+            string tableKind = "watch", bool dryRun = true, string expectedPlanHash = "", bool confirm = false, string expectedProjectFile = "")
         {
             try
             {
-                var result = _tables.ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName);
-                return new ResponseImportBatch
-                {
-                    Message = $"Exported {result.Imported?.Count() ?? 0} PLC watch tables to '{dir}'. Failed={result.Failed?.Count() ?? 0}",
-                    Imported = result.Imported,
-                    Failed = result.Failed,
-                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
-                };
+                var result = _tables.ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName, tableKind, dryRun, expectedPlanHash,
+                    confirm, expectedProjectFile);
+                result.Message = $"{(dryRun ? "Previewed" : "Exported")} {result.Imported?.Count() ?? 0} PLC {tableKind} tables to '{dir}'. "
+                    + $"Failed={result.Failed?.Count() ?? 0}";
+                result.Meta ??= ResponseMeta.Basic(DateTime.Now, result.Failed == null || !result.Failed.Any());
+                return result;
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -586,42 +587,64 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportPlcWatchTableOffline"),
-                Description("[L2][PLC-Software][WRITE] Import native SimaticML watch tables into an exact existing group. Offline-only, no overwrite. " +
-                "Rejects force-table and mixed-object XML and DTD. dryRun=true default. Does not execute modify values, start monitoring, save or download. " +
-                "filePath is on the MCP server. Current native policy; V4 safety behavior is not yet accepted.")]
-        public CallToolResult ImportPlcWatchTableOfflineV4(string softwarePath,string filePath,string groupPath="",bool dryRun=true)
-            => PlcToolContract.Run("ImportPlcWatchTableOffline", !dryRun, true, () => ImportPlcWatchTableOffline(softwarePath, filePath, groupPath, dryRun));
+                Description("[L2][PLC-Software][WRITE] Import native SimaticML watch (default) or force tables into an exact existing group. " +
+                "Offline configuration only, no overwrite. Rejects the other table kind, mixed-object XML and DTD. " +
+                "Force entries remain read-only; import never activates forcing or monitoring, executes modify values, saves or downloads. " +
+                "dryRun=true previews the native validation and returns planHash. Execution requires dryRun=false, expectedPlanHash and " +
+                "expectedProjectFile from this preview. filePath is on the MCP server. Current native policy; V4 safety behavior is not yet accepted.")]
+        public CallToolResult ImportPlcWatchTableOfflineV4(string softwarePath, string filePath, string groupPath = "", bool dryRun = true,
+            [Description("tableKind: watch (default) | force; native SimaticML offline configuration only.")] string tableKind = "watch",
+            [Description("expectedPlanHash: planHash from this tool's preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact bound project file from this tool's preview; required when dryRun=false.")]
+                string expectedProjectFile = "")
+            => McpServer.RunNativeWritePreview("ImportPlcWatchTableOffline", dryRun, new { softwarePath, filePath, groupPath, tableKind },
+                () => PlcToolContract.Run("ImportPlcWatchTableOffline", false, true,
+                    () => ImportPlcWatchTableOffline(softwarePath, filePath, groupPath, true, tableKind)),
+                () => PlcToolContract.Run("ImportPlcWatchTableOffline", true, true,
+                    () => ImportPlcWatchTableOffline(softwarePath, filePath, groupPath, false, tableKind)), expectedPlanHash, expectedProjectFile);
 
-        public ResponseMessage ImportPlcWatchTableOffline(string softwarePath,string filePath,string groupPath="",bool dryRun=true)
-            => _tables.ImportPlcWatchTableOffline(softwarePath,filePath,groupPath,dryRun);
-
-
-
-
+        public ResponseMessage ImportPlcWatchTableOffline(string softwarePath, string filePath, string groupPath = "", bool dryRun = true,
+            string tableKind = "watch")
+            => _tables.ImportPlcWatchTableOffline(softwarePath, filePath, groupPath, dryRun, tableKind);
 
         [McpServerTool(Name = "ManagePlcTableEntries"),
                 Description("[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as " +
                 "typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), " +
                 "PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). " +
-                "Watch tables also accept createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, " +
+                "Watch tables also accept createTable (empty table in an exact existing group, no implicit parents), " +
+                "createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, " +
                 "confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with " +
                 "SetPlcWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. " +
                 "Configuration values only, never online data. Default dryRun=true; no save/compile/download. Current native policy; V4 safety behavior is " +
-                "not yet accepted.")]
+                "not yet accepted. All mutating actions require expectedPlanHash and expectedProjectFile from this tool's native dry-run preview.")]
         public CallToolResult ManagePlcTableEntriesV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
             [Description("tableKind: watch | force.")] string tableKind,
             [Description("tablePath: 'Group/Table' path under the watch-and-force-table group, e.g. 'MCP_W/MCP_WT' (bare name for a root " +
                 "table).")] string tablePath,
-            [Description("action: read | createComment | deleteEntry | deleteTable (force tables: read only).")] string action="read",
+            [Description("action: read | createTable | createComment | deleteEntry | deleteTable (force tables: read only).")] string action="read",
             [Description("entryIndex: 0-based row index from a read, for deleteEntry.")] int entryIndex=-1,
             [Description("confirmDelete: must be true together with dryRun=false for deleteEntry / deleteTable.")] bool confirmDelete=false,
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true,
             [Description("offset: first row to return (paging).")] int offset=0,
-            [Description("limit: maximum rows to return.")] int limit=200)
-            => PlcToolContract
-                .Run("ManagePlcTableEntries", !dryRun && action != "read", true, () =>
-                    ManagePlcTableEntries(softwarePath, tableKind, tablePath, action, entryIndex, confirmDelete, dryRun, offset, limit));
+            [Description("limit: maximum rows to return.")] int limit=200,
+            [Description("expectedPlanHash: planHash from this tool's preview; required for mutation when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact bound project file from this tool's preview; required for mutation when dryRun=false.")]
+                string expectedProjectFile = "")
+        {
+            if (tableKind == "force" && action != "read")
+                return McpServer.V4Reject("ManagePlcTableEntries", new Error("Force entries remain read-only; the API has no force-table Create.",
+                    new InvalidArgumentDetails("action", new[] { "read" })));
+            if (action == "read") return PlcToolContract.Run("ManagePlcTableEntries", false, true,
+                () => ManagePlcTableEntries(softwarePath, tableKind, tablePath, action, entryIndex, confirmDelete, dryRun, offset, limit));
+            return McpServer.RunNativeWritePreview("ManagePlcTableEntries", dryRun,
+                new { softwarePath, tableKind, tablePath, action, entryIndex, confirmDelete, offset, limit },
+                () => PlcToolContract.Run("ManagePlcTableEntries", false, true,
+                    () => ManagePlcTableEntries(softwarePath, tableKind, tablePath, action, entryIndex, confirmDelete, true, offset, limit)),
+                () => PlcToolContract.Run("ManagePlcTableEntries", true, true,
+                    () => ManagePlcTableEntries(softwarePath, tableKind, tablePath, action, entryIndex, confirmDelete, false, offset, limit)),
+                expectedPlanHash, expectedProjectFile);
+        }
 
         public ResponseMessage ManagePlcTableEntries(
             string softwarePath,

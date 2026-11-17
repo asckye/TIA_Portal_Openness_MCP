@@ -32,6 +32,7 @@ namespace TiaMcp.Adapters
         public static bool IsConsistent(PlcWatchTable table) => table.IsConsistent;
 #if PLC_SPECIAL_EXPORT || PLC_WATCH_EXPORT
         public static void Export(PlcWatchTable table, FileInfo file, ExportOptions options) => table.Export(file, options);
+        public static void Export(PlcForceTable table, FileInfo file, ExportOptions options) => table.Export(file, options);
 #endif
 #endif
 
@@ -48,7 +49,9 @@ namespace TiaMcp.Adapters
 #endif
 #if PLC_WATCH_READ
         public static PlcWatchTable Find(PlcWatchTableComposition tables, string name) => tables.Find(name);
+        public static PlcWatchTable Create(PlcWatchTableComposition tables, string name) => tables.Create(name);
         public static IList<PlcWatchTable> Import(PlcWatchTableComposition tables, FileInfo file, ImportOptions options) => tables.Import(file, options);
+        public static IList<PlcForceTable> Import(PlcForceTableComposition tables, FileInfo file, ImportOptions options) => tables.Import(file, options);
         public static PlcTableCommentEntryComposition Entries(PlcWatchTable table) => table.Entries;
         public static PlcTableCommentEntryComposition Entries(PlcForceTable table) => table.Entries;
         public static string Name(PlcForceTable table) => table.Name;

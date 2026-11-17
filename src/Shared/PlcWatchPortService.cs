@@ -29,20 +29,27 @@ namespace TiaMcpServer.Siemens.Services
         }
         private string forceTablePathsSuffix = "";
         public string ForceTablePathsSuffix() => forceTablePathsSuffix;
-        public ResponseImportBatch ExportPlcWatchTablesToDirectory(string softwarePath, string dir, string regexName = "")
-            =>
-                TechnologyBatch(Invoke(new PlcSoftwareRequest {
-                        Operation = "ExportPlcWatchTablesToDirectory", SoftwarePath = softwarePath, FilePath = dir, RegexName = regexName }));
+        public ResponseImportBatch ExportPlcWatchTablesToDirectory(string softwarePath, string dir, string regexName = "", string tableKind = "watch",
+            bool dryRun = true, string expectedPlanHash = "", bool confirm = false, string expectedProjectFile = "")
+        {
+            if (!dryRun && (!confirm || expectedProjectFile != projectIdentity()))
+                throw new AdapterPreconditionException("Export requires confirmation and the reviewed project.");
+            return TechnologyBatch(Invoke(new PlcSoftwareRequest {
+                Operation = "ExportPlcWatchTablesToDirectory", SoftwarePath = softwarePath, FilePath = dir, RegexName = regexName, Kind = tableKind,
+                DryRun = dryRun, ExpectedPlanHash = expectedPlanHash }));
+        }
         public ResponseMessage EnsureWatchTableEntry(string softwarePath, string tableName, string address, string modifyValue, string trigger = "Permanent")
             =>
                 OrganisationStep(new PlcSoftwareRequest {
                     Operation = "SetPlcWatchTableModifyValue", SoftwarePath = softwarePath, Path = tableName, AddressOrValue = address, Value =
                         new HardwareScalar { Kind = "string", Text = modifyValue }, GenerateOption = trigger, DryRun = false
                 });
-        public ResponseMessage ImportPlcWatchTableOffline(string softwarePath, string filePath, string groupPath = "", bool dryRun = true)
+        public ResponseMessage ImportPlcWatchTableOffline(string softwarePath, string filePath, string groupPath = "", bool dryRun = true,
+            string tableKind = "watch")
             =>
                 OrganisationStep(new PlcSoftwareRequest {
-                    Operation = "ImportPlcWatchTableOffline", SoftwarePath = softwarePath, FilePath = filePath, GroupPath = groupPath, DryRun = dryRun });
+                    Operation = "ImportPlcWatchTableOffline", SoftwarePath = softwarePath, FilePath = filePath, GroupPath = groupPath, DryRun = dryRun,
+                    Kind = tableKind });
         public ResponseMessage ManagePlcTableEntries(string softwarePath, string tableKind, string tablePath, string action = "read", int entryIndex = -1,
                 bool confirmDelete = false, bool dryRun = true, int offset = 0, int limit = 200)
             =>

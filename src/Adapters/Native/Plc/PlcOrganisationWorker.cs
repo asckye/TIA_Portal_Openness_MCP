@@ -94,13 +94,15 @@ namespace TiaMcp.Adapters
                         break;
 #if PLC_WATCH_READ
                     case "ExportPlcWatchTablesToDirectory": reply.Batch = adapter
-                        .ExportPlcWatchTablesToDirectory(request.SoftwarePath, request.FilePath, request.RegexName); break;
+                        .ExportPlcWatchTablesToDirectory(request.SoftwarePath, request.FilePath, request.RegexName,
+                            request.Kind.Length == 0 ? "watch" : request.Kind, dryRun, request.ExpectedPlanHash); break;
                     case "ListPlcForceTables": reply.Names = adapter.GetPlcForceTables(request.SoftwarePath)?.ToArray(); if (reply.Names == null) reply.Reason =
                         (EngineeringPlcOrganisationSession ?? new OrganisationSession(this)).AvailablePlcPathsSuffix(); break;
                     case "SetPlcWatchTableModifyValue": step = adapter
                         .EnsureWatchTableEntry(request.SoftwarePath, request.Path, request.AddressOrValue, request.Value.Text, request.GenerateOption); break;
                     case "ImportPlcWatchTableOffline": step = adapter
-                        .ImportPlcWatchTableOffline(request.SoftwarePath, request.FilePath, request.GroupPath, dryRun); break;
+                        .ImportPlcWatchTableOffline(request.SoftwarePath, request.FilePath, request.GroupPath, dryRun,
+                            request.Kind.Length == 0 ? "watch" : request.Kind); break;
                     case "ManagePlcTableEntries": step = adapter
                         .ManagePlcTableEntries(request.SoftwarePath, request.Kind, request.Path, request.Action, request.EntryIndex, request.Confirm, dryRun,
                             request.Offset, request.Limit);

@@ -16,8 +16,8 @@ namespace TiaMcp.Adapters.Contracts
                     "verified pairs can be added after native verification.";
             if (request.Operation == "ManagePlcSoftwareUnit" && version < 18 && request.Properties.ContainsKey("NamespacePreset"))
                 return "PlcUnitBase.NamespacePreset requires V18.";
-            if (request.Operation == "ManagePlcTableEntries" && version < 17 && request.Action != "createComment")
-                return "Typed watch/force entry evidence requires V17; only createComment is available on this release.";
+            if (request.Operation == "ManagePlcTableEntries" && version < 17 && request.Action != "createComment" && request.Action != "createTable")
+                return "Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release.";
             if (request.Operation == "ManageMotionAxis")
             {
                 if (version < 21

@@ -189,7 +189,8 @@ internal static class CanonicalBatchTools
             }
             else
             {
-                const string reader = "ListPlcWatchTables";
+                bool force = Text("tableKind") == "force";
+                string reader = force ? "ListPlcForceTables" : "ListPlcWatchTables";
                 var listed = await Invoke(roster[reader], new JsonObject { ["softwarePath"] = Text("softwarePath") }, request, token);
                 var body = Body(listed);
                 if ((bool?)body["ok"] != true) throw new InvalidOperationException("Canonical inventory failed: " + body.ToJsonString());
@@ -199,9 +200,19 @@ internal static class CanonicalBatchTools
                     string path = entry!.GetValue<string>();
                     if (Text("regexName").Length != 0 && !Regex.IsMatch(Uri.UnescapeDataString(path.Split('/').Last()), Text("regexName"),
                         RegexOptions.IgnoreCase)) continue;
-                    var values = Common(); values["watchTableName"] = path;
-                    values["exportPath"] = ExportPath(Text("dir"), path);
-                    calls.Add(("ExportPlcWatchTable", values));
+                    string output = ExportPath(Text("dir"), path);
+                    var values = Common();
+                    if (force)
+                    {
+                        values["tableKind"] = "force"; values["dir"] = Text("dir");
+                        values["regexName"] = "\\A" + Regex.Escape(path) + "\\z";
+                        calls.Add((tool.Name, values));
+                    }
+                    else
+                    {
+                        values["watchTableName"] = path; values["exportPath"] = output;
+                        calls.Add(("ExportPlcWatchTable", values));
+                    }
                 }
             }
             var rows = new JsonArray(); bool ready = true;

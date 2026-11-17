@@ -10,6 +10,108 @@ using Xunit;
 
 public sealed class CanonicalBatchToolsTests
 {
+    [Theory]
+    [InlineData("15.1", 0, false)]
+    [InlineData("21", 0, false)]
+    [InlineData("21", 2, false)]
+    [InlineData("21", 1, true)]
+    public async Task Force_exports_keep_one_approval_exact_items_and_stop_on_failure(string release, int failWrite, bool unknown)
+    {
+        using var files = new Files();
+        const string name = "ExportPlcWatchTablesToDirectory";
+        var reader = new Target("ListPlcForceTables", release) { Inventory = new JsonArray("Group/A", "Group/B", "Group/C") };
+        var watch = new Target("ListPlcWatchTables", release) { Inventory = new JsonArray("Wrong/Watch") };
+        var native = new Target(name, release) { HashInEvidence = true, FailWrite = failWrite, UnknownFailure = unknown };
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [reader.ProtocolTool.Name] = reader, [watch.ProtocolTool.Name] = watch, [name] = native
+        }, release, () => Binding.DeepClone().AsObject()) { CompleteApproval = (_, _) => Task.CompletedTask };
+        int approvals = 0;
+        batch.Approve = (pending, _, _) => {
+            approvals++; Assert.Contains("force", pending.ParametersJson);
+            return Task.FromResult(new ApprovalOutcome(pending, false, null));
+        };
+        var args = files.Arguments(); args["tableKind"] = "force"; args["regexName"] = "^[ABC]$";
+        var preview = await batch.InvokeAsync(Request(name, args));
+        Assert.True((bool?)preview.StructuredContent?["ok"], preview.StructuredContent?.ToJsonString());
+        var items = preview.StructuredContent!["data"]!["items"]!.AsArray();
+        Assert.Equal(3, items.Count); Assert.Empty(native.Writes); Assert.Equal(0, approvals); Assert.Equal(0, watch.Calls);
+        for (int index = 0; index < items.Count; index++)
+        {
+            var item = items[index]!;
+            Assert.Equal(name, (string?)item["tool"]);
+            Assert.Equal("force", (string?)item["arguments"]?["tableKind"]);
+            Assert.Equal(files.Directory, (string?)item["arguments"]?["dir"]);
+            Assert.Equal("\\AGroup/" + "ABC"[index] + "\\z", (string?)item["arguments"]?["regexName"]);
+            Assert.True((bool?)item["arguments"]?["dryRun"]);
+            Assert.Equal(new string('a', 64), (string?)item["canonicalPlanHash"]);
+        }
+        Apply(args, preview.StructuredContent["data"]!.AsObject());
+        var result = await batch.InvokeAsync(Request(name, args));
+        Assert.Equal(1, approvals); Assert.Equal(failWrite == 0 ? 3 : failWrite, native.Writes.Count);
+        Assert.Equal(unknown ? "unknown" : failWrite == 0 ? "succeeded" : "partial", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal(failWrite == 0 ? new[] { "completed", "completed", "completed" }
+            : unknown ? new[] { "failed", "not-started", "not-started" } : new[] { "completed", "failed", "not-started" },
+            result.StructuredContent!["data"]!["items"]!.AsArray().Select(row => (string?)row!["status"]));
+        Assert.All(native.Arguments.Where(values => (bool?)values["dryRun"] == false), values => {
+            Assert.Equal("force", (string?)values["tableKind"]); Assert.Equal(new string('a', 64), (string?)values["expectedPlanHash"]);
+        });
+        Assert.All(native.ExportRoots, root => Assert.Equal(Path.GetFullPath(files.Directory), root));
+        Assert.Null(CanonicalBatchTools.CurrentExportRoot.Value);
+    }
+
+    [Fact]
+    public async Task Table_kind_is_hashed_even_when_both_inventories_are_empty()
+    {
+        using var files = new Files();
+        const string name = "ExportPlcWatchTablesToDirectory";
+        var watch = new Target("ListPlcWatchTables") { Inventory = new JsonArray() };
+        var force = new Target("ListPlcForceTables") { Inventory = new JsonArray() };
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [watch.ProtocolTool.Name] = watch, [force.ProtocolTool.Name] = force
+        }, "21", () => Binding.DeepClone().AsObject());
+        int approvals = 0;
+        batch.Approve = (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
+        var args = files.Arguments();
+        var preview = await batch.InvokeAsync(Request(name, args));
+        Assert.True((bool?)preview.StructuredContent?["ok"]);
+        string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
+        args["tableKind"] = "watch";
+        var explicitWatch = await batch.InvokeAsync(Request(name, args));
+        Assert.Equal(hash, (string?)explicitWatch.StructuredContent!["data"]!["planHash"]);
+        args["tableKind"] = "force";
+        var forcePreview = await batch.InvokeAsync(Request(name, args));
+        Assert.True((bool?)forcePreview.StructuredContent?["ok"]);
+        Assert.NotEqual(hash, (string?)forcePreview.StructuredContent!["data"]!["planHash"]);
+        Apply(args, preview.StructuredContent["data"]!.AsObject());
+        var stale = await batch.InvokeAsync(Request(name, args));
+        Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent?["error"]?["code"]); Assert.Equal(0, approvals);
+        Assert.Empty(watch.Writes); Assert.Empty(force.Writes);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Force_export_refuses_denial_or_inventory_change_during_approval(bool changeInventory)
+    {
+        using var files = new Files(); const string name = "ExportPlcWatchTablesToDirectory";
+        var reader = new Target("ListPlcForceTables") { Inventory = new JsonArray("A") };
+        var native = new Target(name);
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [reader.ProtocolTool.Name] = reader, [name] = native
+        }, "21", () => Binding.DeepClone().AsObject()) { CompleteApproval = (_, _) => Task.CompletedTask };
+        var args = files.Arguments(); args["tableKind"] = "force";
+        var preview = await batch.InvokeAsync(Request(name, args));
+        Assert.True((bool?)preview.StructuredContent?["ok"]);
+        Apply(args, preview.StructuredContent!["data"]!.AsObject());
+        batch.Approve = (pending, _, _) => {
+            if (changeInventory) reader.Inventory = new JsonArray("B");
+            return Task.FromResult(new ApprovalOutcome(pending, false, changeInventory ? null : "denied"));
+        };
+        var refused = await batch.InvokeAsync(Request(name, args));
+        Assert.Equal(changeInventory ? "PLAN_STALE" : "CONFIRMATION_REQUIRED", (string?)refused.StructuredContent?["error"]?["code"]);
+        Assert.Empty(native.Writes);
+    }
+
     public static IEnumerable<object[]> UnknownBatchCases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .SelectMany(release => new[] { new object[] { release, false }, new object[] { release, true } });
 
@@ -461,6 +563,8 @@ public sealed class CanonicalBatchToolsTests
         foreach (var key in new[] { "swImportOptions", "importOptions" }) properties[key] = new JsonObject {
             ["type"] = "array", ["items"] = new JsonObject { ["type"] = "string" } };
         properties["compileAfter"] = new JsonObject { ["type"] = "boolean", ["default"] = true };
+        if (name == "ExportPlcWatchTablesToDirectory") properties["tableKind"] = new JsonObject {
+            ["type"] = "string", ["default"] = "watch", ["enum"] = new JsonArray("watch", "force") };
         return new Tool {
             Name = name, InputSchema = JsonSerializer
                 .SerializeToElement(new JsonObject { ["type"] = "object", ["additionalProperties"] = false, ["properties"] = properties })

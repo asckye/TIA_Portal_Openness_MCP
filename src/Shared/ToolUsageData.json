@@ -13522,7 +13522,16 @@
           "requiresBinding": true
         }
       },
-      "operations": {},
+      "operations": {
+        "force": {
+          "arguments": {
+            "tableKind": "force",
+            "dryRun": true,
+            "confirm": false
+          },
+          "meaning": "V15.1–V21: preview ListPlcForceTables inventory and each exact native force export. Apply with this same force batch plan hash and project. PlcForceTable.Export(FileInfo, ExportOptions.WithDefaults) writes offline configuration only; import into another existing group."
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
     },
     "ExportProjectTexts": {
@@ -14821,7 +14830,17 @@
           "exampleValue": "Examples"
         }
       },
-      "operations": {},
+      "operations": {
+        "force": {
+          "arguments": {
+            "tableKind": "force",
+            "filePath": "<server-local force SimaticML export>",
+            "groupPath": "<another existing watch-and-force group>",
+            "dryRun": true
+          },
+          "meaning": "Use ExportPlcWatchTablesToDirectory tableKind=force as the source. Review then apply with this force preview hash/project. Configuration only; no monitoring or forcing."
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
     },
@@ -19010,8 +19029,8 @@
       "arguments": {
         "softwarePath": "PLC_1",
         "tableKind": "watch",
-        "tablePath": "MCP_W/MCP_WT",
-        "action": "read",
+        "tablePath": "MCP_W/NewWatch",
+        "action": "createTable",
         "confirmDelete": false,
         "dryRun": true
       },
@@ -19028,23 +19047,37 @@
       },
       "operations": {
         "read": {
-          "arguments": {}
+          "arguments": {
+            "action": "read"
+          }
         },
         "createComment": {
           "arguments": {
-            "action": "createComment"
+            "action": "createComment",
+            "tablePath": "<exact table path from ListPlcWatchTables>"
           }
         },
         "deleteEntry": {
           "arguments": {
             "action": "deleteEntry",
-            "entryIndex": 0
+            "entryIndex": 0,
+            "tablePath": "<exact table path from ListPlcWatchTables>",
+            "confirmDelete": true
           }
         },
         "deleteTable": {
           "arguments": {
-            "action": "deleteTable"
+            "action": "deleteTable",
+            "tablePath": "<exact table path from ListPlcWatchTables>",
+            "confirmDelete": true
           }
+        },
+        "createTable": {
+          "arguments": {
+            "action": "createTable",
+            "tableKind": "watch"
+          },
+          "meaning": "V15.1–V21. Preview an empty watch table in an exact existing group; use ManagePlcUserGroup family=watchTables to create groups first. Force-table Create does not exist."
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -37338,6 +37371,7 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "exportDirectory": "C:\\Examples\\exports",
+            "tableKind": "watch",
             "dryRun": true,
             "confirm": false
           },
@@ -37345,11 +37379,55 @@
             "regexName": {
               "exampleValue": "<regexName from this operation's target or user input>",
               "requiresBinding": true
+            },
+            "softwarePath": {
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ]
+            },
+            "exportDirectory": {
+              "exampleValue": "<server-local output directory with unused XML filenames>",
+              "requiresBinding": true
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same batch preview>",
+              "requiresBinding": true,
+              "tools": [
+                "ExportPlcWatchTablesToDirectory"
+              ]
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact expectedProjectFile from this same batch preview>",
+              "requiresBinding": true,
+              "tools": [
+                "ExportPlcWatchTablesToDirectory",
+                "GetSessionState"
+              ]
             }
           },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "Preview the complete ordered batch and every canonical item/hash. Apply with dryRun=false, confirm=true, expectedPlanHash and exact expectedProjectFile from this preview. One approval covers the batch; stop on the first failure and report completed/failed/not-started items. Native acceptance NOT RUN."
+          "operations": {
+            "force": {
+              "arguments": {
+                "tableKind": "force",
+                "dryRun": true,
+                "confirm": false
+              },
+              "meaning": "V15.1–V21: preview ListPlcForceTables inventory and each exact native force export. Apply with this same force batch plan hash and project. PlcForceTable.Export(FileInfo, ExportOptions.WithDefaults) writes offline configuration only; import into another existing group."
+            }
+          },
+          "validation": "Schema-checked example for V15.1–V21 only. Bind the exact target and server-local paths before calling. Native execution NOT RUN.",
+          "note": "Existing ordered batch contract is retained: dryRun=true defaults to a complete preview with zero file writes; apply requires confirm=true, expectedPlanHash, expectedProjectFile and one batch approval. tableKind (watch default | force) is part of the batch hash, including empty inventories. Native force export uses WithDefaults; new files only, preserving group paths. Existing destinations are refused. No monitoring, forcing, save or download. Inspect failed artifacts before another call. Native acceptance NOT RUN.",
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "confirm": true,
+              "expectedPlanHash": "<planHash from this same batch preview>",
+              "expectedProjectFile": "<exact expectedProjectFile from this same batch preview>"
+            },
+            "meaning": "Merge into the reviewed preview arguments, including the same tableKind. One batch approval covers the ordered items. A changed kind, inventory, target binding or item preview refuses as stale; first item failure stops the batch and leaves later items not-started."
+          }
         },
         "GetPlcWatchTableCurrentValuesReadOnly": {
           "arguments": {
@@ -37368,16 +37446,71 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-            "dryRun": true
+            "dryRun": true,
+            "tableKind": "watch"
           },
           "parameters": {
             "groupPath": {
-              "exampleValue": "Examples"
+              "exampleValue": "MCP_Import",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree",
+                "ListPlcWatchTables",
+                "ListPlcForceTables"
+              ],
+              "meaning": "Exact existing watch-and-force user group; split paths before decoding MIN-ESCAPE segments. Empty means root."
+            },
+            "softwarePath": {
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ]
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same tool preview>",
+              "requiresBinding": true,
+              "tools": [
+                "ImportPlcWatchTableOffline"
+              ]
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact bound project file from preview targetIdentity>",
+              "requiresBinding": true,
+              "tools": [
+                "ImportPlcWatchTableOffline",
+                "GetSessionState"
+              ]
+            },
+            "filePath": {
+              "exampleValue": "<server-local native SimaticML file exported from a watch or force table>",
+              "requiresBinding": true,
+              "tools": [
+                "ExportPlcWatchTablesToDirectory"
+              ]
             }
           },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "operations": {
+            "force": {
+              "arguments": {
+                "tableKind": "force",
+                "filePath": "<server-local force SimaticML export>",
+                "groupPath": "<another existing watch-and-force group>",
+                "dryRun": true
+              },
+              "meaning": "Use ExportPlcWatchTablesToDirectory tableKind=force as the source. Review then apply with this force preview hash/project. Configuration only; no monitoring or forcing."
+            }
+          },
+          "validation": "Schema-checked example for V15.1–V21 only. Bind the exact target and server-local paths before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this same tool preview>",
+              "expectedProjectFile": "<exact bound project file from preview targetIdentity>"
+            },
+            "meaning": "Merge into the reviewed preview arguments. All mutations, including existing actions, now require both bindings; Workbench WRITE approval remains. ManagePlcTableEntries action=read is unbound. Do not retry an unknown import."
+          }
         },
         "ListPlcForceTables": {
           "arguments": {
@@ -37391,8 +37524,8 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "tableKind": "watch",
-            "tablePath": "MCP_W/MCP_WT",
-            "action": "createComment",
+            "tablePath": "MCP_W/NewWatch",
+            "action": "createTable",
             "confirmDelete": false,
             "dryRun": true
           },
@@ -37405,32 +37538,86 @@
             },
             "limit": {
               "exampleValue": 200
+            },
+            "softwarePath": {
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ]
+            },
+            "tablePath": {
+              "exampleValue": "MCP_W/NewWatch",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcWatchTables",
+                "ListPlcForceTables",
+                "GetProjectTree"
+              ],
+              "meaning": "Create in an existing watchTables user group; preserve MIN-ESCAPE segments, e.g. Group%2FName/Table. The leaf must be unused by both watch and force tables. For other actions select the exact table from discovery."
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same tool preview>",
+              "requiresBinding": true,
+              "tools": [
+                "ManagePlcTableEntries"
+              ]
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact bound project file from preview targetIdentity>",
+              "requiresBinding": true,
+              "tools": [
+                "ManagePlcTableEntries",
+                "GetSessionState"
+              ]
             }
           },
           "operations": {
             "read": {
-              "arguments": {}
+              "arguments": {
+                "action": "read"
+              }
             },
             "createComment": {
               "arguments": {
-                "action": "createComment"
+                "action": "createComment",
+                "tablePath": "<exact table path from ListPlcWatchTables>"
               }
             },
             "deleteEntry": {
               "arguments": {
                 "action": "deleteEntry",
-                "entryIndex": 0
+                "entryIndex": 0,
+                "tablePath": "<exact table path from ListPlcWatchTables>",
+                "confirmDelete": true
               }
             },
             "deleteTable": {
               "arguments": {
-                "action": "deleteTable"
+                "action": "deleteTable",
+                "tablePath": "<exact table path from ListPlcWatchTables>",
+                "confirmDelete": true
               }
+            },
+            "createTable": {
+              "arguments": {
+                "action": "createTable",
+                "tableKind": "watch"
+              },
+              "meaning": "V15.1–V21. Preview an empty watch table in an exact existing group; use ManagePlcUserGroup family=watchTables to create groups first. Force-table Create does not exist."
             }
           },
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. V15.1/V16 allow only createComment; typed entry reads/deletes require V17.",
+          "validation": "Schema-checked example for V15.1–V21 only. Bind the exact target and server-local paths before calling. Native execution NOT RUN. V15.1/V16 allow createTable and createComment; typed entry reads/deletes require V17.",
           "inline": true,
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this same tool preview>",
+              "expectedProjectFile": "<exact bound project file from preview targetIdentity>"
+            },
+            "meaning": "Merge into the reviewed preview arguments. All mutations, including existing actions, now require both bindings; Workbench WRITE approval remains. ManagePlcTableEntries action=read is unbound. Do not retry an unknown import."
+          }
         },
         "MonitorPlcWatchTableS7": {
           "arguments": {
@@ -50935,6 +51122,7 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "exportDirectory": "C:\\Examples\\exports",
+            "tableKind": "watch",
             "dryRun": true,
             "confirm": false
           },
@@ -50942,11 +51130,55 @@
             "regexName": {
               "exampleValue": "<regexName from this operation's target or user input>",
               "requiresBinding": true
+            },
+            "softwarePath": {
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ]
+            },
+            "exportDirectory": {
+              "exampleValue": "<server-local output directory with unused XML filenames>",
+              "requiresBinding": true
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same batch preview>",
+              "requiresBinding": true,
+              "tools": [
+                "ExportPlcWatchTablesToDirectory"
+              ]
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact expectedProjectFile from this same batch preview>",
+              "requiresBinding": true,
+              "tools": [
+                "ExportPlcWatchTablesToDirectory",
+                "GetSessionState"
+              ]
             }
           },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "Preview the complete ordered batch and every canonical item/hash. Apply with dryRun=false, confirm=true, expectedPlanHash and exact expectedProjectFile from this preview. One approval covers the batch; stop on the first failure and report completed/failed/not-started items. Native acceptance NOT RUN."
+          "operations": {
+            "force": {
+              "arguments": {
+                "tableKind": "force",
+                "dryRun": true,
+                "confirm": false
+              },
+              "meaning": "V15.1–V21: preview ListPlcForceTables inventory and each exact native force export. Apply with this same force batch plan hash and project. PlcForceTable.Export(FileInfo, ExportOptions.WithDefaults) writes offline configuration only; import into another existing group."
+            }
+          },
+          "validation": "Schema-checked example for V15.1–V21 only. Bind the exact target and server-local paths before calling. Native execution NOT RUN.",
+          "note": "Existing ordered batch contract is retained: dryRun=true defaults to a complete preview with zero file writes; apply requires confirm=true, expectedPlanHash, expectedProjectFile and one batch approval. tableKind (watch default | force) is part of the batch hash, including empty inventories. Native force export uses WithDefaults; new files only, preserving group paths. Existing destinations are refused. No monitoring, forcing, save or download. Inspect failed artifacts before another call. Native acceptance NOT RUN.",
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "confirm": true,
+              "expectedPlanHash": "<planHash from this same batch preview>",
+              "expectedProjectFile": "<exact expectedProjectFile from this same batch preview>"
+            },
+            "meaning": "Merge into the reviewed preview arguments, including the same tableKind. One batch approval covers the ordered items. A changed kind, inventory, target binding or item preview refuses as stale; first item failure stops the batch and leaves later items not-started."
+          }
         },
         "ExportProjectTexts": {
           "arguments": {
@@ -52903,16 +53135,71 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "filePath": "C:\\Examples\\exports\\Watch_1.xml",
-            "dryRun": true
+            "dryRun": true,
+            "tableKind": "watch"
           },
           "parameters": {
             "groupPath": {
-              "exampleValue": "Examples"
+              "exampleValue": "MCP_Import",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree",
+                "ListPlcWatchTables",
+                "ListPlcForceTables"
+              ],
+              "meaning": "Exact existing watch-and-force user group; split paths before decoding MIN-ESCAPE segments. Empty means root."
+            },
+            "softwarePath": {
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ]
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same tool preview>",
+              "requiresBinding": true,
+              "tools": [
+                "ImportPlcWatchTableOffline"
+              ]
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact bound project file from preview targetIdentity>",
+              "requiresBinding": true,
+              "tools": [
+                "ImportPlcWatchTableOffline",
+                "GetSessionState"
+              ]
+            },
+            "filePath": {
+              "exampleValue": "<server-local native SimaticML file exported from a watch or force table>",
+              "requiresBinding": true,
+              "tools": [
+                "ExportPlcWatchTablesToDirectory"
+              ]
             }
           },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "operations": {
+            "force": {
+              "arguments": {
+                "tableKind": "force",
+                "filePath": "<server-local force SimaticML export>",
+                "groupPath": "<another existing watch-and-force group>",
+                "dryRun": true
+              },
+              "meaning": "Use ExportPlcWatchTablesToDirectory tableKind=force as the source. Review then apply with this force preview hash/project. Configuration only; no monitoring or forcing."
+            }
+          },
+          "validation": "Schema-checked example for V15.1–V21 only. Bind the exact target and server-local paths before calling. Native execution NOT RUN.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this same tool preview>",
+              "expectedProjectFile": "<exact bound project file from preview targetIdentity>"
+            },
+            "meaning": "Merge into the reviewed preview arguments. All mutations, including existing actions, now require both bindings; Workbench WRITE approval remains. ManagePlcTableEntries action=read is unbound. Do not retry an unknown import."
+          }
         },
         "ImportProjectTexts": {
           "arguments": {
@@ -57430,8 +57717,8 @@
           "arguments": {
             "softwarePath": "PLC_1",
             "tableKind": "watch",
-            "tablePath": "MCP_W/MCP_WT",
-            "action": "read",
+            "tablePath": "MCP_W/NewWatch",
+            "action": "createTable",
             "confirmDelete": false,
             "dryRun": true
           },
@@ -57444,32 +57731,86 @@
             },
             "limit": {
               "exampleValue": 200
+            },
+            "softwarePath": {
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ]
+            },
+            "tablePath": {
+              "exampleValue": "MCP_W/NewWatch",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcWatchTables",
+                "ListPlcForceTables",
+                "GetProjectTree"
+              ],
+              "meaning": "Create in an existing watchTables user group; preserve MIN-ESCAPE segments, e.g. Group%2FName/Table. The leaf must be unused by both watch and force tables. For other actions select the exact table from discovery."
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same tool preview>",
+              "requiresBinding": true,
+              "tools": [
+                "ManagePlcTableEntries"
+              ]
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact bound project file from preview targetIdentity>",
+              "requiresBinding": true,
+              "tools": [
+                "ManagePlcTableEntries",
+                "GetSessionState"
+              ]
             }
           },
           "operations": {
             "read": {
-              "arguments": {}
+              "arguments": {
+                "action": "read"
+              }
             },
             "createComment": {
               "arguments": {
-                "action": "createComment"
+                "action": "createComment",
+                "tablePath": "<exact table path from ListPlcWatchTables>"
               }
             },
             "deleteEntry": {
               "arguments": {
                 "action": "deleteEntry",
-                "entryIndex": 0
+                "entryIndex": 0,
+                "tablePath": "<exact table path from ListPlcWatchTables>",
+                "confirmDelete": true
               }
             },
             "deleteTable": {
               "arguments": {
-                "action": "deleteTable"
+                "action": "deleteTable",
+                "tablePath": "<exact table path from ListPlcWatchTables>",
+                "confirmDelete": true
               }
+            },
+            "createTable": {
+              "arguments": {
+                "action": "createTable",
+                "tableKind": "watch"
+              },
+              "meaning": "V15.1–V21. Preview an empty watch table in an exact existing group; use ManagePlcUserGroup family=watchTables to create groups first. Force-table Create does not exist."
             }
           },
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "validation": "Schema-checked example for V15.1–V21 only. Bind the exact target and server-local paths before calling. Native execution NOT RUN. V15.1/V16 allow createTable and createComment; typed entry reads/deletes require V17.",
           "inline": true,
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this same tool preview>",
+              "expectedProjectFile": "<exact bound project file from preview targetIdentity>"
+            },
+            "meaning": "Merge into the reviewed preview arguments. All mutations, including existing actions, now require both bindings; Workbench WRITE approval remains. ManagePlcTableEntries action=read is unbound. Do not retry an unknown import."
+          }
         },
         "ManagePlcTagDefinition": {
           "arguments": {

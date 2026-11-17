@@ -60,12 +60,43 @@ public sealed class PlcWatchTechnologyPortTests
     [InlineData("15.1", "read", true)]
     [InlineData("15.1", "deleteEntry", true)]
     [InlineData("15.1", "createComment", false)]
+    [InlineData("15.1", "createTable", false)]
     [InlineData("16", "read", true)]
     [InlineData("16", "createComment", false)]
+    [InlineData("16", "createTable", false)]
     [InlineData("17", "read", false)]
     [InlineData("17", "deleteEntry", false)]
     public void EntryActionsRequireTheirTypedApi(string release, string action, bool refused)
         => Assert.Equal(refused, PlcB4Capabilities.Unsupported(release, new PlcSoftwareRequest { Operation = "ManagePlcTableEntries", Action = action }) != null);
+
+    [Theory]
+    [InlineData("watch")]
+    [InlineData("force")]
+    public void OfflineImportAcceptsOnlyTheSelectedNativeTableKind(string tableKind)
+    {
+        string selected = tableKind == "watch" ? "Watch" : "Force";
+        string other = tableKind == "watch" ? "Force" : "Watch";
+        string Table(string kind, int id) => $"<SW.WatchAndForceTables.Plc{kind}Table ID=\"{id}\"><AttributeList><Name>Table{id}</Name></AttributeList>" +
+            "<ObjectList><SW.WatchAndForceTables.PlcTableCommentEntry ID=\"100\" CompositionName=\"Entries\"><AttributeList/>" +
+            $"</SW.WatchAndForceTables.PlcTableCommentEntry></ObjectList></SW.WatchAndForceTables.Plc{kind}Table>";
+        string path = Path.Combine(Path.GetTempPath(), "tia-watch-import-" + Guid.NewGuid().ToString("N") + ".xml");
+        try
+        {
+            File.WriteAllText(path, "<Document><Engineering version=\"V21\"/>" + Table(selected, 0) + Table(selected, 1) + "</Document>");
+            Assert.Equal(2, WatchTableImportValidation.Validate(path, tableKind));
+            if (tableKind == "watch") Assert.Equal(2, WatchTableImportValidation.Validate(path));
+            File.WriteAllText(path, "<Document>" + Table(other, 0) + "</Document>");
+            Assert.Throws<ArgumentException>(() => WatchTableImportValidation.Validate(path, tableKind));
+            File.WriteAllText(path, "<Document>" + Table(selected, 0) + Table(other, 1) + "</Document>");
+            Assert.Throws<ArgumentException>(() => WatchTableImportValidation.Validate(path, tableKind));
+            File.WriteAllText(path, "<!DOCTYPE Document [<!ENTITY x 'forbidden'>]><Document>" + Table(selected, 0) + "</Document>");
+            Assert.Throws<System.Xml.XmlException>(() => WatchTableImportValidation.Validate(path, tableKind));
+            File.WriteAllText(path, "<Document/>");
+            Assert.Throws<ArgumentException>(() => WatchTableImportValidation.Validate(path, tableKind));
+            Assert.Throws<ArgumentException>(() => WatchTableImportValidation.Validate(path, "unknown"));
+        }
+        finally { File.Delete(path); }
+    }
 
     [Theory]
     [InlineData("14sp1", "connect", "torque", true)]

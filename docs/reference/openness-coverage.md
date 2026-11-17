@@ -3,6 +3,18 @@
 The eight local official PublicAPI XML sets are compared with compiled native-call inventories. No Siemens DLL or XML is redistributed.
 Current V4 registration is summarized in [the version matrix](version-tools.md). The [generated name catalog](version-tool-catalog.md) is a release-time record of the last built package; release validation regenerates it.
 
+## API-P1b offline table configuration (beta.6)
+
+V15.1–V21 expose `PlcWatchTableComposition.Create(string)` through `ManagePlcTableEntries action=createTable`,
+`PlcForceTableComposition.Import(FileInfo, ImportOptions.None)` through `ImportPlcWatchTableOffline tableKind=force`,
+and `PlcForceTable.Export(FileInfo, ExportOptions.WithDefaults)` through `ExportPlcWatchTablesToDirectory tableKind=force`.
+Directory exports retain the existing ordered batch preview, confirmation, project/hash binding and one batch approval;
+`tableKind` participates in the batch hash. V14 SP1 has no watch-and-force-table namespace and these tools remain unregistered. Force entries stay read-only;
+import writes offline configuration and never activates forcing. Native acceptance is **NOT RUN**; see the
+[VM checklist](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md#未发布改动的验收边界).
+
+Scoped compile is postponed to a separate round after the lead's V21/V18 `ICompilable` probes; the existing software compile remains unchanged.
+
 ## Security coverage deferred beyond 4.0
 
 The 2026-10-19 API audit (P8-81g, S-11) identified these documented members without tool actions. They remain uncovered in 4.0; tool descriptions disclose the limits.
