@@ -48,7 +48,8 @@ internal static class DocumentExportContract
                 .FullPath(result["OutputDirectory"]!.GetValue<string>()))
             throw new InvalidDataException("Document output identity mismatch.");
         foreach(var pair in new[]{("BlockPath","blockPath")})
-            if(result[pair.Item1]!.GetValue<string>()!=request[pair.Item2]?.GetValue<string>())
+            if(request[pair.Item2]?.GetValue<string>() is not string requested || result[pair.Item1]!.GetValue<string>()
+                    !=TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(requested,pair.Item2))
                 throw new InvalidDataException("Document result identity mismatch.");
         if(request["preservePath"]?.GetValue<bool>()==true
                 || (!dry

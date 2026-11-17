@@ -16,7 +16,8 @@ namespace TiaMcp.Adapters
                 bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
             var r=new PlcDocumentImportRequest {
-                Release=ReleaseKey,Software=softwarePath,Group=groupPath,Directory=importPath,Name=fileNameWithoutExtension,Overwrite=overwrite,DryRun=dryRun,
+                Release=ReleaseKey,Software=softwarePath,Group=PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath"),Directory=importPath,
+                    Name=fileNameWithoutExtension,Overwrite=overwrite,DryRun=dryRun,
                     ExpectedHash=expectedPlanHash,Confirm=confirm,ExpectedProject=expectedProjectFile
             };
             PlcDocumentImportPolicy.ValidateOptions(r);

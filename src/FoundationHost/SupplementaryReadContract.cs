@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -38,8 +39,8 @@ internal static class SupplementaryReadContract
                         .Add(name))
                     throw new InvalidDataException("Invalid watch-table name list.");
                 if(name.Split('/')
-                        .Any(s=>string.IsNullOrWhiteSpace(Uri.UnescapeDataString(s)) || Uri.UnescapeDataString(s) is "." or ".." || Uri
-                            .EscapeDataString(Uri.UnescapeDataString(s))!=s))
+                        .Any(s=>string.IsNullOrWhiteSpace(ObjectPathEncoding.DecodeSegment(s)) || ObjectPathEncoding.DecodeSegment(s) is "." or ".."
+                                || ObjectPathEncoding.EncodeSegment(ObjectPathEncoding.DecodeSegment(s))!=s))
                     throw new InvalidDataException("Invalid canonical watch-table path.");
                 outputItems.Add(name);
             }
@@ -51,10 +52,10 @@ internal static class SupplementaryReadContract
                 var name=Text(row,"Name"); var folder=Text(row,"Folder",true);
                 if(name is "." or "..") throw new InvalidDataException("Invalid technology object name.");
                 if(folder.Length>0 && folder.Split('/')
-                        .Any(s=>string.IsNullOrWhiteSpace(Uri.UnescapeDataString(s)) || Uri.UnescapeDataString(s) is "." or ".." || Uri
-                            .EscapeDataString(Uri.UnescapeDataString(s))!=s))
+                        .Any(s=>string.IsNullOrWhiteSpace(ObjectPathEncoding.DecodeSegment(s)) || ObjectPathEncoding.DecodeSegment(s) is "." or ".."
+                                || ObjectPathEncoding.EncodeSegment(ObjectPathEncoding.DecodeSegment(s))!=s))
                     throw new InvalidDataException("Invalid technology folder identity.");
-                if(!seen.Add(folder+"/"+Uri.EscapeDataString(name))) throw new InvalidDataException("Duplicate technology object identity.");
+                if(!seen.Add(folder+"/"+ObjectPathEncoding.EncodeSegment(name))) throw new InvalidDataException("Duplicate technology object identity.");
                 if(row["UnavailableAttributes"] is not JsonArray missing || missing
                         .Any(v=>v is not JsonValue val || !val.TryGetValue<string>(out var n) || n is not ("OfSystemLibElement" or "OfSystemLibVersion"))
                         || missing.Select(v=>v!.GetValue<string>()).Distinct().Count()!=missing.Count)
@@ -67,7 +68,8 @@ internal static class SupplementaryReadContract
                     if(!absent) copy[Wire(key)]=Text(row,key);
                 }
                 if(missing.Count!=0) unavailable
-                    .Add(new JsonObject { ["objectPath"]=(folder.Length==0?"":folder+"/")+Uri.EscapeDataString(name),["attributes"]=missing.DeepClone() });
+                    .Add(new JsonObject {
+                            ["objectPath"]=(folder.Length==0?"":folder+"/")+ObjectPathEncoding.EncodeSegment(name),["attributes"]=missing.DeepClone() });
                 outputItems.Add(copy);
             }
         }

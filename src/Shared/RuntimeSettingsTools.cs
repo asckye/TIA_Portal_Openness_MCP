@@ -41,7 +41,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][HMI-Unified][WRITE]4.0 writes root scalars only; nested runtime settings are not exposed. Update supported root HMI " +
                 "Runtime settings using public Openness setters. changes is an object, e.g. " +
                 "{\"StartScreen\":\"/Group/Main\",\"ScreenResolution\":\"SR_1920X1080\"}; use exact enum names from GetUnifiedRuntimeSettings. StartScreen " +
-                "MUST be a full URI-escaped screen path: validates existence and unique name in the selected HMI before writing the API's name value. " +
+                "MUST be a full readable screen path (old encoded input accepted): validates existence and unique name in the selected HMI before writing " +
+                    "the API's name value. "
+                    +
                 "Default dryRun=true returns before/proposed/token. Apply identical changes with dryRun=false and previewToken. Validates all requested " +
                 "fields before any write and verifies final readback. On failure inspect appliedFields/mayHaveChanged; multi-field writes are not atomic. No " +
                 "automatic rollback, save, compile, download, runtime restart or close. Unsupported/nested fields are rejected. Native " +

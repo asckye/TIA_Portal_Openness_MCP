@@ -3,9 +3,10 @@ namespace TiaMcp.FoundationHost;
 internal static class ExternalSourcePlanContract
 {
     // The worker resolves a unique short PLC host name before returning the exact address.
-    internal static bool SameSoftware(string actual,string? requested) => actual==requested
+    internal static bool SameSoftware(string actual,string? requested) => requested!=null
+        && actual==TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(requested)
         || requested!=null && requested.Length>0 && requested is not ("." or "..") && requested.IndexOf('/')<0
-            && string.Equals(Uri.UnescapeDataString(actual.Split('/').Last()),requested,StringComparison.OrdinalIgnoreCase);
+            && string.Equals(TiaMcp.Adapters.Contracts.ObjectPathEncoding.DecodeSegment(actual.Split('/').Last()),requested,StringComparison.OrdinalIgnoreCase);
     internal static JsonObject Validate(JsonNode? payload)
     {
         if(payload is not JsonObject result) throw new InvalidDataException("Missing external-source plan.");

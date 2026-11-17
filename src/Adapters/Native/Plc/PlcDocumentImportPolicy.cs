@@ -34,6 +34,7 @@ namespace TiaMcp.Adapters
             PlcDocumentExportPolicy.Name(r.Name);
             if(r.Name.Length>128 || !PlcDocumentDeclaration.Identifier(r.Name)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Basename must be one ASCII identifier, 1..128 characters.");
+            r.Group = PlcExchangePolicy.ObjectPath(r.Group,true,"groupPath");
             if(r.Group!=PlcExchangePolicy.ObjectPath(r.Group,true)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Exact canonical group path required.");
             if(!r.DryRun && (!r.Confirm || r.ExpectedHash.Length!=64 || r.ExpectedHash.Any(c=>!"0123456789abcdef".Contains(c)))) throw new TiaMcp.Adapters

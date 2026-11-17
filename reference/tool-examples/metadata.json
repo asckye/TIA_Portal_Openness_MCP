@@ -6,7 +6,7 @@
         "GetProjectTree",
         "GetSoftwareTree"
       ],
-      "meaning": "Select the PLC or HMI software path returned by the tree for this target; station names can differ. Foundation trees expose softwarePath=devices/<URL-encoded station>/<PLC>; ordinary tools accept a unique short name, but ExportPlcBlocks, ExportPlcTypes and both directory imports require the exact tree path."
+      "meaning": "Select the PLC or HMI software path returned by the tree for this target; station names can differ. Foundation trees expose softwarePath=devices/<minimally escaped station>/<PLC>; ordinary tools accept a unique short name, but ExportPlcBlocks, ExportPlcTypes and both directory imports require the exact tree path."
     },
     "hmiSoftwarePath": {
       "tools": [

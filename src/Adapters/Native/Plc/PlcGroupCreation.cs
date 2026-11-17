@@ -26,7 +26,7 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 foreach (var part in parts)
                 {
-                    var segment = pathParts == null ? part : Uri.EscapeDataString(part);
+                    var segment = pathParts == null ? part : ObjectPathEncoding.EncodeSegment(part);
                     prefix = prefix.Length == 0 ? rootPrefix + segment : prefix + "/" + segment;
                     var matches = current == null ? new List<T>() : children(current)
                         .Where(g => string.Equals(name(g), part, StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
@@ -54,7 +54,7 @@ namespace TiaMcp.Adapters.Native.Plc
             journal.Commit();
             return new Dictionary<string, object?> {
                 ["success"] = true, ["groupPath"] = pathParts == null ? string.Join("/", parts) : rootPrefix + string
-                    .Join("/", parts.Select(Uri.EscapeDataString)),
+                    .Join("/", parts.Select(ObjectPathEncoding.EncodeSegment)),
                 ["dryRun"] = dryRun, ["createdCount"] = created.Count, ["createdPaths"] = created,
                 ["missingPaths"] = missing, ["alreadyExisted"] = missing.Count == 0 };
         }

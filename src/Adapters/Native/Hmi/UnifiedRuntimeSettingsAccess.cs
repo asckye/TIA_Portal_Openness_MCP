@@ -124,7 +124,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             if (path.Length > 4096 || !path.StartsWith("/", StringComparison.Ordinal) || path.EndsWith("/", StringComparison.Ordinal)
                 || path.Substring(1).Split('/').Any(string.IsNullOrEmpty) || path.Count(c => c == '/') > 65)
-                throw new ArgumentException("StartScreen requires an exact absolute URI-escaped screen path, not a bare name or an empty value.");
+                throw new ArgumentException("StartScreen requires an exact absolute readable screen path (old encoded input accepted), not a bare name or an " +
+                    "empty value.");
             var screen = Call(trace, path, () => MigrationRead.Screen(hmi, path))!;
             var name = (string?)Call(trace, path + "/Name", () => MigrationRead.Get(screen, "Name"))
                 ?? throw new InvalidOperationException("Target screen Name unavailable.");

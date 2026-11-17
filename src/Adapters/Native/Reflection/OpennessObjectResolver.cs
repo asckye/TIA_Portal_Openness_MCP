@@ -235,7 +235,9 @@ namespace TiaMcp.Adapters
             if (path.StartsWith("/Scripts/", StringComparison.Ordinal))
             {
                 var segment = path.Substring(9);
-                if (segment.Length == 0 || segment.IndexOf('/') >= 0) throw new ArgumentException("Use /Scripts/<URI-escaped exact module name>.");
+                if (segment.Length == 0 || segment.IndexOf('/') >= 0)
+                    throw new ArgumentException("Use /Scripts/<readable exact module name>; escape %, /, backslash and ASCII controls within the name. Old " +
+                    "encoded input is accepted.");
                 path = Uri.UnescapeDataString(segment);
             }
             else if (path.StartsWith("/", StringComparison.Ordinal))

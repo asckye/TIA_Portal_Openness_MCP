@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -81,7 +82,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 Add(group, "block", path, depth);
                 foreach (var child in group.Groups) {
                     if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Block group parent mismatch.");
-                    Blocks(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1);
+                    Blocks(child, path == "" ? ObjectPathEncoding.EncodeSegment(child.Name) : path + "/" + ObjectPathEncoding.EncodeSegment(child.Name), depth
+                            + 1);
                 }
             }
             void Types(PlcTypeGroup group, string path, int depth)
@@ -89,7 +91,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 Add(group, "type", path, depth);
                 foreach (var child in group.Groups) {
                     if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Type group parent mismatch.");
-                    Types(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1);
+                    Types(child, path == "" ? ObjectPathEncoding.EncodeSegment(child.Name) : path + "/" + ObjectPathEncoding.EncodeSegment(child.Name), depth
+                            + 1);
                 }
             }
             void Tags(PlcTagTableGroup group, string path, int depth)
@@ -97,7 +100,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 Add(group, "tag", path, depth);
                 foreach (var child in group.Groups) {
                     if (!object.Equals(child.Parent, group)) throw new InvalidDataException("Tag group parent mismatch.");
-                    Tags(child, path == "" ? Uri.EscapeDataString(child.Name) : path + "/" + Uri.EscapeDataString(child.Name), depth + 1);
+                    Tags(child, path == "" ? ObjectPathEncoding.EncodeSegment(child.Name) : path + "/" + ObjectPathEncoding.EncodeSegment(child.Name), depth
+                            + 1);
                 }
             }
             var unit = PlcUnitScope.Optional(software, UnitName);

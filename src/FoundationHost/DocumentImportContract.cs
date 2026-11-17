@@ -89,7 +89,12 @@ internal static class DocumentImportContract
                 .FullPath(Text("InputDirectory")))
             throw new InvalidDataException("Document input/software identity mismatch.");
         foreach(var pair in new[]{("GroupPath","groupPath"),("DeclaredName","fileNameWithoutExtension")})
-            if(Text(pair.Item1)!=request[pair.Item2]?.GetValue<string>())throw new InvalidDataException("Document request/response identity mismatch.");
+        {
+            string? requested = request[pair.Item2]?.GetValue<string>();
+            if(requested!=null && pair.Item1=="GroupPath")
+                requested=TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(requested,pair.Item2);
+            if(Text(pair.Item1)!=requested)throw new InvalidDataException("Document request/response identity mismatch.");
+        }
         if(request["overwrite"]?.GetValue<bool>()==true)throw new InvalidDataException("Document overwrite is not admitted.");
         return result;
     }

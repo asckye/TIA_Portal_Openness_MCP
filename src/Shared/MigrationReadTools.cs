@@ -77,7 +77,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 string cursor = "", int pageSize = 100, int budgetMs = 5000)
         => _migrationRead.ReadUnifiedTagDefinitions(softwarePath, expectedProject, cursor, pageSize, budgetMs);
         [McpServerTool(Name = "GetUnifiedScreenBranch"),
-                Description("[L2][HMI-Unified][READ]Read an exact screen/item branch with continuation. screenPath is /Group/Screen with URI-escaped names. " +
+                Description("[L2][HMI-Unified][READ]Read an exact screen/item branch with continuation. screenPath is /Group/Screen with readable segments; " +
+                    "escape %, /, backslash and ASCII controls within names; old encoded input accepted. "
+                        +
                 "branch is an array of at most 64 steps: {property}, {attribute}, {index} or {name,key?}. [] reads the selected subtree, never Parent. No " +
                 "writes or arbitrary method invocation.")]
         public CallToolResult ReadUnifiedScreenBranchV4(

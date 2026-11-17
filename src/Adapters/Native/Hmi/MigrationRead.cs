@@ -20,7 +20,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     EngineeringInputValidation.AbsoluteHmiPath((string)path!, rootAllowed: key == "folderPath");
         }
 
-        internal static string Segment(string value) => Uri.EscapeDataString(value);
+        internal static string Segment(string value) => ObjectPathEncoding.EncodeSegment(value);
         internal static Exception Cause(Exception ex) => ex is TargetInvocationException tie && tie.InnerException != null ? Cause(tie.InnerException) : ex;
         internal static HmiObject Failure(string path, string code, Exception? ex = null, string? reason = null)
         {
@@ -92,8 +92,9 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static object Screen(object hmi, string screenPath)
         {
             var parts = EngineeringInputValidation.AbsoluteHmiPath(screenPath); object owner = hmi;
-            for (int j = 0; j < parts.Length - 1; j++) owner = Named(Get(owner, j == 0 ? "ScreenGroups" : "Groups")!, Uri.UnescapeDataString(parts[j]));
-            return Named(Get(owner, "Screens")!, Uri.UnescapeDataString(parts[parts.Length - 1]));
+            for (int j = 0; j < parts.Length - 1; j++) owner =
+                Named(Get(owner, j == 0 ? "ScreenGroups" : "Groups")!, ObjectPathEncoding.DecodeSegment(parts[j]));
+            return Named(Get(owner, "Screens")!, ObjectPathEncoding.DecodeSegment(parts[parts.Length - 1]));
         }
         internal static HmiArray ParseBranch(string branchJson)
         {

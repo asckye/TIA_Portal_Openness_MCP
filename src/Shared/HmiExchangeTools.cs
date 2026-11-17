@@ -319,7 +319,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiScreenV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+            [Description("folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input " +
+                "accepted; / selects the root (empty retains the legacy root selection). Relative "
+                        +
                 "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported screen XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false,
@@ -335,7 +337,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage ImportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+            [Description("folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input " +
+                "accepted; / selects the root (empty retains the legacy root selection). Relative "
+                        +
                 "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported screen XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
@@ -366,7 +370,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiTagTableV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+            [Description("folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input " +
+                "accepted; / selects the root (empty retains the legacy root selection). Relative "
+                        +
                 "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported tag table XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false,
@@ -382,7 +388,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseMessage ImportHmiTagTable(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+            [Description("folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input " +
+                "accepted; / selects the root (empty retains the legacy root selection). Relative "
+                        +
                 "and backslash paths are refused.")] string folderPath,
             [Description("importPath: full file path of exported tag table XML")] string importPath,
             [Description("overwrite: default false; existing targets refuse before native Import. Set true explicitly to replace.")] bool overwrite = false)
@@ -456,7 +464,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiScreensFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+            [Description("folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input " +
+                "accepted; / selects the root (empty retains the legacy root selection). Relative "
+                        +
                 "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
@@ -473,7 +483,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseImportBatch ImportHmiScreensFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+            [Description("folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input " +
+                "accepted; / selects the root (empty retains the legacy root selection). Relative "
+                        +
                 "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
@@ -504,7 +516,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult ImportHmiTagTablesFromDirectoryV4(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+            [Description("folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input " +
+                "accepted; / selects the root (empty retains the legacy root selection). Relative "
+                        +
                 "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
@@ -522,7 +536,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public ResponseImportBatch ImportHmiTagTablesFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
-            [Description("folderPath: absolute /Group/Sub with URI-escaped segments; / selects the root (empty retains the legacy root selection). Relative " +
+            [Description("folderPath: absolute /Group/Sub with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input " +
+                "accepted; / selects the root (empty retains the legacy root selection). Relative "
+                        +
                 "and backslash paths are refused.")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",

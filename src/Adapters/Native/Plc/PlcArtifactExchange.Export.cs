@@ -12,7 +12,7 @@ namespace TiaMcp.Adapters.Native.Plc
         {
             if (!preservePath && exportPath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) && !Directory.Exists(exportPath))
                 return exportPath;
-            var fileName = Uri.EscapeDataString(name) + ".xml";
+            var fileName = ObjectFileNameEncoding.Encode(name) + ".xml";
             return preservePath ? Path.Combine(exportPath, groupPath.Replace('/', '\\'), fileName) : Path.Combine(exportPath, fileName);
         }
 

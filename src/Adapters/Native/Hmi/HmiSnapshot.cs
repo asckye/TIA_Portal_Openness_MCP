@@ -116,7 +116,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (property.Name == "Parent" || property.GetMethod == null || !property.GetMethod.IsPublic || property.GetIndexParameters().Length != 0)
                     { omitted++; continue; }
                     if (!CanRead()) break;
-                    var childPath = path + "/" + Uri.EscapeDataString(property.Name);
+                    var childPath = path + "/" + ObjectPathEncoding.EncodeSegment(property.Name);
                     var skip = HmiReadSafety.SkipReason(type, property.Name);
                     if (skip != null)
                     {

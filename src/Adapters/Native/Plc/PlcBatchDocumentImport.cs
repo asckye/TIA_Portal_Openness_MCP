@@ -10,6 +10,7 @@ namespace TiaMcp.Adapters
             if(fileNamesWithoutExtension==null || fileNamesWithoutExtension.Length<1 || fileNamesWithoutExtension.Length>PlcBatchDocumentImportPolicy
                     .MaximumItems || fileNamesWithoutExtension.Distinct(StringComparer.OrdinalIgnoreCase).Count()!=fileNamesWithoutExtension.Length)
                 throw new ArgumentException("Explicit ordered unique manifest of 1..16 basenames required.");
+            groupPath = PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath");
             var contexts=fileNamesWithoutExtension
                 .Select(name=>
                     CreateDocumentImportContext(new PlcDocumentImportRequest {

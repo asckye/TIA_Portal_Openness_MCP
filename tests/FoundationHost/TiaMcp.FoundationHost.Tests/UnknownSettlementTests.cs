@@ -17,6 +17,22 @@ namespace TiaMcp.FoundationHost.Tests;
 [Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class UnknownSettlementTests
 {
+    [Theory]
+    [InlineData("组 一/表%2F50%25")]
+    [InlineData("%E7%BB%84%20%E4%B8%80/%E8%A1%A8%2F50%25")]
+    public async Task Readable_declarations_settle_writes_with_saved_or_readable_table_paths(string table)
+    {
+        var args = new JsonObject { ["plc"] = "PLC", ["table"] = table, ["name"] = "标记/50%", ["dataType"] = "Bool", ["address"] = "%M0.0" };
+        var calls = new UnsettledCalls();
+        var results = new LateCalls();
+        calls.Record("readable", "CreatePlcTag", "digest", DateTimeOffset.UtcNow, args);
+        var rows = new JsonArray(new JsonObject {
+            ["Name"] = "标记/50%", ["Path"] = "组 一/表%2F50%25/标记%2F50%25", ["Kind"] = "tag", ["DataType"] = "Bool", ["Value"] = "%M0.0" });
+        var settlement = await UnknownSettlement.Run(calls, results, "readable", (_, _) => Task.FromResult<JsonNode?>(rows));
+        Assert.Equal("applied", settlement?.Outcome);
+        Assert.Empty(calls.Snapshot());
+    }
+
     private static readonly string[] Names = { "CreatePlcTagTable", "CreatePlcTag", "CreatePlcUserConstant", "DeletePlcExternalSource",
         "ImportPlcExternalSource", "ExportPlcBlock", "ExportPlcType", "ExportPlcTagTable", "ExportPlcWatchTable", "ExportTechnologyObject",
         "ExportProjectTexts" };

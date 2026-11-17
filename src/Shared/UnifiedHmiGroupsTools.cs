@@ -22,7 +22,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ManageUnifiedHmiGroup"),
                 Description("[L2][HMI-Unified][WRITE] Create, rename or deleteEmpty a user folder. family=screens/tags; groupPath is an absolute /Group/Sub " +
-                "path with URI-escaped segments; relative and backslash paths are refused. newName is one segment for rename. Default dryRun=true. Missing " +
+                "path with readable segments; escape %, /, backslash and ASCII controls within names; old encoded input accepted; relative and backslash " +
+                    "paths are refused. newName is one segment for rename. Default dryRun=true. Missing "
+                    +
                 "parents created, root/nonempty deletion refused. No save/compile/download. Unified script folders are not exposed by the supported API. " +
                 "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ManageUnifiedHmiGroupV4(string softwarePath, [Description("screens | tags. Unified HMI user-folder family.")] string family,

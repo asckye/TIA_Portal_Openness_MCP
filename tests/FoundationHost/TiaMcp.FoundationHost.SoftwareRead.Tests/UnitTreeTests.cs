@@ -31,6 +31,27 @@ namespace TiaMcp.Adapters.Native.Plc
 }
 public sealed class UnitTreeTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("devices/站\\一/PLC")]
+    public void Software_selection_refuses_null_and_raw_backslashes(string? input)
+    {
+        var candidate = new PlcReadCandidate<int> { Value = 1, ExactPath = "devices/站%5C一/PLC" };
+        var error = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => PlcReadPathPolicy.Resolve(new[] { candidate }, input!));
+        Assert.Equal("softwarePath", error.ParamName);
+        Assert.Equal(1, PlcReadPathPolicy.Resolve(new[] { candidate }, candidate.ExactPath));
+    }
+
+    [Theory]
+    [InlineData("devices/中文 站/CPU", "devices/%E4%B8%AD%E6%96%87%20%E7%AB%99/CPU")]
+    [InlineData("devices/A%2FB/50%25", "devices/A%2FB/50%25")]
+    public void Saved_software_addresses_match_readable_inventory(string readable, string saved)
+    {
+        var candidates = new[] { new PlcReadCandidate<int> { Value = 1, ExactPath = readable } };
+        Assert.Equal(1, PlcReadPathPolicy.Resolve(candidates, readable));
+        Assert.Equal(1, PlcReadPathPolicy.Resolve(candidates, saved));
+    }
+
     [Fact]
     public void UnitsHaveIndependentTopLevelIdentitiesAndAllFourGroups()
     {
@@ -49,7 +70,7 @@ public sealed class UnitTreeTests
         var paths = actual["Meta"]!["paths"]!.AsArray();
         Assert.Equal(2, paths.Count(path => (string?)path?["kind"] == "unit"));
         Assert.Equal(3, paths.Count(path => (string?)path?["kind"] == "block"));
-        Assert.Contains(paths, path => (string?)path?["path"] == "devices/D/CPU/units/Unit%20A%2FB/blocks/Same"
+        Assert.Contains(paths, path => (string?)path?["path"] == "devices/D/CPU/units/Unit A%2FB/blocks/Same"
             && (string?)path?["objectPath"] == "Same" && (string?)path?["unitName"] == "Unit A/B");
         foreach (var kind in new[] { "block-group", "type-group", "tag-group", "source-group" })
             Assert.Equal(2, paths.Count(path => (string?)path?["kind"] == kind && path?["unitName"] != null));

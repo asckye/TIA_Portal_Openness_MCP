@@ -7,6 +7,23 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class HmiAuditRegressionTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Readable_table_paths_and_saved_paths_resolve_the_same_names(bool classic)
+    {
+        var parent = new TableFolder { Name = "中文组 一" };
+        var root = new TableFolder { TagTableGroups = [parent], Folders = [parent] };
+        object software = classic ? new ClassicSoftware { TagFolder = root } : root;
+        const string readable = "/中文组 一/表%2F50%25";
+        string saved = "/" + Uri.EscapeDataString(parent.Name) + "/" + Uri.EscapeDataString("表/50%");
+        var table = HmiExchangePolicy.EnsureTagTable(software, saved, () => { });
+        Assert.Equal("表/50%", ((Named)table).Name);
+        Assert.Same(table, HmiExchangePolicy.TagTable(software, readable));
+        Assert.Same(table, HmiExchangePolicy.TagTable(software, saved));
+        Assert.Equal(readable, Assert.Single(HmiExchangePolicy.TagTables(software)).Path);
+    }
+
+    [Theory]
     [InlineData("Group/Sub/Table", "/Group/Sub/Table")]
     [InlineData("Group\\Sub\\Table", "/Group/Sub/Table")]
     [InlineData("/Group\\Sub/Table", "/Group/Sub/Table")]

@@ -50,7 +50,7 @@ internal static class SpecialExportContract
         var kind=operation=="ExportPlcWatchTable"?"watch-table":operation=="ExportTechnologyObject"?"technology-object"
             :throw new InvalidDataException("Invalid special export operation.");
         if(Actual("Kind")!=kind || !TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(Requested("softwarePath"),Actual("SoftwarePath"))
-                || Actual("ObjectPath")!=Requested(kind=="watch-table"?"watchTableName":"toName") ||
+                || Actual("ObjectPath")!=TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(Requested(kind=="watch-table"?"watchTableName":"toName")) ||
             !string.Equals(Actual("OutputFile"),Path.GetFullPath(Requested("exportPath")),StringComparison.OrdinalIgnoreCase) ||
             (!dryRun
                     && (Actual("PlanHash")!=Requested("expectedPlanHash") || !string

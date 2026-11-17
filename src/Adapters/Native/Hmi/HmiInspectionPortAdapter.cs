@@ -57,6 +57,6 @@ public HmiMessage ListHmiScreenPaths(string softwarePath,int offset=0,int limit=
                 meta["total"]=screens.Count;meta["offset"]=offset;
                 meta["paths"]=new HmiArray(screens.Skip(offset).Take(limit).Select(x=>HmiValues.Value(x.Path)).ToArray());
                 meta["nextOffset"]=offset+limit<screens.Count?(object?)HmiValues.Value(offset+limit):null;
-                return "Complete group paths, with URI-escaped name segments; leading / selects an exact path.";
+                return "Complete group paths with readable name segments; old encoded input is accepted; leading / selects an exact path.";
             });
 } }

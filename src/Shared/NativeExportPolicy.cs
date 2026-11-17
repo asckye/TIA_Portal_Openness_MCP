@@ -157,14 +157,16 @@ namespace TiaOpenness.Shared
 
         internal static void RequireSoftwarePath(string requested, string resolved, bool batch)
         {
-            if (batch && !string.Equals(requested, resolved, StringComparison.Ordinal))
+            if (batch && !string
+                    .Equals(ObjectPathEncoding.NormalizePath(requested,"softwarePath"), ObjectPathEncoding.NormalizePath(resolved,"softwarePath"),
+                        StringComparison.Ordinal))
                 throw new AdapterPreconditionException("Batch operation requires the exact software path, not an alias.", "softwarePath");
         }
 
         internal static bool ResolvedIdentityMatches(string requested, string resolved)
         {
-            if (requested == resolved) return true;
-            var actual = resolved.Split('/').Select(Uri.UnescapeDataString).ToArray();
+            if (ObjectPathEncoding.NormalizePath(requested,"softwarePath") == ObjectPathEncoding.NormalizePath(resolved,"softwarePath")) return true;
+            var actual = resolved.Split('/').Select(TiaMcp.Adapters.Contracts.ObjectPathEncoding.DecodeSegment).ToArray();
             var input = requested.Split('/');
             if (actual.Length < 2 || input.Length < 1 || input.Any(p => p.Length == 0 || p == "." || p == "..")) return false;
             var groups = new List<string>(); int device = actual.Length - 2;

@@ -82,8 +82,9 @@ internal static class WorkerProtocol
         if(operation is "ExportBlocks" or "ExportTypes")
         {
             BatchExportContract.Validate(data,dryRun);
-            if(data["SoftwarePath"]!.GetValue<string>()!=arguments["softwarePath"]!.GetValue<string>() ||
-                data["GroupPath"]!.GetValue<string>()!=arguments["groupPath"]!.GetValue<string>() ||
+            if(data["SoftwarePath"]!.GetValue<string>()!=TiaMcp.Adapters.Contracts.ObjectPathEncoding
+                    .NormalizePath(arguments["softwarePath"]!.GetValue<string>()) ||
+                data["GroupPath"]!.GetValue<string>()!=TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(arguments["groupPath"]!.GetValue<string>()) ||
                 data["Recursive"]!.GetValue<bool>()!=(arguments["recursive"]?.GetValue<bool>() ?? false) ||
                 data["Items"]!.AsArray().Count>(arguments["maxItems"]?.GetValue<int>() ?? 128) ||
                 (!dryRun && data["InventoryHash"]!.GetValue<string>()!=arguments["expectedInventoryHash"]!.GetValue<string>()))
@@ -93,7 +94,8 @@ internal static class WorkerProtocol
         {
             BatchImportContract.Validate(data,dryRun);
             var items=data["Items"]!.AsArray();
-            if(data["SoftwarePath"]!.GetValue<string>()!=arguments["softwarePath"]!.GetValue<string>() || data["Recursive"]!
+            if(data["SoftwarePath"]!.GetValue<string>()!=TiaMcp.Adapters.Contracts.ObjectPathEncoding
+                    .NormalizePath(arguments["softwarePath"]!.GetValue<string>()) || data["Recursive"]!
                     .GetValue<bool>()!=(operation=="ImportPlcProgramFromDirectory") || items.Count>(arguments["maxItems"]?.GetValue<int>() ?? 128)
                     || (!dryRun && data["PlanHash"]!.GetValue<string>()!=arguments["expectedPlanHash"]!.GetValue<string>()))
                 throw new IOException("Batch import scope/hash conflicts with request.");
@@ -106,7 +108,7 @@ internal static class WorkerProtocol
                 var key=operation=="ImportBlocksFromDirectory" ? "groupPath" : kind=="UDT" ? "typeGroupPath" : kind=="TagTable" ? "tagFolderPath"
                     : "blockGroupPath";
                 if((operation=="ImportBlocksFromDirectory" && kind is "UDT" or "TagTable") || planned["GroupPath"]!
-                        .GetValue<string>()!=(arguments[key]?.GetValue<string>() ?? ""))
+                        .GetValue<string>()!=TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(arguments[key]?.GetValue<string>() ?? ""))
                     throw new IOException("Batch import destination conflicts with request.");
             }
         }

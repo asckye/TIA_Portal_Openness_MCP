@@ -17,6 +17,33 @@ public sealed class PlcObjectPathTests
     public static IEnumerable<object[]> NamedReleases() => Releases().SelectMany(row =>
         new[] { "A/B", "中文块", "A%2FB", "A #?" }.Select(name => new object[] { row[0], name }));
 
+    [Theory, MemberData(nameof(Releases))]
+    public void Saved_encoded_and_readable_paths_select_the_same_block(string release)
+    {
+        var engine = new PathEngine(release);
+        var group = AddGroup(engine.Plc.BlockGroup, "组 一");
+        foreach (string name in new[] { "中文块", "A/B", "50%", "A%2FB", "A #?" })
+        {
+            var block = AddBlock(group, name);
+            string readable = "组 一/" + ObjectPathEncoding.EncodeSegment(name);
+            string saved = Uri.EscapeDataString(group.Name) + "/" + Uri.EscapeDataString(name);
+            Assert.Equal(readable, engine.BlockPath(block));
+            Assert.Same(block, engine.ExactBlock(readable));
+            Assert.Same(block, engine.ExactBlock(saved));
+            Assert.Same(block, Export(engine, saved));
+        }
+        Assert.Same(engine.ExactBlock("组 一/50%25"), engine.ExactBlock("组 一/50%"));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Directory_exports_keep_file_name_punctuation_encoded(string release)
+    {
+        var engine = new PathEngine(release);
+        var block = AddBlock(AddGroup(engine.Plc.BlockGroup, "G"), "中文块 :*?\"<>|/%\\");
+        Assert.Same(block, Export(engine, "G/" + ObjectPathEncoding.EncodeSegment(block.Name), directory: true));
+        Assert.Equal(1, block.Exports);
+    }
+
     [Theory, MemberData(nameof(NamedReleases))]
     public void Logic_reads_use_the_tree_encoded_slash_and_Chinese_names(string release, string name)
     {
@@ -35,7 +62,7 @@ public sealed class PlcObjectPathTests
         var engine = new PathEngine(release);
         var group = AddGroup(engine.Plc.BlockGroup, "组/一");
         var block = AddBlock(group, "A/B%");
-        string path = engine.TreePath(Uri.EscapeDataString(group.Name), block.Name);
+        string path = engine.TreePath(ObjectPathEncoding.EncodeSegment(group.Name), block.Name);
         Assert.Equal(path, engine.BlockPath(block));
         Assert.Same(block, engine.ExactBlock(engine.BlockPath(block)));
         Assert.Same(group, engine.BlockGroup(Uri.EscapeDataString(group.Name)));
@@ -113,7 +140,7 @@ public sealed class PlcObjectPathTests
     {
         var engine = new PathEngine(release);
         var group = AddGroup(AddGroup(engine.Plc.BlockGroup, "组/A"), "B\\C%2F");
-        string expected = "%E7%BB%84%2FA/B%5CC%252F";
+        string expected = "组%2FA/B%5CC%252F";
         Assert.Equal(expected, engine.GroupPath(group));
         Assert.Same(group, engine.BlockGroup(engine.GroupPath(group)));
         Assert.Equal("", engine.GroupPath(engine.Plc.BlockGroup));

@@ -261,7 +261,7 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         private object ExactPlantNode(string path)
         {
-            var parts=EngineeringInputValidation.AbsoluteHmiPath(path).Select(Uri.UnescapeDataString).ToArray();
+            var parts=EngineeringInputValidation.AbsoluteHmiPath(path).Select(ObjectPathEncoding.DecodeSegment).ToArray();
             object current=PlcGroupOperations.Find(ExactPlantViews(),parts[0]) ?? throw new PlcSoftwareException("NotFound", "Exact plant view not found.");
             foreach(var part in parts.Skip(1)) current=PlcGroupOperations.Find(PlcGroupOperations.Get(current,"PlantViewNodes"),part)
                 ?? throw new PlcSoftwareException("NotFound", "Exact plant node not found: "+part);
@@ -293,12 +293,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if(changes.ContainsKey("Name") || (action=="delete" && changes.Count!=0))
                     throw new ArgumentException("Rename and properties during delete are excluded.");
                 if(!new[]{"create","update","delete"}.Contains(action)) throw new ArgumentException("action must be create/update/delete.");
-                var parts=EngineeringInputValidation.AbsoluteHmiPath(plantPath).Select(Uri.UnescapeDataString).ToArray();
+                var parts=EngineeringInputValidation.AbsoluteHmiPath(plantPath).Select(ObjectPathEncoding.DecodeSegment).ToArray();
                 if(plantObjectType!="" && (parts.Length==1 || action!="create"))
                     throw new ArgumentException("plantObjectType only applies to creating a child CPM instance.");
                 using var access=dryRun ? null : _session.AcquireHmiEditAccess();
                 var collection=parts.Length==1 ? ExactPlantViews() : PlcGroupOperations
-                    .Get(ExactPlantNode("/" + string.Join("/",parts.Take(parts.Length-1).Select(Uri.EscapeDataString))),"PlantViewNodes");
+                    .Get(ExactPlantNode("/" + string.Join("/",parts.Take(parts.Length-1).Select(ObjectPathEncoding.EncodeSegment))),"PlantViewNodes");
                 var target=PlcGroupOperations.Find(collection,parts.Last());
                 if((action=="create")== (target!=null))
                     throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action=="create" ? "Plant object exists."

@@ -75,7 +75,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact " +
-                "module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
             => HmiInspectionContract.Run("DescribeObject", false, false, () => DescribeObject(objectKind, objectPath, softwarePath, maxMembers));
@@ -84,7 +85,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact " +
-                "module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
         {
@@ -112,7 +114,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact " +
-                "module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Property path, e.g. Name or BlockGroup.Groups")] string propertyPath,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "")
             => HmiInspectionContract.Run("GetObjectProperty", false, false, () => GetObjectProperty(objectKind, objectPath, propertyPath, softwarePath));
@@ -121,7 +124,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact " +
-                "module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Property path, e.g. Name or BlockGroup.Groups")] string propertyPath,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "")
         {
@@ -149,7 +153,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact " +
-                "module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Enumerable property name/path, e.g. Devices, DeviceItems, BlockGroup.Blocks")] string collectionProperty,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max child items to return")] int limit = 200)
@@ -160,7 +165,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact " +
-                "module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Enumerable property name/path, e.g. Devices, DeviceItems, BlockGroup.Blocks")] string collectionProperty,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max child items to return")] int limit = 200)
@@ -191,7 +197,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact " +
-                "module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Method name (case-insensitive)")] string methodName,
             [Description("JSON array of args, e.g. [\"AttrName\"]. Empty for no args. DirectoryInfo/FileInfo parameters accept path strings on the MCP " +
                 "machine.")] NativeValue[]
@@ -214,7 +221,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Object kind: " +
                 "Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact " +
-                "module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Method name (case-insensitive)")] string methodName,
             [Description("JSON array of args, e.g. [\"AttrName\"]. Empty for no args. DirectoryInfo/FileInfo parameters accept path strings on the MCP " +
                 "machine.")] System
@@ -249,7 +257,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult DescribeServiceV4(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: " +
-                "exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable")] string serviceTypeSuffix,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
@@ -259,7 +268,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseObjectDescribe DescribeService(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: " +
-                "exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable")] string serviceTypeSuffix,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
@@ -289,7 +299,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult InvokeServiceV4(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: " +
-                "exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable")] string serviceTypeSuffix,
             [Description("Method name (case-insensitive)")] string methodName,
             [Description("JSON array of args, empty for no args")] NativeValue[]? args = null,
@@ -310,7 +321,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseObjectValue InvokeService(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: " +
-                "exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+                "exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
+                    "softwarePath.")] string objectPath,
             [Description("Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable")] string serviceTypeSuffix,
             [Description("Method name (case-insensitive)")] string methodName,
             [Description("JSON array of args, empty for no args")] System.Text.Json.JsonElement[]? args = null,

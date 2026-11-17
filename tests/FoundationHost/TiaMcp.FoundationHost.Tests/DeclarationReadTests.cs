@@ -21,10 +21,10 @@ internal static class DeclarationReadTests
         public void Dispose() { }
     }
     private static JsonObject Row(string table,string name,string kind,string dataType,string value) => new() {
-        ["Name"]=name,["Path"]=table+"/"+Uri.EscapeDataString(name),["Kind"]=kind,["DataType"]=dataType,["Value"]=value };
+        ["Name"]=name,["Path"]=table+"/"+TiaMcp.Adapters.Contracts.ObjectPathEncoding.EncodeSegment(name),["Kind"]=kind,["DataType"]=dataType,["Value"]=value };
     internal static async Task Run(IMcpServer server,Action<bool,string> check)
     {
-        const string table="Group%2F1/Table%20A";
+        const string table="Group%2F1/Table A";
         foreach(var entry in new[]{("ListPlcTags","ListTags","tag"),("ListPlcUserConstants","ListUserConstants","user-constant"),("ListPlcSystemConstants","ListSystemConstants","system-constant")})
         {
             var definition=FoundationTools.Definitions.Single(d=>d.Name==entry.Item1);

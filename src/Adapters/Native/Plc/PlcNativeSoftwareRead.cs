@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using PlcNative = TiaMcp.Adapters.Native.Plc.PlcBlockPrimitives;
 using System;
 using TiaMcp.Adapters.Native.Plc;
@@ -43,7 +44,7 @@ namespace TiaMcp.Adapters
             sections.Add(SnapshotTypes(types,"PLC data types",selected.ExactPath+"/types",budget,0));
             foreach (var unit in PlcUnitScope.Units(selected.Value))
             {
-                var path = selected.ExactPath + "/units/" + Uri.EscapeDataString(unit.Key);
+                var path = selected.ExactPath + "/units/" + ObjectPathEncoding.EncodeSegment(unit.Key);
                 budget.Add(unit.Key, path, unit.Key);
                 sections.Add(new PlcSoftwareTreeNode { Name = unit.Key, Path = path, Kind = "unit", Display = unit.Key + " [Software unit]", Children = new[] {
                     SnapshotBlocks(PlcUnitScope.Blocks(selected.Value, unit.Value), "Program blocks", path + "/blocks", warnings, budget, 0),

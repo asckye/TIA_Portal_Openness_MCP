@@ -117,13 +117,15 @@ namespace TiaMcp.Adapters
             {
                 var tables = TagGroups(PlcUnitScope.Tags(software, unit))
                     .SelectMany(g => g.Value.TagTables.Select(t => new Located<PlcTagTable>(Child(g.Path, t.Name), t))).ToArray();
-                var selected = table == "" ? tables : includeUnits ? tables.Where(t => t.Path == table).ToArray() : new[] {
+                var selected = table == "" ? tables : includeUnits ? tables.Where(t => t.Path == ObjectPathEncoding.NormalizePath(table)).ToArray() : new[] {
                     PlcExchangePolicy.SelectTable(tables, table, t => t.Path, t => t.Value.Name) };
                 foreach (var selectedTable in selected) yield return new Located<PlcTagTable>(prefix + selectedTable.Path, selectedTable.Value);
             }
-            if (unitName != "") return Scope(PlcUnitScope.Optional(software, unitName), "units/" + Uri.EscapeDataString(unitName) + "/tag-tables/").ToArray();
+            if (unitName != "") return Scope(PlcUnitScope.Optional(software, unitName), "units/" + ObjectPathEncoding.EncodeSegment(unitName) + "/tag-tables/")
+                .ToArray();
             return Scope(null, "root/tag-tables/")
-                .Concat(PlcUnitScope.Units(software).SelectMany(unit => Scope(unit.Value, "units/" + Uri.EscapeDataString(unit.Key) + "/tag-tables/")))
+                .Concat(PlcUnitScope.Units(software)
+                        .SelectMany(unit => Scope(unit.Value, "units/" + ObjectPathEncoding.EncodeSegment(unit.Key) + "/tag-tables/")))
                 .ToArray();
         }
         public PlcObjectInfo[] ListTags(string plc, string table) {
@@ -351,7 +353,8 @@ namespace TiaMcp.Adapters
         public PlcMutationResult CreateTagTable(string plc, string group, string name, bool dryRun = true)
         {
             PlcFoundationPolicy.RequireName(name);
-            var target = PlcFoundationPolicy.Exact(TagGroups(Plc(plc).TagTableGroup), x => x.Path, group,"group").Value;
+            var target = PlcFoundationPolicy.Exact(TagGroups(Plc(plc).TagTableGroup), x => x.Path,
+                ObjectPathEncoding.NormalizePath(group,"group"),"group").Value;
             if (target.TagTables.Find(name) != null) throw new AdapterPreconditionException("Tag table already exists.","name");
             if (!dryRun) target.TagTables.Create(name);
             return Mutation("CreateTagTable", dryRun, new[] { name });

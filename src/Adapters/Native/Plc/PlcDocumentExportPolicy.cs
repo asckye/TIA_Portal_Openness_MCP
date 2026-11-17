@@ -69,6 +69,7 @@ namespace TiaMcp.Adapters
                 bool dryRun,string expectedHash,Action requireOffline,Func<DirectoryInfo,string,string[]> export,Action<DirectoryInfo,DirectoryInfo>? move=null)
         {
             RequireRelease(release);
+            block = PlcExchangePolicy.ObjectPath(block,false,"blockPath");
             if(string.IsNullOrWhiteSpace(project) || string.IsNullOrWhiteSpace(software) || PlcExchangePolicy.ObjectPath(block)!=block) throw new TiaMcp
                 .Adapters.Contracts.AdapterPreconditionException("Exact project/software/canonical block identity required.");
             if(language!="LAD" && language!="DB") throw new TiaMcp.Adapters.Contracts

@@ -72,7 +72,7 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             var parentPath = string.Join("/", parts.Take(parts.Length - 1));
             if (pathParts != null) parentPath = (path.StartsWith("/", StringComparison.Ordinal) ? "/" : "")
-                + string.Join("/", parts.Take(parts.Length - 1).Select(Uri.EscapeDataString));
+                + string.Join("/", parts.Take(parts.Length - 1).Select(ObjectPathEncoding.EncodeSegment));
             var parent = Group(root, parentPath, firstGroups, pathParts);
             var siblings = Get(parent, parts.Length == 1 ? firstGroups : "Groups");
             var target = Find(siblings, parts.Last()) ?? throw new PlcSoftwareException("NotFound", "Group not found: " + path);

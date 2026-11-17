@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -42,7 +43,7 @@ internal static class SoftwareReadContract
                 RequireString(path,"name"); var kind=RequireString(path,"kind"); var address=RequireString(path,"path");
                 var plc=meta["softwarePath"]!.GetValue<string>();
                 string unit=path["unitName"]?.GetValue<string>() ?? "";
-                string scope=unit=="" ? plc : plc+"/units/"+Uri.EscapeDataString(unit);
+                string scope=unit=="" ? plc : plc+"/units/"+ObjectPathEncoding.EncodeSegment(unit);
                 if(kind=="unit")
                 {
                     if(unit=="" || path["name"]?.GetValue<string>()!=unit || address!=scope || path["objectPath"]?.GetValue<string>()!=unit
@@ -65,8 +66,8 @@ internal static class SoftwareReadContract
                     (relative.Length==0 && kind is "block" or "type" or "tag-table" or "external-source"))
                     throw new InvalidDataException("Worker returned an invalid tree selector.");
                 if(relative.Length!=0 && relative.Split('/').Any(segment=>
-                    string.IsNullOrWhiteSpace(Uri.UnescapeDataString(segment)) || Uri.UnescapeDataString(segment) is "." or ".." ||
-                    Uri.EscapeDataString(Uri.UnescapeDataString(segment))!=segment))
+                    string.IsNullOrWhiteSpace(ObjectPathEncoding.DecodeSegment(segment)) || ObjectPathEncoding.DecodeSegment(segment) is "." or ".." ||
+                    ObjectPathEncoding.EncodeSegment(ObjectPathEncoding.DecodeSegment(segment))!=segment))
                     throw new InvalidDataException("Worker returned a noncanonical tree selector.");
             }
         }

@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,7 @@ namespace TiaMcp.Adapters
     {
         internal const string Scope =
             "PLC root/user block and type groups; V16–V21 standard software units with block/type/tag-table/external-source groups; excludes system groups, safety units and technology objects";
-        internal static string ChildPath(string parent,string name) => parent + "/" + Uri.EscapeDataString(name);
+        internal static string ChildPath(string parent,string name) => parent + "/" + ObjectPathEncoding.EncodeSegment(name);
         internal static string Render(string softwareName,PlcSoftwareTreeNode[] sections)
         {
             if(string.IsNullOrWhiteSpace(softwareName)) throw new InvalidOperationException("PLC software has no name.");

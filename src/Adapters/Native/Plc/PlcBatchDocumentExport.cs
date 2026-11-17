@@ -21,7 +21,8 @@ namespace TiaMcp.Adapters
             TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,selected.ExactPath,true);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var path=PlcExchangePolicy.ObjectPath(groupPath,true);
-            if(path!=groupPath) throw new ArgumentException("Exact canonical group path required.");
+            groupPath = TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(groupPath);
+            if(path!=groupPath) throw new ArgumentException("Group path must preserve its validated segment identities.");
             var group=BatchGroup(BlockGroups(Documents.BlockGroup(selected.Value)),path);
             var groups=recursive?BlockGroups(group,path):new[]{new Located<PlcBlockGroup>(path,group)};
             var sources=BatchGroupsBounded(groups).SelectMany(g=>Documents.Blocks(g.Value).Select(block=>new PlcBatchDocumentExportSource {

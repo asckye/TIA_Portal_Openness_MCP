@@ -3397,7 +3397,7 @@
         "meaning": "true previews create/replace per logical object. All replacements are exported before any import. Review recoveryDirectory, restored and remainingChanged after failures; unknown native outcomes remain OUTCOME_UNKNOWN and must not be replayed."
       },
       "softwarePath": {
-        "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+        "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1; preserve readable station segments, escaping only %, /, backslash and ASCII controls within names. Old fully encoded paths are still accepted. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
         "requiresBinding": true,
         "tools": [
           "GetProjectTree"
@@ -3513,7 +3513,7 @@
         "meaning": "Must be true; continuation is refused."
       },
       "softwarePath": {
-        "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP%20station_1/PLC_1; preserve URL-encoded station segments. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
+        "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/S71500%2FET200MP station_1/PLC_1; preserve readable station segments, escaping only %, /, backslash and ASCII controls within names. Old fully encoded paths are still accepted. Ordinary tools also accept a unique short name such as PLC_1. Batch tools require the exact path and refuse an alias.",
         "requiresBinding": true,
         "tools": [
           "GetProjectTree"

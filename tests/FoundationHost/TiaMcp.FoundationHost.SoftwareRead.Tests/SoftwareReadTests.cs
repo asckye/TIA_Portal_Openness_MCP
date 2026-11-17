@@ -14,7 +14,7 @@ internal static class SoftwareReadTests
         var text=PlcSoftwareReadPolicy.Render("PLC",sections);
         Check(text==string.Join(Environment.NewLine,new[]{"PLC [PLC Software]","├── Program blocks","│   ├── A/B [FC1, SCL]","│   └── Empty","└── PLC data types",""}),"tree formatting and empty groups");
         Check(PlcSoftwareReadPolicy.Paths(sections).Length==4,"all exact identities");
-        Check(PlcSoftwareReadPolicy.ChildPath("root","A/B %") == "root/A%2FB%20%25","escaped path");
+        Check(PlcSoftwareReadPolicy.ChildPath("root","A/B %") == "root/A%2FB %25","escaped path");
         Reject(()=>PlcSoftwareReadPolicy.Render("",sections),"empty software name");
         Reject(()=>PlcSoftwareReadPolicy.Render("PLC",new[]{sections[0],sections[0]}),"duplicate identity");
         var deep=Node("leaf","deep/0","leaf"); for(int i=1;i<132;i++) deep=Node("node","deep/"+i,"node",deep);

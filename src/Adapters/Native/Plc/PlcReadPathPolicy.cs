@@ -27,7 +27,9 @@ namespace TiaMcp.Adapters
         {
             if(string.IsNullOrWhiteSpace(path)) throw new AdapterPreconditionException("softwarePath must not be empty.","softwarePath");
             var all=inventory.ToArray();
-            int selected=TiaOpenness.Shared.NativePathSelection.Select(path,all.Select(c=>c.ExactPath).ToArray(),(index,parts)=>Matches(all[index],parts));
+            string canonical = ObjectPathEncoding.NormalizePath(path,"softwarePath");
+            int selected=TiaOpenness.Shared.NativePathSelection.Select(canonical,all.Select(c=>c.ExactPath).ToArray(),
+                (index,parts)=>Matches(all[index],parts.Select(ObjectPathEncoding.DecodeSegment).ToArray()));
             if(selected==-3) throw new AdapterPreconditionException("softwarePath contains an empty or traversal segment.","softwarePath");
             if(selected==-2)
                 throw new AdapterPreconditionException("Ambiguous softwarePath '"+path+"'. Select an exact address: "+string

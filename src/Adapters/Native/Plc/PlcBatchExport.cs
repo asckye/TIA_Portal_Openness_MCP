@@ -26,7 +26,8 @@ namespace TiaMcp.Adapters
             TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,selected.ExactPath,true);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var path=PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath");
-            if(path!=groupPath) throw new AdapterPreconditionException("Use the exact canonical group path from the software inventory.","groupPath");
+            groupPath = TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(groupPath);
+            if(path!=groupPath) throw new AdapterPreconditionException("Group path must preserve its validated segment identities.","groupPath");
             var group=BatchGroup(BlockGroups(PlcUnitScope.Blocks(selected.Value,unit)),path,"groupPath");
             var groups=recursive ? BlockGroups(group,path) : new[]{new Located<PlcBlockGroup>(path,group)};
             var sources=BatchGroupsBounded(groups).SelectMany(g=>PlcNative.Blocks(g.Value).Select(b=>new PlcBatchExportSource {
@@ -49,7 +50,8 @@ namespace TiaMcp.Adapters
             TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,selected.ExactPath,true);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var path=PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath");
-            if(path!=groupPath) throw new AdapterPreconditionException("Use the exact canonical group path from the software inventory.","groupPath");
+            groupPath = TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(groupPath);
+            if(path!=groupPath) throw new AdapterPreconditionException("Group path must preserve its validated segment identities.","groupPath");
             var group=BatchGroup(TypeGroups(PlcUnitScope.Types(selected.Value,unit)),path,"groupPath");
             var groups=recursive ? TypeGroups(group,path) : new[]{new Located<PlcTypeGroup>(path,group)};
             var sources=BatchGroupsBounded(groups).SelectMany(g=>PlcNative.Types(g.Value).Select(t=>new PlcBatchExportSource {

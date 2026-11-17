@@ -1137,7 +1137,7 @@
           "plc": "PLC_1",
           "table": "默认变量表"
         },
-        "expect": "Bind PLC_1 to the unique PLC in the tree; results carry encoded paths."
+        "expect": "Bind PLC_1 to the unique PLC in the tree; results carry readable paths with minimally escaped segments."
       }
     ]
   },

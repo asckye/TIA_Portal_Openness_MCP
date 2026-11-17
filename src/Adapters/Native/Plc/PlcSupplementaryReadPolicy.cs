@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,7 +70,7 @@ namespace TiaMcp.Adapters
                 if(size>1024*1024) throw new InvalidOperationException("Watch group budget exceeded.");
                 foreach(var item in names(group))
                 {
-                    var segment=Uri.EscapeDataString(Name(item));
+                    var segment=ObjectPathEncoding.EncodeSegment(Name(item));
                     var path=folder.Length==0?segment:folder+"/"+segment;
                     size+=path.Length;
                     if(result.Count>=10000 || size>1024*1024) throw new InvalidOperationException("Watch snapshot budget exceeded.");
@@ -78,7 +79,7 @@ namespace TiaMcp.Adapters
                 var siblings=new HashSet<string>(StringComparer.Ordinal);
                 foreach(var child in groups(group))
                 {
-                    var segment=Uri.EscapeDataString(Name(name(child)));
+                    var segment=ObjectPathEncoding.EncodeSegment(Name(name(child)));
                     if(!siblings.Add(segment)) throw new InvalidOperationException("Duplicate watch group identity.");
                     walk(child,folder.Length==0?segment:folder+"/"+segment,depth+1);
                 }
@@ -115,7 +116,7 @@ namespace TiaMcp.Adapters
                     Name(row.Name);
                     if(row.OfSystemLibElement!=null) Name(row.OfSystemLibElement);
                     if(row.OfSystemLibVersion!=null) Name(row.OfSystemLibVersion);
-                    var path=folder+"/"+Uri.EscapeDataString(row.Name);
+                    var path=folder+"/"+ObjectPathEncoding.EncodeSegment(row.Name);
                     size+=(long)path.Length+(row.OfSystemLibElement?.Length??0)+(row.OfSystemLibVersion?.Length??0);
                     if(!paths.Add(path) || result.Count>=10000 || size>1024*1024)
                         throw new InvalidOperationException("Invalid or oversized technology-object snapshot.");
@@ -124,7 +125,7 @@ namespace TiaMcp.Adapters
                 var siblings=new HashSet<string>(StringComparer.Ordinal);
                 foreach(var child in groups(group))
                 {
-                    var segment=Uri.EscapeDataString(Name(name(child)));
+                    var segment=ObjectPathEncoding.EncodeSegment(Name(name(child)));
                     if(!siblings.Add(segment)) throw new InvalidOperationException("Duplicate technology-group identity.");
                     walk(child,folder.Length==0?segment:folder+"/"+segment,depth+1);
                 }

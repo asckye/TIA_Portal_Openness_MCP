@@ -39,10 +39,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult EnsureStartStopUnifiedHmiV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused. (default 'Main')")] string screenName =
                 "Main",
-            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already " +
+            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with readable segments; escape %, /, backslash and " +
+                "ASCII controls within names; old encoded input accepted. Parent folders must already "
+                        +
                 "exist; relative or backslash paths and missing folders are refused. (default: the HMI software's default tag table)")] string tagTableName =
                 TiaMcp.Adapters.Contracts.UnifiedHmiDefaults.DefaultTagTableName,
             [Description("plcName: PLC software path / device name for connection + tag mapping (default 'PLC_1')")] string plcName = "PLC_1",
@@ -87,7 +91,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "ApplyUnifiedHmiScreenDesign. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiScreenV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("width: optional screen width, 0 means keep current")] uint width = 0,
             [Description("height: optional screen height, 0 means keep current")] uint height = 0, bool dryRun = true)
@@ -101,7 +107,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "groups are resolved; missing groups are refused without root fallback. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiTagTableV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already " +
+            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with readable segments; escape %, /, backslash and " +
+                "ASCII controls within names; old encoded input accepted. Parent folders must already "
+                        +
                 "exist; relative or backslash paths and missing folders are refused.")] string tagTableName,
                 bool dryRun = true)
             => UnifiedHmiContract.Run("EnsureUnifiedHmiTagTable", !dryRun, true, () => EnsureUnifiedHmiTagTable(hmiSoftwarePath, tagTableName, dryRun));
@@ -130,7 +138,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "EnsureUnifiedHmiTagTable. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiTagV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with URI-escaped segments. Parent folders must already " +
+            [Description("tagTableName: unique plain name (root create) or absolute /Group/Sub/Table with readable segments; escape %, /, backslash and " +
+                "ASCII controls within names; old encoded input accepted. Parent folders must already "
+                        +
                 "exist; relative or backslash paths and missing folders are refused.")] string tagTableName,
             [Description("tagName: HMI tag name")] string tagName,
             [Description("plcName: required exact PLC software name for symbolic binding; discover it from project reads.")] string plcName,
@@ -206,7 +216,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Non-empty text refuses before changes because no culture is specified; use SetUnifiedMultilingualProperty with an explicit culture.  Create or verify a single Unified HMI control (button, lamp, IO field, etc.) on a screen. Requires: ConnectPortal + OpenProject + EnsureUnifiedHmiScreen. itemType: Button, Rectangle (lamp/indicator/background — has NO text), Text (static text label = HmiText), IOField (value display/entry), or full CLR type name. For a text caption/label ALWAYS use Text, never Rectangle (a Rectangle has no Text property and renders blank if given text). For a complete screen layout use ApplyUnifiedHmiScreenDesign instead. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiScreenItemV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("itemName: screen item name")] string itemName,
             [Description("itemType: Button, Rectangle/Lamp, IOField, or full CLR type name")] string itemType = "Button",
@@ -240,7 +252,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ApplyUnifiedHmiScreenDesignJsonV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("design: JSON object with optional screen properties and items array")] UnifiedScreenSpec design,
             [Description("strict: true includes failure details in the error; false returns a partial-result summary. Both report ok=false on failed writes; " +
@@ -265,7 +279,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "verify with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ApplyUnifiedHmiThemeV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("theme: JSON accepted by BuildUnifiedHmiThemeDesign.")] UnifiedThemeSpec theme, bool dryRun = true)
             => UnifiedHmiContract
@@ -278,7 +294,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "verify changed items with DescribeHmiScreenItem/readback before saving. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ApplyUnifiedHmiLayoutV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("layout: JSON accepted by BuildUnifiedHmiLayoutDesign.")] UnifiedLayoutSpec layout, bool dryRun = true)
             => UnifiedHmiContract
@@ -291,7 +309,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult BindUnifiedHmiButtonPressedTagV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("tagName: HMI tag name to write while pressed")] string tagName, bool dryRun = true)
@@ -332,7 +352,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiButtonEventHandlerV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: HmiButtonEventType value, e.g. Tapped, Down, Up; use ListUnifiedHmiApiTypes('HmiButtonEventType') to " +
@@ -346,7 +368,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][HMI-Unified]Describe a Unified HMI button event handler Script property and its current object members/attributes.")]
         public CallToolResult DescribeUnifiedHmiButtonEventScriptV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: enum value, e.g. Tapped, Down, Up")] string eventType,
@@ -364,7 +388,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult SetUnifiedHmiButtonEventScriptCodeV4(
             RequestContext<CallToolRequestParams> context,
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: enum value, e.g. Tapped, Down, Up")] string eventType,
@@ -405,7 +431,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiButtonActionV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("buttonName: HMI button item name")] string buttonName,
             [Description("eventType: HmiButtonEventType value, e.g. Down (press), Up (release), Tapped — NOT Pressed/Released")] string eventType,
@@ -423,7 +451,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiDynamizationV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("itemName: HMI screen item name")] string itemName,
             [Description("propertyName: target property name, e.g. BackColor or Visible")] string propertyName,
@@ -440,7 +470,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "safety behavior is not yet accepted.")]
         public CallToolResult BindUnifiedHmiTagDynamizationV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
-            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with URI-escaped segments. Parent groups must already exist; relative " +
+            [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
+                "within names; old encoded input accepted. Parent groups must already exist; relative "
+                        +
                 "or backslash paths are refused.")] string screenName,
             [Description("itemName: HMI screen item name")] string itemName,
             [Description("propertyName: target property name, e.g. BackColor or Visible")] string propertyName,

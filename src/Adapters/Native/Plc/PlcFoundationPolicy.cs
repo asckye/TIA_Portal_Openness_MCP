@@ -18,7 +18,7 @@ namespace TiaMcp.Adapters
                 throw new InvalidOperationException("A separately compiled PLC foundation module is required for " + requestedKey + ".");
         }
 
-        internal static string Segment(string name) => Uri.EscapeDataString(name);
+        internal static string Segment(string name) => ObjectPathEncoding.EncodeSegment(name);
 
         internal static string RequireName(string name)
         {

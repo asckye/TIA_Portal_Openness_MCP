@@ -102,9 +102,13 @@ namespace TiaMcp.Adapters
                 var selected=ReadSelection(request.Software);
                 var unit=PlcUnitScope.Optional(selected.Value,request.UnitName);
                 TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(request.Software,selected.ExactPath,true);
+                request.Software = selected.ExactPath;
                 PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
                 request.Project=Project().Path.FullName;request.ProcessId=lifecycle.ProcessId ?? throw new TiaMcp.Adapters.Contracts
                     .AdapterPreconditionException("Explicit process identity required.","softwarePath",false);
+                request.BlockGroup = PlcExchangePolicy.ObjectPath(request.BlockGroup,true,"groupPath");
+                request.TypeGroup = PlcExchangePolicy.ObjectPath(request.TypeGroup,true,"typeGroupPath");
+                request.TagGroup = PlcExchangePolicy.ObjectPath(request.TagGroup,true,"tagFolderPath");
                 foreach(var item in new[]{
                         (Path:request.BlockGroup,Parameter:"groupPath"),(Path:request.TypeGroup,Parameter:"typeGroupPath"),
                             (Path:request.TagGroup,Parameter:"tagFolderPath")

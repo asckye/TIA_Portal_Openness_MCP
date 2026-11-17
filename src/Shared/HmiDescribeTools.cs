@@ -109,7 +109,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "HMI software. Relative slash paths and backslashes are refused with the corrected form.")]
         public CallToolResult DescribeHmiScreenV4(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
-            [Description("screenName: absolute /Group/Sub/Screen path (URI-escaped segments), or an unambiguous exact name; use a path when names " +
+            [Description("screenName: absolute /Group/Sub/Screen path (readable segments; escape %, /, backslash and ASCII controls within names; old " +
+                "encoded input accepted), or an unambiguous exact name; use a path when names "
+                        +
                 "repeat.")] string screenName,
             [Description("maxMembers: max member count")] int maxMembers = 200)
             => HmiInspectionContract.Run("DescribeHmiScreen", false, false, () => DescribeHmiScreen(softwarePath, screenName, maxMembers));

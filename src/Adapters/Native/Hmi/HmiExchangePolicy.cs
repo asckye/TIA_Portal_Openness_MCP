@@ -77,12 +77,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 foreach (var table in Items(tables))
                 {
                     if (result.Count >= 10000) throw new InvalidOperationException("HMI tag table traversal limit.");
-                    result.Add((path + "/" + Uri.EscapeDataString(Name(table)), table));
+                    result.Add((path + "/" + ObjectPathEncoding.EncodeSegment(Name(table)), table));
                 }
                 var groups = Get(folder, childProperty);
                 if (groups != null)
                     foreach (var child in Items(groups))
-                        Walk(child, path + "/" + Uri.EscapeDataString(Name(child)), childProperty == "Folders" ? "Folders" : "Groups", depth + 1);
+                        Walk(child, path + "/" + ObjectPathEncoding.EncodeSegment(Name(child)), childProperty == "Folders" ? "Folders" : "Groups", depth + 1);
                 ancestors.Remove(folder);
             }
         }
@@ -108,7 +108,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 var groups = Get(current, i == 0 ? rootGroups : rootGroups == "Folders" ? "Folders" : "Groups")
                     ?? throw new PlcSoftwareException("NotFound", "HMI folder collection unavailable: " + path);
-                current = Find(groups, Uri.UnescapeDataString(parts[i]))
+                current = Find(groups, ObjectPathEncoding.DecodeSegment(parts[i]))
                     ?? throw new PlcSoftwareException("NotFound", "HMI folder not found: " + path);
             }
             return current;
@@ -130,7 +130,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var folder = Folder(root, nameOrPath.Substring(0, slash), groupsName);
                 parent = folder;
                 return Find(Get(folder, "TagTables") ?? throw new PlcSoftwareException("NotFound", "TagTables unavailable."),
-                    Uri.UnescapeDataString(nameOrPath.Substring(slash + 1)));
+                    ObjectPathEncoding.DecodeSegment(nameOrPath.Substring(slash + 1)));
             }
             var found = new List<(object Table, object Folder)>();
             Walk(root, groupsName, 0, new HashSet<object>());
@@ -164,7 +164,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 int slash = nameOrPath.LastIndexOf('/');
                 root = Folder(root, nameOrPath.Substring(0, slash), ReferenceEquals(root, software) ? "TagTableGroups" : "Folders");
                 tables = Get(root, "TagTables") ?? throw new PlcSoftwareException("NotFound", "TagTables unavailable.");
-                name = Uri.UnescapeDataString(nameOrPath.Substring(slash + 1));
+                name = ObjectPathEncoding.DecodeSegment(nameOrPath.Substring(slash + 1));
             }
             object VerifyParent(object table, object expectedParent)
             {

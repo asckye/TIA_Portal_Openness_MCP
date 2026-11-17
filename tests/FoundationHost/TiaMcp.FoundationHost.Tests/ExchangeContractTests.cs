@@ -14,8 +14,8 @@ internal static class ExchangeContractTests
         try
         {
             Directory.CreateDirectory(Path.Combine(root,"Group A"));
-            check(PlcExchangePolicy.ObjectPath("Group A/Motor")=="Group%20A/Motor","Raw group names normalize to exact address");
-            check(PlcExchangePolicy.ObjectPath("Group%20A/Motor")=="Group%20A/Motor","Canonical encoding stable");
+            check(PlcExchangePolicy.ObjectPath("Group A/Motor")=="Group A/Motor","Raw group names normalize to exact address");
+            check(PlcExchangePolicy.ObjectPath("Group%20A/Motor")=="Group A/Motor","Saved encoded input normalizes to the readable path");
             check(PlcExchangePolicy.ObjectPath("",true)=="","Explicit import root accepted");
             foreach(var bad in new[]{"","/Motor","Group//Motor","Group/..","%2e%2e/Motor",@"Group\Motor"}) Reject(()=>PlcExchangePolicy.ObjectPath(bad),"Invalid object path refused "+bad);
             var flat=PlcExchangePolicy.ExportDestination(root,"Group A/Motor",false);

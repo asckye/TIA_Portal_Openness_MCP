@@ -178,7 +178,10 @@ namespace TiaMcp.Adapters.Contracts
             if (rootAllowed && value == "/") return Array.Empty<string>();
             var corrected = "/" + string.Join("/", (value ?? "").Trim().Replace('\\', '/').Split('/').Where(p => !string.IsNullOrWhiteSpace(p)));
             if (!rootAllowed && corrected == "/") corrected = "/Group/Sub/Table";
-            var guidance = " Use absolute /Group/Sub/Table (or /Group/Sub for folders) with URI-escaped segments. Corrected slash form: " + corrected + ".";
+            var guidance =
+                " Use absolute /Group/Sub/Table (or /Group/Sub for folders) with readable segments; escape %, /, backslash and ASCII controls within names; " +
+                "old encoded input accepted. Corrected slash form: "
+                + corrected + ".";
             if (string.IsNullOrWhiteSpace(value) || !value!.StartsWith("/", StringComparison.Ordinal) || value.IndexOf('\\') >= 0)
                 throw new ArgumentException("Relative and backslash HMI paths are refused." + guidance);
             var parts = value.Substring(1).Split('/');

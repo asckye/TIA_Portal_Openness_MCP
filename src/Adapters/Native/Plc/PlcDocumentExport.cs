@@ -17,6 +17,7 @@ namespace TiaMcp.Adapters
                 .AdapterPreconditionException("This paired export requires a new explicit output directory; preservePath is outside the bounded contract.",
                     "export-plan",false);
 #if PLC_DOCUMENT_EXPORT
+            blockPath = PlcExchangePolicy.ObjectPath(blockPath,false,"blockPath");
             var selected=ReadSelection(softwarePath);
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             var blocks=BlockGroups(Documents.BlockGroup(selected.Value))

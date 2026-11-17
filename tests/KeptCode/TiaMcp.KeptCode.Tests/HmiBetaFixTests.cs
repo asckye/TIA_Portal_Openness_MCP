@@ -582,7 +582,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
             var root = new Group { TagTables = [new Table { Name = "Shared" }], TagTableGroups = [new Group {
                 Name = "Group A", TagTables = [new Table { Name = "Shared" }], Groups = [new Group {
                     Name = "Sub", TagTables = [new Table { Name = "Shared" }] }] }] };
-            Assert.Equal(new[] { "/Shared", "/Group%20A/Shared", "/Group%20A/Sub/Shared" }, HmiExchangePolicy.TagTables(root).Select(t => t.Path));
+            Assert.Equal(new[] { "/Shared", "/Group A/Shared", "/Group A/Sub/Shared" }, HmiExchangePolicy.TagTables(root).Select(t => t.Path));
             Assert.Throws<PlcSoftwareException>(() => HmiExchangePolicy.TagTable(root, "Shared"));
             Assert.Same(root.TagTables[0], HmiExchangePolicy.TagTable(root, "/Shared"));
         }

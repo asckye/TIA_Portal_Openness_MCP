@@ -55,7 +55,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ancestors.Remove(group);
             }
         }
-        private static string Segment(object value) => Uri.EscapeDataString(Get(value,"Name") as string
+        private static string Segment(object value) => ObjectPathEncoding.EncodeSegment(Get(value,"Name") as string
             ?? throw new InvalidOperationException("Object name unavailable."));
         internal static object Screen(object software, string nameOrPath)
         {
@@ -77,11 +77,11 @@ namespace TiaMcp.Adapters.Native.Hmi
             {
                 var groups = Get(current, "ScreenGroups") ?? Get(current, "Groups") ?? Get(current, "Folders")
                     ?? throw new PlcSoftwareException("NotFound", "Screen group collection unavailable: " + nameOrPath);
-                current = Named(groups, Uri.UnescapeDataString(parts[i]));
+                current = Named(groups, ObjectPathEncoding.DecodeSegment(parts[i]));
             }
             return Named(Get(current, "Screens")
                 ?? throw new PlcSoftwareException("NotFound", "Screens unavailable: " + nameOrPath),
-                Uri.UnescapeDataString(parts[parts.Length - 1]));
+                ObjectPathEncoding.DecodeSegment(parts[parts.Length - 1]));
         }
         internal static object Group(object software,string path)
         {
@@ -93,7 +93,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (string.IsNullOrEmpty(part)) throw new PlcSoftwareException("InvalidParams","Empty group path segment.");
                 var collection = Get(current,"ScreenGroups") ?? Get(current,"Groups")
                     ?? throw new PlcSoftwareException("NotFound","Group collection not found.");
-                current = Named(collection,Uri.UnescapeDataString(part));
+                current = Named(collection,ObjectPathEncoding.DecodeSegment(part));
             }
             return current;
         }

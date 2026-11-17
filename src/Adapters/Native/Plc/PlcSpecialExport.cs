@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using NativeCalls = TiaMcp.Adapters.WatchTechnologyPrimitives;
 using System;
 using System.Collections.Generic;
@@ -25,12 +26,15 @@ namespace TiaMcp.Adapters
             var objects=new Dictionary<string,PlcWatchTable>(StringComparer.Ordinal);
             var groups=new Dictionary<PlcWatchAndForceTableGroup,string> { [root]="" };
             PlcSupplementaryReadPolicy.WatchPaths<PlcWatchAndForceTableGroup>(root,g=>NativeCalls.WatchTables(g).Select(t=> {
-                var folder=groups[g]; var path=folder+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(t)));
+                var folder=groups[g]; var path=folder+ObjectPathEncoding.EncodeSegment(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(t)));
                 objects.Add(path,t); return NativeCalls.Name(t);
             }),g=>NativeCalls.Groups(g)
-                .Select(child=> { groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(child)))+"/"); return child;
+                .Select(child=> {
+                        groups.Add(child,groups[g]+ObjectPathEncoding.EncodeSegment(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(child)))+"/");
+                        return child;
                 }),
                 g=>g.Name);
+            watchTableName = ObjectPathEncoding.NormalizePath(watchTableName,"watchTableName");
             if(!objects.TryGetValue(watchTableName,out var table)) throw TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException.NotFound("Exact canonical watch-table path not found.", "watchTableName");
             return PlcSpecialExportPolicy
@@ -60,16 +64,18 @@ namespace TiaMcp.Adapters
             var objects=new Dictionary<string,TechnologicalInstanceDB>(StringComparer.Ordinal);
             var groups=new Dictionary<TechnologicalInstanceDBGroup,string> { [root]="" };
             PlcSupplementaryReadPolicy.Technologies(root,g=>NativeCalls.Objects(g).Select(t=> {
-                objects.Add(groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(t))),t); return TechnologyMetadata(t);
+                objects.Add(groups[g]+ObjectPathEncoding.EncodeSegment(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(t))),t); return TechnologyMetadata(t);
             }),g=> {
 #if PLC_TECH_GROUP_READ
                 return NativeCalls.Groups(g)
                     .Select(child=> {
-                        groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(child)))+"/"); return child; });
+                        groups.Add(child,groups[g]+ObjectPathEncoding.EncodeSegment(PlcSupplementaryReadPolicy.Name(NativeCalls.Name(child)))+"/");
+                        return child; });
 #else
                 return new TechnologicalInstanceDBGroup[0];
 #endif
             },g=>NativeCalls.Name(g));
+            toName = ObjectPathEncoding.NormalizePath(toName,"toName");
             if(!objects.TryGetValue(toName,out var item))
                 throw TiaMcp.Adapters.Contracts
                     .AdapterPreconditionException.NotFound("Exact canonical technology-object path not found within this release's documented read scope.",

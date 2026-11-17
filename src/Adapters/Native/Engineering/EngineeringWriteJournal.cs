@@ -474,7 +474,7 @@ namespace TiaMcp.Adapters.Native.Engineering
                 var name = LabelOrNull(item, "Name") as string ?? LabelOrNull(item, "PropertyName") as string;
                 if (name == null && LabelOrNull(item, "Language") is object language
                     && LabelOrNull(language, "Culture") is CultureInfo culture) name = "language=" + culture.Name;
-                parts.Add(name == null ? item.GetType().Name : Uri.EscapeDataString(name));
+                parts.Add(name == null ? item.GetType().Name : ObjectPathEncoding.EncodeSegment(name));
                 var next = LabelOrNull(item, "Parent");
                 if (ReferenceEquals(next, item)) break;
                 item = next;

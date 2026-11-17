@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,7 +54,7 @@ public static class UnknownSettlement
 
     private static string ExportFile(JsonObject arguments, string objectPath)
     {
-        var parts = objectPath.Split('/').Select(Uri.UnescapeDataString).ToArray();
+        var parts = objectPath.Split('/').Select(ObjectPathEncoding.DecodeSegment).ToArray();
         string relative = (bool?)arguments["preservePath"] == true ? Path.Combine(parts) : parts.Last();
         return Path.GetFullPath(Path.Combine((string)arguments["exportPath"]!, relative + ".xml"));
     }
@@ -128,8 +129,9 @@ public static class UnknownSettlement
             if (row is not JsonObject item || new[] { "Name", "Path", "Kind", "DataType", "Value" }
                 .Any(key => item[key] is not JsonValue value || !value.TryGetValue<string>(out _))) return null;
             string name = (string)item["Name"]!, path = (string)item["Path"]!;
-            string suffix = "/" + Uri.EscapeDataString(name);
-            bool selected = path == target.Table + suffix || !target.Table.Contains('/') && path == Uri.EscapeDataString(target.Table) + suffix;
+            string suffix = "/" + ObjectPathEncoding.EncodeSegment(name);
+            bool selected = path == ObjectPathEncoding.NormalizePath(target.Table) + suffix
+                || !target.Table.Contains('/') && path == ObjectPathEncoding.EncodeSegment(target.Table) + suffix;
             if (string.IsNullOrWhiteSpace(name) || !selected || (string?)item["Kind"] != kind) return null;
             declarations.Add(item);
         }

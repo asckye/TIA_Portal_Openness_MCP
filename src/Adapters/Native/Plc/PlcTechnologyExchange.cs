@@ -91,7 +91,7 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 string name = WatchNative.Name(row.To) ?? "";
                 var parts = row.Folder.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(Uri.UnescapeDataString).Concat(new[] { name }).ToArray();
+                    .Select(ObjectPathEncoding.DecodeSegment).Concat(new[] { name }).ToArray();
                 if (parts.Any(part => part.Length == 0 || part == "." || part == ".."
                     || part.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || part.IndexOf('/') >= 0 || part.IndexOf('\\') >= 0))
                     throw new AdapterPreconditionException("Technology group and object names must be ordinary path components.");
@@ -145,7 +145,8 @@ namespace TiaMcp.Adapters.Native.Plc
 #if PLC_TECH_GROUP_READ
                 foreach (var sub in PlcGroupOperations.Items(WatchNative.Groups(group)).Cast<global::Siemens.Engineering.SW.TechnologicalObjects
                         .TechnologicalInstanceDBUserGroup>())
-                    Walk(sub, folder.Length == 0 ? Uri.EscapeDataString(WatchNative.Name(sub)) : folder + "/" + Uri.EscapeDataString(WatchNative.Name(sub)));
+                    Walk(sub, folder.Length == 0 ? ObjectPathEncoding.EncodeSegment(WatchNative.Name(sub)) : folder + "/" + ObjectPathEncoding
+                            .EncodeSegment(WatchNative.Name(sub)));
 #endif
             }
             Walk(WatchNative.TechnologyGroup(plc), "");

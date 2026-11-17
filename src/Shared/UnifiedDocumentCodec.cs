@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +9,7 @@ namespace TiaMcpServer.Siemens.Services
 {
     internal static class UnifiedDocumentCodec
     {
-        private static string Segment(string value) => Uri.EscapeDataString(value);
+        private static string Segment(string value) => ObjectPathEncoding.EncodeSegment(value);
         private static Dictionary<string, object?> Failure(string path, string code, Exception? ex = null, string? reason = null)
             => new Dictionary<string, object?> {
                 ["path"] = path, ["kind"] = "gap", ["status"] = code == "Unsupported" ? "unsupported" : "failed", ["code"] = code,

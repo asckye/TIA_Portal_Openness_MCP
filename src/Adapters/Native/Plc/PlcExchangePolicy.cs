@@ -16,7 +16,9 @@ namespace TiaMcp.Adapters
         }
         internal static T SelectTable<T>(System.Collections.Generic.IEnumerable<T> tables,string selected,Func<T,string> path,Func<T,string> name)
         {
-            var exact=tables.Where(item=>string.Equals(path(item),selected,StringComparison.Ordinal)).Take(2).ToArray();
+            string canonical = ObjectPathEncoding.NormalizePath(selected,"table");
+            var exact=tables.Where(item=>string.Equals(path(item),selected,StringComparison.Ordinal)
+                || string.Equals(path(item),canonical,StringComparison.Ordinal)).Take(2).ToArray();
             if(exact.Length==1) return exact[0];
             if(exact.Length>1) throw new AdapterPreconditionException("Ambiguous tag table path: "+selected,"table");
             if(!selected.Contains("/"))

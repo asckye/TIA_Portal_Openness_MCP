@@ -40,7 +40,12 @@ internal static class BatchDocumentExportContract
         if(status=="failed"?string.IsNullOrWhiteSpace(Text(result,"RecoveryDirectory")):Text(result,"RecoveryDirectory")!="")
             throw new InvalidDataException("Recovery state conflict.");
         foreach(var pair in new[]{("SoftwarePath","softwarePath"),("GroupPath","groupPath"),("OutputDirectory","exportPath")})
-            if(Text(result,pair.Item1)!=request[pair.Item2]?.GetValue<string>()) throw new InvalidDataException("Batch document result identity mismatch.");
+        {
+            string? requested = request[pair.Item2]?.GetValue<string>();
+            if (requested != null && pair.Item1 is "SoftwarePath" or "GroupPath")
+                requested = TiaMcp.Adapters.Contracts.ObjectPathEncoding.NormalizePath(requested);
+            if(Text(result,pair.Item1)!=requested) throw new InvalidDataException("Batch document result identity mismatch.");
+        }
         if(recursive!=(request["recursive"]?.GetValue<bool>()??false) || request["preservePath"]?.GetValue<bool>()==true)
             throw new InvalidDataException("Batch document scope differs from request.");
         if(result["Items"] is not JsonArray items || items.Count<1 || items.Count>maxItems)

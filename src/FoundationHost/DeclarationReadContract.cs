@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json.Nodes;
 
 namespace TiaMcp.FoundationHost;
@@ -23,8 +24,9 @@ internal static class DeclarationReadContract
         };
         if(result is not JsonArray rows) throw new InvalidDataException("Worker returned an invalid declaration list for "+tool);
         var paths=new HashSet<string>(StringComparer.Ordinal);
-        // The table may be the exact encoded path or (P6-55) a unique raw single-segment name, which the worker
-        // answers with the canonical encoded path; every row must then share that one prefix.
+        // The table may be a saved encoded path or (P6-55) a unique raw single-segment name.
+        // The worker answers with the canonical readable path; every row must share that one prefix.
+        string canonicalTable = ObjectPathEncoding.NormalizePath(table,"table");
         string? prefix=null;
         foreach(var node in rows)
         {
@@ -34,14 +36,15 @@ internal static class DeclarationReadContract
                 if(row[field] is not JsonValue value || !value.TryGetValue<string>(out _))
                     throw new InvalidDataException("Worker returned an invalid declaration field for "+tool);
             string name=row["Name"]!.GetValue<string>(), path=row["Path"]!.GetValue<string>();
-            string leaf="/"+Uri.EscapeDataString(name);
+            string leaf="/"+ObjectPathEncoding.EncodeSegment(name);
             string? rowPrefix=path.EndsWith(leaf,StringComparison.Ordinal) ? path.Substring(0,path.Length-leaf.Length) : null;
             string? relative=rowPrefix;
             if(rowPrefix?.StartsWith("units/",StringComparison.Ordinal)==true && (includeUnits || unitName!=""))
             {
                 var parts=rowPrefix.Split('/');
-                if(parts.Length<4 || parts[2]!="tag-tables" || string.IsNullOrWhiteSpace(Uri.UnescapeDataString(parts[1]))
-                    || Uri.EscapeDataString(Uri.UnescapeDataString(parts[1]))!=parts[1] || unitName!="" && parts[1]!=Uri.EscapeDataString(unitName))
+                if(parts.Length<4 || parts[2]!="tag-tables" || string.IsNullOrWhiteSpace(ObjectPathEncoding.DecodeSegment(parts[1]))
+                    || ObjectPathEncoding.EncodeSegment(ObjectPathEncoding.DecodeSegment(parts[1]))!=parts[1] || unitName!="" && parts[1]!=ObjectPathEncoding
+                        .EncodeSegment(unitName))
                     throw new InvalidDataException("Worker returned conflicting unit declaration identity.");
                 relative=string.Join("/",parts.Skip(3));
             }
@@ -51,9 +54,10 @@ internal static class DeclarationReadContract
             else if(unitName!="") relative=null;
             bool scoped=includeUnits || unitName!="";
             bool canonical=relative!=null && relative.Split('/')
-                .All(segment=>!string.IsNullOrWhiteSpace(Uri.UnescapeDataString(segment)) && Uri.UnescapeDataString(segment) is not ("." or "..") && Uri
-                    .EscapeDataString(Uri.UnescapeDataString(segment))==segment);
-            bool knownPrefix=canonical && (relative==table || (!table.Contains('/') && relative==Uri.EscapeDataString(table)) || scoped && table=="");
+                .All(segment=>!string.IsNullOrWhiteSpace(ObjectPathEncoding.DecodeSegment(segment)) && ObjectPathEncoding
+                        .DecodeSegment(segment) is not ("." or "..") && ObjectPathEncoding.EncodeSegment(ObjectPathEncoding.DecodeSegment(segment))==segment);
+            bool knownPrefix=canonical
+                && (relative==canonicalTable || (!table.Contains('/') && relative==ObjectPathEncoding.EncodeSegment(table)) || scoped && table=="");
             if(string.IsNullOrWhiteSpace(name) || row["Kind"]!.GetValue<string>()!=kind || !knownPrefix ||
                 (!scoped && prefix!=null && rowPrefix!=prefix) || !paths.Add(path))
                 throw new InvalidDataException("Worker returned conflicting declaration identity for "+tool);
