@@ -148,13 +148,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 masterCopyPath,createOption,confirmDelete,dryRun);
         [McpServerTool(Name="ListSivarcBlockDefinitions"),
                 Description("[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before " +
-                "SivarcDataProvider access; blockPath Folder/Block under the PLC block group) through the SivarcDataProvider block service: tag definitions " +
+                "SivarcDataProvider access; all block types are refused on V20 because definition access can crash TIA Portal V20; works on V21; " +
+                "blockPath Folder/Block under the PLC block group) through the SivarcDataProvider block service: tag definitions " +
                 "(name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings " +
                 "(UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. " +
                 "Read-only. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ListSivarcBlockDefinitionsV4(
             string softwarePath,
-            string blockPath,
+            [Description("blockPath: Folder/Block. All blocks refused on V20 before native access (TIA V20 crash); works on V21.")] string blockPath,
             [Description("includeBlockParameters: true also returns block parameters.")] bool includeBlockParameters=true)
             => LibraryToolContract.Run("ListSivarcBlockDefinitions", false, true, () =>
             {
@@ -171,10 +172,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 "delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), " +
                 "tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode " +
                 "None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits " +
-                "need the SiVArc licence; never saves. Current native policy; V4 native acceptance is pending.")]
+                "need the SiVArc licence; never saves. All block-definition reads and writes are refused with UNSUPPORTED_CAPABILITY on V20 before " +
+                "native access because SivarcDataProvider definition access can crash TIA Portal V20; works on V21. " +
+                "Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageSivarcBlockDefinitionV4(
             string softwarePath,
-            string blockPath,
+            [Description("blockPath: Folder/Block. All blocks refused on V20 before native access (TIA V20 crash); works on V21.")] string blockPath,
             [Description("kind: tagDefinition | textDefinition | tagMemberSettings | commonParameters | blockParameter.")] string kind,
             string name="",
             [Description("action: the operation to perform - read | create | update | delete.")] string action="read",

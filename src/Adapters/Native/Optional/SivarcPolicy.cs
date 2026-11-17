@@ -23,9 +23,8 @@ namespace TiaMcp.Adapters.Native.Optional
     {
         internal static void RequireSupportedBlockClass(string blockClass)
         {
-            if (blockClass != "FB" && blockClass != "FC")
-                throw new NotSupportedException("Block-level SiVArc data is restricted to FB and FC; " + blockClass
-                        + " is unsupported. OB access crashed TIA Portal V20 (finding 44).");
+            if (OptionalEngineeringCapabilities.SivarcBlockDefinitionProblem("", blockClass) is string problem)
+                throw new NotSupportedException(problem);
         }
 
         internal static T BlockProvider<T>(string blockClass, Func<T> getProvider)

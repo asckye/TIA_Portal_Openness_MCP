@@ -5,6 +5,18 @@ namespace TiaMcp.Adapters.Contracts;
 
 public static class OptionalEngineeringCapabilities
 {
+    public static string? SivarcBlockDefinitionProblem(string release, string? blockClass = null)
+    {
+        if (release == "20")
+            return "SiVArc block-definition reads and writes are refused for every block type on TIA Portal V20: "
+                + "SivarcDataProvider definition access can crash TIA Portal V20 (finding 44 and the FB regression). "
+                + "Block-definition access works on V21; use TIA Portal V21.";
+        if (blockClass != null && blockClass != "FB" && blockClass != "FC")
+            return "Block-level SiVArc data is restricted to FB and FC; " + blockClass
+                + " is unsupported. OB access crashed TIA Portal V20 (finding 44).";
+        return null;
+    }
+
     public static HardwareAddressingReply? Refusal(Exception error)
     {
         if (error == null) throw new ArgumentNullException(nameof(error));
@@ -31,6 +43,9 @@ public static class OptionalEngineeringCapabilities
 
     public static string? Unsupported(string release, OptionalEngineeringRequest request)
     {
+        if (request.Operation is "ListSivarcBlockDefinitions" or "ManageSivarcBlockDefinition"
+            && SivarcBlockDefinitionProblem(release) is string blockProblem)
+            return blockProblem;
         int major = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
         if (major == 14 && request.DriveObjectIndex > 0)
             return "V14 SP1 exposes one DriveObject service per device item; select driveObjectIndex=0.";

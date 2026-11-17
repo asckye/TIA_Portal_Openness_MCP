@@ -17123,12 +17123,12 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "a8d160fd0e6c70566eec634ad2e0bf454b937eb8997829c9148c0ce25f1df6a3",
+      "descriptionSha256": "e5d5ffada7459fbbd83a98cab3d809e89e587d763c2669664469b58b5130a643",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "blockPath": {
-            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
+            "description": "blockPath: Folder/Block. All blocks refused on V20 before native access (TIA V20 crash); works on V21.",
             "type": "string"
           },
           "includeBlockParameters": {
@@ -22915,7 +22915,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f48bc1454698fdef4c660ae79c541eef77462aa4c29416315d9736b69dcbce31",
+      "descriptionSha256": "b31cd7846e99b79e8a379d68870c2fcdf2f4b39ec109398d3d078836d7732bc7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -22931,7 +22931,7 @@
             "type": "string"
           },
           "blockPath": {
-            "description": "blockPath: 'Group/Subgroup/Name' of the block as GetSoftwareTree shows it; a root block is its bare name.",
+            "description": "blockPath: Folder/Block. All blocks refused on V20 before native access (TIA V20 crash); works on V21.",
             "type": "string"
           },
           "confirmDelete": {

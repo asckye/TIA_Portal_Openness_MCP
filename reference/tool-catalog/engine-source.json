@@ -12786,7 +12786,7 @@
       "path": "src/Shared/SivarcTools.cs",
       "owner": "SivarcTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ListSivarcBlockDefinitionsV4(\n            string softwarePath,\n            string blockPath,\n            [Description(\"includeBlockParameters: true also returns block parameters.\")] bool includeBlockParameters=true)",
+      "signature": "public CallToolResult ListSivarcBlockDefinitionsV4(\n            string softwarePath,\n            [Description(\"blockPath: Folder/Block. All blocks refused on V20 before native access (TIA V20 crash); works on V21.\")] string blockPath,\n            [Description(\"includeBlockParameters: true also returns block parameters.\")] bool includeBlockParameters=true)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -12794,7 +12794,8 @@
         },
         "blockPath": {
           "type": "string",
-          "default": null
+          "default": null,
+          "description": "blockPath: Folder/Block. All blocks refused on V20 before native access (TIA V20 crash); works on V21."
         },
         "includeBlockParameters": {
           "type": "bool",
@@ -12809,7 +12810,7 @@
       "path": "src/Shared/SivarcTools.cs",
       "owner": "SivarcTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ManageSivarcBlockDefinitionV4(\n            string softwarePath,\n            string blockPath,\n            [Description(\"kind: tagDefinition | textDefinition | tagMemberSettings | commonParameters | blockParameter.\")] string kind,\n            string name=\"\",\n            [Description(\"action: the operation to perform - read | create | update | delete.\")] string action=\"read\",\n            AttributeMap<Scalar> properties = null!,\n            [Description(\"texts: JSON object language tag -> text.\")] AttributeMap<string> texts = null!,\n            bool confirmDelete=false,\n            bool dryRun=true)",
+      "signature": "public CallToolResult ManageSivarcBlockDefinitionV4(\n            string softwarePath,\n            [Description(\"blockPath: Folder/Block. All blocks refused on V20 before native access (TIA V20 crash); works on V21.\")] string blockPath,\n            [Description(\"kind: tagDefinition | textDefinition | tagMemberSettings | commonParameters | blockParameter.\")] string kind,\n            string name=\"\",\n            [Description(\"action: the operation to perform - read | create | update | delete.\")] string action=\"read\",\n            AttributeMap<Scalar> properties = null!,\n            [Description(\"texts: JSON object language tag -> text.\")] AttributeMap<string> texts = null!,\n            bool confirmDelete=false,\n            bool dryRun=true)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -12817,7 +12818,8 @@
         },
         "blockPath": {
           "type": "string",
-          "default": null
+          "default": null,
+          "description": "blockPath: Folder/Block. All blocks refused on V20 before native access (TIA V20 crash); works on V21."
         },
         "kind": {
           "type": "string",
