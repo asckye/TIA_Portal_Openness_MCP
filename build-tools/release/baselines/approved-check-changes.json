@@ -4941,6 +4941,53 @@
           "identifier": "OutputRootApprovalTests/AssertOutputCoverage( Func \u003C string , JsonObject , IEnumerable \u003C string \u003E \u003E targets ):4398ab421156c5cc99a8b06b9a6aae63d225bf18d37a57ff6acb44d7b84ef73c:1"
         }
       ]
+    },
+    {
+      "task": "TIA-BATCH-3",
+      "maintainerDate": "2026-11-17",
+      "reason": "Lead approval 2026-11-17 under the maintainer\u0027s standing approval: ConvertEngineeringTable adds one registered tool per release (\u002B1) and one covered output (57 to 58)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):071e62d540813274aaee20cd55e44cdc1b6470b9f9224d7e152bf1465407b29f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):19df08adf9094bc3bd4f81307fcf040737336a639e244d96a36e6532ef69de6a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):8ba280e23a93e0371336658aa1ca1171c27a1722ae0c46d362fcdd6e153dbd13:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):a8d5deb4d915caf23afc1e38dd43a2d96d69a8ed6fe83a580a362e3e367b53e3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):a917a06aed78d17eb2836661bb3a05627af96b51f744d6eb783662eb20cac527:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):aef727de3d872797b167b7f975ef1e3e9a4402a74ecfdb658075806182f5780d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/AssertOutputCoverage( Func \u003C string , JsonObject , IEnumerable \u003C string \u003E \u003E targets ):13c3b585e8c53f11cf3a2a0e5ff882fe17fe6fea9f83cba7a348a17736e25a81:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/AssertOutputCoverage( Func \u003C string , JsonObject , IEnumerable \u003C string \u003E \u003E targets ):47a61f86abac88e27e5b59b485dcd52f8526194db9c7878b64ad49ed1710615d:1"
+        }
+      ]
     }
   ]
 }
