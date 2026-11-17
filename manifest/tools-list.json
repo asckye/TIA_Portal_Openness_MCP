@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T14:46:24.9882895+00:00",
+  "generatedAt": "2026-11-17T15:10:11.8625881+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "f84b229d0593fd2ed1ad494ce055907bbd2b9874981894a33548b795655e4a12",
+  "workerSha256": "d4ca303154d781173c804ad6da12bf3918c92eb123f512797ae8cb92ce4b2250",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -3865,7 +3865,7 @@
         "files",
         "dryRun"
       ],
-      "description": "[L1][PLC-Software][FILE] Stage caller text under the installed bundle staging/session directory next to runtime; ASCII SCL/UDT source or UTF-8 Document XML. files: fileName, kind, content. Kinds scl, simaticml, tagtable, udt (s7dcl/s7res only V20/V21; V20 document imports require pairs, V21 resources are optional). Preview defaults true; apply dryRun=false is approved and audited. 4 MiB/file, 128 files/32 MiB/session; safe filenames, no overwrite. Returns directory, paths and SHA-256. Import and generation are separate calls; list/cleanup before ending the session. Examples: GetToolUsage(toolName: \"StageImportFiles\"), optionally operation or language.",
+      "description": "[L1][PLC-Software][FILE] Stage caller text under the installed bundle staging/session directory next to runtime; ASCII SCL/UDT source, UTF-8 without BOM S7DCL/S7RES, or UTF-8 Document XML. S7DCL supports Unicode block identifiers and requires ASCII whitespace. files: fileName, kind, content. Kinds scl, simaticml, tagtable, udt (s7dcl/s7res only V20/V21; V20 document imports require pairs, V21 resources are optional). Preview defaults true; apply dryRun=false is approved and audited. 4 MiB/file, 128 files/32 MiB/session; safe filenames, no overwrite. Returns directory, paths and SHA-256. Import and generation are separate calls; list/cleanup before ending the session. Examples: GetToolUsage(toolName: \"StageImportFiles\"), optionally operation or language.",
       "example": "{\"files\":[{\"fileName\":\"FC_Add.scl\",\"kind\":\"scl\",\"content\":\"FUNCTION \\u0022FC_Add\\u0022 : Int\\nVAR_INPUT\\n    A : Int;\\n    B : Int;\\nEND_VAR\\nBEGIN\\n    #FC_Add := #A \\u002B #B;\\nEND_FUNCTION\\n\"}],\"dryRun\":true}"
     },
     {
