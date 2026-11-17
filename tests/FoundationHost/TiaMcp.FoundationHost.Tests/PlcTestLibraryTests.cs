@@ -116,6 +116,20 @@ public sealed class PlcTestLibraryTests : IDisposable
         Assert.Throws<ArgumentException>(() => Store.Read(id));
     }
 
+    [Fact]
+    public void Published_id_pattern_uses_a_portable_strict_end_anchor()
+    {
+        string pattern = TypedToolInput.For(typeof(PlcTestCaseDocument))!.Schema.GetProperty("properties").GetProperty("id")
+            .GetProperty("pattern").GetString()!;
+        Assert.Equal(PlcTestCaseDocument.IdPattern, pattern);
+        Assert.DoesNotContain(@"\z", pattern);
+        Assert.DoesNotContain(@"\Z", pattern);
+        Assert.DoesNotContain(@"\A", pattern);
+        var regex = new System.Text.RegularExpressions.Regex(pattern, System.Text.RegularExpressions.RegexOptions.ECMAScript);
+        Assert.Matches(regex, "conveyor");
+        Assert.DoesNotMatch(regex, "conveyor\n");
+    }
+
     public static IEnumerable<object[]> ReservedIds()
     {
         var stems = new[] { "CON", "PRN", "AUX", "NUL" }.Concat(Enumerable.Range(1, 9).Select(i => "COM" + i))
@@ -328,6 +342,8 @@ public sealed class PlcTestLibraryTests : IDisposable
         Assert.All(page["data"]!["items"]!.AsArray(), row => {
             Assert.False((bool?)row?["valid"]);
             Assert.False(string.IsNullOrEmpty((string?)row?["error"]));
+            Assert.DoesNotContain(Runs, (string)row!["error"]!);
+            Assert.DoesNotMatch(@"[A-Za-z]:", (string)row["error"]!);
         });
         Assert.Equal(2, (int?)page["meta"]?["paging"]?["nextOffset"]);
         var missingAndInvalid = Tool.ManagePlcTestLibrary("listRuns", offset: 2, limit: 2).StructuredContent!;
@@ -338,12 +354,17 @@ public sealed class PlcTestLibraryTests : IDisposable
         var exactBad = Tool.ManagePlcTestLibrary("readRun", runId: ids[4]).StructuredContent!;
         Assert.Equal("IO_FAILED", (string?)exactBad["error"]?["code"]);
         Assert.Contains(ids[4], (string)exactBad["error"]!["message"]!);
+        Assert.Equal("Cannot read PLC test run '" + ids[4] + "': IOException", (string?)exactBad["error"]?["message"]);
+        Assert.DoesNotContain(Runs, (string)exactBad["error"]!["message"]!);
+        Assert.DoesNotMatch(@"[A-Za-z]:", (string)exactBad["error"]!["message"]!);
+        Assert.Null(exactBad["error"]?["details"]?["path"]);
         File.Delete(Path.Combine(Runs, ids[0], "run.json"));
         var error = Assert.Throws<PlcTestRunReadException>(() => PlcTestRunRecord.Read(Runs, "latest"));
         Assert.Equal(ids[4], error.RunId);
         var allBad = Tool.ManagePlcTestLibrary("readRun").StructuredContent!;
         Assert.Equal("IO_FAILED", (string?)allBad["error"]?["code"]);
         Assert.Contains(ids[4], (string)allBad["error"]!["message"]!);
+        Assert.Null(allBad["error"]?["details"]?["path"]);
     }
 
     [Fact]
@@ -469,6 +490,8 @@ public sealed class PlcTestLibraryTests : IDisposable
         Assert.False(PreflightLogic.NeedsProject("FILE", "ManagePlcTestLibrary"));
         var schema = tool.ProtocolTool.InputSchema;
         Assert.Equal("object", schema.GetProperty("properties").GetProperty("testCase").GetProperty("type").GetString());
+        Assert.Equal(PlcTestCaseDocument.IdPattern, schema.GetProperty("properties").GetProperty("testCase").GetProperty("properties")
+            .GetProperty("id").GetProperty("pattern").GetString());
         var described = TiaOpenness.Shared.ToolUsageCatalog.Describe("ManagePlcTestLibrary", release, "full-engine", tool.ProtocolTool.Description!,
             JsonNode.Parse(schema.GetRawText())!.AsObject(), operation: "save", roster: fixture.Tools.Select(t => t.ProtocolTool.Name));
         Assert.Equal("save", (string?)described["example"]?["request"]?["params"]?["arguments"]?["action"]);

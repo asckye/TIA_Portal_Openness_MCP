@@ -15,7 +15,7 @@ namespace TiaMcp.Logic.Testing
     public sealed class PlcTestCaseDocument
     {
         public const string IdPattern = "^(?!(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])"
-            + "(?:\\.|\\z))[A-Za-z0-9][A-Za-z0-9._-]{0,63}\\z";
+            + "(?:\\.|(?![\\s\\S])))[A-Za-z0-9][A-Za-z0-9._-]{0,63}(?![\\s\\S])";
         private readonly JsonObject document;
         public string Id => (string)document["id"]!;
         public string Title => (string)document["title"]!;

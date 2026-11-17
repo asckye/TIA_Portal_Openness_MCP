@@ -235,7 +235,8 @@ namespace TiaMcp.Logic.Testing
     public sealed class PlcTestRunReadException : IOException
     {
         public string RunId { get; }
-        internal PlcTestRunReadException(string runId, Exception cause) : base("Cannot read PLC test run '" + runId + "': " + cause.Message, cause)
+        internal PlcTestRunReadException(string runId, Exception cause)
+            : base("Cannot read PLC test run '" + runId + "': " + cause.GetType().Name, cause)
             => RunId = runId;
     }
 }

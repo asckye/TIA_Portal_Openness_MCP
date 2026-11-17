@@ -64,7 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return McpServer.V4Result(tool, data, completed: action == "save" || action == "delete");
             }
             catch (PlcTestRunReadException ex)
-            { return McpServer.V4Reject(tool, new Error(ex.Message, new IoFailedDetails("plc-test-run", ex.RunId))); }
+            { return McpServer.V4Reject(tool, new Error(ex.Message, new IoFailedDetails("plc-test-run", null))); }
             catch (FileNotFoundException) /* swallow(privacy): return NOT_FOUND without exposing the full local file path */
             { return McpServer.V4Reject(tool, new Error("Case or run was not found.", new NotFoundDetails(null))); }
             catch (DirectoryNotFoundException) /* swallow(privacy): return NOT_FOUND without exposing the full local directory path */
