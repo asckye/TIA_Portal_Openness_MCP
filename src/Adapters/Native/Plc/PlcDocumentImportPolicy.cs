@@ -32,8 +32,8 @@ namespace TiaMcp.Adapters
             if(r.Overwrite) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Only documented reject-existing ImportDocumentOptions.None is admitted.","export-plan",false);
             PlcDocumentExportPolicy.Name(r.Name);
-            if(r.Name.Length>128 || !PlcDocumentDeclaration.Identifier(r.Name)) throw new TiaMcp.Adapters.Contracts
-                .AdapterPreconditionException("Basename must be one ASCII identifier, 1..128 characters.");
+            if(r.Name.Length>128 || !PlcDocumentDeclaration.BlockIdentifier(r.Name)) throw new TiaMcp.Adapters.Contracts
+                .AdapterPreconditionException("Basename must be one identifier, 1..128 characters.");
             r.Group = PlcExchangePolicy.ObjectPath(r.Group,true,"groupPath");
             if(r.Group!=PlcExchangePolicy.ObjectPath(r.Group,true)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Exact canonical group path required.");
@@ -208,14 +208,23 @@ namespace TiaMcp.Adapters
     {
         internal static bool Identifier(string s)=>s.Length>0 && s.Length<=128 && ((s[0]>='A'&&s[0]<='Z')||(s[0]>='a'&&s[0]<='z')||s[0]=='_') && s
             .All(c=>(c>='A'&&c<='Z')||(c>='a'&&c<='z')||(c>='0'&&c<='9')||c=='_');
+        internal static bool BlockIdentifier(string s)=>s.Length>0 && s.Length<=128 && (char.IsLetter(s[0]) || s[0]=='_')
+            && s.All(c=>char.IsLetterOrDigit(c) || c=='_');
         internal static string Parse(byte[] bytes)
         {
             if(bytes.Length<1 || bytes.Length>PlcDocumentImportPolicy.MaximumBytes) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Code size outside bounds.");
             int start=bytes.Length>=3 && bytes[0]==239 && bytes[1]==187 && bytes[2]==191?3:0;
-            for(int i=start;i<bytes.Length;i++) if(bytes[i]>126 || (bytes[i]<32 && bytes[i]!=9 && bytes[i]!=10 && bytes[i]!=13)) throw new TiaMcp.Adapters
-                .Contracts.AdapterPreconditionException("Only ASCII code, optionally a UTF-8 BOM, is admitted; no transcoding.");
-            var p=new Parser(Encoding.ASCII.GetString(bytes,start,bytes.Length-start));return p.Parse();
+            string text;
+            try {text=new UTF8Encoding(false,true).GetString(bytes,start,bytes.Length-start);}
+            catch(DecoderFallbackException error)
+            {
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                    "Only valid UTF-8 code, optionally a UTF-8 BOM, is admitted; no transcoding.","importPath",true,error);
+            }
+            if(text.Any(c=>char.IsControl(c) && c!='\t' && c!='\n' && c!='\r')) throw new TiaMcp.Adapters.Contracts
+                .AdapterPreconditionException("Control characters are outside admission grammar.","importPath");
+            var p=new Parser(text);return p.Parse();
         }
         private sealed class Parser
         {
@@ -255,9 +264,10 @@ namespace TiaMcp.Adapters
                 }
                 Next();
             }
-            private string Name() {
+            private string Name(bool block=false) {
                 var result=token;
-                if(!Identifier(result) || new[]{"DATA_BLOCK","END_DATA_BLOCK","VAR","END_VAR","FUNCTION","FUNCTION_BLOCK","TYPE","ORGANIZATION_BLOCK","BEGIN"}
+                if(!(block?BlockIdentifier(result):Identifier(result)) || new[]{
+                        "DATA_BLOCK","END_DATA_BLOCK","VAR","END_VAR","FUNCTION","FUNCTION_BLOCK","TYPE","ORGANIZATION_BLOCK","BEGIN"}
                         .Contains(result.ToUpperInvariant()))
                     throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Ordinary identifier required.");Next();return result;
             }
@@ -288,31 +298,45 @@ namespace TiaMcp.Adapters
             internal string Parse()
             {
                 if(Is("{"))Pragmas(false);
-                Require("DATA_BLOCK");var name=Name();Require("VAR");var names=new HashSet<string>(StringComparer.OrdinalIgnoreCase);int count=0;
+                Require("DATA_BLOCK");var name=Name(true);Require("VAR");var names=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);int count=0;
                 while(!Is("END_VAR"))
                 {
                     if(++count>1024)throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("DB exceeds 1024 scalar declarations.");
                     if(Is("{"))Pragmas(true);
-                    var variable=Name();if(!names.Add(variable))throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Duplicate scalar name.");
+                    var variable=Name();if(names.ContainsKey(variable))throw new TiaMcp.Adapters.Contracts
+                        .AdapterPreconditionException("Duplicate scalar name.");
                     Require(":");
                     var type=token;if(quoted || !new[]{"Bool","SInt","USInt","Int","UInt","DInt","UDInt","LInt","ULInt"}.Contains(type))throw new TiaMcp
-                        .Adapters.Contracts.AdapterPreconditionException("Only primitive Bool/integer scalar DB declarations admitted.");Next();
+                        .Adapters.Contracts.AdapterPreconditionException("Only primitive Bool/integer scalar DB declarations admitted.");names
+                            .Add(variable,type);Next();
                     if(Is(":="))
                     {
-                        Next();if(type=="Bool") {
-                            if(quoted || (token!="true"&&token!="false"&&token!="TRUE"&&token!="FALSE"))throw new TiaMcp.Adapters.Contracts
-                                .AdapterPreconditionException("Boolean literal required.");Next();
-                        }
-                        else {
-                            if(Is("+")||Is("-"))Next();if(quoted || token.Length<1 || token.Length>20 || token.Any(c=>c<'0'||c>'9'))throw new TiaMcp.Adapters
-                                .Contracts.AdapterPreconditionException("Decimal integer literal required; native range checking remains pending.");Next();
-                        }
+                        Next();Literal(type);
                     }
                     Require(";");
                 }
                 if(count==0)throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("At least one scalar declaration required.");
-                Require("END_VAR");Require("END_DATA_BLOCK");if(token!="" || quoted)throw new TiaMcp.Adapters.Contracts
+                Require("END_VAR");
+                while(!Is("END_DATA_BLOCK") && !Is("BEGIN"))
+                {
+                    var variable=Name();
+                    if(!names.TryGetValue(variable,out var type))throw new TiaMcp.Adapters.Contracts
+                        .AdapterPreconditionException("Start value member must be declared in VAR.","importPath");
+                    Require(":=");Literal(type);Require(";");
+                }
+                Require("END_DATA_BLOCK");if(token!="" || quoted)throw new TiaMcp.Adapters.Contracts
                     .AdapterPreconditionException("Additional declarations or trailing tokens refused.");return name;
+            }
+            private void Literal(string type)
+            {
+                if(type=="Bool") {
+                    if(quoted || (token!="true"&&token!="false"&&token!="TRUE"&&token!="FALSE"))throw new TiaMcp.Adapters.Contracts
+                        .AdapterPreconditionException("Boolean literal required.");Next();
+                }
+                else {
+                    if(Is("+")||Is("-"))Next();if(quoted || token.Length<1 || token.Length>20 || token.Any(c=>c<'0'||c>'9'))throw new TiaMcp.Adapters
+                        .Contracts.AdapterPreconditionException("Decimal integer literal required; native range checking remains pending.");Next();
+                }
             }
         }
     }
