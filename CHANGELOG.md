@@ -13,6 +13,9 @@
 - `ManageLibraryMasterCopy` and `ManageLibraryTypeVersion` add previewed project instantiation from master copies and released block/Classic screen versions across all eight releases; PLC copy/path modes require V20+. Incompatible change: every mutating action of both tools now requires the same preview's `expectedPlanHash` and `expectedProjectFile`.
 - PLC and HMI object paths now display Chinese, spaces and other names readably, escaping only path separators, percent signs and control characters. Previously fully encoded paths remain accepted as input. Plan and inventory hashes change for affected names; previews created before this change are refused with a hash mismatch and must be regenerated.
 
+### Fixed
+- Online target IPv4 addresses reject octets with leading zeros before approval, preventing different numeric interpretations by the policy and TIA. Reading a missing online-target list creates no directories or lock files, non-address tools do not load it, and administrative list saves report audit failures to the caller.
+
 ## [4.0.0-beta.5] - 2026-11-16
 
 ### Added

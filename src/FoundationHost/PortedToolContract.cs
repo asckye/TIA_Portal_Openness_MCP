@@ -456,11 +456,19 @@ internal sealed partial class FoundationTool
                 TargetIpAddress = Text("targetIpAddress"), ObjectKind = Text("objectKind") };
             if (OnlineCapabilities.Unsupported(portedRelease!, online) != null)
                 return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
-            if (OnlineTargetPolicy.Refusal(online,
-                TiaOpenness.Shared.OnlineTargetSettings.Load(TiaOpenness.Shared.OnlineTargetSettings.SettingsPath)) is { } targetRefusal)
-                return McpServer.V4TargetReject(tool.Name, new Error(targetRefusal.Message,
-                    targetRefusal.Condition == null ? McpServer.ArgumentDetails(tool.Name, targetRefusal.Parameter)
-                        : new PreconditionFailedDetails(targetRefusal.Condition, null)), current: true);
+            if (OnlineTargetPolicy.AddressParameter(tool.Name) != null)
+            {
+                OnlineTargetList? targets;
+                try { targets = TiaOpenness.Shared.OnlineTargetSettings.Load(TiaOpenness.Shared.OnlineTargetSettings.SettingsPath); }
+                catch (Exception) /* swallow(env-probe): unexpected settings/path failures become a typed invalid-list refusal for address tools. */
+                {
+                    targets = OnlineTargetList.Invalid;
+                }
+                if (OnlineTargetPolicy.Refusal(online, targets) is { } targetRefusal)
+                    return McpServer.V4TargetReject(tool.Name, new Error(targetRefusal.Message,
+                        targetRefusal.Condition == null ? McpServer.ArgumentDetails(tool.Name, targetRefusal.Parameter)
+                            : new PreconditionFailedDetails(targetRefusal.Condition, null)), current: true);
+            }
         }
         if (family.Name is "F27" or "F28")
         {

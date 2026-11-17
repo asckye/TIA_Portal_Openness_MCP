@@ -11,6 +11,9 @@ public sealed class OnlineTargetSettingsTests
         using var fixture = new SettingsFixture();
         string path = Path.Combine(fixture.Root, "config", "online-targets.settings");
         Assert.Null(OnlineTargetSettings.Load(path));
+        Assert.False(Directory.Exists(Path.GetDirectoryName(path)));
+        Assert.Empty(Directory.GetFileSystemEntries(fixture.Root));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, "target=192.168.1.10\n");
         Assert.True(OnlineTargetSettings.Load(path)!.IsValid);
         using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
@@ -18,6 +21,28 @@ public sealed class OnlineTargetSettingsTests
         File.WriteAllText(path, "target=192.168.1.10\ntarget=host.invalid\n");
         Assert.False(OnlineTargetSettings.Load(path)!.IsValid);
         Assert.False(OnlineTargetSettings.Load(fixture.Root)!.IsValid);
+    }
+
+    [Fact]
+    public void Existing_parent_missing_file_is_read_without_creating_a_lock()
+    {
+        using var fixture = new SettingsFixture();
+        string path = Path.Combine(fixture.Root, "online-targets.settings");
+        Assert.Null(OnlineTargetSettings.Load(path));
+        Assert.Empty(Directory.GetFileSystemEntries(fixture.Root));
+        Assert.Throws<ArgumentException>(() => OnlineTargetSettings.Load("\0"));
+    }
+
+    [Fact]
+    public void Audit_append_failure_is_reported_after_the_list_write()
+    {
+        using var fixture = new SettingsFixture();
+        string path = Path.Combine(fixture.Root, "online-targets.settings");
+        string auditPath = Path.Combine(fixture.Root, "audit-is-a-file");
+        File.WriteAllText(auditPath, "not a directory");
+        Assert.Throws<IOException>(() => OnlineTargetSettings.Save(path,
+            OnlineTargetPolicy.Parse("target=192.168.1.10"), new AuditLog(auditPath)));
+        Assert.Equal("target=192.168.1.10\n", File.ReadAllText(path));
     }
 
     [Fact]

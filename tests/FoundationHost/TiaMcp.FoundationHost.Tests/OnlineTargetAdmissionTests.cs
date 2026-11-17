@@ -1,6 +1,7 @@
 extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using System.Text.Json;
+using System.Diagnostics;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using Xunit;
@@ -34,7 +35,8 @@ public sealed class OnlineTargetAdmissionTests
         from operation in new[] { "ConnectOnlinePlc", "DownloadPlc", "UploadDeviceParameters" }
         where operation != "UploadDeviceParameters" || release == "21"
         from dryRun in operation == "DownloadPlc" ? new[] { true, false } : new[] { true }
-        from address in new[] { "missing", "", "192.168.1", "host.invalid", "::1" }
+        from address in new[] { "missing", "", "192.168.1", "host.invalid", "::1", "192.168.001.010", "010.001.001.001",
+            " 192.168.1.10", "192.168.1.10 ", "256.1.1.1" }
         select new object[] { release, operation, dryRun, address };
 
     [Theory, MemberData(nameof(MissingAddresses))]
@@ -52,6 +54,45 @@ public sealed class OnlineTargetAdmissionTests
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         Assert.Equal(0, fixture.Worker.Calls);
         Assert.Equal(0, approval.Calls);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Non_address_tools_never_read_the_list_and_unexpected_load_failures_fail_closed(bool unexpectedFailure)
+    {
+        using var settings = new OnlineTargetSettingsScope("target=192.168.1.10\n");
+        using var unreadable = new FileStream(OnlineTargetSettings.SettingsPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        using var listener = new SettingsReadListener(unexpectedFailure);
+        Trace.Listeners.Add(listener);
+        try
+        {
+            using var approval = new ApprovalCounter();
+            using var fixture = new VersionControlAdmissionTests.FileToolFixture("21");
+            using var session = fixture.EnterSession();
+            await fixture.Call("GetOnlineState", new { softwarePath = "PLC_1" });
+            Assert.Equal(0, listener.Reads);
+            Assert.Equal(1, fixture.Worker.Calls);
+            var body = (await fixture.Call("ConnectOnlinePlc", Arguments("ConnectOnlinePlc", "192.168.1.10", true))).StructuredContent!;
+            Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Equal("online-target-list-invalid", (string?)body["error"]?["details"]?["condition"]);
+            Assert.Equal(1, listener.Reads);
+            Assert.Equal(1, fixture.Worker.Calls);
+            Assert.Equal(0, approval.Calls);
+        }
+        finally { Trace.Listeners.Remove(listener); }
+    }
+
+    private sealed class SettingsReadListener(bool throwOnRead) : TraceListener
+    {
+        internal int Reads;
+        public override void Write(string? message) { }
+        public override void WriteLine(string? message)
+        {
+            if (message?.StartsWith("Online-target", StringComparison.Ordinal) != true) return;
+            if (message.StartsWith("Online-target settings unavailable:", StringComparison.Ordinal)) Reads++;
+            if (throwOnRead) throw new InvalidOperationException("Unexpected loader/diagnostic failure fixture.");
+        }
     }
 
     public static IEnumerable<object[]> Lists =>

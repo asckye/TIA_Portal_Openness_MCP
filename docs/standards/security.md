@@ -165,9 +165,9 @@
 
 ### SEC-14 在线目标只用显式地址
 
-- `ConnectOnlinePlc` 必须提供 `ipAddress`；`DownloadPlc`、`UploadDeviceParameters`、`GetPlcBlockFingerprints` 和 `UploadStationFromPlc` 必须提供 `targetIpAddress`。只接受完整的 IPv4 字面量，缺失、空串、主机名、IPv6 和缩写地址均在审批及 worker 调用之前拒绝，预览同样检查。
-- 白名单位于数据配置目录的 `online-targets.settings`，每行 `target=<IPv4>` 或 `target=<IPv4>/<0..32>`；支持空行和 `#` 注释。文件不存在时不限制合法显式地址；已保存的空文件拒绝全部地址；文件格式无效或无法读取时按 `online-target-list-invalid` 拒绝，未列出的地址按 `online-target-not-allowed` 拒绝，不返回列表内容。
-- MCP 不能写入 `online-targets.settings` 或 `secrets.vault`，包括短文件名和文件身份别名。人工保存白名单使用文件锁及原子替换，只审计设置变更事件，不记录地址。工作台编辑入口在后续 beta 提供。
+- `ConnectOnlinePlc` 必须提供 `ipAddress`；`DownloadPlc`、`UploadDeviceParameters`、`GetPlcBlockFingerprints` 和 `UploadStationFromPlc` 必须提供 `targetIpAddress`。只接受完整的 IPv4 字面量，八位组除单个 `0` 外不允许前导零；缺失、空串、地址内外空白、主机名、IPv6 和缩写地址均在审批及 worker 调用之前拒绝，预览同样检查。
+- 白名单位于数据配置目录的 `online-targets.settings`，每行 `target=<IPv4>` 或 `target=<IPv4>/<0..32>`；支持空行和 `#` 注释。文件不存在时不限制合法显式地址，读取不创建目录或锁文件，非地址工具不读取该文件；已保存的空文件拒绝全部地址；文件格式无效或无法读取时按 `online-target-list-invalid` 拒绝，未列出的地址按 `online-target-not-allowed` 拒绝，不返回列表内容。
+- MCP 不能写入 `online-targets.settings` 或 `secrets.vault`，包括短文件名和文件身份别名。人工保存白名单使用文件锁及原子替换，只审计设置变更事件，不记录地址。审计追加失败会报告给调用方，不能视为保存成功；此时文件可能已经替换，须检查并补齐审计。工作台编辑入口在后续 beta 提供。
 - V14 SP1 不再注册 `ConnectOnlinePlc`；`GetOnlineState`、断开和在线比较等原有入口保留。V15.1–V20 连接先成功应用调用方的地址再调用无地址重载；V21 使用地址重载。R/H 在 V15.1–V20 同样先应用精确地址，V21 只用地址重载。已在线的标准 PLC 保留当前连接并报告此前状态。
 - 实现：`src/Adapters.Contracts/OnlineTargetPolicy.cs`、`src/Shared/OnlineTargetSettings.cs`、`src/Shared/ApprovalSettings.cs`、`src/FoundationHost/PortedToolContract.cs`、`src/Adapters/Native/Online/OnlineDownloadAdapter.cs`。
 - 测试：`tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OnlineTargetPolicyTests.cs`、`tests/FoundationHost/TiaMcp.FoundationHost.Tests/OnlineTargetAdmissionTests.cs`、`OnlineTargetSettingsTests.cs`、`VersionControlAdmissionTests.cs` 与 `tests/Repository/TiaMcp.SourceContracts.Tests/OnlineTargetSourceContracts.cs`。原生连接尚待八版真机验收，见[真机台账](../reference/real-machine-ledger.md)。

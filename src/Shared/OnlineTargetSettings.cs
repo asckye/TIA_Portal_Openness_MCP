@@ -15,16 +15,15 @@ namespace TiaOpenness.Shared
         {
             try
             {
-                using (JournalFileLock.Acquire(path + ".lock"))
-                {
-                    try { return OnlineTargetPolicy.Parse(File.ReadAllText(path)); }
-                    catch (FileNotFoundException) /* swallow(probe-optional): no file means the optional list is not configured (D1). */
-                    { return null; }
-                    catch (DirectoryNotFoundException) /* swallow(probe-optional): a missing settings directory also means no configured list. */
-                    { return null; }
-                }
+                // Atomic saves expose the old or new file. Reading must not create a settings directory or a lock file.
+                return OnlineTargetPolicy.Parse(File.ReadAllText(path));
             }
-            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException)
+            catch (FileNotFoundException) /* swallow(probe-optional): no file means the optional list is not configured (D1). */
+            { return null; }
+            catch (DirectoryNotFoundException) /* swallow(probe-optional): a missing settings directory also means no configured list. */
+            { return null; }
+            // Sharing/I/O errors, denied file access and denied security permission all make the configured list unavailable.
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Security.SecurityException)
             {
                 Trace.TraceWarning("Online-target settings unavailable: " + ex.GetType().Name);
                 return OnlineTargetList.Invalid;
@@ -51,11 +50,7 @@ namespace TiaOpenness.Shared
                 }
                 finally { if (File.Exists(temporary)) File.Delete(temporary); }
             }
-            try
-            {
-                (audit ?? AuditLog.Current).Append("online-targets-change", "", "workbench", "", "", actor: ActorScope.Workbench);
-            }
-            catch (Exception ex) { Trace.TraceWarning("Online-target settings audit unavailable: " + ex.GetType().Name); }
+            (audit ?? AuditLog.Current).Append("online-targets-change", "", "workbench", "", "", actor: ActorScope.Workbench);
         }
     }
 }

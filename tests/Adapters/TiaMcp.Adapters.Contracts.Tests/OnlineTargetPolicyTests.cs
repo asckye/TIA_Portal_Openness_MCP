@@ -33,8 +33,32 @@ public sealed class OnlineTargetPolicyTests
     [InlineData("target=192.168.1.10 /24")]
     [InlineData("target=192.168.1.10\nbad")]
     [InlineData("target=192.168.1.10=extra")]
+    [InlineData("target=192.168.001.010")]
+    [InlineData("target=010.001.001.001/24")]
     public void Any_invalid_line_invalidates_the_whole_list(string text)
         => Assert.False(OnlineTargetPolicy.Parse(text).IsValid);
+
+    public static IEnumerable<object[]> InvalidAddresses =>
+        from operation in new[] { "ConnectOnlinePlc", "DownloadPlc", "UploadDeviceParameters", "GetPlcBlockFingerprints", "UploadStationFromPlc" }
+        from address in new[] { "192.168.001.010", "010.001.001.001", "00.1.1.1", "0.0.0.00", " 192.168.1.10", "192.168.1.10 ",
+            "192.168.1.\t10", "::1", "plc.example", "256.1.1.1", "192.168.1.999" }
+        select new object[] { operation, address };
+
+    [Theory, MemberData(nameof(InvalidAddresses))]
+    public void Ambiguous_or_nonliteral_addresses_are_invalid_even_without_a_list(string operation, string address)
+    {
+        var refusal = OnlineTargetPolicy.Refusal(new OnlineRequest { Operation = operation, IpAddress = address, TargetIpAddress = address }, null);
+        Assert.NotNull(refusal);
+        Assert.Null(refusal.Value.Condition);
+        Assert.Equal(operation == "ConnectOnlinePlc" ? "ipAddress" : "targetIpAddress", refusal.Value.Parameter);
+    }
+
+    [Theory]
+    [InlineData("0.0.0.0")]
+    [InlineData("10.0.0.1")]
+    [InlineData("192.168.0.10")]
+    public void A_single_zero_octet_is_unambiguous(string address)
+        => Assert.Null(OnlineTargetPolicy.Refusal(new OnlineRequest { Operation = "ConnectOnlinePlc", IpAddress = address }, null));
 
     public static IEnumerable<object[]> Refusals =>
         from operation in new[] { "ConnectOnlinePlc", "DownloadPlc", "UploadDeviceParameters", "GetPlcBlockFingerprints", "UploadStationFromPlc" }
