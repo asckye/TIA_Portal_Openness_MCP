@@ -1,23 +1,23 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T17:32:37.0576012+00:00",
+  "generatedAt": "2026-11-17T18:04:49.6745850+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "d65523a564997980982d79d1731c7b67b9ac2385a5e17ca66759babf8eb233c8",
+  "workerSha256": "1b0642f833c55d9d94601ea4d5784850eb489e772c3b7edce8a21a3246ab6249",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2864,
-    "parametersUndocumented": 852,
-    "parametersFromVocabulary": 696,
+    "parameters": 2865,
+    "parametersUndocumented": 850,
+    "parametersFromVocabulary": 694,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 169,
-    "enumHints": 264,
-    "defaultHints": 1639,
+    "enumHints": 265,
+    "defaultHints": 1640,
     "examplesCurated": 518,
-    "recipes": 42
+    "recipes": 44
   },
   "categories": [
     {
@@ -3954,7 +3954,7 @@
       "layer": "L2",
       "category": "project",
       "domain": "Project",
-      "operation": "WRITE",
+      "operation": "UI",
       "operationInferred": false,
       "method": "ShowObjectInEditorV4",
       "returnType": "CallToolResult",
@@ -3964,10 +3964,11 @@
         "itemPath",
         "softwarePath",
         "objectPath",
-        "dryRun"
+        "dryRun",
+        "view"
       ],
-      "description": "[L2][Project][WRITE] IShowable.ShowInEditor on the exact object (kind=device via devicePath, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal started with user interface. Default dryRun=true. Examples: GetToolUsage(toolName: \"ShowObjectInEditor\"), optionally operation or language.",
-      "example": "{\"dryRun\":true}"
+      "description": "[L2][Project][UI] IShowable.ShowInEditor opens the exact object in the TIA Portal editor for the engineer. UI only: no project change and no approval. Requires a TIA Portal with user interface. Available on all eight releases (V14 SP1, V15.1, V16-V21); watch/force tables require V15.1+. Empty view uses IShowable.ShowInEditor(); kind=device also supports device/network/topology via Device.ShowInEditor(View) on all eight releases. On V20 Device is not IShowable: kind=device requires a nonempty view (device|network|topology); empty view refuses before dispatch. Opens directly by default; dryRun=true touches no UI. Examples: GetToolUsage(toolName: \"ShowObjectInEditor\"), optionally operation or language.",
+      "example": "{\"kind\":\"plcBlock\",\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"objectPath\":\"\\u003Cexact written object path from readback\\u003E\",\"dryRun\":false}"
     },
     {
       "name": "SetUnifiedRuntimeSettings",
@@ -4410,7 +4411,7 @@
         "dryRun",
         "scope"
       ],
-      "description": "[L2][Project][WRITE] Typed Test Suite definition management: read; rename (Name = newName); setScope - style guide: RuleSet.SetScope(updateOptions Add|Override, scope objects from scope [{kind project | deviceGroup (name) | plc (softwarePath -> CPU device item) | blocks | tags | types (softwarePath, optional groupPath below the system group) | units (softwarePath -> PlcUnitProvider.UnitGroup)}], native bool reported), application: TestCase.SetScope(PlcSoftware at softwarePath[, instanceName, executionMode SystemManagedPLCSIMInstance | ExternallyManagedPLCSIMInstance]; software controllers are refused natively), system: SystemTestCase.SetScope(opcUaServerAddress opc.tcp://server:port/path, serverInterfaceType UserDefined | StandardSIMATIC | SiOMECompanionSpecification[, interfaceFolderPath absolute directory]); copyScope (RuleSet.CopyScope(target rule set named by targetName)); createFromMasterCopy (RuleSetComposition / TestCaseComposition / SystemTestCaseComposition.CreateFrom(MasterCopy at masterCopyPath in the project library or the open global library libraryName), renamed to name when given); showInEditor (rule sets, test cases, test sets; WithUserInterface sessions). Default preview; readback after the change; no test run or automatic save. Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageTestSuiteCase\"), optionally operation or language.",
+      "description": "[L2][Project][WRITE] Typed Test Suite definition management: read; rename (Name = newName); setScope - style guide: RuleSet.SetScope(updateOptions Add|Override, scope objects from scope [{kind project | deviceGroup (name) | plc (softwarePath -> CPU device item) | blocks | tags | types (softwarePath, optional groupPath below the system group) | units (softwarePath -> PlcUnitProvider.UnitGroup)}], native bool reported), application: TestCase.SetScope(PlcSoftware at softwarePath[, instanceName, executionMode SystemManagedPLCSIMInstance | ExternallyManagedPLCSIMInstance]; software controllers are refused natively), system: SystemTestCase.SetScope(opcUaServerAddress opc.tcp://server:port/path, serverInterfaceType UserDefined | StandardSIMATIC | SiOMECompanionSpecification[, interfaceFolderPath absolute directory]); copyScope (RuleSet.CopyScope(target rule set named by targetName)); createFromMasterCopy (RuleSetComposition / TestCaseComposition / SystemTestCaseComposition.CreateFrom(MasterCopy at masterCopyPath in the project library or the open global library libraryName), renamed to name when given); showInEditor (rule sets, test cases, test sets; WithUserInterface sessions required; dryRun=true never touches the UI; UI only, no approval or project change). Mutating actions keep WRITE approval. Default preview; readback after the change; no test run or automatic save. Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions refuse with UNSUPPORTED_CAPABILITY before native dispatch. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageTestSuiteCase\"), optionally operation or language.",
       "example": "{\"category\":\"styleGuide\",\"name\":\"Example_1\",\"dryRun\":true,\"action\":\"read\"}"
     },
     {
