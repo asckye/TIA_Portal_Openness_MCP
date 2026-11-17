@@ -508,7 +508,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["SetUnifiedObjectProperties"] = new Classification("L2", "HMI-Unified", "WRITE", false, false, true),
             ["SetUnifiedPlantObject"] = new Classification("L2", "HMI-Unified", "WRITE", false, false, true),
             ["SetUnifiedRuntimeSettings"] = new Classification("L2", "HMI-Unified", "WRITE", false, false, true),
-            ["ShowObjectInEditor"] = new Classification("L2", "Project", "WRITE", false, false, true),
+            ["ShowObjectInEditor"] = new Classification("L2", "Project", "UI", false, false, false),
             ["SynchronizeLibrary"] = new Classification("L2", "Library", "WRITE", false, false, true),
             ["SynchronizeVersionControlWorkspace"] = new Classification("L1", "VersionControl", "WRITE", false, false, false, false, true, false, false),
             ["TraceTagCause"] = new Classification("L2", "Online-Monitoring", "READ", false, false, false, true, false, true, false),

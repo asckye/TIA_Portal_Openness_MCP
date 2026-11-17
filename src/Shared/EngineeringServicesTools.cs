@@ -86,18 +86,19 @@ namespace TiaMcpServer.ModelContextProtocol
             => _service.ReadObjectIdentifier(kind,devicePathJson,itemPathJson,softwarePath,objectPath,identifier);
 
         [McpServerTool(Name="ShowObjectInEditor"),
-                Description("[L2][Project][WRITE] IShowable.ShowInEditor on the exact object (kind=device via devicePath, kind=plcBlock/plcType/plcTagTable " +
-                "via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal " +
-                "started with user interface. Default dryRun=true.")]
+                Description("[L2][Project][UI] IShowable.ShowInEditor opens the exact object in the TIA Portal editor for the engineer. " +
+                "UI only: no project change and no approval. Requires a TIA Portal with user interface. Available on all eight releases " +
+                "(V14 SP1, V15.1, V16-V21); the target must implement IShowable. Opens directly by default; dryRun=true touches no UI.")]
         public CallToolResult ShowObjectInEditorV4(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
             string[]? devicePath = null,
             string[]? itemPath = null,
             string softwarePath="",
             string objectPath="",
-            bool dryRun=true)
+            [Description("dryRun: false (default) opens the editor without approval or project changes; true previews without touching the UI.")]
+            bool dryRun=false)
             => SessionToolContract
-                .Run("ShowObjectInEditor", !dryRun, false, () =>
+                .Run("ShowObjectInEditor", false, false, () =>
                     ShowObjectInEditor(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()),
                         softwarePath, objectPath, dryRun));
 
@@ -107,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string itemPathJson="[]",
             string softwarePath="",
             string objectPath="",
-            bool dryRun=true)
+            bool dryRun=false)
             => _service.ShowObjectInEditor(kind,devicePathJson,itemPathJson,softwarePath,objectPath,dryRun);
 
         [McpServerTool(Name="ManageProjectCompilationSettings"),

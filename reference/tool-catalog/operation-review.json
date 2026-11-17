@@ -1,5 +1,10 @@
 {
   "EXCEPTIONS": {
+    "ShowObjectInEditor": [
+      "WRITE",
+      "UI",
+      "IShowable.ShowInEditor only opens the exact object for the engineer; no project change or approval (maintainer SHOW-EDITOR, 2026-11-17)."
+    ],
     "GetExport": [
       "FILE",
       "READ",

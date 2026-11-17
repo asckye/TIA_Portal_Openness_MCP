@@ -143,7 +143,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>规范操作类型。描述里第三个方括号使用这些值；其它写法映射到这些规范值。</summary>
         public static readonly IReadOnlyDictionary<string, string> OperationMeaning = new Dictionary<string, string>
         {
-            ["UI"] = "Change Workbench pages, selection or prefill without changing a project or requiring TIA.",
+            ["UI"] = "Change Workbench or TIA Portal editor UI without project changes or approval. TIA editor actions require a Portal with user interface.",
             ["SESSION"] = "会话与发现：连接/断开/状态/引导/工具查找，不改工程",
             ["READ"] = "读取已打开工程的数据，不改动",
             ["WRITE"] = "修改已打开工程（离线工程数据），默认预览，不自动保存/编译/下载",

@@ -10,6 +10,21 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class ReadOnlySourceContracts
 {
     [Fact]
+    public void Editor_opening_keeps_exact_lookup_and_native_refusals_before_the_ui_call()
+    {
+        var source = Read("src/Adapters/Native/Engineering/EngineeringServices.cs");
+        var show = EngineSources.BlockAfter(source, "public HardwareAddressingReply ShowObjectInEditor(");
+        Contains(show, "EngineeringServicesPolicy.ObjectSelection(", "ExactIdentifiableObject(", "target as IShowable",
+            "throw new NotSupportedException", "mode != TiaPortalMode.WithUserInterface", "throw new AdapterPreconditionException",
+            "if (dryRun) return", "showable.ShowInEditor();");
+        Assert.True(show.IndexOf("if (dryRun) return", StringComparison.Ordinal)
+            < show.IndexOf("showable.ShowInEditor();", StringComparison.Ordinal));
+        var lookup = EngineSources.BlockAfter(source, "private IEngineeringObject ExactIdentifiableObject(");
+        Contains(lookup, "ExactHardware(", "ExactPlcForEngineering(", "PlcObjectPath.Parts(objectPath", "PlcGroupOperations.Find(",
+            "throw new PlcSoftwareException(\"NotFound\"");
+    }
+
+    [Fact]
     public void Technology_object_type_description_uses_technology_identifiers()
     {
         string member = Sources.Member("ManageTechnologyObjectV4", tool: true);

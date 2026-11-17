@@ -102,7 +102,7 @@
     "topic": "plc-scl-block",
     "purpose": "Create a block from SCL text: source file -> external source -> generated block -> compile -> save.",
     "preconditions": "connect-project done; the PLC software path is known.",
-    "notes": "Use the complete SCL files in GetToolUsage(language=\"scl\"). External source and SIMATIC SD envelopes differ. Generation may overwrite an existing block. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+    "notes": "Use the complete SCL files in GetToolUsage(language=\"scl\"). External source and SIMATIC SD envelopes differ. Generation may overwrite an existing block. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "20",
       "21"
@@ -168,6 +168,16 @@
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
         },
         "expect": "IsModified false"
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "<exact generated block path from readback>",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -176,7 +186,7 @@
     "topic": "plc-s7dcl-import",
     "purpose": "Preview one admitted ordinary GlobalDB document set through the shared Foundation import candidate.",
     "preconditions": "ConnectPortal then AttachOpenProject done; an ordinary GlobalDB .s7dcl (+ required V20 .s7res) set exists on the TIA machine. FC/FB/LAD documents remain refused.",
-    "notes": "Select a language example for the actual release/update. Check imported block names and document messages, then compile the relevant software. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-FALLBACK is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+    "notes": "Select a language example for the actual release/update. Check imported block names and document messages, then compile the relevant software. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-FALLBACK is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "20",
       "21"
@@ -215,6 +225,16 @@
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
         },
         "expect": "saved"
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "DB_Status",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -223,7 +243,7 @@
     "topic": "plc-builder",
     "purpose": "Build a UDT / tag table / global DB / FC / FB from structured JSON in one call (dry run first).",
     "preconditions": "connect-project done.",
-    "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see BuildAndImportPlcArtifact's example). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+    "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see BuildAndImportPlcArtifact's example). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "20",
       "21"
@@ -325,6 +345,16 @@
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
         },
         "expect": "saved"
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "FC_DryRun",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -865,7 +895,7 @@
     "topic": "export-import-block",
     "purpose": "Round-trip one block through SimaticML (export, edit outside, import back).",
     "preconditions": "connect-project done; use an export created for the same TIA release and inspect the exact PLC software and block path.",
-    "notes": "ExportPlcBlock returns the V4 envelope and exported file evidence. ImportPlcBlock does not rewrite the source version or BOM; select an artifact for the exact target release and inspect the result before a separate compile or explicit save. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-EXPORT is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-IMPORT is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+    "notes": "ExportPlcBlock returns the V4 envelope and exported file evidence. ImportPlcBlock does not rewrite the source version or BOM; select an artifact for the exact target release and inspect the result before a separate compile or explicit save. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-EXPORT is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-IMPORT is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "20",
       "21"
@@ -905,6 +935,16 @@
           "confirm": false
         },
         "expect": "ErrorCount 0"
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "Main",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -953,7 +993,7 @@
     "topic": "plc-scl-block",
     "purpose": "Ordinary PLC root: ASCII external source import, block generation, compilation and readback on the foundation profile.",
     "preconditions": "Intended TIA/project explicitly attached. An operator-reviewed ASCII FC_Add.scl without a BOM exists on the TIA host. Use exact softwarePath or unique PLC_1; generation may overwrite same-named PLC objects.",
-    "notes": "External-source file paths accept either slash spelling while all canonical local-drive restrictions remain. Review each operation preview and use only its own data.planHash for execution. PlanPlcExternalSourceImport is planning only; its plan does not execute import. Delete preview status=not-found-not-deleted returns directly without approval. Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires target inspection before repeating the call. Never replay it automatically. GetSessionState lists unsettled request IDs. No automatic save or download. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Apply still checks confirmation, project identity, reviewed hashes and blockers before recovery export or mutation; typed refusals remain rejected-before-operation/not-started and leave the session usable. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
+    "notes": "External-source file paths accept either slash spelling while all canonical local-drive restrictions remain. Review each operation preview and use only its own data.planHash for execution. PlanPlcExternalSourceImport is planning only; its plan does not execute import. Delete preview status=not-found-not-deleted returns directly without approval. Use GetToolUsage(exampleId=\"scl-add\") for the source. Read the V4 envelope first. V14 SP1 generation retains data.observation with data.nativeResult=null. Known failure is meta.outcome=failed; unknown requires target inspection before repeating the call. Never replay it automatically. GetSessionState lists unsettled request IDs. No automatic save or download. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. P6-35 behavior family P6-SOURCE is current for applicable release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Apply still checks confirmation, project identity, reviewed hashes and blockers before recovery export or mutation; typed refusals remain rejected-before-operation/not-started and leave the session usable. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "14sp1",
       "15.1",
@@ -1071,6 +1111,16 @@
           "expectedPlanHash": "<data.planHash from this deletion preview>"
         },
         "expect": "deleted-verified after approval, or not-found-not-deleted without approval; generated PLC objects remain."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "FC_Add",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -1146,7 +1196,7 @@
     "topic": "foundation-write-tags",
     "purpose": "Create a fresh table, PLC-wide unique tag and constant, verify them and explicitly save.",
     "preconditions": "foundation-connect-project completed; the exact bound projectFile and unique PLC alias are known. Inspect all PLC table inventories and choose fresh PLC-wide symbol names before previews.",
-    "notes": "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Apply still checks confirmation, project identity, reviewed hashes and blockers before recovery export or mutation; typed refusals remain rejected-before-operation/not-started and leave the session usable. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "notes": "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Apply still checks confirmation, project identity, reviewed hashes and blockers before recovery export or mutation; typed refusals remain rejected-before-operation/not-started and leave the session usable. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "14sp1",
       "15.1",
@@ -1282,6 +1332,16 @@
           "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
         },
         "expect": "Wait for approval before saving the intended project; inspect V4 outcome/execution."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcTagTable",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "<exact new table path from ListPlcTagTables>",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -1814,7 +1874,7 @@
     "topic": "plc-xml-round-trip",
     "purpose": "Export, edit, import and verify tag-table/block XML using the current full-engine schema.",
     "preconditions": "The intended V20/V21 project is bound; use exact software/block/table paths from its tree. Choose new XML outputs in an existing directory on the TIA machine. Compile an inconsistent block before export and satisfy compile offline prerequisites.",
-    "notes": "The current full-engine import schema has no overwrite, dryRun, confirm or expectedProjectFile parameters; Foundation overwrite selection, normalized-path and precheck evidence must not be inferred here. Review the current native import behavior before replacing any existing object. Read the returned export path and edit that same native XML before import, preserving release and object identity. Imports and compile require Workbench approval. This flow has contract checks only; V20/V21 native round-trip acceptance NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+    "notes": "The current full-engine import schema has no overwrite, dryRun, confirm or expectedProjectFile parameters; Foundation overwrite selection, normalized-path and precheck evidence must not be inferred here. Review the current native import behavior before replacing any existing object. Read the returned export path and edit that same native XML before import, preserving release and object identity. Imports and compile require Workbench approval. This flow has contract checks only; V20/V21 native round-trip acceptance NOT RUN. These examples do not change the current behavior policy or certify safe-v4. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "20",
       "21"
@@ -1901,6 +1961,26 @@
           "confirm": false
         },
         "expect": "Approve real compilation and inspect compiler state/errors."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcTagTable",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "默认变量表",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "Main",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -1909,7 +1989,7 @@
     "topic": "stage-scl-function",
     "purpose": "Send caller text from the AI host to TIA and generate a function.",
     "preconditions": "Exact project and PLC are already bound; external-source root and intended replacement scope reviewed.",
-    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN.",
+    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "14sp1",
       "15.1",
@@ -2003,6 +2083,26 @@
           "dryRun": false
         },
         "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
+      },
+      {
+        "tool": "CompilePlcDiagnostics",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "After the final successful generation/import, compile and inspect native state, errorCount and nested diagnostics before displaying the result. Stop on a failed or unknown write; never replay it."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "FC_Add",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -2011,7 +2111,7 @@
     "topic": "stage-scl-udt",
     "purpose": "Send caller text from the AI host to TIA and generate a UDT from SCL TYPE.",
     "preconditions": "Exact project and PLC are already bound; external-source root and intended replacement scope reviewed.",
-    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN.",
+    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "14sp1",
       "15.1",
@@ -2105,6 +2205,26 @@
           "dryRun": false
         },
         "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
+      },
+      {
+        "tool": "CompilePlcDiagnostics",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "After the final successful generation/import, compile and inspect native state, errorCount and nested diagnostics before displaying the result. Stop on a failed or unknown write; never replay it."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcType",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "ExampleUDT",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -2113,7 +2233,7 @@
     "topic": "stage-program-overwrite",
     "purpose": "Stage a mixed program directory, review create/replace plan and import with recovery backups.",
     "preconditions": "Use complete exact-release Openness XML; ordinary blocks/types/tag tables and exact existing destination groups. Safety/protected objects, V14 SP1 interface-only SCL XML and technology objects are refused.",
-    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download. Single-file backup is best effort with BACKUP_SKIPPED; batch replacement backup remains mandatory. Reconnected sessions can list and clean identified batches. Unknown cleanup entries are retained with a warning.",
+    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download. Single-file backup is best effort with BACKUP_SKIPPED; batch replacement backup remains mandatory. Reconnected sessions can list and clean identified batches. Unknown cleanup entries are retained with a warning. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "14sp1",
       "15.1",
@@ -2235,6 +2355,36 @@
         "tool": "ListStagedImportFiles",
         "arguments": {},
         "expect": "Review retained staged batches; cleanup the selected batchId explicitly after inspection."
+      },
+      {
+        "tool": "CompilePlcDiagnostics",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "After the final successful generation/import, compile and inspect native state, errorCount and nested diagnostics before displaying the result. Stop on a failed or unknown write; never replay it."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcType",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "ExampleUDT",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "Main",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -2243,7 +2393,7 @@
     "topic": "stage-scl-function",
     "purpose": "Send caller text from the AI host to TIA and generate a function.",
     "preconditions": "Exact project and PLC are already bound; external-source root and intended replacement scope reviewed.",
-    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN.",
+    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "20",
       "21"
@@ -2308,6 +2458,26 @@
           "dryRun": false
         },
         "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
+      },
+      {
+        "tool": "CompilePlcDiagnostics",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "After the final successful generation/import, compile and inspect native state, errorCount and nested diagnostics before displaying the result. Stop on a failed or unknown write; never replay it."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "FC_Add",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -2316,7 +2486,7 @@
     "topic": "stage-scl-udt",
     "purpose": "Send caller text from the AI host to TIA and generate a UDT from SCL TYPE.",
     "preconditions": "Exact project and PLC are already bound; external-source root and intended replacement scope reviewed.",
-    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN.",
+    "notes": "No hand copy into VM. Source generation is separate from full PLC compile. Each planned Foundation write uses its own expectedPlanHash. Full-engine current source tools have no preview/hash parameters; do not pass candidate-only arguments. Do not replay OUTCOME_UNKNOWN. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "20",
       "21"
@@ -2381,6 +2551,26 @@
           "dryRun": false
         },
         "expect": "After inspecting/importing, approve cleanup of the staged source; recovery exports are retained."
+      },
+      {
+        "tool": "CompilePlcDiagnostics",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "After the final successful generation/import, compile and inspect native state, errorCount and nested diagnostics before displaying the result. Stop on a failed or unknown write; never replay it."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "FC_Add",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -2389,7 +2579,7 @@
     "topic": "stage-program-overwrite",
     "purpose": "Stage a mixed program directory, review create/replace plan and import with recovery backups.",
     "preconditions": "Use complete exact-release Openness XML; ordinary blocks/types/tag tables and exact existing destination groups. Safety/protected objects, V14 SP1 interface-only SCL XML and technology objects are refused.",
-    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download. Single-file backup is best effort with BACKUP_SKIPPED; batch replacement backup remains mandatory. Reconnected sessions can list and clean identified batches. Unknown cleanup entries are retained with a warning.",
+    "notes": "All selected files must appear exactly once in dependency-first importOrder. Existing-object exports are retained under the host data root recovery directory. Created objects remain changed after a later failure. An unknown failed replacement is not automatically replayed; known earlier replacements are restored. No save/compile/download. Single-file backup is best effort with BACKUP_SKIPPED; batch replacement backup remains mandatory. Reconnected sessions can list and clean identified batches. Unknown cleanup entries are retained with a warning. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
     "releaseKeys": [
       "20",
       "21"
@@ -2491,6 +2681,26 @@
         "tool": "ListStagedImportFiles",
         "arguments": {},
         "expect": "Review retained staged batches; cleanup the selected batchId explicitly after inspection."
+      },
+      {
+        "tool": "CompilePlcDiagnostics",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "After the final successful generation/import, compile and inspect native state, errorCount and nested diagnostics before displaying the result. Stop on a failed or unknown write; never replay it."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "Main",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   },
@@ -4460,6 +4670,71 @@
           "moduleName": "NewStatus"
         },
         "expect": "Read all pages and verify the created module text. Native TIA acceptance remains NOT RUN until a VM test."
+      }
+    ]
+  },
+  {
+    "id": "sequence/show-written-object",
+    "topic": "show-written-object",
+    "purpose": "Write -> compile -> ShowObjectInEditor: show the written PLC object to the engineer watching TIA Portal.",
+    "preconditions": "Bind the intended project and exact PLC software path. Choose a same-release native block XML and a new block name; resolve the resulting exact object path from readback.",
+    "notes": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write. The same display pattern applies to plcType and plcTagTable using their exact written paths.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "importPath": "<same-release block XML on the TIA machine>",
+          "overwrite": false,
+          "dryRun": true
+        },
+        "expect": "Review the write preview and exact target before applying."
+      },
+      {
+        "tool": "ImportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "importPath": "<same-release block XML on the TIA machine>",
+          "overwrite": false,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "Obtain write approval and verify the completed import and exact affected block path; stop on failure or unknown outcome."
+      },
+      {
+        "tool": "CompilePlcDiagnostics",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "Inspect native compiler state, errorCount and nested diagnostics after the successful write."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "<exact written block path from import/readback>",
+          "dryRun": false
+        },
+        "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."
       }
     ]
   }

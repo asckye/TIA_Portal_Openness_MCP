@@ -116,7 +116,8 @@ namespace TiaOpenness.Shared
             if (engineSource)
                 foreach (var maintained in Data.Value["sequences"]!.AsArray().OfType<JsonObject>())
                     if (maintained["steps"] is JsonArray steps && steps.Any(step =>
-                        TiaMcpServer.ModelContextProtocol.ToolMetadata.Find((string)step!["tool"]!)?.Domain
+                        (string?)step!["tool"] == "ShowObjectInEditor"
+                        || TiaMcpServer.ModelContextProtocol.ToolMetadata.Find((string)step!["tool"]!)?.Domain
                             .StartsWith("HMI", StringComparison.Ordinal) == true))
                     {
                         var existing = rows.FirstOrDefault(row => (string?)row!["id"] == (string?)maintained["id"]);
@@ -138,7 +139,8 @@ namespace TiaOpenness.Shared
                 ?.DeepClone();
             if (row == null) return null;
             if (entry != null) row["arguments"] = entry["arguments"]!.DeepClone();
-            PreviewForm(row["arguments"]!.AsObject());
+            if (TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation != "UI")
+                PreviewForm(row["arguments"]!.AsObject());
             var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
             // Only our explicit format tokens are replaced; braces in JSON/code are preserved.
             return JsonNode.Parse(row.ToJsonString().Replace("{extension}", extension).Replace("{release}", release)
@@ -317,7 +319,9 @@ namespace TiaOpenness.Shared
             foreach (var key in new[] { "action", "operation", "dryRun", "confirm" })
                 if (properties[key] is JsonObject prop && !args.ContainsKey(key)) args[key] = ExampleValue(key, prop);
             if (operation.Length > 0) args[selector] = operation;
-            if (properties.ContainsKey("dryRun")) args["dryRun"] = true;
+            if (properties.ContainsKey("dryRun"))
+                args["dryRun"] = TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "UI"
+                    ? properties["dryRun"]?["default"]?.DeepClone() ?? JsonValue.Create(false) : JsonValue.Create(true);
             if (properties.ContainsKey("confirm")) args["confirm"] = false;
             var origins = new JsonObject();
             var available = new HashSet<string>(roster ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);

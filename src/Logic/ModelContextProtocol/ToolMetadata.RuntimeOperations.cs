@@ -470,7 +470,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["SetUnifiedHmiButtonEventScriptCodeV4"] = "WRITE",
             ["SetUnifiedLogDurationV4"] = "WRITE",
             ["SetWatchTableModifyValueV4"] = "ONLINE-WRITE",
-            ["ShowObjectInEditorV4"] = "WRITE",
+            ["ShowObjectInEditorV4"] = "UI",
             ["SynchronizeLibraryV4"] = "WRITE",
             ["SynchronizeVersionControlWorkspaceV4"] = "WRITE",
             ["TraceTagCauseLiveV4"] = "ONLINE",

@@ -2759,7 +2759,7 @@
       "path": "src/Shared/EngineeringServicesTools.cs",
       "owner": "EngineeringServicesTools",
       "domain": "Project",
-      "signature": "public CallToolResult ShowObjectInEditorV4(\n            [Description(\"kind: device | deviceItem | plcBlock | plcType | plcTagTable.\")] string kind=\"device\",\n            string[]? devicePath = null,\n            string[]? itemPath = null,\n            string softwarePath=\"\",\n            string objectPath=\"\",\n            bool dryRun=true)",
+      "signature": "public CallToolResult ShowObjectInEditorV4(\n            [Description(\"kind: device | deviceItem | plcBlock | plcType | plcTagTable.\")] string kind=\"device\",\n            string[]? devicePath = null,\n            string[]? itemPath = null,\n            string softwarePath=\"\",\n            string objectPath=\"\",\n            [Description(\"dryRun: false (default) opens the editor without approval or project changes; true previews without touching the UI.\")]\n            bool dryRun=false)",
       "parameters": {
         "kind": {
           "type": "string",
@@ -2789,8 +2789,9 @@
         },
         "dryRun": {
           "type": "bool",
-          "default": "true",
-          "value": true
+          "default": "false",
+          "value": false,
+          "description": "dryRun: false (default) opens the editor without approval or project changes; true previews without touching the UI."
         }
       }
     },

@@ -73,7 +73,7 @@ namespace TiaMcpServer.Siemens.Services
                 });
 
         public ResponseMessage ShowObjectInEditor(string kind = "device", string devicePathJson = "[]", string itemPathJson = "[]", string softwarePath = "",
-                string objectPath = "", bool dryRun = true)
+                string objectPath = "", bool dryRun = false)
             =>
                 Invoke(new EngineeringServicesRequest {
                     Operation = "ShowObjectInEditor", Kind = kind, DevicePath = JsonSerializer.Deserialize<string[]>(devicePathJson)!, ItemPath = JsonSerializer
