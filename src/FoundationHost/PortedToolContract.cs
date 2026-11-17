@@ -479,7 +479,7 @@ internal sealed partial class FoundationTool
             }
             if (tool.Name == "DownloadPlc" && arguments.TryGetValue("dryRun", out var downloadPreview)
                 && downloadPreview.ValueKind == JsonValueKind.False
-                && HostBehavior.DownloadTargetKind(Text("targetIpAddress")) == "physical"
+                && HostBehavior.DownloadTargetKind(Text("targetIpAddress"), Text("pgPcInterface")) == "physical"
                 && (!arguments.TryGetValue("confirmPhysicalTarget", out var physicalConfirmation)
                     || physicalConfirmation.ValueKind != JsonValueKind.True))
                 return McpServer.TargetFailure(tool.Name, new AdapterPreconditionException(

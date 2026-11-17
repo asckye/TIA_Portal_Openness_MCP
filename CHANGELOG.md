@@ -28,7 +28,7 @@
 - GetToolUsage includes compile/save/preview/execute sequences for PLCSIM and physical downloads, with release API compatibility notes.
 
 ### Changed
-- Non-preview ONLINE-WRITE calls require Workbench approval even with approval switched off, except the three PLCSIM-only tools and DownloadPlc to a verified running PLCSIM Advanced instance address or a subnet exclusive to the PLCSIM virtual adapter. The PG/PC interface hint cannot establish simulation; the worker independently requires physical-target confirmation.
+- Non-preview ONLINE-WRITE calls require Workbench approval even with approval switched off, except the three PLCSIM-only tools and DownloadPlc with an empty or PLCSIM/Softbus interface, no overlapping non-PLCSIM subnet in any adapter state, and either a matching running PLCSIM Advanced instance address or an exclusive PLCSIM adapter subnet with a contiguous mask of /8 or narrower. Instance IPs are read from the controllerIP array; malformed rows provide no evidence. The interface or instance address alone cannot establish simulation; the worker independently requires physical-target confirmation.
 - DownloadPlc refuses unsaved or known inconsistent projects; compile and explicitly save first. Unknown consistency is reported. Online write preview plans expire after 15 minutes by default, configurable locally through `onlinePlanLifetimeSeconds` in approval.settings; expired execution returns PLAN_STALE. Repeating a preview past half its lifetime issues a fresh hash and deadline without extending the original plan.
 
 - `ApplyToolBatch` fills missing plan bindings from each item's stored preview; PLC tag-table imports and Unified tag creation now support the batch route.

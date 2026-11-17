@@ -86,6 +86,9 @@
     <ProjectReference Include="../../../src/Studio/Contracts/TiaOpenness.Contracts.csproj" />
     <Compile Include="../../../src/Logic/Siemens/SubnetTypePolicy.cs" Link="Session/SubnetTypePolicy.cs" />
     <Compile Include="../../../src/PlcWorker/OnlineDownloadGuard.cs" Link="OnlineDownloadGuard.cs" />
+    <Compile Include="../../../src/Logic/Siemens/DownloadTargetPolicy.cs" Link="DownloadTargetPolicy.cs" />
+    <Compile Include="../../../src/Logic/Siemens/LocalNetworkPolicy.cs" Link="LocalNetworkPolicy.cs" />
+    <Compile Include="../../Shared/DownloadTargetCases.cs" Link="Shared/DownloadTargetCases.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerJson.cs" Link="WorkerJson.cs" />
     <Compile Include="../../../src/Shared/HostFailurePolicy.cs" Link="Shared/HostFailurePolicy.cs" />
     <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="Shared/ProcessLossPolicy.cs" />

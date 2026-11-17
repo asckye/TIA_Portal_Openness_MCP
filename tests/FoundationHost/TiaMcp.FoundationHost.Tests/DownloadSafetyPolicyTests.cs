@@ -1,9 +1,11 @@
 using System.Text.Json.Nodes;
+using System.Net.NetworkInformation;
+using TiaMcp.Engine.Tests.Shared;
 using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
 using Xunit;
 
-public sealed class DownloadSafetyPolicyTests
+public sealed class DownloadSafetyPolicyTests(Xunit.Abstractions.ITestOutputHelper output)
 {
     [Theory]
     [InlineData("PLCSIM", "physical")]
@@ -16,43 +18,45 @@ public sealed class DownloadSafetyPolicyTests
     {
         using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => null, _ => new JsonObject());
         var arguments = new JsonObject { ["pgPcInterface"] = adapter, ["targetIpAddress"] = "192.0.2.10", ["dryRun"] = false };
-        Assert.Equal(expected, HostBehavior.DownloadTargetKind((string?)arguments["targetIpAddress"]));
+        Assert.Equal(expected, HostBehavior.DownloadTargetKind((string?)arguments["targetIpAddress"], adapter));
         Assert.True(HostBehavior.ApprovalRequired(false, "DownloadPlc", arguments));
     }
 
     [Fact]
     public void Approval_matrix_preserves_previews_and_simulator_exceptions()
     {
-        using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => RunningInstance("192.0.2.10"), _ => new JsonObject());
-        foreach (bool enabled in new[] { false, true })
-        foreach (bool preview in new[] { false, true })
-        foreach (string tool in new[] { "DownloadPlc", "WritePlcSimAdvancedTags", "ManagePlcSimAdvancedInstance",
-            "RunPlcSimAdvancedTestScenario", "WritePlcWebVars", "SetPlcWebOperatingMode", "SetPlcBlockAttribute" })
-        foreach (string adapter in new[] { "PLCSIM", "Intel(R) Ethernet", "" })
-        foreach (string target in new[] { "192.0.2.10", "192.0.2.11" })
+        foreach (bool collision in new[] { false, true })
         {
-            var arguments = new JsonObject { ["dryRun"] = preview, ["pgPcInterface"] = adapter, ["targetIpAddress"] = target };
-            bool physicalWrite = tool is "WritePlcWebVars" or "SetPlcWebOperatingMode" || tool == "DownloadPlc" && target != "192.0.2.10";
-            Assert.Equal(enabled || !preview && physicalWrite, HostBehavior.ApprovalRequired(enabled, tool, arguments));
+            using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => RunningInstance("192.0.2.10"),
+                _ => DownloadTargetCases.Network(collision ? OperationalStatus.Up : null));
+            foreach (bool enabled in new[] { false, true })
+            foreach (bool preview in new[] { false, true })
+            foreach (string tool in new[] { "DownloadPlc", "WritePlcSimAdvancedTags", "ManagePlcSimAdvancedInstance",
+                "RunPlcSimAdvancedTestScenario", "WritePlcWebVars", "SetPlcWebOperatingMode", "SetPlcBlockAttribute" })
+            foreach (string adapter in new[] { "PLCSIM", "Intel(R) Ethernet", "" })
+            foreach (string target in new[] { "192.0.2.10", "192.0.2.11" })
+            {
+                var arguments = new JsonObject { ["dryRun"] = preview, ["pgPcInterface"] = adapter, ["targetIpAddress"] = target };
+                bool physicalWrite = tool is "WritePlcWebVars" or "SetPlcWebOperatingMode" || tool == "DownloadPlc"
+                    && (target != "192.0.2.10" || adapter == "Intel(R) Ethernet" || collision);
+                Assert.Equal(enabled || !preview && physicalWrite, HostBehavior.ApprovalRequired(enabled, tool, arguments));
+            }
         }
         Assert.False(HostBehavior.ApprovalRequired(false, "DownloadPlc", new JsonObject()));
         Assert.True(HostBehavior.ApprovalRequired(false, "WritePlcWebVars", new JsonObject { ["dryRun"] = "true" }));
     }
 
-    internal static JsonObject RunningInstance(string ip) => new() { ["Data"] = new JsonObject {
-        ["instances"] = new JsonArray(new JsonObject { ["name"] = "fixture", ["id"] = 1, ["operatingState"] = "Run", ["controllerIP"] = ip }) } };
+    internal static JsonObject RunningInstance(string ip) => DownloadTargetCases.Listing(ip);
 
-    [Fact]
-    public void Running_instance_address_is_simulated_independently_of_the_requested_interface()
+    [Theory, MemberData(nameof(DownloadTargetCases.Cases), MemberType = typeof(DownloadTargetCases))]
+    public void Target_evidence_drives_host_kind_and_approval(string name, string adapter, string listingJson, string networkJson, string expected)
     {
-        using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => RunningInstance("192.0.2.10"), _ => new JsonObject());
-        Assert.Equal("plcsim", HostBehavior.DownloadTargetKind("192.0.2.10"));
-        Assert.Equal("physical", HostBehavior.DownloadTargetKind("192.0.2.11"));
-        Assert.False(HostBehavior.ApprovalRequired(false, "DownloadPlc", new JsonObject {
-            ["targetIpAddress"] = "192.0.2.10", ["pgPcInterface"] = "Intel(R) Ethernet", ["dryRun"] = false }));
-        var stopped = RunningInstance("192.0.2.10");
-        stopped["Data"]!["instances"]![0]!["operatingState"] = "Stop";
-        Assert.Equal("physical", TiaMcpServer.Siemens.DownloadTargetPolicy.Classify("192.0.2.10", stopped, new JsonObject()));
+        output.WriteLine(name);
+        using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(
+            () => JsonNode.Parse(listingJson)!.AsObject(), _ => JsonNode.Parse(networkJson)!.AsObject());
+        Assert.Equal(expected, HostBehavior.DownloadTargetKind(DownloadTargetCases.Target, adapter));
+        Assert.Equal(expected == "physical", HostBehavior.ApprovalRequired(false, "DownloadPlc", new JsonObject {
+            ["targetIpAddress"] = DownloadTargetCases.Target, ["pgPcInterface"] = adapter, ["dryRun"] = false }));
     }
 
     [Fact]
@@ -60,30 +64,32 @@ public sealed class DownloadSafetyPolicyTests
     {
         const string target = "192.168.1.10";
         var sim = new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Sim", Description = "Siemens PLCSIM Virtual Ethernet Adapter",
-            Type = System.Net.NetworkInformation.NetworkInterfaceType.Ethernet, Up = true, Ip = "192.168.1.2", Mask = "255.255.255.0" };
+            Type = NetworkInterfaceType.Ethernet, Status = OperationalStatus.Up,
+            Ip = "192.168.1.2", Mask = "255.255.255.0" };
         var real = new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Real", Description = "Intel Ethernet",
-            Type = System.Net.NetworkInformation.NetworkInterfaceType.Ethernet, Up = true, Ip = "192.168.1.3", Mask = "255.255.255.0" };
+            Type = NetworkInterfaceType.Ethernet, Status = OperationalStatus.Up,
+            Ip = "192.168.1.3", Mask = "255.255.255.0" };
         var simOnly = TiaMcpServer.Siemens.LocalNetworkPolicy.Report(target, new[] { sim });
-        Assert.Equal("plcsim", TiaMcpServer.Siemens.DownloadTargetPolicy.Classify(target, null, simOnly));
+        Assert.Equal("plcsim", TiaMcpServer.Siemens.DownloadTargetPolicy.Classify(target, "PLCSIM", null, simOnly));
         var actual = TiaMcpServer.Siemens.LocalNetworkPolicy.Report(target, new[] { real });
         using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => null, _ => actual);
         Assert.Equal("physical", HostBehavior.DownloadTargetKind(target));
         Assert.True(HostBehavior.ApprovalRequired(false, "DownloadPlc", new JsonObject {
             ["targetIpAddress"] = target, ["pgPcInterface"] = "PLCSIM", ["dryRun"] = false }));
-        Assert.Equal("physical", TiaMcpServer.Siemens.DownloadTargetPolicy.Classify(target, null,
+        Assert.Equal("physical", TiaMcpServer.Siemens.DownloadTargetPolicy.Classify(target, "PLCSIM", null,
             TiaMcpServer.Siemens.LocalNetworkPolicy.Report(target, new[] { sim, real })));
         var hidden = new[] {
-            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Down", Description = "Down", Up = false,
+            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Down", Description = "Down", Status = OperationalStatus.Down,
                 Ip = "192.168.1.4", Mask = "255.255.255.0" },
-            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Other", Description = "Other", Up = true,
+            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Other", Description = "Other", Status = OperationalStatus.Up,
                 Ip = "10.0.0.1", Mask = "255.255.255.0" },
-            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "VPN", Description = "VPN", Up = true,
-                Type = System.Net.NetworkInformation.NetworkInterfaceType.Tunnel, Ip = "192.168.1.5", Mask = "255.255.255.0" },
-            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Loopback", Description = "Loopback", Up = true,
-                Type = System.Net.NetworkInformation.NetworkInterfaceType.Loopback, Ip = "192.168.1.6", Mask = "255.255.255.0" }, sim };
+            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "VPN", Description = "VPN", Status = OperationalStatus.Up,
+                Type = NetworkInterfaceType.Tunnel, Ip = "192.168.1.5", Mask = "255.255.255.0" },
+            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Loopback", Description = "Loopback", Status = OperationalStatus.Up,
+                Type = NetworkInterfaceType.Loopback, Ip = "192.168.1.6", Mask = "255.255.255.0" }, sim };
         hidden = hidden.Concat(new[] { "TAP-Windows Adapter V9", "WireGuard", "Wintun" }.Select(description =>
-            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Ethernet 2", Description = description, Up = true,
-                Type = System.Net.NetworkInformation.NetworkInterfaceType.Ethernet, Ip = "192.168.1.7", Mask = "255.255.255.0" })).ToArray();
+            new TiaMcpServer.Siemens.LocalNetworkPolicy.Address { Name = "Ethernet 2", Description = description, Status = OperationalStatus.Up,
+                Type = NetworkInterfaceType.Ethernet, Ip = "192.168.1.7", Mask = "255.255.255.0" })).ToArray();
         var report = TiaMcpServer.Siemens.LocalNetworkPolicy.Report(target, hidden);
         Assert.Equal("Sim", (string?)Assert.Single(report["adapters"]!.AsArray())!["name"]);
         Assert.False((bool?)report["simulationOnlySubnet"]);

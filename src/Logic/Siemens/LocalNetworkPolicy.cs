@@ -23,7 +23,7 @@ namespace TiaMcpServer.Siemens
         {
             internal string Name = "", Description = "", Ip = "", Mask = "";
             internal NetworkInterfaceType Type;
-            internal bool Up;
+            internal OperationalStatus Status;
         }
 
         // Local OS inventory only; no probe, DNS lookup or socket is opened.
@@ -35,11 +35,10 @@ namespace TiaMcpServer.Siemens
             {
                 foreach (var adapter in NetworkInterface.GetAllNetworkInterfaces())
                 {
-                    if (adapter.OperationalStatus != OperationalStatus.Up) continue;
                     foreach (var address in adapter.GetIPProperties().UnicastAddresses)
                         if (address.Address.AddressFamily == AddressFamily.InterNetwork)
                             addresses.Add(new Address { Name = adapter.Name, Description = adapter.Description, Type = adapter.NetworkInterfaceType,
-                                Up = true, Ip = address.Address.ToString(), Mask = address.IPv4Mask.ToString() });
+                                Status = adapter.OperationalStatus, Ip = address.Address.ToString(), Mask = address.IPv4Mask.ToString() });
                 }
             }
             catch (NetworkInformationException) /* swallow(env-probe): incomplete inventory cannot establish a simulator-only subnet. */
@@ -55,11 +54,12 @@ namespace TiaMcpServer.Siemens
             bool matches = false, simulator = false, other = false;
             foreach (var address in addresses)
             {
-                if (!address.Up || !SharesSubnet(address.Ip, address.Mask, target)) continue;
-                matches = true;
+                if (!SharesSubnet(address.Ip, address.Mask, target)) continue;
                 bool simulated = address.Description.IndexOf("PLCSIM Virtual Ethernet Adapter", StringComparison.OrdinalIgnoreCase) >= 0;
-                simulator |= simulated;
                 other |= !simulated;
+                if (address.Status != OperationalStatus.Up) continue;
+                matches = true;
+                simulator |= simulated && SimulatorMask(address.Mask);
                 bool privateAdapter = address.Type is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel or NetworkInterfaceType.Ppp
                     || address.Description.IndexOf("VPN", StringComparison.OrdinalIgnoreCase) >= 0
                     || address.Name.IndexOf("VPN", StringComparison.OrdinalIgnoreCase) >= 0
@@ -72,10 +72,24 @@ namespace TiaMcpServer.Siemens
                         ["sharesTargetSubnet"] = true }) });
             }
             return new JsonObject { ["targetIpAddress"] = target, ["adapters"] = adapters, ["sharesLocalSubnet"] = matches,
+                ["noNonPlcsimSubnetOverlap"] = complete && !other,
                 ["simulationOnlySubnet"] = complete && simulator && !other,
                 ["warning"] = !complete ? "Local adapter inventory is incomplete."
                     : matches ? null : "No active local IPv4 adapter shares the target subnet. Check the PG/PC route. "
                         + "Routed networks and PLCSIM Softbus may still work; this is a warning, not a reachability test." };
+        }
+
+        private static bool SimulatorMask(string text)
+        {
+            if (!IPAddress.TryParse(text, out var mask) || mask.AddressFamily != AddressFamily.InterNetwork) return false;
+            int prefix = 0;
+            bool zero = false;
+            foreach (byte part in mask.GetAddressBytes())
+                for (int bit = 7; bit >= 0; bit--)
+                    if ((part & (1 << bit)) == 0) zero = true;
+                    else if (zero) return false;
+                    else prefix++;
+            return prefix >= 8;
         }
     }
 }

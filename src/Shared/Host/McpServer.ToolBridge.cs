@@ -326,7 +326,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static CallToolResult RunOnlineNetworkCheck(string tool, string target, Func<CallToolResult> call)
         {
-            var network = TiaMcpServer.Siemens.LocalNetworkPolicy.Inspect(target);
+            var network = TiaMcpServer.Siemens.DownloadTargetPolicy.NetworkSnapshot(target);
             var result = call();
             if (ResultBody(result) is not JsonObject body) return result;
             if (body["data"] is not JsonObject data) body["data"] = data = new JsonObject();
@@ -459,7 +459,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (tool == "DownloadPlc")
             {
-                string kind = HostBehavior.DownloadTargetKind((string?)JsonSerializer.SerializeToNode(arguments)?["targetIpAddress"]);
+                var target = JsonSerializer.SerializeToNode(arguments);
+                string kind = HostBehavior.DownloadTargetKind((string?)target?["targetIpAddress"], (string?)target?["pgPcInterface"]);
                 plan["targetKind"] = kind;
                 plan["requiresPhysicalConfirmation"] = kind == "physical";
                 if (kind == "physical") plan["executionRequirement"] = "Set confirmPhysicalTarget=true in the reviewed preview and execution. "

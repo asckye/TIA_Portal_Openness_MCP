@@ -1,8 +1,10 @@
+using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
+using TiaMcp.Engine.Tests.Shared;
 using TiaMcp.PlcWorker;
 using Xunit;
 
-public sealed class OnlineDownloadWorkerGuardTests
+public sealed class OnlineDownloadWorkerGuardTests(Xunit.Abstractions.ITestOutputHelper output)
 {
     [Theory]
     [InlineData(false, false, false)]
@@ -12,11 +14,12 @@ public sealed class OnlineDownloadWorkerGuardTests
     public void Raw_worker_download_cannot_bypass_physical_confirmation(bool preview, bool confirmed, bool simulated)
     {
         var request = new OnlineRequest { Operation = "DownloadPlc", DryRun = preview, ConfirmPhysicalTarget = confirmed,
-            PgPcInterface = "PLCSIM", TargetIpAddress = "192.168.1.10" };
+            PgPcInterface = "PLCSIM", TargetIpAddress = DownloadTargetCases.Target };
         int nativeCalls = 0;
         void RawWorkerCall()
         {
-            OnlineDownloadGuard.Require(request, preview, _ => simulated);
+            OnlineDownloadGuard.Require(request, preview, () => DownloadTargetCases.Listing(simulated ? request.TargetIpAddress : "198.51.100.1"),
+                _ => DownloadTargetCases.Network());
             nativeCalls++;
         }
         if (!preview && !confirmed && !simulated)
@@ -38,8 +41,34 @@ public sealed class OnlineDownloadWorkerGuardTests
         foreach (bool preview in new[] { false, true })
         {
             var request = new OnlineRequest { Operation = "DownloadPlc", DryRun = !preview,
-                PgPcInterface = "PLCSIM", TargetIpAddress = "192.168.1.10" };
-            Assert.Throws<AdapterPreconditionException>(() => OnlineDownloadGuard.Require(request, preview, _ => false));
+                PgPcInterface = "PLCSIM", TargetIpAddress = DownloadTargetCases.Target };
+            Assert.Throws<AdapterPreconditionException>(() => OnlineDownloadGuard.Require(request, preview, () => DownloadTargetCases.Listing(),
+                _ => DownloadTargetCases.Network()));
+        }
+    }
+
+    [Theory, MemberData(nameof(DownloadTargetCases.Cases), MemberType = typeof(DownloadTargetCases))]
+    public void Raw_worker_target_evidence_matches_host_policy(string name, string adapter, string listingJson, string networkJson, string expected)
+    {
+        output.WriteLine(name);
+        var request = new OnlineRequest { Operation = "DownloadPlc", DryRun = false,
+            PgPcInterface = adapter, TargetIpAddress = DownloadTargetCases.Target };
+        int nativeCalls = 0;
+        void Dispatch()
+        {
+            OnlineDownloadGuard.Require(request, false, () => JsonNode.Parse(listingJson)!.AsObject(),
+                _ => JsonNode.Parse(networkJson)!.AsObject());
+            nativeCalls++;
+        }
+        if (expected == "physical")
+        {
+            Assert.Throws<AdapterPreconditionException>(Dispatch);
+            Assert.Equal(0, nativeCalls);
+        }
+        else
+        {
+            Dispatch();
+            Assert.Equal(1, nativeCalls);
         }
     }
 

@@ -50,8 +50,8 @@ namespace TiaMcp.Logic.V4
                 || CallerInputFiles.WritesOutsideOutputRoot(tool, args);
         }
 
-        internal static string DownloadTargetKind(string? targetIpAddress)
-            => TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind(targetIpAddress);
+        internal static string DownloadTargetKind(string? targetIpAddress, string? pgPcInterface = null)
+            => TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind(targetIpAddress, pgPcInterface);
 
         internal static bool ApprovalRequired(bool switchEnabled, string tool, JsonObject arguments)
         {
@@ -60,7 +60,7 @@ namespace TiaMcp.Logic.V4
                 || IsPreview(arguments, true)) return false;
             if (tool is "ManagePlcSimAdvancedInstance" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario") return false;
             return tool != "DownloadPlc"
-                || TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind((string?)arguments["targetIpAddress"]) != "plcsim";
+                || DownloadTargetKind((string?)arguments["targetIpAddress"], (string?)arguments["pgPcInterface"]) != "plcsim";
         }
 
         internal static bool NeedsPrecheck(bool internalPreview, bool write, bool enabled, bool hasPreview)

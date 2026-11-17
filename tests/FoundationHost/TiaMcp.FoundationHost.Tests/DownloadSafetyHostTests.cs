@@ -7,6 +7,58 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 public sealed class DownloadSafetyHostTests
 {
+    public static IEnumerable<object[]> CollidingInstances => from nested in new[] { false, true }
+        from sample in new[] { ("Intel(R) Ethernet", (System.Net.NetworkInformation.OperationalStatus?)null),
+            ("PLCSIM", System.Net.NetworkInformation.OperationalStatus.Up),
+            ("PLCSIM", System.Net.NetworkInformation.OperationalStatus.Down),
+            ("", System.Net.NetworkInformation.OperationalStatus.Down) }
+        select new object[] { nested, sample.Item1, sample.Item2! };
+
+    [Theory, MemberData(nameof(CollidingInstances))]
+    public async Task Running_instance_with_a_physical_route_still_requires_confirmation_and_approval(bool nested, string adapter,
+        System.Net.NetworkInformation.OperationalStatus? physical)
+    {
+        using var settings = new OnlineTargetSettingsScope(null);
+        var before = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+        int waits = 0;
+        try
+        {
+            new ApprovalSettings(false, 1).Save(ApprovalSettings.SettingsPath);
+            Task<ApprovalOutcome> Wait(PendingApproval pending, ApprovalSettings current, CancellationToken token)
+            {
+                Assert.True(current.Enabled);
+                waits++;
+                return Task.FromResult(new ApprovalOutcome(pending, false, "workbench-unavailable"));
+            }
+            using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(
+                () => DownloadSafetyPolicyTests.RunningInstance("192.0.2.10"),
+                _ => TiaMcp.Engine.Tests.Shared.DownloadTargetCases.Network(physical));
+            using var waitScope = new ApprovalWaitScope(Wait);
+            using var worker = new BoundWorker { Simulated = true };
+            using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker, approvalWait: Wait);
+            using var session = fixture.EnterSession();
+            var args = Arguments(adapter, false);
+            args["dryRun"] = false;
+            var refused = await Call(fixture, nested, args);
+            Assert.False((bool?)refused["ok"]);
+            Assert.Contains("confirmPhysicalTarget=true", refused.ToJsonString(), StringComparison.Ordinal);
+            Assert.Equal(0, waits);
+            Assert.Equal(0, worker.OnlineCalls);
+            args["dryRun"] = true;
+            args["confirmPhysicalTarget"] = true;
+            var preview = await Call(fixture, nested, args);
+            Assert.Equal("physical", (string?)preview["data"]?["targetKind"]);
+            args["dryRun"] = false;
+            args["expectedPlanHash"] = (string?)preview["data"]?["planHash"];
+            args["expectedProjectFile"] = BoundWorker.Project;
+            var result = await Call(fixture, nested, args);
+            Assert.Equal("CONFIRMATION_REQUIRED", (string?)result["error"]?["code"]);
+            Assert.Equal(1, waits);
+            Assert.Equal(0, worker.OnlineCalls);
+        }
+        finally { before.Save(ApprovalSettings.SettingsPath); }
+    }
+
     [Theory]
     [InlineData("14sp1", "192.0.2.10", false)]
     [InlineData("21", "192.0.2.10", true)]
@@ -303,7 +355,8 @@ public sealed class DownloadSafetyHostTests
         using var worker = new ListingWorker();
         var services = FoundationHostPorts.CreateServices(worker, "21", () => new JsonObject(), null);
         var instances = await services.ReadSimulatorInstances(CancellationToken.None);
-        using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => instances, _ => new JsonObject());
+        using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(() => instances,
+            _ => TiaMcp.Engine.Tests.Shared.DownloadTargetCases.Network());
         Assert.Equal(1, worker.Calls);
         Assert.Equal("plcsim", TiaMcp.Logic.V4.HostBehavior.DownloadTargetKind("192.0.2.10"));
         Assert.Equal("physical", TiaMcp.Logic.V4.HostBehavior.DownloadTargetKind("192.0.2.11"));
@@ -335,8 +388,7 @@ public sealed class DownloadSafetyHostTests
             if (topic == "download-physical")
                 Assert.All(steps.Where(step => (string?)step!["tool"] == "DownloadPlc"),
                     step => Assert.True((bool?)step!["arguments"]?["confirmPhysicalTarget"]));
-            if (topic == "download-physical")
-                Assert.All(steps.Where(step => step?["arguments"]?["trustDeviceCertificate"] != null),
+            Assert.All(steps.Where(step => step?["arguments"]?["trustDeviceCertificate"] != null),
                     step => Assert.False((bool?)step!["arguments"]!["trustDeviceCertificate"]));
         }
         Assert.Equal(0, fixture.Worker.Calls);

@@ -15176,7 +15176,8 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "notes": "The PLCSIM PG/PC interface value selects a route; its name does not establish that the destination is a simulator. Verify the explicit IP and local adapter subnets before downloading."
       },
       "DisconnectOnlinePlc": {
         "arguments": {
@@ -24443,7 +24444,8 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "inline": true
+        "inline": true,
+        "notes": "The PLCSIM PG/PC interface value selects a route; its name does not establish that the destination is a simulator. Verify the explicit IP and local adapter subnets before downloading."
       },
       "ImportAlarmClasses": {
         "arguments": {

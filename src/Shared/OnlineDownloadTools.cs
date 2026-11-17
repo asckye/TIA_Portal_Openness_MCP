@@ -76,7 +76,8 @@ namespace TiaMcpServer.ModelContextProtocol
             " Connects only to the given address (V21: GoOnline(ConfigurationAddress); earlier releases apply that address with ApplyConfiguration " +
                 "first); an address outside the Workbench online-target list is refused." +
             " The matching ConfigurationAddress comes from the route tree (target interface, subnet or gateway; created on the target interface when " +
-                "TIA has not seen it yet). PLCSIM Advanced uses pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'." +
+                "TIA has not seen it yet). PLCSIM Advanced uses pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'. " +
+                "This selects a route; the interface name does not prove that the destination is a simulator." +
             " Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch)."
                 +
             " Local adapters and subnet matches are reported before connecting; no matching local subnet is a warning " +
@@ -295,8 +296,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "allows it."
                 +
             " The approval request lists every prompt answer the call will give (promptAnswerPlan)." +
-            " A simulator target must match a running PLCSIM Advanced instance address or a subnet exclusive to the PLCSIM virtual adapter." +
-            " Otherwise it is physical; the requested PG/PC interface name alone is never simulation evidence." +
+            " A simulator target requires an empty or PLCSIM/Softbus PG/PC interface, no non-PLCSIM adapter subnet containing the target " +
+                "in any operational state, and either a matching running PLCSIM Advanced instance address or an exclusive PLCSIM adapter subnet " +
+                "with a contiguous /8 or narrower mask. Otherwise the target is physical." +
             " Physical execution requires confirmPhysicalTarget=true and Workbench approval even when approval is switched off." +
             " Unsaved or inconsistent projects are refused; unknown consistency is reported. Online write plans expire after 15 minutes by default." +
             " Local adapters and subnet matches are reported before downloading; no matching local subnet is a warning " +
@@ -381,8 +383,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "",
-            [Description("confirmPhysicalTarget: true explicitly acknowledges downloading to a real PLC. Required unless the target IP is verified " +
-                "as a running PLCSIM Advanced instance or an exclusive PLCSIM virtual-adapter subnet. Include true in the reviewed preview as well. " +
+            [Description("confirmPhysicalTarget: true explicitly acknowledges downloading to a real PLC. Required unless destination IP, PG/PC " +
+                "interface and all local adapter subnets establish a PLCSIM target under the rule above. Include true in the reviewed preview as well. " +
                 "Workbench approval is still required.")] bool confirmPhysicalTarget = false)
             => McpServer.RunOnlineNetworkCheck("DownloadPlc", targetIpAddress, () => McpServer
                 .RunWritePreview("DownloadPlc", dryRun, new {

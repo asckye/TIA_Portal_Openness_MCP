@@ -232,7 +232,7 @@ namespace TiaMcp.FoundationHost
             JsonObject? instances = null;
             try { instances = await context.Worker.ReadSimulatorInstances(token).ConfigureAwait(false); }
             catch (Exception) /* swallow(env-probe): missing local simulator evidence leaves the target physical unless the subnet proves simulation. */ { }
-            return (instances, TiaMcpServer.Siemens.LocalNetworkPolicy.Inspect(target));
+            return (instances, TiaMcpServer.Siemens.DownloadTargetPolicy.NetworkSnapshot(target));
         }
 
         private sealed class OperatorSessionTool(EngineHostPipeline owner, McpServerTool inner) : McpServerTool
