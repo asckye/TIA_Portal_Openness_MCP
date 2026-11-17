@@ -23,6 +23,179 @@ public sealed class UnifiedPortAdmissionTests
     [InlineData("19", true)]
     [InlineData("20", true)]
     [InlineData("21", true)]
+    public async Task Runtime_settings_sequence_matches_the_served_schema_on_all_eight_releases(string release, bool available)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        var tools = LegacyHostToolRegistry.Create(worker, release, false);
+        var usage = tools.Single(t => t.ProtocolTool.Name == "GetToolUsage");
+        var result = await usage.InvokeAsync(Request("GetToolUsage", new JsonObject {
+            ["exampleId"] = "sequence/unified-runtime-settings", ["exampleKind"] = "all" }));
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent!.ToJsonString());
+        var row = Assert.Single(result.StructuredContent!["data"]!["examples"]!.AsArray())!;
+        Assert.Equal(available, (bool?)row["releaseMatches"]);
+        Assert.Equal(available, (bool?)row["available"]);
+        Assert.Equal("VM NOT RUN", (string?)row["validation"]);
+        if (available)
+        {
+            Assert.True((bool?)row["profileMatches"]);
+            var write = row["steps"]!.AsArray().Single(step => (string?)step!["tool"] == "SetUnifiedRuntimeSettings"
+                && (bool?)step["arguments"]?["dryRun"] == false)!;
+            Assert.NotNull(write["arguments"]?["previewToken"]);
+            Assert.NotNull(write["arguments"]?["expectedPlanHash"]);
+            Assert.NotNull(write["arguments"]?["expectedProjectFile"]);
+        }
+        else
+            Assert.DoesNotContain(tools, tool => tool.ProtocolTool.Name is "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings");
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19", "TelemetryRuntimeSettings.TelemetryActive")]
+    [InlineData("20", "HmiUnifiedTagSettings.TagOptimizationActive")]
+    public async Task Nested_runtime_fields_unavailable_on_the_release_refuse_before_worker_dispatch(string release, string field)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        const string name = "SetUnifiedRuntimeSettings";
+        var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name);
+        var arguments = Arguments(name); arguments["changes"] = new JsonObject { [field] = true };
+        var result = await tool.InvokeAsync(Request(name, arguments));
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Contains("HmiRuntimeSetting." + field, (string)result.StructuredContent!["error"]!["message"]!);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("TelemetryRuntimeSettings.TelemetryActive")]
+    [InlineData("HmiUnifiedTagSettings.TagOptimizationActive")]
+    public void V21_admits_nested_runtime_fields(string field)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        const string name = "SetUnifiedRuntimeSettings";
+        var tool = PortedToolContract.Create(worker, "21").OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == name);
+        var arguments = Arguments(name); arguments["changes"] = new JsonObject { [field] = true };
+        Assert.Null(tool.RefusePortedCapability(JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString())!));
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Generic_writes_refuse_the_whole_runtime_settings_subtree_before_dispatch(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        var tools = LegacyHostToolRegistry.Create(worker, release, false);
+        foreach (string name in new[] { "SetUnifiedObjectProperties", "SetUnifiedMultilingualProperty" })
+        foreach (int length in new[] { 1, 2 })
+        {
+            var arguments = Arguments(name);
+            arguments["objectPath"] = new JsonArray(new[] { new JsonObject { ["property"] = "RuntimeSettings" },
+                new JsonObject { ["property"] = "OpcUaServerRuntimeSettings" } }.Take(length).Select(x => (JsonNode)x).ToArray());
+            var result = await tools.Single(t => t.ProtocolTool.Name == name).InvokeAsync(Request(name, arguments));
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Contains("SetUnifiedRuntimeSettings", (string)result.StructuredContent!["error"]!["message"]!);
+            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        }
+        const string readName = "GetUnifiedObjectProperties";
+        var read = PortedToolContract.Create(worker, release).OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == readName);
+        var readArguments = Arguments(readName);
+        readArguments["objectPath"] = new JsonArray(new JsonObject { ["property"] = "RuntimeSettings" },
+            new JsonObject { ["property"] = "OpcUaServerRuntimeSettings" });
+        Assert.Null(read.RefusePortedCapability(
+            JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(readArguments.ToJsonString())!));
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Runtime_settings_keep_the_twelve_field_limit_before_worker_dispatch(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        var tools = LegacyHostToolRegistry.Create(worker, release, false);
+        string[] fields = UnifiedRuntimeSettingsFields.Nested.Take(13).ToArray();
+        foreach (string name in new[] { "GetUnifiedRuntimeSettings", "SetUnifiedRuntimeSettings" })
+        {
+            var arguments = Arguments(name);
+            arguments[name.StartsWith("Get", StringComparison.Ordinal) ? "fields" : "changes"] = name.StartsWith("Get", StringComparison.Ordinal)
+                ? JsonSerializer.SerializeToNode(fields) : JsonSerializer.SerializeToNode(fields.ToDictionary(f => f, _ => true, StringComparer.Ordinal));
+            var result = await tools.Single(t => t.ProtocolTool.Name == name).InvokeAsync(Request(name, arguments));
+            Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("Too many runtime settings; select 1..12 fields.", (string?)result.StructuredContent?["error"]?["message"]);
+            Assert.Equal(name.StartsWith("Get", StringComparison.Ordinal) ? "/fields" : "/changes",
+                (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Unknown_and_duplicate_runtime_fields_are_invalid_arguments_with_parameter_pointers(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        var tools = LegacyHostToolRegistry.Create(worker, release, false);
+        foreach (string name in new[] { "GetUnifiedRuntimeSettings", "SetUnifiedRuntimeSettings" })
+        {
+            string parameter = name.StartsWith("Get", StringComparison.Ordinal) ? "fields" : "changes";
+            var arguments = Arguments(name);
+            arguments[parameter] = parameter == "fields" ? new JsonArray("MissingSetting") : new JsonObject { ["MissingSetting"] = true };
+            var result = await tools.Single(t => t.ProtocolTool.Name == name).InvokeAsync(Request(name, arguments));
+            Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("/" + parameter, (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+            Assert.Equal("Unknown runtime setting name.", (string?)result.StructuredContent?["error"]?["message"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        }
+        var duplicate = Arguments("GetUnifiedRuntimeSettings");
+        duplicate["fields"] = new JsonArray("StartScreen", "StartScreen");
+        var duplicateResult = await tools.Single(t => t.ProtocolTool.Name == "GetUnifiedRuntimeSettings")
+            .InvokeAsync(Request("GetUnifiedRuntimeSettings", duplicate));
+        Assert.Equal("INVALID_ARGUMENT", (string?)duplicateResult.StructuredContent?["error"]?["code"]);
+        Assert.Equal("/fields", (string?)duplicateResult.StructuredContent?["error"]?["details"]?["parameter"]);
+        Assert.Equal("Duplicate runtime setting name.", (string?)duplicateResult.StructuredContent?["error"]?["message"]);
+        Assert.Equal("not-started", (string?)duplicateResult.StructuredContent?["meta"]?["execution"]);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Runtime_execution_requires_plan_fields_before_readiness_or_dispatch(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        const string name = "SetUnifiedRuntimeSettings";
+        var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name);
+        foreach (string missing in new[] { "expectedPlanHash", "expectedProjectFile" })
+        {
+            var arguments = Arguments(name); arguments["dryRun"] = false;
+            arguments["expectedPlanHash"] = "hash"; arguments["expectedProjectFile"] = "C:/Fixture.ap21"; arguments.Remove(missing);
+            var result = await tool.InvokeAsync(Request(name, arguments));
+            Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("14sp1", false)]
+    [InlineData("15.1", false)]
+    [InlineData("16", false)]
+    [InlineData("17", false)]
+    [InlineData("18", false)]
+    [InlineData("19", true)]
+    [InlineData("20", true)]
+    [InlineData("21", true)]
     public void Script_create_sequence_has_exact_release_scope_and_valid_served_schemas(string release, bool available)
     {
         using var worker = new ApprovalWorker();
@@ -738,6 +911,8 @@ public sealed class UnifiedPortAdmissionTests
             { Params = new() { Name = "SetUnifiedRuntimeSettings", Arguments = arguments } };
         var result = await tool.InvokeAsync(duplicateRequest);
         Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("/changes", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+        Assert.Contains("Duplicate", (string)result.StructuredContent!["error"]!["message"]!);
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.Equal(0, worker.Calls);
     }
@@ -819,7 +994,7 @@ public sealed class UnifiedPortAdmissionTests
         if (release == "19") arguments = TiaMcp.Logic.V4.CanonicalToolParameters.LegacyArguments(name, arguments);
         try
         {
-            if (name is "ManageUnifiedEngineeringObject" or "SetUnifiedGlobalScript" && !preview)
+            if (name is "ManageUnifiedEngineeringObject" or "SetUnifiedGlobalScript" or "SetUnifiedRuntimeSettings" && !preview)
             {
                 arguments["dryRun"] = true;
                 var plan = await tool.InvokeAsync(Request(name, arguments));

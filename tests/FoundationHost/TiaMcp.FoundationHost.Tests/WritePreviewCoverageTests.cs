@@ -13,6 +13,62 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelper output)
 {
     [Theory]
+    [InlineData("19", false)]
+    [InlineData("19", true)]
+    [InlineData("20", false)]
+    [InlineData("20", true)]
+    [InlineData("21", false)]
+    [InlineData("21", true)]
+    public void Runtime_settings_native_preview_binds_arguments_and_project_before_execution(string release, bool nested)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var received = new List<TiaMcp.Adapters.Contracts.UnifiedRequest>();
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.RuntimeSettingsService((_, args) => {
+            received.Add(args["request"]!.Deserialize<TiaMcp.Adapters.Contracts.UnifiedRequest>()!);
+            return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "native runtime preview", ["Meta"] = new JsonObject {
+                ["success"] = true, ["operationSuccess"] = true, ["token"] = "native-token",
+                ["mayHaveChanged"] = !(bool)args["dryRun"]! } } };
+        }, () => "C:/Projects/original.ap21");
+        var tool = new toolpipeline::TiaMcpServer.ModelContextProtocol.RuntimeSettingsTools(service);
+        var changes = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Inputs.AttributeMap<TiaMcp.Logic.V4.Inputs.Scalar>>(
+            nested ? "{\"MaxLoginRuntimeSettings.MaxLoginErrors\":5}" : "{\"GMPEnabled\":true}");
+        var preview = tool.UpdateUnifiedRuntimeSettingsV4("HMI", "Fixture", changes);
+        Assert.True((bool?)preview.StructuredContent?["ok"], preview.StructuredContent!.ToJsonString());
+        var data = preview.StructuredContent!["data"]!;
+        string hash = (string)data["planHash"]!;
+        Assert.Matches("^[0-9a-f]{64}$", hash);
+        Assert.Equal("native-token", (string?)data["token"]);
+        Assert.True(Assert.Single(received).DryRun);
+        foreach (string field in new[] { "dryRun", "previewToken", "expectedPlanHash", "expectedProjectFile" })
+            Assert.Null(data["plannedChanges"]?[field]);
+        foreach (var (expectedHash, project, code) in new[] {
+            ("", "C:/Projects/original.ap21", "INVALID_ARGUMENT"),
+            (new string('0', 64), "C:/Projects/original.ap21", "PLAN_STALE"),
+            (hash, "C:/Projects/other.ap21", "IDENTITY_MISMATCH")
+        })
+        {
+            var refused = tool.UpdateUnifiedRuntimeSettingsV4("HMI", "Fixture", changes, false, "native-token", expectedHash, project);
+            Assert.Equal(code, (string?)refused.StructuredContent?["error"]?["code"]);
+            Assert.Equal("not-started", (string?)refused.StructuredContent?["meta"]?["execution"]);
+            Assert.Single(received);
+        }
+        var altered = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Inputs.AttributeMap<TiaMcp.Logic.V4.Inputs.Scalar>>(
+            nested ? "{\"MaxLoginRuntimeSettings.MaxLoginErrors\":6}" : "{\"GMPEnabled\":false}");
+        var stale = tool.UpdateUnifiedRuntimeSettingsV4("HMI", "Fixture", altered, false, "native-token", hash, "C:/Projects/original.ap21");
+        Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent?["error"]?["code"]);
+        Assert.Single(received);
+        var applied = tool.UpdateUnifiedRuntimeSettingsV4("HMI", "Fixture", changes, false, "native-token", hash, "C:/Projects/original.ap21");
+        Assert.True((bool?)applied.StructuredContent?["ok"], applied.StructuredContent!.ToJsonString());
+        Assert.Equal(2, received.Count);
+        Assert.False(received[1].DryRun);
+        Assert.Equal("native-token", received[1].ExpectedToken);
+        Assert.Equal(received[0].ChangesJson, received[1].ChangesJson);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
     [InlineData("19", "update")]
     [InlineData("20", "update")]
     [InlineData("21", "update")]
