@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T20:26:44.0542266+00:00",
+  "generatedAt": "2026-11-17T20:53:03.9882262+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "8a7642886100e695a725c899925ddcc1ba3c94c561e1994e3c4197f7ee375060",
+  "workerSha256": "8eb4a450a53f0d032269106cb5a79afe510e9d1555376f5067aab2c0c3b1abd0",
   "toolCount": 519,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -2961,7 +2961,7 @@
         "confirmModeChange",
         "dryRun"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE-WRITE] DANGEROUS: request a CPU operating mode change (RUN or STOP) through the SIMATIC S7 Web server API (Plc.RequestChangeOperatingMode). STOP halts the user program and all outputs go to their configured safe state; RUN starts the program. Defaults to PREVIEW (dryRun=true): reads and reports the current mode only. A real change needs dryRun=false AND confirmModeChange=true; anything else is refused. After the request the mode is polled (up to ~10 s) and the readback is reported; an unconfirmed change is an error, not success. If the CPU is already in the requested mode nothing is sent. The user needs 'change operating mode' permission and the hardware mode selector must allow it. Never writes variables, never touches the TIA project. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetPlcWebOperatingMode\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE-WRITE] DANGEROUS: request a CPU operating mode change (RUN or STOP) through the SIMATIC S7 Web server API (Plc.RequestChangeOperatingMode). STOP halts the user program and all outputs go to their configured safe state; RUN starts the program. Defaults to PREVIEW (dryRun=true): reads and reports the current mode only. A real change needs dryRun=false AND confirmModeChange=true; anything else is refused. After the request the mode is polled (up to ~10 s) and the readback is reported; an unconfirmed change is an error, not success. If the CPU is already in the requested mode nothing is sent. The user needs 'change operating mode' permission and the hardware mode selector must allow it. Never writes variables, never touches the TIA project. Native behaviorPolicy=current; V4 native acceptance is pending. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"SetPlcWebOperatingMode\"), optionally operation or language.",
       "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\",\"mode\":\"run\",\"confirmModeChange\":false,\"dryRun\":true}"
     },
     {
@@ -3327,7 +3327,7 @@
         "slot",
         "expectModuleContains"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read-only TREND sampling over the S7 protocol (port 102): on one open connection, read a set of absolute S7 addresses every intervalMs for up to durationMs (hard-capped at 120 s / 5000 samples), returning a time series per address plus min/max/avg of the numeric ones. Ideal for capturing a PID step response or watching a signal move over time. NEVER writes/forces. The call BLOCKS for ~durationMs while it samples. Same address syntax and identity guard as GetPlcLiveValuesS7. Examples: GetToolUsage(toolName: \"SamplePlcLiveValuesS7\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Read-only TREND sampling over the S7 protocol (port 102): on one open connection, read a set of absolute S7 addresses every intervalMs for up to durationMs (hard-capped at 120 s / 5000 samples), returning a time series per address plus min/max/avg of the numeric ones. Ideal for capturing a PID step response or watching a signal move over time. NEVER writes/forces. The call BLOCKS for ~durationMs while it samples. Same address syntax and identity guard as GetPlcLiveValuesS7. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"SamplePlcLiveValuesS7\"), optionally operation or language.",
       "example": "{\"ip\":\"192.0.2.10\",\"items\":[\"DB1.DBX0.0:BOOL\"]}"
     },
     {
@@ -3419,7 +3419,7 @@
         "dryRun",
         "timeoutSeconds"
       ],
-      "description": "[L2][Simulation][ONLINE-WRITE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. arguments is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ and dependencies installed with `tia install-plc-tools`; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout. Examples: GetToolUsage(toolName: \"RunPlcCompanionTool\"), optionally operation or language.",
+      "description": "[L2][Simulation][ONLINE-WRITE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. arguments is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ and dependencies installed with `tia install-plc-tools`; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout. While an online-target list is configured, mode=run is refused because the companion cannot be limited to listed hosts; catalog/help remain allowed. Examples: GetToolUsage(toolName: \"RunPlcCompanionTool\"), optionally operation or language.",
       "example": "{\"workingDirectory\":\"C:\\\\Examples\",\"dryRun\":true}"
     },
     {
@@ -3587,7 +3587,7 @@
         "dryRun",
         "writes"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE-WRITE] Write values to PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. Every variable is read before the write, written one by one, then read back and compared (items[].verified); a readback mismatch (e.g. the program overwrites the variable cyclically) is reported as an error, never as success. Values must be JSON bool/number/string scalars; structs/arrays are refused. The user needs 'write variables' permission. No force, no CPU mode change, no TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"WritePlcWebVars\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE-WRITE] Write values to PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. Every variable is read before the write, written one by one, then read back and compared (items[].verified); a readback mismatch (e.g. the program overwrites the variable cyclically) is reported as an error, never as success. Values must be JSON bool/number/string scalars; structs/arrays are refused. The user needs 'write variables' permission. No force, no CPU mode change, no TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"WritePlcWebVars\"), optionally operation or language.",
       "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\",\"writes\":[{\"name\":\"\\u0022DB_Status\\u0022.\\u0022Ready\\u0022\",\"value\":true}],\"confirmWrite\":false,\"dryRun\":true}"
     },
     {
@@ -3819,7 +3819,7 @@
         "blockScope",
         "expectModuleContains"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Live causal trace: runs the offline TraceTagCause to find what writes a tag and its gating conditions, then resolves each gating operand to an absolute address via the PLC tag table and LIVE-READS the resolvable ones over S7 (port 102) — so you see which interlock/condition is currently TRUE and driving the value. Read-only. Operands that are DB members / optimized / symbolic have no absolute PLC-tag address and are returned unresolved (read those via OPC UA). Requires the CPU ip; for the offline-only trace use TraceTagCause. NOTE: the offline block export needs the project OFFLINE in TIA (Openness cannot export in online mode); the S7 live-read is a separate direct connection, unaffected by going offline. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"TraceTagCauseLive\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Live causal trace: runs the offline TraceTagCause to find what writes a tag and its gating conditions, then resolves each gating operand to an absolute address via the PLC tag table and LIVE-READS the resolvable ones over S7 (port 102) — so you see which interlock/condition is currently TRUE and driving the value. Read-only. Operands that are DB members / optimized / symbolic have no absolute PLC-tag address and are returned unresolved (read those via OPC UA). Requires the CPU ip; for the offline-only trace use TraceTagCause. NOTE: the offline block export needs the project OFFLINE in TIA (Openness cannot export in online mode); the S7 live-read is a separate direct connection, unaffected by going offline. Native behaviorPolicy=current; V4 native acceptance is pending. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"TraceTagCauseLive\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"tag\":\"DB_Status.Ready\",\"ip\":\"192.0.2.10\"}"
     },
     {
@@ -4377,7 +4377,7 @@
         "slot",
         "expectModuleContains"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use ListPlcWatchTables to list table names. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"MonitorPlcWatchTableS7\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use ListPlcWatchTables to list table names. Current native policy; V4 safety behavior is not yet accepted. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"MonitorPlcWatchTableS7\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"Watch_1\",\"ip\":\"192.0.2.10\"}"
     },
     {
@@ -5066,7 +5066,7 @@
         "rack",
         "slot"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read-only: connect to a physical CPU over the S7 protocol (ISO-on-TCP, port 102) and read its identification (module type, serial, names). Does NOT write, force, or change CPU mode. Use this first to confirm the IP belongs to the intended PLC before reading values. S7-1200/1500 use rack 0, slot 1. Examples: GetToolUsage(toolName: \"ProbeS7CpuIdentity\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Read-only: connect to a physical CPU over the S7 protocol (ISO-on-TCP, port 102) and read its identification (module type, serial, names). Does NOT write, force, or change CPU mode. Use this first to confirm the IP belongs to the intended PLC before reading values. S7-1200/1500 use rack 0, slot 1. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"ProbeS7CpuIdentity\"), optionally operation or language.",
       "example": "{\"ip\":\"192.0.2.10\"}"
     },
     {
@@ -8104,7 +8104,7 @@
         "ignoreCertificateErrors",
         "timeoutMs"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read live values of PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (HTTPS JSON-RPC on the CPU; S7-1500 FW>=2.9, S7-1200 G2, ET 200SP CPU, Software Controller, PLCSIM Advanced). Independent of TIA Openness and of PUT/GET; optimized DBs are fine. Names use the Web API form, e.g. \"\\\"DB_Motor\\\".\\\"Speed\\\"\" or \"\\\"Tag_1\\\"\" (quotes may be omitted for plain names; array elements as \"\\\"DB\\\".\\\"Arr\\\"[3]\"). Read-only: never writes, forces or changes CPU mode. Preconditions: web server enabled on the CPU, the user has 'read variables' permission (the default Anonymous user usually has none). The CPU certificate is validated unless ignoreCertificateErrors=true. The password is passed straight to the API and never stored or logged. Each name is read individually; per-name errors are reported in items[].error. Session is cached per host+user and reused. Examples: GetToolUsage(toolName: \"GetPlcWebVars\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Read live values of PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (HTTPS JSON-RPC on the CPU; S7-1500 FW>=2.9, S7-1200 G2, ET 200SP CPU, Software Controller, PLCSIM Advanced). Independent of TIA Openness and of PUT/GET; optimized DBs are fine. Names use the Web API form, e.g. \"\\\"DB_Motor\\\".\\\"Speed\\\"\" or \"\\\"Tag_1\\\"\" (quotes may be omitted for plain names; array elements as \"\\\"DB\\\".\\\"Arr\\\"[3]\"). Read-only: never writes, forces or changes CPU mode. Preconditions: web server enabled on the CPU, the user has 'read variables' permission (the default Anonymous user usually has none). The CPU certificate is validated unless ignoreCertificateErrors=true. The password is passed straight to the API and never stored or logged. Each name is read individually; per-name errors are reported in items[].error. Session is cached per host+user and reused. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcWebVars\"), optionally operation or language.",
       "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\",\"vars\":[\"\\u0022DB_Status\\u0022.\\u0022Ready\\u0022\"]}"
     },
     {
@@ -8123,7 +8123,7 @@
         "ignoreCertificateErrors",
         "timeoutMs"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read CPU diagnostics through the SIMATIC S7 Web server API: operating mode (RUN/STOP/STARTUP/HOLD/...), mode selector position, Api.Ping, API version, CPU type/order number, CPU system time, cycle-time and load figures, work/retentive memory usage. Read-only: never writes, forces or changes mode. Plc.ReadOperatingMode must succeed; the other calls are best-effort and calls this CPU firmware or user does not support are listed in data.unavailable instead of being faked. Works with PLCSIM Advanced. Certificate validated unless ignoreCertificateErrors=true; password never stored. Examples: GetToolUsage(toolName: \"GetPlcWebDiagnostics\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Read CPU diagnostics through the SIMATIC S7 Web server API: operating mode (RUN/STOP/STARTUP/HOLD/...), mode selector position, Api.Ping, API version, CPU type/order number, CPU system time, cycle-time and load figures, work/retentive memory usage. Read-only: never writes, forces or changes mode. Plc.ReadOperatingMode must succeed; the other calls are best-effort and calls this CPU firmware or user does not support are listed in data.unavailable instead of being faked. Works with PLCSIM Advanced. Certificate validated unless ignoreCertificateErrors=true; password never stored. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcWebDiagnostics\"), optionally operation or language.",
       "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\"}"
     },
     {
@@ -8217,7 +8217,7 @@
         "maxDiagEntries",
         "expectModuleContains"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read-only: read the CPU operating mode (RUN / STOP / UNKNOWN) over the S7 protocol (port 102) — something TIA Openness cannot do. Also returns the CPU clock and a best-effort raw diagnostic-buffer dump (event IDs in hex + raw bytes; full event text needs TIA's text database, and SZL may be unavailable on some S7-1200 CPUs — reported cleanly). Never writes/forces/changes mode. Examples: GetToolUsage(toolName: \"GetPlcRunStateS7\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Read-only: read the CPU operating mode (RUN / STOP / UNKNOWN) over the S7 protocol (port 102) — something TIA Openness cannot do. Also returns the CPU clock and a best-effort raw diagnostic-buffer dump (event IDs in hex + raw bytes; full event text needs TIA's text database, and SZL may be unavailable on some S7-1200 CPUs — reported cleanly). Never writes/forces/changes mode. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcRunStateS7\"), optionally operation or language.",
       "example": "{\"ip\":\"192.0.2.10\"}"
     },
     {
@@ -8286,7 +8286,7 @@
         "expectModuleContains",
         "devicePath"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read-only FAST live values from a physical CPU over the S7 protocol (port 102), independent of TIA Openness. Give absolute S7 addresses (DB10.DBD0:REAL, DB1.DBX2.3, M0.0, MW12, DB5.DBD8:DINT). Returns current values in one round-trip (typically tens of ms). NEVER writes/forces. Preconditions for S7-1200/1500: enable 'Permit PUT/GET access' on the CPU and read NON-optimized DBs (M/I/Q are unrestricted). Use expectModuleContains to hard-guard the target identity. Examples: GetToolUsage(toolName: \"GetPlcLiveValuesS7\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Read-only FAST live values from a physical CPU over the S7 protocol (port 102), independent of TIA Openness. Give absolute S7 addresses (DB10.DBD0:REAL, DB1.DBX2.3, M0.0, MW12, DB5.DBD8:DINT). Returns current values in one round-trip (typically tens of ms). NEVER writes/forces. Preconditions for S7-1200/1500: enable 'Permit PUT/GET access' on the CPU and read NON-optimized DBs (M/I/Q are unrestricted). Use expectModuleContains to hard-guard the target identity. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcLiveValuesS7\"), optionally operation or language.",
       "example": "{\"ip\":\"192.0.2.10\",\"items\":[\"DB1.DBX0.0:BOOL\"]}"
     },
     {
@@ -8303,7 +8303,7 @@
         "nodeIds",
         "timeoutMs"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read-only live values from a CPU's OPC UA server (default opc.tcp port 4840), independent of TIA Openness. Anonymous, no-security session; reads the Value attribute of each node. NEVER writes or calls methods. Node IDs use OPC UA syntax, e.g. 'ns=3;s=\"DB10\".\"X\"' or 'i=2258'. Precondition: the CPU's OPC UA server must be enabled and the variables exposed (Runtime license on S7-1200/1500). If the server is off, connection is refused (reported cleanly). Examples: GetToolUsage(toolName: \"GetPlcLiveValuesOpcUa\"), optionally operation or language.",
+      "description": "[L2][Online-Monitoring][ONLINE] Read-only live values from a CPU's OPC UA server (default opc.tcp port 4840), independent of TIA Openness. Anonymous, no-security session; reads the Value attribute of each node. NEVER writes or calls methods. Node IDs use OPC UA syntax, e.g. 'ns=3;s=\"DB10\".\"X\"' or 'i=2258'. Precondition: the CPU's OPC UA server must be enabled and the variables exposed (Runtime license on S7-1200/1500). If the server is off, connection is refused (reported cleanly). When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcLiveValuesOpcUa\"), optionally operation or language.",
       "example": "{\"endpointUrl\":\"opc.tcp://192.0.2.10:4840\",\"nodeIds\":[\"ns=3;s=\\u0022DB_Status\\u0022.\\u0022Ready\\u0022\"]}"
     },
     {
