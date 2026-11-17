@@ -23536,7 +23536,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "a927e2aaa287483b6e8d62b68458f83299ade980db1924e28a17d3aee97dd5fa",
+      "descriptionSha256": "c8e7e1b9cdf6c066011f31b481af4d2be70869cfc999328a61f03c52e078bbec",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -23735,7 +23735,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "dcce859961d497367468e9c545cce8437e9b263fb26722e32fd55d8eeebfcc39",
+      "descriptionSha256": "8919b12790be3bab3700904701b1afac8afbe3d629029b6fb2032857d6682c04",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -41702,7 +41702,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "650031fd619c536fbd21c9f06fe60564b4d5bd600ad84d082e7ca1b7aeb479bb",
+      "descriptionSha256": "c724302295b12d432a4de146e5784c81b0e54ea1b93368846feacd2bb9d5b5d6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -41787,7 +41787,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ca373c80a2b98cac09c457f912b9978e44a934f6ec1e219dd01cc8442211ff3a",
+      "descriptionSha256": "57107694b69b4004d634bfdd97f21def7a7eed093768b8b2f63283b68dd71d00",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -41969,7 +41969,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "156189f3593dcf2e7856f3be6a7b53cf9275d3c149034becd3065cdd4607b80c",
+      "descriptionSha256": "1fb3f9c22f79f3a28b0291d5b1ba86a7d1df72013879284f79ac596f77afb189",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -41999,8 +41999,18 @@
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
           },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "planHash from this tool's preview for the same arguments and bound project; required for execution.",
+            "type": "string"
+          },
           "expectedProject": {
             "description": "Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not expectedProjectFile.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Absolute bound project file from the preview target identity; required for execution.",
             "type": "string"
           },
           "previewToken": {
