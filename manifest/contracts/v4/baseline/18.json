@@ -23804,13 +23804,13 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "711d151f182bd284323df771fb9b84f0beb9bd9a30a02ffdb19436486c2c1d45",
+      "descriptionSha256": "b9140c9bd69b74fe9849fdfec585e49ce99b2429d97418d266190098e4272dc7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
-            "description": "action: the operation to perform - read | rename | setScope | copyScope | createFromMasterCopy | showInEditor.",
+            "description": "action: read | rename | setScope | copyScope | createFromMasterCopy | showInEditor. showInEditor is UI only without approval; other mutating actions remain WRITE.",
             "enum": [
               "read",
               "rename",
@@ -23832,7 +23832,7 @@
           },
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "description": "dryRun: true (default) previews without touching the UI; false executes. showInEditor requires a Portal with user interface and never changes the project or requests approval.",
             "type": "boolean"
           },
           "executionMode": {
@@ -27592,7 +27592,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "eced838f1cc89176651e9d97900e7e0b48e35090f19aff0729c266931a3cd5ff",
+      "descriptionSha256": "054d686b2b97ba23c08fc4278853e1def6326dc642cae422dc8b61432c31dad6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -27603,8 +27603,8 @@
             "type": "array"
           },
           "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
+            "default": false,
+            "description": "dryRun: false (default) opens the editor without approval or project changes; true previews without touching the UI.",
             "type": "boolean"
           },
           "itemPath": {
@@ -27615,13 +27615,15 @@
           },
           "kind": {
             "default": "device",
-            "description": "kind: device | deviceItem | plcBlock | plcType | plcTagTable.",
+            "description": "kind: device | deviceItem | plcBlock | plcType | plcTagTable | plcWatchTable | plcForceTable (tables V15.1+).",
             "enum": [
               "device",
               "deviceItem",
               "plcBlock",
               "plcType",
-              "plcTagTable"
+              "plcTagTable",
+              "plcWatchTable",
+              "plcForceTable"
             ],
             "type": "string"
           },
@@ -27633,6 +27635,17 @@
           "softwarePath": {
             "default": "",
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "view": {
+            "default": "",
+            "description": "view: empty (default) uses parameterless ShowInEditor; device | network | topology selects the official device view. Only kind=device; required for Device on V20, optional on other releases. UI only, no approval or project change; requires a Portal with user interface.",
+            "enum": [
+              "",
+              "device",
+              "network",
+              "topology"
+            ],
             "type": "string"
           }
         },
