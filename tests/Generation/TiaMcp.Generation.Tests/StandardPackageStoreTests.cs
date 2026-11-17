@@ -210,5 +210,24 @@ namespace TiaMcp.Generation.Tests
             File.WriteAllText(devices, File.ReadAllText(devices).TrimEnd('\n') + ",\"Unknown\"\n");
             Assert.Throws<ArgumentException>(() => MachineCsv.Import(package, directory));
         }
+        [Theory]
+        [InlineData("", "CSV headers must be nonempty and unique.")]
+        [InlineData("id,id\nM1,M1\n", "CSV headers must be nonempty and unique.")]
+        [InlineData("id,name\nM1\n", "CSV row width differs from its header.")]
+        [InlineData("id\n\"broken", "Unterminated CSV quote.")]
+        [InlineData("id\nx\0\n", "Invalid CSV character.")]
+        [InlineData("id\nx\ufeff\n", "Invalid CSV character.")]
+        public void Csv_codec_errors_keep_generic_inputPath_diagnostics(string csv, string message)
+        {
+            var package = store.Load("tiamcp.basic", "1.0.0");
+            string directory = Path.Combine(root, "csv-errors"); Directory.CreateDirectory(directory);
+            foreach (var file in MachineCsv.Export(package, MachineCsv.EmptyMachine(package))) File
+                .WriteAllBytes(Path.Combine(directory, file.Key), file.Value);
+            File.WriteAllText(Path.Combine(directory, "Machine.csv"), csv);
+            var error = Assert.Throws<ArgumentException>(() => MachineCsv.Import(package, directory));
+            Assert.Equal("inputPath", error.ParamName);
+            Assert.Equal(new ArgumentException(message, error.ParamName).Message, error.Message);
+            Assert.DoesNotContain(directory, error.Message);
+        }
     }
 }

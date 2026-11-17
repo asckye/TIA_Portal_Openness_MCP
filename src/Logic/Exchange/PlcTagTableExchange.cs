@@ -30,7 +30,7 @@ namespace TiaMcp.Logic.Exchange
             if (Encoding.UTF8.GetByteCount(xml) > TableFile.MaximumBytes) throw new ArgumentException("XML exceeds 16 MiB.", nameof(xml));
             using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings {
                 DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = TableFile.MaximumBytes });
-            var document = XDocument.Load(reader);
+            var document = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
             Table(document); return document;
         }
 
@@ -43,6 +43,7 @@ namespace TiaMcp.Logic.Exchange
             if (string.IsNullOrWhiteSpace(Value(Attributes(objects[0]), "Name"))) throw new ArgumentException("Table Name is missing.");
             return objects[0];
         }
+        public static string Name(XDocument document) => Value(Attributes(Table(document)), "Name");
         private static XElement? Child(XElement element, string name) => element.Elements().SingleOrDefault(e => e.Name.LocalName == name);
         private static XElement Attributes(XElement element) => Child(element, "AttributeList")
             ?? throw new ArgumentException("Missing AttributeList: " + element.Name.LocalName);
@@ -61,6 +62,7 @@ namespace TiaMcp.Logic.Exchange
         private static string Cell(XElement item, string column)
         {
             if (column == "Kind") return Kind(item);
+            if (Kind(item) == "Constant" && column == "ExternalAccessible") return "";
             if (CommentColumn(column)) return Comments(item).Where(c => Value(Attributes(c), "Culture") == Language(column))
                 .Select(c => Value(Attributes(c), "Text")).SingleOrDefault() ?? "";
             return Value(Attributes(item), Field(column));
@@ -69,18 +71,26 @@ namespace TiaMcp.Logic.Exchange
         public static TableData ToTable(XDocument export)
         {
             var items = Items(export);
-            var columns = FixedColumns.Concat(items.SelectMany(item => Attributes(item).Elements().Where(e => !e.HasElements)
-                .Select(e => e.Name.LocalName)).Where(n => !new[] { "Name", "DataTypeName", "LogicalAddress", "Value" }.Contains(n))
+            T AtRow<T>(int row, int column, Func<T> read)
+            {
+                try { return read(); }
+                catch (InvalidOperationException) { throw TableFile.Error("table", row, column, "Duplicate XML attribute or culture item."); }
+            }
+            var columns = FixedColumns.Concat(items.SelectMany((item, index) => AtRow(index + 2, 1,
+                () => Attributes(item).Elements().Where(e => !e.HasElements).Select(e => e.Name.LocalName).ToArray()))
+                .Where(n => !new[] { "Name", "DataTypeName", "LogicalAddress", "Value" }.Contains(n))
                 .Distinct(StringComparer.Ordinal)).ToList();
-            var languages = items.SelectMany(Comments).Select(c => Value(Attributes(c), "Culture")).Distinct(StringComparer.Ordinal)
+            var languages = items.SelectMany((item, index) => AtRow(index + 2, 1,
+                () => Comments(item).Select(c => Value(Attributes(c), "Culture")).ToArray())).Distinct(StringComparer.Ordinal)
                 .OrderBy(c => c, StringComparer.Ordinal).ToArray();
             if (languages.Any(c => !Culture.IsMatch(c))) throw new ArgumentException("Invalid comment culture in template.");
             columns.AddRange(languages.Select(c => "Comment[" + c + "]"));
-            var keys = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var item in items)
-                if (Cell(item, "Name").Length == 0 || !keys.Add(Key(Kind(item), Cell(item, "Name"))))
+            var table = new TableData(columns.ToArray(), items.Select((item, row) => columns.Select((column, index) =>
+                AtRow(row + 2, index + 1, () => Cell(item, column))).ToArray()));
+            var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in table.Rows)
+                if (row[1].Length == 0 || !keys.Add(row[1]))
                     throw new ArgumentException("Empty or duplicate template row key.");
-            var table = new TableData(columns.ToArray(), items.Select(item => columns.Select(c => Cell(item, c)).ToArray()));
             TableFile.Validate(table); return table;
         }
 
@@ -95,19 +105,32 @@ namespace TiaMcp.Logic.Exchange
             var document = new XDocument(template);
             var items = Items(document);
             var byKey = items.ToDictionary(item => Key(Kind(item), Cell(item, "Name")), StringComparer.Ordinal);
+            var byName = items.ToDictionary(item => Cell(item, "Name"), StringComparer.OrdinalIgnoreCase);
+            var orders = items.GroupBy(Kind).ToDictionary(group => group.Key,
+                group => Attributes(group.First()).Elements().Select(e => e.Name.LocalName).ToArray(), StringComparer.Ordinal);
+            foreach (var constant in items.Where(item => Kind(item) == "Constant")) Child(Attributes(constant), "ExternalAccessible")?.Remove();
             var rows = new Dictionary<string, string[]>(StringComparer.Ordinal);
+            var rowNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             int kindIndex = Array.IndexOf(table.Columns, "Kind"), nameIndex = Array.IndexOf(table.Columns, "Name");
             for (int r = 0; r < table.Rows.Count; r++)
             {
                 var row = table.Rows[r]; string kind = row[kindIndex], name = row[nameIndex];
                 if (!Kinds.Contains(kind) || string.IsNullOrWhiteSpace(name)) throw TableFile.Error("table", r + 2, 1, "Invalid Kind/Name key.");
                 if (rows.ContainsKey(Key(kind, name))) throw TableFile.Error("table", r + 2, nameIndex + 1, "Duplicate row key.");
+                if (!rowNames.Add(name)) throw new ArgumentException("Name collision (case-insensitive): " + name + ".");
+                if (byName.TryGetValue(name, out var named))
+                {
+                    if (Kind(named) != kind) throw new ArgumentException("Kind change refused for existing name: " + name + ".");
+                    if (Cell(named, "Name") != name) throw new ArgumentException("Name collision (case-insensitive): " + name + ".");
+                }
                 rows.Add(Key(kind, name), row);
             }
             // A changed key cannot identify an existing object. Refuse a name-only replacement of an omitted row.
+            var comparedColumns = table.Columns.Select((name, index) => new { name, index }).Where(c => c.name != "Name").ToArray();
+            var omittedSignatures = new HashSet<string>(items.Where(item => !rows.ContainsKey(Key(Kind(item), Cell(item, "Name"))))
+                .Select(item => string.Join("\0", comparedColumns.Select(c => Cell(item, c.name)))), StringComparer.Ordinal);
             foreach (var pair in rows.Where(p => !byKey.ContainsKey(p.Key)))
-                if (items.Any(item => !rows.ContainsKey(Key(Kind(item), Cell(item, "Name")))
-                    && table.Columns.Select((c, i) => c == "Name" || Cell(item, c) == pair.Value[i]).All(equal => equal)))
+                if (omittedSignatures.Contains(string.Join("\0", comparedColumns.Select(c => pair.Value[c.index]))))
                     throw new ArgumentException("Renamed row key refused; keep the original Name and add new rows separately.");
             var ids = new HashSet<ulong>();
             foreach (var id in document.Descendants().Attributes("ID"))
@@ -143,13 +166,13 @@ namespace TiaMcp.Logic.Exchange
                     list.Add(item);
                 }
                 var attrs = Attributes(item!);
-                string[] order = items.FirstOrDefault(e => Kind(e) == kind) is { } exemplar
-                    ? Attributes(exemplar).Elements().Select(e => e.Name.LocalName).ToArray()
+                string[] order = orders.TryGetValue(kind, out var existingOrder) ? existingOrder
                     : kind == "Tag" ? new[] { "DataTypeName", "LogicalAddress", "Name" } : new[] { "DataTypeName", "Name", "Value" };
                 foreach (var column in table.Columns.Select((name, index) => new { name, index })
                     .Where(c => c.name != "Kind").OrderBy(c => {
                         int index = Array.IndexOf(order, Field(c.name)); return index < 0 ? int.MaxValue : index; }))
                 {
+                    if (kind == "Constant" && column.name == "ExternalAccessible") continue;
                     string value = row[column.index];
                     if (before != null && before[column.index] == value) continue;
                     if (CommentColumn(column.name)) { SetComment(item!, Language(column.name), value, NewId); continue; }

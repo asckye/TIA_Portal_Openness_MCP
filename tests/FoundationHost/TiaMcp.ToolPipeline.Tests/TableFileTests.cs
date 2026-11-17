@@ -105,7 +105,8 @@ public sealed class TableFileTests
         Assert.Throws<ArgumentException>(() => TableFile.WriteCsv(table));
         Assert.Throws<ArgumentException>(() => TableFile.WriteXlsx(table, "Rows"));
         Assert.Throws<ArgumentException>(() => TableFile.ReadCsv(Encoding.UTF8.GetBytes("A\n" + string.Concat(Enumerable.Repeat("x\n", 10001)))));
-        byte[] tooMany = ModifiedSheet("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>A</t></is></c></row><row r=\"10002\"/>");
+        byte[] tooMany = ModifiedSheet("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>A</t></is></c></row>"
+            + string.Concat(Enumerable.Range(2, 10001).Select(r => "<row r=\"" + r + "\"><c r=\"A" + r + "\"><v>1</v></c></row>")));
         Assert.Throws<ArgumentException>(() => TableFile.ReadXlsx(tooMany, "Rows"));
         Assert.Throws<ArgumentException>(() => TableFile.WriteXlsx(new TableData(new[] { "A" }, new[] { new[] { new string('x', 32768) } }), "Rows"));
     }
@@ -127,7 +128,121 @@ public sealed class TableFileTests
         Assert.Contains("ambiguous", Assert.Throws<ArgumentException>(() => TableFile.ReadXlsx(buffer.ToArray(), "Rows")).Message);
     }
 
-    private static byte[] ModifiedSheet(string rows)
+    [Fact]
+    public void Excel_saved_escape_fixture_decodes_once_and_roundtrips_literal_escapes()
+    {
+        var table = TableFile.ReadXlsx(File.ReadAllBytes(Fixture("excel-escaped-strings.xlsx")), "Rows");
+        Assert.Equal(new[] { "line\rbreak", "_x0041_", "_x005F_", "inline\rtext" }, table.Rows.Select(row => row[1]));
+        byte[] bytes = TableFile.WriteXlsx(table, "Rows");
+        Equal(table, TableFile.ReadXlsx(bytes, "Rows"));
+        using var zip = new ZipArchive(new MemoryStream(bytes));
+        using var reader = new StreamReader(zip.GetEntry("xl/worksheets/sheet1.xml")!.Open());
+        string xml = reader.ReadToEnd();
+        Assert.Contains("_x005F_x0041_", xml); Assert.Contains("_x005F_x005F_", xml);
+    }
+
+    [Fact]
+    public void Xlsx_exports_have_fixed_timestamps_order_and_sha256()
+    {
+        byte[] first = TableFile.WriteXlsx(Sample, "Rows"), second = TableFile.WriteXlsx(Sample, "Rows");
+        Assert.Equal(System.Security.Cryptography.SHA256.HashData(first), System.Security.Cryptography.SHA256.HashData(second));
+        using var zip = new ZipArchive(new MemoryStream(first));
+        Assert.Equal(new[] { "[Content_Types].xml", "_rels/.rels", "xl/workbook.xml", "xl/_rels/workbook.xml.rels", "xl/worksheets/sheet1.xml" },
+            zip.Entries.Select(entry => entry.FullName));
+        Assert.All(zip.Entries, entry => Assert.Equal(new DateTime(1980, 1, 1), entry.LastWriteTime.DateTime));
+    }
+
+    [Fact]
+    public void Xlsx_counts_decompressed_bytes_even_when_declared_sizes_lie()
+    {
+        using var buffer = new MemoryStream();
+        using (var zip = new ZipArchive(buffer, ZipArchiveMode.Create, true))
+        using (var writer = new StreamWriter(zip.CreateEntry("xl/workbook.xml").Open())) writer.Write(new string(' ', TableFile.MaximumBytes + 1));
+        byte[] bytes = buffer.ToArray();
+        for (int i = 0; i < bytes.Length - 28; i++)
+        {
+            uint signature = BitConverter.ToUInt32(bytes, i);
+            if (signature == 0x02014b50) BitConverter.GetBytes(1U).CopyTo(bytes, i + 24);
+            if (signature == 0x04034b50) BitConverter.GetBytes(1U).CopyTo(bytes, i + 22);
+        }
+        var error = Assert.Throws<ArgumentException>(() => TableFile.ReadXlsx(bytes, "Rows", "lying.xlsx"));
+        Assert.Contains("lying.xlsx: row 1, column 1:", error.Message);
+        Assert.Contains("Invalid, encrypted or unsupported XLSX", error.Message);
+    }
+
+    [Fact]
+    public void Decompression_stream_limit_counts_actual_bytes_and_stops_at_the_first_excess_byte()
+    {
+        using var compressed = new MemoryStream();
+        using (var writer = new DeflateStream(compressed, CompressionLevel.Optimal, true)) writer.Write(new byte[TableFile.MaximumBytes + 1]);
+        compressed.Position = 0;
+        using var stream = new DeflateStream(compressed, CompressionMode.Decompress);
+        long actual = 0;
+        var error = Assert.Throws<ArgumentException>(() => TableFile.ReadXlsxPart(stream, "lying.xlsx", "xl/workbook.xml", ref actual));
+        Assert.Contains("lying.xlsx: row 1, column 1:", error.Message);
+        Assert.Contains("16 MiB while reading", error.Message);
+        Assert.Equal(TableFile.MaximumBytes + 1L, actual);
+    }
+
+    [Fact]
+    public void Readers_ignore_empty_rows_and_empty_styled_trailing_cells()
+    {
+        var csv = TableFile.ReadCsv(Encoding.UTF8.GetBytes("A,B\n\n,,\nx,y\n,\n"));
+        Assert.Equal(new[] { "x", "y" }, csv.Rows.Single());
+        var xlsx = TableFile.ReadXlsx(ModifiedSheet("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>A</t></is></c>"
+            + "<c r=\"XFD1\" s=\"1\"/></row><row r=\"2\"><c r=\"XFD2\" s=\"1\"/></row>"
+            + "<row r=\"5\"><c r=\"A5\" t=\"inlineStr\"><is><t>x</t></is></c><c r=\"XFD5\" s=\"1\"/></row><row r=\"10002\"/>"), "Rows");
+        Assert.Equal(new[] { "A" }, xlsx.Columns); Assert.Equal(new[] { "x" }, xlsx.Rows.Single());
+        var leading = TableFile.ReadCsv(Encoding.UTF8.GetBytes("\n,,\nA,B\nx,y\n"));
+        Assert.Equal(new[] { "A", "B" }, leading.Columns); Assert.Equal(new[] { "x", "y" }, leading.Rows.Single());
+        var styled = TableFile.ReadXlsx(ModifiedSheet("<row r=\"1\"><c r=\"XFD1\" s=\"1\"/></row>"
+            + "<row r=\"3\"><c r=\"A3\" t=\"inlineStr\"><is><t>A</t></is></c></row>"
+            + "<row r=\"4\"><c r=\"A4\" t=\"inlineStr\"><is><t>x</t></is></c></row>"), "Rows");
+        Assert.Equal(new[] { "A" }, styled.Columns); Assert.Equal(new[] { "x" }, styled.Rows.Single());
+    }
+
+    [Theory]
+    [InlineData("=1+1")]
+    [InlineData("+1")]
+    [InlineData("-1")]
+    [InlineData("@SUM(A1)")]
+    [InlineData("\ttext")]
+    [InlineData("\rtext")]
+    public void Formula_prefix_is_present_in_both_files_and_removed_exactly_once(string value)
+    {
+        var table = new TableData(new[] { "Value" }, new[] { new[] { value } });
+        byte[] csv = TableFile.WriteCsv(table), xlsx = TableFile.WriteXlsx(table, "Rows");
+        Assert.Contains("\"'" + value + "\"", Encoding.UTF8.GetString(csv));
+        Equal(table, TableFile.ReadCsv(csv)); Equal(table, TableFile.ReadXlsx(xlsx, "Rows"));
+        using var zip = new ZipArchive(new MemoryStream(xlsx));
+        using var stream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
+        Assert.Equal("'" + value, XDocument.Load(stream).Descendants().Where(e => e.Name.LocalName == "t").Last().Value);
+        Assert.Equal("''" + value, TableFile.ReadCsv(Encoding.UTF8.GetBytes("A\n\"''" + value + "\"\n")).Rows.Single()[0]);
+    }
+
+    public static IEnumerable<object[]> InvalidXmlCharacters() => Enumerable.Range(1, 8).Concat(new[] { 11, 12 })
+        .Concat(Enumerable.Range(14, 18)).Concat(new[] { 0xd800, 0xdc00 }).Select(value => new object[] { value });
+
+    [Theory, MemberData(nameof(InvalidXmlCharacters))]
+    public void Validate_refuses_xml_invalid_characters_before_either_writer(int character)
+    {
+        var table = new TableData(new[] { "A" }, new[] { new[] { new string((char)character, 1) } });
+        Assert.Equal("bad.csv: row 2, column 1: XML-invalid character.",
+            Assert.Throws<ArgumentException>(() => TableFile.WriteCsv(table, "bad.csv")).Message);
+        Assert.Equal("bad.xlsx: row 2, column 1: XML-invalid character.",
+            Assert.Throws<ArgumentException>(() => TableFile.WriteXlsx(table, "Rows", "bad.xlsx")).Message);
+    }
+
+    [Fact]
+    public void Formula_prefix_keeps_the_existing_logical_cell_limits()
+    {
+        var csv = new TableData(new[] { "A" }, new[] { new[] { "=" + new string('x', 65535) } });
+        Equal(csv, TableFile.ReadCsv(TableFile.WriteCsv(csv)));
+        var xlsx = new TableData(new[] { "A" }, new[] { new[] { "=" + new string('x', 32766) } });
+        Equal(xlsx, TableFile.ReadXlsx(TableFile.WriteXlsx(xlsx, "Rows"), "Rows"));
+    }
+
+    internal static byte[] ModifiedSheet(string rows)
     {
         using var buffer = new MemoryStream(); buffer.Write(TableFile.WriteXlsx(new TableData(new[] { "A" }, Array.Empty<string[]>()), "Rows"));
         using (var zip = new ZipArchive(buffer, ZipArchiveMode.Update, true))

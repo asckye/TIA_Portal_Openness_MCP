@@ -134,8 +134,27 @@ namespace TiaMcp.Logic.V4
             if (HasCanonicalOutput(tool))
             {
                 var effective = input.DeepClone().AsObject();
-                if (NeedsDefault(tool, input, required)) effective["exportFile"] = Path.Combine(directory, tool
-                    + ((string?)input["direction"] == "fromTable" ? ".xml" : (string?)input["format"] == "csv" ? ".csv" : ".xlsx"));
+                if (NeedsDefault(tool, input, required))
+                {
+                    string name = "Rows";
+                    if ((string?)input["kind"] == "plcTagTable")
+                    {
+                        string parameter = (string?)input["direction"] == "fromTable" ? "templatePath" : "inputPath";
+                        string path = (string?)input[parameter] ?? "";
+                        try
+                        {
+                            var file = new FileInfo(path);
+                            if (!Path.IsPathRooted(path) || !file.Exists || file.Length > Exchange.TableFile.MaximumBytes)
+                                throw Exchange.TableFile.Error(path, 1, 1, "Absolute XML input at most 16 MiB required.");
+                            name = Exchange.PlcTagTableExchange.Name(Exchange.PlcTagTableExchange.Parse(File.ReadAllText(path)));
+                        }
+                        catch (Exception error) when (error is ArgumentException || error is InvalidOperationException || error is System.Xml.XmlException)
+                        { throw new ArgumentException(Exchange.TableFile.Error(path, 1, 1, error.Message).Message, parameter); }
+                    }
+                    effective["exportFile"] = Path.Combine(directory, tool + "." + Adapters.Contracts.ObjectFileNameEncoding.Encode(name)
+                        + "." + Guid.NewGuid().ToString("N")
+                        + ((string?)input["direction"] == "fromTable" ? ".xml" : (string?)input["format"] == "csv" ? ".csv" : ".xlsx"));
+                }
                 return effective;
             }
             if (Aliases(tool).Count == 0) return input;

@@ -59,11 +59,13 @@ public sealed class PlcTagTableExchangeTests
     }
 
     [Theory]
-    [InlineData("duplicate")]
-    [InlineData("unknown")]
-    [InlineData("rename")]
-    [InlineData("system")]
-    public void Invalid_edits_refuse(string edit)
+    [InlineData("duplicate", "table: row 6, column 2: Duplicate row key.")]
+    [InlineData("unknown", "Unknown template column: Unknown")]
+    [InlineData("rename", "Renamed row key refused; keep the original Name and add new rows separately.")]
+    [InlineData("system", "SystemConstant rows are read-only.")]
+    [InlineData("case", "Name collision (case-insensitive): limit.")]
+    [InlineData("kind", "Kind change refused for existing name: Limit.")]
+    public void Invalid_edits_refuse(string edit, string expected)
     {
         var template = Read("tags-v21.xml"); var table = PlcTagTableExchange.ToTable(template);
         if (edit == "duplicate") table.Rows.Add(table.Rows[0].ToArray());
@@ -71,7 +73,44 @@ public sealed class PlcTagTableExchangeTests
             table.Rows.Select(row => row.Concat(new[] { "value" }).ToArray()));
         if (edit == "rename") table.Rows[0][1] = "Renamed";
         if (edit == "system") table.Rows[3][4] = "99";
-        Assert.Throws<ArgumentException>(() => PlcTagTableExchange.FromTable(template, table));
+        if (edit == "case") table.Rows[2][1] = "limit";
+        if (edit == "kind") table.Rows[2][0] = "Tag";
+        Assert.Equal(expected, Assert.Throws<ArgumentException>(() => PlcTagTableExchange.FromTable(template, table)).Message);
+    }
+
+    [Fact]
+    public void Names_collide_across_case_and_kinds_and_constants_never_emit_external_accessible()
+    {
+        var template = Read("tags-v21.xml"); var table = PlcTagTableExchange.ToTable(template);
+        table.Rows.Add(new[] { "Constant", "NewLimit", "Int", "", "20", "false", "", "", "", "" });
+        var result = PlcTagTableExchange.FromTable(template, table);
+        Assert.All(result.Document.Descendants("SW.Tags.PlcUserConstant"), constant =>
+            Assert.Null(constant.Element("AttributeList")!.Element("ExternalAccessible")));
+        table.Rows.Add(new[] { "Tag", "newlimit", "Bool", "%M3.0", "", "", "", "", "", "" });
+        Assert.Equal("Name collision (case-insensitive): newlimit.",
+            Assert.Throws<ArgumentException>(() => PlcTagTableExchange.FromTable(template, table)).Message);
+    }
+
+    [Theory, MemberData(nameof(Fixtures))]
+    public void Editing_one_row_preserves_the_other_rows_xml_bytes(string name)
+    {
+        string xml = File.ReadAllText(TableFileTests.Fixture(name));
+        var template = PlcTagTableExchange.Parse(xml); var table = PlcTagTableExchange.ToTable(template);
+        table.Rows[0][3] = "%M10.0";
+        var result = PlcTagTableExchange.FromTable(template, table);
+        using var buffer = new MemoryStream();
+        using (var writer = System.Xml.XmlWriter.Create(buffer, new System.Xml.XmlWriterSettings {
+            Encoding = new System.Text.UTF8Encoding(false), NewLineHandling = System.Xml.NewLineHandling.Entitize })) result.Document.Save(writer);
+        string exported = System.Text.Encoding.UTF8.GetString(buffer.ToArray());
+        foreach (var original in template.Descendants().Where(e => e.Name.LocalName.StartsWith("SW.Tags.Plc", StringComparison.Ordinal)
+            && e.Name.LocalName != "SW.Tags.PlcTagTable").Skip(1))
+        {
+            string before = original.ToString(SaveOptions.DisableFormatting);
+            Assert.Contains(before, xml);
+            Assert.Contains(before, exported);
+            var after = result.Document.Descendants(original.Name).Single(e => (string?)e.Attribute("ID") == (string?)original.Attribute("ID"));
+            Assert.Equal(System.Text.Encoding.UTF8.GetBytes(before), System.Text.Encoding.UTF8.GetBytes(after.ToString(SaveOptions.DisableFormatting)));
+        }
     }
 
     [Fact]

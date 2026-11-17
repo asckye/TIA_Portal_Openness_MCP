@@ -117,6 +117,10 @@ internal sealed class CanonicalParameterTool : McpServerTool
             return new Error("Could not create the default export directory. Supply an explicit export target or repair the output root.",
                 new IoFailedDetails("create-default-export-directory", EngineHostConfiguration.CurrentOrNull?.ExportDirectory));
         }
+        catch (ArgumentException failure) when (CanonicalToolParameters.HasCanonicalOutput(name))
+        {
+            return new Error(failure.Message, new InvalidArgumentDetails("/" + (failure.ParamName ?? "inputPath"), Array.Empty<string>()));
+        }
     }
 
     internal static CallToolResult Reject(string release, string name, Error error)

@@ -96,9 +96,34 @@ public sealed class ConvertEngineeringTableToolTests
             rows = new[] { new { Name = "x" } } }));
         Assert.True((bool?)preview["ok"], preview.ToJsonString());
         string path = (string)preview["data"]!["exportFile"]!;
-        Assert.Equal("ConvertEngineeringTable.csv", Path.GetFileName(path));
+        Assert.StartsWith("ConvertEngineeringTable.Rows.", Path.GetFileName(path));
+        Assert.EndsWith(".csv", path);
         Assert.StartsWith(TiaOpenness.Shared.DataLocations.Current.OutputRoot, path);
         Assert.False(File.Exists(path));
+        var second = Body(await fixture.Call("ConvertEngineeringTable", new { kind = "rows", direction = "toTable", format = "csv",
+            rows = new[] { new { Name = "x" } } }));
+        Assert.True((bool?)second["ok"], second.ToJsonString());
+        Assert.NotEqual(path, (string?)second["data"]?["exportFile"]);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Default_table_outputs_include_encoded_names_and_never_collide_in_one_session(string release)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        var outputs = new HashSet<string>(StringComparer.OrdinalIgnoreCase); int i = 0;
+        foreach (string name in new[] { "表/一", "表/二", "表/一" })
+        {
+            string source = Path.Combine(fixture.Root, "source" + i++ + ".xml");
+            File.WriteAllText(source, "<Document><Engineering version=\"V21\"/><SW.Tags.PlcTagTable ID=\"0\"><AttributeList><Name>"
+                + name + "</Name></AttributeList><ObjectList/></SW.Tags.PlcTagTable></Document>");
+            var result = Body(await fixture.Call("ConvertEngineeringTable", new { kind = "plcTagTable", direction = "toTable", inputPath = source,
+                format = "csv", dryRun = false }));
+            Assert.True((bool?)result["ok"], result.ToJsonString());
+            string path = (string)result["data"]!["exportFile"]!;
+            Assert.StartsWith("ConvertEngineeringTable." + ObjectFileNameEncoding.Encode(name) + ".", Path.GetFileName(path));
+            Assert.True(outputs.Add(path)); Assert.True(File.Exists(path));
+        }
+        Assert.Equal(3, outputs.Count);
     }
 
     [Theory, MemberData(nameof(Releases))]

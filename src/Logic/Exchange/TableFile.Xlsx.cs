@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -16,9 +17,15 @@ namespace TiaMcp.Logic.Exchange
         private static readonly XNamespace RelNs = "http://schemas.openxmlformats.org/package/2006/relationships";
         private static readonly XNamespace OfficeRel = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
-        public static byte[] WriteXlsx(TableData table, string sheetName)
+        private static readonly Regex SpreadsheetEscape = new Regex(@"_x([0-9A-Fa-f]{4})_", RegexOptions.CultureInvariant);
+
+        private static string EncodeSpreadsheetText(string text) => SpreadsheetEscape.Replace(text, match => "_x005F_" + match.Value.Substring(1));
+        private static string DecodeSpreadsheetText(string text) => SpreadsheetEscape.Replace(text,
+            match => ((char)int.Parse(match.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
+
+        public static byte[] WriteXlsx(TableData table, string sheetName, string file = "XLSX")
         {
-            Validate(table, "XLSX", 32767);
+            Validate(table, file, 32767);
             using var output = new MemoryStream();
             using (var zip = new ZipArchive(output, ZipArchiveMode.Create, true))
             {
@@ -26,8 +33,10 @@ namespace TiaMcp.Logic.Exchange
                 void Put(string name, MemoryStream buffer)
                 {
                     total += buffer.Length;
-                    if (total > MaximumBytes) throw Error("XLSX", 1, 1, "Uncompressed parts exceed 16 MiB.");
-                    using var stream = zip.CreateEntry(name).Open(); buffer.Position = 0; buffer.CopyTo(stream);
+                    if (total > MaximumBytes) throw Error(file, 1, 1, "Uncompressed parts exceed 16 MiB.");
+                    var entry = zip.CreateEntry(name);
+                    entry.LastWriteTime = new DateTimeOffset(1980, 1, 1, 0, 0, 0, TimeSpan.Zero);
+                    using var stream = entry.Open(); buffer.Position = 0; buffer.CopyTo(stream);
                 }
                 void Part(string name, XDocument xml)
                 {
@@ -67,9 +76,10 @@ namespace TiaMcp.Logic.Exchange
                         {
                             Start("c"); writer.WriteAttributeString("r", ColumnName(c) + r.ToString(CultureInfo.InvariantCulture));
                             writer.WriteAttributeString("t", "inlineStr"); Start("is"); Start("t");
-                            writer.WriteAttributeString("xml", "space", XNamespace.Xml.NamespaceName, "preserve"); writer.WriteString(cells[c]);
+                            writer.WriteAttributeString("xml", "space", XNamespace.Xml.NamespaceName, "preserve");
+                            writer.WriteString(EncodeSpreadsheetText(ExportCell(cells[c])));
                             writer.WriteEndElement(); writer.WriteEndElement(); writer.WriteEndElement(); writer.Flush();
-                            if (total + sheetBuffer.Length > MaximumBytes) throw Error("XLSX", r, c + 1, "Uncompressed parts exceed 16 MiB.");
+                            if (total + sheetBuffer.Length > MaximumBytes) throw Error(file, r, c + 1, "Uncompressed parts exceed 16 MiB.");
                         }
                         writer.WriteEndElement();
                     }
@@ -94,11 +104,13 @@ namespace TiaMcp.Logic.Exchange
                 foreach (var entry in zip.Entries)
                     if (entries.ContainsKey(entry.FullName)) throw Error(file, 1, 1, "Duplicate workbook part.");
                     else entries.Add(entry.FullName, entry);
+                long actualBytes = 0;
                 XDocument Load(string name)
                 {
                     if (!entries.TryGetValue(name, out var entry)) throw Error(file, 1, 1, "Missing workbook part: " + name);
                     using var stream = entry.Open();
-                    using var reader = XmlReader.Create(stream, new XmlReaderSettings {
+                    using var buffer = new MemoryStream(ReadXlsxPart(stream, file, name, ref actualBytes));
+                    using var reader = XmlReader.Create(buffer, new XmlReaderSettings {
                         DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaximumBytes });
                     return XDocument.Load(reader);
                 }
@@ -132,16 +144,20 @@ namespace TiaMcp.Logic.Exchange
                 var rows = new List<string[]>(); int previousRow = 0, width = 0;
                 foreach (var row in sheetData.Elements(SheetNs + "row"))
                 {
-                    int r = (int?)row.Attribute("r") ?? previousRow + 1;
-                    if (r <= previousRow || r > MaximumRows + 1) throw Error(file, r, 1, "Invalid row index or more than 10000 data rows.");
-                    if (previousRow == 0 && r != 1) throw Error(file, r, 1, "Headers must be on row 1.");
-                    while (previousRow + 1 < r) { rows.Add(new string[width].Select(_ => "").ToArray()); previousRow++; }
+                    int r;
+                    if (row.Attribute("r") is { } rowNumber)
+                    {
+                        if (!int.TryParse(rowNumber.Value, NumberStyles.None, CultureInfo.InvariantCulture, out r))
+                            throw Error(file, previousRow + 1, 1, "Invalid row index: " + rowNumber.Value);
+                    }
+                    else r = previousRow + 1;
+                    if (r <= previousRow) throw Error(file, r, 1, "Invalid row index.");
                     var cells = new SortedDictionary<int, string>(); int previousColumn = 0;
                     foreach (var cell in row.Elements(SheetNs + "c"))
                     {
                         string reference = (string?)cell.Attribute("r") ?? ColumnName(previousColumn) + r;
                         int c = ColumnIndex(reference, r, file);
-                        if (c <= previousColumn || c > MaximumColumns) throw Error(file, r, c, "Invalid or duplicate column index.");
+                        if (c <= previousColumn) throw Error(file, r, c, "Invalid or duplicate column index.");
                         previousColumn = c;
                         string? value = cell.Element(SheetNs + "v")?.Value;
                         string type = (string?)cell.Attribute("t") ?? "n";
@@ -158,22 +174,44 @@ namespace TiaMcp.Logic.Exchange
                         else if (type == "b") value = value == "1" ? "true" : value == "0" ? "false"
                             : throw Error(file, r, c, "Invalid boolean cell.");
                         else if (type != "n" && type != "str" && type != "d") throw Error(file, r, c, "Unsupported cell type.");
-                        cells.Add(c, value ?? "");
+                        cells.Add(c, ImportCell(value ?? ""));
                     }
-                    if (r == 1) width = previousColumn;
-                    if (previousColumn > width) throw Error(file, r, previousColumn, "Row width exceeds header.");
-                    rows.Add(Enumerable.Range(1, width).Select(c => cells.TryGetValue(c, out var value) ? value : "").ToArray());
+                    if (rows.Count == 0 && cells.Values.Any(value => value.Length != 0))
+                    {
+                        width = cells.Where(cell => cell.Value.Length != 0).Select(cell => cell.Key).DefaultIfEmpty(0).Max();
+                        if (width > MaximumColumns) throw Error(file, r, width, "Too many columns.");
+                    }
+                    if (cells.Values.Any(value => value.Length != 0))
+                    {
+                        var extra = cells.FirstOrDefault(cell => cell.Key > width && cell.Value.Length != 0);
+                        if (extra.Key != 0) throw Error(file, r, extra.Key, "Row width exceeds header.");
+                        rows.Add(Enumerable.Range(1, width).Select(c => cells.TryGetValue(c, out var value) ? value : "").ToArray());
+                        if (rows.Count > MaximumRows + 1) throw Error(file, r, 1, "More than 10000 data rows.");
+                    }
                     previousRow = r;
                 }
                 var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1));
                 Validate(table, file, 32767); return table;
             }
-            catch (Exception ex) when (ex is InvalidDataException || ex is XmlException || ex is InvalidOperationException || ex is FormatException)
+            catch (Exception ex) when (ex is InvalidDataException || ex is XmlException || ex is InvalidOperationException
+                || ex is FormatException || ex is OverflowException)
             { throw Error(file, 1, 1, "Invalid, encrypted or unsupported XLSX: " + ex.Message); }
         }
 
-        private static string StringText(XElement element) => string.Concat(element.Descendants(SheetNs + "t")
-            .Where(t => t.Parent?.Name != SheetNs + "rPh").Select(t => t.Value));
+        private static string StringText(XElement element) => DecodeSpreadsheetText(string.Concat(element.Descendants(SheetNs + "t")
+            .Where(t => t.Parent?.Name != SheetNs + "rPh").Select(t => t.Value)));
+        internal static byte[] ReadXlsxPart(Stream stream, string file, string name, ref long actualBytes)
+        {
+            using var buffer = new MemoryStream();
+            var chunk = new byte[8192]; int count;
+            while ((count = stream.Read(chunk, 0, (int)Math.Min(chunk.Length, MaximumBytes - actualBytes + 1))) != 0)
+            {
+                actualBytes += count;
+                if (actualBytes > MaximumBytes) throw Error(file, 1, 1, "Uncompressed parts exceed 16 MiB while reading " + name + ".");
+                buffer.Write(chunk, 0, count);
+            }
+            return buffer.ToArray();
+        }
         private static string ColumnName(int zeroBased)
         {
             string name = "";
@@ -186,7 +224,7 @@ namespace TiaMcp.Logic.Exchange
             while (i < reference.Length && reference[i] >= 'A' && reference[i] <= 'Z')
             {
                 c = c * 26 + reference[i++] - 'A' + 1;
-                if (c > MaximumColumns) throw Error(file, row, c, "Too many columns.");
+                if (c > 16384) throw Error(file, row, c, "Invalid Excel column index.");
             }
             if (i == 0 || !int.TryParse(reference.Substring(i), out int r) || r != row) throw Error(file, row, c, "Invalid cell reference.");
             return c;

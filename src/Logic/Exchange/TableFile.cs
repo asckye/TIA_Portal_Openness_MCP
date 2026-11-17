@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
 
 namespace TiaMcp.Logic.Exchange
 {
@@ -19,7 +20,16 @@ namespace TiaMcp.Logic.Exchange
         private static readonly UTF8Encoding Utf8 = new UTF8Encoding(true, true);
 
         public static ArgumentException Error(string file, int row, int column, string message)
-            => new ArgumentException(file + ": row " + row + ", column " + column + ": " + message);
+        {
+            var error = new ArgumentException(file + ": row " + row + ", column " + column + ": " + message);
+            error.Data["tableReason"] = message;
+            error.Data["tableRow"] = row; error.Data["tableColumn"] = column;
+            return error;
+        }
+
+        private static bool FormulaStart(char value) => value == '=' || value == '+' || value == '-' || value == '@' || value == '\t' || value == '\r';
+        private static string ExportCell(string value) => value.Length > 0 && FormulaStart(value[0]) ? "'" + value : value;
+        private static string ImportCell(string value) => value.Length > 1 && value[0] == '\'' && FormulaStart(value[1]) ? value.Substring(1) : value;
 
         public static void Validate(TableData table, string file = "table", int maximumCell = 65536)
         {
@@ -36,27 +46,33 @@ namespace TiaMcp.Logic.Exchange
                 r++;
                 if (row.Length != table.Columns.Length) throw Error(file, r, row.Length + 1, "Row width differs from header.");
                 for (int c = 0; c < row.Length; c++)
-                    if (row[c] == null || row[c].Length > maximumCell || row[c].IndexOf('\0') >= 0 || row[c].IndexOf('\ufeff') >= 0)
-                        throw Error(file, r, c + 1, "Invalid or oversized cell (maximum " + maximumCell + " characters).");
+                {
+                    if (row[c] == null || row[c].IndexOf('\0') >= 0 || row[c].IndexOf('\ufeff') >= 0)
+                        throw Error(file, r, c + 1, "Invalid CSV character.");
+                    if (row[c].Length > maximumCell) throw Error(file, r, c + 1, "Cell exceeds " + maximumCell + " characters.");
+                    try { XmlConvert.VerifyXmlChars(row[c]); }
+                    catch (XmlException) { throw Error(file, r, c + 1, "XML-invalid character."); }
+                }
             }
         }
 
-        public static byte[] WriteCsv(TableData table)
+        public static byte[] WriteCsv(TableData table, string file = "CSV")
         {
-            Validate(table);
+            Validate(table, file);
             long length = Utf8.GetPreamble().Length; int row = 0;
             foreach (var cells in new[] { table.Columns }.Concat(table.Rows))
             {
                 row++;
                 for (int c = 0; c < cells.Length; c++)
                 {
-                    length += Utf8.GetByteCount(cells[c]) + cells[c].Count(ch => ch == '"') + 3L;
-                    if (length > MaximumBytes) throw Error("CSV", row, c + 1, "File exceeds 16 MiB.");
+                    string value = ExportCell(cells[c]);
+                    length += Utf8.GetByteCount(value) + value.Count(ch => ch == '"') + 3L;
+                    if (length > MaximumBytes) throw Error(file, row, c + 1, "File exceeds 16 MiB.");
                 }
             }
             var text = new StringBuilder();
             foreach (var cells in new[] { table.Columns }.Concat(table.Rows))
-                text.Append(string.Join(",", cells.Select(c => "\"" + c.Replace("\"", "\"\"") + "\""))).Append('\n');
+                text.Append(string.Join(",", cells.Select(c => "\"" + ExportCell(c).Replace("\"", "\"\"") + "\""))).Append('\n');
             var bytes = Utf8.GetPreamble().Concat(Utf8.GetBytes(text.ToString())).ToArray();
             return bytes;
         }
@@ -69,8 +85,17 @@ namespace TiaMcp.Logic.Exchange
             try { text = Utf8.GetString(bytes, offset, bytes.Length - offset); }
             catch (DecoderFallbackException) { throw Error(file, 1, 1, "Invalid UTF-8."); }
             var rows = new List<string[]>(); var row = new List<string>(); var cell = new StringBuilder();
-            bool quoted = false, closed = false;
-            ArgumentException Invalid(string message) => Error(file, rows.Count + 1, row.Count + 1, message);
+            bool quoted = false, closed = false; int sourceRow = 1;
+            ArgumentException Invalid(string message) => Error(file, sourceRow, row.Count + 1, message);
+            void AddRow()
+            {
+                if (row.Any(value => value.Length != 0))
+                {
+                    if (rows.Count != 0 && row.Count != rows[0].Length) throw Invalid("Row width differs from header.");
+                    rows.Add(row.Select(ImportCell).ToArray());
+                }
+                row.Clear(); sourceRow++;
+            }
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
@@ -96,14 +121,15 @@ namespace TiaMcp.Logic.Exchange
                     if (c != ',')
                     {
                         if (c == '\r' && i + 1 < text.Length && text[i + 1] == '\n') i++;
-                        rows.Add(row.ToArray()); row.Clear();
+                        AddRow();
                     }
                 }
                 else { if (closed) throw Invalid("Unexpected text after a CSV quote."); cell.Append(c); }
-                if (rows.Count > MaximumRows + 1 || cell.Length > 65536) throw Invalid("CSV row/cell limit exceeded.");
+                int wireMaximum = cell.Length > 1 && cell[0] == '\'' && FormulaStart(cell[1]) ? 65537 : 65536;
+                if (rows.Count > MaximumRows + 1 || cell.Length > wireMaximum) throw Invalid("CSV row/cell limit exceeded.");
             }
             if (quoted) throw Invalid("Unterminated CSV quote.");
-            if (cell.Length > 0 || row.Count > 0 || closed) { row.Add(cell.ToString()); rows.Add(row.ToArray()); }
+            if (cell.Length > 0 || row.Count > 0 || closed) { row.Add(cell.ToString()); AddRow(); }
             var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1));
             Validate(table, file);
             return table;

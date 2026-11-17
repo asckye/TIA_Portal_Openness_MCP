@@ -88,8 +88,8 @@ namespace TiaMcp.Logic.Generation
                 var rows = values.ToArray();
                 var columns = fixedColumns.Concat(rows.SelectMany(r => r.Keys)).Distinct(StringComparer.Ordinal).ToArray();
                 if (rows.Length > MaximumRows - 1 || columns.Length > MaximumColumns) throw new ArgumentException("CSV table exceeds row/column limits.");
-                var bytes = TableFile.WriteCsv(new TableData(columns,
-                    rows.Select(row => columns.Select(c => row.TryGetValue(c, out var value) ? value : "").ToArray())));
+                var bytes = Csv(name + ".csv", file => TableFile.WriteCsv(new TableData(columns,
+                    rows.Select(row => columns.Select(c => row.TryGetValue(c, out var value) ? value : "").ToArray())), file));
                 files.Add(name + ".csv", bytes);
                 if (bytes.Length > 4 * 1024 * 1024) throw new ArgumentException("CSV table exceeds 4 MiB.");
             }
@@ -112,7 +112,7 @@ namespace TiaMcp.Logic.Generation
                 total += input.Length;
                 if (input.Length > 4 * 1024 * 1024 || total > MaximumBytes) throw new ArgumentException("CSV size limit exceeded.", "inputPath");
                 using var output = new MemoryStream(); input.CopyTo(output); var bytes = output.ToArray();
-                var table = TableFile.ReadCsv(bytes, path);
+                var table = Csv(path, file => TableFile.ReadCsv(bytes, file));
                 var columns = table.Columns;
                 headers[sheet] = columns;
                 sheets[sheet] = table.Rows.Select(row => columns.Select((c, i) => new { c, i })
@@ -194,6 +194,23 @@ namespace TiaMcp.Logic.Generation
         private static bool Present(Dictionary<string, string> row, string field)
             => row.TryGetValue(field, out var value) && value is "true" or "false" ? value == "true"
                 : throw new ArgumentException("CSV presence fields must be true or false: " + field, "inputPath");
+        private static T Csv<T>(string inputPath, Func<string, T> convert)
+        {
+            try { return convert(inputPath); }
+            catch (ArgumentException error)
+            {
+                string reason = error.Data["tableReason"] as string ?? "Invalid CSV input.";
+                string message = reason switch {
+                    "Expected 1..1024 columns." => "CSV headers must be nonempty and unique.",
+                    "Headers must be nonempty and unique." => "CSV headers must be nonempty and unique.",
+                    "Row width differs from header." => "CSV row width differs from its header.",
+                    "More than 10000 data rows." => "CSV row/cell limit exceeded.",
+                    "Cell exceeds 65536 characters." => "CSV cell exceeds 65536 characters.",
+                    "XML-invalid character." => "Invalid CSV character.",
+                    _ => reason };
+                throw new ArgumentException(message, nameof(inputPath));
+            }
+        }
         private static string Prefix(string field) => field == "params" ? "Param:" : field == "io" ? "IO:" : field == "alarms" ? "Alarm:" : "Hmi:";
         private static Dictionary<string, string> Row(JsonNode node, params string[] skip)
         { var row = new Dictionary<string, string>(StringComparer.Ordinal); Fields(node, row, "", skip); return row; }
