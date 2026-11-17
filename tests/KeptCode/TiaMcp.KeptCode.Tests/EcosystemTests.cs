@@ -107,6 +107,21 @@ namespace TiaMcp.Engine.Tests
                 () => EcosystemFiles.Guidance(scratch, "", "", 0, 100)).Resource);
         }
 
+        [Theory]
+        [InlineData("", "")]
+        [InlineData("Fixture", "")]
+        [InlineData("", "blocks/SKILL.md")]
+        public void Guidance_returns_the_upstream_scope_for_lists_searches_and_documents(string query, string document)
+        {
+            const string scope = "Reference material only; guides target V21, not this server's per-release contracts.";
+            Put(scratch, "reference/siemens-openness/skills/blocks/SKILL.md", "Fixture guidance");
+            Put(scratch, "reference/siemens-openness/UPSTREAM.json",
+                new JsonObject { ["commit"] = "fixture", ["scope"] = scope }.ToJsonString());
+            var guidance = EcosystemFiles.Guidance(scratch, query, document, 0, 100);
+            Assert.Equal(scope, guidance["scope"]?.GetValue<string>());
+            Assert.Equal("fixture", guidance["commit"]!.GetValue<string>());
+        }
+
         public void Dispose() { if (Directory.Exists(scratch)) Directory.Delete(scratch, true); }
     }
 }

@@ -13,6 +13,41 @@ public sealed class GeneratorTests
     private static string Root => Repository.FindRoot();
 
     [Fact]
+    public void Siemens_guides_keep_the_refreshed_pin_attribution_and_scope()
+    {
+        var usage = ToolUsageGenerator.Generate(Root);
+        var source = usage["sources"]!.AsArray().Single(row => Text(row!["id"]) == "guides")!;
+        string commit = Text(source["commit"]);
+        Assert.StartsWith("6aa3650", commit);
+        Assert.Equal(40, commit.Length);
+        Assert.Equal("2026 Siemens AG", Text(source["copyright"]));
+        Assert.Equal("reference/siemens-openness/LICENSE", Text(source["licenseFile"]));
+        Assert.Equal("Reference material only; not installed or executed. Upstream guides target TIA Portal V21 and contain instructions " +
+            "addressed to coding assistants that write Openness client code (for example to ask for the TIA version and to reject versions " +
+            "below V21). They are not instructions for calling this server, which serves V14 SP1-V21 with per-release tool contracts.",
+            Text(source["scope"]));
+        var guides = usage["documents"]!.AsArray().Where(row => Text(row!["id"]).StartsWith("guides/skills/", StringComparison.Ordinal)
+            && Text(row!["id"]).EndsWith("/SKILL.md", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(32, guides.Length);
+        Assert.All(guides, guide => Assert.Contains("/blob/" + commit + "/openness_development/skills/", Text(guide!["url"])));
+    }
+
+    [Fact]
+    public void Explicit_guide_topics_cover_comparisons_and_read_batches_on_every_release()
+    {
+        var usage = ToolUsageGenerator.Generate(Root);
+        var data = new CatalogData(Root);
+        foreach (var (name, topic) in new[] {
+            ("CompareProjects", "change-detection"), ("CompareSoftwareToOnline", "change-detection"),
+            ("ComparePlcBlockDocuments", "change-detection"), ("RunReadOnlyToolBatch", "performance-and-caching") })
+        {
+            foreach (string release in Keys) Assert.Contains(name, data.Rosters[release]);
+            Assert.Equal(new[] { "guides/skills/" + topic + "/SKILL.md" }, Strings(usage["tools"]![name]!["documents"]));
+        }
+        Assert.Empty(Strings(usage["tools"]!["ManagePlcGitRepository"]!["documents"]));
+    }
+
+    [Fact]
     public void Catalog_rows_take_the_maintained_parameter_set()
     {
         string frozenPath = Path.Combine(Root, "reference/tool-catalog/EngineSourceExamples.json");

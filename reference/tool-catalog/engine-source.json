@@ -16483,6 +16483,7 @@
       }
     },
     "GetOpennessGuidance": {
+      "description": "[L2][Guide][READ] Search or read the bundled 32 official Siemens Openness guides. Empty document lists matching document IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Guides target V21; see scope. Does not connect to TIA.",
       "method": "ReadOpennessGuidanceV4",
       "path": "src/Shared/Host/EcosystemTools.cs",
       "owner": "EcosystemTools",

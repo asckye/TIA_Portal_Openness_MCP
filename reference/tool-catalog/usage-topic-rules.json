@@ -39,6 +39,20 @@
       "hardware-and-modules"
     ]
   },
+  "tools": {
+    "CompareProjects": [
+      "change-detection"
+    ],
+    "CompareSoftwareToOnline": [
+      "change-detection"
+    ],
+    "ComparePlcBlockDocuments": [
+      "change-detection"
+    ],
+    "RunReadOnlyToolBatch": [
+      "performance-and-caching"
+    ]
+  },
   "rules": [
     [
       "(Dcc|Dcb)",

@@ -29,7 +29,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var provenance = JsonNode.Parse(File.ReadAllText(TiaOpenness.Shared.BundleLayout.RequirePath(root, "reference/siemens-openness/UPSTREAM.json")))!
                 .AsObject();
             var result = new JsonObject {
-                ["source"] = "siemens/tia-portal-ai-extensions", ["commit"] = provenance["commit"]!.DeepClone(), ["referenceDataOnly"] = true };
+                ["source"] = "siemens/tia-portal-ai-extensions", ["commit"] = provenance["commit"]!.DeepClone(),
+                ["scope"] = provenance["scope"]?.DeepClone(), ["referenceDataOnly"] = true };
             if (!string.IsNullOrEmpty(document))
             {
                 var file = files.SingleOrDefault(p => p.Id == document) ?? throw new ArgumentException("Unknown document id. List first.");

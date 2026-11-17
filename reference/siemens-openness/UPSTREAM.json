@@ -2,6 +2,8 @@
   "repository": "https://github.com/siemens/tia-portal-ai-extensions",
   "commit": "b5c7041648dc10f9225ef082306ade6c335b8771",
   "license": "MIT",
+  "copyright": "2026 Siemens AG",
+  "licenseFile": "reference/siemens-openness/LICENSE",
   "upstreamSkillsPath": "openness_development/skills",
-  "scope": "Reference material only; relocated skills to stable local skills path, not automatically installed or executed"
+  "scope": "Reference material only; not installed or executed. Upstream guides target TIA Portal V21 and contain instructions addressed to coding assistants that write Openness client code (for example to ask for the TIA version and to reject versions below V21). They are not instructions for calling this server, which serves V14 SP1-V21 with per-release tool contracts."
 }

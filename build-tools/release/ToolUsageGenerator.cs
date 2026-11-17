@@ -57,6 +57,7 @@ internal static class ToolUsageGenerator
                 foreach (var rule in topicRules["rules"]!.AsArray())
                     if (Regex.IsMatch(name, Text(rule![0]))) { topics = Strings(rule[1]); break; }
             if (defined || unsupported) topics = [];
+            if (!unsupported && topicRules["tools"]?[name] is JsonArray explicitTopics) topics = Strings(explicitTopics);
             var references = new List<string>();
             foreach (var topic in topics)
             {

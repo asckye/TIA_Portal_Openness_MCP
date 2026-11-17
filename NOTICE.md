@@ -34,10 +34,13 @@ The workbench embeds Maple Mono CN under SIL Open Font License 1.1. The fonts, o
 
 The shared import dependency planner incorporates MIT-licensed code from EidoAut/EidoTiaWorkbench, copyright (c) 2026 EIDO AUTOMATION, S.L.U.; see [license and pinned provenance](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/eido-import-planner/README.md).
 
-The AI-facing usage catalog embeds reference text from Siemens AI extensions and
-all C# example sources from Siemens TIA Portal Openness Code Snippets, copyright
-Siemens 2025-2026, pinned at `4a8cc79d0666633e524e52f3335d99ff993f8830`.
-Source code is MIT under section 2 of the complete retained
+The AI-facing usage catalog embeds reference text from Siemens AI extensions,
+copyright (c) 2026 Siemens AG, under the retained
+[MIT license](reference/siemens-openness/LICENSE), pinned at `6aa3650`.
+It also embeds all C# example sources from Siemens TIA Portal Openness Code
+Snippets, copyright Siemens 2025-2026, pinned separately at
+`4a8cc79d0666633e524e52f3335d99ff993f8830`.
+The snippet source code is MIT under section 2 of the complete retained
 [Siemens license](docs/licenses/SiemensCodeSnippets-LICENSE.md).
 The files are reference data, not compiled dependencies; Siemens SDK binaries and
 sample engineering archives are excluded. See [scope and provenance](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md).
