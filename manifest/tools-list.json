@@ -1,22 +1,22 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T20:53:03.9882262+00:00",
+  "generatedAt": "2026-11-17T21:18:26.6975238+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "8eb4a450a53f0d032269106cb5a79afe510e9d1555376f5067aab2c0c3b1abd0",
-  "toolCount": 519,
+  "workerSha256": "04e3ed287c6763f4736370025b91645319a218b98ed716ae92432a08b8db5259",
+  "toolCount": 520,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2873,
+    "parameters": 2884,
     "parametersUndocumented": 850,
     "parametersFromVocabulary": 694,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 170,
     "enumHints": 266,
-    "defaultHints": 1645,
-    "examplesCurated": 519,
+    "defaultHints": 1652,
+    "examplesCurated": 520,
     "recipes": 44
   },
   "categories": [
@@ -5344,31 +5344,6 @@
       "example": "{\"templateDirectory\":\"C:\\\\Examples\\\\templates\",\"plcXmlPath\":\"C:\\\\Examples\\\\snapshot\",\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
     },
     {
-      "name": "ManageSinumerikArchive",
-      "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageSinumerikArchive",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "action",
-        "filePath",
-        "devicePath",
-        "itemPath",
-        "modifiedDevicePath",
-        "modifiedItemPath",
-        "mode",
-        "comment",
-        "author",
-        "password",
-        "dryRun"
-      ],
-      "description": "[L2][Hardware][WRITE] SINUMERIK Project.HwUtilities archive/retrieve/fAddressArchive (.dsf). Exact device/item paths are Arrays. archive mode OnlyHardware/HardwareAndAllProgramBlocks; F-address archive selects productive and modified PLC items. Optional comment/author/password; passwords are not logged. dryRun defaults true. Existing output files refused; outputs hashed. Retrieve inserts a device without save; V16 returns void and provides no device identity, V17 and later return its name. Available on V16-V20. F-address archive is unavailable on V17. Password Archive/F-address overloads require V19; password Retrieve requires V20. Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSinumerikArchive\"), optionally operation or language.",
-      "example": "{\"action\":\"archive\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Example.dsf\",\"dryRun\":true,\"devicePath\":[\"\\u003Cexact SINUMERIK device from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact NCU PLC item\\u003E\"]}"
-    },
-    {
       "name": "ImportPlcBlockVerified",
       "layer": "L2",
       "category": "plc",
@@ -5388,6 +5363,29 @@
       ],
       "description": "[L2][PLC-Software][WRITE] Overwrite one existing non-library PLC block in its exact current user group with a reviewed SimaticML file. Default dryRun=true exports a retained backup, preserves omitted scalar block attributes and returns planned.xml plus binding/content token. Execution requires SAME arguments and previewToken; re-exports current block, rechecks binding/content before import, then re-exports for strict document verification preserving wiring and literal values. Requires Offline and consistent exports. Refuses library-bound blocks, InstanceDB, changed name/type/number/layout/language and empty replacement logic. Missing interface members/networks still mean deletion. compileAfterImport=false by default; true explicitly compiles the imported block before readback, rejecting compile errors. Without compile, inconsistent readback remains failed/unverified. No save/download/rollback/retry; failures may leave changes. Native V20/V21 execution not yet validated. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportPlcBlockVerified\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true}"
+    },
+    {
+      "name": "ImportPlcBlockDocuments",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "groupPath",
+        "importPath",
+        "fileNameWithoutExtension",
+        "overwrite",
+        "expectedPlanHash",
+        "dryRun",
+        "confirm",
+        "expectedProjectFile"
+      ],
+      "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. V20 requires .s7res; V21 optional. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Syntax/content validity and native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"DB_Flags\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
     },
     {
       "name": "ImportPlcBlock",
@@ -7776,29 +7774,6 @@
       "example": "{\"processId\":12345}"
     },
     {
-      "name": "ImportPlcBlockDocuments",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "groupPath",
-        "importPath",
-        "fileNameWithoutExtension",
-        "overwrite",
-        "expectedPlanHash",
-        "dryRun",
-        "confirm",
-        "expectedProjectFile"
-      ],
-      "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. V20 requires .s7res; V21 optional. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Syntax/content validity and native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"DB_Flags\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
-    },
-    {
       "name": "ExportHmiConnection",
       "layer": "L2",
       "category": "hmi",
@@ -7816,6 +7791,26 @@
       ],
       "description": "[L2][HMI][FILE]Export one HMI connection to a file (Classic WinCC only; Unified refuses with UNSUPPORTED_CAPABILITY) Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiConnection\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"connectionName\":\"PLC_Connection\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiConnection.xml\",\"exportOptions\":\"WithDefaults\"}"
+    },
+    {
+      "name": "ExportHmiProgram",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "ExportHmiProgramV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "exportDir",
+        "exportScreens",
+        "exportTagTables",
+        "exportOptions",
+        "exportDirectory"
+      ],
+      "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language. exportDir and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "ExportHmiScreen",
@@ -8976,26 +8971,6 @@
       "example": "{\"softwarePath\":\"PLC_1\"}"
     },
     {
-      "name": "ExportHmiProgram",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI",
-      "operation": "FILE",
-      "operationInferred": false,
-      "method": "ExportHmiProgramV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "exportDir",
-        "exportScreens",
-        "exportTagTables",
-        "exportOptions",
-        "exportDirectory"
-      ],
-      "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language. exportDir and exportDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"exportOptions\":\"WithDefaults\"}"
-    },
-    {
       "name": "GetPlcBlockScopes",
       "layer": "L2",
       "category": "plc",
@@ -9011,6 +8986,22 @@
       ],
       "description": "[L2][PLC-Software][READ] Recursively discover blocks in the PLC root, every software unit and safety unit, including system block groups. Each result retains unitName, unitKind and exact blockPath. Enumeration failures fail the operation, never masquerade as an empty scope. offset/limit paginate the complete inventory; no compilation or cross-reference query. Native behaviorPolicy remains current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetPlcBlockScopes\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\"}"
+    },
+    {
+      "name": "GetPlcBlockInfo",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "blockPath"
+      ],
+      "description": "[PLC foundation; native unverified][READ] [v17-object-read-safe-v1; manual reconciliation pending] Read exact group-qualified block details; no fallback or write. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetPlcBlockInfo\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"blockPath\":\"Main\"}"
     },
     {
       "name": "GetPlcBlockHierarchy",
@@ -9286,23 +9277,6 @@
       "example": "{\"softwarePath\":\"PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
-      "name": "GetClassicHmiGlobalization",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Classic",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "GetClassicHmiGlobalization",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "offset",
-        "limit"
-      ],
-      "description": "[L2][HMI-Classic][READ] Project multilingual graphics via project.Graphics (V14 SP1-V20) or project GraphicsProvider (V21): names, scalar properties and advertised attributes with live pagination. softwarePath is retained for compatibility; no classic device is required. Image bytes are not read. Examples: GetToolUsage(toolName: \"GetClassicHmiGlobalization\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\"}"
-    },
-    {
       "name": "ExportTechnologyObject",
       "layer": "L2",
       "category": "plc",
@@ -9323,6 +9297,26 @@
       ],
       "description": "[PLC foundation; native unverified][FILE] [special-export-candidate] Exact canonical TO path; root-only before V19, user groups from V19. Preview first; apply requires exact project, confirmation and expectedPlanHash, consistent supported TO and scoped offline target. Native XML unchanged, ExportOptions.None, no snapshots. V16–20 manual-backed source; other releases signature-verified but preview only until export semantics close. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportTechnologyObject\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"toName\":\"SpeedAxis_1\",\"exportFile\":\"C:\\\\Examples\\\\exports\\\\Axis_1.xml\",\"dryRun\":true,\"confirm\":false}"
+    },
+    {
+      "name": "ExportSafetyPrintout",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "Safety",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "ExportSafetyPrintout",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "filePath",
+        "printer",
+        "option",
+        "documentLayout",
+        "dryRun"
+      ],
+      "description": "[L2][Safety][FILE] Official STEP 7 Safety printout of one exact F-PLC via native SafetyPrintout.Print on the CPU device item: printer MicrosoftPrintToPdf (.pdf) or MicrosoftXpsDocumentWriter (.xps/.oxps), option All or Compact, documentLayout default DocuInfo_ISO_A4_Portrait. filePath is absolute on the MCP server, must not exist (native Print would overwrite) and its parent must exist; the Windows printer driver must be enabled on the TIA machine. dryRun=true default; execution returns the native bool, byte size and SHA-256. No project change. Examples: GetToolUsage(toolName: \"ExportSafetyPrintout\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Safety.pdf\",\"dryRun\":true}"
     },
     {
       "name": "ExportProjectTexts",
@@ -9434,6 +9428,31 @@
       ],
       "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export consistent native type XML into an existing directory. Never overwrites. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcType\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"typePath\":\"UDT_Status\",\"dryRun\":true,\"confirm\":false}"
+    },
+    {
+      "name": "ExportPlcTagTables",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "groupPath",
+        "exportPath",
+        "recursive",
+        "maxItems",
+        "expectedInventoryHash",
+        "dryRun",
+        "unitName",
+        "confirm",
+        "expectedProjectFile",
+        "exportDirectory"
+      ],
+      "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Export PLC root and user-group tag tables from an exact PLC/group scope into an existing exportDirectory. Complete bounded inventory, recursive opt-in; maxItems 1..256, overflow refused. Preview first; execution requires its expectedInventoryHash, confirm=true and exact expectedProjectFile. Files are tagTables-<hash>.xml; each objectPath maps to its file. ExportOptions.None preserves native XML; no overwrite or retry; partial outcomes retained. Native acceptance NOT RUN. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Re-import each file with ImportPlcTagTable (folderPath = parent of objectPath), optionally through ApplyToolBatch, or use ImportPlcProgramFromDirectory with the intended tagFolderPath. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ExportPlcTagTables\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"recursive\":true,\"maxItems\":128,\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportPlcTagTable",
@@ -9612,24 +9631,46 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiTagTable.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
-      "name": "ExportSafetyPrintout",
+      "name": "GetClassicHmiGlobalization",
       "layer": "L2",
-      "category": "plc",
-      "domain": "Safety",
-      "operation": "FILE",
+      "category": "hmi",
+      "domain": "HMI-Classic",
+      "operation": "READ",
       "operationInferred": false,
-      "method": "ExportSafetyPrintout",
+      "method": "GetClassicHmiGlobalization",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
+        "offset",
+        "limit"
+      ],
+      "description": "[L2][HMI-Classic][READ] Project multilingual graphics via project.Graphics (V14 SP1-V20) or project GraphicsProvider (V21): names, scalar properties and advertised attributes with live pagination. softwarePath is retained for compatibility; no classic device is required. Image bytes are not read. Examples: GetToolUsage(toolName: \"GetClassicHmiGlobalization\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\"}"
+    },
+    {
+      "name": "ManageSinumerikArchive",
+      "layer": "L2",
+      "category": "hardware",
+      "domain": "Hardware",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageSinumerikArchive",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "action",
         "filePath",
-        "printer",
-        "option",
-        "documentLayout",
+        "devicePath",
+        "itemPath",
+        "modifiedDevicePath",
+        "modifiedItemPath",
+        "mode",
+        "comment",
+        "author",
+        "password",
         "dryRun"
       ],
-      "description": "[L2][Safety][FILE] Official STEP 7 Safety printout of one exact F-PLC via native SafetyPrintout.Print on the CPU device item: printer MicrosoftPrintToPdf (.pdf) or MicrosoftXpsDocumentWriter (.xps/.oxps), option All or Compact, documentLayout default DocuInfo_ISO_A4_Portrait. filePath is absolute on the MCP server, must not exist (native Print would overwrite) and its parent must exist; the Windows printer driver must be enabled on the TIA machine. dryRun=true default; execution returns the native bool, byte size and SHA-256. No project change. Examples: GetToolUsage(toolName: \"ExportSafetyPrintout\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Safety.pdf\",\"dryRun\":true}"
+      "description": "[L2][Hardware][WRITE] SINUMERIK Project.HwUtilities archive/retrieve/fAddressArchive (.dsf). Exact device/item paths are Arrays. archive mode OnlyHardware/HardwareAndAllProgramBlocks; F-address archive selects productive and modified PLC items. Optional comment/author/password; passwords are not logged. dryRun defaults true. Existing output files refused; outputs hashed. Retrieve inserts a device without save; V16 returns void and provides no device identity, V17 and later return its name. Available on V16-V20. F-address archive is unavailable on V17. Password Archive/F-address overloads require V19; password Retrieve requires V20. Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSinumerikArchive\"), optionally operation or language.",
+      "example": "{\"action\":\"archive\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Example.dsf\",\"dryRun\":true,\"devicePath\":[\"\\u003Cexact SINUMERIK device from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact NCU PLC item\\u003E\"]}"
     },
     {
       "name": "GetClassicHmiScreenTree",
@@ -9648,27 +9689,6 @@
       ],
       "description": "[L2][HMI-Classic][READ] Typed folder tree of a classic (non-Unified) WinCC HMI device: ScreenSystemFolder / ScreenUserFolder (Screens, Folders), ScreenPopupSystemFolder / ScreenPopupUserFolder (ScreenPopups), ScreenTemplateSystemFolder / ScreenTemplateUserFolder (ScreenTemplates), ScreenSlideinSystemFolder (ScreenSlidein by SlideinType) plus ScreenOverview / ScreenGlobalElements presence. kind all/screens/popups/templates/slideins, optional folderPath under the family root, recursive to maxDepth; names only (first 500 per folder). Unified targets are refused. No modification. Examples: GetToolUsage(toolName: \"GetClassicHmiScreenTree\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\"}"
-    },
-    {
-      "name": "GetDccObject",
-      "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ReadDccObject",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "devicePath",
-        "itemPath",
-        "offset",
-        "limit",
-        "driveObjectIndex",
-        "driveObjectNumber",
-        "objectPath"
-      ],
-      "description": "[L2][Hardware][READ] Exact offline DCC chart/block/pin/library property path (objectPath [{property,name}] from the DriveControlChartContainer) with bounded scalar pagination; the typed views are ListDccCharts / ManageDccBlock / ManageDccPin. Complex properties excluded explicitly; no complete internal binding guarantee. Examples: GetToolUsage(toolName: \"GetDccObject\"), optionally operation or language.",
-      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"]}"
     },
     {
       "name": "GetDeviceAddressing",
@@ -10192,20 +10212,25 @@
       "example": "{\"devicePath\":[\"PLC_1\"]}"
     },
     {
-      "name": "GetPlcBlockInfo",
+      "name": "GetDccObject",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
+      "category": "hardware",
+      "domain": "Hardware",
       "operation": "READ",
       "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
+      "method": "ReadDccObject",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "blockPath"
+        "devicePath",
+        "itemPath",
+        "offset",
+        "limit",
+        "driveObjectIndex",
+        "driveObjectNumber",
+        "objectPath"
       ],
-      "description": "[PLC foundation; native unverified][READ] [v17-object-read-safe-v1; manual reconciliation pending] Read exact group-qualified block details; no fallback or write. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetPlcBlockInfo\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"blockPath\":\"Main\"}"
+      "description": "[L2][Hardware][READ] Exact offline DCC chart/block/pin/library property path (objectPath [{property,name}] from the DriveControlChartContainer) with bounded scalar pagination; the typed views are ListDccCharts / ManageDccBlock / ManageDccPin. Complex properties excluded explicitly; no complete internal binding guarantee. Examples: GetToolUsage(toolName: \"GetDccObject\"), optionally operation or language.",
+      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"]}"
     },
     {
       "name": "ManageSinumerikSafetyMode",

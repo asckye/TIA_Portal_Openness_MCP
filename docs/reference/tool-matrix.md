@@ -4,9 +4,9 @@
 
 本文件由 `dotnet run --project build-tools/release -- generate-tool-capability-matrix` 从 `manifest/tools-list.json`（八个 release 的注册工具目录并集）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-11-17 12:55:20
+- 生成时间：2026-11-17 13:20:38
 - 产品文件版本：4.0.0.0
-- 工具数量：519
+- 工具数量：520
 
 ## 读法
 
@@ -18,7 +18,7 @@
 | `SESSION` | 会话与发现，包含工程保存、另存与关闭；写操作须审批 | 16 |
 | `READ` | 读取已打开工程，不改动 | 157 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 199 |
-| `FILE` | 导出/导入文件或生成离线产物 | 58 |
+| `FILE` | 导出/导入文件或生成离线产物 | 59 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 36 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 20 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 15 |
@@ -32,7 +32,7 @@
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 57 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (12)、`Reflection` (7)、`Exports` (5)、`Reports` (6)、`Workbench` (8) |
 | `project` | 工程与协作 / Project & collaboration | 79 | `Project` (35)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
-| `plc` | PLC 软件 / PLC software | 139 | `PLC-Software` (93)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
+| `plc` | PLC 软件 / PLC software | 140 | `PLC-Software` (94)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 75 | `Hardware` (75) |
 | `hmi` | HMI 人机界面 / HMI | 126 | `HMI` (31)、`HMI-Unified` (71)、`HMI-Classic` (18)、`HMI-Library` (6) |
@@ -252,11 +252,11 @@
 | `ScanPlcSourceAnnotations` | L2 | FILE | Scan exported PLC documents in a directory (absolute path; recursive by default; extensions default [".xml",".s7dcl",".scl"]) for annotation markers in comments, block/network titles and network comments. markers default ["TODO","FIXME","HACK","XXX","NOTE","BUG"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: "ScanPlcSourceAnnotations"), optionally operation or language. directory and sourceDirectory are mutually exclusive parameter alternatives. |
 | `ValidatePlcDocumentSchemas` | L2 | OFFLINE | Validate recognized SimaticML interface and LAD/FBD/SCL/STL/GRAPH fragments against the caller's local Siemens PublicAPI Schemas folder for the selected release (V14 SP1 through V21). V14 SP1 network schemas are unsuffixed and reported as skipped; its Interface/v2 is supported. Uses exact namespace schema versions; refuses DTDs and resolves schema includes only from the bounded supplied directory. No schema download or TIA connection. Read fragmentSchemasPassed, skippedFragments and issues; the whole Document, instruction semantics, CPU compatibility and native import are NOT validated. Siemens schemas are not redistributed. Examples: GetToolUsage(toolName: "ValidatePlcDocumentSchemas"), optionally operation or language. |
 
-## plc — PLC 软件 / PLC software（139）
+## plc — PLC 软件 / PLC software（140）
 
 块/UDT/标签表/外部源/软件单元、块构建器与 SCL/LAD 生成、PLC 报警文本、工艺对象、OPC UA 服务器配置、Safety 离线工程。
 
-### [PLC-Software]（93）
+### [PLC-Software]（94）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -297,6 +297,7 @@
 | `ExportPlcBlocksDocuments` | L2 | FILE | [PLC foundation; native unverified][FILE] [batch-document-export-candidate] Exact V20/V21 ordinary LAD/DB groups only. Complete bounded inventory; recursive opt-in; unsupported/protected members refuse entire batch. exportPath MUST be a NEW tree under an existing parent, with path-hashed block directories. V20 resources required, V21 optional. Preview then exact project/hash confirmation. preservePath=true refused. One non-overwrite tree publication, retain partial staging and stop on failure; no replay. SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ExportPlcBlocksDocuments"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. |
 | `ExportPlcProDiagInfo` | L2 | FILE | Native CodeBlock.ExportProDIAGInfo: writes the alarm messages of one exact ProDiag FB (blockPath under BlockGroup or a unit's BlockGroup) as CSV files into an existing directoryPath on the TIA Portal machine and hashes the new files. Refused before the call unless the block is a ProDiag FB and consistent (compile first). Default dryRun=true; no project change. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ExportPlcProDiagInfo"), optionally operation or language. |
 | `ExportPlcTagTable` | L2 | FILE | [PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export one root-group tag table to a new XML file. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ExportPlcTagTable"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives. |
+| `ExportPlcTagTables` | L2 | FILE | [PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Export PLC root and user-group tag tables from an exact PLC/group scope into an existing exportDirectory. Complete bounded inventory, recursive opt-in; maxItems 1..256, overflow refused. Preview first; execution requires its expectedInventoryHash, confirm=true and exact expectedProjectFile. Files are tagTables-<hash>.xml; each objectPath maps to its file. ExportOptions.None preserves native XML; no overwrite or retry; partial outcomes retained. Native acceptance NOT RUN. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Re-import each file with ImportPlcTagTable (folderPath = parent of objectPath), optionally through ApplyToolBatch, or use ImportPlcProgramFromDirectory with the intended tagFolderPath. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ExportPlcTagTables"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. |
 | `ExportPlcType` | L2 | FILE | [PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export consistent native type XML into an existing directory. Never overwrites. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ExportPlcType"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. |
 | `ExportPlcTypes` | L2 | FILE | [PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ExportPlcTypes"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. |
 | `ExportPlcWatchTable` | L2 | FILE | [PLC foundation; native unverified][FILE] [special-export-candidate] Exact canonical ordinary PLC watch-table path; root/user groups, no force tables. Preview has zero file writes. Confirmed apply requires exact project and expectedPlanHash. ExportOptions.None; no overwrite, snapshots or retry. V15.1–21 official API-backed method source; native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ExportPlcWatchTable"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives. |

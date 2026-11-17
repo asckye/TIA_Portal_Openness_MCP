@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "0e12ea23567cc698b090d8d193dc909dee4406f156570b3acb011e7bd8ad8771",
-  "uniqueTools": 519,
+  "catalogSha256": "d7b276a14e41521f78e9251fe6b13770dd2425e35c43dce6ea3fa679988161ea",
+  "uniqueTools": 520,
   "documents": 89,
-  "versionToolPairs": 3217,
+  "versionToolPairs": 3225,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 260,
-  "noDirectVendoredExampleMappings": 259,
+  "noDirectVendoredExampleMappings": 260,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -53,8 +53,8 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 281,
-      "checkedToolCount": 281,
+      "registeredToolCount": 282,
+      "checkedToolCount": 282,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 175,
@@ -885,6 +885,14 @@
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcTagTables",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3867,8 +3875,8 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 322,
-      "checkedToolCount": 322,
+      "registeredToolCount": 323,
+      "checkedToolCount": 323,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 236,
@@ -4803,6 +4811,14 @@
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcTagTables",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -8458,8 +8474,8 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 351,
-      "checkedToolCount": 351,
+      "registeredToolCount": 352,
+      "checkedToolCount": 352,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 290,
@@ -9454,6 +9470,14 @@
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcTagTables",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -13654,8 +13678,8 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 374,
-      "checkedToolCount": 374,
+      "registeredToolCount": 375,
+      "checkedToolCount": 375,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 365,
@@ -14760,6 +14784,14 @@
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcTagTables",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -19495,8 +19527,8 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 400,
-      "checkedToolCount": 400,
+      "registeredToolCount": 401,
+      "checkedToolCount": 401,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 441,
@@ -20711,6 +20743,14 @@
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcTagTables",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -26033,8 +26073,8 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 476,
-      "checkedToolCount": 476,
+      "registeredToolCount": 477,
+      "checkedToolCount": 477,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 503,
@@ -27500,6 +27540,14 @@
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcTagTables",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -33530,8 +33578,8 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 499,
-      "checkedToolCount": 499,
+      "registeredToolCount": 500,
+      "checkedToolCount": 500,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 517,
@@ -35052,6 +35100,14 @@
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcTagTables",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -41302,14 +41358,14 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "c82573202b86cbe3aa22603355397ae7a6411db0636a7808e1d82e539dd6e15e",
-      "runtimeSha256": "c82573202b86cbe3aa22603355397ae7a6411db0636a7808e1d82e539dd6e15e",
+      "sdkWorkerSha256": "7ef3e6b389d86885f055ac3811977b76ddeefce18e7b3a8e72849f8236a59d6d",
+      "runtimeSha256": "7ef3e6b389d86885f055ac3811977b76ddeefce18e7b3a8e72849f8236a59d6d",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 514,
-      "checkedToolCount": 514,
+      "registeredToolCount": 515,
+      "checkedToolCount": 515,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 565,
@@ -42889,6 +42945,14 @@
             "guides/skills/tags-and-tagtables/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/TagTableSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ExportPlcTagTables",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -49458,8 +49522,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "53c534b68563007884ea58efddafd75ae278a9ab62ef7946af8e64322c44c23d",
-      "runtimeSha256": "53c534b68563007884ea58efddafd75ae278a9ab62ef7946af8e64322c44c23d",
+      "sdkWorkerSha256": "4edcc546fddbb5ddd2b0afbce0f568c0060f248c44fd5bb540e6fc9b39538e93",
+      "runtimeSha256": "4edcc546fddbb5ddd2b0afbce0f568c0060f248c44fd5bb540e6fc9b39538e93",
       "workerModel": "foundation-host-plc-worker"
     }
   }
