@@ -626,7 +626,9 @@ public sealed class OutputRootApprovalTests
         string repository = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
         var metadata = JsonNode.Parse(File.ReadAllText(Path.Combine(repository, "manifest", "tools-list.json")))!;
         var exceptions = new HashSet<string>(StringComparer.Ordinal) { "ManageStandardPackage", "ManageMachineDescription",
-            "PublishGenerationRecord", "ManageGenerationArtifacts", "StageImportFiles", "CleanupStagedImportFiles" };
+            "PublishGenerationRecord", "ManageGenerationArtifacts", "StageImportFiles", "CleanupStagedImportFiles",
+            // Fixed data-root storage; no caller-selected output path.
+            "ManagePlcTestLibrary" };
         var actions = new[] { "", "export", "exportOpcUa", "exportCardReaderPsc", "build", "stage", "commit" };
         var covered = new HashSet<string>(StringComparer.Ordinal);
         var schemaCovered = new HashSet<string>(StringComparer.Ordinal);

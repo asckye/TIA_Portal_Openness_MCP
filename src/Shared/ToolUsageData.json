@@ -48104,9 +48104,23 @@
               },
               "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
             },
+            "delete": {
+              "arguments": {
+                "action": "delete",
+                "id": "conveyor-start"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
             "listRuns": {
               "arguments": {
                 "action": "listRuns"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
+            "readRun": {
+              "arguments": {
+                "action": "readRun",
+                "runId": "latest"
               },
               "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
             }
@@ -68539,9 +68553,23 @@
               },
               "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
             },
+            "delete": {
+              "arguments": {
+                "action": "delete",
+                "id": "conveyor-start"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
             "listRuns": {
               "arguments": {
                 "action": "listRuns"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
+            "readRun": {
+              "arguments": {
+                "action": "readRun",
+                "runId": "latest"
               },
               "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
             }
