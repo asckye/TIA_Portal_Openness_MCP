@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
+using TiaMcp.Logic.Exchange;
 
 namespace TiaMcp.Logic.Generation
 {
     // CSV is a bounded, lossless view of the canonical machine document, not another generation model.
     public static class MachineCsv
     {
-        private static readonly UTF8Encoding Utf8 = new UTF8Encoding(true, true);
         private static readonly string[] Sheets = { "Machine", "Stations", "Units", "Devices", "Lists" };
         private const int MaximumBytes = 16 * 1024 * 1024, MaximumRows = 10001, MaximumColumns = 1024;
 
@@ -88,16 +88,10 @@ namespace TiaMcp.Logic.Generation
                 var rows = values.ToArray();
                 var columns = fixedColumns.Concat(rows.SelectMany(r => r.Keys)).Distinct(StringComparer.Ordinal).ToArray();
                 if (rows.Length > MaximumRows - 1 || columns.Length > MaximumColumns) throw new ArgumentException("CSV table exceeds row/column limits.");
-                var text = new StringBuilder(); Line(columns);
-                foreach (var row in rows) Line(columns.Select(c => row.TryGetValue(c, out var value) ? value : ""));
-                var bytes = Utf8.GetPreamble().Concat(Utf8.GetBytes(text.ToString())).ToArray(); files.Add(name + ".csv", bytes);
+                var bytes = TableFile.WriteCsv(new TableData(columns,
+                    rows.Select(row => columns.Select(c => row.TryGetValue(c, out var value) ? value : "").ToArray())));
+                files.Add(name + ".csv", bytes);
                 if (bytes.Length > 4 * 1024 * 1024) throw new ArgumentException("CSV table exceeds 4 MiB.");
-                void Line(IEnumerable<string> cells)
-                {
-                    var values = cells.ToArray();
-                    if (values.Any(c => c.Length > 65536)) throw new ArgumentException("CSV cell exceeds 65536 characters.");
-                    text.Append(string.Join(",", values.Select(c => "\"" + c.Replace("\"", "\"\"") + "\""))).Append('\n');
-                }
             }
         }
 
@@ -118,15 +112,11 @@ namespace TiaMcp.Logic.Generation
                 total += input.Length;
                 if (input.Length > 4 * 1024 * 1024 || total > MaximumBytes) throw new ArgumentException("CSV size limit exceeded.", "inputPath");
                 using var output = new MemoryStream(); input.CopyTo(output); var bytes = output.ToArray();
-                int offset = bytes.Length >= 3 && bytes[0] == 239 && bytes[1] == 187 && bytes[2] == 191 ? 3 : 0;
-                var rows = Parse(Utf8.GetString(bytes, offset, bytes.Length - offset));
-                if (rows.Count == 0 || rows[0].Any(c => c.Length == 0) || rows[0].Distinct(StringComparer.Ordinal).Count() != rows[0].Length)
-                    throw new ArgumentException("CSV headers must be nonempty and unique.", "inputPath");
-                var columns = rows[0];
+                var table = TableFile.ReadCsv(bytes, path);
+                var columns = table.Columns;
                 headers[sheet] = columns;
-                sheets[sheet] = rows.Skip(1)
-                    .Select(row => row.Length != columns.Length ? throw new ArgumentException("CSV row width differs from its header.", "inputPath")
-                    : columns.Select((c, i) => new { c, i }).ToDictionary(p => p.c, p => row[p.i], StringComparer.Ordinal)).ToArray();
+                sheets[sheet] = table.Rows.Select(row => columns.Select((c, i) => new { c, i })
+                    .ToDictionary(p => p.c, p => row[p.i], StringComparer.Ordinal)).ToArray();
             }
             if (sheets["Machine"].Length != 1) throw new ArgumentException("Machine.csv must contain exactly one machine.", "inputPath");
             var info = sheets["Machine"][0];
@@ -194,7 +184,7 @@ namespace TiaMcp.Logic.Generation
             var expected = Export(package, json);
             foreach (var sheet in Sheets)
             {
-                var columns = Parse(Utf8.GetString(expected[sheet + ".csv"].Skip(3).ToArray()))[0];
+                var columns = TableFile.ReadCsv(expected[sheet + ".csv"]).Columns;
                 if (headers[sheet].Any(c => !columns.Contains(c, StringComparer.Ordinal)))
                     throw new ArgumentException("Unknown CSV column in " + sheet + ".", "inputPath");
             }
@@ -227,32 +217,6 @@ namespace TiaMcp.Logic.Generation
                 obj["name"] = name;
             }
             return obj;
-        }
-        private static List<string[]> Parse(string text)
-        {
-            var rows = new List<string[]>(); var row = new List<string>(); var cell = new StringBuilder(); bool quoted = false, closed = false;
-            for (int i = 0; i < text.Length; i++)
-            {
-                char c = text[i];
-                if (c == '\0' || c == '\ufeff') throw new ArgumentException("Invalid CSV character.", "inputPath");
-                if (quoted)
-                {
-                    if (c == '"') { if (i + 1 < text.Length && text[i + 1] == '"') { cell.Append('"'); i++; } else { quoted = false; closed = true; } }
-                    else cell.Append(c);
-                }
-                else if (c == '"') { if (cell.Length != 0 || closed) throw new ArgumentException("Invalid CSV quoting.", "inputPath"); quoted = true; }
-                else if (c == ',' || c == '\n' || c == '\r')
-                {
-                    row.Add(cell.ToString()); cell.Clear(); closed = false;
-                    if (row.Count > MaximumColumns) throw new ArgumentException("Too many CSV columns.", "inputPath");
-                    if (c != ',') { if (c == '\r' && i + 1 < text.Length && text[i + 1] == '\n') i++; rows.Add(row.ToArray()); row.Clear(); }
-                }
-                else { if (closed) throw new ArgumentException("Unexpected text after a CSV quote.", "inputPath"); cell.Append(c); }
-                if (rows.Count > MaximumRows || cell.Length > 65536) throw new ArgumentException("CSV row/cell limit exceeded.", "inputPath");
-            }
-            if (quoted) throw new ArgumentException("Unterminated CSV quote.", "inputPath");
-            if (cell.Length > 0 || row.Count > 0 || closed) { row.Add(cell.ToString()); rows.Add(row.ToArray()); }
-            return rows;
         }
     }
 }

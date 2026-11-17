@@ -430,6 +430,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["MovePlcBlockToGroup"] = "worker",
                 ["OpenProject"] = "worker",
                 ["PatchPlcBlockDocument"] = "host",
+                ["ConvertEngineeringTable"] = "host",
                 ["PlanArtifactImportOrder"] = "host",
                 ["PlanGlobalLibraryTemplateReuse"] = "host",
                 ["PlanHardwareNetworkConfiguration"] = "foundation",

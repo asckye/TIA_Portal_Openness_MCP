@@ -4779,5 +4779,111 @@
         "expect": "Show the completed result to the engineer watching TIA Portal, without approval or project changes. Skip this display step when TIA runs without user interface; only display after a successful write and readback, never after an unknown or refused write."
       }
     ]
+  },
+  {
+    "id": "sequence/plc-tag-table-excel",
+    "topic": "plc-tag-table-excel",
+    "purpose": "Edit an exported PLC tag table in Excel and re-import through the existing previewed import.",
+    "preconditions": "Bind softwarePath, tableName and folderPath to the same export target; use new output files. Review edits in Excel before fromTable.",
+    "notes": "CSV/XLSX conversion is offline. Missing rows are kept, keys never renamed, SystemConstant rows read-only. Excel locale with semicolon separator: use XLSX. ImportPlcTagTable overwrite=true uses its existing backup and approval. XML does not contain the original folder; never guess it. Native acceptance NOT RUN.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Schema and offline fixtures; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "ExportPlcTagTable",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "exportFile": "C:/Examples/exports/Tags.xml",
+          "dryRun": false,
+          "tagTableName": "<exact table name>",
+          "expectedProjectFile": "C:/Projects/Example.ap{projectExtension}"
+        },
+        "expect": "Export the exact table. For recursive/group exports use ExportPlcTagTables when available; retain its original folder path."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
+          "dryRun": false
+        },
+        "expect": "Open in Excel, edit comments/address/access flags and add tags/constants. Save; retain unchanged keys and template."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "fromTable",
+          "inputPath": "C:/Examples/generated/Tags.xlsx",
+          "templatePath": "C:/Examples/exports/Tags.xml",
+          "exportFile": "C:/Examples/generated/Tags-edited.xml",
+          "dryRun": true
+        },
+        "expect": "Review changes.updated/added/unchanged/keptFromTemplate and first 50 old/new rows; no file written."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "fromTable",
+          "inputPath": "C:/Examples/generated/Tags.xlsx",
+          "templatePath": "C:/Examples/exports/Tags.xml",
+          "exportFile": "C:/Examples/generated/Tags-edited.xml",
+          "dryRun": false
+        },
+        "expect": "New XML written; inspect output.path, bytes and sha256."
+      },
+      {
+        "tool": "ImportPlcTagTable",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "folderPath": "<original table folder>",
+          "importPath": "C:/Examples/generated/Tags-edited.xml",
+          "overwrite": true,
+          "dryRun": true
+        },
+        "expect": "Review preview and backup/overwrite scope before approval."
+      },
+      {
+        "tool": "ImportPlcTagTable",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "folderPath": "<original table folder>",
+          "importPath": "C:/Examples/generated/Tags-edited.xml",
+          "overwrite": true,
+          "dryRun": false,
+          "expectedProjectFile": "C:/Projects/Example.ap{projectExtension}"
+        },
+        "expect": "Approve the exact import target; inspect backup and result."
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "softwarePath": "devices/PLC_1"
+        },
+        "expect": "Read back modified and unchanged tags; continue paging as returned."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "devices/PLC_1"
+        },
+        "expect": "Compile when affected tags are used in blocks; inspect diagnostics."
+      }
+    ]
   }
 ]

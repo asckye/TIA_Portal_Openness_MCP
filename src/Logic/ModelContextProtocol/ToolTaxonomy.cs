@@ -31,6 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "BuildUnifiedHmiButtonActionScript", "BuildUnifiedHmiLayoutDesign", "BuildUnifiedHmiThemeDesign",
             "BuildUnifiedHmiTemplateApplyDesign", "BuildUnifiedHmiTemplateApplyDesignManifest",
             "BuildDeviceAmlDocument", "PlanHardwareNetworkConfiguration", "WritePlcSclSourceFile",
+            "ConvertEngineeringTable",
             "BuildClassicHmiMinimalPackage", "BuildClassicHmiScreen", "BuildClassicHmiTagTable", "BuildFlgNetCall",
             "BuildPlcAliasAlarmLad", "BuildPlcFbBlock", "BuildPlcFcBlock", "BuildPlcGlobalDb",
             "BuildPlcLadFcBlock", "BuildPlcSymbolManifestFromPath", "BuildPlcTagTable", "BuildPlcUdt",

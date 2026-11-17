@@ -6229,6 +6229,19 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ConvertEngineeringTable",
+      "family": "F02",
+      "example": {
+        "kind": "plcTagTable",
+        "direction": "toTable",
+        "inputPath": "C:/Examples/exports/Tags.xml",
+        "format": "xlsx",
+        "exportFile": "C:/Examples/generated/Tags.xlsx",
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ExtractPlcBlockMetrics",
       "family": "F02",
       "example": {
@@ -8652,6 +8665,19 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ConvertEngineeringTable",
+      "family": "F02",
+      "example": {
+        "kind": "plcTagTable",
+        "direction": "toTable",
+        "inputPath": "C:/Examples/exports/Tags.xml",
+        "format": "xlsx",
+        "exportFile": "C:/Examples/generated/Tags.xlsx",
+        "dryRun": true
       }
     },
     {
@@ -11495,6 +11521,19 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ConvertEngineeringTable",
+      "family": "F02",
+      "example": {
+        "kind": "plcTagTable",
+        "direction": "toTable",
+        "inputPath": "C:/Examples/exports/Tags.xml",
+        "format": "xlsx",
+        "exportFile": "C:/Examples/generated/Tags.xlsx",
+        "dryRun": true
       }
     },
     {
@@ -14631,6 +14670,19 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ConvertEngineeringTable",
+      "family": "F02",
+      "example": {
+        "kind": "plcTagTable",
+        "direction": "toTable",
+        "inputPath": "C:/Examples/exports/Tags.xml",
+        "format": "xlsx",
+        "exportFile": "C:/Examples/generated/Tags.xlsx",
+        "dryRun": true
       }
     },
     {
@@ -18083,6 +18135,19 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ConvertEngineeringTable",
+      "family": "F02",
+      "example": {
+        "kind": "plcTagTable",
+        "direction": "toTable",
+        "inputPath": "C:/Examples/exports/Tags.xml",
+        "format": "xlsx",
+        "exportFile": "C:/Examples/generated/Tags.xlsx",
+        "dryRun": true
       }
     },
     {
@@ -21709,6 +21774,19 @@
       "example": {
         "leftFilePath": "C:\\Examples\\before\\Main.xml",
         "rightFilePath": "C:\\Examples\\after\\Main.xml"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ConvertEngineeringTable",
+      "family": "F02",
+      "example": {
+        "kind": "plcTagTable",
+        "direction": "toTable",
+        "inputPath": "C:/Examples/exports/Tags.xml",
+        "format": "xlsx",
+        "exportFile": "C:/Examples/generated/Tags.xlsx",
+        "dryRun": true
       }
     },
     {
@@ -26094,6 +26172,25 @@
           "plc-foundation"
         ],
         "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ConvertEngineeringTable",
+        "currentName": "ConvertEngineeringTable",
+        "sourceName": "ConvertEngineeringTable",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -35774,6 +35871,25 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "ConvertEngineeringTable",
+        "currentName": "ConvertEngineeringTable",
+        "sourceName": "ConvertEngineeringTable",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "CreateDevice",
         "currentName": "CreateDevice",
         "sourceName": "AddDevice",
@@ -44814,6 +44930,25 @@
         "exampleSource": "plc-foundation"
       },
       {
+        "name": "ConvertEngineeringTable",
+        "currentName": "ConvertEngineeringTable",
+        "sourceName": "ConvertEngineeringTable",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "CreateDevice",
         "currentName": "CreateDevice",
         "sourceName": "AddDevice",
@@ -50181,6 +50316,25 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ConvertEngineeringTable",
+        "currentName": "ConvertEngineeringTable",
+        "sourceName": "ConvertEngineeringTable",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
       },
       {
         "name": "CreateDevice",
@@ -56226,6 +56380,25 @@
           "plc-foundation"
         ],
         "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ConvertEngineeringTable",
+        "currentName": "ConvertEngineeringTable",
+        "sourceName": "ConvertEngineeringTable",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -62776,6 +62949,25 @@
           "plc-foundation"
         ],
         "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ConvertEngineeringTable",
+        "currentName": "ConvertEngineeringTable",
+        "sourceName": "ConvertEngineeringTable",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -69765,6 +69957,25 @@
           "plc-foundation"
         ],
         "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ConvertEngineeringTable",
+        "currentName": "ConvertEngineeringTable",
+        "sourceName": "ConvertEngineeringTable",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -77563,6 +77774,25 @@
           "plc-foundation"
         ],
         "arguments": {
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ConvertEngineeringTable",
+        "currentName": "ConvertEngineeringTable",
+        "sourceName": "ConvertEngineeringTable",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "kind": "plcTagTable",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/Tags.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Tags.xlsx",
           "dryRun": true
         },
         "envelopeVersion": 4,

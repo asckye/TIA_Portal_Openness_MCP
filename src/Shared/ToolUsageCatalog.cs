@@ -284,7 +284,8 @@ namespace TiaOpenness.Shared
             var releaseKeys = Data.Value["toolNotes"]?[name]?["releaseKeys"] as JsonArray;
             string releaseProblem = releaseKeys != null && !releaseKeys.Any(r => (string?)r == release)
                 ? "This registered wrapper has no native implementation for release " + release + "; see interpretation and the tool description." : "";
-            string selector = properties.ContainsKey("action") ? "action" : properties.ContainsKey("operation") ? "operation" : "";
+            string selector = properties.ContainsKey("action") ? "action" : properties.ContainsKey("operation") ? "operation"
+                : name == "ConvertEngineeringTable" ? "direction" : "";
             var choices = selector.Length == 0 ? new JsonArray() : properties[selector]!["enum"] as JsonArray ?? new JsonArray();
             choices = new JsonArray(choices.Where(c => !string.IsNullOrEmpty((string?)c)).Select(c => c!.DeepClone()).ToArray());
             if (operation.Length > 0 && !choices.Any(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase)))

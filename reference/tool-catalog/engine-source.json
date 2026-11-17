@@ -18920,6 +18920,79 @@
           "description": "Existing absolute output directory on the TIA host. Mutually exclusive with exportPath. Omit to use the session output directory."
         }
       }
+    },
+    "ConvertEngineeringTable": {
+      "method": "ConvertEngineeringTableV4",
+      "path": "src/Shared/PlcOfflineTools.cs",
+      "owner": "PlcOfflineTools",
+      "domain": "PLC-Builders",
+      "signature": "public CallToolResult ConvertEngineeringTableV4(\n            [Description(\"plcTagTable | rows.\")] string kind,\n            [Description(\"toTable | fromTable.\")] string direction,\n            [Description(\"Absolute input XML for plcTagTable toTable, or .csv/.xlsx for fromTable.\")] string inputPath = \"\",\n            [Description(\"Original exported tag table XML; required for plcTagTable fromTable.\")] string templatePath = \"\",\n            [Description(\"1..1000 flat scalar objects for rows toTable; numbers use invariant text, booleans true/false, null empty.\")]\n                JsonElement[]? rows = null,\n            [Description(\"Optional unique column order for rows toTable; must include every supplied property.\")] string[]? columns = null,\n            [Description(\"xlsx | csv for toTable; default xlsx, text cells preserve addresses and leading zeros.\")] string format = \"xlsx\",\n            [Description(\"New absolute .xlsx/.csv output, or .xml for plcTagTable fromTable; omitted uses the session output directory.\")]\n                string exportFile = \"\",\n            [Description(\"Zero-based offset for rows fromTable.\")] int offset = 0,\n            [Description(\"Page size 1..200 for rows fromTable; default 50 for PreviewToolBatch.\")] int limit = 50,\n            [Description(\"Validate and preview without writing by default; false creates a new file, never imports.\")] bool dryRun = true)",
+      "parameters": {
+        "kind": {
+          "type": "string",
+          "default": null,
+          "description": "plcTagTable | rows."
+        },
+        "direction": {
+          "type": "string",
+          "default": null,
+          "description": "toTable | fromTable."
+        },
+        "inputPath": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Absolute input XML for plcTagTable toTable, or .csv/.xlsx for fromTable.",
+          "value": ""
+        },
+        "templatePath": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Original exported tag table XML; required for plcTagTable fromTable.",
+          "value": ""
+        },
+        "rows": {
+          "type": "JsonElement[]?",
+          "default": "null",
+          "description": "1..1000 flat scalar objects for rows toTable; numbers use invariant text, booleans true/false, null empty.",
+          "value": null
+        },
+        "columns": {
+          "type": "string[]?",
+          "default": "null",
+          "description": "Optional unique column order for rows toTable; must include every supplied property.",
+          "value": null
+        },
+        "format": {
+          "type": "string",
+          "default": "\"xlsx\"",
+          "description": "xlsx | csv for toTable; default xlsx, text cells preserve addresses and leading zeros.",
+          "value": "xlsx"
+        },
+        "exportFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "New absolute .xlsx/.csv output, or .xml for plcTagTable fromTable; omitted uses the session output directory.",
+          "value": ""
+        },
+        "offset": {
+          "type": "int",
+          "default": "0",
+          "description": "Zero-based offset for rows fromTable.",
+          "value": 0
+        },
+        "limit": {
+          "type": "int",
+          "default": "50",
+          "description": "Page size 1..200 for rows fromTable; default 50 for PreviewToolBatch.",
+          "value": 50
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "Validate and preview without writing by default; false creates a new file, never imports.",
+          "value": true
+        }
+      }
     }
   },
   "behaviorCandidates": [

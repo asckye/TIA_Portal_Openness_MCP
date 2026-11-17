@@ -44,6 +44,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ConnectDeviceNodesToProfinetSubnet` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `ConnectIsolatedPortal` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `ConnectPortal` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
+| `ConvertEngineeringTable` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `CreateDevice` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `CreateLibraryMasterCopy` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `CreatePlcBlockGroup` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |

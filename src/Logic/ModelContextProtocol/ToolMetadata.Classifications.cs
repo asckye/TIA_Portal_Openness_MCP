@@ -444,6 +444,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["MonitorPlcWatchTableS7"] = new Classification("L2", "Online-Monitoring", "ONLINE", false, false, false, true, false, true, true),
             ["MovePlcBlockToGroup"] = new Classification("L2", "PLC-Software", "WRITE", false, false, false, false, true, false, false),
             ["OpenProject"] = new Classification("L1", "Project", "SESSION", false, false, false, false, false, false, false),
+            ["ConvertEngineeringTable"] = new Classification("L2", "PLC-Builders", "FILE", false, false, false),
             ["PatchPlcBlockDocument"] = new Classification("L2", "PLC-Builders", "FILE", false, false, false),
             ["PlanArtifactImportOrder"] = new Classification("L2", "Validation", "READ", false, true, false),
             ["PlanPlcExternalSourceImport"] = new Classification("L1", "PLC-Software", "READ", false, false, false),

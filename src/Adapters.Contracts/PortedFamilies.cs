@@ -52,7 +52,7 @@ namespace TiaMcp.Adapters.Contracts
                 new[] { "ApplyToolBatch", "BuildReleaseDiagnosticReport", "BuildReleaseHandoffArtifacts", "BuildReleaseManifest", "BuildReleaseRunbook", "CallTool", "CheckProductUpdate", "ClearExportHandles", "DeleteExportHandle", "FindTools", "GenerateAcceptanceReport", "GenerateErrorReport", "GetEnvironmentDiagnostics", "GetExportContent", "GetNativeInvocationLog", "GetOpennessCompatibility", "GetOpennessGuidance", "GetOpennessWorkerStatus", "GetV21EcosystemCatalog", "ListExportHandles", "ListToolCategories", "ManagePlcTestLibrary", "PreviewToolBatch", "PreviewToolCall", "RestartOpennessWorker", "RunOfflineReleaseValidationSuite", "RunOnlineMonitoringSafetySelfTest", "RunReadOnlyToolBatch", "SaveExportContent" }),
             new Family("F02", "plc-offline",
                 ReleaseRange.All,
-                new[] { "AnalyzePlcReferences", "AnalyzePlcSclSource", "AuditEngineeringExports", "BuildPlcAliasAlarmLad", "ComparePlcBlockDocuments", "DecodePlcSimaticMl", "ExtractPlcBlockMetrics", "GeneratePlcDocumentation", "InspectSimaticSdCompatibility", "InstantiatePlcTemplates", "PatchPlcBlockDocument", "RenderPlcBlockDocument", "RenderPlcVisualDiff", "ScanPlcSourceAnnotations", "ValidatePlcDocumentSchemas", "WritePlcSclSourceFile" }),
+                new[] { "AnalyzePlcReferences", "AnalyzePlcSclSource", "AuditEngineeringExports", "BuildPlcAliasAlarmLad", "ComparePlcBlockDocuments", "ConvertEngineeringTable", "DecodePlcSimaticMl", "ExtractPlcBlockMetrics", "GeneratePlcDocumentation", "InspectSimaticSdCompatibility", "InstantiatePlcTemplates", "PatchPlcBlockDocument", "RenderPlcBlockDocument", "RenderPlcVisualDiff", "ScanPlcSourceAnnotations", "ValidatePlcDocumentSchemas", "WritePlcSclSourceFile" }),
             new Family("F03", "hmi-offline",
                 ReleaseRange.All,
                 new[] { "AnalyzeGlobalLibraryPackage", "AnalyzeHmiTemplateReference", "AnalyzeUnifiedHmiTemplateLayout", "BuildClassicHmiMinimalPackage", "BuildClassicHmiScreen", "BuildClassicHmiTagTable", "BuildUnifiedHmiButtonActionScript", "BuildUnifiedHmiLayoutDesign", "BuildUnifiedHmiTemplateApplyDesign", "BuildUnifiedHmiTemplateApplyDesignManifest", "BuildUnifiedHmiThemeDesign", "ManageUnifiedCwcPackage", "PlanGlobalLibraryTemplateReuse", "RunClassicHmiOfflineValidationSuite", "RunClassicHmiTemporaryImportPreflight", "RunHmiActionScriptRecipeSafetySelfTest", "RunHmiTemplatePlcSyncPrecheckSuite", "ValidateClassicHmiMinimalPackageFiles", "ValidateClassicHmiMinimalPackagePlcSync", "WriteClassicHmiMinimalPackageFiles" }),
@@ -127,6 +127,7 @@ namespace TiaMcp.Adapters.Contracts
         };
 
         public static readonly IReadOnlyDictionary<string, string[]> ToolReleases = new Dictionary<string, string[]>(StringComparer.Ordinal) {
+            ["ConvertEngineeringTable"] = ReleaseRange.All,
             ["GetPlcLiveValuesOpcUa"] = ReleaseRange.All,
             ["GetPlcLiveValuesS7"] = ReleaseRange.All,
             ["GetPlcRunStateS7"] = ReleaseRange.All,

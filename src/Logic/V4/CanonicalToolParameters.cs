@@ -24,6 +24,7 @@ namespace TiaMcp.Logic.V4
         };
         public static IReadOnlyList<Alias> Aliases(string tool) => Table.TryGetValue(tool, out var aliases) ? aliases : Array.Empty<Alias>();
         public static bool HasStringDevice(string tool) => StringDevices.Contains(tool);
+        public static bool HasCanonicalOutput(string tool) => tool == "ConvertEngineeringTable";
 
         private static IReadOnlyDictionary<string, Alias[]> BuildTable()
         {
@@ -124,10 +125,19 @@ namespace TiaMcp.Logic.V4
         }
 
         public static bool NeedsDefault(string tool, JsonObject input, IEnumerable<string> required)
-            => DefaultTargets(tool, input, required).Any();
+            => HasCanonicalOutput(tool) ? !input.ContainsKey("exportFile")
+                && !((string?)input["kind"] == "rows" && (string?)input["direction"] == "fromTable")
+                : DefaultTargets(tool, input, required).Any();
 
         public static JsonObject WithDefaults(string tool, JsonObject input, IEnumerable<string> required, string directory)
         {
+            if (HasCanonicalOutput(tool))
+            {
+                var effective = input.DeepClone().AsObject();
+                if (NeedsDefault(tool, input, required)) effective["exportFile"] = Path.Combine(directory, tool
+                    + ((string?)input["direction"] == "fromTable" ? ".xml" : (string?)input["format"] == "csv" ? ".csv" : ".xlsx"));
+                return effective;
+            }
             if (Aliases(tool).Count == 0) return input;
             var result = input.DeepClone().AsObject();
             foreach (var alias in DefaultTargets(tool, input, required))

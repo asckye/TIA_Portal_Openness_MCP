@@ -552,6 +552,7 @@ public sealed class OutputRootApprovalTests
         ["GenerateOpcUaModelledInterface"] = new("exportFile", "outputPath"),
         ["GeneratePlcDocumentation"] = new("exportFile", "outputPath"),
         ["PatchPlcBlockDocument"] = new("exportFile", "outputPath"),
+        ["ConvertEngineeringTable"] = new("exportFile"),
         ["RenderPlcBlock"] = new("exportFile", "outputPath"),
         ["RenderPlcBlockDocument"] = new("exportFile", "outputPath"),
         ["RenderPlcProgramAtlas"] = new("exportFile", "outputPath"),

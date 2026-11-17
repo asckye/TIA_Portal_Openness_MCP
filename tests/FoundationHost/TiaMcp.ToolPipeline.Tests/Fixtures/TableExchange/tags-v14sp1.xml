@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V14 SP1" />
+  <DocumentInfo><Created>2000-01-01T00:00:00.0000000Z</Created><ExportSetting>None</ExportSetting><InstalledProducts /></DocumentInfo>
+  <SW.Tags.PlcTagTable ID="0">
+    <AttributeList><Name>ExchangeTags</Name></AttributeList>
+    <ObjectList>
+      <SW.Tags.PlcTag ID="1" CompositionName="Tags">
+        <AttributeList><DataTypeName>Bool</DataTypeName><ExternalAccessible>false</ExternalAccessible><ExternalVisible>true</ExternalVisible><ExternalWritable>false</ExternalWritable><LogicalAddress>%M0.0</LogicalAddress><Name>电机/运行</Name></AttributeList>
+        <ObjectList><MultilingualText ID="2" CompositionName="Comment"><ObjectList>
+          <MultilingualTextItem ID="3" CompositionName="Items"><AttributeList><Culture>zh-CN</Culture><Text>电机运行</Text></AttributeList></MultilingualTextItem>
+          <MultilingualTextItem ID="4" CompositionName="Items"><AttributeList><Culture>en-US</Culture><Text>Motor run</Text></AttributeList></MultilingualTextItem>
+        </ObjectList></MultilingualText><Unrelated ID="5"><Token>preserve exactly</Token></Unrelated></ObjectList>
+      </SW.Tags.PlcTag>
+      <SW.Tags.PlcTag ID="6" CompositionName="Tags"><AttributeList><DataTypeName>Word</DataTypeName><LogicalAddress>%MW10</LogicalAddress><Name>Count</Name></AttributeList></SW.Tags.PlcTag>
+      <SW.Tags.PlcUserConstant ID="A" CompositionName="UserConstants"><AttributeList><DataTypeName>Int</DataTypeName><Name>Limit</Name><Value>10</Value></AttributeList></SW.Tags.PlcUserConstant>
+      <SW.Tags.PlcSystemConstant ID="F" CompositionName="SystemConstants"><AttributeList><DataTypeName>Hw_Io</DataTypeName><Name>LocalModule</Name><Value>64</Value></AttributeList></SW.Tags.PlcSystemConstant>
+    </ObjectList>
+  </SW.Tags.PlcTagTable>
+</Document>

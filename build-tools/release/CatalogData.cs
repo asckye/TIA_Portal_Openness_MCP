@@ -94,6 +94,10 @@ internal sealed class CatalogData
             StringComparison.Ordinal), "ManagePlcTestLibrary classification differs");
         CatalogJson.Require(metadata.Contains("[\"GetCallResult\"] = new Classification(\"L0\", \"Diagnostics\", \"READ\",",
             StringComparison.Ordinal), "GetCallResult classification differs");
+        HostOnly.Add("ConvertEngineeringTable", "FILE");
+        CatalogJson.Require(metadata.Contains("[\"ConvertEngineeringTable\"] = new Classification(\"L2\", \"PLC-Builders\", \"FILE\",",
+            StringComparison.Ordinal) && CatalogJson.Source(root, "src/Shared/PlcOfflineTools.cs")
+                .Contains("McpServerTool(Name = \"ConvertEngineeringTable\")", StringComparison.Ordinal), "Table exchange registration differs");
         foreach (var (name, row) in EngineSource["registrations"]!.AsObject())
             Registrations.Add(name, (CatalogJson.Text(row!["path"]), CatalogJson.Text(row["method"]), CatalogJson.Text(row["domain"])));
         var full = CatalogJson.Set(Registrations.Keys.Except(HostOnly.Keys));
@@ -135,7 +139,11 @@ internal sealed class CatalogData
     internal static void ValidateReviewedData(JsonObject additions, Dictionary<string, string> renames, HashSet<string> archived)
     {
         CatalogJson.Require(CatalogJson.Set(renames.Keys).SetEquals(archived), "Frozen rename table must cover the archive exactly");
-        var verbs = "Analyze Apply Archive Attach Audit Bind Build Call Check Cleanup Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Prefill Preview Probe Publish Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Stage Synchronize Trace Upgrade Upload Validate Write".Split(' ');
+        var verbs = ("Analyze Apply Archive Attach Audit Bind Build Call Check Cleanup Clear Close Compare Compile Configure Connect " +
+            "Convert Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get " +
+            "Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Prefill Preview " +
+            "Probe Publish Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Stage " +
+            "Synchronize Trace Upgrade Upload Validate Write").Split(' ');
         foreach (var (old, target) in renames)
             CatalogJson.Require(Regex.IsMatch(target, "^[A-Z][A-Za-z0-9]+$") && verbs.Contains(Regex.Match(target, "^[A-Z][a-z]*").Value) && !new[] { "Json", "Xml", "Xlsx", "SiVArc" }.Any(target.Contains), "Unreviewed rename: " + old);
         foreach (var group in renames.GroupBy(p => p.Value, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
@@ -145,6 +153,7 @@ internal sealed class CatalogData
             ["GetCallResult"] = ("NO-LOCK-2", "READ"),
             ["ManagePlcTestLibrary"] = ("TIA-TEST-1", "FILE"),
             ["ExportPlcTagTables"] = ("TIA-BATCH-2", "FILE"),
+            ["ConvertEngineeringTable"] = ("TIA-BATCH-3", "FILE"),
             ["RenderPlcBlock"] = ("P6-48", "FILE"), ["RenderPlcProgramAtlas"] = ("P6-48", "FILE"),
             ["StageImportFiles"] = ("P6-67", "FILE"), ["ListStagedImportFiles"] = ("P6-67", "READ"), ["CleanupStagedImportFiles"] = ("P6-67", "FILE"),
             ["ListStandardPackages"] = ("P8-31d", "READ"), ["ManageStandardPackage"] = ("P8-31d", "FILE"), ["ValidateStandardPackage"] = ("P8-31d", "OFFLINE"), ["DescribeStandardPackage"] = ("P8-31d", "READ"), ["ManageMachineDescription"] = ("P8-31d", "FILE"),
@@ -162,7 +171,11 @@ internal sealed class CatalogData
     }
     private static void ValidateName(string name)
     {
-        var verbs = "Analyze Apply Archive Attach Audit Bind Build Call Check Cleanup Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Prefill Preview Probe Publish Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Stage Synchronize Trace Upgrade Upload Validate Write".Split(' ');
+        var verbs = ("Analyze Apply Archive Attach Audit Bind Build Call Check Cleanup Clear Close Compare Compile Configure Connect " +
+            "Convert Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get " +
+            "Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Prefill Preview " +
+            "Probe Publish Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Stage " +
+            "Synchronize Trace Upgrade Upload Validate Write").Split(' ');
         CatalogJson.Require(Regex.IsMatch(name, "^[A-Z][A-Za-z0-9]+$") && verbs.Contains(Regex.Match(name, "^[A-Z][a-z]*").Value), "Unreviewed V4 tool name: " + name);
     }
     internal static Dictionary<string, string> Resolve(IEnumerable<string> baseline, HashSet<string> registered, Dictionary<string, string> targets, bool merged = false)

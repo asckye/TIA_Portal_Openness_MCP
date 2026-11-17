@@ -90,7 +90,8 @@ internal sealed class CanonicalParameterTool : McpServerTool
     {
         error = null;
         var context = EngineHostConfiguration.CurrentOrNull;
-        if (CanonicalToolParameters.Aliases(name).Count == 0 || context?.Catalog?.Find(name) is not { } descriptor) return arguments;
+        if (CanonicalToolParameters.Aliases(name).Count == 0 && !CanonicalToolParameters.HasCanonicalOutput(name)
+            || context?.Catalog?.Find(name) is not { } descriptor) return arguments;
         var input = JsonNode.Parse(arguments.Json.GetRawText())!.AsObject();
         error = PrepareDefault(name, input, descriptor.ImplementationRequired,
             () => context.GetExportDirectory(prepareDirectory), out var effective);
@@ -106,7 +107,7 @@ internal sealed class CanonicalParameterTool : McpServerTool
         {
             string? target = directory();
             if (target != null) { effective = CanonicalToolParameters.WithDefaults(name, input, required, target); return null; }
-            string parameter = CanonicalToolParameters.Aliases(name)
+            string parameter = CanonicalToolParameters.HasCanonicalOutput(name) ? "exportFile" : CanonicalToolParameters.Aliases(name)
                 .First(alias => alias.Canonical.StartsWith("export", StringComparison.Ordinal)).Canonical;
             return new Error("No default export directory is available. Supply " + parameter + " explicitly.",
                 new InvalidArgumentDetails("/" + parameter, Array.Empty<string>()));
@@ -131,7 +132,7 @@ internal sealed class CanonicalParameterTool : McpServerTool
         CancellationToken cancellationToken)
     {
         var original = request.Params;
-        if (original == null || CanonicalToolParameters.Aliases(original.Name).Count == 0)
+        if (original == null || CanonicalToolParameters.Aliases(original.Name).Count == 0 && !CanonicalToolParameters.HasCanonicalOutput(original.Name))
             return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
         var supplied = new ToolArguments(JsonSerializer.SerializeToElement(original.Arguments ?? new Dictionary<string, JsonElement>()));
         var effective = ApplyDefaults(original.Name, supplied, out var error);

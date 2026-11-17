@@ -30,7 +30,7 @@ public sealed class B3HostPortsTests
             AttachDeviceNodeToSubnet AuditEngineeringExports BuildAndImportPlcArtifact BuildDeviceAmlDocument BuildProjectScaffold
             BuildReleaseDiagnosticReport BuildReleaseHandoffArtifacts BuildReleaseManifest BuildReleaseRunbook CallTool CheckLibraryUpdates
             CheckProductUpdate ClearExportHandles ComparePlcBlockDocuments CompareProjects CompareSoftwareToOnline CompileDevice
-            CompileHmiDiagnostics ConfigureMotionHardwareConnection ConnectDeviceNodesToProfinetSubnet ConnectIsolatedPortal
+            CompileHmiDiagnostics ConfigureMotionHardwareConnection ConnectDeviceNodesToProfinetSubnet ConnectIsolatedPortal ConvertEngineeringTable
             CreateDevice CreateLibraryMasterCopy CreatePlcBlockGroup CreatePlcTypeGroup DeleteEmptyPlcBlockGroup
             DeleteExportHandle DeleteHmiTag DeletePlcBlock DeletePlcTagTable DeletePlcType DescribeHmiScreen DescribeHmiSoftware
             DescribeHmiTag DescribeHmiTagTable DescribeObject DescribeObjectProperty DescribePlcBlockLogic DescribeService

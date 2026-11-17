@@ -371,6 +371,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["MoveBlockToGroupV4"] = "WRITE",
             ["OpenProjectV4"] = "SESSION",
             ["PatchPlcBlockDocumentV4"] = "FILE",
+            ["ConvertEngineeringTableV4"] = "FILE",
             ["PlanArtifactImportOrderV4"] = "READ",
             ["PlanGlobalLibraryTemplateReuseV4"] = "OFFLINE",
             ["PlanHardwareNetworkConfiguration"] = "OFFLINE",
