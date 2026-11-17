@@ -10104,12 +10104,12 @@
             "requiresBinding": true
           },
           "targetSoftwarePath": {
-            "exampleValue": "<exact softwarePath from GetProjectTree>",
+            "exampleValue": "PLC_2",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
             ],
-            "meaning": "Use the exact PLC software for PLC targets or Classic HMI software for Classic targets. For device omit this parameter."
+            "meaning": "Use the exact PLC software for code-block versions or Classic HMI software for screen versions, discovered with GetProjectTree."
           },
           "typePath": {
             "requiresBinding": true,
@@ -27076,12 +27076,12 @@
             "requiresBinding": true
           },
           "targetSoftwarePath": {
-            "exampleValue": "<exact softwarePath from GetProjectTree>",
+            "exampleValue": "PLC_2",
             "requiresBinding": true,
             "tools": [
               "GetProjectTree"
             ],
-            "meaning": "Use the exact PLC software for PLC targets or Classic HMI software for Classic targets. For device omit this parameter."
+            "meaning": "Use the exact PLC software for code-block versions or Classic HMI software for screen versions, discovered with GetProjectTree."
           },
           "typePath": {
             "requiresBinding": true,

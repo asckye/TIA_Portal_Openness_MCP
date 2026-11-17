@@ -6299,7 +6299,7 @@
       "path": "src/Shared/LibraryTools.cs",
       "owner": "LibraryTools",
       "domain": "Library",
-      "signature": "public CallToolResult ManageLibraryTypeVersionV4(\n            string typePath,\n            string version,\n            [Description(\"action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances.\")] string action,\n            string libraryName=\"\",\n            [Description(\"newVersion: version string of the new type version, e.g. 'V1.0.1'.\")] string newVersion=\"\",\n            [Description(\"dependenciesMode: how dependent types are handled by the action ('' = default).\")] string dependenciesMode=\"\",\n            [Description(\"author: author text of the version.\")] string author=\"\",\n            [Description(\"comment: comment text.\")] string comment=\"\",\n            string targetSoftwarePath=\"\",\n            bool dryRun=true)",
+      "signature": "public CallToolResult ManageLibraryTypeVersionV4(\n            string typePath,\n            string version,\n            [Description(\"action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | \" +\n                \"findInstances | instantiate.\")] string action,\n            string libraryName=\"\",\n            [Description(\"newVersion: version string of the new type version, e.g. '1.0.1'.\")] string newVersion=\"\",\n            [Description(\"dependenciesMode: how dependent types are handled by the action ('' = default).\")] string dependenciesMode=\"\",\n            [Description(\"author: author text of the version.\")] string author=\"\",\n            [Description(\"comment: comment text.\")] string comment=\"\",\n            string targetSoftwarePath=\"\",\n            bool dryRun=true,\n            [Description(\"targetGroupPath: exact destination block group or Classic screen folder; empty selects root. Encode name segments.\")]\n                string targetGroupPath=\"\",\n            [Description(\"updatePathsMode: V20+ code blocks only; empty uses the simple overload, or KeepExistingPathsInTarget | ThrowIfPathsConflict | \" +\n                \"UpdatePathsInTarget.\")] string updatePathsMode=\"\",\n            string expectedPlanHash=\"\",\n            string expectedProjectFile=\"\")",
       "parameters": {
         "typePath": {
           "type": "string",
@@ -6312,7 +6312,7 @@
         "action": {
           "type": "string",
           "default": null,
-          "description": "action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances."
+          "description": "action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances | instantiate."
         },
         "libraryName": {
           "type": "string",
@@ -6322,7 +6322,7 @@
         "newVersion": {
           "type": "string",
           "default": "\"\"",
-          "description": "newVersion: version string of the new type version, e.g. 'V1.0.1'.",
+          "description": "newVersion: version string of the new type version, e.g. '1.0.1'.",
           "value": ""
         },
         "dependenciesMode": {
@@ -6352,6 +6352,28 @@
           "type": "bool",
           "default": "true",
           "value": true
+        },
+        "targetGroupPath": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "targetGroupPath: exact destination block group or Classic screen folder; empty selects root. Encode name segments.",
+          "value": ""
+        },
+        "updatePathsMode": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "updatePathsMode: V20+ code blocks only; empty uses the simple overload, or KeepExistingPathsInTarget | ThrowIfPathsConflict | UpdatePathsInTarget.",
+          "value": ""
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
         }
       }
     },
@@ -6399,7 +6421,7 @@
       "path": "src/Shared/LibraryTools.cs",
       "owner": "LibraryTools",
       "domain": "Library",
-      "signature": "public CallToolResult ManageLibraryMasterCopyV4(\n            [Description(\"sourcePath: 'Group/Name' of the source object.\")] string sourcePath,\n            [Description(\"action: the operation to perform - read | copy | compare | delete.\")] string action,\n            string libraryName=\"\",\n            [Description(\"destinationLibraryName: global library that receives the copy ('' = the project library).\")] string destinationLibraryName=\"\",\n            [Description(\"destinationPath: 'Folder/Name' where the copy is created.\")] string destinationPath=\"\",\n            bool dryRun=true)",
+      "signature": "public CallToolResult ManageLibraryMasterCopyV4(\n            [Description(\"sourcePath: 'Group/Name' of the source object.\")] string sourcePath,\n            [Description(\"action: the operation to perform - read | copy | compare | delete | instantiate.\")] string action,\n            string libraryName=\"\",\n            [Description(\"destinationLibraryName: global library that receives the copy ('' = the project library).\")] string destinationLibraryName=\"\",\n            [Description(\"destinationPath: 'Folder/Name' where the copy is created.\")] string destinationPath=\"\",\n            bool dryRun=true,\n            [Description(\"targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable.\")] string targetKind=\"\",\n            string targetSoftwarePath=\"\",\n            [Description(\"targetGroupPath: exact PLC group, tag table (Group/Table), device group or Classic folder; empty=root except tag. \" +\n                \"Encode each name segment.\")] string targetGroupPath=\"\",\n            [Description(\"copyMode: empty refuses name clashes; ThrowIfExists | Rename | Replace require V20+ and a PLC target.\")] string copyMode=\"\",\n            string expectedPlanHash=\"\",\n            string expectedProjectFile=\"\")",
       "parameters": {
         "sourcePath": {
           "type": "string",
@@ -6409,7 +6431,7 @@
         "action": {
           "type": "string",
           "default": null,
-          "description": "action: the operation to perform - read | copy | compare | delete."
+          "description": "action: the operation to perform - read | copy | compare | delete | instantiate."
         },
         "libraryName": {
           "type": "string",
@@ -6432,6 +6454,39 @@
           "type": "bool",
           "default": "true",
           "value": true
+        },
+        "targetKind": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable.",
+          "value": ""
+        },
+        "targetSoftwarePath": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "targetGroupPath": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "targetGroupPath: exact PLC group, tag table (Group/Table), device group or Classic folder; empty=root except tag. Encode each name segment.",
+          "value": ""
+        },
+        "copyMode": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "copyMode: empty refuses name clashes; ThrowIfExists | Rename | Replace require V20+ and a PLC target.",
+          "value": ""
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "value": ""
         }
       }
     },
