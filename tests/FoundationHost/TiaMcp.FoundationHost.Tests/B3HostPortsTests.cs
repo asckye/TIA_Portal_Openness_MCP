@@ -247,6 +247,88 @@ public sealed class B3HostPortsTests
     }
 
     [Theory, MemberData(nameof(Releases))]
+    public void Preview_batch_admits_tag_table_imports_and_available_Unified_tags(string release)
+    {
+        using var worker = new FakeWorker();
+        var registry = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
+        using var engineWorker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, engineWorker, registry);
+        using var session = pipeline.EnterSession();
+        var examples = JsonNode.Parse(File.ReadAllText(Path.Combine(
+            TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "reference", "tool-examples", "calls.json")))!;
+        var names = release is "19" or "20" or "21"
+            ? new[] { "ImportPlcTagTable", "EnsureUnifiedHmiTag" } : new[] { "ImportPlcTagTable" };
+        foreach (string name in names)
+        {
+            var arguments = JsonSerializer.SerializeToElement(examples["profiles"]!["plc-foundation"]![name]!["arguments"]!);
+            var operations = new[] { new TiaMcp.Logic.V4.Inputs.ToolCall(name, new TiaMcp.Logic.V4.Inputs.ToolArguments(arguments)) };
+            var error = Host.McpServer.ValidateBatch(operations, true, out var validated);
+            Assert.Null(error);
+            Assert.Equal(name, Assert.Single(validated!).Name);
+            Assert.True(validated![0].Arguments.Json.GetProperty("dryRun").GetBoolean());
+        }
+        Assert.Equal(0, worker.Calls);
+        Assert.Equal(0, engineWorker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Bulk_examples_validate_nested_calls_and_serve_the_readback_sequence(string release)
+    {
+        using var worker = new FakeWorker();
+        IReadOnlyList<McpServerTool>? published = null;
+        var registry = LegacyHostToolRegistry.Create(worker, release, false, usageRoster: () => published!, hostPorts: false);
+        using var engineWorker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, engineWorker, registry);
+        published = pipeline.AllTools;
+        using var session = pipeline.EnterSession();
+        var examples = JsonNode.Parse(File.ReadAllText(Path.Combine(
+            TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "reference", "tool-examples", "calls.json")))!;
+        foreach (string profile in new[] { "plc-foundation", "full-engine" })
+        {
+            var preview = examples["profiles"]![profile]!["PreviewToolBatch"]!;
+            Assert.True((bool?)preview["parameters"]!["operations"]!["requiresBinding"]);
+            foreach (var (variant, count) in new[] { ("delete-blocks", 3), ("create-plc-tags", 5), ("create-unified-tags", 3) })
+            {
+                var row = preview["operations"]![variant]!;
+                if (!row["releaseKeys"]!.AsArray().Any(key => (string?)key == release)) continue;
+                var calls = row["arguments"]!["operations"]!.AsArray().Select(call => new TiaMcp.Logic.V4.Inputs.ToolCall(
+                    (string)call!["name"]!, new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(call["arguments"]!)))).ToArray();
+                Assert.Equal(count, calls.Length);
+                Assert.Null(Host.McpServer.ValidateBatch(calls, true, out _));
+                foreach (var call in calls)
+                    if (call.Name is "DeletePlcBlock" or "ManagePlcTagDefinition")
+                        Assert.True(call.Arguments.Json.GetProperty("confirm").GetBoolean());
+                var apply = examples["profiles"]![profile]!["ApplyToolBatch"]!["operations"]![variant]!;
+                Assert.True((bool?)apply["requiresBinding"]);
+                Assert.Contains("previewToken", (string?)apply["arguments"]!["previewToken"]);
+            }
+        }
+        var sequences = JsonNode.Parse(File.ReadAllText(Path.Combine(
+            TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "reference", "tool-examples", "sequences.json")))!.AsArray();
+        var authored = sequences.Single(sequence => (string?)sequence!["id"] == "sequence/bulk-plc-objects")!;
+        foreach (var step in authored["steps"]!.AsArray())
+        {
+            string name = (string)step!["tool"]!;
+            var schema = pipeline.AllTools.Single(tool => tool.ProtocolTool.Name == name).ProtocolTool.InputSchema;
+            var arguments = JsonSerializer.SerializeToElement(step["arguments"]!);
+            var error = new TiaMcp.Logic.V4.Inputs.InputSchema(schema).Validate(arguments, "arguments");
+            Assert.True(error == null, name + ": " + JsonSerializer.Serialize(error));
+        }
+        var usage = pipeline.AllTools.Single(tool => tool.ProtocolTool.Name == "GetToolUsage");
+        var result = await usage.InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+            Params = new() { Name = "GetToolUsage", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                "{\"exampleId\":\"sequence/bulk-plc-objects\",\"exampleKind\":\"sequence\"}") }
+        });
+        Assert.False(result.IsError ?? false);
+        var sequence = Assert.Single(result.StructuredContent!["data"]!["examples"]!.AsArray())!;
+        Assert.True((bool?)sequence["available"]);
+        Assert.Equal(new[] { "GetSoftwareTree", "ListPlcTags", "PreviewToolBatch", "ApplyToolBatch", "ListPlcTags" },
+            sequence["steps"]!.AsArray().Select(step => (string?)step!["tool"]));
+        Assert.Equal(0, worker.Calls);
+        Assert.Equal(0, engineWorker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
     public void Every_declaration_is_available_without_native_host_dependencies(string release)
     {
         var families = PortedFamilies.All.Where(f => f.Name is "F08" or "F09" or "F11" or "F17").ToArray();

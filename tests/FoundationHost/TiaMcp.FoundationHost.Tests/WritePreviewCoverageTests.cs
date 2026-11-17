@@ -37,6 +37,167 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
 
     public static IEnumerable<object[]> Releases() => CanonicalParameterRound2Tests.Releases();
 
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Apply_batch_fills_each_items_previewed_plan(string release)
+    {
+        using var fixture = new BatchPreviewFixture(release);
+        var preview = await fixture.Preview(new JsonObject { ["name"] = "Motor" },
+            new JsonObject { ["name"] = "Pump", ["expectedPlanHash"] = "", ["expectedProjectFile"] = "" });
+        var applied = fixture.Apply(preview);
+        Assert.True((bool?)applied["ok"], applied.ToJsonString());
+        var previews = preview["data"]!["items"]!.AsArray();
+        var results = applied["data"]!["items"]!.AsArray();
+        Assert.Equal(2, results.Count);
+        Assert.NotEqual((string?)previews[0]!["result"]!["data"]!["planHash"], (string?)previews[1]!["result"]!["data"]!["planHash"]);
+        for (int i = 0; i < results.Count; i++)
+        {
+            var data = results[i]!["result"]!["data"]!;
+            Assert.Equal((string?)previews[i]!["result"]!["data"]!["planHash"], (string?)data["planHash"]);
+            Assert.False((bool?)data["dryRun"]);
+            Assert.False((bool?)data["confirm"]);
+        }
+        Assert.Equal(1, fixture.Executions["Motor"]);
+        Assert.Equal(1, fixture.Executions["Pump"]);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Apply_batch_fills_native_preview_plan(string release)
+    {
+        using var fixture = new BatchPreviewFixture(release, native: true);
+        var preview = await fixture.Preview(new JsonObject { ["name"] = "Motor", ["confirm"] = true });
+        var applied = fixture.Apply(preview);
+        Assert.True((bool?)applied["ok"], applied.ToJsonString());
+        var data = applied["data"]!["items"]![0]!["result"]!["data"]!;
+        Assert.Equal((string?)preview["data"]!["items"]![0]!["result"]!["data"]!["planHash"], (string?)data["planHash"]);
+        Assert.True((bool?)data["confirm"]);
+        Assert.Equal(2, fixture.NativePreviews);
+        Assert.Equal(1, fixture.Executions["Motor"]);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Apply_batch_keeps_caller_supplied_plan_and_project(string release)
+    {
+        using var fixture = new BatchPreviewFixture(release);
+        var original = await fixture.Preview(new JsonObject { ["name"] = "Motor" });
+        string hash = (string)original["data"]!["items"]![0]!["result"]!["data"]!["planHash"]!;
+        foreach (var (field, value, code) in new[] {
+            ("expectedPlanHash", new string('0', 64), "PLAN_STALE"),
+            ("expectedProjectFile", "C:/Projects/other.ap21", "IDENTITY_MISMATCH")
+        })
+        {
+            var arguments = new JsonObject {
+                ["name"] = "Motor", ["expectedPlanHash"] = hash, ["expectedProjectFile"] = "C:/Projects/original.ap21", [field] = value
+            };
+            var preview = await fixture.Preview(arguments,
+                new JsonObject { ["name"] = "Pump" });
+            var applied = fixture.Apply(preview);
+            Assert.False((bool?)applied["ok"]);
+            Assert.Equal(code, (string?)applied["data"]!["items"]![0]!["result"]!["error"]!["code"]);
+            Assert.Equal("NOT_EXECUTED", (string?)applied["data"]!["items"]![1]!["result"]!["error"]!["code"]);
+        }
+        Assert.Empty(fixture.Executions);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Apply_batch_revalidates_changed_planned_arguments_before_any_write(string release)
+    {
+        using var fixture = new BatchPreviewFixture(release);
+        var preview = await fixture.Preview(new JsonObject { ["name"] = "Motor" }, new JsonObject { ["name"] = "Pump" });
+        fixture.Revision++;
+        var applied = fixture.Apply(preview);
+        Assert.False((bool?)applied["ok"]);
+        Assert.Equal("PLAN_STALE", (string?)applied["error"]!["code"]);
+        Assert.Equal("preview", (string?)applied["error"]!["details"]!["reason"]);
+        Assert.Empty(fixture.Executions);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    private sealed class BatchPreviewFixture : IDisposable
+    {
+        internal readonly BatchPreviewWorker Worker = new();
+        internal readonly Dictionary<string, int> Executions = new(StringComparer.Ordinal);
+        internal int Revision, NativePreviews;
+        private readonly toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline pipeline;
+        private readonly IDisposable session;
+
+        internal BatchPreviewFixture(string release, bool native = false)
+        {
+            var tool = McpServerTool.Create((string name, bool dryRun = true, string expectedPlanHash = "",
+                string expectedProjectFile = "", bool confirm = false) => {
+                var arguments = new { name, revision = Revision, confirm };
+                CallToolResult Execute()
+                {
+                    Executions[name] = Executions.GetValueOrDefault(name) + 1;
+                    return Host.V4Result("DeletePlcBlock", new JsonObject { ["confirm"] = confirm }, completed: true);
+                }
+                CallToolResult Preview()
+                {
+                    NativePreviews++;
+                    return Host.V4Result("DeletePlcBlock", new JsonObject { ["name"] = name });
+                }
+                return native
+                    ? Host.RunNativeWritePreview("DeletePlcBlock", dryRun, arguments, Preview, Execute, expectedPlanHash, expectedProjectFile)
+                    : Host.RunWritePreview("DeletePlcBlock", dryRun, arguments, Execute, expectedPlanHash, expectedProjectFile);
+            }, new() { Name = "DeletePlcBlock" });
+            pipeline = new(release, Worker, new[] { tool });
+            session = pipeline.EnterSession();
+        }
+
+        internal async Task<JsonObject> Preview(params JsonObject[] arguments)
+        {
+            var operations = arguments.Select(args => new { name = "DeletePlcBlock", arguments = args }).ToArray();
+            var request = Request("PreviewToolBatch", new { expectedProject = "Fixture", operations });
+            var result = await pipeline.AllTools.Single(tool => tool.ProtocolTool.Name == "PreviewToolBatch").InvokeAsync(request);
+            Assert.True((bool?)result.StructuredContent!["ok"], result.StructuredContent.ToJsonString());
+            return result.StructuredContent.AsObject();
+        }
+
+        internal JsonObject Apply(JsonObject preview)
+        {
+            string token = (string)preview["data"]!["previewToken"]!;
+            using var request = Host.UseProgressRequest(Request("ApplyToolBatch", new { previewToken = token }), CancellationToken.None);
+            return Host.ApplyToolBatch(token).StructuredContent!.AsObject();
+        }
+
+        private static RequestContext<CallToolRequestParams> Request(string name, object arguments)
+            => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(JsonSerializer.Serialize(arguments)) }
+            };
+
+        public void Dispose() { session.Dispose(); pipeline.Dispose(); Worker.Dispose(); }
+    }
+
+    private sealed class BatchPreviewWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker
+    {
+        internal readonly PlanWorker Plan = new();
+        internal int Calls => Plan.Calls;
+        internal BatchPreviewWorker()
+        {
+            var identity = Plan.Identity["identity"]!.AsObject();
+            identity["tiaMajorVersion"] = 21;
+            identity["processStartUtc"] = "2026-11-17T00:00:00Z";
+            identity["projectName"] = "Fixture";
+            identity["generation"] = 1;
+        }
+        public bool Faulted => false;
+        public JsonNode? Binding => Plan.Binding;
+        public object SessionKey => Plan.SessionKey;
+        public JsonObject Snapshot() => new() {
+            ["readiness"] = new JsonObject { ["ready"] = true },
+            ["session"] = new JsonObject { ["isConnected"] = true, ["project"] = "Fixture" }, ["binding"] = Binding!.DeepClone()
+        };
+        public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());
+        public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new NotSupportedException();
+        public Task<IDisposable> Acquire(CancellationToken token) => Task.FromResult<IDisposable>(new Lease());
+        private sealed class Lease : IDisposable { public void Dispose() { } }
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(
+            string id, string name, JsonObject arguments, bool preview, CancellationToken token) => Plan.Invoke(id, name, arguments, preview, token);
+        public void Dispose() => Plan.Dispose();
+    }
+
     public static IEnumerable<object[]> EmptyNativePreviewDataCases() => from release in Releases()
         from omitData in new[] { false, true }
         select new object[] { release[0], omitData };

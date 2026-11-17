@@ -115,7 +115,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ApplyToolBatch"),
                 Description("[L2][Meta][WRITE] Consume a PreviewToolBatch previewToken once. Recheck project/session/process identity and all stored " +
                 "previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest " +
-                "NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download.")]
+                "NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download. " +
+                "Plan-bound items take missing or empty expectedPlanHash and expectedProjectFile from their own stored preview.")]
         [AsyncDispatch(nameof(ApplyToolBatchAsync))]
         public static CallToolResult ApplyToolBatch([Description("Single-use previewToken from PreviewToolBatch; expires after 10 " +
             "minutes.")] string previewToken)
@@ -162,6 +163,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     try
                     {
                         var args = (JsonObject)op["arguments"]!.DeepClone(); args["dryRun"] = false;
+                        var properties = CatalogView.Find(name, includeUnavailable: true)!.Tool.InputSchema.GetProperty("properties");
+                        var preview = plan.Previews[rows.Count]?["data"];
+                        if (properties.TryGetProperty("expectedPlanHash", out _) && string.IsNullOrEmpty((string?)args["expectedPlanHash"])
+                            && preview?["planHash"] is JsonValue hash && hash.TryGetValue<string>(out var planHash))
+                            args["expectedPlanHash"] = planHash;
+                        if (properties.TryGetProperty("expectedProjectFile", out _) && string.IsNullOrEmpty((string?)args["expectedProjectFile"])
+                            && PlanProjectFile(preview?["targetIdentity"]) is string projectFile)
+                            args["expectedProjectFile"] = projectFile;
                         issued = true;
                         result = await BridgeWait.On(CallToolCoreAsync(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), async () =>
                         {

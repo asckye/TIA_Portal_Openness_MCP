@@ -4265,5 +4265,141 @@
         }
       }
     ]
+  },
+  {
+    "id": "sequence/bulk-plc-objects",
+    "topic": "bulk-plc-objects",
+    "purpose": "Delete several blocks or create several PLC tags with one reviewed PreviewToolBatch and one ApplyToolBatch.",
+    "preconditions": "Bind the intended project first. Resolve exact software paths, groups and tables with GetSoftwareTree, and tag names/addresses with ListPlcTags. The sample table already exists and the five names and addresses are available.",
+    "notes": "Each batch holds 1..50 calls. Review every child preview and its target before ApplyToolBatch; keep confirm=true explicit where required. Apply fills missing plan bindings from each stored child preview and never replaces caller values. A failed item is rolled back by its own journal; earlier items stay, and later items are NOT_EXECUTED. Unknown outcomes require readback before any replay. More than 50 objects require several separately reviewed batches or the file import route for tag tables/DBs. See PreviewToolBatch call-library variants for three DeletePlcBlock calls and, on V19-V21, three EnsureUnifiedHmiTag calls. No automatic save, compile or download. Native acceptance NOT RUN.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Schema and managed fixture checks only; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetSoftwareTree",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>"
+        },
+        "expect": "Read exact group, block and tag-table paths; bind the intended existing table."
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "plc": "<exact softwarePath from GetProjectTree>",
+          "table": "Batch tags"
+        },
+        "expect": "Check existing declarations; select five unused names and addresses explicitly."
+      },
+      {
+        "tool": "PreviewToolBatch",
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManagePlcTagDefinition",
+              "arguments": {
+                "softwarePath": "<exact softwarePath from GetProjectTree>",
+                "tablePath": "Batch tags",
+                "name": "BatchTag_1",
+                "kind": "tag",
+                "action": "create",
+                "dataType": "Bool",
+                "addressOrValue": "%M100.0",
+                "dryRun": true,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+              }
+            },
+            {
+              "name": "ManagePlcTagDefinition",
+              "arguments": {
+                "softwarePath": "<exact softwarePath from GetProjectTree>",
+                "tablePath": "Batch tags",
+                "name": "BatchTag_2",
+                "kind": "tag",
+                "action": "create",
+                "dataType": "Bool",
+                "addressOrValue": "%M100.1",
+                "dryRun": true,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+              }
+            },
+            {
+              "name": "ManagePlcTagDefinition",
+              "arguments": {
+                "softwarePath": "<exact softwarePath from GetProjectTree>",
+                "tablePath": "Batch tags",
+                "name": "BatchTag_3",
+                "kind": "tag",
+                "action": "create",
+                "dataType": "Bool",
+                "addressOrValue": "%M100.2",
+                "dryRun": true,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+              }
+            },
+            {
+              "name": "ManagePlcTagDefinition",
+              "arguments": {
+                "softwarePath": "<exact softwarePath from GetProjectTree>",
+                "tablePath": "Batch tags",
+                "name": "BatchTag_4",
+                "kind": "tag",
+                "action": "create",
+                "dataType": "Bool",
+                "addressOrValue": "%M100.3",
+                "dryRun": true,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+              }
+            },
+            {
+              "name": "ManagePlcTagDefinition",
+              "arguments": {
+                "softwarePath": "<exact softwarePath from GetProjectTree>",
+                "tablePath": "Batch tags",
+                "name": "BatchTag_5",
+                "kind": "tag",
+                "action": "create",
+                "dataType": "Bool",
+                "addressOrValue": "%M100.4",
+                "dryRun": true,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+              }
+            }
+          ]
+        },
+        "expect": "Review all five child previews and their target identity. Nothing has been written. Retain this previewToken only after review."
+      },
+      {
+        "tool": "ApplyToolBatch",
+        "arguments": {
+          "previewToken": "<previewToken from this reviewed PreviewToolBatch>"
+        },
+        "expect": "Obtain approval and execute the exact stored calls. Read every child envelope; stop and inspect failures or unknown outcomes."
+      },
+      {
+        "tool": "ListPlcTags",
+        "arguments": {
+          "plc": "<exact softwarePath from GetProjectTree>",
+          "table": "Batch tags"
+        },
+        "expect": "Read back all five tag declarations and compare their names, types and addresses."
+      }
+    ]
   }
 ]
