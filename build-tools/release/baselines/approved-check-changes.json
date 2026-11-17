@@ -4745,6 +4745,53 @@
           "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/DraftBetaNotesCarryTheCurrentGeneratedSection( ):3091f84a71f5c23e4d8821b0a5c7bc6f98e3545474bacf73610d3dd4daae7dd5:1"
         }
       ]
+    },
+    {
+      "task": "MIN-ESCAPE",
+      "maintainerDate": "2026-11-17",
+      "reason": "2026-11-17 maintainer approved: path expectations that change only in how spaces and non-ASCII characters are written (pre-approved), and three DeclarationReadContractTests assertions rebuilt with the shared encoder so the mixed-prefix, grouped-raw-name and saved-encoded-selector guards are exercised again",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.SoftwareRead.Tests/SoftwareReadTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SoftwareReadTests/Run( Action \u003C bool , string \u003E Check ):2c07098279e8551fd20cc7ed378708a7a04b16e8dcaf632a74bf22c1bbd7cd40:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.SoftwareRead.Tests/UnitTreeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "UnitTreeTests/UnitsHaveIndependentTopLevelIdentitiesAndAllFourGroups( ):e3c100b9cbcb16a899238ffbefbdef39b0e2c9b6ffa3033a722bc9c22400fd7c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DeclarationReadContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.DeclarationReadContractTests/Raw_chinese_table_name_accepts_the_canonical_encoded_rows( ):bc75bb6240fa9892e19319be5f4bfc2b46a4fa3aa88aa3d969fdd7cf22c13807:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DeclarationReadContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.DeclarationReadContractTests/Rows_from_another_table_or_mixed_prefixes_are_refused( ):a53cca0d0d89a60a0b35cbee057806aa55ccd5778788ae94bcb4fce3eaeab5e6:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DeclarationReadContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.DeclarationReadContractTests/Rows_from_another_table_or_mixed_prefixes_are_refused( ):b126027687f9eba96ace3f32fc720e61ac9915c36333e1d39e34a243b93dd425:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ExchangeContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ExchangeContractTests/Run( Action \u003C bool , string \u003E check ):5b88a99a1068ddd48340b7fd8554c36b5eba06ceec44067f630b71697d7da714:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ExchangeContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ExchangeContractTests/Run( Action \u003C bool , string \u003E check ):e7e200e3266f7b6cdf53a0bc222260c121b55f5abd2c6acfaedfd16e65595f4c:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/HmiBetaFixTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HmiBetaFixTests/Unified_tables_walk_Groups_and_preserve_same_names_with_absolute_escaped_paths( ):5a410a445f2dcfc85c873078f27a8bdbe97b055b9046073d07305ad51348166b:1"
+        }
+      ]
     }
   ]
 }
