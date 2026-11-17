@@ -77,6 +77,13 @@ namespace TiaMcp.FoundationHost
             if (problem.Length == 0 && !catalog.All.ContainsKey(name)) problem = "Tool is not available in this release.";
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
             var error = ValidateArguments(tool, arguments.Json, tool.Tool.InputSchema);
+            if (error == null && TiaMcp.Adapters.Contracts.OnlineTargetPolicy.AddressParameter(name) is "ip" or "host" or "endpointUrl")
+            {
+                string parameter = TiaMcp.Adapters.Contracts.OnlineTargetPolicy.AddressParameter(name)!;
+                string target = arguments.Json.TryGetProperty(parameter, out var value) ? value.GetString() ?? "" : "";
+                if (TiaOpenness.Shared.OnlineTargetSettings.RuntimeRefusal(name, target) is { } refusal)
+                    error = new Error(refusal.Message, new PreconditionFailedDetails(refusal.Condition!, null));
+            }
             if (error == null) call = new BoundCall(this, tool, arguments);
             return error;
         }

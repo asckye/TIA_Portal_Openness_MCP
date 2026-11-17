@@ -5,11 +5,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Sharp7;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("TiaMcp.FoundationHost.Tests")]
+
 namespace TiaMcpServer.Runtime
 {
 
     public static partial class S7LiveReader
     {
+        internal static readonly System.Threading.AsyncLocal<Func<S7Client>?> ClientFactory = new();
+        private static S7Client CreateClient() => ClientFactory.Value?.Invoke() ?? new S7Client();
+
         // Sharp7 area codes
         private const int AreaDB = 0x84;
         private const int AreaMK = 0x83; // M (merker)
@@ -20,7 +25,7 @@ namespace TiaMcpServer.Runtime
         public static S7CpuIdentity ProbeIdentity(string ip, int rack, int slot)
         {
             var id = new S7CpuIdentity();
-            var client = new S7Client();
+            var client = CreateClient();
             try
             {
                 int res = client.ConnectTo(ip, rack, slot);
@@ -66,7 +71,7 @@ namespace TiaMcpServer.Runtime
         {
             var result = new S7ReadResult();
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            var client = new S7Client();
+            var client = CreateClient();
             try
             {
                 int res = client.ConnectTo(ip, rack, slot);
@@ -170,7 +175,7 @@ namespace TiaMcpServer.Runtime
             }
             if (result.Series.Count == 0) { result.Error = "No addresses supplied."; return result; }
 
-            var client = new S7Client();
+            var client = CreateClient();
             var sw = System.Diagnostics.Stopwatch.StartNew();
             try
             {
@@ -273,7 +278,7 @@ namespace TiaMcpServer.Runtime
         {
             var state = new S7RunState();
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            var client = new S7Client();
+            var client = CreateClient();
             try
             {
                 int res = client.ConnectTo(ip, rack, slot);

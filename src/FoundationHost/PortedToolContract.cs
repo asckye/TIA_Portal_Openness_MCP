@@ -264,6 +264,7 @@ internal sealed partial class FoundationTool
     {
         // A missing online address is refused by the target policy after capability admission. Validate every other field first.
         if (arguments.ValueKind == JsonValueKind.Object && OnlineTargetPolicy.AddressParameter(tool.Name) is { } parameter
+            && parameter is "ipAddress" or "targetIpAddress"
             && !arguments.TryGetProperty(parameter, out _))
         {
             var input = JsonNode.Parse(arguments.GetRawText())!.AsObject();
@@ -433,6 +434,10 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("generateOption", out var generateOption) ? generateOption.GetString() ?? "None" : "None") != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         string Text(string name) => arguments.TryGetValue(name, out var value) ? value.GetString() ?? "" : "";
+        if (OnlineTargetPolicy.AddressParameter(tool.Name) is "ip" or "host" or "endpointUrl"
+            && TiaOpenness.Shared.OnlineTargetSettings.RuntimeRefusal(tool.Name, Text(OnlineTargetPolicy.AddressParameter(tool.Name)!)) is { } runtimeTarget)
+            return McpServer.V4TargetReject(tool.Name,
+                new Error(runtimeTarget.Message, new PreconditionFailedDetails(runtimeTarget.Condition!, null)), current: true);
         var b4 = new PlcSoftwareRequest { Operation = tool.Name, Action = actionName,
             TypeIdentifier = Text("typeIdentifier"), Version = Text("version") };
         if (family.Name == "F26")

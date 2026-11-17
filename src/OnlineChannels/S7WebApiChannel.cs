@@ -103,6 +103,8 @@ namespace TiaMcpServer.Runtime
 
     public static class S7WebApiChannel
     {
+        internal static readonly AsyncLocal<Func<HttpClientHandler>?> HandlerFactory = new();
+
         private sealed class Session
         {
             public HttpClient Http = null!;
@@ -400,7 +402,8 @@ namespace TiaMcpServer.Runtime
             }
             if (existing != null) Forget(key, existing);
 
-            var handler = new HttpClientHandler { AllowAutoRedirect = false };
+            var handler = HandlerFactory.Value?.Invoke() ?? new HttpClientHandler();
+            handler.AllowAutoRedirect = false;
             if (ignoreCert)
                 handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
             var transport = new TlsObservationHandler(handler) { OnResponse = tlsEstablished };

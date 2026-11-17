@@ -46,13 +46,15 @@ namespace TiaMcpServer.ModelContextProtocol
         // ------------------------------------------------------------------ S7 Web API
 
         [McpServerTool(Name = "GetPlcWebVars"),
-                Description("[L2][Online-Monitoring][ONLINE] Read live values of PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (HTTPS " +
-                "JSON-RPC on the CPU; S7-1500 FW>=2.9, S7-1200 G2, ET 200SP CPU, Software Controller, PLCSIM Advanced). Independent of TIA Openness and of " +
-                "PUT/GET; optimized DBs are fine. Names use the Web API form, e.g. \"\\\"DB_Motor\\\".\\\"Speed\\\"\" or \"\\\"Tag_1\\\"\" (quotes may be " +
-                "omitted for plain names; array elements as \"\\\"DB\\\".\\\"Arr\\\"[3]\"). Read-only: never writes, forces or changes CPU mode. " +
-                "Preconditions: web server enabled on the CPU, the user has 'read variables' permission (the default Anonymous user usually has none). The " +
-                "CPU certificate is validated unless ignoreCertificateErrors=true. The password is passed straight to the API and never stored or logged. " +
-                "Each name is read individually; per-name errors are reported in items[].error. Session is cached per host+user and reused.")]
+                Description("[L2][Online-Monitoring][ONLINE] Read live values of PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API " +
+                "(HTTPS JSON-RPC on the CPU; S7-1500 FW>=2.9, S7-1200 G2, ET 200SP CPU, Software Controller, PLCSIM Advanced). Independent " +
+                "of TIA Openness and of PUT/GET; optimized DBs are fine. Names use the Web API form, e.g. \"\\\"DB_Motor\\\".\\\"Speed\\\"\" " +
+                "or \"\\\"Tag_1\\\"\" (quotes may be omitted for plain names; array elements as \"\\\"DB\\\".\\\"Arr\\\"[3]\"). Read-only: " +
+                "never writes, forces or changes CPU mode. Preconditions: web server enabled on the CPU, the user has 'read variables' " +
+                "permission (the default Anonymous user usually has none). The CPU certificate is validated unless " +
+                "ignoreCertificateErrors=true. The password is passed straight to the API and never stored or logged. Each name is read " +
+                "individually; per-name errors are reported in items[].error. Session is cached per host+user and reused. When the " +
+                "online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup).")]
         public CallToolResult ReadPlcWebVarsV4(
             [Description("host: CPU web server address, IP or DNS name with optional :port, e.g. '192.168.0.1'. No scheme (always https).")] string host,
             [Description("username: web server user configured in TIA (Protection & Security > User management), e.g. 'Anonymous' or " +
@@ -116,12 +118,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "WritePlcWebVars"),
                 Description("[L2][Online-Monitoring][ONLINE-WRITE] Write values to PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API " +
-                "(PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT " +
-                "values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. Every variable is read " +
-                "before the write, written one by one, then read back and compared (items[].verified); a readback mismatch (e.g. the program overwrites the " +
-                "variable cyclically) is reported as an error, never as success. Values must be JSON bool/number/string scalars; structs/arrays are refused. " +
-                "The user needs 'write variables' permission. No force, no CPU mode change, no TIA project change. Native behaviorPolicy=current; V4 native " +
-                "acceptance is pending.")]
+                "(PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads " +
+                "the CURRENT values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. " +
+                "Every variable is read before the write, written one by one, then read back and compared (items[].verified); a readback " +
+                "mismatch (e.g. the program overwrites the variable cyclically) is reported as an error, never as success. Values must be " +
+                "JSON bool/number/string scalars; structs/arrays are refused. The user needs 'write variables' permission. No force, no CPU " +
+                "mode change, no TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending. When the online-target " +
+                "list is configured, the target host must be a listed IPv4 literal (no DNS lookup).")]
         public CallToolResult WritePlcWebVarsV4(
             [Description("host: CPU web server address, e.g. '192.168.0.1' (optional :port, no scheme).")] string host,
             [Description("username: web server user with write permission.")] string username,
@@ -212,10 +215,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetPlcWebDiagnostics"),
                 Description("[L2][Online-Monitoring][ONLINE] Read CPU diagnostics through the SIMATIC S7 Web server API: operating mode " +
-                "(RUN/STOP/STARTUP/HOLD/...), mode selector position, Api.Ping, API version, CPU type/order number, CPU system time, cycle-time and load " +
-                "figures, work/retentive memory usage. Read-only: never writes, forces or changes mode. Plc.ReadOperatingMode must succeed; the other calls " +
-                "are best-effort and calls this CPU firmware or user does not support are listed in data.unavailable instead of being faked. Works with " +
-                "PLCSIM Advanced. Certificate validated unless ignoreCertificateErrors=true; password never stored.")]
+                "(RUN/STOP/STARTUP/HOLD/...), mode selector position, Api.Ping, API version, CPU type/order number, CPU system time, " +
+                "cycle-time and load figures, work/retentive memory usage. Read-only: never writes, forces or changes mode. " +
+                "Plc.ReadOperatingMode must succeed; the other calls are best-effort and calls this CPU firmware or user does not support " +
+                "are listed in data.unavailable instead of being faked. Works with PLCSIM Advanced. Certificate validated unless " +
+                "ignoreCertificateErrors=true; password never stored. When the online-target list is configured, the target host must be a " +
+                "listed IPv4 literal (no DNS lookup).")]
         public CallToolResult ReadPlcWebDiagnosticsV4(
             [Description("host: CPU web server address, e.g. '192.168.0.1' (optional :port, no scheme).")] string host,
             [Description("username: web server user (needs 'read diagnostics' for most values).")] string username,
@@ -279,13 +284,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "SetPlcWebOperatingMode"),
-                Description("[L2][Online-Monitoring][ONLINE-WRITE] DANGEROUS: request a CPU operating mode change (RUN or STOP) through the SIMATIC S7 Web " +
-                "server API (Plc.RequestChangeOperatingMode). STOP halts the user program and all outputs go to their configured safe state; RUN starts the " +
-                "program. Defaults to PREVIEW (dryRun=true): reads and reports the current mode only. A real change needs dryRun=false AND " +
-                "confirmModeChange=true; anything else is refused. After the request the mode is polled (up to ~10 s) and the readback is reported; an " +
-                "unconfirmed change is an error, not success. If the CPU is already in the requested mode nothing is sent. The user needs 'change operating " +
-                "mode' permission and the hardware mode selector must allow it. Never writes variables, never touches the TIA project. Native " +
-                "behaviorPolicy=current; V4 native acceptance is pending.")]
+                Description("[L2][Online-Monitoring][ONLINE-WRITE] DANGEROUS: request a CPU operating mode change (RUN or STOP) through the SIMATIC S7 " +
+                "Web server API (Plc.RequestChangeOperatingMode). STOP halts the user program and all outputs go to their configured safe " +
+                "state; RUN starts the program. Defaults to PREVIEW (dryRun=true): reads and reports the current mode only. A real change " +
+                "needs dryRun=false AND confirmModeChange=true; anything else is refused. After the request the mode is polled (up to ~10 s) " +
+                "and the readback is reported; an unconfirmed change is an error, not success. If the CPU is already in the requested mode " +
+                "nothing is sent. The user needs 'change operating mode' permission and the hardware mode selector must allow it. Never " +
+                "writes variables, never touches the TIA project. Native behaviorPolicy=current; V4 native acceptance is pending. When the " +
+                "online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup).")]
         public CallToolResult SetPlcWebOperatingModeV4(
             [Description("host: CPU web server address, e.g. '192.168.0.1' (optional :port, no scheme).")] string host,
             [Description("username: web server user with 'change operating mode' permission.")] string username,

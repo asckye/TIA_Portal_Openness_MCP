@@ -11,6 +11,16 @@ namespace TiaOpenness.Shared
     {
         internal static string SettingsPath => Path.Combine(DataLocations.Current.ConfigDirectory, "online-targets.settings");
 
+        internal static (string Parameter, string? Condition, string Message)? RuntimeRefusal(string operation, string target)
+        {
+            if (OnlineTargetPolicy.AddressParameter(operation) is not ("ip" or "host" or "endpointUrl")) return null;
+            OnlineTargetList? targets;
+            try { targets = Load(SettingsPath); }
+            catch (Exception) /* swallow(env-probe): settings/path failures must refuse runtime targets before approval or channel creation. */
+            { targets = OnlineTargetList.Invalid; }
+            return OnlineTargetPolicy.RuntimeRefusal(operation, target, targets);
+        }
+
         internal static OnlineTargetList? Load(string path)
         {
             try

@@ -62,7 +62,35 @@ public static class OnlineTargetPolicy
     public static string? AddressParameter(string operation) => operation switch {
         "ConnectOnlinePlc" => "ipAddress",
         "DownloadPlc" or "UploadDeviceParameters" or "GetPlcBlockFingerprints" or "UploadStationFromPlc" => "targetIpAddress",
+        "GetPlcLiveValuesS7" or "SamplePlcLiveValuesS7" or "MonitorPlcWatchTableS7" or "TraceTagCauseLive"
+            or "ProbeS7CpuIdentity" or "GetPlcRunStateS7" => "ip",
+        "GetPlcWebVars" or "GetPlcWebDiagnostics" or "WritePlcWebVars" or "SetPlcWebOperatingMode" => "host",
+        "GetPlcLiveValuesOpcUa" => "endpointUrl",
         _ => null };
+
+    public static (string Parameter, string? Condition, string Message)? RuntimeRefusal(
+        string operation, string target, OnlineTargetList? list)
+    {
+        string? parameter = AddressParameter(operation);
+        if (list == null || parameter is not ("ip" or "host" or "endpointUrl")) return null;
+        if (!list.IsValid)
+            return (parameter, "online-target-list-invalid", "The online-target list is unavailable or invalid; edit it in the Workbench.");
+        string address = target;
+        if (parameter != "ip")
+        {
+            // Read the authority without Uri's IPv4 canonicalization (short, hex and octal forms must not become literals).
+            string url = parameter == "host" ? "https://" + target.Trim() : target.Trim();
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.UserInfo.Length != 0)
+                address = "";
+            else
+                address = url.Substring(url.IndexOf("://", StringComparison.Ordinal) + 3).Split('/', '?', '#')[0];
+            int colon = address.IndexOf(':');
+            if (colon >= 0) address = address.Substring(0, colon);
+            if (uri == null || address != uri.Host) address = "";
+        }
+        return TryAddress(address, out uint value) && list.Allows(value) ? null
+            : (parameter, "online-target-not-allowed", "The target must use an IPv4 literal in the online-target list; edit the list in the Workbench.");
+    }
 
     internal static bool TryAddress(string text, out uint address)
     {

@@ -42,6 +42,8 @@ namespace TiaMcpServer.Runtime
 
     public static class OpcUaLiveReader
     {
+        internal static readonly AsyncLocal<Func<string, ClientSessionChannel>?> ChannelFactory = new();
+
         private static readonly ApplicationDescription AppDescription = new ApplicationDescription
         {
             ApplicationName = "TiaMcpServer",
@@ -151,7 +153,7 @@ namespace TiaMcpServer.Runtime
 
             if (existing != null) Forget(endpointUrl, existing);
 
-            var fresh = new ClientSessionChannel(
+            var fresh = ChannelFactory.Value?.Invoke(endpointUrl) ?? new ClientSessionChannel(
                 AppDescription,
                 null,
                 new AnonymousIdentity(),

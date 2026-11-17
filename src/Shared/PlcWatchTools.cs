@@ -550,10 +550,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "MonitorPlcWatchTableS7"),
                 Description("[L2][Online-Monitoring] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, " +
-                "read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or " +
-                "forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for " +
-                "those). Identity guard via expectModuleContains. Use ListPlcWatchTables to list table names. Current native policy; V4 safety behavior is " +
-                "not yet accepted.")]
+                "read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch " +
+                "table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed " +
+                "as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use ListPlcWatchTables to list table names. " +
+                "Current native policy; V4 safety behavior is not yet accepted. When the online-target list is configured, the target host " +
+                "must be a listed IPv4 literal (no DNS lookup).")]
         public CallToolResult MonitorWatchTableLiveS7V4(
             [Description("softwarePath: PLC software path, e.g. '安全PLC'.")] string softwarePath,
             [Description("watchTableName: existing watch table name from ListPlcWatchTables.")] string watchTableName,

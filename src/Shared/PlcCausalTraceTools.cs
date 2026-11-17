@@ -47,7 +47,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "TraceTagCauseLive"),
-                Description("[L2][Online-Monitoring] Live causal trace: runs the offline TraceTagCause to find what writes a tag and its gating conditions, then resolves each gating operand to an absolute address via the PLC tag table and LIVE-READS the resolvable ones over S7 (port 102) — so you see which interlock/condition is currently TRUE and driving the value. Read-only. Operands that are DB members / optimized / symbolic have no absolute PLC-tag address and are returned unresolved (read those via OPC UA). Requires the CPU ip; for the offline-only trace use TraceTagCause. NOTE: the offline block export needs the project OFFLINE in TIA (Openness cannot export in online mode); the S7 live-read is a separate direct connection, unaffected by going offline. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+                Description("[L2][Online-Monitoring] Live causal trace: runs the offline TraceTagCause to find what writes a tag and its gating " +
+                "conditions, then resolves each gating operand to an absolute address via the PLC tag table and LIVE-READS the resolvable " +
+                "ones over S7 (port 102) — so you see which interlock/condition is currently TRUE and driving the value. Read-only. Operands " +
+                "that are DB members / optimized / symbolic have no absolute PLC-tag address and are returned unresolved (read those via OPC " +
+                "UA). Requires the CPU ip; for the offline-only trace use TraceTagCause. NOTE: the offline block export needs the project " +
+                "OFFLINE in TIA (Openness cannot export in online mode); the S7 live-read is a separate direct connection, unaffected by " +
+                "going offline. Native behaviorPolicy=current; V4 native acceptance is pending. When the online-target list is configured, " +
+                "the target host must be a listed IPv4 literal (no DNS lookup).")]
         public CallToolResult TraceTagCauseLiveV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. '安全PLC'.")] string softwarePath,
             [Description("tag: symbol to trace (full path or member name; quotes/whitespace ignored).")] string tag,
