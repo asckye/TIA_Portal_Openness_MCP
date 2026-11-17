@@ -38,6 +38,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             "alarmClasses" => "AlarmClasses", "discreteAlarms" => "DiscreteAlarms", "analogAlarms" => "AnalogAlarms",
             "alarmLogs" => "AlarmLogs", "dataLogs" => "DataLogs", "textLists" => "HmiTextLists", "graphicLists" => "HmiGraphicLists",
             "systemTags" => "SystemTags", "systemTextLists" => "HmiSystemTextLists", "auditTrails" => "AuditTrails", "opcUaAlarmTypes" => "OpcUaAlarmTypes",
+            "connections" => "Connections", "tagTables" => "TagTables",
             _ => throw new ArgumentException("Unknown Unified collection category.")
         };
     }

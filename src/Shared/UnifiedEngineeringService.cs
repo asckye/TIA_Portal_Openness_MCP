@@ -21,11 +21,11 @@ namespace TiaMcpServer.Siemens.Services
                     Operation = "ListUnifiedEngineeringObjects", SoftwarePath = softwarePath, Category = category, Name = name, Offset = offset, Limit = limit
                 }, true);
         public ResponseMessage ManageUnifiedEngineeringObject(string softwarePath, string category, string name, string action,
-            string propertiesJson = "{}", bool dryRun = true)
+            string propertiesJson = "{}", bool dryRun = true, string textsJson = "{}")
             =>
                 Invoke(new UnifiedRequest {
                     Operation = "ManageUnifiedEngineeringObject", SoftwarePath = softwarePath, Category = category, Name = name, Action = action,
-                        PropertiesJson = propertiesJson, DryRun = dryRun
+                        PropertiesJson = propertiesJson, DryRun = dryRun, TextsJson = textsJson
                 }, dryRun);
     }
 }

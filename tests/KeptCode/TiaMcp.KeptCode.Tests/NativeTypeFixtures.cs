@@ -27,7 +27,7 @@ namespace Siemens.Engineering
 }
 namespace Siemens.Engineering.HmiUnified
 {
-    public sealed class HmiSoftware { }
+    public sealed partial class HmiSoftware { }
 }
 namespace TiaMcp.Engine.Tests
 {

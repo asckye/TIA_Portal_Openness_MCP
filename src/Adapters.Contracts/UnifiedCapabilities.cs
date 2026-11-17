@@ -20,6 +20,13 @@ namespace TiaMcp.Adapters.Contracts
                 || request.Operation == "ManageUnifiedEngineeringObject";
             if (list && request.Category == "graphicLists" && release != "21")
                 return "HmiSoftware.HmiGraphicLists is available in the V21 PublicAPI only.";
+            if (request.Operation == "ManageUnifiedEngineeringObject")
+            {
+                if ((request.Category == "connections" || request.Category == "tagTables") && request.Action != "delete")
+                    return "Unified connections/tagTables support delete only; create/update is not supported by this tool.";
+                if ((request.Category == "graphicLists" || request.Category == "textLists") && request.Action == "create")
+                    return "HmiGraphicListComposition/HmiTextListComposition expose no Create; import a list document with ImportUnifiedEngineeringList.";
+            }
             if (release == "19")
             {
                 if (request.Operation == "ExportUnifiedEngineeringList" || request.Operation == "ImportUnifiedEngineeringList"

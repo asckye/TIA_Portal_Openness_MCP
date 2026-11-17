@@ -309,6 +309,9 @@ internal sealed partial class FoundationTool
         ["offset"] = nameof(UnifiedRequest.Offset),
         ["limit"] = nameof(UnifiedRequest.Limit),
         ["properties"] = nameof(UnifiedRequest.PropertiesJson),
+        ["texts"] = nameof(UnifiedRequest.TextsJson),
+        ["expectedPlanHash"] = nameof(UnifiedRequest.ExpectedPlanHash),
+        ["expectedProjectFile"] = nameof(UnifiedRequest.ExpectedProjectFile),
         ["overwrite"] = nameof(UnifiedRequest.Overwrite),
         ["dryRun"] = nameof(UnifiedRequest.DryRun),
         ["property"] = nameof(UnifiedRequest.Property),
@@ -442,8 +445,16 @@ internal sealed partial class FoundationTool
         {
             var unified = BindUnifiedRequest(tool.Name, portedMethod!, arguments);
             UnifiedPortService.DecodeInputs(unified);
-            if (UnifiedCapabilities.Unsupported(portedRelease!, unified) != null)
-                return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            if (UnifiedCapabilities.Unsupported(portedRelease!, unified) is string unifiedReason)
+                return tool.Name == "ManageUnifiedEngineeringObject"
+                    ? McpServer.V4TargetReject(tool.Name,
+                        new Error(unifiedReason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true)
+                    : HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            if (tool.Name == "ManageUnifiedEngineeringObject" && !unified.DryRun)
+                foreach (var field in new[] { "expectedPlanHash", "expectedProjectFile" })
+                    if (!arguments.TryGetValue(field, out var value) || value.ValueKind != JsonValueKind.String
+                        || string.IsNullOrWhiteSpace(value.GetString()))
+                        return McpServer.V4TargetReject(tool.Name, McpServer.InvalidInput(field), current: true);
             return null;
         }
         if (family.Name == "F07" && SecurityCapabilities.Unsupported(portedRelease!, tool.Name, actionName,

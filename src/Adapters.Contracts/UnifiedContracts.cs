@@ -114,11 +114,15 @@ namespace TiaMcp.Adapters.Contracts
                 case "ListUnifiedEngineeringObjects":
                 case "ManageUnifiedEngineeringObject":
                     Category(request.Category, "alarmClasses", "discreteAlarms", "analogAlarms", "alarmLogs", "dataLogs", "textLists", "graphicLists",
-                            "systemTags", "systemTextLists", "auditTrails", "opcUaAlarmTypes");
+                            "systemTags", "systemTextLists", "auditTrails", "opcUaAlarmTypes", "connections", "tagTables");
+                    if (request.Operation == "ListUnifiedEngineeringObjects" && request.Category == "tagTables")
+                        throw new ArgumentException("tagTables is supported by ManageUnifiedEngineeringObject delete only.");
                     if (request.Operation == "ManageUnifiedEngineeringObject")
                     {
                         Action(request.Action, "create", "update", "delete");
                         if (string.IsNullOrWhiteSpace(request.Name)) throw new ArgumentException("Exact name required.");
+                        if (request.Category == "tagTables") NameOrAbsolutePath(request.Name);
+                        ValidateAlarmTexts(request);
                     }
                     break;
                 case "ManageUnifiedPlantNode":
@@ -142,11 +146,41 @@ namespace TiaMcp.Adapters.Contracts
                     {
                         if (value.Properties.ContainsKey("Name")) throw new ArgumentException("Renaming through properties is refused.");
                         if (request.Action == "delete" && value.Properties.Count != 0) throw new ArgumentException("Delete does not accept properties.");
+                        if (request.Operation == "ManageUnifiedEngineeringObject"
+                            && (value.Properties.ContainsKey("TriggerBitAddress") || value.Properties.ContainsKey("TriggerAddress")))
+                            throw new ArgumentException("TriggerBitAddress/TriggerAddress are read-only; use RaisedStateTag and RaisedStateTagBitNumber.");
                     }
                 }
             if (request.Operation == "GetUnifiedAlarmCommon" || request.Operation == "GetUnifiedAuditSettings" || request
                     .Operation == "ListUnifiedEngineeringObjects")
                 if (request.Offset < 0 || request.Limit < 1 || request.Limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
+        }
+
+        public static bool AlarmTextProperty(string property) => property == "EventText" || property == "InfoText"
+            || property.Length == 10 && property.StartsWith("EventText", StringComparison.Ordinal) && property[9] >= '1' && property[9] <= '9';
+
+        private static void ValidateAlarmTexts(UnifiedRequest request)
+        {
+            if (request.TextsJson.Length == 0 || !request.Inputs.TryGetValue(request.TextsJson, out var texts)) return;
+            if (texts.Error != null || texts.Kind != "object") throw new ArgumentException("texts must be an object with unique keys.");
+            if (texts.Properties.Count != 0 && (request.Action == "delete" || request.Category != "discreteAlarms" && request.Category != "analogAlarms"))
+                throw new ArgumentException("texts applies only to discreteAlarms/analogAlarms create or update.");
+            foreach (var property in texts.Properties)
+            {
+                if (!AlarmTextProperty(property.Key)) throw new ArgumentException("texts accepts EventText, EventText1..9 and InfoText only.");
+                var languages = property.Value;
+                if (languages.Kind != "object" || languages.Properties.Count == 0)
+                    throw new ArgumentException("texts." + property.Key + " requires an object of culture-to-text entries.");
+                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var language in languages.Properties)
+                {
+                    if (string.IsNullOrWhiteSpace(language.Key) || !seen.Add(language.Key) || language.Value.Kind != "string")
+                        throw new ArgumentException("Each texts culture must be unique and have a string value (empty clears).");
+                    try { System.Globalization.CultureInfo.GetCultureInfo(language.Key); }
+                    catch (System.Globalization.CultureNotFoundException error)
+                    { throw new ArgumentException("Unknown texts culture: " + language.Key, error); }
+                }
+            }
         }
 
         public static void NameOrAbsolutePath(string value)
@@ -200,6 +234,9 @@ namespace TiaMcp.Adapters.Contracts
         public int Offset { get; set; }
         public int Limit { get; set; }
         public string PropertiesJson { get; set; } = "";
+        public string TextsJson { get; set; } = "{}";
+        public string ExpectedPlanHash { get; set; } = "";
+        public string ExpectedProjectFile { get; set; } = "";
         public bool Overwrite { get; set; }
         public bool DryRun { get; set; }
         public string Property { get; set; } = "";

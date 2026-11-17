@@ -119,7 +119,7 @@ namespace TiaMcp.Adapters
                         .ReadUnifiedEngineeringObjects(request.SoftwarePath, request.Category, request.Name, request.Offset, request.Limit); break;
                     case "ManageUnifiedEngineeringObject": reply.Value = new UnifiedEngineeringAdapter(session)
                         .ManageUnifiedEngineeringObject(request.SoftwarePath, request.Category, request.Name, request.Action, request.PropertiesJson, request
-                            .DryRun);
+                            .DryRun, request.TextsJson);
                     break;
                     case "ManageUnifiedEvent": reply.Value = new UnifiedEventsAdapter(session)
                         .ManageUnifiedEvent(request.SoftwarePath, request.ObjectPathJson, request.EventType, request.Action, request.PropertyName, request

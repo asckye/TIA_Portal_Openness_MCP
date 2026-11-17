@@ -6,6 +6,7 @@
 
 ### Changed
 - Tool descriptions now state per-release availability: snapshot read/export on V15.1–V21 and value actions only on V21; compilation simulation flag from V16 and virtual-PLC flag from V19. No behaviour change.
+- Unified V19–V21 adds connection/tag-table deletion and alarm multilingual texts; V21 graphic lists remain import-only for creation. Incompatible change: every `ManageUnifiedEngineeringObject` execution, including existing actions, now requires the preview's `expectedPlanHash` and absolute `expectedProjectFile`; use `ApplyToolBatch` for multiple alarms.
 - PLC and HMI object paths now display Chinese, spaces and other names readably, escaping only path separators, percent signs and control characters. Previously fully encoded paths remain accepted as input. Plan and inventory hashes change for affected names; previews created before this change are refused with a hash mismatch and must be regenerated.
 
 ## [4.0.0-beta.5] - 2026-11-16

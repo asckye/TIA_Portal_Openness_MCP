@@ -14,6 +14,102 @@ using Xunit;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class UnifiedPortAdmissionTests
 {
+    [Theory]
+    [InlineData("connections")]
+    [InlineData("tagTables")]
+    [InlineData("discreteAlarms")]
+    public void Unified_extended_request_mapping_preserves_texts_and_plan_fields(string category)
+    {
+        var arguments = new JsonObject { ["softwarePath"] = "HMI_RT_1", ["category"] = category, ["name"] = "Alarm",
+            ["action"] = "delete", ["texts"] = new JsonObject { ["EventText"] = new JsonObject { ["en-US"] = "Alarm", ["zh-CN"] = "报警" } },
+            ["expectedPlanHash"] = "hash", ["expectedProjectFile"] = "C:/Fixture.ap21" };
+        var request = FoundationTool.BindUnifiedRequest("ManageUnifiedEngineeringObject", Method("ManageUnifiedEngineeringObject"),
+            JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString())!);
+        Assert.Equal(category, request.Category);
+        Assert.Equal(arguments["texts"]!.ToJsonString(), request.TextsJson);
+        Assert.Equal("hash", request.ExpectedPlanHash);
+        Assert.Equal("C:/Fixture.ap21", request.ExpectedProjectFile);
+        Assert.DoesNotContain(Method("ManageUnifiedEngineeringObject").GetParameters(), p => p.Name is "items" or "parameterTags");
+    }
+
+    [Theory]
+    [InlineData("create", "", "")]
+    [InlineData("update", "", "C:/Fixture.ap21")]
+    [InlineData("delete", "hash", "")]
+    public void Unified_execution_requires_both_plan_fields_before_service_dispatch(string action, string hash, string project)
+    {
+        using var release = new ReleaseState("21");
+        using var worker = new ApprovalWorker(bound: true);
+        using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = new ApprovalCatalog("21") });
+        int dispatches = 0;
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedEngineeringService(
+            (_, _) => { dispatches++; throw new InvalidOperationException("No dispatch expected."); }, () => "C:/Fixture.ap21");
+        var result = new Host.UnifiedEngineeringTools(service).ManageUnifiedEngineeringObjectV4("HMI_RT_1", "alarmClasses", "Alarm", action,
+            dryRun: false, expectedPlanHash: hash, expectedProjectFile: project);
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        Assert.Equal(0, dispatches);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public async Task Served_Unified_execution_without_plan_fields_refuses_before_readiness_or_preview_dispatch(string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        const string name = "ManageUnifiedEngineeringObject";
+        var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name);
+        foreach (var action in new[] { "create", "update", "delete" })
+        foreach (var missing in new[] { "expectedPlanHash", "expectedProjectFile" })
+        {
+            var arguments = Arguments(name); arguments["action"] = action; arguments["dryRun"] = false;
+            arguments["expectedPlanHash"] = "hash"; arguments["expectedProjectFile"] = "C:/Fixture.ap21"; arguments.Remove(missing);
+            var result = await tool.InvokeAsync(Request(name, arguments));
+            Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Fact]
+    public void Unified_native_preview_binds_texts_and_scalars_and_execution_uses_the_same_plan()
+    {
+        using var release = new ReleaseState("21");
+        using var worker = new ApprovalWorker(bound: true);
+        using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = new ApprovalCatalog("21") });
+        var received = new List<UnifiedRequest>();
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedEngineeringService((_, args) => {
+            received.Add(args["request"]!.Deserialize<UnifiedRequest>()!);
+            return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "native preview", ["Meta"] = new JsonObject {
+                ["success"] = true, ["operationSuccess"] = true, ["mayHaveChanged"] = !(bool)args["dryRun"]!, ["tagCount"] = 2 } } };
+        }, () => "C:/Fixture.ap21");
+        var tool = new Host.UnifiedEngineeringTools(service);
+        var texts = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Inputs.AttributeMap<TiaMcp.Logic.V4.Inputs.AttributeMap<string>>>(
+            "{\"EventText\":{\"en-US\":\"Alarm\",\"zh-CN\":\"报警\"}}");
+        var preview = tool.ManageUnifiedEngineeringObjectV4("HMI_RT_1", "discreteAlarms", "Alarm", "create", texts: texts);
+        Assert.True((bool)preview.StructuredContent!["ok"]!, preview.StructuredContent.ToJsonString());
+        var hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
+        Assert.NotEmpty(hash);
+        Assert.Equal(2, (int)preview.StructuredContent["data"]!["tagCount"]!);
+        var request = Assert.Single(received);
+        Assert.True(request.DryRun);
+        Assert.Equal("报警", request.Inputs[request.TextsJson].Properties["EventText"].Properties["zh-CN"].Text);
+        var stale = tool.ManageUnifiedEngineeringObjectV4("HMI_RT_1", "discreteAlarms", "Alarm", "create", dryRun: false,
+            expectedPlanHash: hash, expectedProjectFile: "C:/Fixture.ap21");
+        Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent?["error"]?["code"]);
+        Assert.Single(received);
+        var applied = tool.ManageUnifiedEngineeringObjectV4("HMI_RT_1", "discreteAlarms", "Alarm", "create", dryRun: false, texts: texts,
+            expectedPlanHash: hash, expectedProjectFile: "C:/Fixture.ap21");
+        Assert.True((bool)applied.StructuredContent!["ok"]!);
+        Assert.Equal(2, received.Count);
+        Assert.False(received[1].DryRun);
+    }
+
     [Theory, InlineData(5, true), InlineData(6, false), InlineData(int.MaxValue, false)]
     public void Api_type_list_reports_truncation(int limit, bool truncated)
     {
@@ -382,6 +478,10 @@ public sealed class UnifiedPortAdmissionTests
     [InlineData("19", "ManageUnifiedDynamization", "", "update", "TagParameter")]
     [InlineData("20", "ExportUnifiedEngineeringList", "graphicLists", "", "")]
     [InlineData("21", "ManageUnifiedListEntries", "textLists", "create", "")]
+    [InlineData("21", "ManageUnifiedEngineeringObject", "graphicLists", "create", "")]
+    [InlineData("20", "ManageUnifiedEngineeringObject", "textLists", "create", "")]
+    [InlineData("19", "ManageUnifiedEngineeringObject", "connections", "update", "")]
+    [InlineData("21", "ManageUnifiedEngineeringObject", "tagTables", "create", "")]
     public async Task Missing_action_is_refused_by_the_served_host_before_any_worker_call(
         string release, string name, string category, string action, string kind)
     {
@@ -622,6 +722,15 @@ public sealed class UnifiedPortAdmissionTests
         if (release == "19") arguments = TiaMcp.Logic.V4.CanonicalToolParameters.LegacyArguments(name, arguments);
         try
         {
+            if (name == "ManageUnifiedEngineeringObject" && !preview)
+            {
+                arguments["dryRun"] = true;
+                var plan = await tool.InvokeAsync(Request(name, arguments));
+                Assert.True((bool)plan.StructuredContent!["ok"]!, plan.StructuredContent.ToJsonString());
+                arguments["expectedPlanHash"] = (string)plan.StructuredContent["data"]!["planHash"]!;
+                arguments["expectedProjectFile"] = "C:/fixture.ap21";
+                arguments["dryRun"] = false;
+            }
             var result = await tool.InvokeAsync(Request(name, arguments));
             Assert.Equal(gated ? 1 : 0, waits);
             if (gated)
@@ -679,11 +788,11 @@ public sealed class UnifiedPortAdmissionTests
         }
     }
 
-    private sealed class ApprovalWorker : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
+    private sealed class ApprovalWorker(bool bound = false) : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Calls, Applies;
         public bool Faulted => false;
-        public JsonNode? Binding => null;
+        public JsonNode? Binding => bound ? new JsonObject { ["projectFile"] = "C:/Fixture.ap21" } : null;
         public object SessionKey { get; } = new();
         public JsonObject Snapshot() => new() { ["readiness"] = new JsonObject { ["ready"] = true } };
         public Task<JsonObject> Status(CancellationToken token) => Task.FromResult(Snapshot());

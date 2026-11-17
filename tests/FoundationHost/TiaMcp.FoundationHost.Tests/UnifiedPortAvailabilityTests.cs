@@ -9,6 +9,48 @@ using Xunit;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class UnifiedPortAvailabilityTests
 {
+    [Theory]
+    [InlineData("14sp1", false)]
+    [InlineData("15.1", false)]
+    [InlineData("16", false)]
+    [InlineData("17", false)]
+    [InlineData("18", false)]
+    [InlineData("19", true)]
+    [InlineData("20", true)]
+    [InlineData("21", true)]
+    public void Unified_delete_categories_follow_API_availability(string release, bool available)
+    {
+        foreach (var category in new[] { "connections", "tagTables" })
+            Assert.Equal(available, UnifiedCapabilities.Unsupported(release,
+                new UnifiedRequest { Operation = "ManageUnifiedEngineeringObject", Category = category, Action = "delete" }) == null);
+        Assert.Equal(available, UnifiedCapabilities.Unsupported(release,
+            new UnifiedRequest { Operation = "ListUnifiedEngineeringObjects", Category = "connections" }) == null);
+        foreach (var operation in new[] { "ListUnifiedEngineeringObjects", "ExportUnifiedEngineeringList", "ImportUnifiedEngineeringList",
+            "ManageUnifiedEngineeringObject" })
+            Assert.Equal(release == "21", UnifiedCapabilities.Unsupported(release,
+                new UnifiedRequest { Operation = operation, Category = "graphicLists", Action = "delete" }) == null);
+    }
+
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Delete_only_categories_refuse_create_and_update_before_native_access(string release)
+    {
+        foreach (var category in new[] { "connections", "tagTables" })
+        foreach (var action in new[] { "create", "update" })
+            Assert.Contains("delete only", UnifiedCapabilities.Unsupported(release,
+                new UnifiedRequest { Operation = "ManageUnifiedEngineeringObject", Category = category, Action = action }));
+    }
+
+    [Theory]
+    [InlineData("20", "textLists")]
+    [InlineData("21", "textLists")]
+    [InlineData("21", "graphicLists")]
+    public void Lists_refuse_create_with_the_import_hint(string release, string category)
+        => Assert.Contains("ImportUnifiedEngineeringList", UnifiedCapabilities.Unsupported(release,
+            new UnifiedRequest { Operation = "ManageUnifiedEngineeringObject", Category = category, Action = "create" }));
+
     public static IEnumerable<object[]> RegistrationCases =>
         from family in PortedFamilies.All.Where(f => f.Name is "F27" or "F28")
         from tool in family.Tools

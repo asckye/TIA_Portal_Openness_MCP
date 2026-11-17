@@ -18,6 +18,94 @@ namespace TiaMcp.Engine.Tests;
 
 public sealed class WriteRollbackTests(ITestOutputHelper output)
 {
+    [Fact]
+    public void Alarm_text_failure_deletes_the_alarm_created_by_the_call()
+    {
+        var alarms = new AlarmComposition(); var meta = new HmiObject();
+        var edits = UnifiedEngineeringAdapter.PrepareAlarmTexts(typeof(Alarm), null, new AlarmProject(), AlarmTexts());
+        Assert.Throws<InvalidOperationException>(() => EngineeringWriteJournal.Run(meta, () => {
+            var alarm = (Alarm)PlcGroupOperations.Call(alarms, "Create", new[] { typeof(string) }, "NewAlarm");
+            UnifiedRequestScalar.Apply(alarm, UnifiedRequestScalar.Prepare(typeof(Alarm), new HmiObject { ["Priority"] = 8 }), meta);
+            alarm.EventText.Items[1].Fail = true;
+            UnifiedEngineeringAdapter.ApplyAlarmTexts(alarm, edits, meta);
+            return "unreachable";
+        }));
+        Assert.Empty(alarms);
+        Assert.Equal(true, meta["rollbackCompleted"]);
+        Assert.Empty((List<object?>)meta["cleanupRequired"]!);
+        var written = (HmiArray)meta["textWrites"]!;
+        Assert.Equal(2, written.Count);
+        Assert.Equal(true, ((HmiObject)written[0]!)["verified"]);
+        Assert.Equal(false, ((HmiObject)written[1]!)["verified"]);
+    }
+
+    [Fact]
+    public void Alarm_update_restores_scalars_and_texts_when_a_later_text_fails()
+    {
+        var alarms = new AlarmComposition(); var alarm = alarms.Create("Existing"); var meta = new HmiObject();
+        string[] before = alarm.EventText.Items.Select(item => item.Text).ToArray();
+        var edits = UnifiedEngineeringAdapter.PrepareAlarmTexts(typeof(Alarm), alarm, new AlarmProject(), AlarmTexts());
+        Assert.Throws<InvalidOperationException>(() => EngineeringWriteJournal.Run(meta, () => {
+            UnifiedRequestScalar.Apply(alarm, UnifiedRequestScalar.Prepare(typeof(Alarm), new HmiObject { ["Priority"] = 8 }), meta);
+            alarm.EventText.Items[1].Fail = true;
+            UnifiedEngineeringAdapter.ApplyAlarmTexts(alarm, edits, meta);
+            return "unreachable";
+        }));
+        Assert.Same(alarm, Assert.Single(alarms));
+        Assert.Equal(1, alarm.Priority);
+        Assert.Equal(before, alarm.EventText.Items.Select(item => item.Text));
+        Assert.Equal(true, meta["rollbackCompleted"]);
+    }
+
+    [Fact]
+    public void Alarm_text_preview_validates_active_and_existing_languages_without_writing()
+    {
+        var alarms = new AlarmComposition(); var alarm = alarms.Create("Existing"); var meta = new HmiObject();
+        string[] before = alarm.EventText.Items.Select(item => item.Text).ToArray();
+        var edits = UnifiedEngineeringAdapter.PrepareAlarmTexts(typeof(Alarm), alarm, new AlarmProject(), AlarmTexts());
+        Assert.Equal(2, edits.Count);
+        var unknown = new HmiObject { ["EventText"] = new HmiObject { ["de-DE"] = "Alarm" } };
+        Assert.Throws<ArgumentException>(() => UnifiedEngineeringAdapter.PrepareAlarmTexts(typeof(Alarm), null, new AlarmProject(), unknown));
+        Assert.Throws<PlcSoftwareException>(() => UnifiedEngineeringAdapter.PrepareAlarmTexts(typeof(Alarm), alarm, new AlarmProject(), unknown));
+        Assert.Equal(before, alarm.EventText.Items.Select(item => item.Text));
+        EngineeringWriteJournal.Run(meta, () => { UnifiedEngineeringAdapter.ApplyAlarmTexts(alarm, edits, meta); return "ok"; });
+        Assert.Equal("<body><p>Alarm</p></body>", alarm.EventText.Items[0].Text);
+        Assert.Equal("<body><p>报警</p></body>", alarm.EventText.Items[1].Text);
+        Assert.All(((HmiArray)meta["textWrites"]!).Cast<HmiObject>(), row => {
+            Assert.Equal(true, row["targetMatched"]); Assert.Equal(true, row["nonTargetUnchanged"]);
+        });
+    }
+
+    [Fact]
+    public void Five_hundred_single_alarm_previews_report_managed_before_and_after_timings()
+    {
+        var properties = new HmiObject { ["Priority"] = 8 }; var texts = AlarmTexts(); var project = new AlarmProject();
+        void Before() => UnifiedRequestScalar.Prepare(typeof(Alarm), properties);
+        void After() { Before(); UnifiedEngineeringAdapter.PrepareAlarmTexts(typeof(Alarm), null, project, texts); }
+        for (int i = 0; i < 500; i++) { Before(); After(); }
+        var timer = Stopwatch.StartNew(); for (int i = 0; i < 500; i++) Before();
+        double before = timer.Elapsed.TotalMilliseconds;
+        timer.Restart(); for (int i = 0; i < 500; i++) After();
+        output.WriteLine("500 managed single-alarm previews: scalar-only before={0:F3} ms; scalars + two texts after={1:F3} ms. "
+            + "No native TIA calls or bulk parameter.",
+            before, timer.Elapsed.TotalMilliseconds);
+    }
+
+    private static HmiObject AlarmTexts() => new() { ["EventText"] = new HmiObject { ["en-US"] = "Alarm", ["zh-CN"] = "报警" } };
+    public sealed class AlarmProject { public AlarmLanguageSettings LanguageSettings { get; } = new(); }
+    public sealed class AlarmLanguageSettings { public Language[] ActiveLanguages { get; } = { new("en-US"), new("zh-CN") }; }
+    public sealed class AlarmComposition : List<Alarm>
+    {
+        public Alarm Create(string name) { var alarm = new Alarm(name, this); Add(alarm); return alarm; }
+        public Alarm? Find(string name) => this.SingleOrDefault(alarm => alarm.Name == name);
+    }
+    public sealed class Alarm(string name, AlarmComposition owner)
+    {
+        public string Name => name;
+        public int Priority { get; set; } = 1;
+        public MultilingualText EventText { get; } = new();
+        public void Delete() => owner.Remove(this);
+    }
     public sealed class EventHandlerFake { public string EventType => "Down"; }
     public sealed class EventScriptFake
     {
@@ -707,7 +795,9 @@ public sealed class WriteRollbackTests(ITestOutputHelper output)
     public sealed class TextItem(string culture)
     {
         public Language Language { get; } = new(culture);
-        public string Text { get; set; } = "<body><p>Original " + culture + "</p></body>";
+        public bool Fail;
+        private string text = "<body><p>Original " + culture + "</p></body>";
+        public string Text { get => text; set { text = value; if (Fail) { Fail = false; throw new InvalidOperationException("text failed after mutation"); } } }
     }
     public sealed class Language(string culture) { public CultureInfo Culture { get; } = CultureInfo.GetCultureInfo(culture); }
 }

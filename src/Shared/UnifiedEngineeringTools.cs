@@ -45,7 +45,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name="ListUnifiedEngineeringObjects"),
                 Description("[L2][HMI-Unified][READ] Read paginated public scalar properties for " +
-                "alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists/systemTags/systemTextLists/auditTrails/opcUaAlarmTypes. " +
+                "alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists/connections/systemTags/systemTextLists/" +
+                "auditTrails/opcUaAlarmTypes. " +
                 "Optional exact name. Returns counts, nextOffset, field failures and excluded complex properties. Not a complete export of entries or " +
                 "bindings; live pagination requires unchanged collection.")]
         public CallToolResult ReadUnifiedEngineeringObjectsV4(string softwarePath,string category,string name="",int offset=0,int limit=100)
@@ -58,19 +59,35 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name="ManageUnifiedEngineeringObject"),
                 Description("[L2][HMI-Unified][WRITE] Native create/update/delete for " +
-                "alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists when supported by installed API. Exact name. properties " +
-                "contains public writable scalar properties only, not references/complex text. Default dryRun=true. Preview validates API shape, not TIA " +
-                "semantics. No save/compile/download. Delete impact on references is not analyzed. Partial writes reported, no rollback. Native " +
+                "alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists when supported by installed API; connections/tagTables " +
+                "support delete only. name is exact, or /Group/Sub/Table for tagTables (preview includes tag count). Lists have no Create; use " +
+                "ImportUnifiedEngineeringList. properties contains writable scalars; TriggerBitAddress/TriggerAddress are read-only. Alarm create/update " +
+                "accepts texts as {EventText|EventText1..9|InfoText:{culture:text}}; AlarmClass must exist and cultures must be active project languages. " +
+                "Default dryRun=true; every execution requires expectedPlanHash and expectedProjectFile from the same preview. Preview checks API shape " +
+                "and bindings, not all TIA semantics. Failed creates delete the new object; updates restore journaled values, with cleanupRequired on " +
+                "incomplete rollback. For bulk alarms use ApplyToolBatch with one call per alarm; stops at first failure, earlier calls stay. " +
+                "No save/compile/download. Delete impact on references is not analyzed. Native " +
                 "behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageUnifiedEngineeringObjectV4(string softwarePath,string category,string name,
-                [Description("create | update | delete. ")] string action,AttributeMap<Scalar> properties = null!,bool dryRun=true)
-            => HmiInspectionContract
-                .Run("ManageUnifiedEngineeringObject", !dryRun, true, () =>
-                    ManageUnifiedEngineeringObject(softwarePath, category, name, action, V4Json
-                        .Serialize(properties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>())), dryRun));
+                [Description("create | update | delete. ")] string action,AttributeMap<Scalar> properties = null!,bool dryRun=true,
+                [Description("Alarm text property to culture-to-text map. Empty text clears that culture; omitted cultures stay unchanged.")]
+                AttributeMap<AttributeMap<string>> texts = null!, string expectedPlanHash = "", string expectedProjectFile = "")
+            => McpServer.RunNativeWritePreview("ManageUnifiedEngineeringObject", dryRun,
+                new { softwarePath, category, name, action,
+                    properties = properties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>()),
+                    texts = texts ?? new AttributeMap<AttributeMap<string>>(new Dictionary<string, AttributeMap<string>>()) },
+                () => Manage(softwarePath, category, name, action, properties, texts, true),
+                () => Manage(softwarePath, category, name, action, properties, texts, false), expectedPlanHash, expectedProjectFile);
+
+        private CallToolResult Manage(string softwarePath, string category, string name, string action,
+            AttributeMap<Scalar>? properties, AttributeMap<AttributeMap<string>>? texts, bool dryRun)
+            => HmiInspectionContract.Run("ManageUnifiedEngineeringObject", !dryRun, true, () =>
+                ManageUnifiedEngineeringObject(softwarePath, category, name, action,
+                    V4Json.Serialize(properties ?? new AttributeMap<Scalar>(new Dictionary<string, Scalar>())), dryRun,
+                    V4Json.Serialize(texts ?? new AttributeMap<AttributeMap<string>>(new Dictionary<string, AttributeMap<string>>()))));
 
         public ResponseMessage ManageUnifiedEngineeringObject(string softwarePath,string category,string name,
-                [Description("create | update | delete. ")] string action,string propertiesJson="{}",bool dryRun=true)
-        => _service.ManageUnifiedEngineeringObject(softwarePath,category,name,action,propertiesJson,dryRun);
+                [Description("create | update | delete. ")] string action,string propertiesJson="{}",bool dryRun=true,string textsJson="{}")
+        => _service.ManageUnifiedEngineeringObject(softwarePath,category,name,action,propertiesJson,dryRun,textsJson);
     }
 }

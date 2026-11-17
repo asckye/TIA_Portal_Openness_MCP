@@ -11287,7 +11287,13 @@
           "requiresBinding": true
         }
       },
-      "operations": {},
+      "operations": {
+        "unifiedAlarms": {
+          "arguments": {
+            "previewToken": "<previewToken from PreviewToolBatch unifiedAlarms>"
+          }
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
     },
@@ -20921,6 +20927,82 @@
           "arguments": {
             "action": "delete"
           }
+        },
+        "connectionDelete": {
+          "arguments": {
+            "category": "connections",
+            "name": "HMI_Connection_1",
+            "action": "delete",
+            "dryRun": true
+          }
+        },
+        "tagTableDelete": {
+          "arguments": {
+            "category": "tagTables",
+            "name": "/Diagnostic/DiagInfo",
+            "action": "delete",
+            "dryRun": true
+          }
+        },
+        "graphicListDeleteV21": {
+          "arguments": {
+            "category": "graphicLists",
+            "name": "StatusGraphics",
+            "action": "delete",
+            "dryRun": true
+          }
+        },
+        "alarmCreateWithTexts": {
+          "arguments": {
+            "category": "discreteAlarms",
+            "name": "Alarm_1",
+            "action": "create",
+            "properties": {
+              "AlarmClass": "Errors",
+              "RaisedStateTag": "AlarmTrigger",
+              "RaisedStateTagBitNumber": 0,
+              "Priority": 8
+            },
+            "texts": {
+              "EventText": {
+                "en-US": "Alarm raised",
+                "zh-CN": "报警触发"
+              }
+            },
+            "dryRun": true
+          }
+        },
+        "executePreviewedAlarm": {
+          "arguments": {
+            "category": "discreteAlarms",
+            "name": "Alarm_1",
+            "action": "create",
+            "properties": {
+              "AlarmClass": "Errors",
+              "RaisedStateTag": "AlarmTrigger",
+              "RaisedStateTagBitNumber": 0,
+              "Priority": 8
+            },
+            "texts": {
+              "EventText": {
+                "en-US": "Alarm raised",
+                "zh-CN": "报警触发"
+              }
+            },
+            "dryRun": false,
+            "expectedPlanHash": "<planHash from alarmCreateWithTexts>",
+            "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+          }
+        },
+        "executePreviewedDelete": {
+          "arguments": {
+            "category": "connections",
+            "name": "HMI_Connection_1",
+            "action": "delete",
+            "dryRun": false,
+            "expectedPlanHash": "<planHash from connectionDelete>",
+            "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+          }
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -21701,7 +21783,63 @@
         ]
       },
       "parameters": {},
-      "operations": {},
+      "operations": {
+        "unifiedAlarms": {
+          "arguments": {
+            "expectedProject": "Example",
+            "operations": [
+              {
+                "name": "ManageUnifiedEngineeringObject",
+                "arguments": {
+                  "softwarePath": "HMI_RT_1",
+                  "category": "discreteAlarms",
+                  "name": "Alarm_1",
+                  "action": "create",
+                  "properties": {
+                    "AlarmClass": "Errors",
+                    "RaisedStateTag": "AlarmTrigger",
+                    "RaisedStateTagBitNumber": 0,
+                    "Priority": 8
+                  },
+                  "texts": {
+                    "EventText": {
+                      "en-US": "Alarm 1",
+                      "zh-CN": "报警 1"
+                    }
+                  },
+                  "dryRun": true,
+                  "expectedPlanHash": "<planHash from the identical Alarm_1 single-tool preview>",
+                  "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+                }
+              },
+              {
+                "name": "ManageUnifiedEngineeringObject",
+                "arguments": {
+                  "softwarePath": "HMI_RT_1",
+                  "category": "discreteAlarms",
+                  "name": "Alarm_2",
+                  "action": "create",
+                  "properties": {
+                    "AlarmClass": "Errors",
+                    "RaisedStateTag": "AlarmTrigger",
+                    "RaisedStateTagBitNumber": 1,
+                    "Priority": 8
+                  },
+                  "texts": {
+                    "EventText": {
+                      "en-US": "Alarm 2",
+                      "zh-CN": "报警 2"
+                    }
+                  },
+                  "dryRun": true,
+                  "expectedPlanHash": "<planHash from the identical Alarm_2 single-tool preview>",
+                  "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+                }
+              }
+            ]
+          }
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
     },
     "PreviewToolCall": {
@@ -22874,7 +23012,20 @@
           "exampleValue": 100
         }
       },
-      "operations": {},
+      "operations": {
+        "connections": {
+          "arguments": {
+            "category": "connections",
+            "name": "HMI_Connection_1"
+          }
+        },
+        "graphicListsV21": {
+          "arguments": {
+            "category": "graphicLists",
+            "name": "StatusGraphics"
+          }
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
     },
     "GetUnifiedFaceplateInstance": {
@@ -32499,11 +32650,20 @@
               "requiresBinding": true
             }
           },
-          "operations": {},
+          "operations": {
+            "unifiedAlarms": {
+              "arguments": {
+                "previewToken": "<previewToken from PreviewToolBatch unifiedAlarms>"
+              }
+            }
+          },
           "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ],
+          "notes": [
+            "V19-V21: use PreviewToolBatch unifiedAlarms after binding each alarm call to its own single-tool preview planHash and project file. ApplyToolBatch stops at the first failed alarm; earlier calls stay, the failed call uses its own DES-3 rollback, and later calls are NOT_EXECUTED. Read per-item envelopes and cleanupRequired; inspect the project before repeating a failed write."
           ]
         },
         "BuildReleaseDiagnosticReport": {
@@ -32892,10 +33052,69 @@
               "requiresBinding": true
             }
           },
-          "operations": {},
+          "operations": {
+            "unifiedAlarms": {
+              "arguments": {
+                "expectedProject": "Example",
+                "operations": [
+                  {
+                    "name": "ManageUnifiedEngineeringObject",
+                    "arguments": {
+                      "softwarePath": "HMI_RT_1",
+                      "category": "discreteAlarms",
+                      "name": "Alarm_1",
+                      "action": "create",
+                      "properties": {
+                        "AlarmClass": "Errors",
+                        "RaisedStateTag": "AlarmTrigger",
+                        "RaisedStateTagBitNumber": 0,
+                        "Priority": 8
+                      },
+                      "texts": {
+                        "EventText": {
+                          "en-US": "Alarm 1",
+                          "zh-CN": "报警 1"
+                        }
+                      },
+                      "dryRun": true,
+                      "expectedPlanHash": "<planHash from the identical Alarm_1 single-tool preview>",
+                      "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+                    }
+                  },
+                  {
+                    "name": "ManageUnifiedEngineeringObject",
+                    "arguments": {
+                      "softwarePath": "HMI_RT_1",
+                      "category": "discreteAlarms",
+                      "name": "Alarm_2",
+                      "action": "create",
+                      "properties": {
+                        "AlarmClass": "Errors",
+                        "RaisedStateTag": "AlarmTrigger",
+                        "RaisedStateTagBitNumber": 1,
+                        "Priority": 8
+                      },
+                      "texts": {
+                        "EventText": {
+                          "en-US": "Alarm 2",
+                          "zh-CN": "报警 2"
+                        }
+                      },
+                      "dryRun": true,
+                      "expectedPlanHash": "<planHash from the identical Alarm_2 single-tool preview>",
+                      "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+                    }
+                  }
+                ]
+              }
+            }
+          },
           "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
+          ],
+          "notes": [
+            "V19-V21 Unified alarms: first preview each identical single-alarm call and bind its data.planHash plus exact expectedProjectFile in operations; then PreviewToolBatch with 1..50 ordered calls. ApplyToolBatch consumes this batch previewToken. Bind classes/tags/cultures using the Unified readers and active project languages. No items or parameterTags parameter."
           ]
         },
         "PreviewToolCall": {
@@ -45367,7 +45586,8 @@
           },
           "parameters": {
             "name": {
-              "exampleValue": "Example_1"
+              "exampleValue": "Example_1",
+              "requiresBinding": true
             },
             "offset": {
               "exampleValue": 0
@@ -45376,7 +45596,20 @@
               "exampleValue": 100
             }
           },
-          "operations": {},
+          "operations": {
+            "connections": {
+              "arguments": {
+                "category": "connections",
+                "name": "HMI_Connection_1"
+              }
+            },
+            "graphicListsV21": {
+              "arguments": {
+                "category": "graphicLists",
+                "name": "StatusGraphics"
+              }
+            }
+          },
           "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
           "notes": [
             "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
@@ -45392,7 +45625,41 @@
           },
           "parameters": {
             "properties": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "exampleValue": {
+                "AlarmClass": "Errors",
+                "RaisedStateTag": "AlarmTrigger",
+                "RaisedStateTagBitNumber": 0,
+                "Priority": 8
+              },
+              "meaning": "For alarm create/update bind AlarmClass to GetUnifiedAlarmCommon category=alarmClasses and RaisedStateTag to ListUnifiedTagDefinitions. TriggerBitAddress/TriggerAddress are read-only.",
+              "requiresBinding": true
+            },
+            "softwarePath": {
+              "meaning": "Exact Unified software path from the project inventory, for example HMI_RT_1.",
+              "requiresBinding": true
+            },
+            "name": {
+              "meaning": "Exact object name; tagTables also accepts /Diagnostic/DiagInfo (split path segments before decoding).",
+              "requiresBinding": true
+            },
+            "texts": {
+              "exampleValue": {
+                "EventText": {
+                  "en-US": "Alarm raised",
+                  "zh-CN": "报警触发"
+                }
+              },
+              "meaning": "Alarm create/update only: EventText, EventText1..9 or InfoText to culture-to-text map. Bind cultures to active project languages; omitted cultures stay unchanged.",
+              "requiresBinding": true
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this exact preview>",
+              "meaning": "Required for every dryRun:false action, including existing create/update/delete. Copy data.planHash from the same arguments and binding.",
+              "requiresBinding": true
+            },
+            "expectedProjectFile": {
+              "exampleValue": "C:\\Projects\\Example\\Example.ap21",
+              "meaning": "Exact absolute bound project file from the preview targetIdentity; use the matching release extension.",
               "requiresBinding": true
             }
           },
@@ -45412,10 +45679,86 @@
               "arguments": {
                 "action": "delete"
               }
+            },
+            "connectionDelete": {
+              "arguments": {
+                "category": "connections",
+                "name": "HMI_Connection_1",
+                "action": "delete",
+                "dryRun": true
+              }
+            },
+            "tagTableDelete": {
+              "arguments": {
+                "category": "tagTables",
+                "name": "/Diagnostic/DiagInfo",
+                "action": "delete",
+                "dryRun": true
+              }
+            },
+            "graphicListDeleteV21": {
+              "arguments": {
+                "category": "graphicLists",
+                "name": "StatusGraphics",
+                "action": "delete",
+                "dryRun": true
+              }
+            },
+            "alarmCreateWithTexts": {
+              "arguments": {
+                "category": "discreteAlarms",
+                "name": "Alarm_1",
+                "action": "create",
+                "properties": {
+                  "AlarmClass": "Errors",
+                  "RaisedStateTag": "AlarmTrigger",
+                  "RaisedStateTagBitNumber": 0,
+                  "Priority": 8
+                },
+                "texts": {
+                  "EventText": {
+                    "en-US": "Alarm raised",
+                    "zh-CN": "报警触发"
+                  }
+                },
+                "dryRun": true
+              }
+            },
+            "executePreviewedAlarm": {
+              "arguments": {
+                "category": "discreteAlarms",
+                "name": "Alarm_1",
+                "action": "create",
+                "properties": {
+                  "AlarmClass": "Errors",
+                  "RaisedStateTag": "AlarmTrigger",
+                  "RaisedStateTagBitNumber": 0,
+                  "Priority": 8
+                },
+                "texts": {
+                  "EventText": {
+                    "en-US": "Alarm raised",
+                    "zh-CN": "报警触发"
+                  }
+                },
+                "dryRun": false,
+                "expectedPlanHash": "<planHash from alarmCreateWithTexts>",
+                "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+              }
+            },
+            "executePreviewedDelete": {
+              "arguments": {
+                "category": "connections",
+                "name": "HMI_Connection_1",
+                "action": "delete",
+                "dryRun": false,
+                "expectedPlanHash": "<planHash from connectionDelete>",
+                "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+              }
             }
           },
-          "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): alarmClasses create preview and apply passed with read-back; V19/V20 Create reviewed in official XML, native execution NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. A textLists create is refused: HmiTextListComposition has no Create.",
+          "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): alarmClasses create preview and apply passed with read-back; V19/V20 Create reviewed in official XML, native execution NOT RUN. Other releases: input schema checked offline; native execution NOT RUN. API-P1d extensions and whole-tool plan binding: managed checks only; V19/V21 VM acceptance NOT RUN. Example names, alarm classes, tags, cultures, hashes and project files require project binding.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. A textLists create is refused: HmiTextListComposition has no Create. V19-V21: connections/tagTables are delete-only; list connections with ListUnifiedEngineeringObjects. V21 only: graphicLists list/export/import/delete; graphicLists and textLists have no Create, use ImportUnifiedEngineeringList. All execution actions now require the preview plan hash and absolute project file (incompatible change). Use ApplyToolBatch for multiple alarms; no items/parameterTags parameter.",
           "notes": [
             "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access."
           ]
@@ -46417,9 +46760,18 @@
               "requiresBinding": true
             }
           },
-          "operations": {},
+          "operations": {
+            "unifiedAlarms": {
+              "arguments": {
+                "previewToken": "<previewToken from PreviewToolBatch unifiedAlarms>"
+              }
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "notes": [
+            "V19-V21: use PreviewToolBatch unifiedAlarms after binding each alarm call to its own single-tool preview planHash and project file. ApplyToolBatch stops at the first failed alarm; earlier calls stay, the failed call uses its own DES-3 rollback, and later calls are NOT_EXECUTED. Read per-item envelopes and cleanupRequired; inspect the project before repeating a failed write."
+          ]
         },
         "ApplyUnifiedHmiLayout": {
           "arguments": {
@@ -57808,7 +58160,41 @@
           },
           "parameters": {
             "properties": {
-              "exampleValue": "{\"<exact supported field from this operation/read result>\":\"<value of that field's documented type>\"}",
+              "exampleValue": {
+                "AlarmClass": "Errors",
+                "RaisedStateTag": "AlarmTrigger",
+                "RaisedStateTagBitNumber": 0,
+                "Priority": 8
+              },
+              "meaning": "For alarm create/update bind AlarmClass to GetUnifiedAlarmCommon category=alarmClasses and RaisedStateTag to ListUnifiedTagDefinitions. TriggerBitAddress/TriggerAddress are read-only.",
+              "requiresBinding": true
+            },
+            "softwarePath": {
+              "meaning": "Exact Unified software path from the project inventory, for example HMI_RT_1.",
+              "requiresBinding": true
+            },
+            "name": {
+              "meaning": "Exact object name; tagTables also accepts /Diagnostic/DiagInfo (split path segments before decoding).",
+              "requiresBinding": true
+            },
+            "texts": {
+              "exampleValue": {
+                "EventText": {
+                  "en-US": "Alarm raised",
+                  "zh-CN": "报警触发"
+                }
+              },
+              "meaning": "Alarm create/update only: EventText, EventText1..9 or InfoText to culture-to-text map. Bind cultures to active project languages; omitted cultures stay unchanged.",
+              "requiresBinding": true
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this exact preview>",
+              "meaning": "Required for every dryRun:false action, including existing create/update/delete. Copy data.planHash from the same arguments and binding.",
+              "requiresBinding": true
+            },
+            "expectedProjectFile": {
+              "exampleValue": "C:\\Projects\\Example\\Example.ap21",
+              "meaning": "Exact absolute bound project file from the preview targetIdentity; use the matching release extension.",
               "requiresBinding": true
             }
           },
@@ -57828,10 +58214,86 @@
               "arguments": {
                 "action": "delete"
               }
+            },
+            "connectionDelete": {
+              "arguments": {
+                "category": "connections",
+                "name": "HMI_Connection_1",
+                "action": "delete",
+                "dryRun": true
+              }
+            },
+            "tagTableDelete": {
+              "arguments": {
+                "category": "tagTables",
+                "name": "/Diagnostic/DiagInfo",
+                "action": "delete",
+                "dryRun": true
+              }
+            },
+            "graphicListDeleteV21": {
+              "arguments": {
+                "category": "graphicLists",
+                "name": "StatusGraphics",
+                "action": "delete",
+                "dryRun": true
+              }
+            },
+            "alarmCreateWithTexts": {
+              "arguments": {
+                "category": "discreteAlarms",
+                "name": "Alarm_1",
+                "action": "create",
+                "properties": {
+                  "AlarmClass": "Errors",
+                  "RaisedStateTag": "AlarmTrigger",
+                  "RaisedStateTagBitNumber": 0,
+                  "Priority": 8
+                },
+                "texts": {
+                  "EventText": {
+                    "en-US": "Alarm raised",
+                    "zh-CN": "报警触发"
+                  }
+                },
+                "dryRun": true
+              }
+            },
+            "executePreviewedAlarm": {
+              "arguments": {
+                "category": "discreteAlarms",
+                "name": "Alarm_1",
+                "action": "create",
+                "properties": {
+                  "AlarmClass": "Errors",
+                  "RaisedStateTag": "AlarmTrigger",
+                  "RaisedStateTagBitNumber": 0,
+                  "Priority": 8
+                },
+                "texts": {
+                  "EventText": {
+                    "en-US": "Alarm raised",
+                    "zh-CN": "报警触发"
+                  }
+                },
+                "dryRun": false,
+                "expectedPlanHash": "<planHash from alarmCreateWithTexts>",
+                "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+              }
+            },
+            "executePreviewedDelete": {
+              "arguments": {
+                "category": "connections",
+                "name": "HMI_Connection_1",
+                "action": "delete",
+                "dryRun": false,
+                "expectedPlanHash": "<planHash from connectionDelete>",
+                "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+              }
             }
           },
-          "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): alarmClasses create preview and apply passed with read-back; V19/V20 Create reviewed in official XML, native execution NOT RUN. Other releases: input schema checked offline; native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. A textLists create is refused: HmiTextListComposition has no Create."
+          "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): alarmClasses create preview and apply passed with read-back; V19/V20 Create reviewed in official XML, native execution NOT RUN. Other releases: input schema checked offline; native execution NOT RUN. API-P1d extensions and whole-tool plan binding: managed checks only; V19/V21 VM acceptance NOT RUN. Example names, alarm classes, tags, cultures, hashes and project files require project binding.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. A textLists create is refused: HmiTextListComposition has no Create. V19-V21: connections/tagTables are delete-only; list connections with ListUnifiedEngineeringObjects. V21 only: graphicLists list/export/import/delete; graphicLists and textLists have no Create, use ImportUnifiedEngineeringList. All execution actions now require the preview plan hash and absolute project file (incompatible change). Use ApplyToolBatch for multiple alarms; no items/parameterTags parameter."
         },
         "ManageUnifiedEvent": {
           "arguments": {
@@ -58665,8 +59127,67 @@
               "requiresBinding": true
             }
           },
-          "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "operations": {
+            "unifiedAlarms": {
+              "arguments": {
+                "expectedProject": "Example",
+                "operations": [
+                  {
+                    "name": "ManageUnifiedEngineeringObject",
+                    "arguments": {
+                      "softwarePath": "HMI_RT_1",
+                      "category": "discreteAlarms",
+                      "name": "Alarm_1",
+                      "action": "create",
+                      "properties": {
+                        "AlarmClass": "Errors",
+                        "RaisedStateTag": "AlarmTrigger",
+                        "RaisedStateTagBitNumber": 0,
+                        "Priority": 8
+                      },
+                      "texts": {
+                        "EventText": {
+                          "en-US": "Alarm 1",
+                          "zh-CN": "报警 1"
+                        }
+                      },
+                      "dryRun": true,
+                      "expectedPlanHash": "<planHash from the identical Alarm_1 single-tool preview>",
+                      "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+                    }
+                  },
+                  {
+                    "name": "ManageUnifiedEngineeringObject",
+                    "arguments": {
+                      "softwarePath": "HMI_RT_1",
+                      "category": "discreteAlarms",
+                      "name": "Alarm_2",
+                      "action": "create",
+                      "properties": {
+                        "AlarmClass": "Errors",
+                        "RaisedStateTag": "AlarmTrigger",
+                        "RaisedStateTagBitNumber": 1,
+                        "Priority": 8
+                      },
+                      "texts": {
+                        "EventText": {
+                          "en-US": "Alarm 2",
+                          "zh-CN": "报警 2"
+                        }
+                      },
+                      "dryRun": true,
+                      "expectedPlanHash": "<planHash from the identical Alarm_2 single-tool preview>",
+                      "expectedProjectFile": "C:\\Projects\\Example\\Example.ap21"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "notes": [
+            "V19-V21 Unified alarms: first preview each identical single-alarm call and bind its data.planHash plus exact expectedProjectFile in operations; then PreviewToolBatch with 1..50 ordered calls. ApplyToolBatch consumes this batch previewToken. Bind classes/tags/cultures using the Unified readers and active project languages. No items or parameterTags parameter."
+          ]
         },
         "PreviewToolCall": {
           "arguments": {
@@ -59879,7 +60400,8 @@
           },
           "parameters": {
             "name": {
-              "exampleValue": "Example_1"
+              "exampleValue": "Example_1",
+              "requiresBinding": true
             },
             "offset": {
               "exampleValue": 0
@@ -59888,7 +60410,20 @@
               "exampleValue": 100
             }
           },
-          "operations": {},
+          "operations": {
+            "connections": {
+              "arguments": {
+                "category": "connections",
+                "name": "HMI_Connection_1"
+              }
+            },
+            "graphicListsV21": {
+              "arguments": {
+                "category": "graphicLists",
+                "name": "StatusGraphics"
+              }
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "GetUnifiedFaceplateInstance": {

@@ -2,6 +2,7 @@ using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace TiaMcp.Adapters.Native.Hmi
@@ -70,50 +71,118 @@ namespace TiaMcp.Adapters.Native.Hmi
             });
 
         public HmiMessage ManageUnifiedEngineeringObject(string softwarePath, string category, string name, string action,
-            string propertiesJson = "{}", bool dryRun = true)
+            string propertiesJson = "{}", bool dryRun = true, string textsJson = "{}")
             => _session.RunHmiStepTool("ManageUnifiedEngineeringObject", meta => {
                 if (action != "create" && action != "update" && action != "delete") throw new ArgumentException("action must be create, update or delete.");
                 if (category == "systemTags" || category == "systemTextLists")
                     throw new NotSupportedException("System collections are read-only in this adapter.");
                 if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Exact name required.");
                 var changes = UnifiedRequestValues.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("propertiesJson must be an object.");
+                var texts = UnifiedRequestValues.Parse(textsJson) as HmiObject ?? throw new ArgumentException("texts must be an object.");
                 if (changes.ContainsKey("Name")) throw new ArgumentException("Name changes are not supported here; supply the exact name parameter.");
                 if (action == "delete" && changes.Count != 0) throw new ArgumentException("Delete does not accept properties.");
                 var collectionName = _session.UnifiedCollection(category);
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var hmi = _session.ResolveHmiSoftwareOrThrow(softwarePath);
                 if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Unified HMI required.");
-                var collection = PlcGroupOperations.Get(hmi, collectionName);
-                var target = PlcGroupOperations.Find(collection, name);
+                var collection = category == "tagTables" ? null : PlcGroupOperations.Get(hmi, collectionName);
+                object? FindTarget(object software) => category == "tagTables" ? HmiExchangePolicy.TagTable(software, name)
+                    : PlcGroupOperations.Find(PlcGroupOperations.Get(software, collectionName), name);
+                var target = category == "tagTables" ? HmiExchangePolicy.TagTable(hmi, name) : PlcGroupOperations.Find(collection!, name);
                 meta["category"] = category; meta["name"] = name; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (action == "create" && target != null) throw new InvalidOperationException("Object already exists; use update explicitly.");
                 if (action != "create" && target == null) throw new PlcSoftwareException("NotFound", "Exact object not found: " + name);
-                var create = collection.GetType().GetMethod("Create", new[] { typeof(string) });
+                var create = collection?.GetType().GetMethod("Create", new[] { typeof(string) });
                 var type = target?.GetType() ?? create?.ReturnType ?? throw new NotSupportedException("Native Create(string) is not exposed for " + category);
                 var prepared = UnifiedRequestScalar.Prepare(type, changes);
+                var textEdits = PrepareAlarmTexts(type, target, _session.CurrentProject!, texts);
+                if ((category == "discreteAlarms" || category == "analogAlarms") && changes.TryGetValue("AlarmClass", out var alarmClass))
+                {
+                    if (alarmClass is not string className || PlcGroupOperations.Find(PlcGroupOperations.Get(hmi, "AlarmClasses"), className) == null)
+                        throw new ArgumentException("AlarmClass must name an existing HmiSoftware.AlarmClasses entry.");
+                }
                 if (action == "delete" && type.GetMethod("Delete", Type.EmptyTypes) == null) throw new NotSupportedException("Native Delete is not exposed.");
-                if (target != null) meta["before"] = UnifiedRequestScalar.Read(target);
+                if (target != null) meta["before"] = ReadObject(target, category);
+                if (category == "tagTables") meta["tagCount"] = PlcGroupOperations.Items(PlcGroupOperations.Get(target!, "Tags")).Count();
                 meta["requestedProperties"] = changes.DeepClone();
+                meta["requestedTexts"] = texts.DeepClone();
                 meta["dependencyImpact"] = "Not analyzed. Deletion may invalidate references; preview does not imply absence of references.";
                 if (dryRun) return "Preview only. Public API shape and scalar property conversions checked; TIA semantic validation occurs during execution.";
                 meta["mayHaveChanged"] = true;
                 if (action == "create")
                 {
-                    target = PlcGroupOperations.Call(collection, "Create", new[] { typeof(string) }, name);
+                    target = PlcGroupOperations.Call(collection!, "Create", new[] { typeof(string) }, name);
+                    foreach (var edit in textEdits) UnifiedMultilingualText.Validate(target, edit.Property, edit.Culture);
                 }
                 if (action == "delete")
                 {
                     PlcGroupOperations.Call(target!, "Delete", Type.EmptyTypes);
-                    if (PlcGroupOperations.Find(collection, name) != null) throw new InvalidOperationException("Delete returned but object remains.");
+                    var remaining = category == "connections" || category == "tagTables"
+                        ? FindTarget(_session.ResolveHmiSoftwareOrThrow(softwarePath)) : PlcGroupOperations.Find(collection!, name);
+                    if (remaining != null)
+                        throw new InvalidOperationException("Delete returned but object remains.");
                     meta["verifiedAbsent"] = true;
                 }
                 else
                 {
                     UnifiedRequestScalar.Apply(target!, prepared, meta);
-                    meta["after"] = UnifiedRequestScalar.Read(target!);
+                    if (textEdits.Count != 0) ApplyAlarmTexts(target!, textEdits, meta);
+                    meta["after"] = ReadObject(target!, category);
                 }
                 meta["persistence"] = "Not saved, compiled or downloaded. Inspect rollbackCompleted and cleanupRequired on failure.";
-                return "Native Unified object operation completed; requested scalar writes read back. Full semantic validity is not asserted.";
+                return "Native Unified object operation completed; requested scalar and text writes read back. Full semantic validity is not asserted.";
             });
+
+        internal static List<(string Property, string Culture, string Text)> PrepareAlarmTexts(Type type, object? target, object project, HmiObject texts)
+        {
+            var edits = new List<(string, string, string)>();
+            string[]? active = null;
+            foreach (var property in texts)
+            {
+                var member = type.GetProperty(property.Key);
+                if (!EngineeringInputValidation.AlarmTextProperty(property.Key) || member?.GetMethod?.IsPublic != true
+                    || member.PropertyType.Name != "MultilingualText")
+                    throw new ArgumentException("Alarm multilingual property unavailable: " + property.Key);
+                foreach (var language in (HmiObject)property.Value!)
+                {
+                    if (target != null) UnifiedMultilingualText.Validate(target, property.Key, language.Key);
+                    else
+                    {
+                        active ??= PlcGroupOperations.Items(PlcGroupOperations.Get(PlcGroupOperations.Get(project, "LanguageSettings"), "ActiveLanguages"))
+                            .Select(item => PlcGroupOperations.Get(PlcGroupOperations.Get(item, "Culture"), "Name").ToString()!).ToArray();
+                        if (!active.Contains(language.Key, StringComparer.OrdinalIgnoreCase))
+                            throw new ArgumentException("Alarm text culture is not an active project language: " + language.Key
+                                + "; available cultures: " + string.Join(", ", active));
+                    }
+                    edits.Add((property.Key, language.Key, (string)language.Value!));
+                }
+            }
+            return edits;
+        }
+
+        internal static void ApplyAlarmTexts(object target, List<(string Property, string Culture, string Text)> edits, HmiObject meta)
+        {
+            var written = new HmiArray(); meta["textWrites"] = written;
+            foreach (var edit in edits)
+            {
+                var result = UnifiedMultilingualText.WriteDetailed(target, edit.Property, edit.Text, edit.Culture);
+                written.Add(result);
+                if (result["verified"] is not true)
+                    throw new InvalidOperationException(edit.Property + " culture=" + edit.Culture + ": " + result["error"]);
+            }
+        }
+
+        private static HmiObject ReadObject(object target, string category)
+        {
+            var row = UnifiedRequestScalar.Read(target);
+            if (category == "discreteAlarms" || category == "analogAlarms")
+            {
+                var texts = new HmiObject(); row["texts"] = texts;
+                foreach (var property in UnifiedRequestScalar.DistinctProperties(target.GetType())
+                    .Where(p => EngineeringInputValidation.AlarmTextProperty(p.Name)))
+                    texts[property.Name] = UnifiedMultilingualText.Read(PlcGroupOperations.Get(target, property.Name));
+            }
+            return row;
+        }
     }
 }
