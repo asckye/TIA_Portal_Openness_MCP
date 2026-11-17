@@ -6,6 +6,8 @@
 
 ## 当前状态
 
+- **2026-11-17 维护者决定：beta.6 发布前在 V21 上补测所有 beta.6 新增和改动的工具**（用 beta.6 候选包部署到 V21 VM，单独测试会话，格式同 `bin-build/vm-test/beta5-v21`），补测完成前不发布。beta.5 的 V21 补测已完成：142 个工具中 beta.4 问题已修 79 个，剩余高级 5、中级 7 个归入 VMFIX-12。
+
 - **2026-11-17 已发布 v4.0.0-beta.5（`52d2d417`），GitHub 预发布，不设为 latest。** beta.4 V21 回归修复（VMFIX-6b 至 11，VMFIX-10D 除外）、B21、B27、B28、NO-LOCK 1–8、DES-4R2/R3、TIDY-7、HOST-RENAME、LONG-LINE-GATE 和 LOW-B5 已合并。维护者决定 beta.5 不等虚拟机，MTA-1（已实现、门禁通过、未合并，等八版 VM 冒烟）与 VMFIX-10D 移至 beta.6，见[开发计划](plan.md#400-beta5)。NO-LOCK 8b 删除 `meta.requiresSessionReset` 与 `SESSION_RESET_REQUIRED`，类型化结果的 `data.requiresSessionReset` 改为 `data.outcomeUnknown`；客户端改读 `meta.outcome` 和 `GetSessionState.unsettled`，见 [CHANGELOG](../../CHANGELOG.md)。主机仍须运行 `merge-check -All` 和 `prepare`，维护者确认后才能公开。CI-RED（`69e5c073`）已修复 GitHub `validate-bundle` 的样本换行与中文编码问题。beta.5 全部变化仍待真机复验。
 
 - **2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归修复、NO-LOCK、DES-4R2/R3 和合并后的整理；API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF 共十项移到 beta.6，4.0 正式版仍以它们完成为条件，见[开发计划](plan.md)。
