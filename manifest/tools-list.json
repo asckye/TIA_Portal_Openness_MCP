@@ -1,23 +1,23 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T15:10:11.8625881+00:00",
+  "generatedAt": "2026-11-17T17:32:37.0576012+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "d4ca303154d781173c804ad6da12bf3918c92eb123f512797ae8cb92ce4b2250",
+  "workerSha256": "d65523a564997980982d79d1731c7b67b9ac2385a5e17ca66759babf8eb233c8",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2861,
+    "parameters": 2864,
     "parametersUndocumented": 852,
     "parametersFromVocabulary": 696,
     "toolsWithUndocumentedParameters": 215,
-    "toolsWithEnumHints": 168,
-    "enumHints": 263,
-    "defaultHints": 1636,
+    "toolsWithEnumHints": 169,
+    "enumHints": 264,
+    "defaultHints": 1639,
     "examplesCurated": 518,
-    "recipes": 41
+    "recipes": 42
   },
   "categories": [
     {
@@ -2906,10 +2906,13 @@
         "moduleName",
         "scriptCode",
         "dryRun",
-        "previewToken"
+        "previewToken",
+        "action",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][HMI-Unified][WRITE]Update one existing global Scripts module (e.g. Navigation) using official native JS/YAML export and import. Default dryRun=true returns complete before/after text, backup path and token. Apply the SAME full scriptCode with dryRun=false and previewToken; current content is rechecked, then re-exported for exact verification. Never uses event ScriptCode setters, creates/deletes modules, saves, compiles or deletes pages. Import false/exception/readback mismatch is NOT success; partial changes may exist. No automatic retry after connection failure. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetUnifiedGlobalScript\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"moduleName\":\"Status\",\"scriptCode\":\"\\u003Ccomplete scriptCode from GetUnifiedGlobalScript with the intended edit\\u003E\",\"dryRun\":true}"
+      "description": "[L2][HMI-Unified][WRITE]Update an existing global Scripts module (default action=update), or create one new module from complete scriptCode using official native JS/YAML import (action=create). Create refuses an existing name, including case variants. No Openness delete exists for script modules; remove an unwanted create manually in TIA. Default dryRun=true returns proposed text, hashes and previewToken; updates also retain the native backup and before text. Execution requires the SAME arguments, previewToken, expectedPlanHash and expectedProjectFile. Current content/absence is rechecked and exact full text is verified by export. No save/compile. Import false, exception or readback mismatch is NOT success; partial changes may exist. No automatic retry after connection failure. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"SetUnifiedGlobalScript\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"moduleName\":\"Status\",\"scriptCode\":\"\\u003Ccomplete scriptCode from GetUnifiedGlobalScript with the intended edit\\u003E\",\"dryRun\":true,\"action\":\"update\"}"
     },
     {
       "name": "SetPlcWebOperatingMode",

@@ -36719,21 +36719,40 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7df6240d65c366a92bc3547fdeb48da32a2b105f6eafe6036fbfe04e6edd6e7d",
+      "descriptionSha256": "b07631ee715cfcd51458a025940af1b7052a3fc36e7d44dfd8ff5cfb0930b785",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "action": {
+            "default": "update",
+            "description": "update | create; default update.",
+            "enum": [
+              "update",
+              "create"
+            ],
+            "type": "string"
+          },
           "dryRun": {
             "default": true,
             "description": "Preview and back up only by default. Set false only to apply the reviewed text.",
             "type": "boolean"
           },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "planHash from this tool's preview for the same arguments and bound project; required for execution.",
+            "type": "string"
+          },
           "expectedProject": {
             "description": "Exact currently open project name; mismatch refuses the operation.",
             "type": "string"
           },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Absolute bound project file from the preview target identity; required for execution.",
+            "type": "string"
+          },
           "moduleName": {
-            "description": "Exact existing global module name, e.g. Navigation; case-sensitive.",
+            "description": "Exact global module name, e.g. Navigation; create requires an absent name, including case variants.",
             "type": "string"
           },
           "previewToken": {

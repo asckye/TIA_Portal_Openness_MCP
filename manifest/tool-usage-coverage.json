@@ -1,13 +1,13 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "9f45da4c010f0c5418e20e4a36090b9f5753a7e6d33d0e432c535996ece64735",
+  "catalogSha256": "03ecbc210c9e41a4ece148a306b8dc70f5ec01920a686ea32ab009c65932c6a0",
   "uniqueTools": 518,
   "documents": 89,
   "versionToolPairs": 3209,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
-  "callSequences": 41,
+  "callSequences": 42,
   "languages": [
     "scl",
     "scl-sd",
@@ -54,7 +54,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 169,
       "programmingExampleCount": 25,
-      "callSequenceCount": 41,
+      "callSequenceCount": 42,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -3828,7 +3828,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 230,
       "programmingExampleCount": 25,
-      "callSequenceCount": 41,
+      "callSequenceCount": 42,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -8379,7 +8379,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 284,
       "programmingExampleCount": 25,
-      "callSequenceCount": 41,
+      "callSequenceCount": 42,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -13535,7 +13535,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 359,
       "programmingExampleCount": 25,
-      "callSequenceCount": 41,
+      "callSequenceCount": 42,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -19336,7 +19336,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 435,
       "programmingExampleCount": 25,
-      "callSequenceCount": 41,
+      "callSequenceCount": 42,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -25832,9 +25832,9 @@
       "checkedToolCount": 475,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 495,
+      "operationExampleCount": 497,
       "programmingExampleCount": 25,
-      "callSequenceCount": 41,
+      "callSequenceCount": 42,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -33014,7 +33014,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
-          "operations": []
+          "operations": [
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
         },
         {
           "toolName": "SetUnifiedHmiButtonEventScriptCode",
@@ -33278,9 +33289,9 @@
       "checkedToolCount": 498,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 509,
+      "operationExampleCount": 511,
       "programmingExampleCount": 25,
-      "callSequenceCount": 41,
+      "callSequenceCount": 42,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -40705,7 +40716,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
-          "operations": []
+          "operations": [
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
         },
         {
           "toolName": "SetUnifiedHmiButtonEventScriptCode",
@@ -40995,8 +41017,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "9b0f0d8b6b3ee39746b1b31c8eb5efb136f2238a8d5bb272d7c524adef69fce2",
-      "runtimeSha256": "9b0f0d8b6b3ee39746b1b31c8eb5efb136f2238a8d5bb272d7c524adef69fce2",
+      "sdkWorkerSha256": "0c856e53fcea2cd466aa749b3b02c3d478cd0e2adfdead76fcc3f8497053c1f8",
+      "runtimeSha256": "0c856e53fcea2cd466aa749b3b02c3d478cd0e2adfdead76fcc3f8497053c1f8",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -41005,9 +41027,9 @@
       "checkedToolCount": 513,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 557,
+      "operationExampleCount": 559,
       "programmingExampleCount": 25,
-      "callSequenceCount": 41,
+      "callSequenceCount": 42,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -48798,7 +48820,18 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
           "documents": [],
-          "operations": []
+          "operations": [
+            {
+              "operation": "update",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "create",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            }
+          ]
         },
         {
           "toolName": "SetUnifiedHmiButtonEventScriptCode",
@@ -49100,8 +49133,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "08e716a100cf23cb96d14d0aedbaac7515b8673299b4e3321ededdfd5bcf4332",
-      "runtimeSha256": "08e716a100cf23cb96d14d0aedbaac7515b8673299b4e3321ededdfd5bcf4332",
+      "sdkWorkerSha256": "0506f3292f6c2d1051bd412b8d2aa6b25ce1653b4f93183ce7a9c61b76afec6b",
+      "runtimeSha256": "0506f3292f6c2d1051bd412b8d2aa6b25ce1653b4f93183ce7a9c61b76afec6b",
       "workerModel": "foundation-host-plc-worker"
     }
   }
