@@ -12,7 +12,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly IReadOnlyDictionary<string, Type[]> Types = new Dictionary<string, Type[]>(StringComparer.Ordinal) {
             ["F04"] = new[] { typeof(RuntimeTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools), typeof(EcosystemTools) },
             ["F01"] = new[] {
-                typeof(McpServer), typeof(HostMetaTools), typeof(ExportTools), typeof(OfflineSuiteTools), typeof(EngineeringDiagnosticsTools),
+                typeof(McpServer), typeof(HostMetaTools), typeof(PlcTestLibraryTools), typeof(ExportTools), typeof(OfflineSuiteTools),
+                typeof(EngineeringDiagnosticsTools),
                     typeof(EcosystemTools), typeof(V21EcosystemTools)
             },
             ["F02"] = new[] {

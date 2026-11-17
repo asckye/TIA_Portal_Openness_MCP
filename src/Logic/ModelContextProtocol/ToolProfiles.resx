@@ -5997,6 +5997,14 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ManagePlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "action": "list"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "PreviewToolBatch",
       "family": "F01",
       "example": {
@@ -8413,6 +8421,14 @@
       "entry": "ListToolCategories",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ManagePlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "action": "list"
+      }
     },
     {
       "releaseKey": "15.1",
@@ -11248,6 +11264,14 @@
       "entry": "ListToolCategories",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ManagePlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "action": "list"
+      }
     },
     {
       "releaseKey": "16",
@@ -14376,6 +14400,14 @@
       "entry": "ListToolCategories",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ManagePlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "action": "list"
+      }
     },
     {
       "releaseKey": "17",
@@ -17820,6 +17852,14 @@
       "entry": "ListToolCategories",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ManagePlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "action": "list"
+      }
     },
     {
       "releaseKey": "18",
@@ -21438,6 +21478,14 @@
       "entry": "ListToolCategories",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ManagePlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "action": "list"
+      }
     },
     {
       "releaseKey": "19",
@@ -31156,6 +31204,20 @@
           "dataType": "Bool",
           "addressOrValue": "%M0.0",
           "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ManagePlcTestLibrary",
+        "currentName": "ManagePlcTestLibrary",
+        "sourceName": "ManagePlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -40888,6 +40950,20 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "ManagePlcTestLibrary",
+        "currentName": "ManagePlcTestLibrary",
+        "sourceName": "ManagePlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "ManagePlcUserGroup",
         "currentName": "ManagePlcUserGroup",
         "sourceName": "ManagePlcUserGroup",
@@ -47477,6 +47553,20 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "ManagePlcTestLibrary",
+        "currentName": "ManagePlcTestLibrary",
+        "sourceName": "ManagePlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "ManagePlcUserGroup",
         "currentName": "ManagePlcUserGroup",
         "sourceName": "ManagePlcUserGroup",
@@ -53303,6 +53393,20 @@
           "dataType": "Bool",
           "addressOrValue": "%M0.0",
           "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ManagePlcTestLibrary",
+        "currentName": "ManagePlcTestLibrary",
+        "sourceName": "ManagePlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -59692,6 +59796,20 @@
           "dataType": "Bool",
           "addressOrValue": "%M0.0",
           "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ManagePlcTestLibrary",
+        "currentName": "ManagePlcTestLibrary",
+        "sourceName": "ManagePlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -66459,6 +66577,20 @@
           "dataType": "Bool",
           "addressOrValue": "%M0.0",
           "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ManagePlcTestLibrary",
+        "currentName": "ManagePlcTestLibrary",
+        "sourceName": "ManagePlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -73710,6 +73842,20 @@
           "dataType": "Bool",
           "addressOrValue": "%M0.0",
           "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ManagePlcTestLibrary",
+        "currentName": "ManagePlcTestLibrary",
+        "sourceName": "ManagePlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -82170,6 +82316,20 @@
           "dataType": "Bool",
           "addressOrValue": "%M0.0",
           "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "ManagePlcTestLibrary",
+        "currentName": "ManagePlcTestLibrary",
+        "sourceName": "ManagePlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "action": "list"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"

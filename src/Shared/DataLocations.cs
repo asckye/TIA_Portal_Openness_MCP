@@ -275,6 +275,8 @@ namespace TiaOpenness.Shared
             catch (SecurityException) /* swallow(logging-failure): retain a file when process inspection is denied */ { return true; }
         }
         internal string ReportsDirectory => At("reports", Path.Combine(temporaryDirectory, "TiaMcpReports"));
+        internal string TestLibraryDirectory => At("test-library", Path.Combine(localApplicationData, "TiaMcp", "test-library"));
+        internal string TestRunsDirectory => At("test-runs", Path.Combine(localApplicationData, "TiaMcp", "test-runs"));
         internal string TempDirectory => Ensure(At("temp", temporaryDirectory));
         internal string WorkerSpillsDirectory => Ensure(At("worker-spills", Path.Combine(localApplicationData, "TiaMcp", "worker-spills")));
 

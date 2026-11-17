@@ -32,7 +32,8 @@ namespace TiaMcp.FoundationHost
             local = new[] { typeof(McpServer), typeof(XmlBuilderTools), typeof(OfflineSuiteTools), typeof(TemplateTools),
                 typeof(ExportTools), typeof(ImportStagingTools), typeof(ImportOrderTools), typeof(ToolUsageTools),
                 typeof(EcosystemTools), typeof(V21EcosystemTools), typeof(EngineeringDiagnosticsTools), typeof(OfflineAnalysisTools),
-                typeof(HostMetaTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(PlcDocumentationTools), typeof(QualityAuditTools),
+                typeof(HostMetaTools), typeof(PlcTestLibraryTools), typeof(PlcOfflineTools), typeof(HmiOfflineTools), typeof(PlcDocumentationTools),
+                typeof(QualityAuditTools),
                     typeof(GitWorkflowTools),
                 typeof(RuntimeTools), typeof(RuntimeChannelTools), typeof(PlcSimAdvancedTools) }
                 .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))

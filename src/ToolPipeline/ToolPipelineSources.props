@@ -206,6 +206,7 @@
     <ToolPipelineSource Include="$(MSBuildThisFileDirectory)../Shared/PlcOfflineTools.cs" />
     <ToolPipelineSource Include="$(MSBuildThisFileDirectory)../Shared/HmiOfflineTools.cs" />
     <ToolPipelineSource Include="$(MSBuildThisFileDirectory)../Shared/HostMetaTools.cs" />
+    <ToolPipelineSource Include="$(MSBuildThisFileDirectory)../Shared/PlcTestLibraryTools.cs" />
     <ToolPipelineSource Include="$(MSBuildThisFileDirectory)../Shared/PlcToolContract.cs" />
     <ToolPipelineSource Include="$(MSBuildThisFileDirectory)../Shared/Host/QualityAuditTools.cs" />
     <ToolPipelineSource Include="$(MSBuildThisFileDirectory)../Shared/Host/PlcDocumentationTools.cs" />

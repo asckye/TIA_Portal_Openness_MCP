@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 280,
+      "toolCount": 281,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -220,6 +220,7 @@
         "ManagePlcGitRepository",
         "ManagePlcSimAdvancedInstance",
         "ManagePlcTagDefinition",
+        "ManagePlcTestLibrary",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectLanguage",
@@ -291,7 +292,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 321,
+      "toolCount": 322,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -538,6 +539,7 @@
         "ManagePlcSimAdvancedInstance",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
+        "ManagePlcTestLibrary",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectLanguage",
@@ -618,7 +620,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 350,
+      "toolCount": 351,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -887,6 +889,7 @@
         "ManagePlcSoftwareUnit",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
+        "ManagePlcTestLibrary",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
@@ -974,7 +977,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 373,
+      "toolCount": 374,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1259,6 +1262,7 @@
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
+        "ManagePlcTestLibrary",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
@@ -1353,7 +1357,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 399,
+      "toolCount": 400,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1656,6 +1660,7 @@
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
+        "ManagePlcTestLibrary",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
@@ -1758,7 +1763,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 475,
+      "toolCount": 476,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2113,6 +2118,7 @@
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
+        "ManagePlcTestLibrary",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
@@ -2239,7 +2245,7 @@
     },
     "20": {
       "profile": "plc-foundation",
-      "toolCount": 498,
+      "toolCount": 499,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2609,6 +2615,7 @@
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
+        "ManagePlcTestLibrary",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
@@ -2743,7 +2750,7 @@
     },
     "21": {
       "profile": "plc-foundation",
-      "toolCount": 513,
+      "toolCount": 514,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -3124,6 +3131,7 @@
         "ManagePlcSupervision",
         "ManagePlcTableEntries",
         "ManagePlcTagDefinition",
+        "ManagePlcTestLibrary",
         "ManagePlcUserGroup",
         "ManagePortInterconnection",
         "ManageProjectCompilationSettings",
@@ -3262,7 +3270,7 @@
     }
   },
   "groupCounts": {
-    "all-releases": 279,
+    "all-releases": 280,
     "shared-subset": 219,
     "release-only": 20
   },
@@ -8337,6 +8345,21 @@
     },
     {
       "name": "ManagePlcTagDefinition",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcTestLibrary",
       "releases": [
         "14sp1",
         "15.1",

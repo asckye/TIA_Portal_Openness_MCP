@@ -149,6 +149,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["FindToolsV4"] = "READ",
             ["GenerateAcceptanceReportV4"] = "FILE",
             ["GenerateBlocksFromExternalSourceV4"] = "WRITE",
+            ["ManagePlcTestLibrary"] = "FILE",
             ["GenerateErrorReportV4"] = "FILE",
             ["GenerateOpcUaModelledInterfaceV4"] = "FILE",
             ["GeneratePlcDocumentationV4"] = "FILE",

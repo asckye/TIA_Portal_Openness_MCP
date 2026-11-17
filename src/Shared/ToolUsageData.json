@@ -7981,6 +7981,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ManagePlcTestLibrary": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ManagePlcUserGroup": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -48039,6 +48046,74 @@
             "20": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures.",
             "21": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures."
           }
+        },
+        "ManagePlcTestLibrary": {
+          "arguments": {
+            "action": "list"
+          },
+          "parameters": {},
+          "operations": {
+            "list": {
+              "arguments": {
+                "action": "list"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
+            "read": {
+              "arguments": {
+                "action": "read",
+                "id": "conveyor-start"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
+            "save": {
+              "arguments": {
+                "action": "save",
+                "testCase": {
+                  "schemaVersion": 1,
+                  "id": "conveyor-start",
+                  "title": "Conveyor starts when Start is pressed",
+                  "requirement": "REQ-012",
+                  "tags": [
+                    "fat",
+                    "conveyor"
+                  ],
+                  "kind": "plcsimScenario",
+                  "scenario": {
+                    "instance": "PLC_1",
+                    "mode": "singleStep",
+                    "stopOnFailure": true,
+                    "steps": [
+                      {
+                        "write": {
+                          "\"Start\"": true
+                        }
+                      },
+                      {
+                        "waitMs": 200
+                      },
+                      {
+                        "assert": {
+                          "\"Running\"": true
+                        },
+                        "note": "motor contactor on"
+                      }
+                    ]
+                  }
+                }
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
+            "listRuns": {
+              "arguments": {
+                "action": "listRuns"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            }
+          },
+          "validation": "Managed fixture checks only; native acceptance NOT RUN.",
+          "inline": true,
+          "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
         }
       },
       "full-engine": {
@@ -68406,6 +68481,74 @@
             "20": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures.",
             "21": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures."
           }
+        },
+        "ManagePlcTestLibrary": {
+          "arguments": {
+            "action": "list"
+          },
+          "parameters": {},
+          "operations": {
+            "list": {
+              "arguments": {
+                "action": "list"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
+            "read": {
+              "arguments": {
+                "action": "read",
+                "id": "conveyor-start"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
+            "save": {
+              "arguments": {
+                "action": "save",
+                "testCase": {
+                  "schemaVersion": 1,
+                  "id": "conveyor-start",
+                  "title": "Conveyor starts when Start is pressed",
+                  "requirement": "REQ-012",
+                  "tags": [
+                    "fat",
+                    "conveyor"
+                  ],
+                  "kind": "plcsimScenario",
+                  "scenario": {
+                    "instance": "PLC_1",
+                    "mode": "singleStep",
+                    "stopOnFailure": true,
+                    "steps": [
+                      {
+                        "write": {
+                          "\"Start\"": true
+                        }
+                      },
+                      {
+                        "waitMs": 200
+                      },
+                      {
+                        "assert": {
+                          "\"Running\"": true
+                        },
+                        "note": "motor contactor on"
+                      }
+                    ]
+                  }
+                }
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            },
+            "listRuns": {
+              "arguments": {
+                "action": "listRuns"
+              },
+              "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+            }
+          },
+          "validation": "Managed fixture checks only; native acceptance NOT RUN.",
+          "inline": true,
+          "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
         }
       }
     }

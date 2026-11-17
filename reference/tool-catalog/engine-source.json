@@ -18777,6 +18777,62 @@
           "description": "ladFcBlock: LadFcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
         }
       }
+    },
+    "ManagePlcTestLibrary": {
+      "method": "ManagePlcTestLibrary",
+      "path": "src/Shared/PlcTestLibraryTools.cs",
+      "owner": "PlcTestLibraryTools",
+      "domain": "Simulation",
+      "signature": "public CallToolResult ManagePlcTestLibrary(\n            [Description(\"list | read | save | delete | listRuns | readRun.\")] string action,\n            [Description(\"Case id; read/delete only. 1..64 letters, digits, dot, underscore or hyphen; begins with a letter or digit.\")] string id = \"\",\n            [Description(\"Closed schemaVersion=1 case document; required for save. kind selects scenario or testSuite, exclusively.\")]\n            PlcTestCaseDocument? testCase = null,\n            [Description(\"Allow save to replace an existing case, returning its previous SHA-256.\")] bool overwrite = false,\n            [Description(\"Optional tags for list; any case-insensitive match selects a case. Invalid files remain visible.\")] string[]? tags = null,\n            [Description(\"Zero-based offset for list/listRuns.\")] int offset = 0,\n            [Description(\"Page size for list/listRuns, 1..100.\")] int limit = 100,\n            [Description(\"Exact history run id, or latest; readRun only.\")] string runId = \"latest\")",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "default": null,
+          "description": "list | read | save | delete | listRuns | readRun."
+        },
+        "id": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Case id; read/delete only. 1..64 letters, digits, dot, underscore or hyphen; begins with a letter or digit.",
+          "value": ""
+        },
+        "testCase": {
+          "type": "PlcTestCaseDocument?",
+          "default": "null",
+          "description": "Closed schemaVersion=1 case document; required for save. kind selects scenario or testSuite, exclusively.",
+          "value": null
+        },
+        "overwrite": {
+          "type": "bool",
+          "default": "false",
+          "description": "Allow save to replace an existing case, returning its previous SHA-256.",
+          "value": false
+        },
+        "tags": {
+          "type": "string[]?",
+          "default": "null",
+          "description": "Optional tags for list; any case-insensitive match selects a case. Invalid files remain visible.",
+          "value": null
+        },
+        "offset": {
+          "type": "int",
+          "default": "0",
+          "description": "Zero-based offset for list/listRuns.",
+          "value": 0
+        },
+        "limit": {
+          "type": "int",
+          "default": "100",
+          "description": "Page size for list/listRuns, 1..100.",
+          "value": 100
+        },
+        "runId": {
+          "type": "string",
+          "default": "\"latest\"",
+          "description": "Exact history run id, or latest; readRun only.",
+          "value": "latest"
+        }
+      }
     }
   },
   "behaviorCandidates": [

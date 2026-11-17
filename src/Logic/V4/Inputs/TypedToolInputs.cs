@@ -36,6 +36,8 @@ namespace TiaMcp.Logic.V4.Inputs
         internal static TypedToolInput? For(Type type)
         {
             type = Nullable.GetUnderlyingType(type) ?? type;
+            if (type == typeof(Testing.PlcTestCaseDocument)) return From(new InputContract<Testing.PlcTestCaseDocument>(
+                Testing.PlcTestCaseDocument.Schema, new InputBudget()));
             if (DomainSchemas.Has(type)) return Generic(nameof(Domain), type);
             if (typeof(ConstructionNode).IsAssignableFrom(type)) return Generic(nameof(Construction), type);
             if (typeof(HmiObject).IsAssignableFrom(type)) return Generic(nameof(Hmi), type);

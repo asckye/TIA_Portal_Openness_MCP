@@ -53,7 +53,7 @@ public sealed class B3HostPortsTests
             ManageClassicHmiScreenObject ManageClassicHmiScript ManageClassicHmiTextGraphicList ManageDeviceUserGroup ManageDriveTelegrams
             ManageGlobalLibrary ManageHardwareObject ManageHardwareUtilities ManageIoSystem ManageLibraryFolder ManageLibraryMasterCopy
             ManageLibraryType ManageLibraryTypeVersion ManageMotionAxis ManagePlcExternalSources ManagePlcGitRepository
-            ManagePlcSimAdvancedInstance ManagePlcTagDefinition ManagePlcUserGroup ManagePortInterconnection ManageProjectLanguage
+            ManagePlcSimAdvancedInstance ManagePlcTestLibrary ManagePlcTagDefinition ManagePlcUserGroup ManagePortInterconnection ManageProjectLanguage
             ManageStartdriveParameter ManageTechnologyObject MovePlcBlockToGroup PatchPlcBlockDocument PlanGlobalLibraryTemplateReuse
             PlanHardwareNetworkConfiguration PlanOnlineReadOnlyDataProvider PlanOnlineReadOnlyMonitoring PlugDeviceItem PreviewToolBatch
             PreviewToolCall ProbeGlobalLibrary ProbeHardwareHmiConnectionOwnerCandidates ProbeHardwareHmiConnectionWhitelistedServices

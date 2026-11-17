@@ -3,6 +3,9 @@
 The eight local official PublicAPI XML sets are compared with compiled native-call inventories. No Siemens DLL or XML is redistributed.
 Current V4 registration is summarized in [the version matrix](version-tools.md). The [generated name catalog](version-tool-catalog.md) is a release-time record of the last built package; release validation regenerates it.
 
+Stored PLC test libraries add no Openness member: library runs reuse the existing Test Suite executor calls
+(styleGuide/application V17+, system V18+, application test sets V20+); the library and history files are host-only on all eight releases.
+
 ## API-P1b offline table configuration (beta.6)
 
 V15.1–V21 expose `PlcWatchTableComposition.Create(string)` through `ManagePlcTableEntries action=createTable`,
