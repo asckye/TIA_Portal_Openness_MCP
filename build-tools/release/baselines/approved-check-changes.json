@@ -4929,6 +4929,18 @@
           "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):ede8eeceb0f966ca192a97daeee9bc39e2e954bfdaa8c17de050435f55e87702:1"
         }
       ]
+    },
+    {
+      "task": "TIA-BATCH-2",
+      "maintainerDate": "2026-11-17",
+      "reason": "Lead approval 2026-11-17 under the maintainer\u0027s standing approval: ExportPlcTagTables output is covered (56 to 57 covered outputs)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OutputRootApprovalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OutputRootApprovalTests/AssertOutputCoverage( Func \u003C string , JsonObject , IEnumerable \u003C string \u003E \u003E targets ):4398ab421156c5cc99a8b06b9a6aae63d225bf18d37a57ff6acb44d7b84ef73c:1"
+        }
+      ]
     }
   ]
 }
