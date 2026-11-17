@@ -177,8 +177,6 @@ internal static class ToolUsageGenerator
             .GroupBy(tool => Text(tool!["name"]), StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.Any(tool => tool!["inputSchema"]!["properties"]!.AsObject().ContainsKey("expectedProjectFile")),
                     StringComparer.Ordinal);
-        // Register the new batch export before the lead captures its first contract baseline.
-        projectBinding.TryAdd("ExportPlcTagTables", true);
         void Check(string name, JsonNode args, string location)
         {
             Require(projectBinding.ContainsKey(name), "Unknown tool schema: " + location);

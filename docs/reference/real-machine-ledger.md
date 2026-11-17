@@ -10,7 +10,7 @@
 
 ## 未发布改动的验收边界
 
-TIA-BATCH-2：**NOT RUN**。在 V14 SP1、V18、V21 工程副本上用 ExportPlcTagTables 预览并导出含用户组（含中文名、带 / 的名称）的全部变量表，核对文件数与 objectPath，并把其中一个文件用 ImportPlcTagTable 导回原组（overwrite=true）。
+TIA-BATCH-2：**NOT RUN**。在 V14 SP1、V18、V21 工程副本上，用 ExportPlcTagTables 分别从 PLC 根组和一个精确用户组执行 recursive=false 与 recursive=true 两种预览和导出，覆盖根组非递归、根组递归、用户组非递归、用户组递归四种组合；工程包含用户组、子组及中文名、带 / 名称的变量表。核对非递归仅包含选定组本级的变量表，递归包含选定组及其全部子组的变量表，逐次核对文件数与 objectPath，并把其中一个文件用 ImportPlcTagTable 导回原组（overwrite=true）。
 
 | 改动 | 真机验收 |
 |---|---|

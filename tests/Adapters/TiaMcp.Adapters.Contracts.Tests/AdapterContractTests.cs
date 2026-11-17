@@ -63,7 +63,7 @@ public sealed class AdapterContractTests
         }
         Assert.Equal(14, typeof(IPortalSession).GetMethods().Length);
         Assert.Equal(26, typeof(IPlcProgram).GetMethods().Length);
-        Assert.Equal(16, typeof(IPlcData).GetMethods().Length);
+        Assert.Equal(17, typeof(IPlcData).GetMethods().Length);
         Assert.Single(typeof(IHardware).GetMethods());
         Assert.Equal(5, typeof(IVersionControl).GetMethods().Length);
         Assert.Equal(2, typeof(IHmiExport).GetMethods().Length);
