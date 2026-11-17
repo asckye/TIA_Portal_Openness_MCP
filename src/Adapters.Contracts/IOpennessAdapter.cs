@@ -64,7 +64,8 @@ namespace TiaMcp.Adapters.Contracts
     }
     public interface IPlcProgram
     {
-        public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true);
+        public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true,
+            string scope = "software", string scopePath = "", string unitName = "");
         public PlcExternalSourceDeleteResult DeletePlcExternalSource(string softwarePath,string groupPath,string externalSourceName,bool dryRun=true,
                 string expectedPlanHash="",bool confirm=false,string expectedProjectFile="");
         public PlcDocumentExportResult ExportAsDocuments(string softwarePath,string blockPath,string exportPath,bool preservePath=false,string expectedPlanHash=

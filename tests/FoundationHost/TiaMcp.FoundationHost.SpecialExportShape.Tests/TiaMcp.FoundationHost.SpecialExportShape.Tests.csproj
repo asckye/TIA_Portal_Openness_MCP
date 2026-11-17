@@ -3,7 +3,7 @@
   <PropertyGroup>
     <RootNamespace>TiaMcp.FoundationHost.SpecialExportShape.Tests</RootNamespace>
     <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
-    <DefineConstants>$(DefineConstants);PLC_WATCH_READ;PLC_WATCH_EXPORT</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLC_WATCH_READ;PLC_WATCH_EXPORT;PLC_UNITS;PLC_SAFETY</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
@@ -19,5 +19,11 @@
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSpecialExport.cs" Link="PlcSpecialExport.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/WatchTechnologyPrimitives.cs" Link="WatchTechnologyPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.Compile.cs" Link="PlcFoundationEngine.Compile.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcCompilePolicy.cs" Link="PlcCompilePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcUnitScope.cs" Link="PlcUnitScope.cs" />
+    <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
+    <Compile Include="../../../src/Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
+    <Compile Include="../../../src/Shared/OpennessEnvironment.cs" Link="OpennessEnvironment.cs" />
   </ItemGroup>
 </Project>

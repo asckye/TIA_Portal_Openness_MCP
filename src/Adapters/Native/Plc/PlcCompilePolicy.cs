@@ -7,6 +7,17 @@ namespace TiaMcp.Adapters
 {
     internal static class PlcCompilePolicy
     {
+        internal static string[] RequireScope(string release, string scope, string scopePath, string unitName)
+        {
+            var parts = Contracts.PlcCompileScope.Validate(scope, scopePath, unitName);
+            if ((scope == "unit" || unitName != "") && TiaVersionCatalog.Get(release).MajorVersion < 16)
+                throw ScopeUnavailable("Software unit compile scopes require V16-V21.");
+            return parts;
+        }
+
+        internal static Contracts.AdapterPreconditionException ScopeUnavailable(string message)
+            => new Contracts.AdapterPreconditionException(message, Contracts.PlcCompileScope.UnavailableCondition, null);
+
         internal static void RequirePasswordCapability(string release,string password)
         {
             TiaVersionCatalog.Get(release);

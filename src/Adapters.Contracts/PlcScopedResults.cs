@@ -3,6 +3,15 @@ using System;
 namespace TiaMcp.Adapters.Contracts
 {
     // Scope evidence extends live replies without changing the frozen legacy DTO wire fixtures.
+    internal sealed class PlcScopedCompileResult : TiaMcp.Adapters.PlcCompileResult
+    {
+        public string Scope { get; internal set; } = "";
+        public string ScopePath { get; internal set; } = "";
+        public string UnitName { get; internal set; } = "";
+        public string ResolvedObject { get; internal set; } = "";
+        public bool Compilable { get; internal set; }
+        public bool ApplyBlocked => !Compilable;
+    }
     internal sealed class PlcScopedMutationResult : TiaMcp.Adapters.PlcMutationResult
     {
         public string UnitName { get; internal set; } = "";

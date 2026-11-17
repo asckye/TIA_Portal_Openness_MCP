@@ -5806,7 +5806,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "13b0d18dd6f0a1a0f97d7a2ca34ae4b60d82563f6293bbd8187d5cb68f09c250",
+      "descriptionSha256": "5dd91ead3f7532671df528c35e71021b45ae8a1d7dc73a40586da4ee25a76252",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -5830,8 +5830,29 @@
             "description": "Exact foundation argument: password",
             "type": "string"
           },
+          "scope": {
+            "default": "software",
+            "description": "Exact compiler owner: software (default), block, group or unit; no software fallback.",
+            "enum": [
+              "software",
+              "block",
+              "group",
+              "unit"
+            ],
+            "type": "string"
+          },
+          "scopePath": {
+            "default": "",
+            "description": "Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding.",
+            "type": "string"
+          },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Optional exact V16–V21 standard unit for block/group scope; empty selects the PLC program-block root.",
             "type": "string"
           }
         },
@@ -5850,7 +5871,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7b560f871a19cc946270b2b0935d9561302f0b90b65181f7f4f1c07a218d851a",
+      "descriptionSha256": "3af19f495f8a33e7bc2efb17e1929210037b32b71c69e0087a0f7d244a925d7c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -5874,8 +5895,29 @@
             "description": "Exact foundation argument: password",
             "type": "string"
           },
+          "scope": {
+            "default": "software",
+            "description": "Exact compiler owner: software (default), block, group or unit; no software fallback.",
+            "enum": [
+              "software",
+              "block",
+              "group",
+              "unit"
+            ],
+            "type": "string"
+          },
+          "scopePath": {
+            "default": "",
+            "description": "Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding.",
+            "type": "string"
+          },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Optional exact V16–V21 standard unit for block/group scope; empty selects the PLC program-block root.",
             "type": "string"
           }
         },

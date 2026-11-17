@@ -341,24 +341,61 @@
       }
     },
     "CompilePlcDiagnostics": {
-      "method": "CompileAndDiagnosePlcV4",
-      "path": "src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs",
-      "owner": "PlcBlocksTools",
+      "method": "CompilePlcDiagnostics",
+      "path": "src/FoundationHost/FoundationTools.cs",
+      "owner": "FoundationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult CompileAndDiagnosePlcV4(\n            [Description(\"softwarePath: PLC software path, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"password: optional safety password\")] string password = \"\")",
+      "signature": "public CallToolResult CompilePlcDiagnostics(\n    [Description(\"Exact PLC software path from discovery, or a unique short name.\")] string softwarePath,\n    [Description(\"Optional Safety password; requires V17+ SafetyAdministration and is never ignored.\")] string password = \"\",\n    [Description(\"Preview the exact compiler owner and service availability without compilation.\")] bool dryRun = true,\n    [Description(\"Exact compiler owner: software, block, group or unit; no software fallback.\")] string scope = \"software\",\n    [Description(\"Exact block/group path relative to the program-block root, or one unit name. Split before MIN-ESCAPE decoding.\")] string scopePath = \"\",\n    [Description(\"Optional exact V16\\u2013V21 standard software unit for block/group scope; empty selects the PLC root.\")] string unitName = \"\",\n    [Description(\"Execution requires explicit confirm=true. Compile is EXECUTE and requires no WRITE approval.\")] bool confirm = false,\n    [Description(\"Execution requires the exact bound project file; no expectedPlanHash is used.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
           "default": null,
-          "description": "softwarePath: PLC software path, e.g. 'PLC_1'"
+          "description": "Exact PLC software path from discovery, or a unique short name."
         },
         "password": {
           "type": "string",
           "default": "\"\"",
-          "description": "password: optional safety password",
+          "description": "Optional Safety password; requires V17+ SafetyAdministration and is never ignored.",
+          "value": ""
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "Preview the exact compiler owner and service availability without compilation.",
+          "value": true
+        },
+        "scope": {
+          "type": "string",
+          "default": "\"software\"",
+          "description": "Exact compiler owner: software, block, group or unit; no software fallback.",
+          "value": "software"
+        },
+        "scopePath": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Exact block/group path relative to the program-block root, or one unit name. Split before MIN-ESCAPE decoding.",
+          "value": ""
+        },
+        "unitName": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Optional exact V16–V21 standard software unit for block/group scope; empty selects the PLC root.",
+          "value": ""
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "description": "Execution requires explicit confirm=true. Compile is EXECUTE and requires no WRITE approval.",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Execution requires the exact bound project file; no expectedPlanHash is used.",
           "value": ""
         }
-      }
+      },
+      "description": "Preview by default. Compile one exact software, block, group or V16–V21 standard unit through ICompilable; unavailable scoped services refuse execution. Existing offline, Safety and diagnostic behavior is retained."
     },
     "ExportPlcBlocks": {
       "method": "ExportBlocksV4",
@@ -494,24 +531,61 @@
       }
     },
     "CompilePlcSoftware": {
-      "method": "CompileSoftwareV4",
-      "path": "src/Engine/ModelContextProtocol/Tools/PlcSoftwareTools.cs",
-      "owner": "PlcSoftwareTools",
+      "method": "CompilePlcSoftware",
+      "path": "src/FoundationHost/FoundationTools.cs",
+      "owner": "FoundationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult CompileSoftwareV4(\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"password: the password to access adminsitration, default: no password\")] string password = \"\")",
+      "signature": "public CallToolResult CompilePlcSoftware(\n    [Description(\"Exact PLC software path from discovery, or a unique short name.\")] string softwarePath,\n    [Description(\"Optional Safety password; requires V17+ SafetyAdministration and is never ignored.\")] string password = \"\",\n    [Description(\"Preview the exact compiler owner and service availability without compilation.\")] bool dryRun = true,\n    [Description(\"Exact compiler owner: software, block, group or unit; no software fallback.\")] string scope = \"software\",\n    [Description(\"Exact block/group path relative to the program-block root, or one unit name. Split before MIN-ESCAPE decoding.\")] string scopePath = \"\",\n    [Description(\"Optional exact V16\\u2013V21 standard software unit for block/group scope; empty selects the PLC root.\")] string unitName = \"\",\n    [Description(\"Execution requires explicit confirm=true. Compile is EXECUTE and requires no WRITE approval.\")] bool confirm = false,\n    [Description(\"Execution requires the exact bound project file; no expectedPlanHash is used.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
           "default": null,
-          "description": "softwarePath: defines the path in the project structure to the plc software"
+          "description": "Exact PLC software path from discovery, or a unique short name."
         },
         "password": {
           "type": "string",
           "default": "\"\"",
-          "description": "password: the password to access adminsitration, default: no password",
+          "description": "Optional Safety password; requires V17+ SafetyAdministration and is never ignored.",
+          "value": ""
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "Preview the exact compiler owner and service availability without compilation.",
+          "value": true
+        },
+        "scope": {
+          "type": "string",
+          "default": "\"software\"",
+          "description": "Exact compiler owner: software, block, group or unit; no software fallback.",
+          "value": "software"
+        },
+        "scopePath": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Exact block/group path relative to the program-block root, or one unit name. Split before MIN-ESCAPE decoding.",
+          "value": ""
+        },
+        "unitName": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Optional exact V16–V21 standard software unit for block/group scope; empty selects the PLC root.",
+          "value": ""
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "description": "Execution requires explicit confirm=true. Compile is EXECUTE and requires no WRITE approval.",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Execution requires the exact bound project file; no expectedPlanHash is used.",
           "value": ""
         }
-      }
+      },
+      "description": "Preview by default. Compile one exact software, block, group or V16–V21 standard unit through ICompilable; unavailable scoped services refuse execution. Existing offline, Safety and diagnostic behavior is retained."
     },
     "GetSoftwareTree": {
       "method": "GetSoftwareTreeV4",

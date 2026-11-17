@@ -5,6 +5,8 @@ Status: Current · Last checked: 2026-10-11, master `578a05ee`
 
 Targets: net48 and net10.0. No Siemens or JSON dependency. Existing declarations keep
 their namespaces, member order, accessors and defaults. Step D implements session, PLC program and PLC data facets by delegation. The worker still calls the existing engine.
+Scoped compile adds optional scope arguments to `IPlcProgram`. The base `PlcCompileResult` is inheritable so only scoped replies add target identity and service availability through an internal derived DTO; default software serialization retains its original fields. `PlcCompileScope` shares syntax validation between host and native adapters without Siemens or JSON dependencies.
+
 Step G adds `IStudioSession` and fills hardware (device listing), VCI and HMI export
 facets for the opt-in `StudioAdapter`. The Foundation adapter continues returning
 null for these surfaces. [Adapter documentation](../Adapters/README.md)

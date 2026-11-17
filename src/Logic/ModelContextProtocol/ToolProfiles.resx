@@ -25798,7 +25798,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -25815,7 +25818,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -35427,7 +35433,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -35444,7 +35453,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -44452,7 +44464,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -44469,7 +44484,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -49761,7 +49779,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -49778,7 +49799,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -55752,7 +55776,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -55769,7 +55796,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -62258,7 +62288,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -62275,7 +62308,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -69203,7 +69239,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -69220,7 +69259,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -76957,7 +76999,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -76974,7 +77019,10 @@
         "arguments": {
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "scope": "software",
+          "scopePath": "",
+          "unitName": ""
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"

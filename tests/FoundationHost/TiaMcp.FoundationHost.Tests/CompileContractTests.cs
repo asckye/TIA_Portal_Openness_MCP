@@ -103,7 +103,10 @@ internal static class CompileContractTests
             UnsettledOutcomeAssertions.Failure(error, true, true, true, check, "Invalid actual compiler outcome"); }
         foreach(var name in new[]{"CompilePlcSoftware","CompilePlcDiagnostics"})
         {
-            var def=FoundationTools.Definitions.Single(d=>d.Name==name);
+            var scoped=FoundationTools.Definitions.Single(d=>d.Name==name);
+            check(scoped.Arguments.Select(a=>a.Name).SequenceEqual(new[]{"softwarePath","password","dryRun","scope","scopePath","unitName"}),
+                "Exact scoped compiler signature retains its legacy prefix and adds only the three optional scope arguments "+name);
+            var def=scoped with { Arguments=scoped.Arguments.Take(3).ToArray() };
             check(def.Arguments.Select(a=>a.Name).SequenceEqual(new[]{"softwarePath","password","dryRun"}),"V17 compile parameters plus preview "+name);
             check(def.Arguments[1].Default is "" && def.Arguments[2].Default is true,"Password/preview defaults "+name);
         }

@@ -12096,7 +12096,36 @@
           "requiresBinding": true
         }
       },
-      "operations": {},
+      "operations": {
+        "block": {
+          "arguments": {
+            "scope": "block",
+            "scopePath": "<exact block path from ListPlcBlocks>",
+            "unitName": ""
+          }
+        },
+        "group": {
+          "arguments": {
+            "scope": "group",
+            "scopePath": "<exact group path from GetSoftwareTree>",
+            "unitName": ""
+          }
+        },
+        "unit": {
+          "arguments": {
+            "scope": "unit",
+            "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
+            "unitName": ""
+          }
+        },
+        "blockInUnit": {
+          "arguments": {
+            "scope": "block",
+            "scopePath": "<block path relative to this unit>",
+            "unitName": "<exact unit name from ListPlcSoftwareUnits>"
+          }
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "inline": true,
       "resultReading": [
@@ -12114,7 +12143,36 @@
           "requiresBinding": true
         }
       },
-      "operations": {},
+      "operations": {
+        "block": {
+          "arguments": {
+            "scope": "block",
+            "scopePath": "<exact block path from ListPlcBlocks>",
+            "unitName": ""
+          }
+        },
+        "group": {
+          "arguments": {
+            "scope": "group",
+            "scopePath": "<exact group path from GetSoftwareTree>",
+            "unitName": ""
+          }
+        },
+        "unit": {
+          "arguments": {
+            "scope": "unit",
+            "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
+            "unitName": ""
+          }
+        },
+        "blockInUnit": {
+          "arguments": {
+            "scope": "block",
+            "scopePath": "<block path relative to this unit>",
+            "unitName": "<exact unit name from ListPlcSoftwareUnits>"
+          }
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "inline": true,
       "resultReading": [
@@ -28758,7 +28816,10 @@
           "arguments": {
             "softwarePath": "<exact softwarePath from GetProjectTree>",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "scope": "software",
+            "scopePath": "",
+            "unitName": ""
           },
           "parameters": {
             "softwarePath": {
@@ -28782,19 +28843,71 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "scope": {
+              "exampleValue": "software",
+              "meaning": "Exact ICompilable owner: software (default), block, group or V16–V21 standard unit; no software fallback.",
+              "requiresBinding": false
+            },
+            "scopePath": {
+              "exampleValue": "<exact block or group path; unit name for scope=unit>",
+              "meaning": "Relative to the selected program-block root. Split on / before decoding MIN-ESCAPE; names containing / use %2F. For a unit use one encoded name segment.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcBlocks",
+                "GetSoftwareTree",
+                "ListPlcSoftwareUnits"
+              ]
+            },
+            "unitName": {
+              "exampleValue": "",
+              "meaning": "Optional exact V16–V21 standard software unit for block/group scope. Empty selects the PLC root; unit scope uses scopePath and requires empty unitName.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcSoftwareUnits"
+              ]
             }
           },
-          "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview and real compile exercised successfully; read native diagnostic counts/state, not just transport success. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "operations": {
+            "block": {
+              "arguments": {
+                "scope": "block",
+                "scopePath": "<exact block path from ListPlcBlocks>",
+                "unitName": ""
+              }
+            },
+            "group": {
+              "arguments": {
+                "scope": "group",
+                "scopePath": "<exact group path from GetSoftwareTree>",
+                "unitName": ""
+              }
+            },
+            "unit": {
+              "arguments": {
+                "scope": "unit",
+                "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
+                "unitName": ""
+              }
+            },
+            "blockInUnit": {
+              "arguments": {
+                "scope": "block",
+                "scopePath": "<block path relative to this unit>",
+                "unitName": "<exact unit name from ListPlcSoftwareUnits>"
+              }
+            }
+          },
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview and real compile exercised successfully; read native diagnostic counts/state, not just transport success. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. Scoped compile native acceptance is NOT RUN on all releases. The lead confirmed only V21 PlcBlock ICompilable exposure (CompileProvider.Compile) in Step 0; V18 and group/unit services require Step 0b probes.",
           "execution": {
             "arguments": {
               "dryRun": false,
               "confirm": true,
               "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "Merge into the reviewed preview for the same target. Execution requires confirm=true and the exact expectedProjectFile. Compile is EXECUTE: no WRITE approval or expectedPlanHash."
           },
-          "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals. Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. For an inconsistent block, review the preview, then compile with dryRun:false, confirm:true and the exact expectedProjectFile. Check compiler errors before exporting; preview does not compile.",
+          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -28815,7 +28928,10 @@
           "arguments": {
             "softwarePath": "<exact softwarePath from GetProjectTree>",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "scope": "software",
+            "scopePath": "",
+            "unitName": ""
           },
           "parameters": {
             "softwarePath": {
@@ -28839,19 +28955,71 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "scope": {
+              "exampleValue": "software",
+              "meaning": "Exact ICompilable owner: software (default), block, group or V16–V21 standard unit; no software fallback.",
+              "requiresBinding": false
+            },
+            "scopePath": {
+              "exampleValue": "<exact block or group path; unit name for scope=unit>",
+              "meaning": "Relative to the selected program-block root. Split on / before decoding MIN-ESCAPE; names containing / use %2F. For a unit use one encoded name segment.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcBlocks",
+                "GetSoftwareTree",
+                "ListPlcSoftwareUnits"
+              ]
+            },
+            "unitName": {
+              "exampleValue": "",
+              "meaning": "Optional exact V16–V21 standard software unit for block/group scope. Empty selects the PLC root; unit scope uses scopePath and requires empty unitName.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcSoftwareUnits"
+              ]
             }
           },
-          "operations": {},
-          "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): real software compilation. V16 COMPILE_ERRORS reports completed execution, six errors, counts and first diagnostic; V18/V19 approval-disabled compilation also verified. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+          "operations": {
+            "block": {
+              "arguments": {
+                "scope": "block",
+                "scopePath": "<exact block path from ListPlcBlocks>",
+                "unitName": ""
+              }
+            },
+            "group": {
+              "arguments": {
+                "scope": "group",
+                "scopePath": "<exact group path from GetSoftwareTree>",
+                "unitName": ""
+              }
+            },
+            "unit": {
+              "arguments": {
+                "scope": "unit",
+                "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
+                "unitName": ""
+              }
+            },
+            "blockInUnit": {
+              "arguments": {
+                "scope": "block",
+                "scopePath": "<block path relative to this unit>",
+                "unitName": "<exact unit name from ListPlcSoftwareUnits>"
+              }
+            }
+          },
+          "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): real software compilation. V16 COMPILE_ERRORS reports completed execution, six errors, counts and first diagnostic; V18/V19 approval-disabled compilation also verified. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4. Scoped compile native acceptance is NOT RUN on all releases. The lead confirmed only V21 PlcBlock ICompilable exposure (CompileProvider.Compile) in Step 0; V18 and group/unit services require Step 0b probes.",
           "execution": {
             "arguments": {
               "dryRun": false,
               "confirm": true,
               "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "Merge into the reviewed preview for the same target. Execution requires confirm=true and the exact expectedProjectFile. Compile is EXECUTE: no WRITE approval or expectedPlanHash."
           },
-          "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals. Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. For an inconsistent block, review the preview, then compile with dryRun:false, confirm:true and the exact expectedProjectFile. Check compiler errors before exporting; preview does not compile.",
+          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -48901,7 +49069,10 @@
           "arguments": {
             "softwarePath": "<exact softwarePath from GetProjectTree>",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "scope": "software",
+            "scopePath": "",
+            "unitName": ""
           },
           "parameters": {
             "softwarePath": {
@@ -48925,19 +49096,71 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "scope": {
+              "exampleValue": "software",
+              "meaning": "Exact ICompilable owner: software (default), block, group or V16–V21 standard unit; no software fallback.",
+              "requiresBinding": false
+            },
+            "scopePath": {
+              "exampleValue": "<exact block or group path; unit name for scope=unit>",
+              "meaning": "Relative to the selected program-block root. Split on / before decoding MIN-ESCAPE; names containing / use %2F. For a unit use one encoded name segment.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcBlocks",
+                "GetSoftwareTree",
+                "ListPlcSoftwareUnits"
+              ]
+            },
+            "unitName": {
+              "exampleValue": "",
+              "meaning": "Optional exact V16–V21 standard software unit for block/group scope. Empty selects the PLC root; unit scope uses scopePath and requires empty unitName.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcSoftwareUnits"
+              ]
             }
           },
-          "operations": {},
-          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview and real compile exercised successfully; read native diagnostic counts/state, not just transport success. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
+          "operations": {
+            "block": {
+              "arguments": {
+                "scope": "block",
+                "scopePath": "<exact block path from ListPlcBlocks>",
+                "unitName": ""
+              }
+            },
+            "group": {
+              "arguments": {
+                "scope": "group",
+                "scopePath": "<exact group path from GetSoftwareTree>",
+                "unitName": ""
+              }
+            },
+            "unit": {
+              "arguments": {
+                "scope": "unit",
+                "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
+                "unitName": ""
+              }
+            },
+            "blockInUnit": {
+              "arguments": {
+                "scope": "block",
+                "scopePath": "<block path relative to this unit>",
+                "unitName": "<exact unit name from ListPlcSoftwareUnits>"
+              }
+            }
+          },
+          "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview and real compile exercised successfully; read native diagnostic counts/state, not just transport success. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. Scoped compile native acceptance is NOT RUN on all releases. The lead confirmed only V21 PlcBlock ICompilable exposure (CompileProvider.Compile) in Step 0; V18 and group/unit services require Step 0b probes.",
           "execution": {
             "arguments": {
               "dryRun": false,
               "confirm": true,
               "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "Merge into the reviewed preview for the same target. Execution requires confirm=true and the exact expectedProjectFile. Compile is EXECUTE: no WRITE approval or expectedPlanHash."
           },
-          "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals. Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. For an inconsistent block, review the preview, then compile with dryRun:false, confirm:true and the exact expectedProjectFile. Check compiler errors before exporting; preview does not compile.",
+          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -48958,7 +49181,10 @@
           "arguments": {
             "softwarePath": "<exact softwarePath from GetProjectTree>",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "scope": "software",
+            "scopePath": "",
+            "unitName": ""
           },
           "parameters": {
             "softwarePath": {
@@ -48982,19 +49208,71 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "scope": {
+              "exampleValue": "software",
+              "meaning": "Exact ICompilable owner: software (default), block, group or V16–V21 standard unit; no software fallback.",
+              "requiresBinding": false
+            },
+            "scopePath": {
+              "exampleValue": "<exact block or group path; unit name for scope=unit>",
+              "meaning": "Relative to the selected program-block root. Split on / before decoding MIN-ESCAPE; names containing / use %2F. For a unit use one encoded name segment.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcBlocks",
+                "GetSoftwareTree",
+                "ListPlcSoftwareUnits"
+              ]
+            },
+            "unitName": {
+              "exampleValue": "",
+              "meaning": "Optional exact V16–V21 standard software unit for block/group scope. Empty selects the PLC root; unit scope uses scopePath and requires empty unitName.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPlcSoftwareUnits"
+              ]
             }
           },
-          "operations": {},
-          "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): real software compilation. V16 COMPILE_ERRORS reports completed execution, six errors, counts and first diagnostic; V18/V19 approval-disabled compilation also verified. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+          "operations": {
+            "block": {
+              "arguments": {
+                "scope": "block",
+                "scopePath": "<exact block path from ListPlcBlocks>",
+                "unitName": ""
+              }
+            },
+            "group": {
+              "arguments": {
+                "scope": "group",
+                "scopePath": "<exact group path from GetSoftwareTree>",
+                "unitName": ""
+              }
+            },
+            "unit": {
+              "arguments": {
+                "scope": "unit",
+                "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
+                "unitName": ""
+              }
+            },
+            "blockInUnit": {
+              "arguments": {
+                "scope": "block",
+                "scopePath": "<block path relative to this unit>",
+                "unitName": "<exact unit name from ListPlcSoftwareUnits>"
+              }
+            }
+          },
+          "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): real software compilation. V16 COMPILE_ERRORS reports completed execution, six errors, counts and first diagnostic; V18/V19 approval-disabled compilation also verified. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4. Scoped compile native acceptance is NOT RUN on all releases. The lead confirmed only V21 PlcBlock ICompilable exposure (CompileProvider.Compile) in Step 0; V18 and group/unit services require Step 0b probes.",
           "execution": {
             "arguments": {
               "dryRun": false,
               "confirm": true,
               "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
             },
-            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+            "meaning": "Merge into the reviewed preview for the same target. Execution requires confirm=true and the exact expectedProjectFile. Compile is EXECUTE: no WRITE approval or expectedPlanHash."
           },
-          "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals. Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. For an inconsistent block, review the preview, then compile with dryRun:false, confirm:true and the exact expectedProjectFile. Check compiler errors before exporting; preview does not compile.",
+          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,

@@ -29,6 +29,16 @@ internal sealed class WorkerOperationException(string message,int code,string ou
             authored["isArgument"] = false;
             evidence = authored.ToJsonString();
         }
+        // Only this authored scope refusal proves that no compile was attempted. Native compiler exceptions keep their outcome.
+        if (failure.Outcome == TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative
+            && reported.ExceptionType == nameof(TiaMcp.Adapters.Contracts.AdapterPreconditionException)
+            && reported.Condition == TiaMcp.Adapters.Contracts.PlcCompileScope.UnavailableCondition)
+        {
+            var authored = JsonNode.Parse(evidence!)!.AsObject();
+            authored["exceptionType"] = nameof(NotSupportedException);
+            evidence = authored.ToJsonString();
+            diagnostic = TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(failure.Message);
+        }
         return new WorkerOperationException(diagnostic ?? failure.Message, failure.Code, outcome, evidence);
     }
     private static string? ParameterFrom(string? json) => FieldFrom(json, "parameter");
@@ -112,6 +122,6 @@ internal static class WorkerProtocol
                     throw new IOException("Batch import destination conflicts with request.");
             }
         }
-        if(operation=="CompileSoftware") V17CompileEnvelope.Validate(data,dryRun);
+        if(operation=="CompileSoftware") V17CompileEnvelope.Validate(data,dryRun,arguments);
     }
 }

@@ -11,7 +11,7 @@ namespace TiaMcp.PlcWorker
     {
         private static readonly HashSet<string> ScopedOperations = new HashSet<string>(StringComparer.Ordinal) {
             "ListTags", "ListUserConstants", "ListSystemConstants", "ExportBlock", "ExportType", "ExportTagTable",
-            "ImportBlocks", "ImportTypes", "ImportTagTables"
+            "ImportBlocks", "ImportTypes", "ImportTagTables", "CompileSoftware"
         };
         internal string Family { get; }
         internal IReadOnlyDictionary<string, MethodInfo> Methods { get; }

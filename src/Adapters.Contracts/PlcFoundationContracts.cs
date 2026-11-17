@@ -31,7 +31,7 @@ namespace TiaMcp.Adapters
         public bool? FullProgramRestoreSupported { get; internal set; }
         public string[] Warnings { get; internal set; } = new string[0];
     }
-    public sealed class PlcCompileResult
+    public class PlcCompileResult
     {
         public bool Executed { get; internal set; }
         public string? ProjectFile { get; internal set; }

@@ -80,8 +80,9 @@ namespace TiaMcp.Adapters
         {
             private readonly PlcFoundationEngine engine;
             internal ProgramFacet(PlcFoundationEngine engine) { this.engine=engine; }
-            public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true) => engine
-                .CompileSoftware(softwarePath, password, dryRun);
+            public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true,
+                string scope = "software", string scopePath = "", string unitName = "") => engine
+                .CompileSoftwareScoped(softwarePath, password, dryRun, scope, scopePath, unitName);
             public PlcExternalSourceDeleteResult DeletePlcExternalSource(string softwarePath,string groupPath,string externalSourceName,bool dryRun=true,
                     string expectedPlanHash="",bool confirm=false,string expectedProjectFile="") =>
                 engine.DeletePlcExternalSource(softwarePath, groupPath, externalSourceName, dryRun, expectedPlanHash, confirm, expectedProjectFile);

@@ -13,3 +13,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("TiaMcp.Offline.Fixtures")]
 [assembly: InternalsVisibleTo("TiaMcp.KeptCode.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost.DeviceAdd.Tests")]
+[assembly: InternalsVisibleTo("TiaMcp.FoundationHost.SpecialExportShape.Tests")]

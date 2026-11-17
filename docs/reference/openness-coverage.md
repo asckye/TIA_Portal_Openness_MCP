@@ -13,7 +13,14 @@ Directory exports retain the existing ordered batch preview, confirmation, proje
 import writes offline configuration and never activates forcing. Native acceptance is **NOT RUN**; see the
 [VM checklist](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md#未发布改动的验收边界).
 
-Scoped compile is postponed to a separate round after the lead's V21/V18 `ICompilable` probes; the existing software compile remains unchanged.
+`CompilePlcSoftware` and `CompilePlcDiagnostics` now select exact `software` (default), `block`, `group` or `unit` compiler owners.
+Block/group paths are relative to the program-block root; optional `unitName` selects a standard unit's root on V16–V21.
+Unit scope takes one MIN-ESCAPE encoded unit name in `scopePath`; V14 SP1/V15.1 refuse it before native access.
+Scoped previews report the resolved identity and `compilable`; absent services block execution without software fallback.
+The SDK XML documents `ICompilable.Compile()` in all eight releases and `PlcUnit` from V16.
+Only the V21 block service was confirmed by the lead's Step 0 probe (`CompileProvider.Compile()`); V18 and group/unit probes are pending.
+Scoped compile native acceptance remains **NOT RUN**. Software defaults preserve the existing worker request and result shape;
+execution retains confirmation, exact project binding, offline/Safety checks and diagnostics, without a plan hash or WRITE approval.
 
 ## Security coverage deferred beyond 4.0
 

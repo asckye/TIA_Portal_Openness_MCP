@@ -15,6 +15,26 @@ public sealed class WorkerOperationModuleTests
         public static void Static() { }
     }
 
+    private sealed class CompileFacade
+    {
+        public string CompileSoftware(string softwarePath, string password = "", bool dryRun = true) => "legacy";
+        public string CompileSoftwareScoped(string softwarePath, string password = "", bool dryRun = true,
+            string scope = "software", string scopePath = "", string unitName = "") => scope + ":" + scopePath + ":" + unitName;
+    }
+
+    [Fact]
+    public void Compile_wire_name_uses_optional_scoped_signature_and_retains_legacy_defaults()
+    {
+        var methods = new WorkerOperationModule("", typeof(CompileFacade), new[] { "CompileSoftware" }).Methods;
+        var method = Assert.Single(methods).Value;
+        Assert.Equal("CompileSoftwareScoped", method.Name);
+        Assert.Equal(new[] { "softwarePath", "password", "dryRun", "scope", "scopePath", "unitName" }, method.GetParameters().Select(p => p.Name));
+        Assert.Equal(new object[] { "CPU", "", true, "software", "", "" },
+            new object[] { "CPU" }.Concat(method.GetParameters().Skip(1).Select(p => p.DefaultValue)));
+        Assert.Equal("block:Group/Main:Unit", method.Invoke(new CompileFacade(), new object[] { "CPU", "", false, "block", "Group/Main", "Unit" }));
+        Assert.False(methods.ContainsKey("CompileSoftwareScoped"));
+    }
+
     [Fact]
     public void LegacyAndFamilyModulesKeepExactWireNames()
     {

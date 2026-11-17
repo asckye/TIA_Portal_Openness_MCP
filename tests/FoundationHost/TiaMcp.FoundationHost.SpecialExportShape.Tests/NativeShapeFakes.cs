@@ -3,7 +3,7 @@
 namespace Siemens.Engineering
 {
     public enum ExportOptions { None, WithDefaults }
-    public enum ImportOptions { None }
+    public enum ImportOptions { None, Override }
     public interface IEngineeringObject
     {
         public object GetAttribute(string name);
@@ -110,7 +110,8 @@ namespace Siemens.Engineering.SW.TechnologicalObjects
     }
     public sealed class TechnologicalInstanceDBComposition : List<TechnologicalInstanceDB>
     {
-        public TechnologicalInstanceDB Create(string name, string typeIdentifier, Version version) { var db = new TechnologicalInstanceDB { Name = name }; Add(db); return db; }
+        public TechnologicalInstanceDB Create(string name, string typeIdentifier, Version version) {
+            var db = new TechnologicalInstanceDB { Name = name }; Add(db); return db; }
         public TechnologicalInstanceDB? Find(string name) => this.SingleOrDefault(db => db.Name == name);
     }
     public sealed class TechnologicalParameter { }
@@ -128,7 +129,7 @@ namespace Siemens.Engineering.SW.TechnologicalObjects
 }
 namespace Siemens.Engineering.SW
 {
-    public sealed class PlcSoftware
+    public sealed partial class PlcSoftware : Siemens.Engineering.CompileServiceOwner
     {
         private readonly Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableSystemGroup watchGroup = new();
         public int WatchGroupReads { get; private set; }
@@ -142,16 +143,22 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         internal Siemens.Engineering.SW.PlcSoftware Software { get; } = new();
-        private string ReleaseKey => "20";
+        internal string ReleaseKey { get; set; } = "20";
         // Mirrors the shared selection rule: the exact path or the PLC's unique short name; anything else is refused.
-        private (Siemens.Engineering.SW.PlcSoftware Value, string ExactPath) ReadSelection(string path) =>
-            path is "devices/D/CPU" or "CPU" ? (Software, "devices/D/CPU") : throw new ArgumentException("Software path not found.", "softwarePath");
+        private (Siemens.Engineering.SW.PlcSoftware Value, string ExactPath, object Context) ReadSelection(string softwarePath) =>
+            softwarePath is "devices/D/CPU" or "CPU" ? (Software, "devices/D/CPU", CompileDevice)
+                : throw new ArgumentException("Software path not found.", nameof(softwarePath));
         private readonly FakeLifecycle lifecycle = new();
         private sealed class FakeLifecycle { public bool IsLocalSession => true; }
         private sealed class FakeProject { public FileInfo Path => new("project.ap20"); }
         private FakeProject Project() => new();
-        private void RequireTargetOffline((Siemens.Engineering.SW.PlcSoftware Value, string ExactPath) selected) { }
-        private static PlcTechnologyReadRow TechnologyMetadata(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB item) => new() { Name=item.Name };
+        private void RequireTargetOffline((Siemens.Engineering.SW.PlcSoftware Value, string ExactPath, object Context) selected)
+        { CompileEvents.Add("target-offline"); if (TargetOnline) throw new InvalidOperationException("PLC is online."); }
+        private string[] CheckProjectOfflineProviders()
+        { CompileEvents.Add("project-offline"); if (ProjectOnline) throw new InvalidOperationException("Project device is online."); return new[] { "HMI" }; }
+        private static void Depth(int depth) { if (depth > 64) throw new InvalidOperationException("Depth exceeded."); }
+        private static PlcTechnologyReadRow TechnologyMetadata(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB item) => new() {
+            Name=item.Name };
     }
     internal static class PlcLifecyclePolicy
     {

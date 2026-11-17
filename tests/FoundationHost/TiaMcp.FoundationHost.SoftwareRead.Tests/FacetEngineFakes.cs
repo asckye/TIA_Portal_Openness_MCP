@@ -77,7 +77,12 @@ namespace TiaMcp.Adapters
         public PlcMutationResult CreateTagTable(string plc, string group, string name, bool dryRun = true) => (PlcMutationResult)Record(nameof(CreateTagTable), plc, group, name, dryRun)!;
         public PlcMutationResult CreateTag(string plc, string table, string name, string dataType, string address, bool dryRun = true) => (PlcMutationResult)Record(nameof(CreateTag), plc, table, name, dataType, address, dryRun)!;
         public PlcMutationResult CreateUserConstant(string plc, string table, string name, string dataType, string value, bool dryRun = true) => (PlcMutationResult)Record(nameof(CreateUserConstant), plc, table, name, dataType, value, dryRun)!;
-        public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true) => (PlcCompileResult)Record(nameof(CompileSoftware), softwarePath, password, dryRun)!;
+        public PlcCompileResult CompileSoftware(string softwarePath, string password="", bool dryRun = true,
+            string scope = "software", string scopePath = "", string unitName = "") => (PlcCompileResult)Record(nameof(CompileSoftware),
+                softwarePath, password, dryRun, scope, scopePath, unitName)!;
+        public PlcCompileResult CompileSoftwareScoped(string softwarePath, string password="", bool dryRun = true,
+            string scope = "software", string scopePath = "", string unitName = "")
+            => CompileSoftware(softwarePath, password, dryRun, scope, scopePath, unitName);
         public PlcDisconnectResult Disconnect() => (PlcDisconnectResult)Record(nameof(Disconnect))!;
         public PlcRuntimeState ReadState() => (PlcRuntimeState)Record(nameof(ReadState))!;
         public PlcProcessQuery ReadPortalProcessProjects() => (PlcProcessQuery)Record(nameof(ReadPortalProcessProjects))!;

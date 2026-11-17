@@ -33,7 +33,7 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         internal static string[] Parse(string path, bool rootAllowed) => PlcObjectPath.Parts(path, rootAllowed);
     }
-    internal static class PlcBlockPrimitives
+    internal static partial class PlcBlockPrimitives
     {
         internal static int Count(PlcWatchTableComposition tables) => tables.Count;
         internal static PlcForceTableComposition ForceTables(PlcWatchAndForceTableGroup group) => group.ForceTables;

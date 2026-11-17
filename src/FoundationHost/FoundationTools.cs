@@ -93,8 +93,8 @@ internal static class FoundationTools
         new("CreatePlcTagTable","CreateTagTable","Create one PLC tag table; collisions refused.",new[]{S("plc"),S("group"),S("name"),Dry()}),
         new("CreatePlcTag","CreateTag","Create one tag declaration; no online write.",new[]{S("plc"),S("table"),S("name"),S("dataType"),S("address"),Dry()}),
         new("CreatePlcUserConstant","CreateUserConstant","Create one user constant.",new[]{S("plc"),S("table"),S("name"),S("dataType"),S("value"),Dry()}),
-        new("CompilePlcSoftware","CompileSoftware","[v17-compile-safe-v1] Preview by default. Actual PLC compilation returns native counts and nested messages; no download. Nonempty safety password requires supplied V17+ SafetyAdministration API and service; never ignored.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry()},"Compile"),
-        new("CompilePlcDiagnostics","CompileSoftware","[v17-compile-safe-v1] Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry()},"Compile")
+        new("CompilePlcSoftware","CompileSoftware","[v17-compile-safe-v1] Preview by default. Optional scope selects an exact block, group or V16–V21 unit with ICompilable; unavailable services refuse execution. Actual PLC compilation returns native counts and nested messages; no download. Nonempty safety password requires supplied V17+ SafetyAdministration API and service; never ignored.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry(),new Argument("scope","string",false,"software","Exact compiler owner: software (default), block, group or unit; no software fallback."),new Argument("scopePath","string",false,"","Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding."),new Argument("unitName","string",false,"","Optional exact V16–V21 standard unit for block/group scope; empty selects the PLC program-block root.")},"Compile"),
+        new("CompilePlcDiagnostics","CompileSoftware","[v17-compile-safe-v1] Optional scope selects an exact block, group or V16-V21 standard unit with ICompilable; unavailable services refuse execution without software fallback. Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry(),new Argument("scope","string",false,"software","Exact compiler owner: software (default), block, group or unit; no software fallback."),new Argument("scopePath","string",false,"","Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding."),new Argument("unitName","string",false,"","Optional exact V16–V21 standard unit for block/group scope; empty selects the PLC program-block root.")},"Compile")
     };
     internal static readonly Definition PagedBlocks =
         new("ListPlcBlocks", TiaMcp.PlcWorker.WorkerOperations.BlockPage, "List ordinary user-group blocks in stable ordinal group-qualified path order; path is usable by GetPlcBlockInfo/ExportPlcBlock. Reads details for this page only. limit 1..100 (default 4); pass meta.paging.nextCursor as cursor with the same softwarePath/regexName. Inventory changes invalidate the cursor; restart with empty cursor. System blocks and software units excluded.", new[]{S("softwarePath"),new Argument("regexName","string",false,""),new Argument("limit","integer",false,4,"Maximum blocks per page, 1..100."),new Argument("cursor","string",false,"","Opaque meta.paging.nextCursor from the previous page; empty starts a listing.")}, "BlockPage");
@@ -174,6 +174,7 @@ internal sealed partial class FoundationTool : McpServerTool
         this.stagingForTest=stagingForTest;
         var properties=new JsonObject();
         foreach(var p in definition.Arguments) { var schema=new JsonObject { ["type"]=p.Type, ["description"]=p.Description ?? "Exact foundation argument: "+p.Name }; if(p.Minimum is int minimum) schema["minimum"]=minimum; if(p.Maximum is int maximum) schema["maximum"]=maximum; if(p.Type=="array") schema["items"]=new JsonObject { ["type"]="string" }; if(!p.Required) schema["default"]=JsonSerializer.SerializeToNode(p.Default); properties[p.Name]=schema; }
+        if (definition.ResponseMember == "Compile") properties["scope"]!["enum"] = new JsonArray("software", "block", "group", "unit");
         if (definition.Name == "StageImportFiles") properties["files"] = TiaMcp.Logic.ModelContextProtocol.ImportStagingSchema.Files();
         var schemaRoot=new JsonObject { ["type"]="object", ["properties"]=properties, ["additionalProperties"]=false, ["required"]=new JsonArray(definition.Arguments.Where(p=>p.Required).Select(p=>(JsonNode?)JsonValue.Create(p.Name)).ToArray()) };
         tool=new Tool { Name=definition.Name, Description=(IsNative ? "[PLC foundation; native unverified] " : "")+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
@@ -239,6 +240,13 @@ internal sealed partial class FoundationTool : McpServerTool
             if(string.IsNullOrWhiteSpace(values["expectedProjectFile"]?.GetValue<string>())) throw new ArgumentException("Execution requires the exact expectedProjectFile.","expectedProjectFile");
         }
         if(definition.Name=="GetPortalConnectionReadiness" && values["processId"]!.GetValue<int>()<=0) throw new ArgumentException("Select an explicit positive processId.","processId");
+        if (definition.ResponseMember == "Compile")
+        {
+            string scope = values["scope"]!.GetValue<string>();
+            TiaMcp.Adapters.Contracts.PlcCompileScope.Validate(scope, values["scopePath"]!.GetValue<string>(), values["unitName"]!.GetValue<string>());
+            // Preserve the original software-scope worker request, including callers that explicitly select the defaults.
+            if (scope == "software") { values.Remove("scope"); values.Remove("scopePath"); values.Remove("unitName"); }
+        }
         if(definition.ResponseMember=="BlockPage") TiaMcp.Adapters.Contracts.Paging.PlcBlockPaging.Validate(values["limit"]!.GetValue<int>(), values["cursor"]!.GetValue<string>());
         if(definition.ResponseMember=="HardwareCatalog") HardwareCatalogContract.ValidateArguments(values);
         if(definition.ResponseMember=="Declarations") DeclarationReadContract.ValidateArguments(values);
@@ -329,7 +337,7 @@ internal sealed partial class FoundationTool : McpServerTool
             else if(definition.ResponseMember=="SpecialExport") result=SpecialExportContract.Validate(result,values["dryRun"]!.GetValue<bool>());
             else if(definition.ResponseMember=="BatchImport") result=BatchImportContract.Validate(result,values["dryRun"]!.GetValue<bool>());
             else if(definition.ResponseMember=="BatchExport") result=BatchExportContract.Validate(result,values["dryRun"]!.GetValue<bool>());
-            else if(definition.ResponseMember=="Compile") result=V17CompileEnvelope.Wrap(definition.Name,result,values["dryRun"]!.GetValue<bool>());
+            else if(definition.ResponseMember=="Compile") result=V17CompileEnvelope.Wrap(definition.Name,result,values["dryRun"]!.GetValue<bool>(),values);
             else if(definition.ResponseMember is "Mutation" or "ExportFile") result=V17MutationEnvelope.Wrap(definition.Name,definition.ResponseMember,result,values["dryRun"]!.GetValue<bool>());
             else if(definition.ResponseMember=="RuntimeQuery") result=RuntimeQueryContract.Validate(definition.Name,result,values["processId"]?.GetValue<int>());
             else if(definition.ResponseMember=="Declarations") result=DeclarationReadContract.Validate(definition.Name,values["table"]!.GetValue<string>(),result,(string?)values["unitName"] ?? "",(bool?)values["includeUnits"] ?? false);

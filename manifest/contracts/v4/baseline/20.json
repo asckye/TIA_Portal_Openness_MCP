@@ -12280,7 +12280,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "13b0d18dd6f0a1a0f97d7a2ca34ae4b60d82563f6293bbd8187d5cb68f09c250",
+      "descriptionSha256": "5dd91ead3f7532671df528c35e71021b45ae8a1d7dc73a40586da4ee25a76252",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12304,8 +12304,29 @@
             "description": "Exact foundation argument: password",
             "type": "string"
           },
+          "scope": {
+            "default": "software",
+            "description": "Exact compiler owner: software (default), block, group or unit; no software fallback.",
+            "enum": [
+              "software",
+              "block",
+              "group",
+              "unit"
+            ],
+            "type": "string"
+          },
+          "scopePath": {
+            "default": "",
+            "description": "Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding.",
+            "type": "string"
+          },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Optional exact V16–V21 standard unit for block/group scope; empty selects the PLC program-block root.",
             "type": "string"
           }
         },
@@ -12324,7 +12345,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7b560f871a19cc946270b2b0935d9561302f0b90b65181f7f4f1c07a218d851a",
+      "descriptionSha256": "3af19f495f8a33e7bc2efb17e1929210037b32b71c69e0087a0f7d244a925d7c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12348,8 +12369,29 @@
             "description": "Exact foundation argument: password",
             "type": "string"
           },
+          "scope": {
+            "default": "software",
+            "description": "Exact compiler owner: software (default), block, group or unit; no software fallback.",
+            "enum": [
+              "software",
+              "block",
+              "group",
+              "unit"
+            ],
+            "type": "string"
+          },
+          "scopePath": {
+            "default": "",
+            "description": "Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding.",
+            "type": "string"
+          },
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "unitName": {
+            "default": "",
+            "description": "Optional exact V16–V21 standard unit for block/group scope; empty selects the PLC program-block root.",
             "type": "string"
           }
         },
@@ -16611,7 +16653,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "fd427fc9671b2c992e5a9a9c0a86e574c008af5f068d51ae75ae3dc2f77194c9",
+      "descriptionSha256": "0754098e5715d67d4273caaf0aab94b5af09eac79c6418b29652c3f7463a12c9",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16652,6 +16694,15 @@
           },
           "softwarePath": {
             "description": "softwarePath: path in the project structure to the PLC software",
+            "type": "string"
+          },
+          "tableKind": {
+            "default": "watch",
+            "description": "tableKind: watch (default) | force; offline configuration only.",
+            "enum": [
+              "watch",
+              "force"
+            ],
             "type": "string"
           }
         },
@@ -22752,7 +22803,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7a60e2d3ab5c7f33f7e7aded295c1bcec47b888c7840e1e7a8c7ca5c758a45f4",
+      "descriptionSha256": "b6341a9a49dbe5115c2eca3721a5812c31a0ed39c36ceed31c74a01eed6d5f84",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -22760,6 +22811,16 @@
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash from this tool's preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact bound project file from this tool's preview; required when dryRun=false.",
+            "type": "string"
           },
           "filePath": {
             "description": "filePath: full path of the file on the TIA machine (engine host), e.g. 'C:\\Temp\\file.xml'.",
@@ -22772,6 +22833,15 @@
           },
           "softwarePath": {
             "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
+            "type": "string"
+          },
+          "tableKind": {
+            "default": "watch",
+            "description": "tableKind: watch (default) | force; native SimaticML offline configuration only.",
+            "enum": [
+              "watch",
+              "force"
+            ],
             "type": "string"
           }
         },
@@ -24671,7 +24741,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "356618208eccc18920a5779c80c51f63f474cb636a6f57d15dd74692bf3bbdb8",
+      "descriptionSha256": "21d7b1f801f620b87fb1249691772b2efd2546d24a022c58285092f704c05901",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -30391,21 +30461,22 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e4ce018229d2db7c240bef6c46aa496f5315274d5a9fdca8ea1fb82d038ccddd",
+      "descriptionSha256": "fb4888e7623d450ed49b3a8652c5459ffb6c9c7453fe0ff422d75dcff32f55c2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "action": {
             "default": "read",
-            "description": "action: read | createComment | deleteEntry | deleteTable (force tables: read only).",
+            "description": "action: read | createTable | createComment | deleteEntry | deleteTable (force tables: read only).",
             "enum": [
               "read",
+              "createTable",
               "createComment",
               "deleteEntry",
               "deleteTable"
             ],
             "examples": [
-              "read"
+              "createTable"
             ],
             "type": "string"
           },
@@ -30429,6 +30500,16 @@
             "default": -1,
             "description": "entryIndex: 0-based row index from a read, for deleteEntry.",
             "type": "integer"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: planHash from this tool's preview; required for mutation when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact bound project file from this tool's preview; required for mutation when dryRun=false.",
+            "type": "string"
           },
           "limit": {
             "default": 200,
@@ -30463,7 +30544,7 @@
           "tablePath": {
             "description": "tablePath: 'Group/Table' path under the watch-and-force-table group, e.g. 'MCP_W/MCP_WT' (bare name for a root table).",
             "examples": [
-              "MCP_W/MCP_WT"
+              "MCP_W/NewWatch"
             ],
             "type": "string"
           }
