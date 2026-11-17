@@ -18,10 +18,16 @@ public sealed class GeneratorTests
         var usage = ToolUsageGenerator.Generate(Root);
         var source = usage["sources"]!.AsArray().Single(row => Text(row!["id"]) == "guides")!;
         string commit = Text(source["commit"]);
+        Assert.Equal("6aa36504d76ddb9f92e3e52c1f7ff0cc571c4d48", commit);
         Assert.StartsWith("6aa3650", commit);
         Assert.Equal(40, commit.Length);
         Assert.Equal("2026 Siemens AG", Text(source["copyright"]));
         Assert.Equal("reference/siemens-openness/LICENSE", Text(source["licenseFile"]));
+        Assert.Equal(new[] {
+            "Local snapshot layout: upstream openness_development/skills is relocated to reference/siemens-openness/skills. " +
+            "The 32 relative skills/*/SKILL.md links in openness_development/README.md therefore do not resolve locally; " +
+            "read the same guides under reference/siemens-openness/skills. Upstream plugin.json, marketplace metadata and validation " +
+            "scripts are not included. This reference snapshot is not an installable upstream plugin." }, Strings(source["scopeNotes"]));
         Assert.Equal("Reference material only; not installed or executed. Upstream guides target TIA Portal V21 and contain instructions " +
             "addressed to coding assistants that write Openness client code (for example to ask for the TIA version and to reject versions " +
             "below V21). They are not instructions for calling this server, which serves V14 SP1-V21 with per-release tool contracts.",
