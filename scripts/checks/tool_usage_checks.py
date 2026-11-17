@@ -1,6 +1,7 @@
 """Usage retrieval and allowlisted in-memory example execution; no native TIA calls."""
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -11,6 +12,10 @@ import xml.etree.ElementTree as ET
 WITHDRAWN_FROM_PRODUCT = {'ConnectProject'}
 GENERATION_EXAMPLES = ('ListStandardPackages', 'ManageStandardPackage', 'ValidateStandardPackage',
                        'DescribeStandardPackage', 'ManageMachineDescription')
+
+
+def is_ui_operation(description):
+    return re.match(r'^\[[^\]]+\]\[[^\]]+\]\[UI\]', description) is not None
 
 
 def check_generation_example(call, name, arguments):
@@ -64,6 +69,16 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
     assert len(names) == first['toolCount'] == len(set(names))
     assert {t['name'] for t in tools} <= set(names)
     schemas = {t['name']: t['inputSchema'] for t in tools}
+    descriptions = {t['name']: t.get('description', '') for t in tools}
+
+    def last_non_ui_step(steps):
+        last = len(steps) - 1
+        while (last >= 0 and steps[last]['tool'] == 'ShowObjectInEditor'
+               and is_ui_operation(descriptions.get('ShowObjectInEditor', ''))):
+            last -= 1
+        assert last >= 0, 'Round-trip requires a non-UI readback or compile step'
+        return steps[last]
+
     records = []
     problems = []
     builder_examples = 0
@@ -100,7 +115,10 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
                 if value not in prop['enum']:
                     problems.append((name, key, value, prop['enum']))
         if 'dryRun' in props:
-            assert args['dryRun'] is True, name
+            if is_ui_operation(usage['description']):
+                assert args['dryRun'] is props['dryRun'].get('default', False), name
+            else:
+                assert args['dryRun'] is True, name
         if 'confirm' in props:
             assert args['confirm'] is False, name
         reference = usage['officialReference']
@@ -244,11 +262,13 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
                 assert set(target.get('required', [])) <= set(values) <= set(target['properties']), (summary['id'], step)
             if example['profileMatches'] and example['releaseMatches']:
                 if example['id'] == 'sequence/foundation-tag-table-round-trip':
-                    assert example['steps'][-1]['tool'] == 'ListPlcTags'
-                    assert 'tag added after export is gone' in example['steps'][-1]['expect']
+                    readback = last_non_ui_step(example['steps'])
+                    assert readback['tool'] == 'ListPlcTags'
+                    assert 'tag added after export is gone' in readback['expect']
                 elif example['id'] == 'sequence/foundation-block-round-trip':
-                    assert example['steps'][-1]['tool'] == 'CompilePlcSoftware'
-                    assert example['steps'][-1]['arguments']['dryRun'] is False
+                    compile_step = last_non_ui_step(example['steps'])
+                    assert compile_step['tool'] == 'CompilePlcSoftware'
+                    assert compile_step['arguments']['dryRun'] is False
                     assert 'remove or move an old Main.xml' in example['preconditions']
                 elif example['id'] == 'sequence/foundation-approval-precheck':
                     assert all('no Workbench request' in step['expect'] for step in example['steps'][1:])
