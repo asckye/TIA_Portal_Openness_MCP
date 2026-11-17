@@ -4,7 +4,7 @@
 
 本文件由 `dotnet run --project build-tools/release -- generate-tool-capability-matrix` 从 `manifest/tools-list.json`（八个 release 的注册工具目录并集）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-11-17 04:03:19
+- 生成时间：2026-11-17 04:44:21
 - 产品文件版本：4.0.0.0
 - 工具数量：518
 
@@ -64,7 +64,7 @@
 | `FindTools` | L0 | READ | Search the full version-gated catalog, including tools outside lite. Returns names, signatures, descriptions and examples. Use CallTool with an arguments object to invoke a match. Example: {"query":"watch table","limit":8,"offset":0} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "FindTools"), optionally operation or language. |
 | `ListToolCategories` | L0 | READ | List the tool taxonomy, layers and current full-catalog counts. Use FindTools to browse a category or domain. Examples: GetToolUsage(toolName: "ListToolCategories"), optionally operation or language. |
 | `PreviewToolCall` | L0 | SESSION | Validate a planned call against the target inputSchema and version gates without executing it. Returns signature, prerequisites and a worked example. No native calls. Example: {"name":"ListPlcBlocks","arguments":{"softwarePath":"PLC_1"}} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "PreviewToolCall"), optionally operation or language. |
-| `ApplyToolBatch` | L2 | WRITE | Consume a PreviewToolBatch previewToken once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download. Examples: GetToolUsage(toolName: "ApplyToolBatch"), optionally operation or language. |
+| `ApplyToolBatch` | L2 | WRITE | Consume a PreviewToolBatch previewToken once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download. Plan-bound items take missing or empty expectedPlanHash and expectedProjectFile from their own stored preview. Examples: GetToolUsage(toolName: "ApplyToolBatch"), optionally operation or language. |
 | `PreviewToolBatch` | L2 | READ | Preview 1..50 tools explicitly admitted by BatchWrite metadata with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute previewToken bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage. Examples: GetToolUsage(toolName: "PreviewToolBatch"), optionally operation or language. |
 | `RunReadOnlyToolBatch` | L2 | READ | Sequentially invoke 1..50 tools explicitly admitted by BatchRead metadata or GetSessionState. Rejects nested orchestration and native cross-reference queries. Returns the target results in input order. An optional expectedProject binds each call to the exact project. External edits can occur; this is not a consistent native snapshot. Examples: GetToolUsage(toolName: "RunReadOnlyToolBatch"), optionally operation or language. |
 

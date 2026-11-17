@@ -2532,7 +2532,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c483dce1661ec1e8202db11bf86beabf240909a762846fd2cf09b25ba06c1a40",
+      "descriptionSha256": "c2584fe1fd3f1062482948bb2d0f51b405e7114159c9f161cd87bf4e391d3d68",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

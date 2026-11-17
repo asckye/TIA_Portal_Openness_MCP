@@ -3160,7 +3160,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9efc6f96e013382455218a4bcfcff7fcfb8b3bb61dba99a22245eaa3a0768c61",
+      "descriptionSha256": "dfb2057a7dab5822213954e79e16382caa8c97170c225c9384effabb31597483",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

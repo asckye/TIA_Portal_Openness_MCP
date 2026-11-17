@@ -1,7 +1,7 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T12:01:54.9980402+00:00",
+  "generatedAt": "2026-11-17T12:42:14.8071817+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
@@ -17,7 +17,7 @@
     "enumHints": 259,
     "defaultHints": 1626,
     "examplesCurated": 518,
-    "recipes": 40
+    "recipes": 41
   },
   "categories": [
     {
@@ -7029,7 +7029,7 @@
       "parameters": [
         "previewToken"
       ],
-      "description": "[L2][Meta][WRITE] Consume a PreviewToolBatch previewToken once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download. Examples: GetToolUsage(toolName: \"ApplyToolBatch\"), optionally operation or language.",
+      "description": "[L2][Meta][WRITE] Consume a PreviewToolBatch previewToken once. Recheck project/session/process identity and all stored previews before the first write. Executes exact stored ordered calls with dryRun=false; stops on failure or unknown and marks the rest NOT_EXECUTED. Earlier writes remain. No transaction, rollback or extra save/compile/download. Plan-bound items take missing or empty expectedPlanHash and expectedProjectFile from their own stored preview. Examples: GetToolUsage(toolName: \"ApplyToolBatch\"), optionally operation or language.",
       "example": "{\"previewToken\":\"\\u003Ctoken from PreviewToolBatch\\u003E\"}"
     },
     {
