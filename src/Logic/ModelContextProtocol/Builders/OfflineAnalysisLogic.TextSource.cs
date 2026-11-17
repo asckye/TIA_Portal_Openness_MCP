@@ -124,27 +124,15 @@ namespace TiaMcpServer.ModelContextProtocol
                             var name = m.Groups[1].Value.Trim('"');
                             var typeText = m.Groups[3].Value;
                             var assign = typeText.IndexOf(":=", StringComparison.Ordinal);
-                            string? startValue = assign < 0 ? null : typeText.Substring(assign + 2).Trim().TrimEnd(';').Trim();
                             if (assign >= 0) typeText = typeText.Substring(0, assign);
                             typeText = typeText.Trim().TrimEnd(';').Trim();
                             var path = structPrefix.Count == 0 ? name : string.Join(".", structPrefix) + "." + name;
-                            doc.Members.Add(new InterfaceMember { Section = section, Path = path, Datatype = typeText, StartValue = startValue });
+                            doc.Members.Add(new InterfaceMember { Section = section, Path = path, Datatype = typeText });
                             if (typeText.Equals("Struct", StringComparison.OrdinalIgnoreCase) || typeText
                                     .EndsWith(" of Struct", StringComparison.OrdinalIgnoreCase))
                                 structPrefix.Add(name);
                         }
                         continue;
-                    }
-                    if (format == "S7DCL" && doc.BlockType == "GlobalDB")
-                    {
-                        var assignment = StartValueRegex.Match(codeTrim);
-                        if (assignment.Success)
-                        {
-                            string name = assignment.Groups[1].Value.Trim('"');
-                            var member = doc.Members.FirstOrDefault(m => m.Section == "Static" && m.Path.Equals(name, StringComparison.OrdinalIgnoreCase));
-                            if (member != null) member.StartValue = assignment.Groups[2].Value.Trim();
-                            continue;
-                        }
                     }
                     if (upper == "BEGIN")
                     {
@@ -180,7 +168,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (doc.Attributes.TryGetValue("S7_BlockTitle", out var blockTitle)) { doc.Title = blockTitle; doc.Attributes.Remove("S7_BlockTitle"); }
             if (doc.Attributes.TryGetValue("S7_BlockComment", out var blockComment)) { doc.Comment = blockComment; doc.Attributes.Remove("S7_BlockComment"); }
             if (doc.Attributes.TryGetValue("S7_PreferredLanguage", out var preferred)) doc.Language = preferred;
-            else if (format == "S7DCL" && doc.BlockType == "GlobalDB") doc.Language = "DB";
+            else if (doc.BlockType == "GlobalDB") doc.Language = "DB";
             else if (format == "SCL") doc.Language = "SCL";
             else
             {
@@ -296,7 +284,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (doc.Comment.Length > 0) lines.Add("[Comment] " + doc.Comment);
             foreach (var kv in doc.Attributes) lines.Add("[Attribute] " + kv.Key + "=" + kv.Value);
             foreach (var m in doc.Members) lines.Add("[Interface] " + m.Section + " " + m.Path + " : " + m.Datatype
-                + (includeTraits ? m.Traits : m.StartValue == null ? "" : " StartValue=" + m.StartValue));
+                + (includeTraits ? m.Traits : ""));
+            if (!includeTraits && doc.BlockType == "GlobalDB") return MaskLines(lines);
             foreach (var n in doc.Networks)
             {
                 lines.Add("[Network " + n.Index + "] Language=" + n.Language);

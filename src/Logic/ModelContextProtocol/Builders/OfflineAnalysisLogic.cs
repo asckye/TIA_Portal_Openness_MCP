@@ -23,7 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
     /// versions) and diffs only an [Interface] + [Network N] canonical form with a Myers engine.
     /// This implementation is a superset: ID attributes, date-like elements, GUIDs and ISO timestamps are
     /// normalized as well, and .s7dcl MLC_* resource ids are resolved through the sibling .s7res.
-    /// XML comparisons include non-default member attributes and comments; XML/SD comparisons also retain start values.
+    /// Same-format comparisons retain start values; mixed formats omit them. XML compares raw member Remanence and other traits.
     /// </summary>
     public static partial class OfflineAnalysisLogic
     {
@@ -40,8 +40,10 @@ namespace TiaMcpServer.ModelContextProtocol
             "xml: attributes ID, UId, IId, RefId removed on every element",
             "xml: elements Created, Modified, CompileDate, ModifiedDate, CreationDate, LastModified removed",
             "xml: element namespaces ignored (local names only); SCL StructuredText rendered to plain lines",
-            "xml (same-format comparisons): interface members compare name, type, non-default Remanence/Accessibility/Informative, start values and comments",
-            "xml/s7dcl: mixed-format comparisons include member start values from VAR initializers and post-END_VAR assignments",
+            "xml (same-format comparisons): interface members compare name, type, raw Remanence including presence, non-default Accessibility/Informative, " +
+                "start values and comments",
+            "mixed-format comparisons (SimaticML vs SCL/S7DCL): start values are not compared, including Bool casing, array initializers and nested " +
+                "assignments",
             "text: UTF-8 BOM stripped, CRLF normalized, lines trimmed, blank lines dropped",
             "text: GUIDs masked as <guid>, ISO-8601 date/time values masked as <timestamp>",
             "s7dcl: MLC_* resource ids replaced by the sibling .s7res text (or <mlc> when unresolved)",
@@ -60,7 +62,6 @@ namespace TiaMcpServer.ModelContextProtocol
             new Regex(@"^(FUNCTION_BLOCK|FUNCTION|ORGANIZATION_BLOCK|DATA_BLOCK|TYPE)\s+(""[^""]+""|[\p{L}_][\p{L}\p{N}_]*)(\s*:\s*([^\s{]+))?", RegexOptions
                     .Compiled | RegexOptions
                 .IgnoreCase);
-        private static readonly Regex StartValueRegex = new Regex(@"^(""[^""]+""|[\p{L}_][\p{L}\p{N}_]*)\s*:=\s*(.*?)\s*;\s*$", RegexOptions.Compiled);
         private static readonly Regex MemberRegex = new Regex(@"^(""[^""]+""|[A-Za-z_][\w]*)\s*(\{[^}]*\})?\s*:\s*(.+?)\s*$", RegexOptions.Compiled);
         private static readonly Regex AttributePairRegex = new Regex(@"([A-Za-z_][\w]*)\s*:=\s*(""[^""]*""|'[^']*'|[^;,}]+)", RegexOptions.Compiled);
         private static readonly Regex QuotedCallRegex = new Regex(@"""([^""]+)""\s*(\{[^}]*\})?\s*\(", RegexOptions.Compiled);
@@ -81,7 +82,6 @@ namespace TiaMcpServer.ModelContextProtocol
             public string Path = "";
             public string Datatype = "";
             public string Traits = "";
-            public string? StartValue;
         }
 
         public sealed class NetworkInfo

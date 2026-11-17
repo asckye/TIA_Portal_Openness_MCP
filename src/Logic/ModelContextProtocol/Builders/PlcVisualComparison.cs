@@ -31,8 +31,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var interfaceDifferences = new JsonArray();
             var members = new InterfaceComparer().Compare(InterfaceSnapshotBuilder.Build(left.Blocks[0]),
                 InterfaceSnapshotBuilder.Build(right.Blocks[0]));
-            var leftRemanence = DeclaredRemanence(left.Blocks[0]);
-            var rightRemanence = DeclaredRemanence(right.Blocks[0]);
+            var leftRemanence = RawRemanence(left.Blocks[0]);
+            var rightRemanence = RawRemanence(right.Blocks[0]);
             foreach (var section in members.Sections)
                 foreach (var member in section.Members) NormalizeMember(member, diff.Interface!, interfaceDifferences, leftRemanence, rightRemanence);
             diff.Interface!.State = diff.Interface.Members.Any(row => row.State != CompareState.Equal) ? CompareState.Changed : CompareState.Equal;
@@ -75,14 +75,14 @@ namespace TiaMcpServer.ModelContextProtocol
             return data;
         }
 
-        private static HashSet<(string Section, string Path)> DeclaredRemanence(BlockDefinition block)
+        private static Dictionary<(string Section, string Path), string> RawRemanence(BlockDefinition block)
         {
-            var declared = new HashSet<(string, string)>();
+            var declared = new Dictionary<(string, string), string>();
             void Add(string section, string prefix, InterfaceMember member)
             {
                 string name = member.Name.Normalize(NormalizationForm.FormC);
                 string path = prefix.Length == 0 ? name : prefix + "/" + name;
-                if (member.RawAttributes.ContainsKey("Remanence")) declared.Add((section, path));
+                if (member.RawAttributes.TryGetValue("Remanence", out var value)) declared[(section, path)] = value ?? "";
                 foreach (var child in member.Children) Add(section, path, child);
             }
             foreach (var section in block.InterfaceSections)
@@ -95,30 +95,33 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static bool NormalizeMember(InterfaceMemberComparison member, SactInterfaceResult legacy, JsonArray differences,
-            HashSet<(string Section, string Path)> leftRemanence, HashSet<(string Section, string Path)> rightRemanence)
+            Dictionary<(string Section, string Path), string> leftRemanence, Dictionary<(string Section, string Path), string> rightRemanence)
         {
             bool childrenEqual = true;
             foreach (var child in member.Children) childrenEqual &= NormalizeMember(child, legacy, differences, leftRemanence, rightRemanence);
             var anchor = member.Left ?? member.Right!;
-            var changes = member.FieldChanges.Where(change => !DefaultOnly(change,
-                leftRemanence.Contains((anchor.Section, anchor.Path)), rightRemanence.Contains((anchor.Section, anchor.Path)))).ToArray();
+            var changes = member.FieldChanges.Where(change => change.Field != InterfaceFieldKind.Retain && !DefaultOnly(change)).ToList();
+            if (member.Left != null && member.Right != null)
+            {
+                leftRemanence.TryGetValue((anchor.Section, anchor.Path), out var left);
+                rightRemanence.TryGetValue((anchor.Section, anchor.Path), out var right);
+                if (!string.Equals(left, right, StringComparison.Ordinal))
+                    changes.Add(new InterfaceFieldChange(InterfaceFieldKind.Retain, null, left, right));
+            }
             foreach (var change in changes)
                 differences.Add(new JsonObject {
                     ["section"] = anchor.Section, ["member"] = anchor.Path.Replace('/', '.'),
                     ["field"] = change.Field.ToString(), ["key"] = change.Key, ["left"] = change.LeftValue, ["right"] = change.RightValue
                 });
-            bool equal = member.Left != null && member.Right != null && changes.Length == 0 && childrenEqual;
-            if (equal)
+            bool equal = member.Left != null && member.Right != null && changes.Count == 0 && childrenEqual;
+            if (member.Left != null && member.Right != null)
                 foreach (var row in legacy.Members.Where(row => row.Section == anchor.Section && row.Name == anchor.Path.Replace('/', '.')))
-                    row.State = CompareState.Equal;
+                    row.State = equal ? CompareState.Equal : CompareState.Changed;
             return equal;
         }
 
-        private static bool DefaultOnly(InterfaceFieldChange change, bool leftRemanence, bool rightRemanence)
+        private static bool DefaultOnly(InterfaceFieldChange change)
         {
-            if (change.Field == InterfaceFieldKind.Retain)
-                return change.LeftValue == "Unspecified" && change.RightValue == "False" && !leftRemanence
-                    || change.LeftValue == "False" && change.RightValue == "Unspecified" && !rightRemanence;
             if (change.Field == InterfaceFieldKind.Informative)
                 return change.LeftValue == "Unspecified" && change.RightValue == "False"
                     || change.LeftValue == "False" && change.RightValue == "Unspecified";

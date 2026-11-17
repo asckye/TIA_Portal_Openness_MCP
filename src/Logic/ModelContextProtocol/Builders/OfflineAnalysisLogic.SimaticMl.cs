@@ -134,8 +134,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var name = (string?)member.Attribute("Name") ?? "";
             var path = prefix.Length == 0 ? name : prefix + "." + name;
             doc.Members.Add(new InterfaceMember {
-                Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(member),
-                StartValue = Child(member, "StartValue")?.Value.Trim()
+                Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(member)
             });
             foreach (var child in member.Elements().Where(e => Local(e) == "Member")) AddXmlMember(section, path, child, doc);
         }
@@ -143,11 +142,10 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string MemberTraits(XElement member)
         {
             var traits = new StringBuilder();
-            foreach (var (name, defaultValue) in new[] { ("Remanence", "NonRetain"), ("Accessibility", "Public") })
-            {
-                var value = ((string?)member.Attribute(name))?.Trim();
-                if (value != null && value != defaultValue) traits.Append(' ').Append(name).Append('=').Append(value);
-            }
+            var remanence = member.Attribute("Remanence");
+            if (remanence != null) traits.Append(" Remanence=").Append(remanence.Value);
+            var accessibility = ((string?)member.Attribute("Accessibility"))?.Trim();
+            if (accessibility != null && accessibility != "Public") traits.Append(" Accessibility=").Append(accessibility);
             var informative = ((string?)member.Attribute("Informative"))?.Trim();
             if (informative == "1" || bool.TryParse(informative, out var flag) && flag) traits.Append(" Informative=true");
             var start = Child(member, "StartValue");

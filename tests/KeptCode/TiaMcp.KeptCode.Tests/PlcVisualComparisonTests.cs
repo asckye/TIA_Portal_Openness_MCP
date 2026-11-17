@@ -59,7 +59,7 @@ public sealed class PlcVisualComparisonTests : IDisposable
     public void Omitted_member_defaults_compare_equal(string release)
     {
         var result = Compare(Block(release, ObMembers("Remanence=\"NonRetain\" Accessibility=\"Public\"")),
-            Block(release, ObMembers()));
+            Block(release, ObMembers("Remanence=\"NonRetain\"")));
         Assert.Equal("Equal", (string?)result["state"]);
         Assert.All(result["comparison"]!["Interface"]!["Members"]!.AsArray(), row => Assert.Equal(0, (int?)row!["State"]));
         Assert.Empty(result["interfaceDifferences"]!.AsArray());
@@ -76,8 +76,8 @@ public sealed class PlcVisualComparisonTests : IDisposable
         Assert.Equal("Retain", (string?)difference["field"]);
         Assert.Equal("Input", (string?)difference["section"]);
         Assert.Equal("Initial_Call", (string?)difference["member"]);
-        Assert.Equal("True", (string?)difference["left"]);
-        Assert.Equal("Unspecified", (string?)difference["right"]);
+        Assert.Equal("Retain", (string?)difference["left"]);
+        Assert.Null(difference["right"]);
         Assert.False((bool?)result["documentDiff"]!["identicalAfterNormalization"]);
     }
 
@@ -95,6 +95,49 @@ public sealed class PlcVisualComparisonTests : IDisposable
             Assert.Contains(result["interfaceDifferences"]!.AsArray(), row => (string?)row!["field"] == "Retain");
             Assert.False((bool?)result["documentDiff"]!["identicalAfterNormalization"]);
         }
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void Raw_remanence_text_and_presence_decide_equality(string release)
+    {
+        var pairs = new (string? Left, string? Right)[] {
+            ("Classic", "SetInIDB"), ("Classic", null), ("SetInIDB", null), ("NonRetain", null),
+            ("", null), ("Retain", "retain"), (" Classic ", "Classic"), ("Classic", "Classic"), ("NonRetain", "NonRetain"), (null, null)
+        };
+        string Members(string? value) => ObMembers(value == null ? "" : "Remanence=\"" + value + "\"");
+        foreach (var pair in pairs)
+        foreach (bool reverse in new[] { false, true })
+        {
+            string? left = reverse ? pair.Right : pair.Left, right = reverse ? pair.Left : pair.Right;
+            bool equal = string.Equals(left, right, StringComparison.Ordinal);
+            var result = Compare(Block(release, Members(left)), Block(release, Members(right)));
+            Assert.Equal(equal ? "Equal" : "Changed", (string?)result["state"]);
+            Assert.Equal(equal, (bool?)result["documentDiff"]!["identicalAfterNormalization"]);
+            var differences = result["interfaceDifferences"]!.AsArray();
+            if (equal) Assert.Empty(differences);
+            else
+            {
+                var difference = Assert.Single(differences)!;
+                Assert.Equal("Retain", (string?)difference["field"]);
+                Assert.Equal(left, (string?)difference["left"]);
+                Assert.Equal(right, (string?)difference["right"]);
+                Assert.Contains(result["comparison"]!["Interface"]!["Members"]!.AsArray(), row => (int?)row!["State"] != 0);
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void Nested_raw_remanence_change_marks_child_and_parent_changed(string release)
+    {
+        string Members(string value) => "<Member Name=\"Container\" Datatype=\"Struct\">"
+            + "<Member Name=\"Flag\" Datatype=\"Bool\" Remanence=\"" + value + "\" /></Member>";
+        var result = Compare(Block(release, Members("Classic")), Block(release, Members("SetInIDB")));
+        Assert.Equal("Changed", (string?)result["state"]);
+        Assert.All(result["comparison"]!["Interface"]!["Members"]!.AsArray(), row => Assert.NotEqual(0, (int?)row!["State"]));
+        Assert.Equal("Container.Flag", (string?)Assert.Single(result["interfaceDifferences"]!.AsArray())!["member"]);
+        Assert.False((bool?)result["documentDiff"]!["identicalAfterNormalization"]);
     }
 
     [Theory]
@@ -127,17 +170,35 @@ public sealed class PlcVisualComparisonTests : IDisposable
     [MemberData(nameof(Releases))]
     public void Xml_and_s7dcl_of_the_same_db_keep_equal_interface_lines(string release)
     {
-        var result = OfflineAnalysisLogic.CompareFiles(Write("left.xml", Block(release,
-            "<Member Name=\"Count\" Datatype=\"Int\"><StartValue>0</StartValue></Member>", "GlobalDB")),
-            Write("right.s7dcl", "DATA_BLOCK \"Example\"\nVAR\nCount : Int := 0;\nEND_VAR\nEND_DATA_BLOCK"), 0, 80, contextLines: 0);
-        Assert.DoesNotContain(result["hunks"]!.AsArray().SelectMany(hunk => hunk!["lines"]!.AsArray()),
-            line => ((string)line!).Contains("[Interface]", StringComparison.Ordinal));
-        Assert.True((bool?)result["identicalAfterNormalization"]);
+        var cases = new (string Members, string Declarations, string Assignments)[] {
+            ("<Member Name=\"Count\" Datatype=\"Int\"><StartValue>0</StartValue></Member>", "Count : Int := 0;", ""),
+            ("<Member Name=\"Flag\" Datatype=\"Bool\"><StartValue>false</StartValue></Member>", "Flag : Bool := FALSE;", ""),
+            ("<Member Name=\"Values\" Datatype=\"Array[0..1] of Int\">"
+                + "<Subelement Path=\"[0]\"><StartValue>1</StartValue></Subelement>"
+                + "<Subelement Path=\"[1]\"><StartValue>2</StartValue></Subelement></Member>", "Values : Array[0..1] of Int := [1, 2];", ""),
+            ("<Member Name=\"Container\" Datatype=\"Struct\"><Member Name=\"Flag\" Datatype=\"Bool\">"
+                + "<StartValue>false</StartValue></Member></Member>", "Container : Struct\nFlag : Bool;\nEND_STRUCT;", "\"Container\".\"Flag\" := FALSE;")
+        };
+        foreach (var fixture in cases)
+        foreach (string extension in new[] { ".s7dcl", ".scl" })
+        {
+            string text = "DATA_BLOCK \"Example\"\nVAR\n" + fixture.Declarations + "\nEND_VAR\n"
+                + (extension == ".scl" ? "BEGIN\n" : "") + fixture.Assignments + "\nEND_DATA_BLOCK";
+            string xml = Write("left.xml", Block(release, fixture.Members, "GlobalDB")), source = Write("right" + extension, text);
+            foreach (bool reverse in new[] { false, true })
+            {
+                var result = reverse ? OfflineAnalysisLogic.CompareFiles(source, xml, 0, 80, contextLines: 0)
+                    : OfflineAnalysisLogic.CompareFiles(xml, source, 0, 80, contextLines: 0);
+                Assert.DoesNotContain(result["hunks"]!.AsArray().SelectMany(hunk => hunk!["lines"]!.AsArray()),
+                    line => ((string)line!).Contains("[Interface]", StringComparison.Ordinal));
+                Assert.True((bool?)result["identicalAfterNormalization"]);
+            }
+        }
     }
 
     [Theory]
     [MemberData(nameof(Releases))]
-    public void Mixed_format_comparisons_include_start_values_from_both_text_forms(string release)
+    public void Mixed_format_comparisons_do_not_compare_start_values(string release)
     {
         string xml = Block(release, "<Member Name=\"Count\" Datatype=\"Int\"><StartValue>20</StartValue></Member>", "GlobalDB");
         foreach (bool postamble in new[] { false, true })
@@ -146,9 +207,27 @@ public sealed class PlcVisualComparisonTests : IDisposable
             string text = postamble ? "DATA_BLOCK Example\nVAR\n\"Count\" : Int;\nEND_VAR\n\"Count\" := " + value + ";\nEND_DATA_BLOCK"
                 : "DATA_BLOCK \"Example\"\nVAR\nCount : Int := " + value + ";\nEND_VAR\nEND_DATA_BLOCK";
             string left = Write("left.xml", xml), right = Write("right.s7dcl", text);
-            Assert.Equal(value == "20", (bool?)OfflineAnalysisLogic.CompareFiles(left, right, 0, 80)["identicalAfterNormalization"]);
-            Assert.Equal(value == "20", (bool?)OfflineAnalysisLogic.CompareFiles(right, left, 0, 80)["identicalAfterNormalization"]);
+            Assert.True((bool?)OfflineAnalysisLogic.CompareFiles(left, right, 0, 80)["identicalAfterNormalization"]);
+            Assert.True((bool?)OfflineAnalysisLogic.CompareFiles(right, left, 0, 80)["identicalAfterNormalization"]);
         }
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void Same_format_comparisons_keep_initializers_and_postamble_start_values(string release)
+    {
+        foreach (string extension in new[] { ".s7dcl", ".scl" })
+        foreach (bool postamble in new[] { false, true })
+        {
+            string Text(string value) => "DATA_BLOCK \"Example\"\nVAR\nCount : Int" + (postamble ? ";" : " := " + value + ";")
+                + "\nEND_VAR\n" + (extension == ".scl" ? "BEGIN\n" : "") + (postamble ? "Count := " + value + ";\n" : "") + "END_DATA_BLOCK";
+            var result = OfflineAnalysisLogic.CompareFiles(Write("left" + extension, Text("20")), Write("right" + extension, Text("21")), 0, 80);
+            Assert.False((bool?)result["identicalAfterNormalization"]);
+        }
+        string Xml(string value) => Block(release, "<Member Name=\"Values\" Datatype=\"Array[0..1] of Int\">"
+            + "<Subelement Path=\"[0]\"><StartValue>" + value + "</StartValue></Subelement></Member>", "GlobalDB");
+        Assert.False((bool?)OfflineAnalysisLogic.CompareFiles(Write("left.xml", Xml("1")), Write("right.xml", Xml("2")), 0, 80)
+            ["identicalAfterNormalization"]);
     }
 
     [Theory]
@@ -185,7 +264,7 @@ public sealed class PlcVisualComparisonTests : IDisposable
         Assert.Contains(document.Canonical, line => line.EndsWith(document.Members[0].Traits, StringComparison.Ordinal));
         var defaults = OfflineAnalysisLogic.ParseText(Block(release,
             "<Member Name=\"Count\" Datatype=\"Int\" Remanence=\"NonRetain\" Accessibility=\"Public\" Informative=\"false\" />"), "Example.xml");
-        Assert.Empty(defaults.Members[0].Traits);
+        Assert.Equal(" Remanence=NonRetain", defaults.Members[0].Traits);
     }
 
     public void Dispose()
