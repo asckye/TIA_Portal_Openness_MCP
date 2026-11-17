@@ -318,7 +318,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     "InitializeEnvironment", "GetEnvironmentDiagnostics", "GetSessionState", "FindTools", "CallTool", "ListToolCategories", "GetToolUsage",
                     "PreviewToolCall", "CheckProductUpdate", "GetPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExportContent",
                     "ListExportHandles", "SaveExportContent", "DeleteExportHandle", "ClearExportHandles", "WritePlcSclSourceFile", "GenerateErrorReport",
-                    "ManagePlcTestLibrary", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest",
+                    "ManagePlcTestLibrary", "RunPlcTestLibrary", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest",
                     "ListPlcSimAdvancedInstances",
                     "ManagePlcSimAdvancedInstance", "GetPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario",
                     "EnsureOpennessUserGroup"

@@ -453,6 +453,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ManagePlcTestLibrary.action"] = new ParameterHint("\"list\"", "list", "read", "save", "delete", "listRuns", "readRun"),
             ["ManagePlcTestLibrary.id"] = new ParameterHint("\"conveyor-start\""),
             ["ManagePlcTestLibrary.runId"] = new ParameterHint("\"latest\""),
+            ["RunPlcTestLibrary.tags"] = new ParameterHint("[\"fat\"]"),
             ["GenerateErrorReport.errorCode"] = new ParameterHint("\"\\u003CerrorCode\\u003E\""),
             ["GenerateErrorReport.summary"] = new ParameterHint("\"\\u003Csummary\\u003E\""),
             ["GenerateErrorReport.detail"] = new ParameterHint("\"\\u003Cdetail\\u003E\""),

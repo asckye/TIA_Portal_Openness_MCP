@@ -6170,6 +6170,17 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "RunPlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "tags": [
+          "fat"
+        ],
+        "dryRun": true
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "RunReadOnlyToolBatch",
       "family": "F01",
       "example": {
@@ -8607,6 +8618,17 @@
       "entry": "RunOnlineMonitoringSafetySelfTest",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "RunPlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "tags": [
+          "fat"
+        ],
+        "dryRun": true
+      }
     },
     {
       "releaseKey": "15.1",
@@ -11463,6 +11485,17 @@
       "entry": "RunOnlineMonitoringSafetySelfTest",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "16",
+      "entry": "RunPlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "tags": [
+          "fat"
+        ],
+        "dryRun": true
+      }
     },
     {
       "releaseKey": "16",
@@ -14612,6 +14645,17 @@
       "entry": "RunOnlineMonitoringSafetySelfTest",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "17",
+      "entry": "RunPlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "tags": [
+          "fat"
+        ],
+        "dryRun": true
+      }
     },
     {
       "releaseKey": "17",
@@ -18077,6 +18121,17 @@
       "entry": "RunOnlineMonitoringSafetySelfTest",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "18",
+      "entry": "RunPlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "tags": [
+          "fat"
+        ],
+        "dryRun": true
+      }
     },
     {
       "releaseKey": "18",
@@ -21716,6 +21771,17 @@
       "entry": "RunOnlineMonitoringSafetySelfTest",
       "family": "F01",
       "example": {}
+    },
+    {
+      "releaseKey": "19",
+      "entry": "RunPlcTestLibrary",
+      "family": "F01",
+      "example": {
+        "tags": [
+          "fat"
+        ],
+        "dryRun": true
+      }
     },
     {
       "releaseKey": "19",
@@ -33396,6 +33462,23 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "RunPlcTestLibrary",
+        "currentName": "RunPlcTestLibrary",
+        "sourceName": "RunPlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "RunReadOnlyToolBatch",
         "currentName": "RunReadOnlyToolBatch",
         "sourceName": "ReadToolBatch",
@@ -43224,6 +43307,23 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "RunPlcTestLibrary",
+        "currentName": "RunPlcTestLibrary",
+        "sourceName": "RunPlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "RunReadOnlyToolBatch",
         "currentName": "RunReadOnlyToolBatch",
         "sourceName": "ReadToolBatch",
@@ -49069,6 +49169,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "RunPlcTestLibrary",
+        "currentName": "RunPlcTestLibrary",
+        "sourceName": "RunPlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -55056,6 +55173,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "RunPlcTestLibrary",
+        "currentName": "RunPlcTestLibrary",
+        "sourceName": "RunPlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -61592,6 +61726,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "RunPlcTestLibrary",
+        "currentName": "RunPlcTestLibrary",
+        "sourceName": "RunPlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -68499,6 +68650,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "RunPlcTestLibrary",
+        "currentName": "RunPlcTestLibrary",
+        "sourceName": "RunPlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -75913,6 +76081,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "RunPlcTestLibrary",
+        "currentName": "RunPlcTestLibrary",
+        "sourceName": "RunPlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -84717,6 +84902,23 @@
           },
           "dryRun": true,
           "confirmRun": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "RunPlcTestLibrary",
+        "currentName": "RunPlcTestLibrary",
+        "sourceName": "RunPlcTestLibrary",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"

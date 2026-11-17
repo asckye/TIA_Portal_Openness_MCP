@@ -278,5 +278,19 @@
       "20",
       "21"
     ]
+  },
+  "RunPlcTestLibrary": {
+    "owner": "TIA-TEST-2",
+    "operation": "ONLINE-WRITE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
   }
 }

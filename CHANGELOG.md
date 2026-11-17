@@ -7,6 +7,7 @@
 ### Added
 - V19–V21 `SetUnifiedGlobalScript action=create` adds one absent global script module from complete JavaScript through native JS/YAML import, with preview, collision refusal and exact export readback. Openness has no script-module delete; remove an unwanted create manually in TIA. Native acceptance is NOT RUN.
 - `ManagePlcTestLibrary` stores validated PLC scenario and Test Suite selections and reads run history on all eight releases; execution of Test Suite entries requires V17+, system tests V18+, and application test sets V20+.
+- `RunPlcTestLibrary` adds one approved sequential batch run with plan binding, persistent history, JUnit and stable exit codes on all eight releases; Test Suite entries require V17+, system tests V18+, and application test sets V20+. Native acceptance is NOT RUN.
 
 ### Changed
 - **Breaking:** every `SetUnifiedGlobalScript` execution, including existing `action=update` callers, now requires the preview's `expectedPlanHash` and absolute `expectedProjectFile` in addition to `previewToken`.

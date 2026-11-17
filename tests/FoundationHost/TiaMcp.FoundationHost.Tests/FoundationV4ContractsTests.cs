@@ -304,8 +304,9 @@ public sealed class FoundationV4ContractsTests
     // TIA-TEST-1 adds the host-owned ManagePlcTestLibrary on every release.
     // TIA-BATCH-2 adds ExportPlcTagTables on every release.
     // TIA-BATCH-3 adds ConvertEngineeringTable on every release.
-    [InlineData("14sp1", 283)] [InlineData("15.1", 324)] [InlineData("16", 353)]
-    [InlineData("17", 376)] [InlineData("18", 402)] [InlineData("19", 478)]
+    // TIA-TEST-2 adds the host-owned RunPlcTestLibrary on every release.
+    [InlineData("14sp1", 284)] [InlineData("15.1", 325)] [InlineData("16", 354)]
+    [InlineData("17", 377)] [InlineData("18", 403)] [InlineData("19", 479)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();

@@ -19768,6 +19768,16 @@
           },
           "meaning": "After reviewing fromTable preview, create the new XML with these complete arguments; bind every path."
         }
+      },
+      "RunPlcTestLibrary": {
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
+        },
+        "parameters": {},
+        "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
       }
     },
     "full-engine": {
@@ -40429,6 +40439,16 @@
           },
           "meaning": "After reviewing fromTable preview, create the new XML with these complete arguments; bind every path."
         }
+      },
+      "RunPlcTestLibrary": {
+        "arguments": {
+          "tags": [
+            "fat"
+          ],
+          "dryRun": true
+        },
+        "parameters": {},
+        "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
       }
     }
   }

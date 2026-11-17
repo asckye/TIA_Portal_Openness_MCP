@@ -75,7 +75,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public static bool DispatchesTargets(string name) => string.Equals(name, "CallTool", StringComparison.OrdinalIgnoreCase)
             || string.Equals(name, "RunReadOnlyToolBatch", StringComparison.OrdinalIgnoreCase)
             || string.Equals(name, "PreviewToolBatch", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(name, "ApplyToolBatch", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(name, "ApplyToolBatch", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "RunPlcTestLibrary", StringComparison.OrdinalIgnoreCase);
 
         public sealed class Category
         {

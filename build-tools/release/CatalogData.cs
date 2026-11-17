@@ -90,6 +90,7 @@ internal sealed class CatalogData
         foreach (var p in xref) HostOnly.Add(p.Key, p.Value);
         HostOnly.Add("GetCallResult", "READ");
         HostOnly.Add("ManagePlcTestLibrary", "FILE");
+        HostOnly.Add("RunPlcTestLibrary", "ONLINE-WRITE");
         CatalogJson.Require(metadata.Contains("[\"ManagePlcTestLibrary\"] = new Classification(\"L1\", \"Simulation\", \"FILE\",",
             StringComparison.Ordinal), "ManagePlcTestLibrary classification differs");
         CatalogJson.Require(metadata.Contains("[\"GetCallResult\"] = new Classification(\"L0\", \"Diagnostics\", \"READ\",",
@@ -154,6 +155,7 @@ internal sealed class CatalogData
             ["ManagePlcTestLibrary"] = ("TIA-TEST-1", "FILE"),
             ["ExportPlcTagTables"] = ("TIA-BATCH-2", "FILE"),
             ["ConvertEngineeringTable"] = ("TIA-BATCH-3", "FILE"),
+            ["RunPlcTestLibrary"] = ("TIA-TEST-2", "ONLINE-WRITE"),
             ["RenderPlcBlock"] = ("P6-48", "FILE"), ["RenderPlcProgramAtlas"] = ("P6-48", "FILE"),
             ["StageImportFiles"] = ("P6-67", "FILE"), ["ListStagedImportFiles"] = ("P6-67", "READ"), ["CleanupStagedImportFiles"] = ("P6-67", "FILE"),
             ["ListStandardPackages"] = ("P8-31d", "READ"), ["ManageStandardPackage"] = ("P8-31d", "FILE"), ["ValidateStandardPackage"] = ("P8-31d", "OFFLINE"), ["DescribeStandardPackage"] = ("P8-31d", "READ"), ["ManageMachineDescription"] = ("P8-31d", "FILE"),

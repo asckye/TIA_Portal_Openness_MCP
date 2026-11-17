@@ -258,6 +258,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `RunOnlineMonitoringSafetySelfTest` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `RunPlcCompanionTool` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `RunPlcSimAdvancedTestScenario` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
+| `RunPlcTestLibrary` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `RunReadOnlyToolBatch` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `RunToolTransaction` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `SamplePlcLiveValuesS7` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |

@@ -18,9 +18,87 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly Func<string> libraryDirectory;
         private readonly Func<string> runsDirectory;
+        private readonly PlcTestLibraryRunner runner;
         public PlcTestLibraryTools() : this(() => DataLocations.Current.TestLibraryDirectory, () => DataLocations.Current.TestRunsDirectory) { }
-        internal PlcTestLibraryTools(Func<string> libraryDirectory, Func<string> runsDirectory)
-        { this.libraryDirectory = libraryDirectory; this.runsDirectory = runsDirectory; }
+        internal PlcTestLibraryTools(Func<string> libraryDirectory, Func<string> runsDirectory,
+            Siemens.Services.PlcSimAdvancedPortService? simulator = null, TiaMcp.Shared.TestSuitePortService? testSuite = null)
+        {
+            this.libraryDirectory = libraryDirectory; this.runsDirectory = runsDirectory;
+            runner = new PlcTestLibraryRunner(simulator ?? PlcTestLibraryRunner.SimulatorService(),
+                testSuite ?? PlcTestLibraryRunner.TestSuiteService());
+        }
+
+        [McpServerTool(Name = "RunPlcTestLibrary"),
+            Description("[L2][Simulation][ONLINE-WRITE] Run 1..100 stored PLC test entries sequentially on all eight releases. " +
+                "ids and tags filter the library together; tags match any value, case-insensitively. Empty filters select the whole library. " +
+                "Default dryRun=true validates locally and returns the ordered plan and planHash without worker calls. Execution requires " +
+                "dryRun=false and expectedPlanHash; runnable Test Suite entries also require a bound project and absolute expectedProjectFile. " +
+                "One Workbench approval covers the batch. Failed/error cases do not stop the run; an unknown outcome stops without replay. " +
+                "Unsupported entries are skipped (Test Suite V17+, system V18+, application test sets V20+); all unsupported is refused. " +
+                "Writes run history and junit.xml under the data root, returns verdict totals and exitCode (0 passed, 3 failed/error, 4 skipped, " +
+                "5 unknown/incomplete). Long runs block tools/call; asynchronous execution and cancellation are not available. " +
+                "Real PLCSIM Advanced / Test Suite installation acceptance is pending.")]
+        public CallToolResult RunPlcTestLibrary(
+            [Description("Optional exact case ids, at most 100; case-insensitive. Combined with the tags filter.")] string[]? ids = null,
+            [Description("Optional tags, at most 32 of 1..64 characters; any case-insensitive match. Combined with ids.")] string[]? tags = null,
+            [Description("true validates and previews without worker calls; false executes the approved batch.")] bool dryRun = true,
+            [Description("Required for execution, including PLCSIM-only runs; use planHash from the matching preview.")] string expectedPlanHash = "",
+            [Description("Absolute bound project file required when a runnable Test Suite entry is selected.")] string expectedProjectFile = "")
+        {
+            const string tool = "RunPlcTestLibrary";
+            ids ??= Array.Empty<string>(); tags ??= Array.Empty<string>();
+            bool started = false;
+            try
+            {
+                if (!dryRun && string.IsNullOrWhiteSpace(expectedPlanHash)) return McpServer.V4Reject(tool, McpServer.InvalidInput("expectedPlanHash"));
+                var entries = PlcTestLibraryRunner.Select(libraryDirectory(), McpServer.ReleaseKey, ids, tags);
+                var orderedPlan = PlcTestLibraryRunner.Plan(entries);
+                if (entries.All(e => e.Unsupported != null)) return McpServer.V4Reject(tool,
+                    new Error("Every selected entry is unsupported on this release.", new UnsupportedCapabilityDetails(McpServer.ReleaseKey, tool, null)),
+                    new JsonObject { ["plan"] = new JsonObject { ["cases"] = orderedPlan } });
+                bool writing = entries.Any(e => e.Case.Kind == "testSuite" && e.Unsupported == null);
+                using var lane = dryRun ? null : Dispatch.ToolDispatchLanes.Enter(writing ? "RunTestSuiteCase" : "RunPlcSimAdvancedTestScenario",
+                    McpServer.WorkerDispatchCancellation);
+                var arguments = new { ids, tags, cases = entries.Select(e => new { id = e.Case.Id, sha256 = e.Hash, document = e.Case.Document }).ToArray() };
+                var result = McpServer.RunWritePreview(tool, dryRun, arguments, () => {
+                    if (dryRun) return McpServer.V4Result(tool, new JsonObject());
+                    started = true;
+                    return Run(entries, expectedPlanHash, expectedProjectFile, ids, tags);
+                }, expectedPlanHash, expectedProjectFile, writing);
+                if (result.StructuredContent?["data"] is JsonObject data)
+                {
+                    data["dryRun"] = dryRun;
+                    if (dryRun && (bool?)result.StructuredContent["ok"] == true) data["plan"] = new JsonObject { ["cases"] = orderedPlan };
+                    if (!dryRun) data.Remove("readOnlyInvocation");
+                    result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(result.StructuredContent) } };
+                }
+                return result;
+            }
+            catch (Exception ex) when (!started && (ex is ArgumentException || ex is JsonException || ex is InputRejectionException
+                || ex is IOException || ex is UnauthorizedAccessException))
+            {
+                if (expectedPlanHash.Length > 0) return McpServer.V4Reject(tool,
+                    new Error("Selected cases changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")));
+                return McpServer.V4Reject(tool, new Error("Invalid selection or stored test case: " + ex.Message,
+                    new InvalidArgumentDetails("", Array.Empty<string>())));
+            }
+        }
+
+        private CallToolResult Run(PlcTestLibraryRunner.Entry[] entries, string hash, string projectFile, string[] ids, string[] tags)
+        {
+            string directory = runsDirectory();
+            var run = runner.Execute(entries, directory, McpServer.ReleaseKey, hash, projectFile, ids, tags);
+            var data = new JsonObject {
+                ["runId"] = run.RunId, ["totals"] = run.Totals, ["exitCode"] = run.ExitCode,
+                ["runDirectory"] = Path.Combine(directory, run.RunId), ["junitFile"] = Path.Combine(directory, run.RunId, "junit.xml"),
+                ["cases"] = JsonSerializer.SerializeToNode(run.Cases.Select(c => new { id = c.Id, verdict = c.Verdict, message = c.Message }))
+            };
+            return run.Status == "completed" ? McpServer.V4Result("RunPlcTestLibrary", data, completed: true)
+                : McpServer.V4Result("RunPlcTestLibrary", data,
+                    new Error("A case ended with an unknown outcome. Inspect the target; do not replay the run.",
+                        new OutcomeUnknownDetails(null, new System.Collections.Generic.Dictionary<string, JsonElement>())),
+                    Outcome.Unknown, Execution.Unknown, Completeness.Partial);
+        }
 
         [McpServerTool(Name = "ManagePlcTestLibrary"),
             Description("[L1][Simulation][FILE] Manage stored PLC test cases and read run history under the data root on all eight releases. " +

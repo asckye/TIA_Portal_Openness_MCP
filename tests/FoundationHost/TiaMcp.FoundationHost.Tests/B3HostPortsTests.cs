@@ -58,7 +58,7 @@ public sealed class B3HostPortsTests
             PlanHardwareNetworkConfiguration PlanOnlineReadOnlyDataProvider PlanOnlineReadOnlyMonitoring PlugDeviceItem PreviewToolBatch
             PreviewToolCall ProbeGlobalLibrary ProbeHardwareHmiConnectionOwnerCandidates ProbeHardwareHmiConnectionWhitelistedServices
             ProbeS7CpuIdentity RenderPlcBlockDocument RenderPlcVisualDiff RepairAndReimportPlcBlock RestartOpennessWorker
-            RunOfflineReleaseValidationSuite RunOnlineMonitoringSafetySelfTest RunPlcCompanionTool RunPlcSimAdvancedTestScenario
+            RunOfflineReleaseValidationSuite RunOnlineMonitoringSafetySelfTest RunPlcCompanionTool RunPlcSimAdvancedTestScenario RunPlcTestLibrary
             RunReadOnlyToolBatch RunToolTransaction SamplePlcLiveValuesS7 SaveExportContent ScanPlcSourceAnnotations
             SearchInstalledGsdDevices SeedProjectFromReference SetDeviceAddress SetDeviceItemAttribute SetDeviceItemChannel
             SetDeviceItemIoAddress SetPlcCpuSettings SetPlcWebOperatingMode ShowObjectInEditor SynchronizeLibrary TraceTagCause

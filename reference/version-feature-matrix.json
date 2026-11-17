@@ -3481,6 +3481,7 @@
           "RestartOpennessWorker",
           "RunOfflineReleaseValidationSuite",
           "RunOnlineMonitoringSafetySelfTest",
+          "RunPlcTestLibrary",
           "RunReadOnlyToolBatch",
           "SaveExportContent"
         ]
@@ -4009,6 +4010,7 @@
           "RestartOpennessWorker",
           "RunOfflineReleaseValidationSuite",
           "RunOnlineMonitoringSafetySelfTest",
+          "RunPlcTestLibrary",
           "RunReadOnlyToolBatch",
           "SaveExportContent"
         ]
@@ -4581,6 +4583,7 @@
           "RestartOpennessWorker",
           "RunOfflineReleaseValidationSuite",
           "RunOnlineMonitoringSafetySelfTest",
+          "RunPlcTestLibrary",
           "RunReadOnlyToolBatch",
           "SaveExportContent"
         ]
@@ -5182,6 +5185,7 @@
           "RestartOpennessWorker",
           "RunOfflineReleaseValidationSuite",
           "RunOnlineMonitoringSafetySelfTest",
+          "RunPlcTestLibrary",
           "RunReadOnlyToolBatch",
           "SaveExportContent"
         ]
@@ -5818,6 +5822,7 @@
           "RestartOpennessWorker",
           "RunOfflineReleaseValidationSuite",
           "RunOnlineMonitoringSafetySelfTest",
+          "RunPlcTestLibrary",
           "RunReadOnlyToolBatch",
           "SaveExportContent"
         ]
@@ -6468,6 +6473,7 @@
           "RestartOpennessWorker",
           "RunOfflineReleaseValidationSuite",
           "RunOnlineMonitoringSafetySelfTest",
+          "RunPlcTestLibrary",
           "RunReadOnlyToolBatch",
           "SaveExportContent"
         ]

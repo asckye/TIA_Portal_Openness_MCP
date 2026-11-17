@@ -19011,6 +19011,46 @@
         }
       },
       "description": "[L2][PLC-Builders][FILE] Offline conversion: kind plcTagTable or rows; direction toTable or fromTable. plcTagTable uses one exported SimaticML table; fromTable requires its templatePath. Fixed columns Kind, Name, DataType, Address, Value, then template scalar attributes in first-seen order and Comment[culture] ordered by culture. Culture syntax ^[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}$. Kind is Tag, Constant or read-only SystemConstant; (Kind,Name) is an exact key, never renamed. Merge updates/adds rows; omitted rows are kept, empty editable cells remove attributes/comments to TIA defaults. Unknown columns, case-insensitive name collisions and Kind changes refuse. Constants never emit ExternalAccessible. Header, DocumentInfo and unrelated XML are preserved. Delete explicitly through ManagePlcTagDefinition/ApplyToolBatch. rows toTable accepts 1..1000 flat scalar objects and optional column order; fromTable returns strings with offset/limit 1..200 (default 50), columns, total and V4 paging; writes no file. CSV is UTF-8 BOM, comma, all cells quoted with doubled quotes and LF; accepts no BOM and CR/LF/CRLF; rejects NUL, broken quotes, uneven nonempty rows and empty/duplicate headers. plcTagTable ignores every empty row; rows trims only trailing empty rows. Trailing empty styled XLSX cells are ignored. CSV export adds one apostrophe before = + - @, tab or CR, including when preceded by leading apostrophes; import removes exactly one such prefix. XLSX preserves apostrophes unchanged without a formula guard. Use XLSX when Excel's locale uses semicolon separators. XLSX uses one sheet PlcTagTable/Rows, all inline text cells; reads that sheet or the only sheet, shared/inline strings, raw numbers, booleans and formula cached values; refuses formulas without cache, errors, ambiguous sheets, .xls/.xlsm and encrypted files. Limits: 16 MiB uncompressed, 10000 data rows, 1024 columns, 65536 CSV/32767 XLSX characters per cell, 64 Mi logical XLSX characters. Default dryRun=true validates and previews columns/counts, changes (first 50 old/new rows) and planned exportFile without writing. false creates a new file, never overwrites; returns path, bytes and SHA-256. Omitted exportFile uses the session output directory, with stable name ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix or overwrite. Output extension must match format (xlsx default/csv), or xml for plcTagTable fromTable. Import the XML with ImportPlcTagTable overwrite=true after preview/approval, binding folderPath to the original table folder; then ListPlcTags readback and compile affected blocks. No TIA calls, imports or compilation."
+    },
+    "RunPlcTestLibrary": {
+      "method": "RunPlcTestLibrary",
+      "path": "src/Shared/PlcTestLibraryTools.cs",
+      "owner": "PlcTestLibraryTools",
+      "domain": "Simulation",
+      "signature": "public CallToolResult RunPlcTestLibrary(\n            [Description(\"Optional exact case ids, at most 100; case-insensitive. Combined with the tags filter.\")] string[]? ids = null,\n            [Description(\"Optional tags, at most 32 of 1..64 characters; any case-insensitive match. Combined with ids.\")] string[]? tags = null,\n            [Description(\"true validates and previews without worker calls; false executes the approved batch.\")] bool dryRun = true,\n            [Description(\"Required for execution, including PLCSIM-only runs; use planHash from the matching preview.\")] string expectedPlanHash = \"\",\n            [Description(\"Absolute bound project file required when a runnable Test Suite entry is selected.\")] string expectedProjectFile = \"\")",
+      "parameters": {
+        "ids": {
+          "type": "string[]?",
+          "default": "null",
+          "description": "Optional exact case ids, at most 100; case-insensitive. Combined with the tags filter.",
+          "value": null
+        },
+        "tags": {
+          "type": "string[]?",
+          "default": "null",
+          "description": "Optional tags, at most 32 of 1..64 characters; any case-insensitive match. Combined with ids.",
+          "value": null
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "true validates and previews without worker calls; false executes the approved batch.",
+          "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Required for execution, including PLCSIM-only runs; use planHash from the matching preview.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Absolute bound project file required when a runnable Test Suite entry is selected.",
+          "value": ""
+        }
+      },
+      "description": "[L2][Simulation][ONLINE-WRITE] Run 1..100 stored PLC test entries sequentially on all eight releases. ids and tags filter the library together; tags match any value, case-insensitively. Empty filters select the whole library. Default dryRun=true validates locally and returns the ordered plan and planHash without worker calls. Execution requires dryRun=false and expectedPlanHash; runnable Test Suite entries also require a bound project and absolute expectedProjectFile. One Workbench approval covers the batch. Failed/error cases do not stop the run; an unknown outcome stops without replay. Unsupported entries are skipped (Test Suite V17+, system V18+, application test sets V20+); all unsupported is refused. Writes run history and junit.xml under the data root, returns verdict totals and exitCode (0 passed, 3 failed/error, 4 skipped, 5 unknown/incomplete). Long runs block tools/call; asynchronous execution and cancellation are not available. Real PLCSIM Advanced / Test Suite installation acceptance is pending."
     }
   },
   "behaviorCandidates": [
