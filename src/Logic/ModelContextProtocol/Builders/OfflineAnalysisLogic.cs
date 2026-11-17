@@ -23,6 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
     /// versions) and diffs only an [Interface] + [Network N] canonical form with a Myers engine.
     /// This implementation is a superset: ID attributes, date-like elements, GUIDs and ISO timestamps are
     /// normalized as well, and .s7dcl MLC_* resource ids are resolved through the sibling .s7res.
+    /// Same-format XML comparisons include non-default member attributes, start values and comments.
     /// </summary>
     public static partial class OfflineAnalysisLogic
     {
@@ -39,6 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "xml: attributes ID, UId, IId, RefId removed on every element",
             "xml: elements Created, Modified, CompileDate, ModifiedDate, CreationDate, LastModified removed",
             "xml: element namespaces ignored (local names only); SCL StructuredText rendered to plain lines",
+            "xml (same-format comparisons): interface members compare name, type, non-default Remanence/Accessibility/Informative, start values and comments",
             "text: UTF-8 BOM stripped, CRLF normalized, lines trimmed, blank lines dropped",
             "text: GUIDs masked as <guid>, ISO-8601 date/time values masked as <timestamp>",
             "s7dcl: MLC_* resource ids replaced by the sibling .s7res text (or <mlc> when unresolved)",
@@ -75,6 +77,7 @@ namespace TiaMcpServer.ModelContextProtocol
             public string Section = "";
             public string Path = "";
             public string Datatype = "";
+            public string Traits = "";
         }
 
         public sealed class NetworkInfo

@@ -7,6 +7,9 @@
 ### Changed
 - `ApplyToolBatch` fills missing plan bindings from each item's stored preview; PLC tag-table imports and Unified tag creation now support the batch route.
 - **Breaking:** `ConnectOnlinePlc` requires an explicit IPv4 `ipAddress`; `DownloadPlc` and `UploadDeviceParameters` require an explicit IPv4 `targetIpAddress`, including previews. Openness online targets obey the optional `online-targets.settings` address/CIDR allow-list; invalid or unreadable lists fail closed and an empty list denies all targets. MCP cannot write the list or `secrets.vault`; a Workbench editor follows in a later beta. `ConnectOnlinePlc` is removed from V14 SP1; V15.1–V20 apply the supplied address before connecting and V21 uses the address overload.
+- `RenderPlcVisualDiff` adds `data.interfaceDifferences` with member field changes across all eight releases and treats omitted XML member defaults as equal to explicit defaults. `ComparePlcBlockDocuments.identicalAfterNormalization` now includes non-default member attributes, start values, comments and subelement start values when both documents are XML.
+- `ImportPlcBlockDocuments` on V20/V21 accepts the block and member resource attributes in the documented V21 export fixture, and reports refused tokens with their line and `importPath`. `BEGIN` sections remain outside admission pending an exported example with start values.
+
 - Tool descriptions now state per-release availability: snapshot read/export on V15.1–V21 and value actions only on V21; compilation simulation flag from V16 and virtual-PLC flag from V19. No behaviour change.
 - Unified V19–V21 adds connection/tag-table deletion and alarm multilingual texts; V21 graphic lists remain import-only for creation. Incompatible change: every `ManageUnifiedEngineeringObject` execution, including existing actions, now requires the preview's `expectedPlanHash` and absolute `expectedProjectFile`; use `ApplyToolBatch` for multiple alarms.
 - `ManageHardwareObject` adds V18+ `changeType` and project subnet creation/deletion on all eight releases; incompatible change: every execution, including existing delete/move/copy actions, now requires `expectedPlanHash` and `expectedProjectFile` from a matching preview, while `devicePath` is optional for subnet actions.
@@ -17,6 +20,7 @@
 
 ### Fixed
 - Online target IPv4 addresses reject octets with leading zeros before approval, preventing different numeric interpretations by the policy and TIA. Reading a missing online-target list creates no directories or lock files, non-address tools do not load it, and administrative list saves report audit failures to the caller.
+- Native document import syntax lines now reach the error message and `details.nativeMessage`. `DB_Example.s7dcl` is an ASCII file without a BOM containing primitive declarations without inline initializers; its language example again lists `ImportPlcBlockDocuments` and states the exact validation limit.
 
 ## [4.0.0-beta.5] - 2026-11-16
 

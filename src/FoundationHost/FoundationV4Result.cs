@@ -419,8 +419,15 @@ internal static class FoundationV4Result
 
     private static Error Unknown() => new("The operation outcome is unknown. Do not repeat this call. Read GetCallResult(requestId).",
         new OutcomeUnknownDetails("worker", Empty));
-    private static Error NativeFailure(JsonObject data) => new("The operation did not establish success; inspect the returned result.",
-        new NativeOperationFailedDetails(null, Text(data, "summary"), data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
+    private static Error NativeFailure(JsonObject data)
+    {
+        string? syntax = data["messages"] is JsonArray messages
+            ? string.Join("; ", messages.Select(node => node is JsonValue value && value.TryGetValue<string>(out var message) ? message : null)
+                .Where(message => message?.StartsWith("Line number ", StringComparison.Ordinal) == true).Take(3)) : null;
+        string? diagnostic = HostBehavior.SafeDiagnostic(Text(data, "summary") ?? syntax);
+        return new Error(diagnostic ?? "The operation did not establish success; inspect the returned result.",
+            new NativeOperationFailedDetails(null, diagnostic, data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
+    }
     private static Execution Execute(Outcome outcome, bool mutation) => HostBehavior.ExecutionOf(outcome, mutation);
     private static bool? Flag(JsonObject? data, string key) => data?[key] is JsonValue v && v.TryGetValue<bool>(out var b) ? b : null;
     private static string? Text(JsonObject data, string key) => data[key] is JsonValue v && v.TryGetValue<string>(out var s) ? s : null;

@@ -5,9 +5,11 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaGitAddIn.Models.Comparison;
 using TiaGitAddIn.Models.Lad;
 using TiaGitAddIn.Models.Sact;
 using TiaGitAddIn.Services;
+using TiaGitAddIn.Services.Comparison;
 using TiaGitAddIn.Services.SimaticMl;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -25,6 +27,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new NotSupportedException("Select one block per document; multi-block exports cannot be silently reduced to the first block.");
             bool graphical = left.Blocks[0].ProgrammingLanguage == "LAD" && right.Blocks[0].ProgrammingLanguage == "LAD";
             var diff = SimaticMlComparer.Compare(left, right);
+            var interfaceDifferences = new JsonArray();
+            var members = new InterfaceComparer().Compare(InterfaceSnapshotBuilder.Build(left.Blocks[0]),
+                InterfaceSnapshotBuilder.Build(right.Blocks[0]));
+            foreach (var section in members.Sections)
+                foreach (var member in section.Members) NormalizeMember(member, diff.Interface!, interfaceDifferences);
+            diff.Interface!.State = diff.Interface.Members.Any(row => row.State != CompareState.Equal) ? CompareState.Changed : CompareState.Equal;
+            diff.State = diff.Interface.State == CompareState.Equal && diff.Content!.State == CompareState.Equal ? CompareState.Equal : CompareState.Changed;
             var pairs = graphical ? PlcLadderDrawing.LayoutComparison(diff) : new System.Collections.Generic.List<LadNetworkPairLayout>();
             var structural = OfflineAnalysisLogic.CompareFiles(leftPath, rightPath, 0, OfflineAnalysisLogic.MaxLimit);
             var data = new JsonObject
@@ -32,6 +41,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["left"] = left.Blocks[0].Name, ["right"] = right.Blocks[0].Name,
                 ["state"] = diff.State.ToString(), ["graphicalLadAvailable"] = graphical,
                 ["comparison"] = JsonNode.Parse(JsonSerializer.Serialize(diff)),
+                ["interfaceDifferences"] = interfaceDifferences,
                 ["layouts"] = JsonNode.Parse(JsonSerializer.Serialize(pairs)),
                 ["documentDiff"] = structural, ["dataComplete"] = structural["dataComplete"]?.GetValue<bool>() == true,
                 ["scope"] =
@@ -60,6 +70,33 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Append("</pre></details><p>Simplified layout; validate engineering changes with the TIA compiler.</p></html>");
             html = b.ToString();
             return data;
+        }
+
+        private static bool NormalizeMember(InterfaceMemberComparison member, SactInterfaceResult legacy, JsonArray differences)
+        {
+            bool childrenEqual = true;
+            foreach (var child in member.Children) childrenEqual &= NormalizeMember(child, legacy, differences);
+            var anchor = member.Left ?? member.Right!;
+            var changes = member.FieldChanges.Where(change => !DefaultOnly(change)).ToArray();
+            foreach (var change in changes)
+                differences.Add(new JsonObject {
+                    ["section"] = anchor.Section, ["member"] = anchor.Path.Replace('/', '.'),
+                    ["field"] = change.Field.ToString(), ["key"] = change.Key, ["left"] = change.LeftValue, ["right"] = change.RightValue
+                });
+            bool equal = member.Left != null && member.Right != null && changes.Length == 0 && childrenEqual;
+            if (equal)
+                foreach (var row in legacy.Members.Where(row => row.Section == anchor.Section && row.Name == anchor.Path.Replace('/', '.')))
+                    row.State = CompareState.Equal;
+            return equal;
+        }
+
+        private static bool DefaultOnly(InterfaceFieldChange change)
+        {
+            if (change.Field is InterfaceFieldKind.Retain or InterfaceFieldKind.Informative)
+                return change.LeftValue == "Unspecified" && change.RightValue == "False"
+                    || change.LeftValue == "False" && change.RightValue == "Unspecified";
+            return change.Field == InterfaceFieldKind.Accessibility
+                && (change.LeftValue == null && change.RightValue == "Public" || change.LeftValue == "Public" && change.RightValue == null);
         }
 
         private static string E(string? value) => WebUtility.HtmlEncode(value ?? "");

@@ -116,7 +116,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 doc.Networks.Add(net);
             }
 
-            BuildCanonical(doc);
+            doc.Canonical = BuildCanonical(doc);
             return doc;
         }
 
@@ -133,8 +133,37 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var name = (string?)member.Attribute("Name") ?? "";
             var path = prefix.Length == 0 ? name : prefix + "." + name;
-            doc.Members.Add(new InterfaceMember { Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim() });
+            doc.Members.Add(new InterfaceMember {
+                Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(member)
+            });
             foreach (var child in member.Elements().Where(e => Local(e) == "Member")) AddXmlMember(section, path, child, doc);
+        }
+
+        private static string MemberTraits(XElement member)
+        {
+            var traits = new StringBuilder();
+            foreach (var (name, defaultValue) in new[] { ("Remanence", "NonRetain"), ("Accessibility", "Public") })
+            {
+                var value = ((string?)member.Attribute(name))?.Trim();
+                if (value != null && value != defaultValue) traits.Append(' ').Append(name).Append('=').Append(value);
+            }
+            var informative = ((string?)member.Attribute("Informative"))?.Trim();
+            if (informative == "1" || bool.TryParse(informative, out var flag) && flag) traits.Append(" Informative=true");
+            var start = Child(member, "StartValue");
+            if (start != null) traits.Append(" StartValue=").Append(start.Value.Trim());
+            var comment = Child(member, "Comment");
+            if (comment != null)
+                foreach (var text in comment.Elements().Where(e => Local(e) == "MultiLanguageText")
+                    .OrderBy(e => (string?)e.Attribute("Lang"), StringComparer.Ordinal))
+                    traits.Append(" Comment[").Append((string?)text.Attribute("Lang")).Append("]=").Append(text.Value.Trim());
+            foreach (var subelement in member.Elements().Where(e => Local(e) == "Subelement")
+                .OrderBy(e => (string?)e.Attribute("Path"), StringComparer.Ordinal))
+            {
+                var value = Child(subelement, "StartValue");
+                if (value != null)
+                    traits.Append(" Subelement[").Append((string?)subelement.Attribute("Path")).Append("]=").Append(value.Value.Trim());
+            }
+            return traits.ToString();
         }
 
         private static string MultilingualTextValue(XElement multilingualText)

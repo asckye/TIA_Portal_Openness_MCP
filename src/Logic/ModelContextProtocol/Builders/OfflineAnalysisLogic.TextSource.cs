@@ -273,7 +273,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static void BuildCanonical(BlockDocument doc)
+        private static List<string> BuildCanonical(BlockDocument doc, bool includeTraits = true)
         {
             var lines = new List<string>
             {
@@ -282,7 +282,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (doc.Title.Length > 0) lines.Add("[Title] " + doc.Title);
             if (doc.Comment.Length > 0) lines.Add("[Comment] " + doc.Comment);
             foreach (var kv in doc.Attributes) lines.Add("[Attribute] " + kv.Key + "=" + kv.Value);
-            foreach (var m in doc.Members) lines.Add("[Interface] " + m.Section + " " + m.Path + " : " + m.Datatype);
+            foreach (var m in doc.Members) lines.Add("[Interface] " + m.Section + " " + m.Path + " : " + m.Datatype + (includeTraits ? m.Traits : ""));
             foreach (var n in doc.Networks)
             {
                 lines.Add("[Network " + n.Index + "] Language=" + n.Language);
@@ -290,7 +290,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (n.Comment.Length > 0) lines.Add("[Network " + n.Index + "] Comment=" + n.Comment);
                 foreach (var s in n.SourceLines) { var t = s.Trim(); if (t.Length > 0) lines.Add(t); }
             }
-            doc.Canonical = MaskLines(lines);
+            return MaskLines(lines);
         }
 
         public static string Mask(string line)

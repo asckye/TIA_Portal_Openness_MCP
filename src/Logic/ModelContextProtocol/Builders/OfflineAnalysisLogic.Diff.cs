@@ -151,9 +151,12 @@ namespace TiaMcpServer.ModelContextProtocol
         public static JsonObject Compare(BlockDocument left, BlockDocument right, int offset, int limit, int contextLines = 2)
         {
             ValidatePage(offset, limit);
-            var identical = left.Canonical.SequenceEqual(right.Canonical, StringComparer.Ordinal);
+            var sameFormat = string.Equals(left.Format, right.Format, StringComparison.Ordinal);
+            var leftCanonical = sameFormat ? left.Canonical : BuildCanonical(left, false);
+            var rightCanonical = sameFormat ? right.Canonical : BuildCanonical(right, false);
+            var identical = leftCanonical.SequenceEqual(rightCanonical, StringComparer.Ordinal);
             var structural = CompareStructure(left, right);
-            var entries = identical ? new List<DiffEntry>() : Diff(left.Canonical, right.Canonical);
+            var entries = identical ? new List<DiffEntry>() : Diff(leftCanonical, rightCanonical);
             var hunks = BuildHunks(entries, contextLines);
             var page = new JsonArray();
             for (var i = offset; i < hunks.Count && page.Count < limit; i++) page.Add(hunks[i]!.DeepClone());

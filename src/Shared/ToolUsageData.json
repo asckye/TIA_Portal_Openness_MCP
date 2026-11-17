@@ -10417,23 +10417,24 @@
     {
       "id": "db-sd",
       "language": "db",
-      "title": "Global DB with initial values",
+      "title": "Primitive global DB in SIMATIC SD",
       "kind": "complete-source",
       "releaseKeys": [
         "21"
       ],
       "origin": "project example",
-      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "validation": "Same shape as a document TIA V21 imported through ImportPlcBlocksDocuments on 2026-11-05 (the envelope reported an unknown outcome; the data showed the item imported). ImportPlcBlockDocuments with this file: NOT RUN.",
       "files": [
         {
           "path": "reference/tool-examples/languages/DB_Example.s7dcl",
           "name": "DB_Example.s7dcl",
-          "encoding": "UTF-8 with BOM",
-          "content": "{ S7_Optimized := \"TRUE\"; S7_Version := \"0.1\" }\nDATA_BLOCK DB_Example\n    VAR\n        Enabled : Bool := FALSE;\n        Setpoint : Real := 10.0;\n        Samples : Array[0..3] of Int;\n    END_VAR\nEND_DATA_BLOCK\n",
-          "contentSha256": "537710e0a14fef59239fd346cc28918aa829b0da644ff31d89272f916aed1cac"
+          "encoding": "ASCII",
+          "content": "{ S7_Optimized := \"TRUE\" }\nDATA_BLOCK \"DB_Example\"\n    VAR\n        Enabled : Bool;\n        Count : Int;\n    END_VAR\nEND_DATA_BLOCK\n",
+          "contentSha256": "0fdbae6cc35e9dd844a22aba1e4a2a47a18d26178fd24e9257ba6b9a9716aab1"
         }
       ],
       "tools": [
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [

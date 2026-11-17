@@ -246,38 +246,53 @@ namespace TiaMcp.Adapters
             }
             private bool Is(string value)=>!quoted && token==value;
             private void Require(string value) {
-                if(!Is(value))throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Expected admitted token "+value+".");Next();}
+                if(!Is(value))
+                {
+                    int line=1;
+                    for(int i=0;i<at;i++)if(text[i]=='\n' || text[i]=='\r' && (i+1>=at || text[i+1]!='\n'))line++;
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                        "Expected admitted token "+value+", found '"+token+"' at line "+line+".","importPath");
+                }
+                Next();
+            }
             private string Name() {
                 var result=token;
                 if(!Identifier(result) || new[]{"DATA_BLOCK","END_DATA_BLOCK","VAR","END_VAR","FUNCTION","FUNCTION_BLOCK","TYPE","ORGANIZATION_BLOCK","BEGIN"}
                         .Contains(result.ToUpperInvariant()))
                     throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Ordinary identifier required.");Next();return result;
             }
+            private void Pragmas(bool member)
+            {
+                Require("{");var keys=new HashSet<string>(StringComparer.Ordinal);
+                while(!Is("}"))
+                {
+                    var key=token;
+                    var admitted=member?key=="S7_MLC":new[]{"S7_Optimized","S7_StandardRetain","S7_Version","S7_BlockComment","S7_BlockTitle"}.Contains(key);
+                    if(quoted || !admitted || !keys.Add(key))throw new TiaMcp.Adapters.Contracts
+                        .AdapterPreconditionException("Unknown/duplicate pragma; safety, language and manual-number pragmas excluded.");
+                    Next();Require(":=");if(!quoted)throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Quoted pragma value required.");
+                    if(key=="S7_Version") {
+                        var pieces=token.Split('.');if(pieces.Length!=2 || pieces.Any(x=>x.Length<1 || x.Length>3 || x.Any(c=>c<'0'||c>'9')))
+                            throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Bounded version pragma required.");
+                    }
+                    else if(key=="S7_MLC" || key=="S7_BlockComment" || key=="S7_BlockTitle") {
+                        if(!Identifier(token) || !token.StartsWith("MLC_",StringComparison.Ordinal) || token.Length<=4)
+                            throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Bounded multilingual resource key required.");
+                    }
+                    else if(token!="TRUE"&&token!="FALSE")throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Boolean pragma required.");
+                    Next();if(Is(";"))Next();else if(!Is("}"))throw new TiaMcp.Adapters.Contracts
+                        .AdapterPreconditionException("Pragma separator required.");
+                }
+                Require("}");
+            }
             internal string Parse()
             {
-                if(Is("{"))
-                {
-                    Next();var keys=new HashSet<string>(StringComparer.Ordinal);
-                    while(!Is("}"))
-                    {
-                        var key=token;if(quoted || !new[]{"S7_Optimized","S7_StandardRetain","S7_Version"}.Contains(key) || !keys.Add(key))throw new TiaMcp
-                            .Adapters.Contracts
-                            .AdapterPreconditionException("Unknown/duplicate pragma; safety, language, MLC and manual-number pragmas excluded.");
-                        Next();Require(":=");if(!quoted)throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Quoted pragma value required.");
-                        if(key=="S7_Version") {
-                            var pieces=token.Split('.');if(pieces.Length!=2 || pieces.Any(x=>x.Length<1 || x.Length>3 || x.Any(c=>c<'0'||c>'9')))
-                                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Bounded version pragma required.");
-                        }
-                        else if(token!="TRUE"&&token!="FALSE")throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Boolean pragma required.");
-                        Next();if(Is(";"))Next();else if(!Is("}"))throw new TiaMcp.Adapters.Contracts
-                            .AdapterPreconditionException("Pragma separator required.");
-                    }
-                    Require("}");
-                }
+                if(Is("{"))Pragmas(false);
                 Require("DATA_BLOCK");var name=Name();Require("VAR");var names=new HashSet<string>(StringComparer.OrdinalIgnoreCase);int count=0;
                 while(!Is("END_VAR"))
                 {
                     if(++count>1024)throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("DB exceeds 1024 scalar declarations.");
+                    if(Is("{"))Pragmas(true);
                     var variable=Name();if(!names.Add(variable))throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Duplicate scalar name.");
                     Require(":");
                     var type=token;if(quoted || !new[]{"Bool","SInt","USInt","Int","UInt","DInt","UDInt","LInt","ULInt"}.Contains(type))throw new TiaMcp

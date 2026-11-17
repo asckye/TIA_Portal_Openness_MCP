@@ -498,21 +498,22 @@
     {
       "id": "db-sd",
       "language": "db",
-      "title": "Global DB with initial values",
+      "title": "Primitive global DB in SIMATIC SD",
       "kind": "complete-source",
       "releaseKeys": [
         "21"
       ],
       "origin": "project example",
-      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "validation": "Same shape as a document TIA V21 imported through ImportPlcBlocksDocuments on 2026-11-05 (the envelope reported an unknown outcome; the data showed the item imported). ImportPlcBlockDocuments with this file: NOT RUN.",
       "files": [
         {
           "path": "reference/tool-examples/languages/DB_Example.s7dcl",
           "name": "DB_Example.s7dcl",
-          "encoding": "UTF-8 with BOM"
+          "encoding": "ASCII"
         }
       ],
       "tools": [
+        "ImportPlcBlockDocuments",
         "CompilePlcSoftware"
       ],
       "notes": [
