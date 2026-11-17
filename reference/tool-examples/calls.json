@@ -19599,13 +19599,9 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "Exact standard software unit name on V16–V21; omit on V14 SP1/V15.1.",
-            "requiresBinding": true,
-            "exampleValue": "<exact unitName from ListPlcSoftwareUnits>"
           }
         },
+        "operations": {},
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -40116,13 +40112,9 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
-          },
-          "unitName": {
-            "meaning": "Exact standard software unit name on V16–V21; omit on V14 SP1/V15.1.",
-            "requiresBinding": true,
-            "exampleValue": "<exact unitName from ListPlcSoftwareUnits>"
           }
         },
+        "operations": {},
         "execution": {
           "arguments": {
             "dryRun": false,

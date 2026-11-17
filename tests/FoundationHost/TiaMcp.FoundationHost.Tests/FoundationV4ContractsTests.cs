@@ -302,8 +302,9 @@ public sealed class FoundationV4ContractsTests
     // XREF adds the guarded offline AnalyzePlcCrossReferences tool on every release.
     // NO-LOCK-2 adds the host-only GetCallResult tool on every release.
     // TIA-TEST-1 adds the host-owned ManagePlcTestLibrary on every release.
-    [InlineData("14sp1", 281)] [InlineData("15.1", 322)] [InlineData("16", 351)]
-    [InlineData("17", 374)] [InlineData("18", 400)] [InlineData("19", 476)]
+    // TIA-BATCH-2 adds ExportPlcTagTables on every release.
+    [InlineData("14sp1", 282)] [InlineData("15.1", 323)] [InlineData("16", 352)]
+    [InlineData("17", 375)] [InlineData("18", 401)] [InlineData("19", 477)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();
