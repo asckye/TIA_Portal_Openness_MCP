@@ -4848,6 +4848,38 @@
           "identifier": "check_usage:c989b33e5d28b3da18207f84eb8811e257b80fe2e077f0b2c9d034a799ae6f0d:1"
         }
       ]
+    },
+    {
+      "task": "TIA-TEST-1",
+      "maintainerDate": "2026-11-17",
+      "reason": "Lead approval 2026-11-17 under the maintainer\u0027s standing approval: ManagePlcTestLibrary adds one registered tool per release (exact counts \u002B1) and one explicit output coverage entry",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):0213d810ce8b1086c14e8e40351692a16acb91dfd906e3845878031dff7c444b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):91ebe36170776f739b7e970a5cfccd7d0f2f4c8d682367e509d1539a70fd6dee:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):95cf75d5e2903ea12d7925731b763e858ba937e346da3250da1b125899fd77b6:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):f071c57434349a62e330ede15e8e37b90fba562da78b457f59e0948240ccf566:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):f75687baeb7c4d69b53ecf658bcf89c7a3660eb80fff54fbb64f5dcaee1f9c5a:1"
+        }
+      ]
     }
   ]
 }
