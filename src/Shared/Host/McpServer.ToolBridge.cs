@@ -434,16 +434,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var result = preview();
             var body = ResultBody(result) as JsonObject;
-            if (ResultSucceeded(body) != true) return result;
-            if (body?["data"] is JsonObject data)
-            {
-                foreach (string field in new[] { "planHash", "plannedChanges", "targetIdentity", "targetBound" })
-                    data[field] = plan[field]?.DeepClone();
-                data["dryRun"] = true;
-                data["mayHaveChanged"] = false;
-                result.StructuredContent = body;
-                result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(body) } };
-            }
+            if (body == null || ResultSucceeded(body) != true) return result;
+            if (body["data"] is not JsonObject data) body["data"] = data = new JsonObject();
+            foreach (string field in new[] { "planHash", "plannedChanges", "targetIdentity", "targetBound" })
+                data[field] = plan[field]?.DeepClone();
+            if ((bool?)plan["targetBound"] == false) data["scope"] = plan["scope"]?.DeepClone();
+            data["dryRun"] = true;
+            data["mayHaveChanged"] = false;
+            result.StructuredContent = body;
+            result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(body) } };
             return result;
         }
         internal static Paging OffsetPage(int offset, int limit, int total) => new Paging(PagingMode.Offset, offset, limit,

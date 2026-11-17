@@ -37,6 +37,65 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
 
     public static IEnumerable<object[]> Releases() => CanonicalParameterRound2Tests.Releases();
 
+    public static IEnumerable<object[]> EmptyNativePreviewDataCases() => from release in Releases()
+        from omitData in new[] { false, true }
+        select new object[] { release[0], omitData };
+
+    [Theory, MemberData(nameof(EmptyNativePreviewDataCases))]
+    public void Native_write_preview_creates_plan_data_when_native_data_is_null_or_missing(string release, bool omitData)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var args = new { action = "delete", masterCopyPath = "Motor" };
+        var native = Host.V4Result("ManageLibraryMasterCopy", null);
+        var body = native.StructuredContent!.AsObject();
+        if (omitData) body.Remove("data");
+        else body["data"] = null;
+        native.Content = new[] { new TextContentBlock { Text = body.ToJsonString() } };
+        int previews = 0;
+        var result = Host.RunNativeWritePreview("ManageLibraryMasterCopy", true, args,
+            () => { previews++; return native; }, () => throw new InvalidOperationException("Preview must not execute."));
+        Assert.True((bool?)result.StructuredContent!["ok"]);
+        var data = Assert.IsType<JsonObject>(result.StructuredContent["data"]);
+        Assert.Matches("^[0-9a-f]{64}$", (string)data["planHash"]!);
+        Assert.True(JsonNode.DeepEquals(JsonSerializer.SerializeToNode(args), data["plannedChanges"]));
+        Assert.True(JsonNode.DeepEquals(worker.Identity, data["targetIdentity"]));
+        Assert.True((bool?)data["targetBound"]);
+        Assert.True((bool?)data["dryRun"]);
+        Assert.False((bool?)data["mayHaveChanged"]);
+        Assert.Null(data["targetVerified"]);
+        Assert.Equal(1, previews);
+        Assert.Equal(0, worker.Calls);
+        Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Native_write_preview_discloses_unbound_scope_and_keeps_bound_native_scope(string release)
+    {
+        foreach (bool bound in new[] { false, true })
+        {
+            using var worker = new PlanWorker();
+            if (!bound) worker.Identity = new JsonObject();
+            using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+            using var session = pipeline.EnterSession();
+            var result = Host.RunNativeWritePreview("ManageLibraryMasterCopy", true, new { action = "delete", masterCopyPath = "Motor" },
+                () => Host.V4Result("ManageLibraryMasterCopy", new JsonObject {
+                    ["scope"] = "Native master copy resolution", ["resolvedPath"] = "Library/Motor"
+                }), () => throw new InvalidOperationException("Preview must not execute."));
+            Assert.True((bool?)result.StructuredContent!["ok"]);
+            var data = result.StructuredContent["data"]!;
+            Assert.Equal(bound, (bool?)data["targetBound"]);
+            Assert.Equal(bound ? "Native master copy resolution"
+                : "No project is bound, so this preview covers only the arguments and input files and names no target. "
+                    + "The target is not verified. Applying it refuses with PROJECT_NOT_BOUND; bind a project and preview again.",
+                (string?)data["scope"]);
+            Assert.Equal("Library/Motor", (string?)data["resolvedPath"]);
+            Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+            Assert.Equal(0, worker.Calls);
+        }
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void Native_write_preview_keeps_native_scope_and_target_evidence(string release)
     {
