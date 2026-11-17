@@ -4683,6 +4683,68 @@
           "identifier": "WritePreviewCoverageTests/Read_action_preview_has_no_target_flag( string release ):9058280b4b5446af7be4a10a62f4b9f7af3e06cdc02703dee93119099dd01c81"
         }
       ]
+    },
+    {
+      "task": "PREP-B5",
+      "maintainerDate": "2026-11-17",
+      "reason": "2026-11-16 maintainer approved: release-tool tests pin the current version 4.0.0-beta.5 instead of 4.0.0-beta.4, the same pattern as the beta.4 preparation",
+      "items": [
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/CreateContextAcceptsTheSmallCleanRepository( ):953148e0f80437c804efa3694edb0317c37bf6506827e155c7a2f891a5a9a687:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):1e09598421d333e7e5c059fd1233610613cc8dba47dae46c87f3a53d09fe5dd2:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):20cb23debc69d38e881e3d342c0dbc61e12a515931caead3cdf6db6fb675ffbb:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):71328c3c14bc2e1119be215fb779f2241fda289ae58cd7f3408e52fcb054bbaf:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):8db37a17ce5a8f7e6660e34a0706879dc238a10b6ded45f8b9d53b99fbfc9748:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesEachReleaseInputMismatch( string path , string contents , string error ):dd7461ea7f34568867ff456ebdf9c6723c1cd68959c6592107537531bf6a8515:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesMissingAndStaleNotesWithoutRewritingThem( ):1bde08f5e689b6fb7beb8d665e5fa5770391c0a483693fb090e9105b9cfb351f:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesMissingAndStaleNotesWithoutRewritingThem( ):1bde08f5e689b6fb7beb8d665e5fa5770391c0a483693fb090e9105b9cfb351f:2"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/RefusesMissingAndStaleNotesWithoutRewritingThem( ):91098a5bbdcb4221a3860d1bd871311e11372dc47a87f84b932b311d9ed3788e:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/UsesNewestReleaseDateAndSkipsUnreleased( ):e074a8156d8c8a07b09d3f21c42066a269cca2baecf6046912b948d98c2b2a6f:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/DraftBetaNotesCarryTheCurrentGeneratedSection( ):3091f84a71f5c23e4d8821b0a5c7bc6f98e3545474bacf73610d3dd4daae7dd5:1"
+        }
+      ]
     }
   ]
 }
