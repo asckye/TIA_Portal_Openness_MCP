@@ -1,6 +1,6 @@
-# 路线图与待办（v4.0.0-beta.4 已发布）
+# 路线图与待办（v4.0.0-beta.5 源码已准备）
 
-状态：现行 · 最后核对：2026-11-05，已发布 v4.0.0-beta.4（`48abffe8`）
+状态：现行 · 最后核对：2026-11-16，beta.5 prepared（源码已准备，未发布）
 
 本页是开发计划：按版本记录范围、任务状态、放行门槛和待维护者决定，取代已归档的[路线图](../archive/development/roadmap.md)和[重构计划](../archive/development/refactor-plan.md)（阶段 0–8 的 P0–P8 任务表、历史目标和风险留在那里）。
 
@@ -133,7 +133,7 @@ beta.3 之后已合并：CI-FIX（`67ca6816`）、PREP-SLIM（`ccc8f7aa`、`d1a7
 
 TIDY-7、HOST-RENAME 和 LONG-LINE-GATE 必须等 DES-4R2、DES-4R3 合并，拆分与改名后的文件无法靠重命名检测跟随仍开的分支。许可沿用 2026-10-30 决定。
 
-本表状态于 2026-11-16 对照 master（`31bcea9a`）核实：判据是任务说明点名的源文件与测试是否存在并具备所述行为，辅以 `build-tools/release/baselines/approved-check-changes.json` 的 `task` 字段。提交信息不带任务编号，不能据此判断。
+本表状态于 2026-11-16 对照 master（`af2e8238`）核实：判据是任务说明点名的源文件与测试是否存在并具备所述行为，辅以 `build-tools/release/baselines/approved-check-changes.json` 的 `task` 字段。提交信息不带任务编号，不能据此判断。
 
 ### 已合并
 
@@ -153,22 +153,25 @@ TIDY-7、HOST-RENAME 和 LONG-LINE-GATE 必须等 DES-4R2、DES-4R3 合并，拆
 | B21、B27、B28 | 编译设备预览、导入工艺对象默认不覆盖；硬件路径统一解析并列出候选；修改 Windows 用户组的工具提示更明确 |
 | STDIO-FRAME、TEST-TRIM、CI-RED | STDIO 每条消息整行写出；删除恒绿测试；GitHub `validate-bundle` 恢复通过 |
 | TIDY-7、HOST-RENAME | 拆分剩余大文件，IL 不变；`src/EngineHost` 改名为 `src/ToolPipeline`，C# 类型与命名空间保持 |
+| LONG-LINE-GATE | 已合并 `b6036d85`；合并门检查分支新增或改动行的 160 字符上限，不做全仓重排 |
+| LOW-B5 | 已合并 `1bd676ca`、`af2e8238`；执行结果去掉预览标记、已存在错误指向声明参数、网络与硬件准入理由、原生单字符秘密去敏等收尾修正 |
 
 ### 未完成
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
-| LONG-LINE-GATE | 合并门只检查分支新增或改动的行不超过 160 字符，不做全仓重排（维护者 2026-11-16 决定） | 实现中 | 2026-11-16 |
-| VMFIX-10D | S7DCL 准入与 PLC 文档差异（真机缺陷 M11、M13） | 说明已写，需要维护者开启虚拟机 | 2026-11-11 |
-| MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 说明已写，需要维护者开启虚拟机 | 2026-11-01 |
 | P8-97b | 单块、块组编译 | 并入 API-P1b（beta.6） | 2026-10-27 |
 
-## 4.0.0-beta.6（新功能，2026-11-13 从 beta.5 移入）
+## 4.0.0-beta.6（新功能与待虚拟机验证项）
 
-beta.5 发布后开工，均为按官方 API 补能力的新功能，不含回归修复。顺序与依赖沿用各行原说明。
+新功能在 beta.5 发布后开工，顺序与依赖沿用各行原说明。另保留等待虚拟机的线程迁移与回归修复。
+
+**维护者 2026-11-16 决定：beta.5 不等虚拟机，MTA-1（已实现、门禁通过、未合并，等八版 VM 冒烟）与 VMFIX-10D 移至 beta.6。**
 
 | 编号 | 内容 | 状态 | 决定日期 |
 |---|---|---|---|
+| MTA-1 | 八个版本的 worker 都在一个 MTA 负责线程上调用 Openness（D-P10 a，方案 A1），隐藏的 STA 回退开关保留到 4.1；合并前 VM 冒烟 | 已实现、门禁通过、未合并，等八版 VM 冒烟 | 2026-11-16 |
+| VMFIX-10D | S7DCL 准入与 PLC 文档差异（真机缺陷 M11、M13） | 说明已写，需要维护者开启虚拟机 | 2026-11-16 |
 | API-P1a | 库对象实例化到项目（`CreateFrom`）：块、变量与变量表、设备、Classic 画面，来源为库类型版本和母版，八个版本按 API 注册；第 0 部分为共用的计划绑定辅助方法 | 排队（任务说明已批准） | 2026-11-02 |
 | API-P1b | 新建监控表，导入（并核实导出）强制表，强制表进入 AI 工具面并受 WRITE/ONLINE-WRITE 审批；按块、块组、软件单元编译，先在 VM 上确认 `ICompilable` 暴露，未暴露则只做前半（吸收 P8-97b） | 排队（API-P1a 第 0 部分之后） | 2026-11-02 |
 | API-P1c | `DeviceItem.ChangeType` 更换 CPU 或模块型号，项目级子网创建与删除 | 排队（API-P1a 第 0 部分之后） | 2026-11-02 |
@@ -264,5 +267,5 @@ T-IA（TIA-TEST/SAFE/BATCH/GAPS）、P8-95、S4 与后续零散任务仍需编�
 - D-P1：4.0 正式版门槛加“没有未决的 blocker 报告”，已补记到 ADR 0023（DOCS-1）。
 - D-P6：旧 `transport-usage-v18` 预算决定已随相应作业移除失去适用对象，不能据此放宽其他功能检查。
 - D-P7：`ReleaseUnifiedReadCursor` 移出只读批处理，随 DES-3。
-- D-P10：八版 worker 改为 MTA（MTA-1，beta.5）；Microsoft.Extensions 等改用稳定版（DEP-1）；MCP C# SDK 在 4.0 保持 0.3.0-preview.4，4.1 迁到 2.x。
+- D-P10：八版 worker 改为 MTA（MTA-1，beta.6）；Microsoft.Extensions 等改用稳定版（DEP-1）；MCP C# SDK 在 4.0 保持 0.3.0-preview.4，4.1 迁到 2.x。
 - D-P12：新任务用主题编号，已有的 P8 编号不变。

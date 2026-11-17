@@ -4,9 +4,14 @@
 
 ## [Unreleased]
 
+## [4.0.0-beta.5] - 2026-11-16
+
+### Added
+- `PatchPlcBlockDocument` adds `setMemberComment` for DB, FB/FC interface and UDT members across all eight releases. UDT member comments are imported without verification.
+
 ### Changed
-- Typed V4 results rename `data.requiresSessionReset` to `data.outcomeUnknown` for device add, document import and export, batch export, batch document import and export, external-source tools and special export; batch import keeps only `data.nativeOutcomeUnknown`, with all values unchanged.
 - Beta.5 removes `meta.requiresSessionReset` and the `SESSION_RESET_REQUIRED` error code across all eight releases as a hard cut under ADR 0001; `schemaVersion` stays 4. Read `meta.outcome` for each call and `GetSessionState.unsettled` for unconfirmed writes. Inspect the target before repeating an unknown write; never replay it automatically.
+- Typed V4 results rename `data.requiresSessionReset` to `data.outcomeUnknown` for device add, document import and export, batch export, batch document import and export, external-source tools and special export; batch import keeps only `data.nativeOutcomeUnknown`, with all values unchanged.
 - `GetUnifiedGraphicSelection` writes its public tool name at the top level and in new page scopes on V19–V21. `CompareUnifiedGraphicSelections` accepts both the new label and the legacy label in saved pages, including comparisons between old and new snapshots.
 - Across all eight releases, `GetDeviceItemNetworkInfo` reports complete reads and names its attribute-name heuristic in `data.selection`; unreadable attributes retain their names and make the read partial with `INCOMPLETE_DATA`, while enumeration and portal-loss failures report `read-failed`.
 - Across all eight releases, `GetHardwareFeatures` reports `present:null` with a reason for unprobed features, sets `dataComplete` from probe results and page coverage, and names the connected release's API in its scope.
@@ -14,6 +19,17 @@
 - `GetUnifiedGraphicSelection` moves `records` and `nextCursor` under `data.page`, retaining the page accepted by `CompareUnifiedGraphicSelections`, on V19–V21.
 - Unified script, tag-definition, screen-branch, library and faceplate migration pages and request-failure records name their public tools in `scope.tool` and failure paths on V19–V21.
 - `ProbeHardwareHmiConnectionWhitelistedServices` displays public engineering types instead of implementation types across all eight releases.
+- Generic write previews report `targetVerified:false` and state that the cached target identity has not been verified, on all eight releases where each tool is registered.
+- Generic read-only invocations, including `ManageOnlineDriveFunctions` read actions, report `readOnlyInvocation:true` on all eight releases where each tool is registered.
+- `WritePlcWebVars` and `SetPlcWebOperatingMode` previews retain their online login and current-value reads and disclose `contactedDevice:true` on all eight releases.
+- `CompileDevice` now defaults to a preview on all eight releases. Existing callers must pass `dryRun:false` with the preview's `expectedPlanHash` and exact bound `expectedProjectFile` to compile.
+- `ImportTechnologyObjectsFromDirectory` defaults to `overwrite:false` on V16–V21; replacing existing technology objects requires `overwrite:true`.
+- Across all eight releases, `PreviewToolBatch` adds `data.previewToken` with the same value as `data.token`; `token` remains available until 5.0.
+- `EnsureUnifiedHmiTag.hmiDataType` and `BindUnifiedHmiTagDynamization.dataType` default to empty on V19–V21. Symbolic tags use the type supplied by TIA; absolute tags still default to Bool. Dynamization dataType, plcTag and address are optional expected values compared after binding, because those API properties are read-only.
+- Unified colour conversion and write verification also accept `0xAARRGGBB`; the theme schema keeps its existing `0x` format.
+- `PlanOnlineReadOnlyMonitoring` / `PlanOnlineReadOnlyDataProvider` refusals change from `PRECONDITION_FAILED` with condition `plc-operation` to `INVALID_ARGUMENT` with parameter `tagPaths`, `mode`, `provider` or `options`. Online planning accepts ordinary and quoted PLC member names and applies intent filtering to provider options.
+- ASCII SCL files omit the BOM for tool import. Other text retains UTF-8 BOM and includes manual TIA import instructions. Replies add the metadata fields `encoding` and `importableByTool`.
+- Capped member lists report `totalMembers` and `truncated`. FindTools reports `matchingCount` and page ranges. Type and library lists report truncation, PLC scope paging uses the expected count, and plant objects and transfer areas compute completeness from the returned page and read failures.
 
 ### Fixed
 - Executed results omit preview `targetVerified` and preview scope text; scope returned by native execution is preserved.
@@ -28,7 +44,6 @@
 - Across all eight releases where registered, missing-target refusals identify a known declared parameter with a JSON pointer in `details.target`; unknown or undeclared parameters keep a null target.
 - Across all eight releases, adapter argument refusals identify the canonical field supplied by the caller.
 - Across all eight releases, batch admission refusals identify `/operations/<i>/name` and explain that the tool lacks a dry-run preview or batch permission, or is a batch or orchestration tool.
-
 - All 17 tools that use the offline analysis runner refuse before any write and retain actionable reasons and declared parameter pointers (all eight releases where registered; CWC on V17–V21). Unused template replacement keys stay private.
 - `RunPlcCompanionTool` identifies missing working directories and unavailable companion runtimes, with setup guidance, across all eight releases.
 - External-source ASCII refusals explain how to re-save without a BOM across all eight releases; the existing byte check is unchanged.
@@ -81,53 +96,27 @@
 - Completed offline library and template analyses report findings through `data.packageComplete` and `data.templatesFound`; missing folders return `NOT_FOUND`. New libraries do not require `XRef/XRef.db`, and successful hashes carry no error field.
 - Offline release validation refusals identify the relative fixture path and explain that callers must supply fixtures absent from the repository and package.
 - Real `DeletePlcTagTable`, `DeletePlcBlock` and `DeletePlcType` calls require `dryRun=false`, `confirm=true` and the exact bound `expectedProjectFile`. Missing confirmation returns `CONFIRMATION_REQUIRED`; invalid or mismatched project identities return `INVALID_ARGUMENT` or `IDENTITY_MISMATCH` before dispatch.
-
 - A failed `MovePlcBlockToGroup` whose block was re-imported and verified in its original group reports `failed` unless it created target groups. `ManageTechnologyObject` create refusals that leave nothing behind report `failed`, and create previews say TIA checks the type and version only at creation. Verified-import results keep a negative verdict. A failed undo on an object the rollback deletes no longer forces `unknown`. Staged PLC exports use a short fixed file name.
 - Classic HMI and SiVArc folder paths accept the absolute `/Group/Sub` form required by the host.
 - Unified HMI template layout QA and apply designs resolve screen size from declarations, then the file name, then caller fallbacks, so shipped templates pass layout checks.
 - HMI template PLC sync prechecks report `no-bindings` when no bindings are declared, and include blocking reasons when the suite cannot pass.
 - Load V21 optional Openness assemblies by exact SDK identity. Distinguish missing components from load failures and preserve load failure reasons in `nativeMessage`.
-
 - Lost worker replies for reads report `read-failed`, `read-only` and `NATIVE_OPERATION_FAILED` across all eight releases. Host mapping classifies failed PLC batch exports as `failed` or `partial`, and cross-reference export failures with no analysis as `read-failed`.
 - Applied batch document imports report `succeeded`. Document imports with an uncertain native result report `unknown`.
 - Verified PLC import readback and preview tokens ignore TIA-computed dates and memory sizes, so recompiling unchanged block content preserves the reviewed token. A completed readback mismatch reports `failed` and retains the backup and cleanup evidence.
 - Unified event writes refused before a native write retain the sanitized native reason. Worker status reports `Busy` with the running request during a detached call and attributes an unwinding fault to the running operation. Compile error counts exclude declared summary nodes.
-
 - `PreviewToolCall` reports the effective dry-run value and a separate `data.changesState`. Session and online precautions follow each tool's read-only annotation, execution prerequisites name its declared confirmation and plan parameters, and `SaveProject`, `SaveProjectCopy` and `CloseProject` require a bound project in the preview.
 - `PreviewToolCall` validates `PrefillWorkbenchForm` fields with the same per-form rules used when calling the tool, so refused field sets report NOT READY.
 - Generic write previews expose `data.targetBound` and explain that applying an unbound preview refuses with `PROJECT_NOT_BOUND`. Plan hashes retain their existing inputs.
 - Generic write and batch `PLAN_STALE` messages explain that reconnects and host restarts can invalidate the preview and instruct callers to preview again.
 - Online monitoring safety checks use force-tool classifications and the reviewed offline-write list, require the monitoring API tools available on each release, and scan the registered roster on V20/V21. The policy covers offline force-table engineering and prohibits changing forcing on a running PLC.
 - Passive capability self-tests read cached connection and project state. A bound project is reported without a worker call, and project validation and tree reads require `connectIfNeeded=true`.
-### Changed
-- Generic write previews report `targetVerified:false` and state that the cached target identity has not been verified, on all eight releases where each tool is registered.
-- Generic read-only invocations, including `ManageOnlineDriveFunctions` read actions, report `readOnlyInvocation:true` on all eight releases where each tool is registered.
-- `WritePlcWebVars` and `SetPlcWebOperatingMode` previews retain their online login and current-value reads and disclose `contactedDevice:true` on all eight releases.
-- `CompileDevice` now defaults to a preview on all eight releases. Existing callers must pass `dryRun:false` with the preview's `expectedPlanHash` and exact bound `expectedProjectFile` to compile.
-- `ImportTechnologyObjectsFromDirectory` defaults to `overwrite:false` on V16–V21; replacing existing technology objects requires `overwrite:true`.
-- Across all eight releases, `PreviewToolBatch` adds `data.previewToken` with the same value as `data.token`; `token` remains available until 5.0.
-- `EnsureUnifiedHmiTag.hmiDataType` and `BindUnifiedHmiTagDynamization.dataType` default to empty on V19–V21. Symbolic tags use the type supplied by TIA; absolute tags still default to Bool. Dynamization dataType, plcTag and address are optional expected values compared after binding, because those API properties are read-only.
-- Unified colour conversion and write verification also accept `0xAARRGGBB`; the theme schema keeps its existing `0x` format.
-
-### Fixed
-- TIA dialog reports reach running-call, busy and Workbench views on all eight releases. Unanswered confirmations promptly return `in-progress`; Ok-only confirmations and notifications are acknowledged after recording. Read-only window observations report unhandled modal windows. Compile, transfer, import/export, archive and library-update wait budgets are 300 seconds.
-- Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
 - Event script writes tolerate unavailable identity labels, preserve native failure reasons and report failed button actions accurately.
 - Symbolic HMI tag binding avoids unnecessary DataType writes, restores the binding before the type on rollback and lists applied property names in results.
 - Preview and deletion accept the exact unbound Tag dynamization snapshot whose Address, DataType and PlcTag getters fail; other incomplete snapshots refuse with failed paths.
 - Empty event deletion accepts a comment-only definition area while still requiring ScriptCode to be exactly empty.
 - `GetUnifiedFaceplateInstance` accepts an omitted optional typePath while still validating all supplied nonempty type paths, screen paths and folder paths.
 - Symbolic HMI tag rollback also restores the original DataType when no type was requested. Dynamization type expectations compare without case sensitivity; incomplete-delete and event-script errors retain useful text when paths or native messages are absent. Usage metadata marks dynamization plcTag as an optional expectation.
-### Changed
-
-- `PlanOnlineReadOnlyMonitoring` / `PlanOnlineReadOnlyDataProvider` refusals change from `PRECONDITION_FAILED` with condition `plc-operation` to `INVALID_ARGUMENT` with parameter `tagPaths`, `mode`, `provider` or `options`. Online planning accepts ordinary and quoted PLC member names and applies intent filtering to provider options.
-- ASCII SCL files omit the BOM for tool import. Other text retains UTF-8 BOM and includes manual TIA import instructions. Replies add the metadata fields `encoding` and `importableByTool`.
-- Capped member lists report `totalMembers` and `truncated`. FindTools reports `matchingCount` and page ranges. Type and library lists report truncation, PLC scope paging uses the expected count, and plant objects and transfer areas compute completeness from the returned page and read failures.
-
-### Fixed
-- TIA dialog reports reach running-call, busy and Workbench views on all eight releases. Unanswered confirmations promptly return `in-progress`; Ok-only confirmations and notifications are acknowledged after recording. Read-only window observations report unhandled modal windows. Compile, transfer, import/export, archive and library-update wait budgets are 300 seconds.
-- Native calls that exceed the client wait budget return `in-progress` and continue to completion. All eight releases add host-only `GetCallResult(requestId)` in lite, busy state and retained late results. Identical writes remain guarded until their result is read. Disconnect, worker reset and session disposal preserve running native calls. The unreleased V4 contract keeps `schemaVersion=4`.
-
 - Tool descriptions show the GetToolUsage hint once. Discovery, preview and schema examples use the maintained call library for the selected release, including file targets, exact PG/PC interfaces, channel settings and Classic HMI bindings. Generation machine documents use the selected release, and ManageMachineDescription discovery starts with exportTemplate.
 - A rate-limited pre-release update check reports the latest release as unknown. Delivery ZIPs with unknown sizes omit the MB figure.
 - New installations start with approval enabled instead of inheriting a disabled switch from the old profile.

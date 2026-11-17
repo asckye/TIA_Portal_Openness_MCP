@@ -1,21 +1,21 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-16，已发布 v4.0.0-beta.4（`48abffe8`），beta.5 未发布
+状态：现行 · 最后核对：2026-11-16，beta.5 已准备（源码已准备，未发布）
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
-- **2026-11-16 beta.5 修复基本完成。** beta.4 V21 回归的全部修复任务（VMFIX-6b 至 11、B21、B27、B28）、NO-LOCK 1–8、DES-4R2/R3、TIDY-7 和 HOST-RENAME 已合并；剩余 LONG-LINE-GATE（实现中），以及需要维护者开启虚拟机的 MTA-1 与 VMFIX-10D，见[开发计划](plan.md#400-beta5)。NO-LOCK 8b 删除了 `meta.requiresSessionReset` 与 `SESSION_RESET_REQUIRED`，读取它们的客户端需改读 `meta.outcome` 和 `GetSessionState.unsettled`，见 CHANGELOG。GitHub CI 的 `validate-bundle` 自 2026-11-05 起失败，CI-RED（`69e5c073`）修复测试样本换行与中文编码后恢复通过。全部变化仍待真机复验。
+- **2026-11-16 beta.5 已准备（源码已准备，未发布）。** beta.4 V21 回归修复（VMFIX-6b 至 11，VMFIX-10D 除外）、B21、B27、B28、NO-LOCK 1–8、DES-4R2/R3、TIDY-7、HOST-RENAME、LONG-LINE-GATE 和 LOW-B5 已合并。维护者决定 beta.5 不等虚拟机，MTA-1（已实现、门禁通过、未合并，等八版 VM 冒烟）与 VMFIX-10D 移至 beta.6，见[开发计划](plan.md#400-beta5)。NO-LOCK 8b 删除 `meta.requiresSessionReset` 与 `SESSION_RESET_REQUIRED`，类型化结果的 `data.requiresSessionReset` 改为 `data.outcomeUnknown`；客户端改读 `meta.outcome` 和 `GetSessionState.unsettled`，见 [CHANGELOG](../../CHANGELOG.md)。主机仍须运行 `merge-check -All` 和 `prepare`，维护者确认后才能公开。CI-RED（`69e5c073`）已修复 GitHub `validate-bundle` 的样本换行与中文编码问题。beta.5 全部变化仍待真机复验。
 
 - **2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归修复、NO-LOCK、DES-4R2/R3 和合并后的整理；API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF 共十项移到 beta.6，4.0 正式版仍以它们完成为条件，见[开发计划](plan.md)。
 
 - **2026-11-11 恢复开发，2026-11-13 核对基线。** beta.4 V21 回归的修复主体已合并（VMFIX-6a、7A、7B、8、8B、9A、9B、10A、10B、10C、EXAMPLES-B4）；归属表在维护者本机 `bin-build/refactor/tasks/VM-B4-MAP.md`。beta.5 剩余工作逐条核实后列在[开发计划](plan.md#400-beta5)，判据为任务说明点名的源文件与测试是否存在并具备所述行为；提交信息不带任务编号，不能据此判断。
-- 当前版本 [`4.0.0-beta.4`](../releases/v4.0.0-beta.4.md) 已于 2026-11-05 发布为预发布（`48abffe8`），GitHub latest 仍为正式版 [v3.3.0](../releases/v3.3.0.md)。预发布不设为 latest，3.3 安装不提示升级。
+- 当前已准备的源码版本为 [`4.0.0-beta.5`](../releases/v4.0.0-beta.5.md)，尚未发布；最近已发布版本 [`4.0.0-beta.4`](../releases/v4.0.0-beta.4.md) 已于 2026-11-05 发布为预发布（`48abffe8`），GitHub latest 仍为正式版 [v3.3.0](../releases/v3.3.0.md)。预发布不设为 latest，3.3 安装不提示升级。
 - beta.4 已集成默认写入预览、批次与安全移块、回滚日志、参数模型、会话恢复、原生原因、输出根审批、确认词、relay 与工作台页面重绘。所有这些变化仍待真实 TIA Portal 复验。
 - `prepare` 构建、打包、检查 ZIP 并上传私有草稿，完整候选准备已含新鲜依赖漏洞扫描。扫描接入前的构建打包实测约 6 分钟，不能作为含扫描的完整耗时。`publish-prepared` 公开封存候选，300 秒硬预算，beta.3 实测 6.9 秒。beta.4 的构建、打包和检查实测 347 秒；上传受本机网络影响，经本机代理约 4–54 KB/s，绕过代理约 148 KB/s（约 20 分钟），beta.3 约 350 KB/s（8 分 10 秒）。上传没有进度显示和超时，待修。
 - 合并门为 `merge-check`，含 38 个注册套件与两组 full 传输检查。FAST-GATE 目标约 10 分钟；2026-11-05 宽范围改动实测 731 秒（约 12 分钟），优化前约 21 分钟。beta.4 候选的 `merge-check -All` 实测 779 秒（约 13 分钟），数量门槛保留。没有 nightly，GitHub CI 不阻塞合并。
-- 架构仍为八版 FoundationHost，每个 MCP 会话一个 PLC worker。V20/V21 使用 MTA，V14 SP1–V19 使用 STA，MTA-1 尚待实施。工具列表呈现已统一为 `plc-foundation`，默认 lite，完整行为统一仍由 UNIFY-1 完成。
+- 架构仍为八版 FoundationHost，每个 MCP 会话一个 PLC worker。V20/V21 使用 MTA，V14 SP1–V19 使用 STA，MTA-1 已实现但未合并，移至 beta.6 等八版 VM 冒烟。工具列表呈现已统一为 `plc-foundation`，默认 lite，完整行为统一仍由 UNIFY-1 完成。
 - 名称为自动化工程工作台，现有程序、插件、服务和仓库标识继续使用。GitHub 仓库改名尚未执行。
 
 机器地址、PID 和运行状态须从当前环境确认，本页不据历史记录推断。
