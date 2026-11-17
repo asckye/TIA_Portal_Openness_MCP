@@ -14,11 +14,24 @@ namespace TiaOpenness.Shared
         internal static (string Parameter, string? Condition, string Message)? RuntimeRefusal(string operation, string target)
         {
             if (OnlineTargetPolicy.AddressParameter(operation) is not ("ip" or "host" or "endpointUrl")) return null;
+            return OnlineTargetPolicy.RuntimeRefusal(operation, target, LoadRuntimeTargets());
+        }
+
+        internal static (string Condition, string Message)? CompanionRefusal(string mode)
+        {
+            if (mode != "run") return null;
+            var targets = LoadRuntimeTargets();
+            return targets == null ? null : (targets.IsValid ? "online-target-not-allowed" : "online-target-list-invalid",
+                "The companion cannot be limited to listed hosts; mode=run is refused while an online-target list is configured.");
+        }
+
+        private static OnlineTargetList? LoadRuntimeTargets()
+        {
             OnlineTargetList? targets;
             try { targets = Load(SettingsPath); }
             catch (Exception) /* swallow(env-probe): settings/path failures must refuse runtime targets before approval or channel creation. */
             { targets = OnlineTargetList.Invalid; }
-            return OnlineTargetPolicy.RuntimeRefusal(operation, target, targets);
+            return targets;
         }
 
         internal static OnlineTargetList? Load(string path)

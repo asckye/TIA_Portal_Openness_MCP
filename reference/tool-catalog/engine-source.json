@@ -16554,7 +16554,8 @@
           "description": "Command-tree timeout in seconds, 1..300; partial effects may remain after timeout.",
           "value": 60
         }
-      }
+      },
+      "description": "[L2][Simulation][ONLINE-WRITE] Pinned MIT siemens-plc-tools companion: code (SCL lint/transpile/test/docs/diff/xref/drawio/PDF/parameters/trace), iol (XML/Excel import/export/compare/validate), net, sim (OPC UA/Modbus), sup and trace. mode catalog/help inspects commands without invoking callbacks; mode run needs dryRun=false. arguments is a string array, e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ and dependencies installed with `tia install-plc-tools`; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout. While an online-target list is configured, mode=run is refused because the companion cannot be limited to listed hosts; catalog/help remain allowed."
     },
     "InspectSimaticSdCompatibility": {
       "method": "InspectSimaticSdCompatibilityV4",

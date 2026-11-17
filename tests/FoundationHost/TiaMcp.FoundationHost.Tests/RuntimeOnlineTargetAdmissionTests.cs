@@ -145,6 +145,22 @@ public sealed class RuntimeOnlineTargetAdmissionTests
         return input;
     }
 
+    [Theory]
+    [InlineData("MonitorPlcWatchTableS7")]
+    [InlineData("TraceTagCauseLive")]
+    public async Task Listed_worker_targets_pass_admission_through_the_registered_call(string tool)
+    {
+        using var settings = new OnlineTargetSettingsScope("target=192.168.1.10");
+        using var channels = new ForbiddenChannels();
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21");
+        using var session = fixture.EnterSession();
+        var body = (await fixture.Call(tool, Arguments(tool, "192.168.1.10", true))).StructuredContent!;
+        Assert.DoesNotContain("online-target-", body.ToJsonString());
+        Assert.True(fixture.Worker.Calls > 0, body.ToJsonString());
+        Assert.Equal("connect-portal", (string?)body["error"]?["details"]?["condition"]);
+        Assert.Equal(0, channels.Calls);
+    }
+
     private sealed class ForbiddenChannels : IDisposable
     {
         private readonly Func<Sharp7.S7Client>? s7 = S7LiveReader.ClientFactory.Value;

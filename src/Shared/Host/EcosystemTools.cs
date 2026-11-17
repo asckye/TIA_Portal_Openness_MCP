@@ -14,6 +14,9 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     public sealed class EcosystemTools
     {
+        internal Func<string, System.Collections.Generic.IEnumerable<string>, string, string?, int, Task<JsonObject>> CompanionRun { get; set; }
+            = EcosystemFiles.Run;
+
         [McpServerTool(Name = "RenderPlcBlock"),
                 Description("[L2][PLC-Software][FILE] Render one existing SimaticML block export as a self-contained static HTML page with ladder SVG, " +
                 "interface and code. Offline local files only. Writes a new absolute .html path; never overwrites. No Siemens calls or online power-flow " +
@@ -94,7 +97,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "e.g. [\"code\",\"lint\",\"--help\"]. Use catalog for exact commands/options. Requires Python 3.12+ and dependencies installed with `tia " +
                 "install-plc-tools`; set TIA_MCP_PLC_TOOLS_PYTHON to its absolute python.exe. Run may write files, execute project tests/scripts, connect to " +
                 "equipment, or write PLC values depending on the selected command/config. It is not a sandbox. No automatic connection/download. Finite " +
-                "timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout.")]
+                "timeout kills the command tree; partial effects are possible. Long-running web/monitor commands end at timeout. " +
+                "While an online-target list is configured, mode=run is refused because the companion cannot be limited to listed hosts; " +
+                "catalog/help remain allowed.")]
         public Task<CallToolResult> RunPlcCompanionToolV4(
             [Description("Existing absolute project directory used by the companion command.")] string workingDirectory,
             [Description("catalog/help/run; catalog and help do not execute command callbacks.")] string mode = "catalog",
@@ -145,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 var request = new JsonObject { ["mode"] = mode, ["arguments"] = args.DeepClone() };
                 meta["dispatchStarted"] = true;
-                var result = await EcosystemFiles.Run(python, new[] { "-I", "-X", "utf8", bridge }, workingDirectory, request.ToJsonString(), timeoutSeconds)
+                var result = await CompanionRun(python, new[] { "-I", "-X", "utf8", bridge }, workingDirectory, request.ToJsonString(), timeoutSeconds)
                     .ConfigureAwait(false);
                 foreach (var item in result) meta[item.Key] = item.Value?.DeepClone();
                 meta["executed"] = true;

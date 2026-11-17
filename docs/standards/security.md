@@ -177,12 +177,14 @@
 - 八版中已注册的 `GetPlcLiveValuesS7`、`SamplePlcLiveValuesS7`、`MonitorPlcWatchTableS7`、`TraceTagCauseLive`、`ProbeS7CpuIdentity`、`GetPlcRunStateS7` 检查 `ip`（`MonitorPlcWatchTableS7` 保持 V15.1 起可用）；`GetPlcWebVars`、`GetPlcWebDiagnostics`、`WritePlcWebVars`、`SetPlcWebOperatingMode` 检查 `host`；`GetPlcLiveValuesOpcUa` 检查 `endpointUrl` 的主机部分。预览和执行、直接调用和桥接调用在宿主参数绑定或 Foundation 能力准入边界，在审批、worker 派发及创建协议客户端之前检查。
 - 文件不存在时保留通道原有的地址行为；配置后仅接受白名单内的完整 IPv4 字面量，不解析 DNS。Web 的可选端口和 OPC UA 的端口、路径不参与地址匹配；缩写、十六进制和带前导零的 IPv4 不会经 URL 标准化变成可放行地址。空列表拒绝全部地址，无效或不可读列表关闭准入；错误码与条件沿用 SEC-14，不回显列表。
 - PLCSIM Advanced 与 Unified Open Pipe 没有 PLC 地址参数，不读取此列表。此限制不改变通道的认证、TLS、写入确认、审批或原生调用顺序。
+- OPC UA 使用 Workstation.UaClient 3.2.3 的字符串 URL 构造入口；该入口保留请求的完整 URL，只从 discovery 回复复制安全与身份元数据。离线 UA TCP 协议夹具返回不同主机、端口和路径的 EndpointUrl，核对库入口及实际工具的两次 HEL 仍连接原地址，替代监听器没有收到连接；`OpcUaEndpointAuthorityTests` 守住此依赖行为。
 - 实现：`src/Adapters.Contracts/OnlineTargetPolicy.cs`、`src/Shared/OnlineTargetSettings.cs`、`src/ToolPipeline/WorkerToolInvoker.cs`、`src/FoundationHost/PortedToolContract.cs`。测试：`RuntimeOnlineTargetPolicyTests`、`RuntimeOnlineTargetAdmissionTests`；注入 S7、Web API、OPC UA 客户端工厂，拒绝路径不创建客户端或打开套接字。实机验收仍为 **NOT RUN**，见[真机台账](../reference/real-machine-ledger.md)。
 
 ## 6 已知缺口与已决定未实现的事项
 
 | 项目 | 现状 | 处理 |
 |---|---|---|
+| PLC companion 的自由参数无法逐主机约束（TIA-SAFE-5 Round 2） | `RunPlcCompanionTool mode=run` 的 net、sim、trace 等命令可能通过参数、配置或脚本连接任意设备，无法保证只连接白名单主机 | 白名单文件存在时（含空、无效或不可读状态），在审批和启动 companion 前以 `online-target-not-allowed` 或 `online-target-list-invalid` 拒绝 mode=run，预览同样拒绝。catalog/help 不执行命令回调，继续允许；文件不存在时保留原有行为。不按自由参数猜测目标，也不提供 MCP 绕过开关 |
 | HTTP 请求的 Origin 与 Host 头 | RELAY-1 已实现每请求校验、403 与审计，含伪造头测试 | 已补齐；新增可信源须显式配置 |
 | HTTP 访问密钥在命令行和客户端配置中是明文 | RELAY-1 的宿主与中继读取 DPAPI 存储；新配置仅含 stdio 中继命令 | 新路径已补齐；弃用的 `--http-api-key` 在下一发布周期移除，旧备份仍可能包含明文 |
 | UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批，输入、预览和审批前的身份检查仍可能查询远程主机并暴露 Windows NTLM 凭据 | 维护者 2026-11-04 已决定在 AI 准入层拒绝网络路径，含指向 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。尚未实现，排 4.0 前 |

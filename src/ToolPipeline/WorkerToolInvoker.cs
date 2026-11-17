@@ -77,6 +77,10 @@ namespace TiaMcp.FoundationHost
             if (problem.Length == 0 && !catalog.All.ContainsKey(name)) problem = "Tool is not available in this release.";
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
             var error = ValidateArguments(tool, arguments.Json, tool.Tool.InputSchema);
+            if (error == null && name == "RunPlcCompanionTool"
+                && TiaOpenness.Shared.OnlineTargetSettings.CompanionRefusal(
+                    arguments.Json.TryGetProperty("mode", out var mode) ? mode.GetString() ?? "catalog" : "catalog") is { } companionRefusal)
+                error = new Error(companionRefusal.Message, new PreconditionFailedDetails(companionRefusal.Condition, null));
             if (error == null && TiaMcp.Adapters.Contracts.OnlineTargetPolicy.AddressParameter(name) is "ip" or "host" or "endpointUrl")
             {
                 string parameter = TiaMcp.Adapters.Contracts.OnlineTargetPolicy.AddressParameter(name)!;
