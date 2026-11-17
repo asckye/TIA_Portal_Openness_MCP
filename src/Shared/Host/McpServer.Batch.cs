@@ -163,22 +163,19 @@ namespace TiaMcpServer.ModelContextProtocol
                     try
                     {
                         var args = (JsonObject)op["arguments"]!.DeepClone(); args["dryRun"] = false;
-                        var properties = CatalogView.Find(name, includeUnavailable: true)!.Tool.InputSchema.GetProperty("properties");
-                        var preview = plan.Previews[rows.Count]?["data"];
-                        if (properties.TryGetProperty("expectedPlanHash", out _) && string.IsNullOrEmpty((string?)args["expectedPlanHash"])
-                            && preview?["planHash"] is JsonValue hash && hash.TryGetValue<string>(out var planHash))
-                            args["expectedPlanHash"] = planHash;
-                        if (properties.TryGetProperty("expectedProjectFile", out _) && string.IsNullOrEmpty((string?)args["expectedProjectFile"])
-                            && PlanProjectFile(preview?["targetIdentity"]) is string projectFile)
-                            args["expectedProjectFile"] = projectFile;
-                        issued = true;
-                        result = await BridgeWait.On(CallToolCoreAsync(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), async () =>
+                        var bindingError = FillBatchPlanArguments(name, args, plan.Previews, rows.Count);
+                        if (bindingError != null) result = V4Reject(name, bindingError);
+                        else
                         {
-                            try { if (await BridgeWait.On(BatchStateAsync(plan.Project)).ConfigureAwait(false) == plan.State) return null; }
-                            catch (Exception) /* swallow(privacy): an unavailable binding refuses this item before dispatch */ { }
-                            return V4Reject(name,
+                            issued = true;
+                            result = await BridgeWait.On(CallToolCoreAsync(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), async () =>
+                            {
+                                try { if (await BridgeWait.On(BatchStateAsync(plan.Project)).ConfigureAwait(false) == plan.State) return null; }
+                                catch (Exception) /* swallow(privacy): an unavailable binding refuses this item before dispatch */ { }
+                                return V4Reject(name,
                                     new Error("Batch identity changed before this write.", new PreconditionFailedDetails("batch-identity", plan.Project)));
-                        })).ConfigureAwait(false);
+                            })).ConfigureAwait(false);
+                        }
                         if (ResultSucceeded(ResultBody(result)) != true) cause = rows.Count;
                     }
                     catch (Exception) /* swallow(privacy): preserve the explicit batch stage and outcome without exposing native exception details */
@@ -204,6 +201,29 @@ namespace TiaMcpServer.ModelContextProtocol
                 rows.Add(row);
             }
             return BatchResult(tool, rows, true);
+        }
+
+        private static Error? FillBatchPlanArguments(string name, JsonObject args, JsonArray previews, int index)
+        {
+            try
+            {
+                var target = CatalogView.Find(name, includeUnavailable: true);
+                if (target == null)
+                    return new Error("Batch target is no longer in the catalog.", new ToolNotFoundDetails(name));
+                var properties = target.Tool.InputSchema.GetProperty("properties");
+                var preview = previews[index]?["data"];
+                if (properties.TryGetProperty("expectedPlanHash", out _) && string.IsNullOrEmpty((string?)args["expectedPlanHash"])
+                    && preview?["planHash"] is JsonValue hash && hash.TryGetValue<string>(out var planHash))
+                    args["expectedPlanHash"] = planHash;
+                if (properties.TryGetProperty("expectedProjectFile", out _) && string.IsNullOrEmpty((string?)args["expectedProjectFile"])
+                    && PlanProjectFile(preview?["targetIdentity"]) is string projectFile)
+                    args["expectedProjectFile"] = projectFile;
+                return null;
+            }
+            catch (Exception) /* swallow(privacy): invalid stored plan data is refused before dispatch without exposing exception details. */
+            {
+                return new Error("Stored batch preview or plan-binding arguments are invalid.", new PreconditionFailedDetails("batch-preview", name));
+            }
         }
 
         internal static Error? ValidateBatch(ToolCall[] operations, bool write, out ToolCall[]? validated)

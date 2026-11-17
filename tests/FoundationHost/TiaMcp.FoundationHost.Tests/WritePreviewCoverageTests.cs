@@ -115,11 +115,54 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.Equal(0, fixture.Worker.Calls);
     }
 
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Apply_batch_keeps_stored_hash_when_an_earlier_item_changes_the_next_plan(string release)
+    {
+        using var fixture = new BatchPreviewFixture(release);
+        var preview = await fixture.Preview(new JsonObject { ["name"] = "Motor" }, new JsonObject { ["name"] = "Pump" });
+        fixture.AfterExecute = name => { if (name == "Motor") fixture.Revision++; };
+        var applied = fixture.Apply(preview);
+        Assert.False((bool?)applied["ok"]);
+        Assert.Equal("partial", (string?)applied["meta"]!["outcome"]);
+        var items = applied["data"]!["items"]!.AsArray();
+        Assert.Equal(2, items.Count);
+        Assert.True((bool?)items[0]!["result"]!["ok"]);
+        Assert.Equal("completed", (string?)items[0]!["result"]!["meta"]!["execution"]);
+        Assert.Equal((string?)preview["data"]!["items"]![0]!["result"]!["data"]!["planHash"],
+            (string?)items[0]!["result"]!["data"]!["planHash"]);
+        Assert.Equal("PLAN_STALE", (string?)items[1]!["result"]!["error"]!["code"]);
+        Assert.Equal((string?)preview["data"]!["items"]![1]!["result"]!["data"]!["planHash"],
+            (string?)items[1]!["result"]!["error"]!["details"]!["planHash"]);
+        Assert.Equal("not-started", (string?)items[1]!["result"]!["meta"]!["execution"]);
+        Assert.Equal(1, fixture.Executions["Motor"]);
+        Assert.False(fixture.Executions.ContainsKey("Pump"));
+        Assert.Equal(1, fixture.Revision);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Apply_batch_refuses_invalid_stored_preview_without_dispatch(string release)
+    {
+        using var fixture = new BatchPreviewFixture(release) { InvalidPreviewIdentity = true };
+        var preview = await fixture.Preview(new JsonObject { ["name"] = "Motor" });
+        var applied = fixture.Apply(preview);
+        Assert.False((bool?)applied["ok"]);
+        var result = applied["data"]!["items"]![0]!["result"]!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]!["code"]);
+        Assert.Equal("batch-preview", (string?)result["error"]!["details"]!["condition"]);
+        Assert.Equal("Stored batch preview or plan-binding arguments are invalid.", (string?)result["error"]!["message"]);
+        Assert.Equal("not-started", (string?)result["meta"]!["execution"]);
+        Assert.Empty(fixture.Executions);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
     private sealed class BatchPreviewFixture : IDisposable
     {
         internal readonly BatchPreviewWorker Worker = new();
         internal readonly Dictionary<string, int> Executions = new(StringComparer.Ordinal);
         internal int Revision, NativePreviews;
+        internal bool InvalidPreviewIdentity;
+        internal Action<string>? AfterExecute;
         private readonly toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline pipeline;
         private readonly IDisposable session;
 
@@ -131,6 +174,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
                 CallToolResult Execute()
                 {
                     Executions[name] = Executions.GetValueOrDefault(name) + 1;
+                    AfterExecute?.Invoke(name);
                     return Host.V4Result("DeletePlcBlock", new JsonObject { ["confirm"] = confirm }, completed: true);
                 }
                 CallToolResult Preview()
@@ -138,9 +182,15 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
                     NativePreviews++;
                     return Host.V4Result("DeletePlcBlock", new JsonObject { ["name"] = name });
                 }
-                return native
+                var result = native
                     ? Host.RunNativeWritePreview("DeletePlcBlock", dryRun, arguments, Preview, Execute, expectedPlanHash, expectedProjectFile)
                     : Host.RunWritePreview("DeletePlcBlock", dryRun, arguments, Execute, expectedPlanHash, expectedProjectFile);
+                if (dryRun && InvalidPreviewIdentity)
+                {
+                    result.StructuredContent!["data"]!["targetIdentity"] = 42;
+                    result.Content = new[] { new TextContentBlock { Text = result.StructuredContent.ToJsonString() } };
+                }
+                return result;
             }, new() { Name = "DeletePlcBlock" });
             pipeline = new(release, Worker, new[] { tool });
             session = pipeline.EnterSession();
