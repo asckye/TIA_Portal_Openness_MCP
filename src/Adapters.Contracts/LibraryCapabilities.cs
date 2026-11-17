@@ -16,8 +16,11 @@ namespace TiaMcp.Adapters.Contracts
         public static string? Unsupported(string release, string operation, string action = "", string sourceKind = "",
             System.Collections.Generic.IEnumerable<string>? properties = null,
             string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", string deleteUnusedVersionsMode = "DoNotDelete",
-                string structureConflictResolutionMode = "RetainStructure")
+                string structureConflictResolutionMode = "RetainStructure", string copyMode = "", string updatePathsMode = "")
         {
+            if ((operation == "ManageLibraryMasterCopy" && copyMode != ""
+                || operation == "ManageLibraryTypeVersion" && updatePathsMode != "") && !EngineeringServicesCapabilities.AtLeast(release, "20"))
+                return "Library instantiation copyMode/updatePathsMode overloads require V20 or later.";
             if (operation == "ManageLibraryTypeVersion" && (action == "edit" || action == "release" || action == "discard") && !EngineeringServicesCapabilities
                     .AtLeast(release, "20"))
                 return "Library version editing/release/discard requires V20 or later.";

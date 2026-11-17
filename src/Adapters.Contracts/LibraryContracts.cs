@@ -19,6 +19,9 @@ namespace TiaMcp.Adapters.Contracts
         public string Author { get; set; } = "";
         public string Comment { get; set; } = "";
         public string TargetSoftwarePath { get; set; } = "";
+        public string TargetKind { get; set; } = "";
+        public string CopyMode { get; set; } = "";
+        public string UpdatePathsMode { get; set; } = "";
         public bool DryRun { get; set; } = false;
         public string SourceKind { get; set; } = "";
         public string SourcePath { get; set; } = "";

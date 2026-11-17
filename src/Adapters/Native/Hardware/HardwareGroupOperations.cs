@@ -39,11 +39,11 @@ namespace TiaMcp.Adapters.Hardware
             try { return info.Invoke(target, args)!; }
             catch (TargetInvocationException ex) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw(); throw; }
         }
-        internal static object Group(object root, string path, string firstGroups = "Groups")
+        internal static object Group(object root, string path, string firstGroups = "Groups", Func<string, string[]>? pathParts = null)
         {
             object current = root;
             bool first = true;
-            foreach (var part in Parts(path, true))
+            foreach (var part in pathParts != null ? pathParts(path) : Parts(path, true))
             {
                 current = Find(Get(current, first ? firstGroups : "Groups"), part)
                     ?? throw new HardwareAddressingException("NotFound", "Group not found: " + path);

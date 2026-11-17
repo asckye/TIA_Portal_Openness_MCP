@@ -1,6 +1,9 @@
 extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using System.Reflection;
+using System.Text.Json;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Services = toolpipeline::TiaMcpServer.Siemens.Services;
@@ -8,6 +11,102 @@ using Xunit;
 
 public sealed class B6HostPortsTests
 {
+    [Theory]
+    [InlineData(false)][InlineData(true)]
+    public void Library_instantiation_maps_all_target_and_mode_parameters(bool preview)
+    {
+        using var release = Host.HardwareContract.UseRelease("21");
+        var requests = new List<LibraryRequest>();
+        var service = new Services.LibraryPortService((operation, args) => {
+            Assert.Equal("libraries.ExecuteLibrary", operation);
+            var request = JsonSerializer.Deserialize<LibraryRequest>(args["request"]!.ToJsonString())!;
+            Assert.Equal(preview, request.DryRun);
+            Assert.Equal(preview, (bool)args["dryRun"]!);
+            if (!preview) Assert.Equal("fixture.ap21", (string?)args["expectedProjectFile"]);
+            requests.Add(request);
+            return new JsonObject { ["Step"] = new JsonObject { ["Message"] = "Mapped", ["Meta"] = new JsonObject() } };
+        }, () => "fixture.ap21");
+        service.ManageLibraryMasterCopy("Copies/Motor", "instantiate", "Global", dryRun: preview,
+            targetKind: "block", targetSoftwarePath: "PLC", targetGroupPath: "Group%2FName", copyMode: "Rename");
+        service.ManageLibraryTypeVersion("Types/Motor", "1.0.0", "instantiate", "Global", targetSoftwarePath: "PLC", dryRun: preview,
+            targetGroupPath: "Target", updatePathsMode: "ThrowIfPathsConflict");
+        Assert.Equal(2, requests.Count);
+        Assert.Equal("Global", requests[0].LibraryName);
+        Assert.Equal("Copies/Motor", requests[0].SourcePath);
+        Assert.Equal("block", requests[0].TargetKind);
+        Assert.Equal("PLC", requests[0].TargetSoftwarePath);
+        Assert.Equal("Group%2FName", requests[0].TargetGroupPath);
+        Assert.Equal("Rename", requests[0].CopyMode);
+        Assert.Equal("Types/Motor", requests[1].TypePath);
+        Assert.Equal("1.0.0", requests[1].Version);
+        Assert.Equal("PLC", requests[1].TargetSoftwarePath);
+        Assert.Equal("Target", requests[1].TargetGroupPath);
+        Assert.Equal("ThrowIfPathsConflict", requests[1].UpdatePathsMode);
+        Assert.Equal("", requests[0].TargetGroupKind);
+    }
+
+    [Theory]
+    [InlineData("ManageLibraryMasterCopy", "instantiate")][InlineData("ManageLibraryMasterCopy", "copy")]
+    [InlineData("ManageLibraryMasterCopy", "delete")][InlineData("ManageLibraryTypeVersion", "instantiate")]
+    [InlineData("ManageLibraryTypeVersion", "edit")][InlineData("ManageLibraryTypeVersion", "release")]
+    [InlineData("ManageLibraryTypeVersion", "setDefault")][InlineData("ManageLibraryTypeVersion", "deleteVersion")]
+    [InlineData("ManageLibraryTypeVersion", "updateInstances")][InlineData("ManageLibraryTypeVersion", "discard")]
+    public void Every_library_mutation_binds_its_native_preview_before_dispatch(string tool, string action)
+    {
+        using var worker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        int previews = 0, executions = 0;
+        var service = new Services.LibraryPortService((_, args) => {
+            bool preview = (bool)args["dryRun"]!;
+            if (preview) previews++; else executions++;
+            return new JsonObject { ["Step"] = new JsonObject { ["Message"] = "Native result", ["Meta"] = new JsonObject {
+                ["operationSuccess"] = true, ["dryRun"] = preview, ["mayHaveChanged"] = !preview,
+                ["targets"] = new JsonArray("Motor"), ["readbackComplete"] = true } } };
+        }, () => "C:/Projects/original.ap21");
+        var tools = new Host.LibraryTools(service);
+        CallToolResult Call(bool preview, string hash = "", string project = "") => tool == "ManageLibraryMasterCopy"
+            ? tools.ManageLibraryMasterCopyV4("Copies/Motor", action, dryRun: preview,
+                targetKind: action == "instantiate" ? "block" : "", targetSoftwarePath: action == "instantiate" ? "PLC" : "",
+                expectedPlanHash: hash, expectedProjectFile: project)
+            : tools.ManageLibraryTypeVersionV4("Types/Motor", "1.0.0", action, targetSoftwarePath: "PLC", dryRun: preview,
+                expectedPlanHash: hash, expectedProjectFile: project);
+        var result = Call(true);
+        Assert.True((bool?)result.StructuredContent!["ok"], result.StructuredContent.ToJsonString());
+        string hash = (string)result.StructuredContent["data"]!["planHash"]!;
+        Assert.Matches("^[0-9a-f]{64}$", hash);
+        Assert.Equal("Motor", (string?)result.StructuredContent["data"]!["evidence"]!["targets"]![0]);
+        foreach (var (expectedHash, project) in new[] {
+            ("", "C:/Projects/original.ap21"), (hash, ""), (new string('0', 64), "C:/Projects/original.ap21"), (hash, "C:/Projects/other.ap21") })
+        {
+            var refused = Call(false, expectedHash, project);
+            Assert.False((bool?)refused.StructuredContent!["ok"]);
+            Assert.Equal("rejected-before-operation", (string?)refused.StructuredContent["meta"]!["outcome"]);
+        }
+        Assert.Equal(1, previews);
+        Assert.Equal(0, executions);
+        Assert.True((bool?)Call(false, hash, "C:/Projects/original.ap21").StructuredContent!["ok"]);
+        Assert.Equal(1, executions);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("read")][InlineData("compare")][InlineData("findInstances")]
+    public void Library_reads_remain_unwrapped(string action)
+    {
+        using var release = Host.HardwareContract.UseRelease("21");
+        int calls = 0;
+        var tools = new Host.LibraryTools(new Services.LibraryPortService((_, _) => {
+            calls++;
+            return new JsonObject { ["Step"] = new JsonObject { ["Message"] = "Read", ["Meta"] = new JsonObject { ["operationSuccess"] = true } } };
+        }, () => "fixture.ap21"));
+        var result = action == "findInstances" ? tools.ManageLibraryTypeVersionV4("Motor", "1.0.0", action)
+            : tools.ManageLibraryMasterCopyV4("Motor", action);
+        Assert.True((bool?)result.StructuredContent!["ok"]);
+        Assert.Null(result.StructuredContent["data"]?["planHash"]);
+        Assert.Equal(1, calls);
+    }
+
     private static readonly string[] Releases = { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" };
 
     [Fact]
@@ -38,6 +137,28 @@ public sealed class B6HostPortsTests
         => Assert.Equal(refused, EngineeringServicesCapabilities.Unsupported(release, "ManageProjectCompilationSettings",
             properties: new[] { "IsSimulationDuringBlockCompilationEnabled" }) != null);
 
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")][InlineData("19")]
+    public void Instantiation_mode_refusal_precedes_native_dispatch(string release)
+        using var scope = Host.HardwareContract.UseRelease(release);
+        var service = new Services.LibraryPortService((_, _) => throw new Xunit.Sdk.XunitException("Unsupported mode reached the worker."), () => "fixture");
+        Assert.Throws<NotSupportedException>(() => service.ManageLibraryMasterCopy("Motor", "instantiate", targetKind: "block",
+            targetSoftwarePath: "PLC", copyMode: "Rename"));
+        Assert.Throws<NotSupportedException>(() => service.ManageLibraryTypeVersion("Motor", "1.0.0", "instantiate", targetSoftwarePath: "PLC",
+            updatePathsMode: "KeepExistingPathsInTarget"));
+    [Theory]
+    [InlineData("restored", "failed")][InlineData("partial", "partial")][InlineData("unknown", "unknown")]
+    public void Instantiation_readback_failure_keeps_the_journal_outcome(string rollback, string outcome)
+        var response = new Host.ResponseMessage { Message = "Instantiation readback failed", Meta = new JsonObject {
+            ["operationSuccess"] = false, ["apiCallSuccess"] = true, ["instantiationAttempted"] = true,
+            ["mayHaveChanged"] = rollback != "restored", ["rollbackCompleted"] = rollback == "restored", ["rollbackOutcome"] = rollback,
+            ["rollbackRefused"] = rollback == "partial", ["rollbackReachable"] = rollback != "unknown",
+            ["writeOutcomeUnknown"] = rollback == "unknown", ["readbackComplete"] = false, ["failed"] = 1,
+            ["createdNames"] = new JsonArray("Motor") } };
+        var result = Host.LibraryToolContract.Map("ManageLibraryMasterCopy", response, writes: true);
+        Assert.False((bool?)result.StructuredContent!["ok"]);
+        Assert.Equal(outcome, (string?)result.StructuredContent["meta"]!["outcome"]);
+        Assert.Equal("Motor", (string?)result.StructuredContent["data"]!["evidence"]!["createdNames"]![0]);
     public static IEnumerable<object[]> RegistrationCases =>
         from release in Releases
         from family in PortedFamilies.All.Where(f => f.Name is "F06" or "F23" or "F35")
@@ -88,7 +209,8 @@ public sealed class B6HostPortsTests
         Assert.Equal(Array.IndexOf(Releases, release) < Array.IndexOf(Releases, first), LibraryCapabilities.Unsupported(release, operation, action) != null);
         if (Array.IndexOf(Releases, release) >= Array.IndexOf(Releases, first)) return;
         using var scope = Host.HardwareContract.UseRelease(release);
-        var service = new Services.LibraryPortService((_, _) => throw new Xunit.Sdk.XunitException("Unsupported action reached the worker."), () => "fixture.ap" + release);
+        var service = new Services
+            .LibraryPortService((_, _) => throw new Xunit.Sdk.XunitException("Unsupported action reached the worker."), () => "fixture.ap" + release);
         Assert.Throws<NotSupportedException>(() => operation switch {
             "ManageLibraryTypeVersion" => service.ManageLibraryTypeVersion("Type", "1.0", action),
             "SynchronizeLibrary" => service.SynchronizeLibrary(action, "[{\"folder\":\"\"}]"),
@@ -104,10 +226,14 @@ public sealed class B6HostPortsTests
         int index = Array.IndexOf(Releases, release);
         Assert.Equal(index < 1, EngineeringServicesCapabilities.Unsupported(release, "CompareProjects", "hardware") != null);
         Assert.Equal(index < 2, EngineeringServicesCapabilities.Unsupported(release, "GetProjectSettings", customIdentityKey: "key") != null);
-        Assert.Equal(index < 5, EngineeringServicesCapabilities.Unsupported(release, "ManageProjectCompilationSettings", properties: new[] { "IsVirtualPlcDuringBlockCompilationEnabled" }) != null);
+        Assert
+            .Equal(index < 5, EngineeringServicesCapabilities
+                .Unsupported(release, "ManageProjectCompilationSettings", properties: new[] { "IsVirtualPlcDuringBlockCompilationEnabled" }) != null);
         Assert.Equal(index < 6, LibraryCapabilities.Unsupported(release, "ManageLibraryType", "update", properties: new[] { "DoNotUse" }) != null);
         Assert.Equal(index < 4, LibraryCapabilities.Unsupported(release, "ManageLibraryType", "update", properties: new[] { "SetForUpdate" }) != null);
-        Assert.Equal(index < 3, LibraryCapabilities.Unsupported(release, "SynchronizeLibrary", "updateProject", forceUpdateMode: "AlwaysSetUpdatedVersionAsDefault") != null);
+        Assert
+            .Equal(index < 3, LibraryCapabilities
+                .Unsupported(release, "SynchronizeLibrary", "updateProject", forceUpdateMode: "AlwaysSetUpdatedVersionAsDefault") != null);
         Assert.Null(LibraryCapabilities.Unsupported(release, "SynchronizeLibrary", "updateLibrary"));
         Assert.Equal(index < 2, LibraryCapabilities.Unsupported(release, "CreateLibraryMasterCopy", sourceKind: "screen") != null);
     }

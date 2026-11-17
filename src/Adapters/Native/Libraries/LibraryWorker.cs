@@ -27,7 +27,7 @@ namespace TiaMcp.Adapters
             if (request.DryRun != dryRun) throw new ArgumentException("Conflicting library preview mode.");
             var unavailable = LibraryCapabilities
                 .Unsupported(ReleaseKey, request.Operation, request.Action, request.SourceKind, request.Properties.Keys, request.ForceUpdateMode, request
-                    .DeleteUnusedVersionsMode, request.StructureConflictResolutionMode);
+                    .DeleteUnusedVersionsMode, request.StructureConflictResolutionMode, request.CopyMode, request.UpdatePathsMode);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             if (request.ValidationError != null) return new LibraryReply {
                 Step = RunEngineeringServicesStep(request.Operation, _ => throw new ArgumentException(request.ValidationError)) };
@@ -36,7 +36,8 @@ namespace TiaMcp.Adapters
                 case "ManageLibraryTypeVersion": return new LibraryReply {
                     Step =
                         ManageLibraryTypeVersion(request.TypePath, request.Version, request.Action, request.LibraryName, request.NewVersion, request
-                            .DependenciesMode, request.Author, request.Comment, request.TargetSoftwarePath, request.DryRun)
+                            .DependenciesMode, request.Author, request.Comment, request.TargetSoftwarePath, request.DryRun,
+                            request.TargetGroupPath, request.UpdatePathsMode)
                 };
                 case "CreateLibraryMasterCopy": return new LibraryReply {
                     Step =
@@ -71,7 +72,7 @@ namespace TiaMcp.Adapters
                 case "ManageLibraryMasterCopy": return new LibraryReply {
                     Step =
                         ManageLibraryMasterCopy(request.SourcePath, request.Action, request.LibraryName, request.DestinationLibraryName, request
-                            .DestinationPath, request.DryRun)
+                            .DestinationPath, request.DryRun, request.TargetKind, request.TargetSoftwarePath, request.TargetGroupPath, request.CopyMode)
                 };
 #if LIBRARY_DOCUMENT_IMPORT
                 case "ImportLibraryTypeDocuments": return new LibraryReply {

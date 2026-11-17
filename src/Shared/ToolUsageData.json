@@ -17187,6 +17187,87 @@
           "arguments": {
             "action": "delete"
           }
+        },
+        "instantiate": {
+          "arguments": {
+            "action": "instantiate",
+            "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+            "targetKind": "block",
+            "targetGroupPath": "",
+            "dryRun": true,
+            "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+          }
+        },
+        "instantiateBlockGroup": {
+          "arguments": {
+            "action": "instantiate",
+            "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+            "targetKind": "blockGroup",
+            "targetGroupPath": "",
+            "dryRun": true,
+            "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+          }
+        },
+        "instantiateTagTable": {
+          "arguments": {
+            "action": "instantiate",
+            "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+            "targetKind": "tagTable",
+            "targetGroupPath": "",
+            "dryRun": true,
+            "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+          }
+        },
+        "instantiateTag": {
+          "arguments": {
+            "action": "instantiate",
+            "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+            "targetKind": "tag",
+            "targetGroupPath": "<exact Group/Table from GetSoftwareTree>",
+            "dryRun": true,
+            "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+          }
+        },
+        "instantiateDevice": {
+          "arguments": {
+            "action": "instantiate",
+            "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+            "targetKind": "device",
+            "targetGroupPath": "",
+            "dryRun": true
+          }
+        },
+        "instantiateClassicScreen": {
+          "arguments": {
+            "action": "instantiate",
+            "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+            "targetKind": "classicScreen",
+            "targetGroupPath": "",
+            "dryRun": true,
+            "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
+          }
+        },
+        "instantiateClassicTagTable": {
+          "arguments": {
+            "action": "instantiate",
+            "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+            "targetKind": "classicTagTable",
+            "targetGroupPath": "",
+            "dryRun": true,
+            "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
+          }
+        },
+        "instantiateExecute": {
+          "arguments": {
+            "action": "instantiate",
+            "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+            "targetKind": "block",
+            "targetGroupPath": "",
+            "dryRun": false,
+            "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+            "expectedPlanHash": "<planHash from this same preview>",
+            "expectedProjectFile": "<exact projectFile from GetSessionState>"
+          }
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -17336,6 +17417,38 @@
           "arguments": {
             "action": "findInstances",
             "targetSoftwarePath": "PLC_2"
+          }
+        },
+        "instantiate": {
+          "arguments": {
+            "action": "instantiate",
+            "typePath": "<exact CodeBlock type path from GetLibraryOverview>",
+            "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+            "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+            "targetGroupPath": "",
+            "dryRun": true
+          }
+        },
+        "instantiateClassicScreen": {
+          "arguments": {
+            "action": "instantiate",
+            "typePath": "<exact ClassicScreen type path from GetLibraryOverview>",
+            "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+            "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
+            "targetGroupPath": "",
+            "dryRun": true
+          }
+        },
+        "instantiateExecute": {
+          "arguments": {
+            "action": "instantiate",
+            "typePath": "<exact CodeBlock type path from GetLibraryOverview>",
+            "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+            "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+            "targetGroupPath": "",
+            "dryRun": false,
+            "expectedPlanHash": "<planHash from this same preview>",
+            "expectedProjectFile": "<exact projectFile from GetSessionState>"
           }
         }
       },
@@ -37902,6 +38015,50 @@
             "destinationPath": {
               "exampleValue": "<destinationPath from this operation's target or user input>",
               "requiresBinding": true
+            },
+            "sourcePath": {
+              "requiresBinding": true,
+              "tools": [
+                "GetLibraryOverview"
+              ],
+              "meaning": "Copy the exact source path from GetLibraryOverview in the selected project or already-open global library; do not infer a library object from its example name."
+            },
+            "targetSoftwarePath": {
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ],
+              "meaning": "Use the exact PLC software for PLC targets or Classic HMI software for Classic targets. For device omit this parameter."
+            },
+            "targetGroupPath": {
+              "exampleValue": "",
+              "requiresBinding": true,
+              "tools": [
+                "GetSoftwareTree",
+                "ManageDeviceUserGroup"
+              ],
+              "meaning": "Empty selects the resolved target root. Otherwise copy the exact group/folder path; tag requires the complete Group/Table path. Device groups come from ManageDeviceUserGroup read. Encode each name segment before joining with /."
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same preview>",
+              "requiresBinding": true,
+              "meaning": "Copy data.planHash from the same mutation preview; keep all other arguments unchanged."
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact projectFile from GetSessionState>",
+              "requiresBinding": true,
+              "tools": [
+                "GetSessionState"
+              ],
+              "meaning": "Copy the bound project file identity exactly; do not infer a project path."
+            },
+            "targetKind": {
+              "exampleValue": "block"
+            },
+            "copyMode": {
+              "exampleValue": "",
+              "meaning": "Empty refuses existing content names on all eight releases. ThrowIfExists/Rename/Replace require V20+ and a PLC composition. Replace may require manual recovery of previous objects after a failed call."
             }
           },
           "operations": {
@@ -37926,10 +38083,99 @@
               "arguments": {
                 "action": "delete"
               }
+            },
+            "instantiate": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "block",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateBlockGroup": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "blockGroup",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateTagTable": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "tagTable",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateTag": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "tag",
+                "targetGroupPath": "<exact Group/Table from GetSoftwareTree>",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateDevice": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "device",
+                "targetGroupPath": "",
+                "dryRun": true
+              }
+            },
+            "instantiateClassicScreen": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "classicScreen",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateClassicTagTable": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "classicTagTable",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateExecute": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "block",
+                "targetGroupPath": "",
+                "dryRun": false,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+                "expectedPlanHash": "<planHash from this same preview>",
+                "expectedProjectFile": "<exact projectFile from GetSessionState>"
+              }
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "compare requires V18. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "compare requires V18. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. instantiate supports seven explicit target kinds on all eight releases; the selected master copy must contain objects of that target kind. Source discovery: GetLibraryOverview; target discovery: GetProjectTree, GetSoftwareTree, ManageDeviceUserGroup read. Global sources use the exact already-open libraryName. Preview lists contents and name clashes; execution reads createdObjects and reports createdNames/rollback evidence on failure. Native execution remains NOT RUN.",
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this same preview>",
+              "expectedProjectFile": "<exact projectFile from GetSessionState>"
+            },
+            "meaning": "Merge into the same preview arguments only after reviewing that plan. Every mutating action, including existing library actions, now needs both bindings and Workbench approval."
+          }
         },
         "ManageLibraryType": {
           "arguments": {
@@ -38029,7 +38275,45 @@
               "requiresBinding": true
             },
             "targetSoftwarePath": {
-              "exampleValue": "PLC_2"
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ],
+              "meaning": "Use the exact PLC software for PLC targets or Classic HMI software for Classic targets. For device omit this parameter."
+            },
+            "typePath": {
+              "requiresBinding": true,
+              "tools": [
+                "GetLibraryOverview"
+              ],
+              "meaning": "Copy the exact source path from GetLibraryOverview in the selected project or already-open global library; do not infer a library object from its example name."
+            },
+            "targetGroupPath": {
+              "exampleValue": "",
+              "requiresBinding": true,
+              "tools": [
+                "GetSoftwareTree",
+                "ManageDeviceUserGroup"
+              ],
+              "meaning": "Empty selects the resolved target root. Otherwise copy the exact group/folder path; tag requires the complete Group/Table path. Device groups come from ManageDeviceUserGroup read. Encode each name segment before joining with /."
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same preview>",
+              "requiresBinding": true,
+              "meaning": "Copy data.planHash from the same mutation preview; keep all other arguments unchanged."
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact projectFile from GetSessionState>",
+              "requiresBinding": true,
+              "tools": [
+                "GetSessionState"
+              ],
+              "meaning": "Copy the bound project file identity exactly; do not infer a project path."
+            },
+            "updatePathsMode": {
+              "exampleValue": "",
+              "meaning": "Empty uses the simple overload on all eight releases. KeepExistingPathsInTarget/ThrowIfPathsConflict/UpdatePathsInTarget require V20+ code blocks; Classic screens have no mode overload."
             }
           },
           "operations": {
@@ -38076,13 +38360,53 @@
                 "action": "findInstances",
                 "targetSoftwarePath": "PLC_2"
               }
+            },
+            "instantiate": {
+              "arguments": {
+                "action": "instantiate",
+                "typePath": "<exact CodeBlock type path from GetLibraryOverview>",
+                "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+                "targetGroupPath": "",
+                "dryRun": true
+              }
+            },
+            "instantiateClassicScreen": {
+              "arguments": {
+                "action": "instantiate",
+                "typePath": "<exact ClassicScreen type path from GetLibraryOverview>",
+                "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+                "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
+                "targetGroupPath": "",
+                "dryRun": true
+              }
+            },
+            "instantiateExecute": {
+              "arguments": {
+                "action": "instantiate",
+                "typePath": "<exact CodeBlock type path from GetLibraryOverview>",
+                "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+                "targetGroupPath": "",
+                "dryRun": false,
+                "expectedPlanHash": "<planHash from this same preview>",
+                "expectedProjectFile": "<exact projectFile from GetSessionState>"
+              }
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "Edit/release/discard require V20; setDefault requires V17. Read/deleteVersion/updateInstances/findInstances use the earlier API. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "Edit/release/discard require V20; setDefault requires V17. Read/deleteVersion/updateInstances/findInstances use the earlier API. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. instantiate supports released CodeBlockLibraryTypeVersion and ScreenLibraryTypeVersion on all eight releases. PLC types/documents use ManagePlcDocuments createFromLibraryType. Source paths and versions come from GetLibraryOverview; target software from GetProjectTree, exact block groups from GetSoftwareTree. Native execution remains NOT RUN.",
           "notes": [
             "Version and newVersion use Major.Minor.Build, for example 1.0.1, without a V prefix. Edit/discard are project-library only. STEP 7 edit uses FindInstances in targetSoftwarePath and Edit(instanceInfo); it refuses zero or multiple instances. HMI edit uses Edit()."
-          ]
+          ],
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this same preview>",
+              "expectedProjectFile": "<exact projectFile from GetSessionState>"
+            },
+            "meaning": "Merge into the same preview arguments only after reviewing that plan. Every mutating action, including existing library actions, now needs both bindings and Workbench approval."
+          }
         },
         "ManageProjectCompilationSettings": {
           "arguments": {
@@ -54663,6 +54987,50 @@
             "destinationPath": {
               "exampleValue": "<destinationPath from this operation's target or user input>",
               "requiresBinding": true
+            },
+            "sourcePath": {
+              "requiresBinding": true,
+              "tools": [
+                "GetLibraryOverview"
+              ],
+              "meaning": "Copy the exact source path from GetLibraryOverview in the selected project or already-open global library; do not infer a library object from its example name."
+            },
+            "targetSoftwarePath": {
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ],
+              "meaning": "Use the exact PLC software for PLC targets or Classic HMI software for Classic targets. For device omit this parameter."
+            },
+            "targetGroupPath": {
+              "exampleValue": "",
+              "requiresBinding": true,
+              "tools": [
+                "GetSoftwareTree",
+                "ManageDeviceUserGroup"
+              ],
+              "meaning": "Empty selects the resolved target root. Otherwise copy the exact group/folder path; tag requires the complete Group/Table path. Device groups come from ManageDeviceUserGroup read. Encode each name segment before joining with /."
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same preview>",
+              "requiresBinding": true,
+              "meaning": "Copy data.planHash from the same mutation preview; keep all other arguments unchanged."
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact projectFile from GetSessionState>",
+              "requiresBinding": true,
+              "tools": [
+                "GetSessionState"
+              ],
+              "meaning": "Copy the bound project file identity exactly; do not infer a project path."
+            },
+            "targetKind": {
+              "exampleValue": "block"
+            },
+            "copyMode": {
+              "exampleValue": "",
+              "meaning": "Empty refuses existing content names on all eight releases. ThrowIfExists/Rename/Replace require V20+ and a PLC composition. Replace may require manual recovery of previous objects after a failed call."
             }
           },
           "operations": {
@@ -54687,10 +55055,99 @@
               "arguments": {
                 "action": "delete"
               }
+            },
+            "instantiate": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "block",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateBlockGroup": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "blockGroup",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateTagTable": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "tagTable",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateTag": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "tag",
+                "targetGroupPath": "<exact Group/Table from GetSoftwareTree>",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateDevice": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "device",
+                "targetGroupPath": "",
+                "dryRun": true
+              }
+            },
+            "instantiateClassicScreen": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "classicScreen",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateClassicTagTable": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "classicTagTable",
+                "targetGroupPath": "",
+                "dryRun": true,
+                "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>"
+              }
+            },
+            "instantiateExecute": {
+              "arguments": {
+                "action": "instantiate",
+                "sourcePath": "<exact master-copy path from GetLibraryOverview>",
+                "targetKind": "block",
+                "targetGroupPath": "",
+                "dryRun": false,
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+                "expectedPlanHash": "<planHash from this same preview>",
+                "expectedProjectFile": "<exact projectFile from GetSessionState>"
+              }
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. instantiate supports seven explicit target kinds on all eight releases; the selected master copy must contain objects of that target kind. Source discovery: GetLibraryOverview; target discovery: GetProjectTree, GetSoftwareTree, ManageDeviceUserGroup read. Global sources use the exact already-open libraryName. Preview lists contents and name clashes; execution reads createdObjects and reports createdNames/rollback evidence on failure. Native execution remains NOT RUN.",
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this same preview>",
+              "expectedProjectFile": "<exact projectFile from GetSessionState>"
+            },
+            "meaning": "Merge into the same preview arguments only after reviewing that plan. Every mutating action, including existing library actions, now needs both bindings and Workbench approval."
+          }
         },
         "ManageLibraryType": {
           "arguments": {
@@ -54790,7 +55247,45 @@
               "requiresBinding": true
             },
             "targetSoftwarePath": {
-              "exampleValue": "PLC_2"
+              "exampleValue": "<exact softwarePath from GetProjectTree>",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ],
+              "meaning": "Use the exact PLC software for PLC targets or Classic HMI software for Classic targets. For device omit this parameter."
+            },
+            "typePath": {
+              "requiresBinding": true,
+              "tools": [
+                "GetLibraryOverview"
+              ],
+              "meaning": "Copy the exact source path from GetLibraryOverview in the selected project or already-open global library; do not infer a library object from its example name."
+            },
+            "targetGroupPath": {
+              "exampleValue": "",
+              "requiresBinding": true,
+              "tools": [
+                "GetSoftwareTree",
+                "ManageDeviceUserGroup"
+              ],
+              "meaning": "Empty selects the resolved target root. Otherwise copy the exact group/folder path; tag requires the complete Group/Table path. Device groups come from ManageDeviceUserGroup read. Encode each name segment before joining with /."
+            },
+            "expectedPlanHash": {
+              "exampleValue": "<planHash from this same preview>",
+              "requiresBinding": true,
+              "meaning": "Copy data.planHash from the same mutation preview; keep all other arguments unchanged."
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact projectFile from GetSessionState>",
+              "requiresBinding": true,
+              "tools": [
+                "GetSessionState"
+              ],
+              "meaning": "Copy the bound project file identity exactly; do not infer a project path."
+            },
+            "updatePathsMode": {
+              "exampleValue": "",
+              "meaning": "Empty uses the simple overload on all eight releases. KeepExistingPathsInTarget/ThrowIfPathsConflict/UpdatePathsInTarget require V20+ code blocks; Classic screens have no mode overload."
             }
           },
           "operations": {
@@ -54837,13 +55332,53 @@
                 "action": "findInstances",
                 "targetSoftwarePath": "PLC_2"
               }
+            },
+            "instantiate": {
+              "arguments": {
+                "action": "instantiate",
+                "typePath": "<exact CodeBlock type path from GetLibraryOverview>",
+                "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+                "targetGroupPath": "",
+                "dryRun": true
+              }
+            },
+            "instantiateClassicScreen": {
+              "arguments": {
+                "action": "instantiate",
+                "typePath": "<exact ClassicScreen type path from GetLibraryOverview>",
+                "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+                "targetSoftwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
+                "targetGroupPath": "",
+                "dryRun": true
+              }
+            },
+            "instantiateExecute": {
+              "arguments": {
+                "action": "instantiate",
+                "typePath": "<exact CodeBlock type path from GetLibraryOverview>",
+                "version": "<released Major.Minor.Build version from GetLibraryOverview>",
+                "targetSoftwarePath": "<exact PLC softwarePath from GetProjectTree>",
+                "targetGroupPath": "",
+                "dryRun": false,
+                "expectedPlanHash": "<planHash from this same preview>",
+                "expectedProjectFile": "<exact projectFile from GetSessionState>"
+              }
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. instantiate supports released CodeBlockLibraryTypeVersion and ScreenLibraryTypeVersion on all eight releases. PLC types/documents use ManagePlcDocuments createFromLibraryType. Source paths and versions come from GetLibraryOverview; target software from GetProjectTree, exact block groups from GetSoftwareTree. Native execution remains NOT RUN.",
           "notes": [
             "Version and newVersion use Major.Minor.Build, for example 1.0.1, without a V prefix. Edit/discard are project-library only. STEP 7 edit uses FindInstances in targetSoftwarePath and Edit(instanceInfo); it refuses zero or multiple instances. HMI edit uses Edit()."
-          ]
+          ],
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this same preview>",
+              "expectedProjectFile": "<exact projectFile from GetSessionState>"
+            },
+            "meaning": "Merge into the same preview arguments only after reviewing that plan. Every mutating action, including existing library actions, now needs both bindings and Workbench approval."
+          }
         },
         "ManageMotionAxis": {
           "arguments": {

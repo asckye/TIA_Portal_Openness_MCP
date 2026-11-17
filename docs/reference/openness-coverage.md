@@ -417,3 +417,21 @@ and an exact attribute name. Classic tag tables traverse `TagFolder.TagTables` a
 because they are not exposed by that Openness API. Service lookup uses exact full names or unique suffixes in Siemens assemblies and
 loads the documented V21 split assemblies before searching. Reflection writes to guarded Safety, SafetyValidation, protection, UMAC
 and other protected objects must use their dedicated tools; these restrictions do not add a replacement native engineering surface.
+
+
+## Library instantiation (API-P1a, beta.6)
+
+`ManageLibraryMasterCopy instantiate` now exposes the documented `CreateFrom(MasterCopy)` on
+`PlcBlockComposition`, `PlcBlockUserGroupComposition`, `PlcTagTableComposition`, `PlcTagComposition`,
+`DeviceComposition`, Classic `ScreenComposition` and `TagTableComposition` on all eight releases.
+`ManageLibraryTypeVersion instantiate` exposes `PlcBlockComposition.CreateFrom(CodeBlockLibraryTypeVersion)`
+and Classic `ScreenComposition.CreateFrom(ScreenLibraryTypeVersion)` for released versions. PLC type/document
+versions use the existing `ManagePlcDocuments createFromLibraryType` path.
+
+PLC `MasterCopyMode` overloads and the code-block `UpdatePathsMode` overload are V20/V21 only;
+device and Classic HMI compositions have no mode overload. Native previews resolve exact source/target
+objects, list content names/types and clashes, and bind every mutation of both tools to a plan and project.
+Execution uses one typed CreateFrom call, fresh target navigation for scalar readback and the write journal
+for newly created objects. Replaced existing objects have no verified inverse and remain explicit recovery
+items on failure. SDK compilation and offline tests do not establish native acceptance; the V21/V18 project
+and open-global-library checks remain **NOT RUN** in the [real-machine ledger](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md).

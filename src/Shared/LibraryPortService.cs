@@ -18,7 +18,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             var unavailable = LibraryCapabilities
                 .Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Action, request.SourceKind, request.Properties.Keys, request
-                    .ForceUpdateMode, request.DeleteUnusedVersionsMode, request.StructureConflictResolutionMode);
+                    .ForceUpdateMode, request.DeleteUnusedVersionsMode, request.StructureConflictResolutionMode, request.CopyMode, request.UpdatePathsMode);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
             if (!request.DryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = identity(); }
@@ -27,12 +27,13 @@ namespace TiaMcpServer.Siemens.Services
         private static Dictionary<string, HardwareScalar> Properties(string json)
             => HardwareAddressingService.Scalars(json);
         public ResponseMessage ManageLibraryTypeVersion(string typePath, string version, string action, string libraryName = "",
-            string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true)
+            string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true,
+            string targetGroupPath = "", string updatePathsMode = "")
         {
             var request = new LibraryRequest {
                 Operation = "ManageLibraryTypeVersion", TypePath = typePath, Version = version, Action = action, LibraryName = libraryName, NewVersion =
                     newVersion, DependenciesMode = dependenciesMode, Author = author, Comment = comment, TargetSoftwarePath = targetSoftwarePath, DryRun =
-                    dryRun
+                    dryRun, TargetGroupPath = targetGroupPath, UpdatePathsMode = updatePathsMode
             };
             var reply = Invoke(request)["Step"] as JsonObject ?? throw new InvalidOperationException("Missing library evidence.");
             return new ResponseMessage { Message = (string?)reply["Message"] ?? "", Meta = (JsonObject)reply["Meta"]!.DeepClone() };
@@ -126,11 +127,12 @@ namespace TiaMcpServer.Siemens.Services
             return new ResponseMessage { Message = (string?)reply["Message"] ?? "", Meta = (JsonObject)reply["Meta"]!.DeepClone() };
         }
         public ResponseMessage ManageLibraryMasterCopy(string sourcePath,string action,string libraryName="",string destinationLibraryName="",
-                string destinationPath="",bool dryRun=true)
+                string destinationPath="",bool dryRun=true, string targetKind="", string targetSoftwarePath="", string targetGroupPath="", string copyMode="")
         {
             var request = new LibraryRequest {
                 Operation = "ManageLibraryMasterCopy", SourcePath = sourcePath, Action = action, LibraryName = libraryName, DestinationLibraryName =
-                    destinationLibraryName, DestinationPath = destinationPath, DryRun = dryRun
+                    destinationLibraryName, DestinationPath = destinationPath, DryRun = dryRun, TargetKind = targetKind,
+                    TargetSoftwarePath = targetSoftwarePath, TargetGroupPath = targetGroupPath, CopyMode = copyMode
             };
             var reply = Invoke(request)["Step"] as JsonObject ?? throw new InvalidOperationException("Missing library evidence.");
             return new ResponseMessage { Message = (string?)reply["Message"] ?? "", Meta = (JsonObject)reply["Meta"]!.DeepClone() };

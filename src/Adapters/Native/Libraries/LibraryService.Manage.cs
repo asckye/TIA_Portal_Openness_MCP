@@ -236,13 +236,15 @@ namespace TiaMcp.Adapters
             }, requiresProject: false);
 #endif
         public HardwareAddressingReply ManageLibraryMasterCopy(string sourcePath,string action,string libraryName="",string destinationLibraryName="",
-                string destinationPath="",bool dryRun=true)
+                string destinationPath="",bool dryRun=true, string targetKind="", string targetSoftwarePath="", string targetGroupPath="", string copyMode="")
             =>RunEngineeringServicesStep("ManageLibraryMasterCopy",meta=>{
-                if (!new[] { "read", "copy", "compare", "delete" }.Contains(action))
-                    throw new ArgumentException("action must be one of: read/copy/compare/delete (case-sensitive).");
+                if (!new[] { "read", "copy", "compare", "delete", "instantiate" }.Contains(action))
+                    throw new ArgumentException("action must be one of: read/copy/compare/delete/instantiate (case-sensitive).");
                 using var access=!dryRun&&(action=="copy"||action=="delete") ? HardwareEditAccess() : null;
                 var source=ExactMasterCopy(libraryName,sourcePath);meta["before"]=LibraryObjectAddress(source);meta["dryRun"]=dryRun;meta["mayHaveChanged"]=
                     false;
+                if (action == "instantiate")
+                    return InstantiateLibraryMasterCopy(source, targetKind, targetSoftwarePath, targetGroupPath, copyMode, dryRun, meta);
                 if(action=="read")return "Master copy scalar properties read.";
                 #if LIBRARY_COMPARE
                 if(action=="compare") {

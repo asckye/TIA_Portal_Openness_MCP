@@ -493,7 +493,9 @@ internal sealed partial class FoundationTool
                 .EnumerateObject().Select(p => p.Name) : null,
             arguments.TryGetValue("forceUpdateMode", out var forceMode) ? forceMode.GetString() ?? "" : "SetOnlyHigherUpdatedVersionAsDefault",
             arguments.TryGetValue("deleteUnusedVersionsMode", out var deleteMode) ? deleteMode.GetString() ?? "" : "DoNotDelete",
-            arguments.TryGetValue("structureConflictResolutionMode", out var structureMode) ? structureMode.GetString() ?? "" : "RetainStructure") != null)
+            arguments.TryGetValue("structureConflictResolutionMode", out var structureMode) ? structureMode.GetString() ?? "" : "RetainStructure",
+            arguments.TryGetValue("copyMode", out var libraryCopyMode) ? libraryCopyMode.GetString() ?? "" : "",
+            arguments.TryGetValue("updatePathsMode", out var libraryPathsMode) ? libraryPathsMode.GetString() ?? "" : "") != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         return null;
     }

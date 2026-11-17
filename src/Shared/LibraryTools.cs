@@ -270,7 +270,10 @@ namespace TiaMcpServer.ModelContextProtocol
         => _library.CompareLibraryObjects(kind,leftPath,rightPath,leftLibraryName,rightLibraryName,leftVersion,rightVersion,includeIdentical,offset,limit);
         [McpServerTool(Name="ManageLibraryTypeVersion"),
                 Description("[L2][Library][WRITE] Exact library type/version " +
-                "read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise " +
+                "read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances/instantiate. instantiate places a released code-block " +
+                "or Classic screen version in exact targetSoftwarePath/targetGroupPath (empty group=root); PLC types/documents use ManagePlcDocuments. " +
+                "updatePathsMode applies to code blocks on V20+ only. Mutations require the preview's expectedPlanHash and expectedProjectFile. " +
+                "Empty libraryName selects project library; otherwise " +
                 "unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires " +
                 "exact targetSoftwarePath with a single instance and uses Edit(instanceInfo), while HMI edit uses Edit(). Versions use Major.Minor.Build " +
                 "without a V prefix. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact " +
@@ -281,19 +284,29 @@ namespace TiaMcpServer.ModelContextProtocol
             string typePath,
             string version,
             [Description("action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | " +
-                "findInstances.")] string action,
+                "findInstances | instantiate.")] string action,
             string libraryName="",
-            [Description("newVersion: version string of the new type version, e.g. 'V1.0.1'.")] string newVersion="",
+            [Description("newVersion: version string of the new type version, e.g. '1.0.1'.")] string newVersion="",
             [Description("dependenciesMode: how dependent types are handled by the action ('' = default).")] string dependenciesMode="",
             [Description("author: author text of the version.")] string author="",
             [Description("comment: comment text.")] string comment="",
             string targetSoftwarePath="",
-            bool dryRun=true)
-            => LibraryToolContract.Run("ManageLibraryTypeVersion", !dryRun && !(action == "read" || action == "findInstances"), true, () =>
-            {
-                return ManageLibraryTypeVersion(typePath, version, action, libraryName, newVersion, dependenciesMode, author, comment, targetSoftwarePath,
-                        dryRun);
-            });
+            bool dryRun=true,
+            [Description("targetGroupPath: exact destination block group or Classic screen folder; empty selects root. Encode name segments.")]
+                string targetGroupPath="",
+            [Description("updatePathsMode: V20+ code blocks only; empty uses the simple overload, or KeepExistingPathsInTarget | ThrowIfPathsConflict | " +
+                "UpdatePathsInTarget.")] string updatePathsMode="",
+            string expectedPlanHash="",
+            string expectedProjectFile="")
+        {
+            bool writes = action != "read" && action != "findInstances";
+            CallToolResult Call(bool preview) => LibraryToolContract.Run("ManageLibraryTypeVersion", writes && !preview, true,
+                () => ManageLibraryTypeVersion(typePath, version, action, libraryName, newVersion, dependenciesMode, author, comment,
+                    targetSoftwarePath, preview, targetGroupPath, updatePathsMode));
+            return writes ? McpServer.RunNativeWritePreview("ManageLibraryTypeVersion", dryRun,
+                new { typePath, version, action, libraryName, newVersion, dependenciesMode, author, comment, targetSoftwarePath,
+                    targetGroupPath, updatePathsMode }, () => Call(true), () => Call(false), expectedPlanHash, expectedProjectFile) : Call(dryRun);
+        }
 
         internal ResponseMessage ManageLibraryTypeVersion(
             string typePath,
@@ -305,8 +318,11 @@ namespace TiaMcpServer.ModelContextProtocol
             string author="",
             string comment="",
             string targetSoftwarePath="",
-            bool dryRun=true)
-        => _library.ManageLibraryTypeVersion(typePath,version,action,libraryName,newVersion,dependenciesMode,author,comment,targetSoftwarePath,dryRun);
+            bool dryRun=true,
+            string targetGroupPath="",
+            string updatePathsMode="")
+        => _library.ManageLibraryTypeVersion(typePath, version, action, libraryName, newVersion, dependenciesMode, author, comment,
+            targetSoftwarePath, dryRun, targetGroupPath, updatePathsMode);
         [McpServerTool(Name="CreateLibraryMasterCopy"),
                 Description("[L2][Library][WRITE] Create a native master copy from an exact block/type/device/screen in an existing library folder. " +
                 "sourcePath is relative object path; for device use JSON array of exact group/station names. Empty libraryName=project library; otherwise " +
@@ -333,19 +349,34 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
         => _library.CreateLibraryMasterCopy(sourceKind,sourcePath,softwarePath,folderPath,libraryName,dryRun);
         [McpServerTool(Name="ManageLibraryMasterCopy"),
-                Description("[L2][Library][WRITE] Exact master-copy read/copy/compare/delete. copy destinationPath is a folder; compare uses exact " +
-                "master-copy path. No overwrites or automatic save. Default preview for mutations. Current native policy; V4 native acceptance is pending.")]
+                Description("[L2][Library][WRITE] Exact master-copy read/copy/compare/delete/instantiate. instantiate creates block, blockGroup, tagTable, " +
+                "tag, device, classicScreen or classicTagTable in the exact targetSoftwarePath/targetGroupPath; empty group=root, tag needs a table path, " +
+                "device needs no software path. copyMode ThrowIfExists/Rename/Replace is V20+ PLC only; empty refuses name clashes on all releases. " +
+                "copy destinationPath is a library folder; compare uses exact master-copy path. Mutations require the preview's expectedPlanHash and " +
+                "expectedProjectFile. Default preview; created objects read back; no automatic save or compile. Native acceptance is pending.")]
         public CallToolResult ManageLibraryMasterCopyV4(
             [Description("sourcePath: 'Group/Name' of the source object.")] string sourcePath,
-            [Description("action: the operation to perform - read | copy | compare | delete.")] string action,
+            [Description("action: the operation to perform - read | copy | compare | delete | instantiate.")] string action,
             string libraryName="",
             [Description("destinationLibraryName: global library that receives the copy ('' = the project library).")] string destinationLibraryName="",
             [Description("destinationPath: 'Folder/Name' where the copy is created.")] string destinationPath="",
-            bool dryRun=true)
-            => LibraryToolContract.Run("ManageLibraryMasterCopy", !dryRun && !(action == "read" || action == "compare"), true, () =>
-            {
-                return ManageLibraryMasterCopy(sourcePath, action, libraryName, destinationLibraryName, destinationPath, dryRun);
-            });
+            bool dryRun=true,
+            [Description("targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable.")] string targetKind="",
+            string targetSoftwarePath="",
+            [Description("targetGroupPath: exact PLC group, tag table (Group/Table), device group or Classic folder; empty=root except tag. " +
+                "Encode each name segment.")] string targetGroupPath="",
+            [Description("copyMode: empty refuses name clashes; ThrowIfExists | Rename | Replace require V20+ and a PLC target.")] string copyMode="",
+            string expectedPlanHash="",
+            string expectedProjectFile="")
+        {
+            bool writes = action != "read" && action != "compare";
+            CallToolResult Call(bool preview) => LibraryToolContract.Run("ManageLibraryMasterCopy", writes && !preview, true,
+                () => ManageLibraryMasterCopy(sourcePath, action, libraryName, destinationLibraryName, destinationPath, preview,
+                    targetKind, targetSoftwarePath, targetGroupPath, copyMode));
+            return writes ? McpServer.RunNativeWritePreview("ManageLibraryMasterCopy", dryRun,
+                new { sourcePath, action, libraryName, destinationLibraryName, destinationPath, targetKind, targetSoftwarePath, targetGroupPath, copyMode },
+                () => Call(true), () => Call(false), expectedPlanHash, expectedProjectFile) : Call(dryRun);
+        }
 
         internal ResponseMessage ManageLibraryMasterCopy(
             string sourcePath,
@@ -353,8 +384,13 @@ namespace TiaMcpServer.ModelContextProtocol
             string libraryName="",
             string destinationLibraryName="",
             string destinationPath="",
-            bool dryRun=true)
-        => _library.ManageLibraryMasterCopy(sourcePath,action,libraryName,destinationLibraryName,destinationPath,dryRun);
+            bool dryRun=true,
+            string targetKind="",
+            string targetSoftwarePath="",
+            string targetGroupPath="",
+            string copyMode="")
+        => _library.ManageLibraryMasterCopy(sourcePath, action, libraryName, destinationLibraryName, destinationPath, dryRun,
+            targetKind, targetSoftwarePath, targetGroupPath, copyMode);
         [McpServerTool(Name="ImportLibraryTypeDocuments"),
                 Description("[L2][Library][WRITE] Native library document import (SimaticML / WinCC ML / S7DCL / SCL / STL / UDT / NVT): without typePath, " +
                 "LibraryTypeComposition.CreateFromDocuments creates a new type with an InWork default version in the exact library folder; with typePath, " +

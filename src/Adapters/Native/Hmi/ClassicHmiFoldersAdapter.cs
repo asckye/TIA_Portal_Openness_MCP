@@ -105,7 +105,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             ["slideinType"] = slidein.SlideinType.ToString(), ["screenClass"] = slidein.GetType().Name };
 
         // ---- folder navigation (typed) --------------------------------------------------------------------------------------------------
-        private static ScreenFolder ExactScreenFolder(HmiTarget hmi, IEnumerable<string> parts)
+        internal static ScreenFolder ExactScreenFolder(HmiTarget hmi, IEnumerable<string> parts)
         {
             ScreenFolder current = hmi.ScreenFolder;
             foreach (var part in parts) {
@@ -132,7 +132,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
             return current;
         }
-        private static TagFolder ExactTagFolder(HmiTarget hmi, IEnumerable<string> parts)
+        internal static TagFolder ExactTagFolder(HmiTarget hmi, IEnumerable<string> parts)
         {
             TagFolder current = hmi.TagFolder;
             foreach (var part in parts) {

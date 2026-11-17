@@ -12,6 +12,14 @@ using TiaMcp.Adapters.Engineering;
 using TiaMcp.Adapters.Hardware;
 using TiaMcp.Adapters.Libraries;
 using TiaMcp.Adapters.Native.Plc;
+using TiaMcp.Adapters.Native.Engineering;
+using TiaMcp.Adapters.Native.Hmi;
+using Siemens.Engineering.HW;
+using Siemens.Engineering.Hmi;
+using Siemens.Engineering.Hmi.Screen;
+using Siemens.Engineering.Hmi.Tag;
+using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Tags;
 
 namespace TiaMcp.Adapters
 {
@@ -191,6 +199,175 @@ namespace TiaMcp.Adapters
                 ?? throw new PlcSoftwareException("NotFound", "Exact PLC " + (block ? "block" : "type") + " not found: " + sourcePath + " (path under "
                         + (block ? "Program blocks" : "PLC data types") + ", groups separated by '/', see GetSoftwareTree).");
         }
+        private object LibraryInstantiationCollection(string kind, string software, string path, bool writing)
+        {
+            string[] Parts(string value) => PlcObjectPath.Parts(value, true, "targetGroupPath");
+            if (kind == "device")
+            {
+                var group = HardwareGroupOperations.Group(Project(), path, "DeviceGroups", Parts);
+                return group is Project bound ? bound.Devices : ((DeviceUserGroup)group).Devices;
+            }
+            if (kind == "classicScreen" || kind == "classicTagTable")
+            {
+                var resolved = ResolveEngineeringHmiSoftware != null ? ResolveEngineeringHmiSoftware(software)
+                    : DefaultHmiSoftware(EngineeringPlcSession, software);
+                var hmi = resolved as HmiTarget
+                    ?? throw new NotSupportedException("targetSoftwarePath must resolve to a Classic WinCC HmiTarget; Unified targets are unsupported.");
+                var folders = EngineeringInputValidation.HmiFolderParts(path);
+                return kind == "classicScreen" ? (object)ClassicHmiFoldersAdapter.ExactScreenFolder(hmi, folders).Screens
+                    : ClassicHmiFoldersAdapter.ExactTagFolder(hmi, folders).TagTables;
+            }
+            var plc = EngineeringPlcSession.ExactPlcForEngineering(software, writing);
+            if (kind == "block" || kind == "blockGroup")
+            {
+                var group = (PlcBlockGroup)PlcGroupOperations.Group(plc.BlockGroup, path, pathParts: Parts);
+                return kind == "block" ? (object)group.Blocks : group.Groups;
+            }
+            if (kind == "tagTable")
+                return ((PlcTagTableGroup)PlcGroupOperations.Group(plc.TagTableGroup, path, pathParts: Parts)).TagTables;
+            var names = PlcObjectPath.Parts(path, parameter: "targetGroupPath");
+            var parent = (PlcTagTableGroup)PlcGroupOperations.Group(plc.TagTableGroup, PlcObjectPath.Format(names.Take(names.Length - 1)), pathParts: Parts);
+            return (parent.TagTables.Find(names.Last())
+                ?? throw new PlcSoftwareException("NotFound", "Exact destination PLC tag table not found: " + path)).Tags;
+        }
+
+        private static Type LibraryInstantiationContentType(string targetKind) => targetKind switch {
+            "block" => typeof(PlcBlock), "blockGroup" => typeof(PlcBlockUserGroup), "tagTable" => typeof(PlcTagTable), "tag" => typeof(PlcTag),
+            "device" => typeof(Device), "classicScreen" => typeof(Screen), "classicTagTable" => typeof(TagTable),
+            _ => throw new ArgumentException("Unsupported targetKind.", nameof(targetKind))
+        };
+
+        private static object LibraryCreateFromMasterCopy(object collection, MasterCopy source, string mode)
+        {
+#if LIBRARY_V20
+            if (mode != "")
+            {
+                var copyMode = (MasterCopyMode)Enum.Parse(typeof(MasterCopyMode), mode);
+                switch (collection)
+                {
+                    case PlcBlockComposition blocks: return blocks.CreateFrom(source, copyMode);
+                    case PlcBlockUserGroupComposition groups: return groups.CreateFrom(source, copyMode);
+                    case PlcTagTableComposition tables: return tables.CreateFrom(source, copyMode);
+                    case PlcTagComposition tags: return tags.CreateFrom(source, copyMode);
+                }
+            }
+#endif
+            switch (collection)
+            {
+                case PlcBlockComposition blocks: return blocks.CreateFrom(source);
+                case PlcBlockUserGroupComposition groups: return groups.CreateFrom(source);
+                case PlcTagTableComposition tables: return tables.CreateFrom(source);
+                case PlcTagComposition tags: return tags.CreateFrom(source);
+                case DeviceComposition devices: return devices.CreateFrom(source);
+                case ScreenComposition screens: return screens.CreateFrom(source);
+                case TagTableComposition tables: return tables.CreateFrom(source);
+                default: throw new NotSupportedException("Unsupported library instantiation composition.");
+            }
+        }
+
+        private string InstantiateLibraryMasterCopy(MasterCopy source, string kind, string software, string groupPath, string copyMode, bool dryRun,
+            Dictionary<string, object?> meta)
+        {
+            LibraryPolicy.ValidateInstantiationTarget(kind, software, groupPath, copyMode);
+            var contents = source.ContentDescriptions.Select(content => (content.ContentName, content.ContentType)).ToArray();
+            meta["contents"] = contents.Select(content => (object?)new Dictionary<string, object?> {
+                ["name"] = content.ContentName, ["type"] = content.ContentType.FullName }).ToList();
+            if (contents.Length == 0 || contents.Any(content => !LibraryInstantiationContentType(kind).IsAssignableFrom(content.ContentType)))
+                throw new NotSupportedException("Master-copy content types do not match targetKind=" + kind + "; no CreateFrom was called.");
+            return InstantiateLibraryContents(kind, software, groupPath, contents.Select(content => content.ContentName).ToArray(), copyMode, dryRun, meta,
+                collection => LibraryCreateFromMasterCopy(collection, source, copyMode));
+        }
+
+        private string InstantiateLibraryVersion(LibraryType type, LibraryTypeVersion source, string software, string groupPath, string updatePathsMode,
+            bool dryRun, Dictionary<string, object?> meta)
+        {
+            string kind = LibraryPolicy.InstantiationVersionKind(source.GetType().Name, updatePathsMode);
+            LibraryPolicy.ValidateInstantiationTarget(kind, software, groupPath, "");
+            meta["libraryTypeVersion"] = new Dictionary<string, object?> {
+                ["type"] = type.Name, ["version"] = source.VersionNumber.ToString(), ["state"] = source.State.ToString(),
+                ["versionClass"] = source.GetType().Name };
+            meta["updatePathsMode"] = updatePathsMode;
+            if (source.State.ToString() != "Released")
+                throw new NotSupportedException("Instantiation requires a released library type version.");
+            return InstantiateLibraryContents(kind, software, groupPath, new[] { type.Name }, "", dryRun, meta, collection => {
+                if (source is CodeBlockLibraryTypeVersion code)
+                {
+                    var blocks = (PlcBlockComposition)collection;
+#if LIBRARY_V20
+                    if (updatePathsMode != "") return blocks.CreateFrom(code, (UpdatePathsMode)Enum.Parse(typeof(UpdatePathsMode), updatePathsMode));
+#endif
+                    return blocks.CreateFrom(code);
+                }
+                if (source is ScreenLibraryTypeVersion screen) return ((ScreenComposition)collection).CreateFrom(screen);
+                throw new NotSupportedException("Unsupported library type version.");
+            });
+        }
+
+        private string InstantiateLibraryContents(string kind, string software, string groupPath, string[] names, string copyMode, bool dryRun,
+            Dictionary<string, object?> meta, Func<object, object> create)
+        {
+            object Collection(bool writing = false) => LibraryInstantiationCollection(kind, software, groupPath, writing);
+            string Name(object item) => PlcGroupOperations.Get(item, "Name").ToString()!;
+            string Apply(bool writing)
+            {
+                using var access = writing ? HardwareEditAccess() : null;
+                var collection = Collection(writing);
+                var before = new HashSet<string>(PlcGroupOperations.Items(collection).Select(Name), StringComparer.OrdinalIgnoreCase);
+                meta["targetKind"] = kind; meta["targetSoftwarePath"] = software; meta["targetGroupPath"] = groupPath; meta["copyMode"] = copyMode;
+                meta["targets"] = names.Select(name => (object?)new Dictionary<string, object?> {
+                    ["name"] = name, ["path"] = groupPath + (groupPath == "" ? "" : "/") + ObjectPathEncoding.EncodeSegment(name),
+                    ["exists"] = before.Contains(name) }).ToList();
+                if ((copyMode == "" || copyMode == "ThrowIfExists") && names.Any(before.Contains))
+                    throw new PlcSoftwareException("ALREADY_EXISTS", "A destination content name already exists; creation refused.");
+                if (!writing) return "Library instantiation preview; source and destination resolved; no changes.";
+                string[] createdNames = Array.Empty<string>();
+                bool observed = false;
+                for (int index = 0; index < names.Length; index++)
+                {
+                    string name = names[index];
+                    int slot = index;
+                    // Bind renamed/partial results while edit access is still held, including a throwing CreateFrom.
+                    object? FindCreated()
+                    {
+                        if (!observed) throw new NotSupportedException("Created names could not be observed; inspect the target before cleanup.");
+                        return slot >= createdNames.Length ? null : PlcGroupOperations.Find(Collection(), createdNames[slot]);
+                    }
+                    EngineeringWriteJournal.Creating(FindCreated, groupPath + "/" + ObjectPathEncoding.EncodeSegment(name));
+                    if (copyMode == "Replace" && before.Contains(name))
+                        EngineeringWriteJournal.Unrestored("Restore replaced library instance " + ObjectPathEncoding.EncodeSegment(name));
+                }
+                meta["mayHaveChanged"] = true;
+                meta["instantiationAttempted"] = true;
+                try
+                {
+                    var created = create(collection); meta["apiCallSuccess"] = true;
+                    string createdName = Name(created);
+                    if (copyMode == "Replace" && before.Contains(createdName))
+                        EngineeringWriteJournal.Created(created, groupPath + "/" + ObjectPathEncoding.EncodeSegment(createdName),
+                            () => PlcGroupOperations.Find(Collection(), createdName) == null);
+                }
+                finally
+                {
+                    createdNames = PlcGroupOperations.Items(Collection()).Select(Name).Where(name => !before.Contains(name)).ToArray();
+                    observed = true;
+                    meta["createdNames"] = createdNames.Cast<object?>().ToList();
+                }
+                var expected = copyMode == "Rename" ? createdNames : names;
+                var readback = new List<object?>(); meta["createdObjects"] = readback;
+                foreach (string name in expected)
+                {
+                    var found = PlcGroupOperations.Find(Collection(), name);
+                    if (found != null) readback.Add(HardwareScalarEvidence.Read(found));
+                }
+                bool complete = expected.Length == names.Length && readback.Count == names.Length;
+                meta["readbackComplete"] = complete; meta["operationSuccess"] = complete;
+                if (!complete) meta["failed"] = Math.Max(1, names.Length - readback.Count);
+                return complete ? "Library contents instantiated and read back; project not saved or compiled."
+                    : "Library instantiation readback failed; rolling back created objects. Inspect createdNames and rollback evidence.";
+            }
+            return dryRun ? Apply(false) : EngineeringWriteJournal.Run(meta, () => Apply(true), () => EngineeringPlcSession.AcquireHmiEditAccess());
+        }
+
         private static IEnumerable<string> LibraryInterestingAttributes(object target)
         {
             var result = new List<string>();

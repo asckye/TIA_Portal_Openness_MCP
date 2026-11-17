@@ -22,11 +22,21 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         public HardwareAddressingReply ManageLibraryTypeVersion(string typePath, string version, string action, string libraryName = "",
-            string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true)
+            string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true,
+            string targetGroupPath = "", string updatePathsMode = "")
             => RunEngineeringServicesStep("ManageLibraryTypeVersion", meta => {
-                if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances", "discard", "findInstances" }.Contains(action))
+                if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances", "discard", "findInstances", "instantiate" }
+                        .Contains(action))
                     throw new ArgumentException("action must be one of: read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances " +
-                    "(case-sensitive).");
+                    "/instantiate (case-sensitive).");
+                if (action == "instantiate")
+                {
+                    var sourceType = ExactLibraryType(ExactOpenEngineeringLibrary(libraryName), typePath);
+                    var sourceVersion = ExactTypeVersion(sourceType, version);
+                    meta["before"] = HardwareScalarEvidence.Read(sourceVersion); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
+                    meta["typePath"] = typePath; meta["libraryName"] = libraryName; meta["action"] = action;
+                    return InstantiateLibraryVersion(sourceType, sourceVersion, targetSoftwarePath, targetGroupPath, updatePathsMode, dryRun, meta);
+                }
                 bool writing = action != "read" && action != "findInstances" && !dryRun;
                 using var access = writing && action != "edit" && action != "discard" ? HardwareEditAccess() : null;
                 var library = ExactOpenEngineeringLibrary(libraryName);

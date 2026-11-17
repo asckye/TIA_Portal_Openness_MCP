@@ -46,6 +46,37 @@ namespace TiaMcp.Adapters.Libraries
         internal static readonly string[] DetailStatuses = { "NotCompared", "ObjectsDifferent", "ObjectsIdentical" };
 
         internal static readonly string[] TypeActions = { "update", "delete", "updateLibrary", "updateProject" };
+        internal static readonly string[] InstantiateTargetKinds = { "block", "blockGroup", "tagTable", "tag", "device", "classicScreen", "classicTagTable" };
+        internal static readonly string[] CopyModes = { "ThrowIfExists", "Rename", "Replace" };
+        internal static readonly string[] UpdatePathsModes = { "KeepExistingPathsInTarget", "ThrowIfPathsConflict", "UpdatePathsInTarget" };
+
+        internal static void ValidateInstantiationTarget(string targetKind, string targetSoftwarePath, string targetGroupPath, string copyMode)
+        {
+            RequireOneOf(targetKind, InstantiateTargetKinds, "targetKind");
+            if (targetKind == "device" ? targetSoftwarePath != "" : string.IsNullOrWhiteSpace(targetSoftwarePath))
+                throw new ArgumentException("targetSoftwarePath is required for PLC/Classic targets and must be empty for device.", nameof(targetSoftwarePath));
+            if (targetKind == "tag" && string.IsNullOrWhiteSpace(targetGroupPath))
+                throw new ArgumentException("tag requires an exact targetGroupPath to a tag table (Group/Table).", nameof(targetGroupPath));
+            if (copyMode == "") return;
+            RequireOneOf(copyMode, CopyModes, "copyMode");
+            if (targetKind == "device" || targetKind == "classicScreen" || targetKind == "classicTagTable")
+                throw new NotSupportedException("copyMode is available only on PLC compositions; device and Classic HMI use the simple overload.");
+        }
+
+        internal static string InstantiationVersionKind(string versionClass, string updatePathsMode)
+        {
+            if (versionClass == "PlcTypeLibraryTypeVersion" || versionClass == "PlcDocumentLibraryTypeVersion")
+                throw new NotSupportedException("Use ManagePlcDocuments action=createFromLibraryType for PLC types/documents.");
+            if (versionClass != "CodeBlockLibraryTypeVersion" && versionClass != "ScreenLibraryTypeVersion")
+                throw new NotSupportedException("Library version class is unsupported for instantiation: " + versionClass);
+            if (updatePathsMode != "")
+            {
+                RequireOneOf(updatePathsMode, UpdatePathsModes, "updatePathsMode");
+                if (versionClass != "CodeBlockLibraryTypeVersion")
+                    throw new NotSupportedException("updatePathsMode applies only to code-block library versions.");
+            }
+            return versionClass == "CodeBlockLibraryTypeVersion" ? "block" : "classicScreen";
+        }
         internal static readonly string[] SyncActions = { "updateLibrary", "updateProject", "harmonizeProject", "cleanUp" };
         internal static readonly string[] CompareKinds = { "type", "version", "masterCopy" };
         internal static readonly string[] GlobalLibraryExtraActions = { "infos", "openInfo", "archive" };
