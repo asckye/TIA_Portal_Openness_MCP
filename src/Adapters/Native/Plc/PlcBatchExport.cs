@@ -6,6 +6,7 @@ using System.Linq;
 using Siemens.Engineering;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Types;
+using Siemens.Engineering.SW.Tags;
 using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Adapters
@@ -64,6 +65,28 @@ namespace TiaMcp.Adapters
             return PlcBatchExportPolicy
                 .Run("types",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>
                     RequireTargetOffline(selected),unitName:unitName);
+        }
+        public PlcBatchExportResult ExportTagTables(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
+                string expectedInventoryHash="",bool dryRun=true,string unitName="")
+        {
+            var selected=ReadSelection(softwarePath);
+            var unit=PlcUnitScope.Optional(selected.Value,unitName);
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,selected.ExactPath,true);
+            PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
+            var path=PlcExchangePolicy.ObjectPath(groupPath,true,"groupPath");
+            groupPath=ObjectPathEncoding.NormalizePath(groupPath);
+            if(path!=groupPath) throw new AdapterPreconditionException("Group path must preserve its validated segment identities.","groupPath");
+            var group=BatchGroup(TagGroups(PlcUnitScope.Tags(selected.Value,unit)),path,"groupPath");
+            var groups=recursive ? TagGroups(group,path) : new[]{new Located<PlcTagTableGroup>(path,group)};
+            var sources=BatchGroupsBounded(groups).SelectMany(g=>g.Value.TagTables.Select(table=>new PlcBatchExportSource {
+                Path=Child(g.Path,table.Name),Consistent=true,
+                Export=file=>{
+                    RequireTargetOffline(selected);
+                    table.Export(file,ExportOptions.None);
+                }
+            }));
+            return PlcBatchExportPolicy.Run("tagTables",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,
+                expectedInventoryHash,sources,()=>RequireTargetOffline(selected),unitName:unitName);
         }
         private static IEnumerable<Located<T>> BatchGroupsBounded<T>(IEnumerable<Located<T>> groups)
         {

@@ -1746,6 +1746,20 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "ExportPlcType",
       "family": "P6-EXPORT",
       "example": {
@@ -2153,6 +2167,20 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -2574,6 +2602,20 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -2995,6 +3037,20 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -3452,6 +3508,20 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -3909,6 +3979,20 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -4475,6 +4559,20 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -5111,6 +5209,20 @@
         "confirm": false,
         "overwrite": false,
         "onError": "stop"
+      }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT",
+      "example": {
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
       }
     },
     {
@@ -27235,6 +27347,27 @@
         "exampleSource": "plc-foundation"
       },
       {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
         "name": "ExportPlcType",
         "currentName": "ExportPlcType",
         "sourceName": "ExportType",
@@ -36888,6 +37021,27 @@
         "exampleSource": "plc-foundation"
       },
       {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
         "name": "ExportPlcType",
         "currentName": "ExportPlcType",
         "sourceName": "ExportType",
@@ -45276,6 +45430,27 @@
         "exampleSource": "plc-foundation"
       },
       {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
         "name": "ExportPlcType",
         "currentName": "ExportPlcType",
         "sourceName": "ExportType",
@@ -50689,6 +50864,27 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
           "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
           "dryRun": true,
           "confirm": false
         },
@@ -56783,6 +56979,27 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
           "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
           "dryRun": true,
           "confirm": false
         },
@@ -63396,6 +63613,27 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
           "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
           "dryRun": true,
           "confirm": false
         },
@@ -70436,6 +70674,27 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
           "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
           "dryRun": true,
           "confirm": false
         },
@@ -78500,6 +78759,27 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
           "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
           "dryRun": true,
           "confirm": false
         },
@@ -87164,6 +87444,24 @@
         "envelopeVersion": 4
       },
       {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
+          "dryRun": true,
+          "confirm": false
+        },
+        "envelopeVersion": 4
+      },
+      {
         "name": "ExportPlcType",
         "currentName": "ExportPlcType",
         "sourceName": "ExportType",
@@ -94549,6 +94847,24 @@
           "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "tagTableName": "默认变量表",
           "exportPath": "C:\\Examples\\exports\\ExportPlcTagTable.xml"
+        },
+        "envelopeVersion": 4
+      },
+      {
+        "name": "ExportPlcTagTables",
+        "currentName": "ExportPlcTagTables",
+        "sourceName": "ExportPlcTagTables",
+        "profiles": [
+          "full"
+        ],
+        "arguments": {
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
+          "groupPath": "",
+          "exportDirectory": "C:\\TIA_MCP\\exports",
+          "recursive": true,
+          "maxItems": 128,
+          "dryRun": true,
+          "confirm": false
         },
         "envelopeVersion": 4
       },

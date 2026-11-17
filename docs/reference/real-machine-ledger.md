@@ -10,6 +10,8 @@
 
 ## 未发布改动的验收边界
 
+TIA-BATCH-2：**NOT RUN**。在 V14 SP1、V18、V21 工程副本上用 ExportPlcTagTables 预览并导出含用户组（含中文名、带 / 的名称）的全部变量表，核对文件数与 objectPath，并把其中一个文件用 ImportPlcTagTable 导回原组（overwrite=true）。
+
 | 改动 | 真机验收 |
 |---|---|
 | TIA-TEST（beta.6）PLC 测试用例库、批量运行、结果历史、JUnit、FAT/SAT 与复现报告（八版；Test Suite 条目 V17+，系统测试 V18+，测试集 V20+） | **NOT RUN**。离线测试只证明文件格式、判定映射、退出码和报告文本。需在装有 PLCSIM Advanced（含许可证）的机器上：保存并运行一条通过和一条失败的场景，核对历史、junit.xml 与退出码；在 V17–V21 工程副本上运行 application 用例、V18+ system 用例、V20+ 测试集，核对多用例时 TestResults 消息树与条目判定是否一致、Warning 判为失败、缺许可证时的错误；长运行与 MCP 客户端超时；FAT 报告中的审计链核对。 |
@@ -177,7 +179,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 |---|---|---|---|---|
 | 14sp1 | P6-DEVICE | current | NOT RUN | CreateDevice |
 | 14sp1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
-| 14sp1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 14sp1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcTagTables, ExportPlcType, ExportPlcTypes |
 | 14sp1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 14sp1 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject |
 | 14sp1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
@@ -214,7 +216,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 14sp1 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 15.1 | P6-DEVICE | current | NOT RUN | CreateDevice |
 | 15.1 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
-| 15.1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 15.1 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcTagTables, ExportPlcType, ExportPlcTypes |
 | 15.1 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 15.1 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 15.1 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
@@ -253,7 +255,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 15.1 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 16 | P6-DEVICE | current | NOT RUN | CreateDevice |
 | 16 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
-| 16 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 16 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcTagTables, ExportPlcType, ExportPlcTypes |
 | 16 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 16 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 16 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
@@ -293,7 +295,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 16 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 17 | P6-DEVICE | current | NOT RUN | CreateDevice |
 | 17 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
-| 17 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 17 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcTagTables, ExportPlcType, ExportPlcTypes |
 | 17 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 17 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 17 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
@@ -333,7 +335,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 17 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 18 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
 | 18 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
-| 18 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 18 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcTagTables, ExportPlcType, ExportPlcTypes |
 | 18 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 18 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 18 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
@@ -374,7 +376,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 18 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 19 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
 | 19 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
-| 19 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 19 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlocks, ExportPlcTagTable, ExportPlcTagTables, ExportPlcType, ExportPlcTypes |
 | 19 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 19 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 19 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
@@ -418,7 +420,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 19 | F19 | current | NOT RUN | GetDeviceAddressing, GetDeviceIpAddress, GetDeviceItemIoAddresses, SetDeviceAddress, SetDeviceItemIoAddress |
 | 20 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
 | 20 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlockDocuments, ImportPlcBlocksDocuments, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
-| 20 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlockDocuments, ExportPlcBlocks, ExportPlcBlocksDocuments, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 20 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlockDocuments, ExportPlcBlocks, ExportPlcBlocksDocuments, ExportPlcTagTable, ExportPlcTagTables, ExportPlcType, ExportPlcTypes |
 | 20 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 20 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 20 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |
@@ -426,7 +428,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 20 | P6-FALLBACK | current | NOT RUN | CompilePlcSoftware, ConnectProjectToWorkspace, CreateVersionControlWorkspace, DownloadPlc, DownloadPlcToFolder, ExportPlcBlockDocuments, GetVersionControlStatus, ImportPlcBlockDocuments, ListVersionControlWorkspaces, SynchronizeVersionControlWorkspace |
 | 21 | P6-DEVICE | current | NOT RUN | CreateDevice, CreateGsdDevice, CreateHardwareCatalogDevice, CreateHardwareDevice |
 | 21 | P6-IMPORT | current | NOT RUN | ImportPlcBlock, ImportPlcBlockDocuments, ImportPlcBlocksDocuments, ImportPlcBlocksFromDirectory, ImportPlcProgramFromDirectory, ImportPlcTagTable, ImportPlcTagTablesFromDirectory, ImportPlcType |
-| 21 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlockDocuments, ExportPlcBlocks, ExportPlcBlocksDocuments, ExportPlcTagTable, ExportPlcType, ExportPlcTypes |
+| 21 | P6-EXPORT | current | NOT RUN | ExportPlcBlock, ExportPlcBlockDocuments, ExportPlcBlocks, ExportPlcBlocksDocuments, ExportPlcTagTable, ExportPlcTagTables, ExportPlcType, ExportPlcTypes |
 | 21 | P6-SESSION | current | NOT RUN | AttachOpenProject, ConnectIsolatedPortal, ConnectPortal, OpenProject |
 | 21 | P6-CLOSE | current | NOT RUN | CloseProject, DisconnectPortal, SaveProject, SaveProjectCopy |
 | 21 | P6-SOURCE | current | NOT RUN | DeletePlcExternalSource, GenerateBlocksFromExternalSource, ImportPlcExternalSource, ListPlcExternalSources, ManagePlcExternalSources, PlanPlcExternalSourceImport |

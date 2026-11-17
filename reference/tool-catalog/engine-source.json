@@ -18846,6 +18846,76 @@
         }
       },
       "description": "[L1][Simulation][FILE] Manage stored PLC test cases and read run history under the data root on all eight releases. Actions: list (including invalid files), read, save, delete, listRuns, readRun. Save validates the closed schemaVersion=1 JSON; plcsimScenario uses the existing scenario validator; testSuite stores exact project case/test-set names. Existing cases need overwrite=true. Delete returns the document for restoration. list filters tags (any match) and uses offset/limit; history is newest first; invalid run files remain visible and only the requested directory page is parsed. readRun latest selects the newest valid record. Unreadable runs return IO_FAILED naming the run. Incomplete runs return exitCode=5. Host files only; no TIA or PLCSIM calls. Stored Test Suite selections require V17+, system V18+, application test sets V20+ when executed. Real installation acceptance pending."
+    },
+    "ExportPlcTagTables": {
+      "method": "ExportTagTables",
+      "path": "src/FoundationHost/FoundationTools.cs",
+      "owner": "FoundationTools",
+      "domain": "PLC-Software",
+      "signature": "public CallToolResult ExportTagTables(string softwarePath, string groupPath, string exportPath, bool recursive = false, int maxItems = 128, string expectedInventoryHash = \"\", bool dryRun = true, string unitName = \"\")",
+      "parameters": {
+        "softwarePath": {
+          "type": "string",
+          "description": "Exact softwarePath returned by GetProjectTree; batch exports refuse aliases.",
+          "default": null
+        },
+        "groupPath": {
+          "type": "string",
+          "description": "Exact MIN-ESCAPE relative tag-table group path; empty selects the scope root.",
+          "default": null
+        },
+        "exportPath": {
+          "type": "string",
+          "description": "Existing absolute export directory. Deprecated alias for exportDirectory; removed in 5.0. Mutually exclusive with exportDirectory.",
+          "default": null
+        },
+        "recursive": {
+          "type": "bool",
+          "description": "Include all descendant tag-table groups; false exports only the selected group.",
+          "default": "false",
+          "value": false
+        },
+        "maxItems": {
+          "type": "int",
+          "description": "Maximum complete inventory, 1..256; oversized inventories are refused, never truncated.",
+          "default": "128",
+          "value": 128
+        },
+        "expectedInventoryHash": {
+          "type": "string",
+          "description": "Exact inventoryHash from the same reviewed preview; required for execution.",
+          "default": "\"\"",
+          "value": ""
+        },
+        "dryRun": {
+          "type": "bool",
+          "description": "Preview only by default; false exports after confirmation and approval.",
+          "default": "true",
+          "value": true
+        },
+        "unitName": {
+          "type": "string",
+          "description": "Exact standard software unit name on V16–V21; empty selects PLC root.",
+          "default": "\"\"",
+          "value": ""
+        },
+        "confirm": {
+          "type": "bool",
+          "description": "Explicit execution confirmation; true is required when dryRun=false.",
+          "default": "false",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "description": "Exact projectFile from the same preview; required for execution.",
+          "default": "\"\"",
+          "value": ""
+        },
+        "exportDirectory": {
+          "type": "string",
+          "description": "Existing absolute output directory on the TIA host. Mutually exclusive with exportPath. Omit to use the session output directory."
+        }
+      }
     }
   },
   "behaviorCandidates": [
@@ -19040,6 +19110,10 @@
     {
       "entry": "CreateHardwareCatalogDevice",
       "family": "P6-DEVICE"
+    },
+    {
+      "entry": "ExportPlcTagTables",
+      "family": "P6-EXPORT"
     }
   ],
   "foundationSourceNames": [

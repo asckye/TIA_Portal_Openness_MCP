@@ -78,7 +78,10 @@ internal static class WorkerProtocol
                 throw new IOException("Attached process differs from the explicit request; session stopped.");
             return;
         }
-        if(operation is not ("BindProject" or "OpenProject" or "CreateProject" or "SaveProject" or "CloseProject" or "CompileSoftware" or "ImportBlocksFromDirectory" or "ImportPlcProgramFromDirectory" or "ExportBlocks" or "ExportTypes" or "ExportBlock" or "ExportType" or "ExportTagTable" or "ImportBlocks" or "ImportTypes" or "ImportTagTables" or "CreateTagTable" or "CreateTag" or "CreateUserConstant"))
+        if(operation is not ("BindProject" or "OpenProject" or "CreateProject" or "SaveProject" or "CloseProject" or "CompileSoftware"
+            or "ImportBlocksFromDirectory" or "ImportPlcProgramFromDirectory" or "ExportBlocks" or "ExportTypes" or "ExportTagTables"
+            or "ExportBlock" or "ExportType" or "ExportTagTable" or "ImportBlocks" or "ImportTypes" or "ImportTagTables"
+            or "CreateTagTable" or "CreateTag" or "CreateUserConstant"))
             return;
         var dryRun=arguments["dryRun"]?.GetValue<bool>() ?? operation!="BindProject";
         if(result is not JsonObject data || data["Executed"] is not JsonValue flag || !flag.TryGetValue<bool>(out var executed) || executed==dryRun)
@@ -89,7 +92,7 @@ internal static class WorkerProtocol
                 .Equals(Path.GetFullPath(arguments["expectedProjectFile"]!.GetValue<string>()),Path.GetFullPath(projectFile),StringComparison
                     .OrdinalIgnoreCase))
             throw new IOException("Exchange worker result belongs to a different project; session stopped.");
-        if(operation is "ExportBlocks" or "ExportTypes")
+        if(operation is "ExportBlocks" or "ExportTypes" or "ExportTagTables")
         {
             BatchExportContract.Validate(data,dryRun);
             if(data["SoftwarePath"]!.GetValue<string>()!=TiaMcp.Adapters.Contracts.ObjectPathEncoding

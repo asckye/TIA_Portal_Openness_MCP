@@ -81,6 +81,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ExportPlcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExportPlcBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExportPlcTagTable` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
+| `ExportPlcTagTables` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExportPlcType` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExportPlcTypes` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExportProjectTexts` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |

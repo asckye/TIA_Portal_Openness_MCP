@@ -144,6 +144,7 @@ internal sealed class CatalogData
         {
             ["GetCallResult"] = ("NO-LOCK-2", "READ"),
             ["ManagePlcTestLibrary"] = ("TIA-TEST-1", "FILE"),
+            ["ExportPlcTagTables"] = ("TIA-BATCH-2", "FILE"),
             ["RenderPlcBlock"] = ("P6-48", "FILE"), ["RenderPlcProgramAtlas"] = ("P6-48", "FILE"),
             ["StageImportFiles"] = ("P6-67", "FILE"), ["ListStagedImportFiles"] = ("P6-67", "READ"), ["CleanupStagedImportFiles"] = ("P6-67", "FILE"),
             ["ListStandardPackages"] = ("P8-31d", "READ"), ["ManageStandardPackage"] = ("P8-31d", "FILE"), ["ValidateStandardPackage"] = ("P8-31d", "OFFLINE"), ["DescribeStandardPackage"] = ("P8-31d", "READ"), ["ManageMachineDescription"] = ("P8-31d", "FILE"),

@@ -123,6 +123,8 @@ namespace TiaMcp.Adapters.Contracts
                 string unitName = "");
         public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
                 string expectedInventoryHash="",bool dryRun=true, string unitName = "");
+        public PlcBatchExportResult ExportTagTables(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
+                string expectedInventoryHash="",bool dryRun=true, string unitName = "");
         public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true, string unitName = "");
         public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true,
                 string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null);

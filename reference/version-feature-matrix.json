@@ -3310,6 +3310,7 @@
           "ExportPlcBlock",
           "ExportPlcBlocks",
           "ExportPlcTagTable",
+          "ExportPlcTagTables",
           "ExportPlcType",
           "ExportPlcTypes"
         ]
@@ -3800,6 +3801,7 @@
           "ExportPlcBlock",
           "ExportPlcBlocks",
           "ExportPlcTagTable",
+          "ExportPlcTagTables",
           "ExportPlcType",
           "ExportPlcTypes"
         ]
@@ -4348,6 +4350,7 @@
           "ExportPlcBlock",
           "ExportPlcBlocks",
           "ExportPlcTagTable",
+          "ExportPlcTagTables",
           "ExportPlcType",
           "ExportPlcTypes"
         ]
@@ -4932,6 +4935,7 @@
           "ExportPlcBlock",
           "ExportPlcBlocks",
           "ExportPlcTagTable",
+          "ExportPlcTagTables",
           "ExportPlcType",
           "ExportPlcTypes"
         ]
@@ -5542,6 +5546,7 @@
           "ExportPlcBlock",
           "ExportPlcBlocks",
           "ExportPlcTagTable",
+          "ExportPlcTagTables",
           "ExportPlcType",
           "ExportPlcTypes"
         ]
@@ -6185,6 +6190,7 @@
           "ExportPlcBlock",
           "ExportPlcBlocks",
           "ExportPlcTagTable",
+          "ExportPlcTagTables",
           "ExportPlcType",
           "ExportPlcTypes"
         ]
@@ -6929,6 +6935,7 @@
           "ExportPlcBlocks",
           "ExportPlcBlocksDocuments",
           "ExportPlcTagTable",
+          "ExportPlcTagTables",
           "ExportPlcType",
           "ExportPlcTypes"
         ]
@@ -7034,6 +7041,7 @@
           "ExportPlcBlocks",
           "ExportPlcBlocksDocuments",
           "ExportPlcTagTable",
+          "ExportPlcTagTables",
           "ExportPlcType",
           "ExportPlcTypes"
         ]

@@ -43,6 +43,7 @@ namespace TiaMcp.WorkerChannel
             ["ExportTechnologyObject"] = "importExport",
             ["ExportType"] = "importExport",
             ["ExportTypes"] = "importExport",
+            ["ExportTagTables"] = "importExport",
             ["GenerateBlocksFromExternalSource"] = "compile",
             ["ImportBlocks"] = "importExport",
             ["ImportBlocksFromDirectory"] = "importExport",

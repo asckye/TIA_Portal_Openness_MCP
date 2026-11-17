@@ -250,5 +250,19 @@
       "20",
       "21"
     ]
+  },
+  "ExportPlcTagTables": {
+    "owner": "TIA-BATCH-2",
+    "operation": "FILE",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
   }
 }

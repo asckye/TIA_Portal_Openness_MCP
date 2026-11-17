@@ -270,7 +270,7 @@ namespace TiaOpenness.Shared
                 "ExportAlarmClasses" or "ExportAlarmInstanceTexts" or "ExportAlarmTextLists" or "ExportDeviceAml"
                     or "ExportHmiConnection" or "ExportHmiScreen" or "ExportHmiTagTable" or "ExportOpcUaInterface"
                     or "ExportTechnologyObject" or "ExportPlcBlock" or "ExportPlcBlockDocuments" or "ExportPlcBlocks" or "ExportPlcBlocksDocuments"
-                    or "ExportPlcTagTable" or "ExportPlcType" or "ExportPlcTypes" or "ExportPlcWatchTable" => "exportPath",
+                    or "ExportPlcTagTable" or "ExportPlcTagTables" or "ExportPlcType" or "ExportPlcTypes" or "ExportPlcWatchTable" => "exportPath",
                 "ExportProjectTexts" or "ExportSafetyPrintout" or "GeneratePlcSourceFromBlocks"
                     or "ExportScadaData" or "GeneratePlcLoadableFile" => "filePath",
                 "ExchangeSystemDiagnosticsSettings" when action == "export" => "filePath",

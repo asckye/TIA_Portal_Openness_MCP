@@ -144,6 +144,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ExportTechnologyObjectsToDirectoryV4"] = "FILE",
             ["ExportTypeV4"] = "FILE",
             ["ExportTypesV4"] = "FILE",
+            ["ExportTagTables"] = "FILE",
             ["ExportUnifiedEngineeringListV4"] = "FILE",
             ["ExtractPlcBlockMetricsV4"] = "READ",
             ["FindToolsV4"] = "READ",

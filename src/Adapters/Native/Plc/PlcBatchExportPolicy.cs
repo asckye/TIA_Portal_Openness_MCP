@@ -24,7 +24,7 @@ namespace TiaMcp.Adapters
                 bool dryRun,string expectedInventoryHash,IEnumerable<PlcBatchExportSource> inventory,Action requireOffline,Func<FileInfo,Action<FileInfo>,string
                 ?>? publish=null,string unitName="")
         {
-            if(kind!="blocks" && kind!="types") throw new AdapterPreconditionException("Unknown batch kind.","kind");
+            if(kind!="blocks" && kind!="types" && kind!="tagTables") throw new AdapterPreconditionException("Unknown batch kind.","kind");
             if(maxItems<1 || maxItems>MaximumItems)
                 throw new AdapterPreconditionException("maxItems must be between 1 and 256; oversized inventories are refused, never truncated.","maxItems");
             if(!Path.IsPathRooted(directory)) throw new AdapterPreconditionException("An absolute existing export directory is required.","exportPath");

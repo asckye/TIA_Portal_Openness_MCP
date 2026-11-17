@@ -5,6 +5,7 @@ Current V4 registration is summarized in [the version matrix](version-tools.md).
 
 Stored PLC test libraries add no Openness member: library runs reuse the existing Test Suite executor calls
 (styleGuide/application V17+, system V18+, application test sets V20+); the library and history files are host-only on all eight releases.
+`ExportPlcTagTables` exports root and user-group PLC tag tables on all eight releases using `PlcTagTableGroup.Groups` / `.TagTables` and `PlcTagTable.Export(FileInfo, ExportOptions.None)`; exact group scope, optional recursion and V16–V21 standard software units retain the bounded inventory preview/hash contract. Native acceptance is **NOT RUN**.
 
 ## API-P1b offline table configuration (beta.6)
 

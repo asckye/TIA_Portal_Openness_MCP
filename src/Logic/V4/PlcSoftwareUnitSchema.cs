@@ -9,7 +9,7 @@ namespace TiaMcp.Logic.V4
         public static bool IsImport(string tool) => tool is "ImportPlcBlock" or "ImportPlcType" or "ImportPlcTagTable" or "ImportPlcBlocksFromDirectory"
             or "ImportPlcTagTablesFromDirectory" or "ImportPlcProgramFromDirectory" or "ImportPlcBlockDocuments" or "ImportPlcBlocksDocuments";
         public static bool IsExport(string tool) => tool is "ExportPlcBlock" or "ExportPlcType" or "ExportPlcTagTable" or "ExportPlcBlocks"
-            or "ExportPlcTypes" or "ExportPlcBlockDocuments" or "ExportPlcBlocksDocuments";
+            or "ExportPlcTypes" or "ExportPlcTagTables" or "ExportPlcBlockDocuments" or "ExportPlcBlocksDocuments";
 
         public static bool Available(string release, string tool, string parameter)
         {

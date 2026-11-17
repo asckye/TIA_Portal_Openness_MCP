@@ -153,6 +153,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["ExportPlcTagTable"] = "worker",
                 ["ExportPlcType"] = "worker",
                 ["ExportPlcTypes"] = "worker",
+                ["ExportPlcTagTables"] = "worker",
                 ["ExportPlcWatchTable"] = "worker",
                 ["ExportPlcWatchTablesToDirectory"] = "foundation",
                 ["ExportProjectTexts"] = "foundation",

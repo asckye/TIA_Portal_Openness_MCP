@@ -390,6 +390,7 @@ public sealed class GeneratorTests
     [Theory]
     [InlineData("ExportPlcBlocks")]
     [InlineData("ExportPlcTypes")]
+    [InlineData("ExportPlcTagTables")]
     [InlineData("ImportPlcBlocksFromDirectory")]
     [InlineData("ImportPlcProgramFromDirectory")]
     public void FoundationBatchExamplesRequireExactPaths(string name) {

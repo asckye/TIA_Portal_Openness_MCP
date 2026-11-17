@@ -537,6 +537,7 @@ public sealed class OutputRootApprovalTests
         ["ExportPlcBlocks"] = new("exportDirectory", "exportPath"),
         ["ExportPlcBlocksDocuments"] = new("exportDirectory", "exportPath"),
         ["ExportPlcTagTable"] = new("exportFile", "exportPath"),
+        ["ExportPlcTagTables"] = new("exportDirectory", "exportPath"),
         ["ExportPlcType"] = new("exportDirectory", "exportPath"),
         ["ExportPlcTypes"] = new("exportDirectory", "exportPath"),
         ["ExportPlcWatchTable"] = new("exportFile", "exportPath"),
@@ -635,7 +636,7 @@ public sealed class OutputRootApprovalTests
         var baselines = Directory.GetFiles(Path.Combine(repository, "manifest", "contracts", "v4", "baseline"), "*.json");
         Assert.Equal(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             baselines.Select(Path.GetFileNameWithoutExtension).OrderBy(name => name, StringComparer.Ordinal));
-        Assert.Equal(56, ExpectedOutputs.Count);
+        Assert.Equal(57, ExpectedOutputs.Count);
         foreach (string file in baselines)
         {
             var catalog = JsonNode.Parse(File.ReadAllText(file))!;

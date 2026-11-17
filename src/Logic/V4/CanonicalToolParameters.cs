@@ -36,7 +36,7 @@ namespace TiaMcp.Logic.V4
                     aliases.Add(new Alias(legacy, canonical));
                 }
             }
-            Add("ExportPlcBlock ExportPlcBlocks ExportPlcType ExportPlcTypes ExportPlcBlockDocuments ExportPlcBlocksDocuments",
+            Add("ExportPlcBlock ExportPlcBlocks ExportPlcType ExportPlcTypes ExportPlcTagTables ExportPlcBlockDocuments ExportPlcBlocksDocuments",
                 "exportPath", "exportDirectory");
             Add("ExportPlcTagTable ExportPlcWatchTable ExportTechnologyObject ExportAlarmClasses ExportAlarmTextLists " +
                 "ExportAlarmInstanceTexts ExportHmiScreen ExportHmiTagTable ExportHmiConnection ExportOpcUaInterface ExportDeviceAml",

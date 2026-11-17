@@ -89,7 +89,16 @@ internal static class CatalogGenerator
             ValidateTransition(old, currentNames[old], data.Renames[old], actual, expected.ToDictionary(p => p, p => Shape(shapes, old, p)));
             if (data.Additions.ContainsKey(old))
             {
-                var wanted = old switch { "StageImportFiles" => new Dictionary<string, string> { ["files"] = "StagedTextFile[]", ["dryRun"] = "bool" }, "ListStagedImportFiles" => [], "CleanupStagedImportFiles" => new() { ["batchId"] = "string", ["dryRun"] = "bool" }, _ => new() { ["inputPath"] = "string", ["outputPath"] = "string" } };
+                var wanted = old switch {
+                    "StageImportFiles" => new Dictionary<string, string> { ["files"] = "StagedTextFile[]", ["dryRun"] = "bool" },
+                    "ExportPlcTagTables" => new() {
+                        ["softwarePath"] = "string", ["groupPath"] = "string", ["exportPath"] = "string", ["recursive"] = "bool",
+                        ["maxItems"] = "int", ["expectedInventoryHash"] = "string", ["dryRun"] = "bool", ["unitName"] = "string"
+                    },
+                    "ListStagedImportFiles" => [],
+                    "CleanupStagedImportFiles" => new() { ["batchId"] = "string", ["dryRun"] = "bool" },
+                    _ => new() { ["inputPath"] = "string", ["outputPath"] = "string" }
+                };
                 Require(actual.Count == wanted.Count && actual.All(p => wanted.GetValueOrDefault(p.Key) == p.Value), "New V4 contract differs: " + old);
             }
         }

@@ -14072,5 +14072,17 @@
       },
       "meaning": "Merge after reviewing preview; complete Workbench approval when enabled."
     }
+  },
+  "ExportPlcTagTables": {
+    "arguments": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
+      "confirm": false
+    },
+    "envelopeVersion": 4
   }
 }

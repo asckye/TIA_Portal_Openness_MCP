@@ -24,7 +24,8 @@ internal static class BatchExportDispatchTests
             {
                 var dry=arguments["dryRun"]!.GetValue<bool>();
                 if(!dry) MutationIdentityPolicy.RequireSameProject(arguments["expectedProjectFile"]!.GetValue<string>(),"C:/Projects/project.ap17");
-                var result=PlcBatchExportPolicy.Run(operation=="ExportBlocks"?"blocks":"types","C:/Projects/project.ap17","devices/PLC","",false,
+                var result=PlcBatchExportPolicy.Run(operation=="ExportBlocks"?"blocks":operation=="ExportTagTables"?"tagTables":"types",
+                    "C:/Projects/project.ap17","devices/PLC","",false,
                     arguments["exportPath"]!.GetValue<string>(),128,dry,arguments["expectedInventoryHash"]!.GetValue<string>(),
                     new[]{"A","B","C"}.Select(path=>new PlcBatchExportSource {Path=path,Consistent=true,Export=_=>throw new Exception("Native callback forbidden in dispatch tests")}),()=>{},
                     (destination,_)=>{
@@ -47,7 +48,7 @@ internal static class BatchExportDispatchTests
         var root=Path.Combine(Path.GetTempPath(),"tia-batch-dispatch-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(root);
         try
         {
-            foreach(var name in new[]{"ExportPlcBlocks","ExportPlcTypes"})
+            foreach(var name in new[]{"ExportPlcBlocks","ExportPlcTypes","ExportPlcTagTables"})
             {
                 Dictionary<string,JsonElement> Args()=>new() { ["softwarePath"]=JsonSerializer.SerializeToElement("devices/PLC"),["groupPath"]=JsonSerializer.SerializeToElement(""),["exportPath"]=JsonSerializer.SerializeToElement(root) };
                 RequestContext<CallToolRequestParams> Request(Dictionary<string,JsonElement> args)=>new(server) {Params=new(){Name=name,Arguments=args}};

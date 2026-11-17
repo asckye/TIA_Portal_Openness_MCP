@@ -427,6 +427,15 @@
       "refreshReadHandle": false,
       "mode": "preview",
       "confirm": false
+    },
+    "ExportPlcTagTables/P6-EXPORT": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
+      "confirm": false
     }
   },
   "15.1": {
@@ -856,6 +865,15 @@
       "retryPolicy": "never",
       "refreshReadHandle": false,
       "mode": "preview",
+      "confirm": false
+    },
+    "ExportPlcTagTables/P6-EXPORT": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
       "confirm": false
     }
   },
@@ -1287,6 +1305,15 @@
       "refreshReadHandle": false,
       "mode": "preview",
       "confirm": false
+    },
+    "ExportPlcTagTables/P6-EXPORT": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
+      "confirm": false
     }
   },
   "17": {
@@ -1716,6 +1743,15 @@
       "retryPolicy": "never",
       "refreshReadHandle": false,
       "mode": "preview",
+      "confirm": false
+    },
+    "ExportPlcTagTables/P6-EXPORT": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
       "confirm": false
     }
   },
@@ -2147,6 +2183,15 @@
       "refreshReadHandle": false,
       "mode": "preview",
       "confirm": false
+    },
+    "ExportPlcTagTables/P6-EXPORT": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
+      "confirm": false
     }
   },
   "19": {
@@ -2576,6 +2621,15 @@
       "retryPolicy": "never",
       "refreshReadHandle": false,
       "mode": "preview",
+      "confirm": false
+    },
+    "ExportPlcTagTables/P6-EXPORT": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
       "confirm": false
     }
   },
@@ -3007,6 +3061,15 @@
       "refreshReadHandle": false,
       "mode": "preview",
       "confirm": false
+    },
+    "ExportPlcTagTables/P6-EXPORT": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
+      "confirm": false
     }
   },
   "21": {
@@ -3436,6 +3499,15 @@
       "retryPolicy": "never",
       "refreshReadHandle": false,
       "mode": "preview",
+      "confirm": false
+    },
+    "ExportPlcTagTables/P6-EXPORT": {
+      "softwarePath": "<exact softwarePath from GetProjectTree>",
+      "groupPath": "",
+      "exportDirectory": "C:\\TIA_MCP\\exports",
+      "recursive": true,
+      "maxItems": 128,
+      "dryRun": true,
       "confirm": false
     }
   }

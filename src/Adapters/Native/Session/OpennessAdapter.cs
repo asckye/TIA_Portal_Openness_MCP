@@ -174,6 +174,9 @@ namespace TiaMcp.Adapters
             public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
                     string expectedInventoryHash="",bool dryRun=true, string unitName = "") =>
                 engine.ExportTypes(softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName);
+            public PlcBatchExportResult ExportTagTables(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
+                    string expectedInventoryHash="",bool dryRun=true, string unitName = "") =>
+                engine.ExportTagTables(softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName);
             public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true, string unitName = "") =>
                 engine.ExportTagTableScoped(softwarePath, tagTableName, exportPath, dryRun, unitName);
             public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true,

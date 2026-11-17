@@ -45,6 +45,7 @@ public sealed class PlcWorkerRobustnessTests
         ["ExportTechnologyObject"] = "importExport",
         ["ExportType"] = "importExport",
         ["ExportTypes"] = "importExport",
+        ["ExportTagTables"] = "importExport",
         ["GenerateBlocksFromExternalSource"] = "compile",
         ["ImportBlocks"] = "importExport",
         ["ImportBlocksFromDirectory"] = "importExport",

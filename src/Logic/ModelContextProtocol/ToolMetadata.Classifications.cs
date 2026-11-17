@@ -162,6 +162,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ExportPlcBlocksDocuments"] = new Classification("L2", "PLC-Software", "FILE", false, false, false, false, false, false, false),
             ["ExportPlcProDiagInfo"] = new Classification("L2", "PLC-Software", "FILE", false, false, false, false, true, false, false),
             ["ExportPlcTagTable"] = new Classification("L2", "PLC-Software", "FILE", false, false, false, false, false, false, false),
+            ["ExportPlcTagTables"] = new Classification("L2", "PLC-Software", "FILE", false, false, false, false, false, false, false),
             ["ExportPlcType"] = new Classification("L2", "PLC-Software", "FILE", false, false, false, false, false, false, false),
             ["ExportPlcTypes"] = new Classification("L2", "PLC-Software", "FILE", false, false, false, false, false, false, false),
             ["ExportPlcWatchTable"] = new Classification("L2", "PLC-Software", "FILE", false, false, false, false, false, false, false),

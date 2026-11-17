@@ -22,7 +22,8 @@ public sealed class SoftwareUnitCoverageTests
     {
         using var worker = new SchemaWorker();
         var tools = LegacyHostToolRegistry.Create(worker, release, false).ToDictionary(t => t.ProtocolTool.Name, t => t.ProtocolTool);
-        foreach (var name in new[] { "AnalyzePlcCrossReferences", "ExportPlcBlock", "ExportPlcType", "ExportPlcTagTable", "ExportPlcBlocks", "ExportPlcTypes",
+        foreach (var name in new[] { "AnalyzePlcCrossReferences", "ExportPlcBlock", "ExportPlcType", "ExportPlcTagTable",
+            "ExportPlcBlocks", "ExportPlcTypes", "ExportPlcTagTables",
             "ImportPlcBlock", "ImportPlcType", "ImportPlcTagTable", "ImportPlcBlocksFromDirectory", "ImportPlcTagTablesFromDirectory", "ImportPlcProgramFromDirectory",
             "ListPlcTags", "ListPlcUserConstants", "ListPlcSystemConstants" })
         {
@@ -44,6 +45,8 @@ public sealed class SoftwareUnitCoverageTests
     }
 
     [Theory]
+    [InlineData("14sp1", "ExportPlcTagTables", "unitName")]
+    [InlineData("15.1", "ExportPlcTagTables", "unitName")]
     [InlineData("14sp1", "ListPlcTags", "unitName")]
     [InlineData("15.1", "ListPlcTags", "includeUnits")]
     [InlineData("18", "ImportPlcBlock", "importOptions")]
@@ -55,6 +58,8 @@ public sealed class SoftwareUnitCoverageTests
         var arguments = name == "ListPlcTags"
             ? new JsonObject { ["plc"]="PLC_1", ["table"]="Tags" }
             : new JsonObject { ["softwarePath"]="PLC_1", [name == "ImportPlcTagTable" ? "folderPath" : "groupPath"]="", ["importPath"]="C:/Fixture.xml" };
+        if (name == "ExportPlcTagTables")
+            arguments = new JsonObject { ["softwarePath"]="devices/PLC/CPU", ["groupPath"]="", ["exportDirectory"]="C:/Exports" };
         arguments[parameter] = parameter.EndsWith("Options", StringComparison.Ordinal) ? new JsonArray("Imaginary")
             : parameter == "includeUnits" ? JsonValue.Create(true) : JsonValue.Create("Unit_1");
         var error = new TiaMcp.Logic.V4.Inputs.InputSchema(tool.InputSchema).Validate(JsonSerializer.SerializeToElement(arguments), "arguments");
