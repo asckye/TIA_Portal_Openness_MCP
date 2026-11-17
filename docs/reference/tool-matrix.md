@@ -4,9 +4,9 @@
 
 本文件由 `dotnet run --project build-tools/release -- generate-tool-capability-matrix` 从 `manifest/tools-list.json`（八个 release 的注册工具目录并集）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-11-17 10:33:04
+- 生成时间：2026-11-17 11:35:29
 - 产品文件版本：4.0.0.0
-- 工具数量：518
+- 工具数量：519
 
 ## 读法
 
@@ -18,7 +18,7 @@
 | `SESSION` | 会话与发现，包含工程保存、另存与关闭；写操作须审批 | 16 |
 | `READ` | 读取已打开工程，不改动 | 157 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 199 |
-| `FILE` | 导出/导入文件或生成离线产物 | 57 |
+| `FILE` | 导出/导入文件或生成离线产物 | 58 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 36 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 20 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 15 |
@@ -36,7 +36,7 @@
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 75 | `Hardware` (75) |
 | `hmi` | HMI 人机界面 / HMI | 126 | `HMI` (31)、`HMI-Unified` (71)、`HMI-Classic` (18)、`HMI-Library` (6) |
-| `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 26 | `Online-Monitoring` (20)、`Simulation` (6) |
+| `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 27 | `Online-Monitoring` (20)、`Simulation` (7) |
 
 ## session — 会话与基础设施 / Session & infrastructure（57）
 
@@ -684,7 +684,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `PlanGlobalLibraryTemplateReuse` | L2 | OFFLINE | Plan the commercial fallback when direct MasterCopy import is not publicly verifiable: learn reference/global-library template evidence and rebuild screens with native Unified HMI MCP theme/layout/action tools. Offline planning only; it does not import library content or modify projects. Examples: GetToolUsage(toolName: "PlanGlobalLibraryTemplateReuse"), optionally operation or language. |
 | `ProbeGlobalLibrary` | L2 | READ | Open a TIA global library (.al21) read-only/best-effort and list accessible master copies/types/folders through public/reflection APIs. It does not import library content. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "ProbeGlobalLibrary"), optionally operation or language. |
 
-## runtime — 运行时监视与仿真 / Runtime monitoring & simulation（26）
+## runtime — 运行时监视与仿真 / Runtime monitoring & simulation（27）
 
 不经 Openness 的运行时通道：S7 协议、OPC UA、S7 Web 服务器 API、Unified Open Pipe 的读值、报警与受确认的写入；PLCSIM Advanced 虚拟 CPU 的实例管理、读写与闭环测试场景。
 
@@ -713,10 +713,11 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `WritePlcWebVars` | L2 | ONLINE-WRITE | Write values to PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. Every variable is read before the write, written one by one, then read back and compared (items[].verified); a readback mismatch (e.g. the program overwrites the variable cyclically) is reported as an error, never as success. Values must be JSON bool/number/string scalars; structs/arrays are refused. The user needs 'write variables' permission. No force, no CPU mode change, no TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "WritePlcWebVars"), optionally operation or language. |
 | `WriteUnifiedRuntimeTags` | L2 | ONLINE-WRITE | Write values to WinCC Unified RUNTIME tags through WinCC Unified Open Pipe (WriteTag on \\.\pipe\HmiRuntime). PLC-connected HMI tags forward the value to the PLC, so this changes a running system. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values (ReadTag) only. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. After WriteTag the tags are read back and compared (items[].verified); a mismatch or a per-tag WriteTag error is reported as failure. Values: JSON bool/number/string scalars (the Runtime converts to the tag's data type). Local only; user must be in the 'SIMATIC HMI' group. No TIA project change. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: "WriteUnifiedRuntimeTags"), optionally operation or language. |
 
-### [Simulation]（6）
+### [Simulation]（7）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
+| `ManagePlcTestLibrary` | L1 | FILE | Manage stored PLC test cases and read run history under the data root on all eight releases. Actions: list (including invalid files), read, save, delete, listRuns, readRun. Save validates the closed schemaVersion=1 JSON; plcsimScenario uses the existing scenario validator; testSuite stores exact project case/test-set names. Existing cases need overwrite=true. Delete returns the document for restoration. list filters tags (any match) and uses offset/limit; history is newest first; invalid run files remain visible and only the requested directory page is parsed. readRun latest selects the newest valid record. Unreadable runs return IO_FAILED naming the run. Incomplete runs return exitCode=5. Host files only; no TIA or PLCSIM calls. Stored Test Suite selections require V17+, system V18+, application test sets V20+ when executed. Real installation acceptance pending. Examples: GetToolUsage(toolName: "ManagePlcTestLibrary"), optionally operation or language. |
 | `GetPlcSimAdvancedTags` | L2 | ONLINE | Read from ONE S7-PLCSIM Advanced instance: with names (array of PLCSIM tag names, e.g. ["\"Start\"", "\"DB_Motor\".Speed", "%I0.0" is NOT supported — use symbolic names as PLCSIM lists them]) the current value and primitive type of each tag; without names the tag list of the instance (UpdateTagList + TagInfos) filtered by areaFilter (Input/Output/Marker/DataBlock/... or empty) and nameContains, paginated with offset/limit (max 500). Read-only; requires the instance to be powered on with a loaded program. Per-tag errors are reported in items[].error. Example: {"instanceName":"MCP_SIM","names":["MCP_SimDB.Cycles","MCP_SimDB.Running"]} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "GetPlcSimAdvancedTags"), optionally operation or language. |
 | `ListPlcSimAdvancedInstances` | L2 | ONLINE | List the S7-PLCSIM Advanced instances registered on this machine through the official PLCSIM Advanced .NET API (Siemens.Simatic.Simulation.Runtime, located at run time: apiPath > env PLCSIMADV_API_PATH > newest folder under %ProgramFiles(x86)%\Common Files\Siemens\PLCSIMADV\API). Returns API path/version, the global network mode (SimulationRuntimeManager.NetworkMode on PLCSIM Advanced 6+: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) and per instance name, id and — when includeState=true — operating state (Off/Stop/Run/...), CPU type, communication interface and storage path. Read-only: registers nothing, changes no state. Fails with status ApiNotFound when PLCSIM Advanced is not installed; the API DLL is never shipped with this server. Example: {"includeState":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "ListPlcSimAdvancedInstances"), optionally operation or language. |
 | `ManagePlcSimAdvancedInstance` | L2 | ONLINE-WRITE | Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the 'Siemens PLCSIM Virtual Ethernet Adapter' (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadPlc / ConnectOnlinePlc to it through that PG/PC interface - the safe target for the whole online family; Softbus selects the local PLCSIM access instead. On PLCSIM Advanced 6+ the per-instance property is read-only and the choice is the global SimulationRuntimeManager.NetworkMode (also accepted literally: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus), which the API refuses while any instance is running - data.communicationInterfaceRoute shows the route and the mode before / after. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {"instanceName":"MCP_SIM","action":"register","cpuType":"<CPU type supported by the installed PLCSIM API>","communicationInterface":"Softbus","confirmInstanceChange":false,"dryRun":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "ManagePlcSimAdvancedInstance"), optionally operation or language. |

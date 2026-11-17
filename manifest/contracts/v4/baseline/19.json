@@ -295,6 +295,7 @@
         "GetV21EcosystemCatalog",
         "ListExportHandles",
         "ListToolCategories",
+        "ManagePlcTestLibrary",
         "PreviewToolBatch",
         "PreviewToolCall",
         "RestartOpennessWorker",
@@ -29897,6 +29898,281 @@
         "type": "object"
       },
       "name": "ManagePlcTagDefinition",
+      "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
+    },
+    {
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "descriptionSha256": "196af5ac4057f6f554cb99b8feef19a1e1082b7db7f0fdaff74eb623f3951d19",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "list | read | save | delete | listRuns | readRun.",
+            "enum": [
+              "list",
+              "read",
+              "save",
+              "delete",
+              "listRuns",
+              "readRun"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "default": "",
+            "description": "Case id; read/delete only. 1..64 letters, digits, dot, underscore or hyphen; starts with a letter or digit. Windows device stems (CON, PRN, AUX, NUL, COM1-9, LPT1-9) are refused before any extension.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 100,
+            "description": "Page size for list/listRuns, 1..100.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based offset for list/listRuns.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Allow save to replace an existing case, returning its previous SHA-256.",
+            "type": "boolean"
+          },
+          "runId": {
+            "default": "latest",
+            "description": "Exact history run id, or latest for the newest valid record; readRun only.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Optional tags for list; any case-insensitive match selects a case. Invalid files remain visible.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "testCase": {
+            "additionalProperties": false,
+            "description": "Closed schemaVersion=1 case document; required for save. kind selects scenario or testSuite, exclusively.",
+            "minProperties": 0,
+            "properties": {
+              "id": {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^(?!(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:\\.|(?![\\s\\S])))[A-Za-z0-9][A-Za-z0-9._-]{0,63}(?![\\s\\S])",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "plcsimScenario",
+                  "testSuite"
+                ],
+                "minLength": 0,
+                "type": "string"
+              },
+              "requirement": {
+                "minLength": 0,
+                "type": "string"
+              },
+              "scenario": {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "instance": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "mode": {
+                    "minLength": 0,
+                    "pattern": "^([sS][iI][nN][gG][lL][eE][sS][tT][eE][pP]|[dD][eE][fF][aA][uU][lL][tT])$",
+                    "type": "string"
+                  },
+                  "steps": {
+                    "items": {
+                      "oneOf": [
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "write": {
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "minLength": 0,
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "maxProperties": 500,
+                              "minProperties": 1,
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "write"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "waitMs": {
+                              "maximum": 60000,
+                              "minimum": 1,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "waitMs"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "minProperties": 0,
+                          "properties": {
+                            "assert": {
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "minLength": 0,
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "maxProperties": 500,
+                              "minProperties": 1,
+                              "type": "object"
+                            },
+                            "note": {
+                              "minLength": 0,
+                              "type": "string"
+                            },
+                            "tolerance": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "assert"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "maxItems": 500,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "stopOnFailure": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "instance",
+                  "steps"
+                ],
+                "type": "object"
+              },
+              "schemaVersion": {
+                "maximum": 1,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "tags": {
+                "items": {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 32,
+                "minItems": 0,
+                "type": "array"
+              },
+              "testSuite": {
+                "additionalProperties": false,
+                "minProperties": 0,
+                "properties": {
+                  "category": {
+                    "enum": [
+                      "styleGuide",
+                      "application",
+                      "system"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "case",
+                      "testSet"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "names": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 50,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "runAll": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "category",
+                  "kind"
+                ],
+                "type": "object"
+              },
+              "title": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "id",
+              "title",
+              "kind"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "type": "object"
+      },
+      "name": "ManagePlcTestLibrary",
       "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
     },
     {
