@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -34,9 +35,9 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
     public Func<string, string, string, IEnumerable<Dictionary<string, object?>>>? DecodeUnifiedDocument => null;
     public Func<string, string, Dictionary<string, object?>>? AnalyzeUnifiedScript => null;
 
-    private HmiObject Create(bool preview, string token = "", string code = Code)
+    private HmiObject Create(bool preview, string token = "", string code = Code, HmiObject? evidence = null)
     {
-        var meta = new HmiObject();
+        var meta = evidence ?? new HmiObject();
         try
         {
             EngineeringWriteJournal.Run(meta, () => UnifiedGlobalScriptEdit.Create(() => software,
@@ -110,6 +111,65 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
         Assert.Equal(true, result["mayHaveChanged"]);
         Assert.Equal(1, software.Scripts.Effects.Count(e => e == "Import"));
         Assert.NotNull(result["cleanupRequired"]);
+        AssertManualCleanup(result);
+    }
+
+    private static void AssertManualCleanup(HmiObject result)
+    {
+        Assert.IsType<string>(result["rollbackOutcome"]);
+        Assert.NotEqual("restored", result["rollbackOutcome"]);
+        Assert.Equal(false, result["rollbackCompleted"]);
+        var cleanup = Assert.Single(Assert.IsAssignableFrom<IEnumerable<object?>>(result["cleanupRequired"]));
+        var task = Assert.IsAssignableFrom<IDictionary<string, object?>>(cleanup);
+        Assert.Equal("HMI/Scripts/Status: no Openness delete; remove manually in TIA if needed", task["target"]);
+        Assert.Contains("remove manually in TIA", Assert.IsType<string>(task["target"]));
+        Assert.Equal("NotSupportedException", task["reason"]);
+    }
+
+    [Fact]
+    public void True_import_with_failed_readback_export_retains_the_module_and_manual_cleanup()
+    {
+        var preview = Create(true);
+        software.Scripts.FailExport = true;
+        var result = Create(false, (string)preview["token"]!);
+        Assert.Equal(true, result["importReturned"]);
+        Assert.Equal("NativeExportFailed", result["status"]);
+        Assert.Equal(false, result["operationSuccess"]);
+        Assert.Equal(false, result["verificationSuccess"]);
+        Assert.Equal(true, result["mayHaveChanged"]);
+        Assert.Equal(new[] { "Import", "Export" }, software.Scripts.Effects);
+        Assert.Single(software.Scripts.Modules);
+        AssertManualCleanup(result);
+    }
+
+    [Fact]
+    public void Exception_after_true_import_does_not_claim_that_the_new_module_was_restored()
+    {
+        var preview = Create(true);
+        software.Scripts.MalformedExport = true;
+        var result = new HmiObject();
+        Assert.Throws<NotSupportedException>(() => Create(false, (string)preview["token"]!, evidence: result));
+        Assert.Equal(true, result["importReturned"]);
+        Assert.Equal(false, result["operationSuccess"]);
+        Assert.Equal(true, result["mayHaveChanged"]);
+        Assert.Equal(new[] { "Import", "Export" }, software.Scripts.Effects);
+        Assert.Single(software.Scripts.Modules);
+        AssertManualCleanup(result);
+    }
+
+    [Fact]
+    public void Native_import_exception_after_insertion_preserves_the_manual_delete_obligation()
+    {
+        var preview = Create(true);
+        software.Scripts.ThrowAfterImport = true;
+        var result = new HmiObject();
+        var error = Assert.Throws<TargetInvocationException>(() => Create(false, (string)preview["token"]!, evidence: result));
+        Assert.IsType<IOException>(error.InnerException);
+        Assert.Equal(false, result["operationSuccess"]);
+        Assert.Equal(true, result["mayHaveChanged"]);
+        Assert.Equal(new[] { "Import" }, software.Scripts.Effects);
+        Assert.Single(software.Scripts.Modules);
+        AssertManualCleanup(result);
     }
 
     public sealed class Software
@@ -121,6 +181,7 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
         internal readonly List<Module> Modules = new();
         internal readonly List<string> Effects = new();
         internal bool Accept = true, Mismatch;
+        internal bool FailExport, MalformedExport, ThrowAfterImport;
         public int Count => Modules.Count;
         public Module this[int index] => Modules[index];
         public bool Import(DirectoryInfo directory)
@@ -128,6 +189,7 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
             Effects.Add("Import");
             var pair = UnifiedScriptFileCodec.ReadPair(directory.FullName, "Status");
             Modules.Add(new Module(this, "Status", Mismatch ? pair.Text + "// changed\n" : pair.Text));
+            if (ThrowAfterImport) throw new IOException("Synthetic import failure after module insertion.");
             return Accept;
         }
     }
@@ -139,7 +201,9 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
         {
             Assert.Equal("Module", fileName);
             owner.Effects.Add("Export");
+            if (owner.FailExport) throw new IOException("Synthetic readback export failure after a successful import.");
             var pair = UnifiedScriptFileCodec.ComposePair(directory.FullName, name, text);
+            if (owner.MalformedExport) File.WriteAllText(Path.Combine(directory.FullName, pair.YamlName), "ScriptModules: {}\n");
             return new[] { new FileInfo(Path.Combine(directory.FullName, pair.YamlName)), new FileInfo(Path.Combine(directory.FullName, pair.JsName)) };
         }
     }

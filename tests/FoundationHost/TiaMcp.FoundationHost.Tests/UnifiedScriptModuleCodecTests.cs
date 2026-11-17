@@ -1,6 +1,7 @@
 using System.Text;
 using TiaMcpServer.Siemens.Services;
 using Xunit;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 public sealed class UnifiedScriptModuleCodecTests : IDisposable
@@ -14,6 +15,10 @@ public sealed class UnifiedScriptModuleCodecTests : IDisposable
     [InlineData("状态模块")]
     [InlineData("It's #global")]
     [InlineData("true")]
+    [InlineData("false")]
+    [InlineData("null")]
+    [InlineData("~")]
+    [InlineData("123")]
     [InlineData("#module")]
     public void Compose_round_trips_exact_text_and_minimal_UTF8_pair(string name)
     {
@@ -31,15 +36,20 @@ public sealed class UnifiedScriptModuleCodecTests : IDisposable
         var yaml = Encoding.UTF8.GetString(pair.Yaml);
         Assert.DoesNotContain("\r", yaml);
         Assert.Contains("\n", yaml);
+        if (name is "true" or "null" or "~" or "123")
+            Assert.Equal(Encoding.UTF8.GetBytes("ScriptModules:\n  \"" + name + "\":\n    ScriptFile: \"" + name + ".hmi.js\"\n"), pair.Yaml);
+        Assert.DoesNotContain("\n...\n", yaml);
         var stream = new YamlStream(); stream.Load(new StringReader(yaml));
         var root = Assert.IsType<YamlMappingNode>(Assert.Single(stream.Documents).RootNode);
         var modules = Assert.IsType<YamlMappingNode>(Assert.Single(root.Children).Value);
         Assert.Equal("ScriptModules", Assert.IsType<YamlScalarNode>(Assert.Single(root.Children).Key).Value);
         var module = Assert.Single(modules.Children);
         Assert.Equal(name, Assert.IsType<YamlScalarNode>(module.Key).Value);
+        Assert.Equal(ScalarStyle.DoubleQuoted, Assert.IsType<YamlScalarNode>(module.Key).Style);
         var entry = Assert.Single(Assert.IsType<YamlMappingNode>(module.Value).Children);
         Assert.Equal("ScriptFile", Assert.IsType<YamlScalarNode>(entry.Key).Value);
         Assert.Equal(name + ".hmi.js", Assert.IsType<YamlScalarNode>(entry.Value).Value);
+        Assert.Equal(ScalarStyle.DoubleQuoted, Assert.IsType<YamlScalarNode>(entry.Value).Style);
         Assert.Equal(2, Directory.GetFileSystemEntries(directory).Length);
     }
 

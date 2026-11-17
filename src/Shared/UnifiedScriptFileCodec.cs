@@ -5,6 +5,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using Esprima;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
 using YamlDotNet.RepresentationModel;
 
 namespace TiaMcpServer.Siemens.Services
@@ -13,6 +15,14 @@ namespace TiaMcpServer.Siemens.Services
     // single-module shape and validate it through ReadPair.
     internal static class UnifiedScriptFileCodec
     {
+        private sealed class ImplicitDocumentEndEmitter : IEmitter
+        {
+            private readonly IEmitter _inner;
+            internal ImplicitDocumentEndEmitter(TextWriter writer) => _inner = new Emitter(writer);
+            public void Emit(ParsingEvent yamlEvent)
+                => _inner.Emit(yamlEvent is DocumentEnd ? new DocumentEnd(isImplicit: true) : yamlEvent);
+        }
+
         private const int MaxBytes = 1024 * 1024;
         private static readonly Encoding Utf8 = new UTF8Encoding(false, true);
         private static string Hash(byte[] bytes)
@@ -52,12 +62,14 @@ namespace TiaMcpServer.Siemens.Services
                 throw new ArgumentException("ComposePair requires an existing empty directory.", nameof(directory));
             var yaml = new YamlStream(new YamlDocument(new YamlMappingNode {
                 { "ScriptModules", new YamlMappingNode {
-                    { moduleName, new YamlMappingNode { { "ScriptFile", moduleName + ".hmi.js" } } }
+                    { new YamlScalarNode(moduleName) { Style = ScalarStyle.DoubleQuoted }, new YamlMappingNode {
+                        { "ScriptFile", new YamlScalarNode(moduleName + ".hmi.js") { Style = ScalarStyle.DoubleQuoted } }
+                    } }
                 } }
             }));
             using (var writer = new StringWriter())
             {
-                yaml.Save(writer, assignAnchors: false);
+                yaml.Save(new ImplicitDocumentEndEmitter(writer), assignAnchors: false);
                 File.WriteAllText(Path.Combine(directory, moduleName + ".hmi.yml"), writer.ToString().Replace("\r\n", "\n"), Utf8);
             }
             File.WriteAllText(Path.Combine(directory, moduleName + ".hmi.js"), scriptCode, Utf8);
