@@ -40,6 +40,7 @@ namespace TiaMcp.Adapters.Native.Online
 #if ONLINE_DOWNLOAD
         public OnlineDownloadResult DownloadToPlc(OnlineRequest request)
         {
+            OnlineTransitionPolicy.RequireAddress(request.TargetIpAddress, "targetIpAddress");
             string softwarePath = request.SoftwarePath;
             string? password = EmptyToNull(request.Password), pgPcInterface = EmptyToNull(request.PgPcInterface), targetIpAddress =
                 EmptyToNull(request.TargetIpAddress);

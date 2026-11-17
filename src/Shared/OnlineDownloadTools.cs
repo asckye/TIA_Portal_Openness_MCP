@@ -73,13 +73,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 "to 10 s)."
                 +
             " An already online PLC is reported as Online without applying a route (ApplyConfiguration throws while the device is online)." +
-            " If ipAddress and pgPcInterface are omitted, the connection must already be configured in this session (ConnectionConfiguration.IsConfigured); " +
-                "otherwise the call is not attempted."
-                +
-            " If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target " +
-                "interface when TIA has not seen it yet) is applied and OnlineProvider.GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM " +
-                "Advanced instance is reached (pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM')."
-                +
+            " Connects only to the given address (V21: GoOnline(ConfigurationAddress); earlier releases apply that address with ApplyConfiguration " +
+                "first); an address outside the Workbench online-target list is refused." +
+            " The matching ConfigurationAddress comes from the route tree (target interface, subnet or gateway; created on the target interface when " +
+                "TIA has not seen it yet). PLCSIM Advanced uses pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'." +
             " Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch)."
                 +
             " An explicitly requested route that ConnectionConfiguration.ApplyConfiguration does not apply is refused with its reason." +
@@ -92,8 +89,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GoOnlineV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.")] string ipAddress =
-                "",
+            [Description("ipAddress: required explicit IPv4 address, e.g. '192.168.1.10'.")] string ipAddress,
             [Description("password: optional CPU access password. Required when the CPU has read/write protection configured. Leave empty for unprotected " +
                 "CPUs.")] string password =
                 "",
@@ -298,8 +294,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 +
             " The approval request lists every prompt answer the call will give (promptAnswerPlan)." +
             " On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU);" +
-            " Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong; an explicit route that " +
-                "ApplyConfiguration does not apply is refused, only an automatic pick continues unconfirmed (Meta.routeApplied=false)."
+            " Meta.pgPcRoute reports which one was used. Override the interface with pgPcInterface when the pick is wrong; the explicit targetIpAddress " +
+                "is required, and a route that ApplyConfiguration does not apply is refused. An address outside the Workbench online-target list is refused."
                 +
             " S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=false (default) makes " +
                 "TIA refuse an untrusted certificate, true answers Trusted; Meta.tlsVerification records the decision and, on V21, the presented certificates."
@@ -310,6 +306,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
         public CallToolResult DownloadToPlcV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
+            [Description("targetIpAddress: required explicit IPv4 address of the CPU, e.g. '192.168.0.1'.")] string targetIpAddress,
             [Description("consistentBlocksOnly: true (default) leaves the AllBlocksDownload prompt unanswered, so TIA aborts instead of downloading all " +
                 "blocks; false answers it with its only selection, download all blocks. ConsistentBlocksDownload is always answered ConsistentDownload; " +
                 "neither value downloads inconsistent blocks - compile first.")] bool consistentBlocksOnly =
@@ -329,9 +326,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 "",
             [Description("pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'. Leave empty to auto-pick " +
                 "the adapter that shares a subnet with the CPU. Run CheckDownloadReadiness to see the available names.")] string pgPcInterface =
-                "",
-            [Description("targetIpAddress: optional CPU IP to download to, e.g. '192.168.0.1'. Disambiguates which route to use when the project has several " +
-                "CPU interfaces. Leave empty to auto-pick.")] string targetIpAddress =
                 "",
             [Description("userManagementMode: how the UserManagementDownload prompt is answered: keep (default, keeps the online user management data), " +
                 "updateKeepPassword (updates data but keeps online passwords), resetToProject (downloads all user management data and resets to " +
@@ -521,15 +515,15 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="UploadDeviceParameters"),
                 Description("[L2][PLC-Online][ONLINE-WRITE] Upload drive parameters from a live SINAMICS StartDrive device into the exact offline head " +
                 "module (ParameterUploadProvider.ParameterUpload; the provider exists only on StartDrive head modules, DeviceItemClassifications.HM - CPUs " +
-                "and other items are refused). Route is selected by pgPcInterface/targetIpAddress; targetIpAddress '' passes a null ConfigurationAddress " +
-                "(the official pattern). The default preview selects the route without applying it (no ApplyConfiguration, no address creation); execution " +
+                "and other items are refused). An explicit IPv4 targetIpAddress is required; the route is selected by pgPcInterface/targetIpAddress. " +
+                "An address outside the Workbench online-target list is refused. The default preview selects the route without applying it " +
+                "(no ApplyConfiguration, no address creation); execution " +
                 "after approval applies it, and an explicit route that is not applied is refused. Execution needs confirmUpload=true and exclusive access; " +
                 "returns before/after scalar properties. No save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult UploadDeviceParametersV4(
             [Description("devicePath: structured string array input.")] string[] devicePath,
             [Description("itemPath: structured string array input.")] string[] itemPath,
-            [Description("targetIpAddress: IP address of the drive as ScanAccessibleDevices lists it; '' uses no explicit address (null " +
-                "ConfigurationAddress).")] string targetIpAddress,
+            [Description("targetIpAddress: required explicit IPv4 address of the drive as ScanAccessibleDevices lists it.")] string targetIpAddress,
             string pgPcInterface = "",
             string password = "",
             [Description("promptAnswers: structured AttributeMap<string> input.")] AttributeMap<string> promptAnswers = null!,

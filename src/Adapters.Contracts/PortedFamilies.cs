@@ -148,7 +148,7 @@ namespace TiaMcp.Adapters.Contracts
             ["WriteUnifiedRuntimeTags"] = ReleaseRange.All,
             ["CheckDownloadReadiness"] = ReleaseRange.Since("15.1"),
             ["CompareSoftwareToOnline"] = ReleaseRange.All,
-            ["ConnectOnlinePlc"] = ReleaseRange.All,
+            ["ConnectOnlinePlc"] = ReleaseRange.Since("15.1"),
             ["DisconnectOnlinePlc"] = ReleaseRange.All,
             ["DisconnectOnlinePlcs"] = ReleaseRange.All,
             ["DownloadPlc"] = ReleaseRange.Since("15.1"),

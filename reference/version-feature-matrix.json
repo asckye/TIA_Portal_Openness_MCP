@@ -3397,7 +3397,6 @@
         "l5": "NOT RUN",
         "entries": [
           "CompareSoftwareToOnline",
-          "ConnectOnlinePlc",
           "DisconnectOnlinePlc",
           "DisconnectOnlinePlcs",
           "GetOnlineState",

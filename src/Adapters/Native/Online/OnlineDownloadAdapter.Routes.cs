@@ -231,7 +231,7 @@ namespace TiaMcp.Adapters.Native.Online
             object? connectionConfiguration,
             string? pgPcInterface,
             string? targetIpAddress,
-            bool apply = true)
+            bool apply = true, bool deferApply = false)
         {
             var selection = new DownloadRouteSelection();
             if (connectionConfiguration == null) return selection;
@@ -331,7 +331,7 @@ namespace TiaMcp.Adapters.Native.Online
 
                 ScoreDownloadRoutes(pool, targetIpAddress);
 
-                if (!apply)
+                if (!apply || deferApply)
                 {
                     var best = pool.OrderByDescending(r => r.Score).First();
                     selection.Target ??= best.Target;
@@ -342,7 +342,8 @@ namespace TiaMcp.Adapters.Native.Online
                     string addressText = selection.Address == null ? "" : " -> address " + OnlineRoutePrimitives.Address(selection.Address) + " (" + selection
                         .AddressSource + ")";
 #endif
-                    selection.Description = best.Describe() + addressText + " (preview: ApplyConfiguration not called)";
+                    selection.Description = best.Describe() + addressText
+                        + (deferApply ? "" : " (preview: ApplyConfiguration not called)");
                     return selection;
                 }
 
@@ -403,17 +404,7 @@ namespace TiaMcp.Adapters.Native.Online
                     }
                 }
 
-                var refusal = OnlineTransitionPolicy.RouteApplyRefusal(explicitRoute, false, string.Join("; ", applyErrors), DescribeRoutes(ranked));
-                if (refusal != null)
-                {
-                    selection.Error = refusal;
-                    return selection;
-                }
-                // Automatic pick only: nothing applied cleanly, so hand back the best-ranked target anyway (it IS an
-                // IConfiguration), marked as not confirmed. Mirrors the previous fallback to the first target.
-                selection.Configuration = ranked[0].Target;
-                selection.Description = ranked[0].Describe() + " (not confirmed by ApplyConfiguration"
-                    + (applyErrors.Count > 0 ? ": " + string.Join("; ", applyErrors) : "") + ")";
+                selection.Error = OnlineTransitionPolicy.RouteApplyRefusal(true, false, string.Join("; ", applyErrors), DescribeRoutes(ranked));
                 return selection;
             }
             catch (Exception ex)

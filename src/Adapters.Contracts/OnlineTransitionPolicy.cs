@@ -27,12 +27,11 @@ public static class OnlineTransitionPolicy
         return state;
     }
 
-    // The official sample calls GoOnline only when ConnectionConfiguration.IsConfigured is true. Without a requested route the
-    // call is not attempted on an unconfigured connection.
-    public static string? ConnectRefusal(bool routeRequested, bool isConfigured)
-        => routeRequested || isConfigured ? null
-            : "no online route is configured for this PLC in this session (ConnectionConfiguration.IsConfigured=false); "
-              + "pass pgPcInterface and ipAddress so the route is applied first.";
+    // Admission validates the address; native entry points keep the nonempty-address invariant before any Siemens call.
+    public static void RequireAddress(string? address, string parameter)
+    {
+        if (string.IsNullOrWhiteSpace(address)) throw new ArgumentException("An explicit IPv4 address is required.", parameter);
+    }
 
     // OnlineProvider.GoOffline returns void, so the state read back after the call decides the result.
     public static (bool Success, string Message) GoOfflineOutcome(string softwarePath, string before, string after)

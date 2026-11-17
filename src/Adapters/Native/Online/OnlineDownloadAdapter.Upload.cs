@@ -136,13 +136,12 @@ namespace TiaMcp.Adapters.Native.Online
 
 #if ONLINE_PARAMETERS
         // ParameterUploadProvider exists only on SINAMICS StartDrive head modules (DeviceItemClassifications.HM; a CPU returns null).
-        // The preview selects the route without applying it; execution applies it after approval. An empty targetIpAddress passes a
-        // null ConfigurationAddress, the official ParameterUpload(configuration, null, delegate) pattern.
+        // The preview selects the explicit address without applying it; execution applies it after approval.
         public HmiMessage UploadDeviceParameters(OnlineRequest request)
             => _session.RunHmiStepTool("UploadDeviceParameters", meta => {
-                string targetIpAddress = request.TargetIpAddress ?? "", pgPcInterface = request.PgPcInterface, password = request.Password;
+                OnlineTransitionPolicy.RequireAddress(request.TargetIpAddress, "targetIpAddress");
+                string targetIpAddress = request.TargetIpAddress, pgPcInterface = request.PgPcInterface, password = request.Password;
                 bool confirmUpload = request.ConfirmUpload, dryRun = request.DryRun;
-                bool addressRequested = !string.IsNullOrWhiteSpace(targetIpAddress);
                 var policy = BuildDownloadPromptPolicy(request);
                 var owner = _session.ExactEngineeringHardware("", "");
                 // ParameterUploadProvider 只在 V21 PublicAPI 中存在；按名解析并经泛型 GetService 反射取得，V20 明确 NotSupported。
@@ -164,22 +163,20 @@ namespace TiaMcp.Adapters.Native.Online
                     if (selected.Configuration == null)
                         throw new PortalException(PortalErrorCode.NotFound, "No PG/PC route to the device; run ScanAccessibleDevices first.");
                     ConfigurationAddress? exact = selected.Address;   // target interface, subnet / gateway or created address
-                    if (addressRequested)
-                        foreach (var candidate in _session.EnumerateReflectedProperty(selected.Target ?? selected.Configuration, "Addresses"))
-                            if (exact == null && string
-                                    .Equals(_session.ReadReflectedString(candidate, "Address"), targetIpAddress, StringComparison.OrdinalIgnoreCase)
-                                    && candidate is ConfigurationAddress typed)
-                                exact = typed;
-                    if (addressRequested && exact == null && (apply || selected.AddressSource != "not-created"))
+                    foreach (var candidate in _session.EnumerateReflectedProperty(selected.Target ?? selected.Configuration, "Addresses"))
+                        if (exact == null && string
+                                .Equals(_session.ReadReflectedString(candidate, "Address"), targetIpAddress, StringComparison.OrdinalIgnoreCase)
+                                && candidate is ConfigurationAddress typed)
+                            exact = typed;
+                    if (exact == null && (apply || selected.AddressSource != "not-created"))
                         throw new PortalException(PortalErrorCode.NotFound, "Exact target address not found on the selected route: " + selected.Description);
                     return (selected, exact);
                 }
                 var preview = Resolve(false);
                 meta["route"] = preview.Route.Description; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string
                     .IsNullOrEmpty(password);
-                meta["targetAddress"] = preview.Address != null ? AddressText(preview.Address) : addressRequested ? targetIpAddress : null;
-                meta["addressMode"] = addressRequested ? (preview.Route.AddressSource.Length == 0 ? "targetInterface" : preview.Route.AddressSource)
-                    : "null address (provider default)";
+                meta["targetAddress"] = preview.Address != null ? AddressText(preview.Address) : targetIpAddress;
+                meta["addressMode"] = preview.Route.AddressSource.Length == 0 ? "targetInterface" : preview.Route.AddressSource;
                 meta["trustDeviceCertificate"] = request.TrustDeviceCertificate;
                 meta["before"] = HmiScalar.Read(owner);
                 if (dryRun)

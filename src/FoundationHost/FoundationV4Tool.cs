@@ -258,10 +258,11 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, paging));
             if (UnifiedInputAdmission.ValidateNavigation(tool.Name, tool.InputSchema, argumentsInput) is { } navigationError)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, navigationError, inner is FoundationTool { IsNative: true }));
+            var capabilityInput = inner is FoundationTool { Ported: true } portedInput ? portedInput.CapabilityInput(argumentsInput) : argumentsInput;
             var validation =
                 new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), tool.Name == "StageImportFiles"
                     ? new InputBudget(characters: 40 * 1024 * 1024, items: 4096) : new InputBudget())
-                .Read(argumentsInput, "arguments");
+                .Read(capabilityInput, "arguments");
             if (validation.Error != null)
             {
                 var error = tool.Name == "GeneratePlcLoadableFile"

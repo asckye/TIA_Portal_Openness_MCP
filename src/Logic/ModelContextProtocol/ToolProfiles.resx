@@ -5669,16 +5669,6 @@
     },
     {
       "releaseKey": "14sp1",
-      "entry": "ConnectOnlinePlc",
-      "family": "F22",
-      "example": {
-        "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
-      }
-    },
-    {
-      "releaseKey": "14sp1",
       "entry": "DisconnectOnlinePlc",
       "family": "F22",
       "example": {
@@ -44516,22 +44506,6 @@
           "plc-foundation"
         ],
         "arguments": {},
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
-        "name": "ConnectOnlinePlc",
-        "currentName": "ConnectOnlinePlc",
-        "sourceName": "GoOnline",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
-        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },

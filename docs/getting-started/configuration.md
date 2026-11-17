@@ -104,7 +104,7 @@ worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 281 | 90 |
+| V14 SP1 | 280 | 90 |
 | V15.1 | 321 | 93 |
 | V16 | 350 | 94 |
 | V17 | 373 | 94 |
@@ -178,6 +178,22 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待工作台审批后才�
 从源码构建时，兼容启动器位于 `src/Studio/Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/development.md#3-仓库结构)。
 
 原生调用诊断默认写入数据根的 `diagnostics`，`TIA_MCP_DIAGNOSTICS_DIRECTORY` 仍有最高优先级；无可用数据根时沿用 `%LOCALAPPDATA%\TiaMcp\diagnostics`。语言与主题位于 `data\ui\ui.settings`，同样只复制缺失的旧偏好。完整位置与回退规则见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#软件自身的数据目录)。
+
+## 在线目标白名单
+
+`ConnectOnlinePlc` 需要显式 IPv4 `ipAddress`；`DownloadPlc`、`UploadDeviceParameters`、`GetPlcBlockFingerprints` 和 `UploadStationFromPlc` 需要显式 IPv4 `targetIpAddress`。PG/PC 接口仍可自动选择。V14 SP1 不提供 `ConnectOnlinePlc`，仍可读取在线状态和断开由 TIA 人工建立的连接。
+
+数据配置目录中的 `data\config\online-targets.settings` 控制允许连接的地址，使用上述数据目录回退规则。文件格式如下，`#` 后是注释：
+
+```text
+# 单个地址和子网
+ target=192.168.1.10
+ target=192.168.2.0/24
+```
+
+文件不存在时，任何格式正确的显式 IPv4 地址均可通过；创建空文件会拒绝全部地址。已配置文件无法读取或格式无效时拒绝在线目标，避免失去限制；未列出的地址在审批和 worker 调用前拒绝，预览也一样。只支持四段十进制 IPv4，CIDR 前缀为 0–32，不支持主机名、IPv6 或缩写地址。
+
+MCP 工具不能修改此文件或 `secrets.vault`，包含短文件名和硬链接等别名。工作台白名单编辑器将在后续 beta 提供；当前可由用户直接编辑此设置文件。文件格式及实现边界见[SEC-14](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md#sec-14-在线目标只用显式地址)。
 
 ## 工作台外观与历史记录
 

@@ -163,10 +163,20 @@
 - 实现：`src/Tools/WriteGuard/Program.cs`。
 - 测试：`tests/Tools/TiaMcp.ShippedTools.Tests/WriteGuardPortTests.cs`（注册套件 `write-guard`）。
 
+### SEC-14 在线目标只用显式地址
+
+- `ConnectOnlinePlc` 必须提供 `ipAddress`；`DownloadPlc`、`UploadDeviceParameters`、`GetPlcBlockFingerprints` 和 `UploadStationFromPlc` 必须提供 `targetIpAddress`。只接受完整的 IPv4 字面量，缺失、空串、主机名、IPv6 和缩写地址均在审批及 worker 调用之前拒绝，预览同样检查。
+- 白名单位于数据配置目录的 `online-targets.settings`，每行 `target=<IPv4>` 或 `target=<IPv4>/<0..32>`；支持空行和 `#` 注释。文件不存在时不限制合法显式地址；已保存的空文件拒绝全部地址；文件格式无效或无法读取时按 `online-target-list-invalid` 拒绝，未列出的地址按 `online-target-not-allowed` 拒绝，不返回列表内容。
+- MCP 不能写入 `online-targets.settings` 或 `secrets.vault`，包括短文件名和文件身份别名。人工保存白名单使用文件锁及原子替换，只审计设置变更事件，不记录地址。工作台编辑入口在后续 beta 提供。
+- V14 SP1 不再注册 `ConnectOnlinePlc`；`GetOnlineState`、断开和在线比较等原有入口保留。V15.1–V20 连接先成功应用调用方的地址再调用无地址重载；V21 使用地址重载。R/H 在 V15.1–V20 同样先应用精确地址，V21 只用地址重载。已在线的标准 PLC 保留当前连接并报告此前状态。
+- 实现：`src/Adapters.Contracts/OnlineTargetPolicy.cs`、`src/Shared/OnlineTargetSettings.cs`、`src/Shared/ApprovalSettings.cs`、`src/FoundationHost/PortedToolContract.cs`、`src/Adapters/Native/Online/OnlineDownloadAdapter.cs`。
+- 测试：`tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OnlineTargetPolicyTests.cs`、`tests/FoundationHost/TiaMcp.FoundationHost.Tests/OnlineTargetAdmissionTests.cs`、`OnlineTargetSettingsTests.cs`、`VersionControlAdmissionTests.cs` 与 `tests/Repository/TiaMcp.SourceContracts.Tests/OnlineTargetSourceContracts.cs`。原生连接尚待八版真机验收，见[真机台账](../reference/real-machine-ledger.md)。
+
 ## 6 已知缺口与已决定未实现的事项
 
 | 项目 | 现状 | 处理 |
 |---|---|---|
+| 运行时通道的 PLC 地址白名单（TIA-SAFE Part 5） | SEC-14 当前覆盖 Openness 在线连接、下载、指纹和上传；S7、Web API 与 OPC UA 通道尚未接入 | 维护者已批准 Part 5 使用同一策略检查运行时地址，待后续任务实施 |
 | HTTP 请求的 Origin 与 Host 头 | RELAY-1 已实现每请求校验、403 与审计，含伪造头测试 | 已补齐；新增可信源须显式配置 |
 | HTTP 访问密钥在命令行和客户端配置中是明文 | RELAY-1 的宿主与中继读取 DPAPI 存储；新配置仅含 stdio 中继命令 | 新路径已补齐；弃用的 `--http-api-key` 在下一发布周期移除，旧备份仍可能包含明文 |
 | UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批，输入、预览和审批前的身份检查仍可能查询远程主机并暴露 Windows NTLM 凭据 | 维护者 2026-11-04 已决定在 AI 准入层拒绝网络路径，含指向 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。尚未实现，排 4.0 前 |

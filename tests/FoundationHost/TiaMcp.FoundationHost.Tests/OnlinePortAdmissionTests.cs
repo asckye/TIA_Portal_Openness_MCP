@@ -54,7 +54,15 @@ public sealed class OnlinePortAdmissionTests
     {
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
-        var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name);
+        var tools = LegacyHostToolRegistry.Create(worker, release, false);
+        if (release == "14sp1" && name == "ConnectOnlinePlc")
+        {
+            Assert.DoesNotContain(tools, tool => tool.ProtocolTool.Name == "ConnectOnlinePlc");
+            Assert.Contains(tools, tool => tool.ProtocolTool.Name == "GetOnlineState");
+            Assert.Equal(0, worker.Calls);
+            return;
+        }
+        var tool = tools.Single(t => t.ProtocolTool.Name == name);
         var result = await tool.InvokeAsync(new RequestContext<CallToolRequestParams>(
             DispatchProxy.Create<IMcpServer, VersionControlAdmissionTests.ServerProxy>()) {
                 Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) } });

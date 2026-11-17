@@ -16,6 +16,46 @@ using Xunit;
 public sealed class VersionControlAdmissionTests
 {
     [Theory]
+    [InlineData("online-targets.settings", "ONLINE~1.SET")]
+    [InlineData("secrets.vault", "SECRET~1.VAU")]
+    public async Task Online_target_settings_and_vault_are_human_only_including_file_aliases(string fileName, string shortName)
+    {
+        using var fixture = new FileToolFixture("21");
+        using var session = fixture.EnterSession();
+        string settings = Path.Combine(TiaOpenness.Shared.DataLocations.Current.ConfigDirectory, fileName);
+        Directory.CreateDirectory(Path.GetDirectoryName(settings)!);
+        byte[]? previous = File.Exists(settings) ? File.ReadAllBytes(settings) : null;
+        string link = Path.Combine(Path.GetDirectoryName(settings)!, Guid.NewGuid().ToString("N") + ".scl");
+        try
+        {
+            File.WriteAllText(settings, "human-only fixture\n");
+            byte[] expected = File.ReadAllBytes(settings);
+            var paths = new List<string> { settings, settings + ".", Path.Combine(Path.GetDirectoryName(settings)!, shortName) };
+            if (OperatingSystem.IsWindows())
+            {
+                var shortPath = new StringBuilder(32768);
+                Assert.NotEqual(0u, GetShortPathName(settings, shortPath, (uint)shortPath.Capacity));
+                paths.Add(shortPath.ToString());
+                Assert.True(CreateHardLink(link, settings, IntPtr.Zero), "Hard link error: " + Marshal.GetLastWin32Error());
+                paths.Add(link);
+            }
+            foreach (string path in paths)
+            {
+                var arguments = new { sclContent = "FUNCTION Test : Void\nEND_FUNCTION", outputPath = path };
+                Refused(await fixture.Call("WritePlcSclSourceFile", arguments));
+                Refused(await fixture.Call("CallTool", new { name = "WritePlcSclSourceFile", arguments }));
+                Assert.Equal(expected, File.ReadAllBytes(settings));
+            }
+            Assert.Equal(0, fixture.Worker.Calls);
+        }
+        finally
+        {
+            if (File.Exists(link)) File.Delete(link);
+            if (previous == null) File.Delete(settings); else File.WriteAllBytes(settings, previous);
+        }
+    }
+
+    [Theory]
     [InlineData("19")]
     [InlineData("21")]
     public async Task XPath_rules_are_not_treated_as_file_paths_with_approval_settings_present(string release)

@@ -48,7 +48,8 @@ namespace TiaOpenness.Shared
     internal sealed class AuditLog
     {
         internal const string Genesis = "0000000000000000000000000000000000000000000000000000000000000000";
-        private static readonly string[] Events = { "request", "start", "end", "approval-granted", "approval-denied", "approval-timeout", "approval-switch" };
+        private static readonly string[] Events = { "request", "start", "end", "approval-granted", "approval-denied", "approval-timeout", "approval-switch",
+            "online-targets-change" };
         private readonly string directory;
         private readonly long maxBytes;
         private static readonly ConcurrentDictionary<string, TailState> Tails = new ConcurrentDictionary<string, TailState>(StringComparer.Ordinal);

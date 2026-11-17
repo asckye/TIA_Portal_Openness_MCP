@@ -101,15 +101,12 @@ namespace TiaMcp.Adapters.Native.Online
 
         // userName/userType answer OnlineAuthenticationConfiguration (UMAC-protected PLCs); rhTarget primary|backup
         // goes online through RHOnlineProvider.GoOnlineToPrimary/Backup on R/H systems.
-        // Historical native observation: OnlineProvider.GoOnline() uses whatever route TIA last applied - on a fresh
-        // project nothing is applied and TIA answers "The connection cannot be established". The route is now selected like a
-        // download (pgPcInterface + ipAddress -> ConnectionConfiguration.ApplyConfiguration) and an explicit address goes through
-        // the official GoOnline(ConfigurationAddress) overload (V21; V20 applies the address and calls GoOnline()). Without a route
-        // the official sample's ConnectionConfiguration.IsConfigured check comes first, and the state is polled while Connecting.
+        // Every connection names its address. V21 uses the address overload; earlier releases apply the address first.
         // trustDeviceCertificate answers the TLS prompt of FW >= 2.9 CPUs (meta.tlsVerification records the decision and the
         // certificates the device presented); allowNonTlsLogin lets a password go over a connection that is not TLS-secured.
         public OnlineStateResult GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface, bool trustDeviceCertificate, bool allowNonTlsLogin = false)
         {
+            OnlineTransitionPolicy.RequireAddress(ipAddress, nameof(ipAddress));
             TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
             rhTarget = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateRhTarget(rhTarget);
             var meta = new HmiObject { ["trustDeviceCertificate"] = trustDeviceCertificate };
@@ -142,17 +139,18 @@ namespace TiaMcp.Adapters.Native.Online
                     using var rhScope =
                         AttachOnlineLegitimationHandler(rh.Configuration, password, userName, userType, meta, trustDeviceCertificate, allowNonTlsLogin);
                     // ConfigurationAddress has no public constructor: the address object comes from the route tree (target interfaces).
-                    ConfigurationAddress? rhAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : FindConfigurationAddress(rh.Configuration, ipAddress!);
-                    if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _session.Log
-                        .Warning("ConnectOnlinePlc R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
+                    ConfigurationAddress rhAddress = FindConfigurationAddress(rh.Configuration, ipAddress!)
+                        ?? throw new PortalException(PortalErrorCode.NotFound, "Exact R/H target address not found: " + ipAddress);
 #if !ONLINE_ADDRESS_OVERLOAD
-                    if (rhAddress != null) _session.Log
-                        .Warning("ConnectOnlinePlc R/H: this release's RHOnlineProvider has no address overload; using the configured address");
+                    bool rhApplied = false;
+                    string? rhApplyError = null;
+                    try { rhApplied = rh.Configuration.ApplyConfiguration(rhAddress); }
+                    catch (Exception ex) { rhApplyError = ex.GetBaseException().Message; }
+                    var rhRefusal = OnlineTransitionPolicy.RouteApplyRefusal(true, rhApplied, rhApplyError, ipAddress!);
+                    if (rhRefusal != null) throw new InvalidOperationException(rhRefusal);
                     OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup();
 #else
-                    OnlineState rhState = rhAddress == null
-                        ? (rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup())
-                        : (rhTarget == "primary" ? rh.GoOnlineToPrimary(rhAddress) : rh.GoOnlineToBackup(rhAddress));
+                    OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary(rhAddress) : rh.GoOnlineToBackup(rhAddress);
 #endif
                     var rhName = OnlineTransitionPolicy.WaitWhileConnecting(rhState.ToString(),
                         () => (rhTarget == "primary" ? rh.PrimaryState : rh.BackupState).ToString(), Thread.Sleep);
@@ -181,8 +179,6 @@ namespace TiaMcp.Adapters.Native.Online
                     AttachOnlineLegitimationHandler(provider.Configuration, password, userName, userType, meta, trustDeviceCertificate, allowNonTlsLogin);
 
                 string routeNote = "";
-                ConfigurationAddress? address = null;
-                bool routeRequested = !string.IsNullOrWhiteSpace(ipAddress) || !string.IsNullOrWhiteSpace(pgPcInterface);
                 string before = provider.State.ToString();
                 meta["onlineStateBefore"] = before;
                 if (before == "Online")
@@ -190,43 +186,40 @@ namespace TiaMcp.Adapters.Native.Online
                     // ApplyConfiguration throws while the device is online, so an established connection is kept as it is.
                     meta["success"] = true;
                     return new OnlineStateResult { State = before, IsOnline = true, IsReachable = true, Meta = meta,
-                        Message = BuildOnlineStateMessage(before, softwarePath) + (routeRequested
-                            ? " It was already online, so the requested route was not applied (ApplyConfiguration throws while the device is online); call " +
-                                "DisconnectOnlinePlc first to change the route."
-                            : " It was already online.") };
+                        Message = BuildOnlineStateMessage(before, softwarePath)
+                            + " It was already online, so the requested route was not applied (ApplyConfiguration throws while the device is online); "
+                            + "call DisconnectOnlinePlc first to change the route." };
                 }
-                bool isConfigured = provider.Configuration.IsConfigured;
-                meta["isConfigured"] = isConfigured;
-                var notConfigured = OnlineTransitionPolicy.ConnectRefusal(routeRequested, isConfigured);
-                if (notConfigured != null)
+                var selection = SelectDownloadRoute(provider.Configuration, pgPcInterface, ipAddress, deferApply: true);
+                if (selection.Error != null || selection.Address == null)
                 {
                     meta["success"] = false;
                     return new OnlineStateResult {
-                        State = before, IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + notConfigured, Meta = meta };
+                        State = "NotReachable", IsOnline = false, IsReachable = false,
+                        Message = "ConnectOnlinePlc not attempted: " + (selection.Error ?? "Exact target address not found on the selected route."),
+                        Meta = meta };
                 }
-                if (routeRequested)
+                ConfigurationAddress address = selection.Address;
+                string? applyError = null;
+                try { selection.Applied = provider.Configuration.ApplyConfiguration(address); }
+                catch (Exception ex) { applyError = ex.GetBaseException().Message; }
+                var routeRefusal = OnlineTransitionPolicy.RouteApplyRefusal(true, selection.Applied, applyError, selection.Description);
+                meta["route"] = selection.Description;
+                meta["routeApplied"] = selection.Applied;
+                if (routeRefusal != null)
                 {
-                    var selection = SelectDownloadRoute(provider.Configuration, pgPcInterface, ipAddress);
-                    if (selection.Error != null)
-                    {
-                        meta["success"] = false;
-                        return new OnlineStateResult {
-                            State = "NotReachable", IsOnline = false, IsReachable = false, Message = "ConnectOnlinePlc not attempted: " + selection.Error,
-                                Meta = meta
-                        };
-                    }
-                    address = selection.Address;
-                    routeNote = " Route: " + selection.Description + ".";
-                    meta["route"] = selection.Description;
-                    meta["routeApplied"] = selection.Applied;
+                    meta["success"] = false;
+                    return new OnlineStateResult {
+                        State = before, IsOnline = false, IsReachable = false,
+                        Message = "ConnectOnlinePlc not attempted: " + routeRefusal, Meta = meta };
                 }
+                routeNote = " Route: " + selection.Description + ".";
 
                 OnlineState resultState;
 #if !ONLINE_ADDRESS_OVERLOAD
-                // V20 has GoOnline() only; the address (when any) was applied through ApplyConfiguration by the route selection.
                 resultState = provider.GoOnline();
 #else
-                resultState = address != null ? provider.GoOnline(address) : provider.GoOnline();
+                resultState = provider.GoOnline(address);
 #endif
 
                 // GoOnline returns before the connection is established; poll while it reads Connecting.

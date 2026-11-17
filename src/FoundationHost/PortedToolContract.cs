@@ -260,9 +260,21 @@ internal sealed partial class FoundationTool
 
     internal McpServerTool ValidatedTool() => new InfrastructureInputTool(this, portedDescriptor!);
     internal McpServerTool CapabilityAdmission(McpServerTool inner) => new CapabilityTool(this, inner);
+    internal JsonElement CapabilityInput(JsonElement arguments)
+    {
+        // A missing online address is refused by the target policy after capability admission. Validate every other field first.
+        if (arguments.ValueKind == JsonValueKind.Object && OnlineTargetPolicy.AddressParameter(tool.Name) is { } parameter
+            && !arguments.TryGetProperty(parameter, out _))
+        {
+            var input = JsonNode.Parse(arguments.GetRawText())!.AsObject();
+            input[parameter] = "";
+            return JsonSerializer.SerializeToElement(input);
+        }
+        return arguments;
+    }
     // The same admission as CapabilityTool: only valid arguments reach the capability check.
     internal bool RefusesByCapability(JsonElement arguments)
-        => McpServer.ToolInvoker.ValidateArguments(portedDescriptor!, arguments, tool.InputSchema) == null
+        => McpServer.ToolInvoker.ValidateArguments(portedDescriptor!, CapabilityInput(arguments), tool.InputSchema) == null
             && RefusePortedCapability(arguments.EnumerateObject()
                     .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal)) != null;
 
@@ -285,7 +297,7 @@ internal sealed partial class FoundationTool
             }
             // Other invalid input still goes through the existing wrapper so its
             // behaviour disclosure and raw rejection payload remain unchanged.
-            var validation = McpServer.ToolInvoker.ValidateArguments(owner.portedDescriptor!, input, ProtocolTool.InputSchema);
+            var validation = McpServer.ToolInvoker.ValidateArguments(owner.portedDescriptor!, owner.CapabilityInput(input), ProtocolTool.InputSchema);
             if (validation != null && PortedFamilies.ForTool(owner.tool.Name).Name is "F27" or "F28"
                 && UnifiedInputCodec.HasDuplicateKeys(input))
             {
@@ -436,11 +448,20 @@ internal sealed partial class FoundationTool
                             && UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, type.GetString()!) != null)
                             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         }
-        if (family.Name == "F22" && OnlineCapabilities.Unsupported(portedRelease!, new OnlineRequest {
-            Operation = tool.Name, Action = actionName, RhTarget = Text("rhTarget"), Password = Text("password"),
-            UserName = Text("userName"), UserType = Text("userType"), IpAddress = Text("ipAddress"),
-            TargetIpAddress = Text("targetIpAddress"), ObjectKind = Text("objectKind") }) != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        if (family.Name == "F22")
+        {
+            var online = new OnlineRequest {
+                Operation = tool.Name, Action = actionName, RhTarget = Text("rhTarget"), Password = Text("password"),
+                UserName = Text("userName"), UserType = Text("userType"), IpAddress = Text("ipAddress"),
+                TargetIpAddress = Text("targetIpAddress"), ObjectKind = Text("objectKind") };
+            if (OnlineCapabilities.Unsupported(portedRelease!, online) != null)
+                return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            if (OnlineTargetPolicy.Refusal(online,
+                TiaOpenness.Shared.OnlineTargetSettings.Load(TiaOpenness.Shared.OnlineTargetSettings.SettingsPath)) is { } targetRefusal)
+                return McpServer.V4TargetReject(tool.Name, new Error(targetRefusal.Message,
+                    targetRefusal.Condition == null ? McpServer.ArgumentDetails(tool.Name, targetRefusal.Parameter)
+                        : new PreconditionFailedDetails(targetRefusal.Condition, null)), current: true);
+        }
         if (family.Name is "F27" or "F28")
         {
             var unified = BindUnifiedRequest(tool.Name, portedMethod!, arguments);

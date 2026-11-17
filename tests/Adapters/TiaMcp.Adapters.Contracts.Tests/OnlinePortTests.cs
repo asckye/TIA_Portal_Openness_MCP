@@ -9,7 +9,7 @@ public sealed class OnlinePortTests
     private static readonly string[] Releases = { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" };
     private static readonly Dictionary<string, int> FirstRelease = new(StringComparer.Ordinal)
     {
-        ["GetOnlineState"] = 0, ["ConnectOnlinePlc"] = 0, ["DisconnectOnlinePlc"] = 0,
+        ["GetOnlineState"] = 0, ["ConnectOnlinePlc"] = 1, ["DisconnectOnlinePlc"] = 0,
         ["DisconnectOnlinePlcs"] = 0, ["CompareSoftwareToOnline"] = 0, ["ListTransferRoutes"] = 0,
         ["CheckDownloadReadiness"] = 1, ["DownloadPlc"] = 1, ["UploadStationFromPlc"] = 1,
         ["ManagePlcDataBlockSnapshot"] = 1, ["GetPlcBlockFingerprints"] = 2,
@@ -185,11 +185,16 @@ public sealed class OnlinePortTests
     }
 
     [Theory]
-    [InlineData(false, false, true)]
-    [InlineData(false, true, false)]
-    [InlineData(true, false, false)]
-    public void GoOnline_without_a_route_needs_a_configured_connection(bool routeRequested, bool isConfigured, bool refused)
-        => Assert.Equal(refused, OnlineTransitionPolicy.ConnectRefusal(routeRequested, isConfigured) != null);
+    [InlineData(null, true)]
+    [InlineData("", true)]
+    [InlineData(" ", true)]
+    [InlineData("192.168.1.10", false)]
+    public void GoOnline_requires_an_explicit_address(string? address, bool refused)
+    {
+        if (refused)
+            Assert.Equal("ipAddress", Assert.Throws<ArgumentException>(() => OnlineTransitionPolicy.RequireAddress(address, "ipAddress")).ParamName);
+        else OnlineTransitionPolicy.RequireAddress(address, "ipAddress");
+    }
 
     [Fact]
     public void An_explicit_route_that_is_not_applied_is_refused_and_an_automatic_pick_continues()

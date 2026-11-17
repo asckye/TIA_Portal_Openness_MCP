@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 281,
+      "toolCount": 280,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -43,7 +43,6 @@
         "ConfigureMotionHardwareConnection",
         "ConnectDeviceNodesToProfinetSubnet",
         "ConnectIsolatedPortal",
-        "ConnectOnlinePlc",
         "ConnectPortal",
         "CreateDevice",
         "CreateLibraryMasterCopy",
@@ -3263,8 +3262,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 280,
-    "shared-subset": 218,
+    "all-releases": 279,
+    "shared-subset": 219,
     "release-only": 20
   },
   "tools": [
@@ -4065,7 +4064,6 @@
     {
       "name": "ConnectOnlinePlc",
       "releases": [
-        "14sp1",
         "15.1",
         "16",
         "17",
@@ -4074,7 +4072,7 @@
         "20",
         "21"
       ],
-      "group": "all-releases",
+      "group": "shared-subset",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
