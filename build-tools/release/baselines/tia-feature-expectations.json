@@ -830,6 +830,8 @@
     "targetFramework": "net10.0",
     "defineConstants": [
       "PLC_HARDWARE_CHANGE_TYPE",
+      "PLC_SAFETY_UNITS",
+      "PLC_UNITS",
       "PROJECT_EXCHANGE",
       "RELEASE",
       "SECURITY_DEVICE_SYSLOG",

@@ -140,15 +140,19 @@ public sealed class B6HostPortsTests
     [Theory]
     [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")][InlineData("19")]
     public void Instantiation_mode_refusal_precedes_native_dispatch(string release)
+    {
         using var scope = Host.HardwareContract.UseRelease(release);
         var service = new Services.LibraryPortService((_, _) => throw new Xunit.Sdk.XunitException("Unsupported mode reached the worker."), () => "fixture");
         Assert.Throws<NotSupportedException>(() => service.ManageLibraryMasterCopy("Motor", "instantiate", targetKind: "block",
             targetSoftwarePath: "PLC", copyMode: "Rename"));
         Assert.Throws<NotSupportedException>(() => service.ManageLibraryTypeVersion("Motor", "1.0.0", "instantiate", targetSoftwarePath: "PLC",
             updatePathsMode: "KeepExistingPathsInTarget"));
+    }
+
     [Theory]
     [InlineData("restored", "failed")][InlineData("partial", "partial")][InlineData("unknown", "unknown")]
     public void Instantiation_readback_failure_keeps_the_journal_outcome(string rollback, string outcome)
+    {
         var response = new Host.ResponseMessage { Message = "Instantiation readback failed", Meta = new JsonObject {
             ["operationSuccess"] = false, ["apiCallSuccess"] = true, ["instantiationAttempted"] = true,
             ["mayHaveChanged"] = rollback != "restored", ["rollbackCompleted"] = rollback == "restored", ["rollbackOutcome"] = rollback,
@@ -159,6 +163,7 @@ public sealed class B6HostPortsTests
         Assert.False((bool?)result.StructuredContent!["ok"]);
         Assert.Equal(outcome, (string?)result.StructuredContent["meta"]!["outcome"]);
         Assert.Equal("Motor", (string?)result.StructuredContent["data"]!["evidence"]!["createdNames"]![0]);
+    }
     public static IEnumerable<object[]> RegistrationCases =>
         from release in Releases
         from family in PortedFamilies.All.Where(f => f.Name is "F06" or "F23" or "F35")
