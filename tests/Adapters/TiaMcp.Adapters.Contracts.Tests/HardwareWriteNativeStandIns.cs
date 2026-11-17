@@ -74,7 +74,7 @@ namespace Siemens.Engineering.HW
         public virtual object GetAttribute(string name) { Calls.Add("get:" + name); return false; }
         public virtual void SetAttribute(string name, object? value) { Calls.Add("set:" + name); if (AttributeFailure != null) throw AttributeFailure; }
     }
-    public sealed class NativeNamedList<T> : List<T> where T : class
+    public class NativeNamedList<T> : List<T> where T : class
     {
         public Func<string, T>? CreateFactory { get; set; }
         public T Create(string name) { var item = CreateFactory!(name); Add(item); return item; }

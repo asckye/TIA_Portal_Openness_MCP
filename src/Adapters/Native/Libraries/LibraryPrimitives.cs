@@ -199,38 +199,6 @@ namespace TiaMcp.Adapters
                 ?? throw new PlcSoftwareException("NotFound", "Exact PLC " + (block ? "block" : "type") + " not found: " + sourcePath + " (path under "
                         + (block ? "Program blocks" : "PLC data types") + ", groups separated by '/', see GetSoftwareTree).");
         }
-        private object LibraryInstantiationCollection(string kind, string software, string path, bool writing)
-        {
-            string[] Parts(string value) => PlcObjectPath.Parts(value, true, "targetGroupPath");
-            if (kind == "device")
-            {
-                var group = HardwareGroupOperations.Group(Project(), path, "DeviceGroups", Parts);
-                return group is Project bound ? bound.Devices : ((DeviceUserGroup)group).Devices;
-            }
-            if (kind == "classicScreen" || kind == "classicTagTable")
-            {
-                var resolved = ResolveEngineeringHmiSoftware != null ? ResolveEngineeringHmiSoftware(software)
-                    : DefaultHmiSoftware(EngineeringPlcSession, software);
-                var hmi = resolved as HmiTarget
-                    ?? throw new NotSupportedException("targetSoftwarePath must resolve to a Classic WinCC HmiTarget; Unified targets are unsupported.");
-                var folders = LibraryTargetFolderParts(path);
-                return kind == "classicScreen" ? (object)ClassicHmiFoldersAdapter.ExactScreenFolder(hmi, folders).Screens
-                    : ClassicHmiFoldersAdapter.ExactTagFolder(hmi, folders).TagTables;
-            }
-            var plc = EngineeringPlcSession.ExactPlcForEngineering(software, writing);
-            if (kind == "block" || kind == "blockGroup")
-            {
-                var group = (PlcBlockGroup)PlcGroupOperations.Group(plc.BlockGroup, path, pathParts: Parts);
-                return kind == "block" ? (object)group.Blocks : group.Groups;
-            }
-            if (kind == "tagTable")
-                return ((PlcTagTableGroup)PlcGroupOperations.Group(plc.TagTableGroup, path, pathParts: Parts)).TagTables;
-            var names = PlcObjectPath.Parts(path, parameter: "targetGroupPath");
-            var parent = (PlcTagTableGroup)PlcGroupOperations.Group(plc.TagTableGroup, PlcObjectPath.Format(names.Take(names.Length - 1)), pathParts: Parts);
-            return (parent.TagTables.Find(names.Last())
-                ?? throw new PlcSoftwareException("NotFound", "Exact destination PLC tag table not found: " + path)).Tags;
-        }
-
         private static Type LibraryInstantiationContentType(string targetKind) => targetKind switch {
             "block" => typeof(PlcBlock), "blockGroup" => typeof(PlcBlockUserGroup), "tagTable" => typeof(PlcTagTable), "tag" => typeof(PlcTag),
             "device" => typeof(Device), "classicScreen" => typeof(Screen), "classicTagTable" => typeof(TagTable),
@@ -276,63 +244,6 @@ namespace TiaMcp.Adapters
                 throw new NotSupportedException("Master-copy content types do not match targetKind=" + kind + "; no CreateFrom was called.");
             return InstantiateLibraryContents(kind, software, groupPath, contents.Select(content => content.ContentName).ToArray(), copyMode, dryRun, meta,
                 collection => LibraryCreateFromMasterCopy(collection, source, copyMode));
-        }
-
-        private string InstantiateLibraryVersion(LibraryType type, LibraryTypeVersion source, string software, string groupPath, string updatePathsMode,
-            bool dryRun, Dictionary<string, object?> meta)
-        {
-            string kind = LibraryPolicy.InstantiationVersionKind(source.GetType().Name, updatePathsMode);
-            LibraryPolicy.ValidateInstantiationTarget(kind, software, groupPath, "");
-            meta["libraryTypeVersion"] = new Dictionary<string, object?> {
-                ["type"] = type.Name, ["version"] = source.VersionNumber.ToString(), ["state"] = source.State.ToString(),
-                ["versionClass"] = source.GetType().Name };
-            meta["updatePathsMode"] = updatePathsMode;
-            RequireCommittedLibraryVersion(source.State);
-            return InstantiateLibraryContents(kind, software, groupPath, new[] { type.Name }, "", dryRun, meta, collection => {
-                if (source is CodeBlockLibraryTypeVersion code)
-                {
-                    var blocks = (PlcBlockComposition)collection;
-#if LIBRARY_V20
-                    if (updatePathsMode != "") return blocks.CreateFrom(code, (UpdatePathsMode)Enum.Parse(typeof(UpdatePathsMode), updatePathsMode));
-#endif
-                    return blocks.CreateFrom(code);
-                }
-                if (source is ScreenLibraryTypeVersion screen) return ((ScreenComposition)collection).CreateFrom(screen);
-                throw new NotSupportedException("Unsupported library type version.");
-            });
-        }
-
-        private string InstantiateLibraryContents(string kind, string software, string groupPath, string[] names, string copyMode, bool dryRun,
-            Dictionary<string, object?> meta, Func<object, object> create)
-            => InstantiateLibraryContentsCore(kind, software, groupPath, names, copyMode, dryRun, meta, create,
-                writing => LibraryInstantiationCollection(kind, software, groupPath, writing),
-                () => LibraryInstantiationScope(kind, software, groupPath), HardwareEditAccess, () => EngineeringPlcSession.AcquireHmiEditAccess());
-
-        private IEnumerable<(object Item, string Path)> LibraryInstantiationScope(string kind, string software, string groupPath)
-        {
-            if (kind == "blockGroup")
-                return PlcGroupOperations.Items(LibraryInstantiationCollection(kind, software, groupPath, false))
-                    .Select(item => (item, PlcObjectPath.Format(LibraryTargetFolderParts(groupPath)) + (groupPath == "" ? "" : "/")
-                        + ObjectPathEncoding.EncodeSegment(PlcGroupOperations.Get(item, "Name").ToString()!)));
-            if (kind == "device")
-            {
-                var project = Project();
-                return TiaMcp.Adapters.Native.Hardware.ProjectDeviceWalk.Walk(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup)
-                    .Select(row => ((object)row.Device, PlcObjectPath.Format(row.GroupNames.Concat(new[] { row.Device.Name }))));
-            }
-            if (kind == "classicScreen" || kind == "classicTagTable")
-            {
-                var hmi = (ResolveEngineeringHmiSoftware != null ? ResolveEngineeringHmiSoftware(software)
-                    : DefaultHmiSoftware(EngineeringPlcSession, software)) as HmiTarget
-                    ?? throw new NotSupportedException("targetSoftwarePath must resolve to a Classic WinCC HmiTarget.");
-                return kind == "classicScreen" ? LibraryScopeObjects(hmi.ScreenFolder, "Screens", "Folders")
-                    : LibraryScopeObjects(hmi.TagFolder, "TagTables", "Folders");
-            }
-            var plc = EngineeringPlcSession.ExactPlcForEngineering(software, false);
-            if (kind != "block") return LibraryScopeObjects(plc.TagTableGroup, "TagTables", "Groups", tags: kind == "tag");
-            return LibraryScopeObjects(plc.BlockGroup, "Blocks", "Groups").Concat(
-                plc.BlockGroup.SystemBlockGroups.SelectMany(group => LibraryScopeObjects(group, "Blocks", "Groups",
-                    ObjectPathEncoding.EncodeSegment(group.Name) + "/")));
         }
 
         private static IEnumerable<string> LibraryInterestingAttributes(object target)

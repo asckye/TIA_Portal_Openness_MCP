@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../../Shared/Xunit.props" />
   <PropertyGroup>
-    <RootNamespace>TiaMcp.Adapters.Contracts.Tests</RootNamespace><TargetFramework>net10.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile><AssemblyVersion>21.0.0.0</AssemblyVersion><DefineConstants>$(DefineConstants);SECURITY_DEVICE_SYSLOG;PROJECT_EXCHANGE</DefineConstants><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+    <RootNamespace>TiaMcp.Adapters.Contracts.Tests</RootNamespace><TargetFramework>net10.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile><AssemblyVersion>21.0.0.0</AssemblyVersion><DefineConstants>$(DefineConstants);SECURITY_DEVICE_SYSLOG;PROJECT_EXCHANGE;PLC_UNITS;PLC_SAFETY_UNITS</DefineConstants><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <PropertyGroup>
     <!-- Exercise both current-release callback registrations against managed Siemens stand-ins. -->
     <DefineConstants>$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
@@ -77,6 +77,7 @@
     <Compile Include="../../../src/Adapters/Native/Reflection/ReflectionScreenTraversal.cs" Link="Reflection/ReflectionScreenTraversal.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryPolicy.cs" Link="Libraries/LibraryPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryInstantiation.cs" Link="Libraries/LibraryInstantiation.cs" />
+    <Compile Include="../../../src/Adapters/Native/Libraries/LibraryInstantiation.Targets.cs" Link="Libraries/LibraryInstantiation.Targets.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalNativeOperations.cs" Link="OptionalNativeOperations.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />

@@ -172,6 +172,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryInstantiation.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryInstantiation.Targets.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Engineering/EngineeringEvidence.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Engineering/EngineeringFileOutput.cs" />

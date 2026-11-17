@@ -6421,7 +6421,7 @@
       "path": "src/Shared/LibraryTools.cs",
       "owner": "LibraryTools",
       "domain": "Library",
-      "signature": "public CallToolResult ManageLibraryMasterCopyV4(\n            [Description(\"sourcePath: 'Group/Name' of the source object.\")] string sourcePath,\n            [Description(\"action: the operation to perform - read | copy | compare | delete | instantiate.\")] string action,\n            string libraryName=\"\",\n            [Description(\"destinationLibraryName: global library that receives the copy ('' = the project library).\")] string destinationLibraryName=\"\",\n            [Description(\"destinationPath: 'Folder/Name' where the copy is created.\")] string destinationPath=\"\",\n            bool dryRun=true,\n            [Description(\"targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable.\")] string targetKind=\"\",\n            string targetSoftwarePath=\"\",\n            [Description(\"targetGroupPath: exact PLC group, tag table (Group/Table), device group or Classic folder; empty=root except tag. \" +\n                \"Encode each name segment.\")] string targetGroupPath=\"\",\n            [Description(\"copyMode: empty refuses name clashes; ThrowIfExists | Rename | Replace require V20+ and a PLC target.\")] string copyMode=\"\",\n            string expectedPlanHash=\"\",\n            string expectedProjectFile=\"\")",
+      "signature": "public CallToolResult ManageLibraryMasterCopyV4(\n            [Description(\"sourcePath: 'Group/Name' of the source object.\")] string sourcePath,\n            [Description(\"action: the operation to perform - read | copy | compare | delete | instantiate.\")] string action,\n            string libraryName=\"\",\n            [Description(\"destinationLibraryName: global library that receives the copy ('' = the project library).\")] string destinationLibraryName=\"\",\n            [Description(\"destinationPath: 'Folder/Name' where the copy is created.\")] string destinationPath=\"\",\n            bool dryRun=true,\n            [Description(\"targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable. blockGroup checks parent group names \" +\n                \"only; blocks inside the copied group are not checked against PLC-wide names.\")] string targetKind=\"\",\n            string targetSoftwarePath=\"\",\n            [Description(\"targetGroupPath: exact PLC group, tag table (Group/Table), device group or Classic folder; empty=root except tag. \" +\n                \"Encode each name segment.\")] string targetGroupPath=\"\",\n            [Description(\"copyMode: empty refuses name clashes; ThrowIfExists | Rename | Replace require V20+ and a PLC target.\")] string copyMode=\"\",\n            string expectedPlanHash=\"\",\n            string expectedProjectFile=\"\")",
       "parameters": {
         "sourcePath": {
           "type": "string",
@@ -6458,7 +6458,7 @@
         "targetKind": {
           "type": "string",
           "default": "\"\"",
-          "description": "targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable.",
+          "description": "targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable. blockGroup checks parent group names only; blocks inside the copied group are not checked against PLC-wide names.",
           "value": ""
         },
         "targetSoftwarePath": {

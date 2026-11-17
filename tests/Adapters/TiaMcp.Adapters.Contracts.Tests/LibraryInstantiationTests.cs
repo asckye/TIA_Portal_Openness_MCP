@@ -141,6 +141,26 @@ namespace TiaMcp.Adapters.Contracts.Tests
         }
 
         [Fact]
+        public void Rollback_labels_match_names_when_native_walk_order_differs_from_content_order()
+        {
+            var fixture = new Fixture("block");
+            var deleted = new List<string>();
+            fixture.Create = _ => {
+                var second = fixture.Add(fixture.Target, "B"); var first = fixture.Add(fixture.Target, "A");
+                second.Deleting = () => { deleted.Add("B"); fixture.Target.Remove(second); };
+                first.Deleting = () => { deleted.Add("A"); fixture.Target.Remove(first); };
+                return first;
+            };
+            fixture.Run(false, "", new[] { "A", "B", "Missing" });
+            Assert.Equal(2, deleted.Count);
+            var restored = ((List<object?>)fixture.Meta["restoredChanges"]!).Cast<string>()
+                .Where(label => label.StartsWith("Target/", StringComparison.Ordinal)).ToArray();
+            Assert.Equal(deleted.Select(name => "Target/" + name + ": delete object created by this call if present"), restored);
+            Assert.Empty(fixture.Target);
+            Assert.Equal(true, fixture.Meta["rollbackCompleted"]);
+        }
+
+        [Fact]
         public void Classic_folder_paths_decode_after_slash_splitting_and_refuse_raw_backslash()
         {
             Assert.Equal(new[] { "Folder/One", "Back\\slash" }, LibraryEngine.LibraryTargetFolderParts("Folder%2FOne/Back%5Cslash"));
@@ -160,6 +180,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
         private sealed class Table : HardwareObject
         {
             public NativeNamedList<HardwareObject> Tags { get; } = new();
+            public NativeNamedList<HardwareObject> UserConstants { get; } = new();
         }
         private sealed class Fixture
         {

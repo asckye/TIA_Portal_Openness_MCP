@@ -20,7 +20,14 @@ namespace Siemens.Engineering
         public string DetailText { get; set; } = "native detail";
     }
 }
-namespace Siemens.Engineering.SW { public sealed class PlcSoftware { public Blocks.PlcBlockGroup BlockGroup { get; } = new(); public string Name => "PLC"; } }
+namespace Siemens.Engineering.SW { public sealed class PlcSoftware {
+        public Blocks.PlcBlockGroup BlockGroup { get; } = new();
+        public Types.PlcTypeGroup TypeGroup { get; } = new();
+        public Tags.PlcTagTableGroup TagTableGroup { get; } = new();
+        public Units.PlcUnitProvider UnitProvider { get; } = new();
+        public T? GetService<T>() where T : class => UnitProvider as T;
+        public string Name => "PLC";
+    } }
 namespace Siemens.Engineering.SW.Blocks
 {
     public sealed class PlcBlockGroup
@@ -28,7 +35,8 @@ namespace Siemens.Engineering.SW.Blocks
         public string Name { get; set; } = "root";
         public PlcBlockGroup? Parent { get; set; }
         public HW.NativeNamedList<PlcBlockGroup> Groups { get; } = new();
-        public HW.NativeNamedList<OB> Blocks { get; } = new();
+        public PlcBlockComposition Blocks { get; } = new();
+        public HW.NativeNamedList<PlcBlockGroup> SystemBlockGroups { get; } = new();
         public PlcBlockGroup()
         {
             Groups.CreateFactory = name => {

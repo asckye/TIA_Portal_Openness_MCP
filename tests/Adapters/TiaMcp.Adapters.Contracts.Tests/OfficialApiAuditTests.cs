@@ -247,7 +247,12 @@ namespace TiaMcp.Adapters.Contracts.Tests
         public sealed class ForeignOnlyService { }
         public sealed record Named(string Name);
         public sealed class Table { public string Name { get; set; } = ""; public Named[] Tags { get; set; } = Array.Empty<Named>(); }
-        public sealed class Folder { public Table[] TagTables { get; set; } = Array.Empty<Table>(); public Folder[] Folders { get; set; } = Array.Empty<Folder>(); }
+        public sealed class Folder
+        {
+            public string Name { get; set; } = "";
+            public Table[] TagTables { get; set; } = Array.Empty<Table>();
+            public Folder[] Folders { get; set; } = Array.Empty<Folder>();
+        }
         public sealed class ServiceOwner(object service) { public T? GetService<T>() where T : class => service as T; }
 
         private static class ServiceTypes
@@ -272,7 +277,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
 
 namespace Siemens.Engineering.Hmi
 {
-    public sealed class HmiTarget
+    public sealed partial class HmiTarget
     {
         public TiaMcp.Adapters.Contracts.Tests.OfficialApiAuditTests.Folder TagFolder { get; set; } = new();
     }

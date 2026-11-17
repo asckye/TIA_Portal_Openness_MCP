@@ -352,6 +352,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][Library][WRITE] Exact master-copy read/copy/compare/delete/instantiate. instantiate creates block, blockGroup, tagTable, " +
                 "tag, device, classicScreen or classicTagTable in the exact targetSoftwarePath/targetGroupPath; empty group=root, tag needs a table path, " +
                 "device needs no software path. copyMode ThrowIfExists/Rename/Replace is V20+ PLC only; empty refuses name clashes on all releases. " +
+                "blockGroup checks destination parent group names only; blocks inside the copied group are not checked against PLC-wide names. " +
                 "copy destinationPath is a library folder; compare uses exact master-copy path. Mutations require the preview's expectedPlanHash and " +
                 "expectedProjectFile. Default preview; created objects read back; no automatic save or compile. Native acceptance is pending.")]
         public CallToolResult ManageLibraryMasterCopyV4(
@@ -361,7 +362,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("destinationLibraryName: global library that receives the copy ('' = the project library).")] string destinationLibraryName="",
             [Description("destinationPath: 'Folder/Name' where the copy is created.")] string destinationPath="",
             bool dryRun=true,
-            [Description("targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable.")] string targetKind="",
+            [Description("targetKind: block | blockGroup | tagTable | tag | device | classicScreen | classicTagTable. blockGroup checks parent group names " +
+                "only; blocks inside the copied group are not checked against PLC-wide names.")] string targetKind="",
             string targetSoftwarePath="",
             [Description("targetGroupPath: exact PLC group, tag table (Group/Table), device group or Classic folder; empty=root except tag. " +
                 "Encode each name segment.")] string targetGroupPath="",
