@@ -1,17 +1,17 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T21:18:26.6975238+00:00",
+  "generatedAt": "2026-11-17T22:22:06.2843574+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "04e3ed287c6763f4736370025b91645319a218b98ed716ae92432a08b8db5259",
+  "workerSha256": "222605a4c789304de937695702d50b581070c52484311f4122b32366e0241d40",
   "toolCount": 520,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
     "parameters": 2884,
-    "parametersUndocumented": 850,
-    "parametersFromVocabulary": 694,
+    "parametersUndocumented": 846,
+    "parametersFromVocabulary": 690,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 170,
     "enumHints": 266,
@@ -2513,8 +2513,8 @@
         "blockPath",
         "includeBlockParameters"
       ],
-      "description": "[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before SivarcDataProvider access; blockPath Folder/Block under the PLC block group) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListSivarcBlockDefinitions\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\"}"
+      "description": "[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before SivarcDataProvider access; all block types are refused on V20 because definition access can crash TIA Portal V20; works on V21; blockPath Group/Subgroup/Name as GetSoftwareTree shows it, or the bare name for a root block) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListSivarcBlockDefinitions\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\"}"
     },
     {
       "name": "ListSafetyActivationTests",
@@ -2869,8 +2869,8 @@
         "properties",
         "texts"
       ],
-      "description": "[L2][PLC-Software][WRITE] One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcBlockDefinition\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
+      "description": "[L2][PLC-Software][WRITE] One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. All block-definition reads and writes are refused with UNSUPPORTED_CAPABILITY on V20 before native access because SivarcDataProvider definition access can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcBlockDefinition\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
     },
     {
       "name": "SetUnifiedHmiRuntimeState",
@@ -3798,7 +3798,7 @@
         "softwarePath",
         "dryRun"
       ],
-      "description": "[L2][PLC-Software][WRITE] Upgrade the SiVArc definitions of one PLC (SivarcDefinitionsUpgrader.Upgrade on the PlcSoftware: legacy SIVARCCOND / SIVARCTEXT functions become tag / text definitions in the block plug-ins). Returns warningCount and the recursive feedback messages. Default preview; NotSupported without the SiVArc option; never saves. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"UpgradeSivarcDefinitions\"), optionally operation or language.",
+      "description": "[L2][PLC-Software][WRITE] Upgrade the SiVArc definitions of one PLC (SivarcDefinitionsUpgrader.Upgrade on the PlcSoftware: legacy SIVARCCOND / SIVARCTEXT functions become tag / text definitions in the block plug-ins). Returns warningCount and the recursive feedback messages. Default preview; NotSupported without the SiVArc option; never saves. Both preview and execution are refused with UNSUPPORTED_CAPABILITY on V20 before native access because the per-block SiVArc definition subsystem can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"UpgradeSivarcDefinitions\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"dryRun\":true}"
     },
     {
@@ -4919,7 +4919,7 @@
         "libraryName",
         "maxResults"
       ],
-      "description": "[L2][HMI][READ] Resolve a SiVArc expression (Block.DB.SymbolicName & HmiApplication.Type & LibraryObject.FolderPath ...) for every instance of one code block in the compiled PLC call structure: Sivarc.GetExpressionResolver(codeBlock, hmiDeviceItem, libraryItem).Resolve(expression). devicePath / itemPath name the HMI device item, libraryItemKind masterCopy | libraryType with libraryItemPath (project library or open global library via libraryName). Rows: instanceName, callPath, result (paged by maxResults). Requires a compiled PLC and the SiVArc option; read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ResolveSivarcExpression\"), optionally operation or language.",
+      "description": "[L2][HMI][READ] Resolve a SiVArc expression (Block.DB.SymbolicName & HmiApplication.Type & LibraryObject.FolderPath ...) for every instance of one code block in the compiled PLC call structure: Sivarc.GetExpressionResolver(codeBlock, hmiDeviceItem, libraryItem).Resolve(expression). devicePath / itemPath name the HMI device item, libraryItemKind masterCopy | libraryType with libraryItemPath (project library or open global library via libraryName). Rows: instanceName, callPath, result (paged by maxResults). Requires a compiled PLC and the SiVArc option; read-only. Refused with UNSUPPORTED_CAPABILITY on V20 before native access because the per-block SiVArc definition subsystem can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ResolveSivarcExpression\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"libraryItemKind\":\"masterCopy\",\"libraryItemPath\":\"MasterCopies/FB_Motor\",\"expression\":\"\\u003CSiVArc expression for the selected rule context\\u003E\"}"
     },
     {
