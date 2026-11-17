@@ -529,6 +529,7 @@ public sealed class PortedPortalAdmissionTests
 
     private static JsonObject Overrides(string name) => JsonNode.Parse(name switch {
         "CompareUnifiedGraphicSelections" => ComparisonArguments(),
+        "SetUnifiedRuntimeSettings" => "{\"changes\":{\"StartScreen\":\"/Main\"}}",
         // The technology-input fixture replaces this legacy field with its real directory after Arguments returns.
         "ImportTechnologyObjectsFromDirectory" => "{\"dir\":\"Fixture\"}",
         "ExportPlcWatchTablesToDirectory" => "{\"dir\":\"C:/Exports\"}",
