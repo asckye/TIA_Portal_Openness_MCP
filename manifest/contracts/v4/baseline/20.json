@@ -12519,7 +12519,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3c79ea69836fc032dadf542dae83dce34b6f9ccefa55f43710dc8a2408767424",
+      "descriptionSha256": "29715ce1cb8e67b4163732d56f09fdd94cfb233997f511dee471e32da624ee85",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12529,8 +12529,7 @@
             "type": "boolean"
           },
           "ipAddress": {
-            "default": "",
-            "description": "ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.",
+            "description": "ipAddress: required explicit IPv4 address, e.g. '192.168.1.10'.",
             "examples": [
               "192.168.0.3"
             ],
@@ -12578,7 +12577,8 @@
           }
         },
         "required": [
-          "softwarePath"
+          "softwarePath",
+          "ipAddress"
         ],
         "type": "object"
       },
@@ -14325,7 +14325,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "19b7b5040e73ee8cb93cc2ded69e438348e14cc5ba71ca21e708d99fbcb6dcb4",
+      "descriptionSha256": "c94288d5e1c1baf626326dd03fff49ded8278ce3f84472361d9e5ddc00b37643",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14451,8 +14451,7 @@
             "type": "boolean"
           },
           "targetIpAddress": {
-            "default": "",
-            "description": "targetIpAddress: optional CPU IP to download to, e.g. '192.168.0.1'. Disambiguates which route to use when the project has several CPU interfaces. Leave empty to auto-pick.",
+            "description": "targetIpAddress: required explicit IPv4 address of the CPU, e.g. '192.168.0.1'.",
             "examples": [
               "192.168.0.3"
             ],
@@ -14470,7 +14469,8 @@
           }
         },
         "required": [
-          "softwarePath"
+          "softwarePath",
+          "targetIpAddress"
         ],
         "type": "object"
       },

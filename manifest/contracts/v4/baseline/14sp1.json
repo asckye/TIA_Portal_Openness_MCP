@@ -113,7 +113,6 @@
     {
       "entries": [
         "CompareSoftwareToOnline",
-        "ConnectOnlinePlc",
         "DisconnectOnlinePlc",
         "DisconnectOnlinePlcs",
         "GetOnlineState",
@@ -6037,79 +6036,6 @@
         "type": "object"
       },
       "name": "ConnectIsolatedPortal",
-      "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
-    },
-    {
-      "annotations": {
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": true,
-        "readOnlyHint": false
-      },
-      "descriptionSha256": "9698b17052f3c3778cf3a2120263b23a2c3f58b2ee6663d99d2f99281949230f",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "allowNonTlsLogin": {
-            "default": false,
-            "description": "allowNonTlsLogin: false (default) sends a password only where the prompt reports IsSecureCommunication=true or the release cannot report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on V21); true also sends it over a connection that is not TLS-secured.",
-            "type": "boolean"
-          },
-          "ipAddress": {
-            "default": "",
-            "description": "ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.",
-            "examples": [
-              "192.168.0.3"
-            ],
-            "type": "string"
-          },
-          "password": {
-            "default": "",
-            "description": "password: optional CPU access password. Required when the CPU has read/write protection configured. Leave empty for unprotected CPUs.",
-            "type": "string"
-          },
-          "pgPcInterface": {
-            "default": "",
-            "description": "pgPcInterface: optional PG/PC adapter name substring (as listed by ListTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).",
-            "examples": [
-              "PLCSIM"
-            ],
-            "type": "string"
-          },
-          "rhTarget": {
-            "default": "",
-            "description": "rhTarget: empty for standard CPUs; primary or backup goes online to that CPU of an R/H system through RHOnlineProvider.",
-            "type": "string"
-          },
-          "softwarePath": {
-            "description": "softwarePath: path to the PLC software, e.g. 'PLC_1'",
-            "examples": [
-              "PLC_1"
-            ],
-            "type": "string"
-          },
-          "trustDeviceCertificate": {
-            "default": false,
-            "description": "trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the connection; true answers the TLS certificate prompt with Trusted for this call. Meta.tlsVerification reports the decision and, on V21, the certificates the device presented.",
-            "type": "boolean"
-          },
-          "userName": {
-            "default": "",
-            "description": "userName: optional user for UMAC-protected PLCs (answers OnlineAuthenticationConfiguration with password); leave empty for legacy password-only protection.",
-            "type": "string"
-          },
-          "userType": {
-            "default": "",
-            "description": "userType: optional OnlineCredentials.Type (None/AnonymousUser/GlobalUser/ProjectUser/SingleSignOnUser/PasswordOnly); default ProjectUser when userName is given.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath"
-        ],
-        "type": "object"
-      },
-      "name": "ConnectOnlinePlc",
       "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
     },
     {

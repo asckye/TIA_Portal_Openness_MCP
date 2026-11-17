@@ -6162,7 +6162,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "9698b17052f3c3778cf3a2120263b23a2c3f58b2ee6663d99d2f99281949230f",
+      "descriptionSha256": "8c07319655aaf08a37175184e2cdbb5e5373ad75a53e1510c8cb7fbe4ec09c40",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6172,8 +6172,7 @@
             "type": "boolean"
           },
           "ipAddress": {
-            "default": "",
-            "description": "ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.",
+            "description": "ipAddress: required explicit IPv4 address, e.g. '192.168.1.10'.",
             "examples": [
               "192.168.0.3"
             ],
@@ -6221,7 +6220,8 @@
           }
         },
         "required": [
-          "softwarePath"
+          "softwarePath",
+          "ipAddress"
         ],
         "type": "object"
       },
@@ -7450,7 +7450,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7e29c3f54827a4e086ca7d8478779833752b7801da2b6480395192fde357c95a",
+      "descriptionSha256": "0d84f603725103d908499e5661dfd81f944056b54b2f72c4b904286842ad070c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7576,8 +7576,7 @@
             "type": "boolean"
           },
           "targetIpAddress": {
-            "default": "",
-            "description": "targetIpAddress: optional CPU IP to download to, e.g. '192.168.0.1'. Disambiguates which route to use when the project has several CPU interfaces. Leave empty to auto-pick.",
+            "description": "targetIpAddress: required explicit IPv4 address of the CPU, e.g. '192.168.0.1'.",
             "examples": [
               "192.168.0.3"
             ],
@@ -7595,7 +7594,8 @@
           }
         },
         "required": [
-          "softwarePath"
+          "softwarePath",
+          "targetIpAddress"
         ],
         "type": "object"
       },

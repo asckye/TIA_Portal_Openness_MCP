@@ -3,7 +3,7 @@
   "catalogSha256": "a495465afeebd841c76cb1b18db0dad07d1a3ddcc47d2fecc4c762a0cbc812af",
   "uniqueTools": 518,
   "documents": 89,
-  "versionToolPairs": 3210,
+  "versionToolPairs": 3209,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
@@ -48,8 +48,8 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 281,
-      "checkedToolCount": 281,
+      "registeredToolCount": 280,
+      "checkedToolCount": 280,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 169,
@@ -462,17 +462,6 @@
         },
         {
           "toolName": "ConnectIsolatedPortal",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "ConnectOnlinePlc",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -40976,8 +40965,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "490f1182b4c41c015554360e74bf87dac0a1083cb1279740964181f371342c63",
-      "runtimeSha256": "490f1182b4c41c015554360e74bf87dac0a1083cb1279740964181f371342c63",
+      "sdkWorkerSha256": "90349dc2fc0041b9f794fd02955f3fe65f3cb41815b35db9543fd380dcf12443",
+      "runtimeSha256": "90349dc2fc0041b9f794fd02955f3fe65f3cb41815b35db9543fd380dcf12443",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -49076,8 +49065,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "179836d0522b7afb5d91f796c336dfd7e6a0db28741a8d97a0b3dc4766c90c67",
-      "runtimeSha256": "179836d0522b7afb5d91f796c336dfd7e6a0db28741a8d97a0b3dc4766c90c67",
+      "sdkWorkerSha256": "7c9393b91278df6e1936aee70efb7a9e9eea5d878dd012f12b48480f344faa73",
+      "runtimeSha256": "7c9393b91278df6e1936aee70efb7a9e9eea5d878dd012f12b48480f344faa73",
       "workerModel": "foundation-host-plc-worker"
     }
   }
