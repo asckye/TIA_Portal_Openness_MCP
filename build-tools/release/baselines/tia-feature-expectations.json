@@ -999,6 +999,8 @@
     "properties": {},
     "targetFramework": "net10.0",
     "defineConstants": [
+      "PLC_SAFETY",
+      "PLC_UNITS",
       "PLC_WATCH_EXPORT",
       "PLC_WATCH_READ",
       "RELEASE",
