@@ -84,6 +84,7 @@ public sealed class PlcWatchTechnologyPortTests
         {
             File.WriteAllText(path, "<Document><Engineering version=\"V21\"/>" + Table(selected, 0) + Table(selected, 1) + "</Document>");
             Assert.Equal(2, WatchTableImportValidation.Validate(path, tableKind));
+            Assert.Equal(new[] { "Table0", "Table1" }, WatchTableImportValidation.ValidateNames(path, tableKind));
             if (tableKind == "watch") Assert.Equal(2, WatchTableImportValidation.Validate(path));
             File.WriteAllText(path, "<Document>" + Table(other, 0) + "</Document>");
             Assert.Throws<ArgumentException>(() => WatchTableImportValidation.Validate(path, tableKind));
@@ -94,6 +95,24 @@ public sealed class PlcWatchTechnologyPortTests
             File.WriteAllText(path, "<Document/>");
             Assert.Throws<ArgumentException>(() => WatchTableImportValidation.Validate(path, tableKind));
             Assert.Throws<ArgumentException>(() => WatchTableImportValidation.Validate(path, "unknown"));
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Theory]
+    [InlineData("watch", "")]
+    [InlineData("watch", "<Name/>")]
+    [InlineData("watch", "<Name>One</Name><Name>Two</Name>")]
+    [InlineData("force", "")]
+    public void Offline_import_needs_an_exact_table_identity_for_rollback(string tableKind, string nameXml)
+    {
+        string path = Path.Combine(Path.GetTempPath(), "tia-watch-name-" + Guid.NewGuid().ToString("N") + ".xml");
+        string kind = tableKind == "watch" ? "Watch" : "Force";
+        try
+        {
+            File.WriteAllText(path, "<Document><SW.WatchAndForceTables.Plc" + kind + "Table ID=\"0\"><AttributeList>"
+                + nameXml + "</AttributeList></SW.WatchAndForceTables.Plc" + kind + "Table></Document>");
+            Assert.Throws<ArgumentException>(() => WatchTableImportValidation.ValidateNames(path, tableKind));
         }
         finally { File.Delete(path); }
     }

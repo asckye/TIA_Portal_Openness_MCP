@@ -106,6 +106,70 @@ public sealed class PlcWatchNativeWriteTests
     }
 
     [Fact]
+    public void Watch_import_that_inserts_then_throws_is_deleted_through_fresh_group_navigation()
+    {
+        using var fixture = new Fixture(); var group = fixture.Group("G/1");
+        var fresh = new PlcWatchAndForceTableUserGroup { Name = group.Name }; PlcWatchTable? inserted = null;
+        var failure = new IOException("Import threw after inserting.");
+        group.StoredWatchTables.AfterImport = tables => {
+            inserted = Assert.Single(tables);
+            group.StoredWatchTables.Clear(); fresh.StoredWatchTables.Add(inserted);
+            inserted.Deleting = () => fresh.StoredWatchTables.Remove(inserted);
+            fixture.Root.Groups.Clear(); fixture.Root.Groups.Add(fresh);
+            throw failure;
+        };
+        Assert.Same(failure, Assert.Throws<IOException>(() => fixture.Adapter.ImportPlcWatchTableOffline(
+            "PLC", fixture.Document("Watch", "W/1"), "G%2F1", false)));
+        Assert.NotNull(inserted); Assert.Equal(1, inserted.DeleteCalls); Assert.Empty(fresh.StoredWatchTables);
+        Assert.Equal(true, fixture.Session.LastMeta["rollbackCompleted"]);
+        Assert.Equal("restored", fixture.Session.LastMeta["rollbackOutcome"]);
+        Assert.Equal(false, fixture.Session.LastMeta["mayHaveChanged"]); Assert.Equal(false, fixture.Session.LastMeta["unrestoredWrite"]);
+        Assert.Empty((List<object?>)fixture.Session.LastMeta["cleanupRequired"]!);
+        Assert.Contains("G%2F1/W%2F1", Assert.IsType<string>(Assert.Single((List<object?>)fixture.Session.LastMeta["restoredChanges"]!)));
+    }
+
+    [Fact]
+    public void Every_validated_watch_name_is_registered_before_import_can_throw()
+    {
+        using var fixture = new Fixture(); var group = fixture.Group("G");
+        string file = fixture.Document("Watch", "First");
+        var xml = System.Xml.Linq.XDocument.Load(file);
+        var second = new System.Xml.Linq.XElement(xml.Root!.Elements().Last()); second.SetAttributeValue("ID", "1");
+        second.Element("AttributeList")!.Element("Name")!.Value = "Second"; xml.Root.Add(second); xml.Save(file);
+        PlcWatchTable[] inserted = Array.Empty<PlcWatchTable>();
+        group.StoredWatchTables.AfterImport = tables => { inserted = tables.ToArray(); throw new IOException("Import failed after both inserts."); };
+        Assert.Throws<IOException>(() => fixture.Adapter.ImportPlcWatchTableOffline("PLC", file, "G", false));
+        Assert.Equal(2, inserted.Length); Assert.All(inserted, table => Assert.Equal(1, table.DeleteCalls));
+        Assert.Empty(group.StoredWatchTables); Assert.Equal(true, fixture.Session.LastMeta["rollbackCompleted"]);
+        Assert.Equal(false, fixture.Session.LastMeta["mayHaveChanged"]);
+        Assert.Equal(2, ((List<object?>)fixture.Session.LastMeta["restoredChanges"]!).Count);
+    }
+
+    [Fact]
+    public void Existing_watch_table_is_refused_before_registering_a_creation_inverse()
+    {
+        using var fixture = new Fixture(); var group = fixture.Group("G"); var existing = new PlcWatchTable { Name = "W" };
+        group.StoredWatchTables.Add(existing);
+        Assert.Throws<AdapterPreconditionException>(() => fixture.Adapter.ImportPlcWatchTableOffline("PLC", fixture.Document("Watch", "W"), "G", false));
+        Assert.Equal(0, group.StoredWatchTables.ImportCalls); Assert.Equal(0, existing.DeleteCalls);
+        Assert.Same(existing, Assert.Single(group.StoredWatchTables)); Assert.Equal(false, fixture.Session.LastMeta["mayHaveChanged"]);
+    }
+
+    [Fact]
+    public void Failed_watch_import_rollback_reports_the_table_that_could_not_be_deleted()
+    {
+        using var fixture = new Fixture(); var group = fixture.Group("G"); PlcWatchTable? inserted = null;
+        var failure = new IOException("Import threw after inserting.");
+        group.StoredWatchTables.AfterImport = tables => {
+            inserted = Assert.Single(tables); inserted.Deleting = () => throw new IOException("Delete failed."); throw failure;
+        };
+        Assert.Same(failure, Assert.Throws<IOException>(() => fixture.Adapter.ImportPlcWatchTableOffline("PLC", fixture.Document("Watch", "W"), "G", false)));
+        Assert.NotNull(inserted); Assert.Equal(1, inserted.DeleteCalls); Assert.Same(inserted, Assert.Single(group.StoredWatchTables));
+        Assert.Equal(false, fixture.Session.LastMeta["rollbackCompleted"]); Assert.Equal(true, fixture.Session.LastMeta["mayHaveChanged"]);
+        Assert.NotEmpty((List<object?>)fixture.Session.LastMeta["cleanupRequired"]!);
+    }
+
+    [Fact]
     public void Imported_watch_tables_have_a_verified_Delete_inverse()
     {
         using var fixture = new Fixture(); var group = fixture.Group("G"); var outer = new Dictionary<string, object?>();

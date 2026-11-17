@@ -409,7 +409,8 @@ namespace TiaMcp.Adapters.Native.Plc
             => _session.RunHmiStepTool("ImportPlcWatchTableOffline", meta => {
                 var source = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!source.Exists)
                     throw new FileNotFoundException("Table XML missing.", filePath);
-                meta["expectedCount"] = WatchTableImportValidation.Validate(source.FullName, tableKind);
+                var expectedNames = WatchTableImportValidation.ValidateNames(source.FullName, tableKind);
+                meta["expectedCount"] = expectedNames.Length;
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var plc = _session.ExactPlcForEngineering(softwarePath, !dryRun);
                 PlcWatchAndForceTableGroup FindGroup() => (PlcWatchAndForceTableGroup)PlcGroupOperations.Group(WatchNative.WatchGroup(plc), groupPath,
@@ -417,12 +418,19 @@ namespace TiaMcp.Adapters.Native.Plc
                 var group = FindGroup();
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["tableKind"] = tableKind;
                 meta["groupPath"] = PlcObjectPath.Format(PlcObjectPath.Parts(groupPath, true));
+                if (tableKind == "watch")
+                    foreach (string name in expectedNames)
+                        if (WatchNative.Find(WatchNative.WatchTables(group), name) != null)
+                            throw new AdapterPreconditionException("Watch table already exists; import cannot overwrite it.", "filePath");
                 if (!dryRun)
                 {
                     meta["mayHaveChanged"] = true; MutationStarted = true;
                     string[] names;
                     if (tableKind == "watch")
                     {
+                        foreach (string name in expectedNames)
+                            EngineeringWriteJournal.Creating(() => WatchNative.Find(WatchNative.WatchTables(FindGroup()), name),
+                                PlcObjectPath.Format(PlcObjectPath.Parts(groupPath, true).Concat(new[] { name })));
                         var importedNames = new List<string>();
                         foreach (var table in WatchNative.Import(WatchNative.WatchTables(group), source, ImportOptions.None))
                         {
