@@ -4792,6 +4792,18 @@
           "identifier": "TiaMcp.Adapters.Contracts.Tests.HmiBetaFixTests/Unified_tables_walk_Groups_and_preserve_same_names_with_absolute_escaped_paths( ):5a410a445f2dcfc85c873078f27a8bdbe97b055b9046073d07305ad51348166b:1"
         }
       ]
+    },
+    {
+      "task": "TIA-SAFE-1",
+      "maintainerDate": "2026-11-17",
+      "reason": "Maintainer approved 2026-11-17 (TIA-SAFE D10-1): going online without an explicit address is refused; the configured-connection theory is replaced by GoOnline_requires_an_explicit_address.",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OnlinePortTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.OnlinePortTests/GoOnline_without_a_route_needs_a_configured_connection( bool routeRequested , bool isConfigured , bool refused ):dd38c5dde9b361cfb56faa9624c1ba5e243e4ab3112ec2c4a3d698e7aad3f717"
+        }
+      ]
     }
   ]
 }
