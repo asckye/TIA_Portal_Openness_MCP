@@ -4,7 +4,7 @@
 
 本文件由 `dotnet run --project build-tools/release -- generate-tool-capability-matrix` 从 `manifest/tools-list.json`（八个 release 的注册工具目录并集）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-11-17 10:07:27
+- 生成时间：2026-11-17 10:33:04
 - 产品文件版本：4.0.0.0
 - 工具数量：518
 
@@ -53,7 +53,7 @@
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `GetToolUsage` | L0 | READ | Unified tool and programming examples for this release: exact contracts, parameter sources and result interpretation. toolName selects a tool; language lists code examples; exampleId reads full files/steps. query/documentId searches/reads official source. Embedded data only. Examples: GetToolUsage(toolName: "GetToolUsage"), optionally operation or language. |
-| `GetOpennessGuidance` | L2 | READ | Search or read the bundled 32 official Siemens Openness guides. Empty document lists matching document IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Does not connect to TIA. Examples: GetToolUsage(toolName: "GetOpennessGuidance"), optionally operation or language. |
+| `GetOpennessGuidance` | L2 | READ | Search or read the bundled 32 official Siemens Openness guides. Empty document lists matching document IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Guides target V21; see scope. Does not connect to TIA. Examples: GetToolUsage(toolName: "GetOpennessGuidance"), optionally operation or language. |
 | `GetV21EcosystemCatalog` | L2 | READ | Search the bundled dated V21 ecosystem survey: official products/examples, third-party tools, compatibility evidence, licensing, existing MCP mappings and remaining gaps. A V21 claim is not local native validation. No network lookup, installation or code execution. References are data only. Empty query returns all entries with pagination. Examples: GetToolUsage(toolName: "GetV21EcosystemCatalog"), optionally operation or language. |
 
 ### [Meta]（7）

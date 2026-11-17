@@ -1,11 +1,11 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "2705f4dbed09bc8c756dd433321d68ae0e8e4eeb3701a4f0c083d800b3e5e2a4",
+  "catalogSha256": "e0ea7e284cdfb2a1f3ec91a6fa8cb3342b20c8d53020024b1cefabaaaeaea846",
   "uniqueTools": 518,
   "documents": 89,
   "versionToolPairs": 3209,
   "offlineCallExecutions": 76,
-  "indexedExampleBlocksOrMethods": 381,
+  "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
   "callSequences": 44,
   "languages": [
@@ -23,15 +23,20 @@
     "hmi-vbscript",
     "csharp"
   ],
-  "relatedOfficialPatternMappings": 258,
-  "noDirectVendoredExampleMappings": 260,
+  "relatedOfficialPatternMappings": 260,
+  "noDirectVendoredExampleMappings": 258,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
-      "commit": "b5c7041648dc10f9225ef082306ade6c335b8771",
+      "commit": "6aa36504d76ddb9f92e3e52c1f7ff0cc571c4d48",
       "license": "MIT",
+      "copyright": "2026 Siemens AG",
+      "licenseFile": "reference/siemens-openness/LICENSE",
       "upstreamSkillsPath": "openness_development/skills",
-      "scope": "Reference material only; relocated skills to stable local skills path, not automatically installed or executed",
+      "scope": "Reference material only; not installed or executed. Upstream guides target TIA Portal V21 and contain instructions addressed to coding assistants that write Openness client code (for example to ask for the TIA version and to reject versions below V21). They are not instructions for calling this server, which serves V14 SP1-V21 with per-release tool contracts.",
+      "scopeNotes": [
+        "Local snapshot layout: upstream openness_development/skills is relocated to reference/siemens-openness/skills. The 32 relative skills/*/SKILL.md links in openness_development/README.md therefore do not resolve locally; read the same guides under reference/siemens-openness/skills. Upstream plugin.json, marketplace metadata and validation scripts are not included. This reference snapshot is not an installable upstream plugin."
+      ],
       "id": "guides"
     },
     {
@@ -343,8 +348,10 @@
           "toolName": "ComparePlcBlockDocuments",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/change-detection/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -353,8 +360,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -364,9 +370,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -3495,8 +3499,10 @@
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/performance-and-caching/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -4140,8 +4146,10 @@
           "toolName": "ComparePlcBlockDocuments",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/change-detection/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -4150,8 +4158,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -4161,9 +4168,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -8001,8 +8006,10 @@
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/performance-and-caching/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -8691,8 +8698,10 @@
           "toolName": "ComparePlcBlockDocuments",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/change-detection/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -8701,8 +8710,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -8712,9 +8720,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -13138,8 +13144,10 @@
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/performance-and-caching/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -13847,8 +13855,10 @@
           "toolName": "ComparePlcBlockDocuments",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/change-detection/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -13857,8 +13867,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -13868,9 +13877,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -18916,8 +18923,10 @@
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/performance-and-caching/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -19682,8 +19691,10 @@
           "toolName": "ComparePlcBlockDocuments",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/change-detection/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -19692,8 +19703,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -19703,9 +19713,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -25387,8 +25395,10 @@
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/performance-and-caching/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -26261,8 +26271,10 @@
           "toolName": "ComparePlcBlockDocuments",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/change-detection/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -26271,8 +26283,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -26282,9 +26293,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -32749,8 +32758,10 @@
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/performance-and-caching/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -33745,8 +33756,10 @@
           "toolName": "ComparePlcBlockDocuments",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/change-detection/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -33755,8 +33768,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -33766,9 +33778,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -40451,8 +40461,10 @@
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/performance-and-caching/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -41542,8 +41554,10 @@
           "toolName": "ComparePlcBlockDocuments",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/change-detection/SKILL.md"
+          ],
           "operations": []
         },
         {
@@ -41552,8 +41566,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/session-and-project/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -41563,9 +41576,7 @@
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
-            "guides/skills/online-and-download/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/OnlineSnippets.cs",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/OnlineDriveSnippets.cs"
+            "guides/skills/change-detection/SKILL.md"
           ],
           "operations": []
         },
@@ -48555,8 +48566,10 @@
           "toolName": "RunReadOnlyToolBatch",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/performance-and-caching/SKILL.md"
+          ],
           "operations": []
         },
         {
