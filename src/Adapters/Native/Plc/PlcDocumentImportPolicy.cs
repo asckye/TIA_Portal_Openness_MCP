@@ -222,8 +222,8 @@ namespace TiaMcp.Adapters
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
                     "Only valid UTF-8 code, optionally a UTF-8 BOM, is admitted; no transcoding.","importPath",true,error);
             }
-            if(text.Any(c=>char.IsControl(c) && c!='\t' && c!='\n' && c!='\r')) throw new TiaMcp.Adapters.Contracts
-                .AdapterPreconditionException("Control characters are outside admission grammar.","importPath");
+            if(text.Any(c=>(char.IsControl(c) && c!='\t' && c!='\n' && c!='\r') || c>127 && char.IsWhiteSpace(c))) throw new TiaMcp.Adapters.Contracts
+                .AdapterPreconditionException("Control characters and non-ASCII whitespace are outside admission grammar.","importPath");
             var p=new Parser(text);return p.Parse();
         }
         private sealed class Parser
@@ -233,7 +233,8 @@ namespace TiaMcp.Adapters
             private void Next()
             {
                 while(at<text.Length) {
-                    if(char.IsWhiteSpace(text[at])) {at++;continue;}if(text[at]=='/' && at+1<text.Length && text[at+1]=='/') {
+                    if(text[at]==' ' || text[at]=='\t' || text[at]=='\r' || text[at]=='\n') {at++;continue;
+                    }if(text[at]=='/' && at+1<text.Length && text[at+1]=='/') {
                         while(at<text.Length && text[at]!='\n' && text[at]!='\r')at++;continue;}break;
                 }
                 if(++tokens>100000) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Code exceeds token budget.");

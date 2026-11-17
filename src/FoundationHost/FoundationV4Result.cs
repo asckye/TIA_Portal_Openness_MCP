@@ -424,7 +424,8 @@ internal static class FoundationV4Result
         string? syntax = data["messages"] is JsonArray messages
             ? string.Join("; ", messages.Select(node => node is JsonValue value && value.TryGetValue<string>(out var message) ? message : null)
                 .Where(message => message?.StartsWith("Line number ", StringComparison.Ordinal) == true).Take(3)) : null;
-        string? diagnostic = HostBehavior.SafeDiagnostic(Text(data, "summary") ?? syntax);
+        string? summary = Text(data, "summary");
+        string? diagnostic = HostBehavior.SafeDiagnostic(string.IsNullOrWhiteSpace(summary) ? syntax : summary);
         return new Error(diagnostic ?? "The operation did not establish success; inspect the returned result.",
             new NativeOperationFailedDetails(null, diagnostic, data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
     }

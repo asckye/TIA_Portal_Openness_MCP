@@ -83,6 +83,22 @@ public sealed class PlcVisualComparisonTests : IDisposable
 
     [Theory]
     [MemberData(nameof(Releases))]
+    public void Explicit_nondefault_remanence_is_not_an_omitted_default(string release)
+    {
+        foreach (string value in new[] { "SetInIDB", "Classic" })
+        foreach (bool reverse in new[] { false, true })
+        {
+            string changed = Block(release, ObMembers("Remanence=\"" + value + "\""));
+            string defaults = Block(release, ObMembers("Remanence=\"NonRetain\""));
+            var result = reverse ? Compare(defaults, changed) : Compare(changed, defaults);
+            Assert.Equal("Changed", (string?)result["state"]);
+            Assert.Contains(result["interfaceDifferences"]!.AsArray(), row => (string?)row!["field"] == "Retain");
+            Assert.False((bool?)result["documentDiff"]!["identicalAfterNormalization"]);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
     public void Comment_change_is_reported(string release)
     {
         var result = Compare(Block(release, ObMembers(comment: "Changed comment")), Block(release, ObMembers()));
@@ -116,6 +132,23 @@ public sealed class PlcVisualComparisonTests : IDisposable
             Write("right.s7dcl", "DATA_BLOCK \"Example\"\nVAR\nCount : Int := 0;\nEND_VAR\nEND_DATA_BLOCK"), 0, 80, contextLines: 0);
         Assert.DoesNotContain(result["hunks"]!.AsArray().SelectMany(hunk => hunk!["lines"]!.AsArray()),
             line => ((string)line!).Contains("[Interface]", StringComparison.Ordinal));
+        Assert.True((bool?)result["identicalAfterNormalization"]);
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void Mixed_format_comparisons_include_start_values_from_both_text_forms(string release)
+    {
+        string xml = Block(release, "<Member Name=\"Count\" Datatype=\"Int\"><StartValue>20</StartValue></Member>", "GlobalDB");
+        foreach (bool postamble in new[] { false, true })
+        foreach (string value in new[] { "20", "21" })
+        {
+            string text = postamble ? "DATA_BLOCK Example\nVAR\n\"Count\" : Int;\nEND_VAR\n\"Count\" := " + value + ";\nEND_DATA_BLOCK"
+                : "DATA_BLOCK \"Example\"\nVAR\nCount : Int := " + value + ";\nEND_VAR\nEND_DATA_BLOCK";
+            string left = Write("left.xml", xml), right = Write("right.s7dcl", text);
+            Assert.Equal(value == "20", (bool?)OfflineAnalysisLogic.CompareFiles(left, right, 0, 80)["identicalAfterNormalization"]);
+            Assert.Equal(value == "20", (bool?)OfflineAnalysisLogic.CompareFiles(right, left, 0, 80)["identicalAfterNormalization"]);
+        }
     }
 
     [Theory]

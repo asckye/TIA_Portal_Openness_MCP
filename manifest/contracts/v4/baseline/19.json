@@ -37542,7 +37542,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1fdfe61bd9052aa3e3324efed1ed6e59d31faa79275f81131e47739c343b52e3",
+      "descriptionSha256": "10f3b0d59dabb76df140c252a5b02260b75ad980994d9e16b192a522aac86c91",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

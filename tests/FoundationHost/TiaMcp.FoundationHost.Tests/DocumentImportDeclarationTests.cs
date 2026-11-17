@@ -114,4 +114,25 @@ public sealed class DocumentImportDeclarationTests
             Assert.Throws<AdapterPreconditionException>(() => PlcDocumentDeclaration.Parse(
                 Encoding.UTF8.GetBytes("DATA_BLOCK Demo VAR Flag : Bool; END_VAR END_DATA_BLOCK" + control)));
     }
+
+    [Theory]
+    [InlineData('\u2028')]
+    [InlineData('\u2029')]
+    [InlineData('\u00a0')]
+    [InlineData('\u3000')]
+    public void Non_ascii_whitespace_cannot_hide_tokens_or_declarations(char separator)
+    {
+        const string code = "DATA_BLOCK Demo VAR Flag : Bool; END_VAR END_DATA_BLOCK";
+        foreach (string content in new[] { code.Replace(" VAR", separator + "VAR"),
+            code + " // comment" + separator + "DATA_BLOCK Other VAR Flag : Bool; END_VAR END_DATA_BLOCK",
+            "// comment" + separator + "\n" + code, code.Replace("Demo", "\"De" + separator + "mo\"") })
+            Assert.Throws<AdapterPreconditionException>(() => PlcDocumentDeclaration.Parse(Encoding.UTF8.GetBytes(content)));
+    }
+
+    [Fact]
+    public void Ordinary_unicode_comment_text_and_block_names_remain_admitted()
+    {
+        Assert.Equal(BlockName, PlcDocumentDeclaration.Parse(Encoding.UTF8.GetBytes("// 普通注释 DATA_BLOCK Other\n" + ExportedStartValue)));
+        Assert.Equal(BlockName, PlcDocumentDeclaration.Parse(Encoding.UTF8.GetBytes(ExportedStartValue.Replace(BlockName, "\"" + BlockName + "\""))));
+    }
 }

@@ -207,7 +207,7 @@ AI 调用、审批、审计和活动列表使用回收虚拟化。位于顶部�
 
 `StageImportFiles` 接收客户端文本，写入包根旁的 `staging/<会话>/<批次>/`。宿主通过 `--bundle-root`、`TIA_MCP_BUNDLE_ROOT` 或程序布局定位包根。已有暂存目录必须可写；首次创建暂存目录时需要包根的创建权限。拒绝信息包含目标路径。审批前拒绝使用 `APPROVAL_PRECHECK_REFUSED`，`details.stage` 为 `approval-precheck`；`NATIVE_WARNING` 只用于原生诊断。暂存不使用 `%LOCALAPPDATA%`。审批请求显示位置、文件名、类型、字节数和 SHA-256，不显示文件正文。
 
-先用 `dryRun: true` 预览，再用 `dryRun: false` 执行。文件名不能包含目录，扩展名必须符合类型；每个文件最多 4 MiB，每个会话最多 128 个文件、32 MiB。SCL、TYPE 源和 S7DCL 使用无 BOM 的 ASCII；SimaticML 使用 UTF-8，并以 Openness `Document` 为根。V20 文档导入需要配对的 `.s7dcl` 和 `.s7res`；V21 资源文件可选。每次调用新建批次，不覆盖已有文件。
+先用 `dryRun: true` 预览，再用 `dryRun: false` 执行。文件名不能包含目录，扩展名必须符合类型；每个文件最多 4 MiB，每个会话最多 128 个文件、32 MiB。SCL、TYPE 源使用无 BOM 的 ASCII；S7DCL 使用无 BOM 的 UTF-8，支持中文块名，空白和换行只接受 ASCII 字符；SimaticML 使用 UTF-8，并以 Openness `Document` 为根。V20 文档导入需要配对的 `.s7dcl` 和 `.s7res`；V21 资源文件可选。每次调用新建批次，不覆盖已有文件。
 
 批次清单记录归属，不保存文件正文。`ListStagedImportFiles` 返回跨会话最新的 200 个批次，包括绝对目录、路径、SHA-256、`currentSession`、`totalBatches`、`returnedBatches` 和 `truncated`；配额只统计当前会话。无法读取或已消失的会话、批次列为未知并附原因。批次记录 MCP 会话及宿主进程身份；其他仍存活或无法核对的会话所属批次不能清理。会话结束、超时或宿主退出后可以清理。缺少归属证据的旧清单可列出，但拒绝跨会话清理。
 

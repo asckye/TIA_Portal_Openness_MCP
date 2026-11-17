@@ -134,7 +134,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var name = (string?)member.Attribute("Name") ?? "";
             var path = prefix.Length == 0 ? name : prefix + "." + name;
             doc.Members.Add(new InterfaceMember {
-                Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(member)
+                Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(member),
+                StartValue = Child(member, "StartValue")?.Value.Trim()
             });
             foreach (var child in member.Elements().Where(e => Local(e) == "Member")) AddXmlMember(section, path, child, doc);
         }

@@ -20,6 +20,7 @@
 
 ### Fixed
 - Online target IPv4 addresses reject octets with leading zeros before approval, preventing different numeric interpretations by the policy and TIA. Reading a missing online-target list creates no directories or lock files, non-address tools do not load it, and administrative list saves report audit failures to the caller.
+- PLC visual comparison preserves explicit `SetInIDB` and `Classic` remanence changes. Mixed XML/S7DCL comparison includes start values from both declaration initializers and post-`END_VAR` assignments. S7DCL admission rejects non-ASCII whitespace, including line separators in comments; staging accepts UTF-8 without BOM for Unicode block identifiers. Empty or whitespace-only native summaries fall back to syntax lines.
 - Native document import syntax lines now reach the error message and `details.nativeMessage`. `DB_Example.s7dcl` is an ASCII file without a BOM containing primitive declarations without inline initializers; its language example again lists `ImportPlcBlockDocuments` and states the exact validation limit.
 
 ## [4.0.0-beta.5] - 2026-11-16

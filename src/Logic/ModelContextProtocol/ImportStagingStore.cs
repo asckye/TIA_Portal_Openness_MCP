@@ -116,7 +116,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
             if (string.IsNullOrWhiteSpace(file.Content) || file.Content.Length > MaximumFileBytes)
                 throw new ArgumentException("Content must be nonempty and at most 4 MiB.", "files");
             if (file.Content.Any(c => c == '\0' || c == '\ufeff' || char.IsControl(c) && c != '\t' && c != '\r' && c != '\n')
-                || source && file.Content
+                || source && file.Kind != "s7dcl" && file.Content
                     .Any(c => c > 127)) throw new ArgumentException("External sources require ASCII without BOM; document control characters are refused.",
                         "files");
             byte[] bytes = Utf8.GetBytes(file.Content);
@@ -147,7 +147,10 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 var bytes = new List<byte[]>(); long total = 0;
                 foreach (var file in files)
                 {
-                    var content = Validate(file); total += content.LongLength;
+                    var content = Validate(file);
+                    if (file.Kind == "s7dcl" && file.Content.Any(c => c > 127 && char.IsWhiteSpace(c)))
+                        throw new ArgumentException("S7DCL requires ASCII whitespace and line separators.", nameof(files));
+                    total += content.LongLength;
                     if (total > MaximumBytes) throw new ArgumentException("Batch staging byte quota exceeded.", nameof(files));
                     bytes.Add(content);
                 }
@@ -168,7 +171,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
                                 nameof(files));
                 var entries = new JsonArray();
                 for (int i = 0; i < files.Length; i++) entries.Add(new JsonObject { ["fileName"] = files[i].FileName, ["kind"] = files[i].Kind,
-                    ["encoding"] = files[i].Kind == "scl" || files[i].Kind == "s7dcl" || files[i].Kind == "udt" && !Path.GetExtension(files[i].FileName)
+                    ["encoding"] = files[i].Kind == "scl" || files[i].Kind == "udt" && !Path.GetExtension(files[i].FileName)
                         .Equals(".xml", StringComparison.OrdinalIgnoreCase) ? "ascii" : "utf-8",
                     ["byteLength"] = bytes[i].LongLength, ["sha256"] = Hash(bytes[i]) });
                 var result = new JsonObject { ["executed"] = !dryRun, ["stagingDirectory"] = root, ["byteLength"] = total, ["files"] = entries };

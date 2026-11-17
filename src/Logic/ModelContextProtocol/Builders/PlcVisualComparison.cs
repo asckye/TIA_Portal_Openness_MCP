@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -30,8 +31,10 @@ namespace TiaMcpServer.ModelContextProtocol
             var interfaceDifferences = new JsonArray();
             var members = new InterfaceComparer().Compare(InterfaceSnapshotBuilder.Build(left.Blocks[0]),
                 InterfaceSnapshotBuilder.Build(right.Blocks[0]));
+            var leftRemanence = DeclaredRemanence(left.Blocks[0]);
+            var rightRemanence = DeclaredRemanence(right.Blocks[0]);
             foreach (var section in members.Sections)
-                foreach (var member in section.Members) NormalizeMember(member, diff.Interface!, interfaceDifferences);
+                foreach (var member in section.Members) NormalizeMember(member, diff.Interface!, interfaceDifferences, leftRemanence, rightRemanence);
             diff.Interface!.State = diff.Interface.Members.Any(row => row.State != CompareState.Equal) ? CompareState.Changed : CompareState.Equal;
             diff.State = diff.Interface.State == CompareState.Equal && diff.Content!.State == CompareState.Equal ? CompareState.Equal : CompareState.Changed;
             var pairs = graphical ? PlcLadderDrawing.LayoutComparison(diff) : new System.Collections.Generic.List<LadNetworkPairLayout>();
@@ -72,12 +75,33 @@ namespace TiaMcpServer.ModelContextProtocol
             return data;
         }
 
-        private static bool NormalizeMember(InterfaceMemberComparison member, SactInterfaceResult legacy, JsonArray differences)
+        private static HashSet<(string Section, string Path)> DeclaredRemanence(BlockDefinition block)
+        {
+            var declared = new HashSet<(string, string)>();
+            void Add(string section, string prefix, InterfaceMember member)
+            {
+                string name = member.Name.Normalize(NormalizationForm.FormC);
+                string path = prefix.Length == 0 ? name : prefix + "/" + name;
+                if (member.RawAttributes.ContainsKey("Remanence")) declared.Add((section, path));
+                foreach (var child in member.Children) Add(section, path, child);
+            }
+            foreach (var section in block.InterfaceSections)
+            {
+                string name = InterfaceSectionOrder.Canonical.FirstOrDefault(canonical =>
+                    string.Equals(canonical, section.Name.Trim(), StringComparison.OrdinalIgnoreCase)) ?? section.Name.Normalize(NormalizationForm.FormC);
+                foreach (var member in section.Members) Add(name, "", member);
+            }
+            return declared;
+        }
+
+        private static bool NormalizeMember(InterfaceMemberComparison member, SactInterfaceResult legacy, JsonArray differences,
+            HashSet<(string Section, string Path)> leftRemanence, HashSet<(string Section, string Path)> rightRemanence)
         {
             bool childrenEqual = true;
-            foreach (var child in member.Children) childrenEqual &= NormalizeMember(child, legacy, differences);
+            foreach (var child in member.Children) childrenEqual &= NormalizeMember(child, legacy, differences, leftRemanence, rightRemanence);
             var anchor = member.Left ?? member.Right!;
-            var changes = member.FieldChanges.Where(change => !DefaultOnly(change)).ToArray();
+            var changes = member.FieldChanges.Where(change => !DefaultOnly(change,
+                leftRemanence.Contains((anchor.Section, anchor.Path)), rightRemanence.Contains((anchor.Section, anchor.Path)))).ToArray();
             foreach (var change in changes)
                 differences.Add(new JsonObject {
                     ["section"] = anchor.Section, ["member"] = anchor.Path.Replace('/', '.'),
@@ -90,9 +114,12 @@ namespace TiaMcpServer.ModelContextProtocol
             return equal;
         }
 
-        private static bool DefaultOnly(InterfaceFieldChange change)
+        private static bool DefaultOnly(InterfaceFieldChange change, bool leftRemanence, bool rightRemanence)
         {
-            if (change.Field is InterfaceFieldKind.Retain or InterfaceFieldKind.Informative)
+            if (change.Field == InterfaceFieldKind.Retain)
+                return change.LeftValue == "Unspecified" && change.RightValue == "False" && !leftRemanence
+                    || change.LeftValue == "False" && change.RightValue == "Unspecified" && !rightRemanence;
+            if (change.Field == InterfaceFieldKind.Informative)
                 return change.LeftValue == "Unspecified" && change.RightValue == "False"
                     || change.LeftValue == "False" && change.RightValue == "Unspecified";
             return change.Field == InterfaceFieldKind.Accessibility
