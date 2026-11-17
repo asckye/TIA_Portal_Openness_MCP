@@ -11,9 +11,16 @@ namespace TiaMcp.Logic.Testing
         public static string Text(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
         public static string Scrub(string? text)
         {
-            string safe = NativeFailureDiagnostics.Text(text) ?? "";
-            return Regex.Replace(safe, @"(?:[A-Za-z]:[\\/]|\\\\)[^\r\n""'<>]*|(?<![\w:])/(?:[^\s/]+/)+[^\s""'<>]*",
-                "[path]", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            const string root = @"(?:[A-Za-z]:[\\/]|\\\\|(?<![\w:/])/)";
+            string FileName(string path) => path.Replace('\\', '/').TrimEnd('/').Split('/').Last();
+            string safe = Regex.Replace(text ?? "", @"(?<quote>[""'])(?<path>" + root + @"[^\r\n""']+)\k<quote>",
+                match => match.Groups["quote"].Value + FileName(match.Groups["path"].Value) + match.Groups["quote"].Value,
+                RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            // Prefer the first complete file name; a later path on the line is a separate match.
+            const string file = @"(?:[^\\/\r\n""'<>|;:]*?[\\/])*?[^\s\\/""'<>|;,:]+\.[A-Za-z0-9]+(?=$|[\s""'<>|;,):])";
+            safe = Regex.Replace(safe, root + file + "|" + root + @"[^\s""'<>|;,:]+",
+                match => FileName(match.Value), RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            return NativeFailureDiagnostics.Text(safe) ?? "";
         }
 
         public static JsonObject Normalize(JsonObject outcome, string verdict, string? diagnostic = null)
@@ -29,7 +36,11 @@ namespace TiaMcp.Logic.Testing
             if (message.Length == 0) message = Scrub(Text(source?["summary"]));
             if (message.Length == 0) message = verdict;
             string code = Text(outcome["error"]?["code"]);
-            return new JsonObject { ["code"] = code.Length == 0 ? verdict == "failed" ? "ASSERTION_FAILED" : "TEST_PASSED" : code,
+            if (code.Length == 0) code = verdict switch {
+                "passed" => "TEST_PASSED", "failed" => "ASSERTION_FAILED", "skipped" => "TEST_SKIPPED",
+                "unknown" => "OUTCOME_UNKNOWN", _ => "TEST_ERROR"
+            };
+            return new JsonObject { ["code"] = code,
                 ["message"] = message, ["details"] = details };
         }
 

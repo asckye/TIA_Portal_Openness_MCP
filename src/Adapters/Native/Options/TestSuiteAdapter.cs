@@ -360,8 +360,8 @@ case ApplicationTestSet set: set.Delete(); break;
                 var row = TestResultsRow(results); meta["result"] = row; meta["apiCallSuccess"] = true;
                 var state = results.State.ToString(); OptionalProductEvidence.RecordNativeState(meta, state); meta["nativeStateType"] = TiaMcp.Adapters
                     .Contracts.NativeResultStates.TestSuite;
-                bool passed = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.TestSuite, state);
-                meta["testPassed"] = passed; meta["operationSuccess"] = passed;
+                bool? verdict = TiaMcp.Adapters.Contracts.NativeResultStates.TestSuiteVerdict(true, state);
+                meta["testPassed"] = verdict == true; meta["operationSuccess"] = verdict.HasValue;
                 return "Native Test Suite execution returned TestResults (state " + state + ", " + results.ErrorCount + " error(s), " + results.WarningCount
                     + " warning(s)); testPassed reflects the native state only. No automatic project save or Portal close.";
                 }

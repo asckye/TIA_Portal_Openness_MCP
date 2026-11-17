@@ -44,6 +44,27 @@ public sealed class PlcTestRunTests
     }
 
     [Theory]
+    [InlineData("Error", "writeOutcomeUnknown")]
+    [InlineData("Warning", "connectionUnavailable")]
+    [InlineData("Success", "missing-result")]
+    public async Task Test_suite_uncertainty_overrides_returned_verdict_and_stops_the_batch(string state, string reason)
+    {
+        using var fixture = new Fixture(bound: true); fixture.Save("a", suite: true); fixture.Save("b");
+        fixture.Reply = _ => {
+            var reply = SuiteReply(state);
+            reply["Meta"]![reason == "missing-result" ? "nativeResultReturned" : reason] = reason != "missing-result";
+            return reply;
+        };
+        var result = await fixture.Execute(); var run = fixture.Read();
+        Assert.Equal("unknown", (string?)result["meta"]?["outcome"]);
+        Assert.Equal("stopped", run.Status); Assert.NotNull(run.FinishedUtc); Assert.Equal(1, fixture.Calls);
+        Assert.Equal(new[] { "unknown", "skipped" }, run.Cases.Select(c => c.Verdict));
+        Assert.StartsWith("NOT_EXECUTED:", run.Cases[1].Message);
+        Assert.Single(fixture.Worker.Unsettled.Snapshot());
+        Assert.True(File.Exists((string)result["data"]!["junitFile"]!));
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Native_exception_strings_are_normalized_without_paths_or_stack_traces(bool suite)
@@ -52,13 +73,14 @@ public sealed class PlcTestRunTests
         fixture.Reply = _ => new JsonObject { ["Ok"] = false, ["Message"] = "Synthetic native failure", ["Data"] = new JsonObject(),
             ["Meta"] = new JsonObject { ["success"] = false, ["operationSuccess"] = false, ["apiCallSuccess"] = false,
                 ["mayHaveChanged"] = false, ["operationNotStarted"] = true, ["status"] = suite ? "ReadOrWriteFailed" : "ApiNotFound",
-                ["error"] = "System.InvalidOperationException: license missing at C:\\private\\project.ap21\n"
+                ["error"] = "System.InvalidOperationException: license missing at C:\\private\\project.ap21; inspect the license\n"
                     + "   at Native.Run() in D:\\src\\native.cs:line 58" } };
         var result = await fixture.Execute();
         var run = fixture.Read(); var item = Assert.Single(run.Cases);
         Assert.Equal("error", item.Verdict);
         Assert.Equal(new[] { "code", "message", "details" }, item.Evidence.Select(p => p.Key));
         Assert.Contains("license missing", (string)item.Evidence["message"]!);
+        Assert.Contains("project.ap21; inspect the license", (string)item.Evidence["message"]!);
         Assert.DoesNotContain(":\\", run.CanonicalJson); Assert.DoesNotContain("at Native.Run", run.CanonicalJson);
         Assert.True(File.Exists((string)result["data"]!["junitFile"]!));
         Assert.Single(XDocument.Load((string)result["data"]!["junitFile"]!).Descendants("error"));
@@ -160,26 +182,49 @@ public sealed class PlcTestRunTests
     }
 
     [Theory]
-    [InlineData("Success")]
-    [InlineData("Information")]
-    [InlineData("Warning")]
-    [InlineData("Error")]
-    public async Task Native_test_suite_result_flags_follow_the_reused_tool_outcome(string state)
+    [InlineData("Success", "succeeded", "passed")]
+    [InlineData("Information", "succeeded", "passed")]
+    [InlineData("Warning", "failed", "failed")]
+    [InlineData("Error", "failed", "failed")]
+    public async Task Native_test_suite_result_flags_follow_the_reused_tool_outcome(string state, string outcome, string verdict)
     {
-        using var fixture = new Fixture(bound: true); fixture.Save("suite", suite: true);
+        using var fixture = new Fixture(bound: true); fixture.Save("a", suite: true); fixture.Save("b");
         var reply = SuiteReply(state);
-        reply["Meta"]!["nativeResultReturned"] = true; reply["Meta"]!["nativeState"] = state;
-        reply["Meta"]!["nativeStateType"] = NativeResultStates.TestSuite;
-        reply["Meta"]!["mayHaveChanged"] = true;
-        fixture.Reply = _ => reply.DeepClone().AsObject();
+        fixture.Reply = call => call == 1 ? reply.DeepClone().AsObject() : ScenarioReply("passed");
         JsonNode expected;
         using (fixture.Pipeline.EnterSession())
             expected = toolpipeline::TiaMcpServer.ModelContextProtocol.OptionalPackageContract.Map("RunTestSuiteCase",
                 new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage {
                     Message = (string?)reply["Message"], Meta = reply["Meta"]!.DeepClone().AsObject() }, true).StructuredContent!;
         var result = await fixture.Execute();
-        Assert.Equal((string?)expected["meta"]?["outcome"], (string?)result["meta"]?["outcome"]);
-        Assert.Equal((string?)expected["meta"]?["outcome"] == "unknown" ? "unknown" : "passed", fixture.Read().Cases[0].Verdict);
+        Assert.Equal(outcome, (string?)expected["meta"]?["outcome"]);
+        Assert.Equal("completed", (string?)expected["meta"]?["execution"]);
+        Assert.Equal("succeeded", (string?)result["meta"]?["outcome"]);
+        var run = fixture.Read();
+        Assert.Equal("completed", run.Status); Assert.Equal(2, fixture.Calls);
+        Assert.Equal(new[] { verdict, "passed" }, run.Cases.Select(c => c.Verdict));
+        Assert.Equal(verdict == "failed" ? 3 : 0, (int)result["data"]!["exitCode"]!);
+        Assert.Empty(fixture.Worker.Unsettled.Snapshot());
+        Assert.Equal(verdict == "failed" ? 1 : 0, XDocument.Load((string)result["data"]!["junitFile"]!).Descendants("failure").Count());
+    }
+
+    [Fact]
+    public async Task Plcsim_api_evidence_keeps_the_filename_and_diagnostic_suffix_under_details()
+    {
+        using var fixture = new Fixture(); fixture.Save("a");
+        fixture.Reply = _ => {
+            var reply = ScenarioReply("passed");
+            reply["Data"]!["api"] = new JsonObject {
+                ["apiPath"] = @"C:\private\Siemens.Simatic.Simulation.Runtime.Api.x64.dll",
+                ["apiSource"] = @"Loaded C:\private\runtime.dll successfully; API version 8",
+                ["apiVersion"] = "8", ["assemblyVersion"] = "8.0.0.0" };
+            return reply;
+        };
+        var result = await fixture.Execute(); var evidence = fixture.Read().Cases[0].Evidence;
+        Assert.Equal("Siemens.Simatic.Simulation.Runtime.Api.x64.dll", (string?)evidence["details"]?["api"]?["apiPath"]);
+        Assert.Equal("Loaded runtime.dll successfully; API version 8", (string?)evidence["details"]?["api"]?["apiSource"]);
+        Assert.DoesNotContain("private", fixture.Read().CanonicalJson);
+        Assert.True(File.Exists((string)result["data"]!["junitFile"]!));
     }
 
     [Theory]
@@ -469,8 +514,10 @@ public sealed class PlcTestRunTests
     }
 
     private static JsonObject SuiteReply(string state) => new() { ["Message"] = "Synthetic TestResults",
-        ["Meta"] = new JsonObject { ["success"] = state is "Success" or "Information", ["apiCallSuccess"] = true,
-            ["testPassed"] = state is "Success" or "Information", ["operationSuccess"] = state is "Success" or "Information",
+        ["Meta"] = new JsonObject { ["success"] = true, ["apiCallSuccess"] = true,
+            ["testPassed"] = state is "Success" or "Information", ["operationSuccess"] = true,
+            ["operationStarted"] = true, ["nativeResultReturned"] = true, ["nativeState"] = state,
+            ["nativeStateType"] = NativeResultStates.TestSuite, ["mayHaveChanged"] = true,
             ["result"] = new JsonObject { ["state"] = state, ["errorCount"] = state == "Error" ? 1 : 0,
                 ["warningCount"] = state == "Warning" ? 1 : 0, ["messageCount"] = 1,
                 ["messages"] = new JsonArray(new JsonObject { ["path"] = "TC_A", ["state"] = state,

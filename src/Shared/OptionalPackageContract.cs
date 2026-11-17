@@ -83,17 +83,22 @@ namespace TiaMcpServer.ModelContextProtocol
             bool stateRequired = (tool == "RunTestSuiteCase" || tool == "ExchangePlcSupervisions") && writes && rejection == null;
             string? state = data["nativeState"]?.ToString();
             bool stateKnown = NativeResultState.Classify(data, tool) != TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected;
+            bool? testVerdict = tool == "RunTestSuiteCase" ? TiaMcp.Adapters.Contracts.NativeResultStates
+                .TestSuiteVerdict(Flag(data, "nativeResultReturned") == true, state) : null;
             if (stateRequired || data.ContainsKey("nativeState"))
             {
                 nativeKnown |= stateKnown;
                 success = NativeResultState.Succeeded(data, tool) && success != false;
             }
+            if (testVerdict.HasValue) { success = testVerdict.Value; data["testPassed"] = testVerdict.Value; }
             bool verificationFailed = Flag(data, "expectedPresenceVerified") == false || Flag(data, "verifiedAbsent") == false;
             if (verificationFailed) success = false;
             bool notStarted = Flag(data, "operationNotStarted") == true;
             bool unchangedFailure = HostBehavior.UnchangedNativeFailure(data, success);
             // A lost worker acknowledgement leaves writes unknown; reads report a read failure.
-            bool unknown = outcomeLost || writes && issued && success != true
+            bool testUncertain = tool == "RunTestSuiteCase" && writes && (reset || Flag(data, "connectionUnavailable") == true
+                || status == "HmiConnectionUnavailable" || rejection == null && !notStarted && !testVerdict.HasValue);
+            bool unknown = outcomeLost || testUncertain || writes && issued && success != true && !testVerdict.HasValue
                 || rejection == null && writes && !notStarted && (stateRequired && !stateKnown
                 || reset && issued || success != true && !nativeKnown && !verificationFailed && !unchangedFailure);
             int imported = (data["imported"] as JsonArray)?.Count ?? 0;
@@ -130,7 +135,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (offset.HasValue && limit.HasValue && data["expectedCount"] is JsonValue count && count.TryGetValue<int>(out var total)
                 && offset >= 0 && limit > 0) paging = McpServer.OffsetPage(offset.Value, limit.Value, total);
             Clean(data);
-            if (NativeResultState.TryUnsuccessful(data, writes, out var nativeOutcome, out var nativeError, tool)) {
+            if (!(tool == "RunTestSuiteCase" && outcome == Outcome.Unknown)
+                && NativeResultState.TryUnsuccessful(data, writes, out var nativeOutcome, out var nativeError, tool)) {
                 outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
                     ? Completeness.Partial : Completeness.Complete;
             }

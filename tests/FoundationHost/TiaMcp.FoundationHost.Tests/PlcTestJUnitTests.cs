@@ -6,6 +6,28 @@ using Xunit;
 public sealed class PlcTestJUnitTests
 {
     [Theory]
+    [InlineData(@"Load C:\private\runtime.dll succeeded; keep this reason", "Load runtime.dll succeeded; keep this reason")]
+    [InlineData(@"Load C:/private/runtime.dll succeeded", "Load runtime.dll succeeded")]
+    [InlineData(@"Load \\server\share\runtime.dll failed", "Load runtime.dll failed")]
+    [InlineData("Load /private/lib/runtime.so failed", "Load runtime.so failed")]
+    [InlineData("Load 'C:\\Program Files\\Siemens\\runtime.dll' failed", "Load 'runtime.dll' failed")]
+    [InlineData(@"Load C:\Program Files\Siemens\runtime.dll failed while opening /tmp/other.so",
+        "Load runtime.dll failed while opening other.so")]
+    [InlineData("Load /private/lib/runtime.so failed while opening /tmp/other.so", "Load runtime.so failed while opening other.so")]
+    public void Evidence_scrubbing_preserves_the_filename_and_text_after_the_path(string input, string expected)
+        => Assert.Equal(expected, PlcTestEvidence.Scrub(input));
+
+    [Fact]
+    public void An_error_verdict_without_an_error_object_has_an_error_code_in_the_record_and_JUnit()
+    {
+        var evidence = PlcTestEvidence.Normalize(new JsonObject { ["data"] = new JsonObject() }, "error");
+        Assert.Equal("TEST_ERROR", (string?)evidence["code"]);
+        var run = new PlcTestRunRecord { Status = "completed" };
+        run.Cases.Add(new PlcTestCaseResult { Id = "native", Verdict = "error", Evidence = evidence });
+        Assert.Equal("TEST_ERROR", Assert.Single(XDocument.Parse(PlcTestJUnitWriter.Write(run)).Descendants("error")).Attribute("type")!.Value);
+    }
+
+    [Theory]
     [InlineData("\"System.InvalidOperationException: synthetic failure\"", "TEST_ERROR")]
     [InlineData("{\"code\":\"NATIVE_OPERATION_FAILED\",\"message\":\"synthetic failure\"}", "NATIVE_OPERATION_FAILED")]
     [InlineData("{\"code\":{\"malformed\":true}}", "TEST_ERROR")]

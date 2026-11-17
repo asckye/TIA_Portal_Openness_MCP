@@ -85,9 +85,13 @@ namespace TiaMcp.Logic.Testing
             {
                 if ((string?)reply["error"]?["code"] == "UNSUPPORTED_CAPABILITY"
                     || (string?)meta?["errorCode"] == "UNSUPPORTED_CAPABILITY") return "skipped";
+                bool? nativeVerdict = TiaMcp.Adapters.Contracts.NativeResultStates.TestSuiteVerdict(
+                    (bool?)meta?["nativeResultReturned"] == true, (string?)meta?["nativeState"]);
+                if (nativeVerdict.HasValue) return nativeVerdict.Value ? "passed" : "failed";
                 if ((bool?)meta?["testPassed"] == true) return "passed";
                 string? state = (string?)meta?["result"]?["state"];
-                return (bool?)meta?["apiCallSuccess"] == true && (state == "Error" || state == "Warning") ? "failed" : "error";
+                return TiaMcp.Adapters.Contracts.NativeResultStates.TestSuiteVerdict((bool?)meta?["apiCallSuccess"] == true, state) == false
+                    ? "failed" : "error";
             }
             if (kind != "plcsimScenario") throw new ArgumentException("Unknown PLC test kind.", nameof(kind));
             if ((string?)data?["verdict"] == "passed" && ((bool?)reply["ok"] ?? (bool?)meta?["operationSuccess"]) == true)

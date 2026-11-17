@@ -103,5 +103,13 @@ namespace TiaMcp.Adapters.Contracts
         public static bool Succeeded(string enumType, string? state)
             => Classify(enumType, state) is NativeStateKind.Success or NativeStateKind.Warning;
         public static bool Succeeded(object? state) => state is Enum value && Succeeded(value.GetType().FullName!, value.ToString());
+
+        // A returned TestResults verdict describes a completed test, independently of project effects.
+        public static bool? TestSuiteVerdict(bool nativeResultReturned, string? state)
+            => !nativeResultReturned ? null : Classify(TestSuite, state) switch {
+                NativeStateKind.Success => true,
+                NativeStateKind.Warning or NativeStateKind.Failure => false,
+                _ => null
+            };
     }
 }

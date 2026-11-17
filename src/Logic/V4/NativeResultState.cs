@@ -190,17 +190,20 @@ namespace TiaMcp.Logic.V4
                 return false;
             string? state = evidence["nativeState"]?.ToString();
             string? type = EnumType(evidence, tool);
-            if (type != null
+            bool? testVerdict = type == NativeResultStates.TestSuite ? NativeResultStates.TestSuiteVerdict(completed, state) : null;
+            if (testVerdict != false && (type != null
                 ? NativeResultStates.Classify(type, state) != NativeStateKind.Failure
-                : state != "Error" && state != "Failure" && state != "Failed" && state != "ErrorRollback") return false;
-            bool changesProject = evidence["mayHaveChanged"] is JsonValue changed && changed.TryGetValue<bool>(out var mayChange) && mayChange;
+                : state != "Error" && state != "Failure" && state != "Failed" && state != "ErrorRollback")) return false;
+            bool changesProject = !testVerdict.HasValue && evidence["mayHaveChanged"] is JsonValue changed
+                && changed.TryGetValue<bool>(out var mayChange) && mayChange;
             if (changesProject) outcome = Outcome.Unknown;
             var details = Evidence(evidence, tool);
             error = changesProject
                 ? new Error("The native operation returned " + state + "; partial project changes are possible. Inspect the target and evidence; "
                         + "the call stays on GetSessionState.unsettled. Do not replay it.",
                         new OutcomeUnknownDetails("native-result-state", details))
-                : new Error("The native operation returned " + state + ". The project was unchanged; inspect the file and log evidence.",
+                : new Error(testVerdict == false ? "The native test completed with a failed verdict (" + state + ")."
+                        : "The native operation returned " + state + ". The project was unchanged; inspect the file and log evidence.",
                         new NativeOperationFailedDetails(state, null, details));
             return true;
         }

@@ -10,6 +10,18 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class OptionalProductTests
 {
     [Theory]
+    [InlineData(true, "Success", true)]
+    [InlineData(true, "Information", true)]
+    [InlineData(true, "Error", false)]
+    [InlineData(true, "Warning", false)]
+    [InlineData(true, "Unexpected", null)]
+    [InlineData(true, null, null)]
+    [InlineData(false, "Success", null)]
+    [InlineData(false, "Error", null)]
+    public void Test_suite_verdict_requires_a_returned_known_native_result(bool returned, string? state, bool? passed)
+        => Assert.Equal(passed, NativeResultStates.TestSuiteVerdict(returned, state));
+
+    [Theory]
     [InlineData(18)]
     [InlineData(19)]
     [InlineData(20)]
