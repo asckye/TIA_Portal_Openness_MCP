@@ -31,7 +31,7 @@ public sealed class B3HostPortsTests
             BuildReleaseDiagnosticReport BuildReleaseHandoffArtifacts BuildReleaseManifest BuildReleaseRunbook CallTool CheckLibraryUpdates
             CheckProductUpdate ClearExportHandles ComparePlcBlockDocuments CompareProjects CompareSoftwareToOnline CompileDevice
             CompileHmiDiagnostics ConfigureMotionHardwareConnection ConnectDeviceNodesToProfinetSubnet ConnectIsolatedPortal
-            ConnectOnlinePlc CreateDevice CreateLibraryMasterCopy CreatePlcBlockGroup CreatePlcTypeGroup DeleteEmptyPlcBlockGroup
+            CreateDevice CreateLibraryMasterCopy CreatePlcBlockGroup CreatePlcTypeGroup DeleteEmptyPlcBlockGroup
             DeleteExportHandle DeleteHmiTag DeletePlcBlock DeletePlcTagTable DeletePlcType DescribeHmiScreen DescribeHmiSoftware
             DescribeHmiTag DescribeHmiTagTable DescribeObject DescribeObjectProperty DescribePlcBlockLogic DescribeService
             DisconnectOnlinePlc DisconnectOnlinePlcs EnsureOpennessUserGroup EnsureSubnet ExportDeviceAml ExportHmiConnection
@@ -66,7 +66,7 @@ public sealed class B3HostPortsTests
             WritePlcWebVars WriteUnifiedRuntimeTags
             """,
         [15] = """
-            ArchiveSavedProject CheckDownloadReadiness CreatePlcInstanceDb DownloadPlc ExchangeMotionCamData ExportOpcUaInterface
+            ArchiveSavedProject CheckDownloadReadiness ConnectOnlinePlc CreatePlcInstanceDb DownloadPlc ExchangeMotionCamData ExportOpcUaInterface
             ExportPlcWatchTable ExportPlcWatchTablesToDirectory GenerateOpcUaModelledInterface GenerateSivarc GetOnlineDriveParameters
             GetPlcChecksums GetPlcObjectFingerprints GetPlcOpcUaConfiguration GetPlcPutGetAccess GetPlcWatchTableCurrentValuesReadOnly
             GetProjectProtection GetSivarcRuleTree ImportOpcUaInterface ImportPlcWatchTableOffline ListPlcForceTables ListSivarcRules

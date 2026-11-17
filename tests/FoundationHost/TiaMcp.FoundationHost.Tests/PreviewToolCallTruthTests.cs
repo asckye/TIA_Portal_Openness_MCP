@@ -99,7 +99,12 @@ public sealed class PreviewToolCallTruthTests
     {
         using var fixture = new PreviewHostFixture(release);
         using var session = fixture.Pipeline.EnterSession();
-        var data = Preview("ConnectOnlinePlc", new { softwarePath = "PLC_1" });
+        if (release == "14sp1")
+        {
+            Assert.Null(Host.CatalogView.Find("ConnectOnlinePlc"));
+            return;
+        }
+        var data = Preview("ConnectOnlinePlc", new { softwarePath = "PLC_1", ipAddress = "192.168.1.10" });
         Assert.True((bool?)data["changesState"]);
         Assert.DoesNotContain("read-only", data["precautions"]!.ToJsonString());
         Assert.Contains("Changes the online connection state", data["precautions"]!.ToJsonString());
@@ -110,7 +115,7 @@ public sealed class PreviewToolCallTruthTests
     {
         using var fixture = new PreviewHostFixture(release);
         using var session = fixture.Pipeline.EnterSession();
-        var data = Preview("DownloadPlc", new { softwarePath = "PLC_1" });
+        var data = Preview("DownloadPlc", new { softwarePath = "PLC_1", targetIpAddress = "192.168.1.10" });
         Assert.True((bool?)data["dryRun"]!["supported"]);
         Assert.Null(data["dryRun"]!["given"]);
         Assert.True((bool?)data["dryRun"]!["effective"]);
@@ -128,7 +133,7 @@ public sealed class PreviewToolCallTruthTests
     {
         using var fixture = new PreviewHostFixture(release);
         using var session = fixture.Pipeline.EnterSession();
-        var data = Preview("DownloadPlc", new { softwarePath = "PLC_1", dryRun = false });
+        var data = Preview("DownloadPlc", new { softwarePath = "PLC_1", targetIpAddress = "192.168.1.10", dryRun = false });
         Assert.False((bool?)data["dryRun"]!["effective"]);
         Assert.True((bool?)data["changesState"]);
         Assert.Contains("EXECUTES (dryRun=false)", (string?)data["summary"]);

@@ -301,7 +301,7 @@ public sealed class FoundationV4ContractsTests
     // on V16/V17 (master 6cf6b132 roster; confirmed by the formal captures).
     // XREF adds the guarded offline AnalyzePlcCrossReferences tool on every release.
     // NO-LOCK-2 adds the host-only GetCallResult tool on every release.
-    [InlineData("14sp1", 281)] [InlineData("15.1", 321)] [InlineData("16", 350)]
+    [InlineData("14sp1", 280)] [InlineData("15.1", 321)] [InlineData("16", 350)]
     [InlineData("17", 373)] [InlineData("18", 399)] [InlineData("19", 475)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {

@@ -1183,7 +1183,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     [Theory]
     [InlineData("SetDeviceItemAttribute", "{\"deviceItemPath\":\"PLC/CPU\",\"attributeName\":\"Name\",\"value\":\"CPU_2\"}")]
     [InlineData("SetPlcCpuSettings", "{\"cpuPath\":\"PLC/CPU\",\"settings\":{\"exactAttributes\":{\"Name\":\"CPU_2\"}}}")]
-    [InlineData("DownloadPlc", "{\"softwarePath\":\"PLC\",\"password\":\"private-value\"}")]
+    [InlineData("DownloadPlc", "{\"softwarePath\":\"PLC\",\"targetIpAddress\":\"192.168.1.10\",\"password\":\"private-value\"}")]
     [InlineData("SetUnifiedHmiButtonEventScriptCode",
                 "{\"hmiSoftwarePath\":\"HMI\",\"screenName\":\"/Overview\",\"buttonName\":\"Start\"," +
                 "\"eventType\":\"Tapped\",\"scriptCode\":\"HMIRuntime.Tags(\\\"Start\\\").Write(true);\"}")]
