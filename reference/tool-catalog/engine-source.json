@@ -14058,14 +14058,15 @@
           "default": "100",
           "value": 100
         }
-      }
+      },
+      "description": "[L2][HMI-Unified][READ] Read paginated public scalar properties for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists/connections/systemTags/systemTextLists/auditTrails/opcUaAlarmTypes. Optional exact name. Returns counts, nextOffset, field failures and excluded complex properties. Not a complete export of entries or bindings; live pagination requires unchanged collection."
     },
     "ManageUnifiedEngineeringObject": {
       "method": "ManageUnifiedEngineeringObjectV4",
       "path": "src/Shared/UnifiedEngineeringTools.cs",
       "owner": "UnifiedEngineeringTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult ManageUnifiedEngineeringObjectV4(string softwarePath,string category,string name,[Description(\"create | update | delete. \")] string action,AttributeMap<Scalar> properties = null!,bool dryRun=true)",
+      "signature": "public CallToolResult ManageUnifiedEngineeringObjectV4(string softwarePath,string category,string name,\n                [Description(\"create | update | delete. \")] string action,AttributeMap<Scalar> properties = null!,bool dryRun=true,\n                [Description(\"Alarm text property to culture-to-text map. Empty text clears that culture; omitted cultures stay unchanged.\")]\n                AttributeMap<AttributeMap<string>> texts = null!, string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -14093,8 +14094,27 @@
           "type": "bool",
           "default": "true",
           "value": true
+        },
+        "texts": {
+          "type": "AttributeMap<AttributeMap<string>>",
+          "default": "null!",
+          "description": "Alarm text property to culture-to-text map. Empty text clears that culture; omitted cultures stay unchanged.",
+          "value": null
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "",
+          "value": ""
         }
-      }
+      },
+      "description": "[L2][HMI-Unified][WRITE] Native create/update/delete for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists when supported by installed API; connections/tagTables support delete only. name is exact, or /Group/Sub/Table for tagTables (preview includes tag count). Lists have no Create; use ImportUnifiedEngineeringList. properties contains writable scalars; TriggerBitAddress/TriggerAddress are read-only. Alarm create/update accepts texts as {EventText|EventText1..9|InfoText:{culture:text}}; AlarmClass must exist and cultures must be active project languages. Default dryRun=true; every execution requires expectedPlanHash and expectedProjectFile from the same preview. Preview checks API shape and bindings, not all TIA semantics. Failed creates delete the new object; updates restore journaled values, with cleanupRequired on incomplete rollback. For bulk alarms use ApplyToolBatch with one call per alarm; stops at first failure, earlier calls stay. No save/compile/download. Delete impact on references is not analyzed. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "ManageUnifiedEvent": {
       "method": "ManageUnifiedEventV4",
