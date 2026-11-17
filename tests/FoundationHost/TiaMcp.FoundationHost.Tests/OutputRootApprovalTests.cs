@@ -680,7 +680,7 @@ public sealed class OutputRootApprovalTests
             }
         }
         Assert.Equal(ExpectedOutputs.Keys.OrderBy(name => name), schemaCovered.OrderBy(name => name));
-        Assert.Equal(56, covered.Count(name => ExpectedOutputs.ContainsKey(name)));
+        Assert.Equal(57, covered.Count(name => ExpectedOutputs.ContainsKey(name)));
         Assert.Contains("BuildDeviceAmlDocument", covered);
         Assert.Contains("RunOfflineReleaseValidationSuite", covered);
     }
