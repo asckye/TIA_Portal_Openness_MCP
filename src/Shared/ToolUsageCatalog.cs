@@ -320,7 +320,8 @@ namespace TiaOpenness.Shared
                 if (properties[key] is JsonObject prop && !args.ContainsKey(key)) args[key] = ExampleValue(key, prop);
             if (operation.Length > 0) args[selector] = operation;
             if (properties.ContainsKey("dryRun"))
-                args["dryRun"] = TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "UI"
+                args["dryRun"] = name == "ManageTestSuiteCase" && (string?)args["action"] == "showInEditor" ? JsonValue.Create(false)
+                    : TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "UI"
                     ? properties["dryRun"]?["default"]?.DeepClone() ?? JsonValue.Create(false) : JsonValue.Create(true);
             if (properties.ContainsKey("confirm")) args["confirm"] = false;
             var origins = new JsonObject();

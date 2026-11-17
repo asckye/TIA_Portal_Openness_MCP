@@ -295,10 +295,57 @@ public sealed class GeneratorTests
     [InlineData("release")]
     public void RetestLessonsCannotDisappear(string mutation)
     {
-        var calls = Read(Root, "reference/tool-examples/calls.json"); var sequences = Read(Root, "reference/tool-examples/sequences.json").AsArray(); var metadata = Read(Root, "reference/tool-examples/metadata.json"); var table = sequences.First(s => Text(s!["id"]) == "sequence/foundation-tag-table-round-trip")!; var block = sequences.First(s => Text(s!["id"]) == "sequence/foundation-block-round-trip")!; var entry = calls["profiles"]!["plc-foundation"]!["ImportPlcTagTable"]!;
-        switch (mutation) { case "overwrite": entry["execution"]!["arguments"]!.AsObject().Remove("overwrite"); break; case "path": entry["note"] = Text(entry["note"]).Replace("normalized full path", "", StringComparison.Ordinal); break; case "full-parameters": calls["profiles"]!["full-engine"]!["ImportPlcBlock"]!["arguments"]!["overwrite"] = true; break; case "sequence": sequences.Remove(table); break; case "readback": table["steps"]!.AsArray().RemoveAt(table["steps"]!.AsArray().Count - 1); break; case "compile": block["steps"]!.AsArray().RemoveAt(block["steps"]!.AsArray().Count - 1); break; case "approval": metadata["resultReading"]!["ResponseMessage"]!.AsArray().RemoveAt(metadata["resultReading"]!["ResponseMessage"]!.AsArray().Count - 1); break; case "identity": table["steps"]!.AsArray()[^2]!["arguments"]!.AsObject().Remove("expectedProjectFile"); break; case "release": table["releaseKeys"]!.AsArray().RemoveAt(5); break; }
+        var calls = Read(Root, "reference/tool-examples/calls.json"); var sequences = Read(Root, "reference/tool-examples/sequences.json").AsArray();
+        var metadata = Read(Root, "reference/tool-examples/metadata.json"); var table = sequences
+            .First(s => Text(s!["id"]) == "sequence/foundation-tag-table-round-trip")!; var block = sequences
+            .First(s => Text(s!["id"]) == "sequence/foundation-block-round-trip")!; var entry = calls["profiles"]!["plc-foundation"]!["ImportPlcTagTable"]!;
+        switch (mutation) {
+            case "overwrite": entry["execution"]!["arguments"]!.AsObject().Remove("overwrite"); break; case "path": entry["note"] = Text(entry["note"])
+                .Replace("normalized full path", "", StringComparison.Ordinal); break; case "full-parameters"
+                : calls["profiles"]!["full-engine"]!["ImportPlcBlock"]!["arguments"]!["overwrite"] = true; break; case "sequence": sequences.Remove(table);
+            break; case "readback": table["steps"]!.AsArray().Remove(table["steps"]!.AsArray().Last(s => Text(s!["tool"]) == "ListPlcTags")); break;
+            case "compile": block["steps"]!.AsArray().Remove(block["steps"]!.AsArray().Last(s => Text(s!["tool"]) == "CompilePlcSoftware")); break;
+            case "approval": metadata["resultReading"]!["ResponseMessage"]!.AsArray()
+                .RemoveAt(metadata["resultReading"]!["ResponseMessage"]!.AsArray().Count - 1); break; case "identity": table["steps"]!.AsArray()
+                .Last(s => Text(s!["tool"]) == "ImportPlcTagTable" && s["arguments"]!["dryRun"]?.GetValue<bool>() == false)!["arguments"]!.AsObject()
+                .Remove("expectedProjectFile"); break; case "release": table["releaseKeys"]!.AsArray().RemoveAt(5); break;
+        }
         Assert.ThrowsAny<Exception>(() => ToolUsageGenerator.ValidateRetest(Root, calls, sequences, metadata));
     }
+    [Theory]
+    [InlineData("")]
+    [InlineData("ShowObjectInEditor")]
+    [InlineData("ShowWorkbenchPage")]
+    [InlineData("ListPlcBlocks")]
+    public void RoundTripAllowsOnlyTrailingEditorUiSteps(string trailingTool)
+    {
+        var calls = Read(Root, "reference/tool-examples/calls.json");
+        var sequences = Read(Root, "reference/tool-examples/sequences.json").AsArray();
+        var metadata = Read(Root, "reference/tool-examples/metadata.json");
+        var block = sequences.Single(s => Text(s!["id"]) == "sequence/foundation-block-round-trip")!;
+        Assert.Equal("ShowObjectInEditor", Text(block["steps"]!.AsArray()[^1]!["tool"]));
+        ToolUsageGenerator.ValidateRetest(Root, calls, sequences, metadata);
+        if (trailingTool.Length == 0) block["steps"]!.AsArray().RemoveAt(block["steps"]!.AsArray().Count - 1);
+        else if (trailingTool == "ShowObjectInEditor") block["steps"]!.AsArray().Add(block["steps"]!.AsArray()[^1]!.DeepClone());
+        else block["steps"]!.AsArray().Add(new JsonObject { ["tool"] = trailingTool, ["arguments"] = trailingTool == "ShowWorkbenchPage"
+            ? new JsonObject { ["page"] = "home" } : new JsonObject { ["softwarePath"] = "PLC_1" } });
+        if (trailingTool is "" or "ShowObjectInEditor") ToolUsageGenerator.ValidateRetest(Root, calls, sequences, metadata);
+        else Assert.Contains("Block compile lesson", Assert.Throws<ReleaseException>(() =>
+            ToolUsageGenerator.ValidateRetest(Root, calls, sequences, metadata)).Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TrailingEditorUiDoesNotLoosenExplicitExecutionIdentityCheck()
+    {
+        var calls = Read(Root, "reference/tool-examples/calls.json");
+        var sequences = Read(Root, "reference/tool-examples/sequences.json").AsArray();
+        var metadata = Read(Root, "reference/tool-examples/metadata.json");
+        var block = sequences.Single(s => Text(s!["id"]) == "sequence/foundation-block-round-trip")!;
+        block["steps"]!.AsArray()[^1]!["arguments"]!["dryRun"] = false;
+        Assert.Contains("Sequence identity lesson", Assert.Throws<ReleaseException>(() =>
+            ToolUsageGenerator.ValidateRetest(Root, calls, sequences, metadata)).Message, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("ExportPlcBlocks")]
     [InlineData("ExportPlcTypes")]

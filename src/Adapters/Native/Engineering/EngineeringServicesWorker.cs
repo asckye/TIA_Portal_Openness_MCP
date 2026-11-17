@@ -27,7 +27,7 @@ namespace TiaMcp.Adapters
             Check();
             if (request.DryRun != dryRun) throw new ArgumentException("Conflicting engineering preview mode.");
             string? unavailable = EngineeringServicesCapabilities
-                .Unsupported(ReleaseKey, request.Operation, request.Kind, request.CustomIdentityKey, request.CompilationSettings.Keys);
+                .Unsupported(ReleaseKey, request.Operation, request.Kind, request.CustomIdentityKey, request.CompilationSettings.Keys, request.View);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             if (request.ValidationError != null) return RunEngineeringServicesStep(request.Operation, _ => throw new ArgumentException(request.ValidationError),
                 requiresProject: request.Operation != "CompareLibraries");

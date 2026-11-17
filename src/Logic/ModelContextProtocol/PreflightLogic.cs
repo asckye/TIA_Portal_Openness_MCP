@@ -238,7 +238,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 case "UI":
                     list
-                        .Add("Changes only Workbench UI state. Human activity, modal dialogs and the control switch can refuse it; prefill awaits human " +
+                        .Add("UI-only: changes Workbench or TIA Portal editor UI; no project change. TIA editor actions need a bound project and a Portal " +
+                        "with user interface. Human activity, modal dialogs and the control switch can refuse Workbench actions; prefill awaits human " +
                         "confirmation.");
                     break;
                 case "WRITE":
@@ -308,7 +309,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>Whether the operation class needs a bound project (session and offline calls do not).</summary>
         public static bool NeedsProject(string operation, string toolName)
         {
-            if (toolName is "SaveProject" or "SaveProjectCopy" or "CloseProject") return true;
+            if (toolName is "SaveProject" or "SaveProjectCopy" or "CloseProject" or "ShowObjectInEditor" or "ShowObjectInEditorV4") return true;
             var op = (operation ?? "").ToUpperInvariant();
             if (op == "SESSION" || op == "OFFLINE" || op == "UI" || ToolTaxonomy.For(toolName).Domain == "Workbench") return false;
             // Tools that read the environment rather than a project.

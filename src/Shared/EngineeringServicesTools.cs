@@ -90,6 +90,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "UI only: no project change and no approval. Requires a TIA Portal with user interface. Available on all eight releases " +
                 "(V14 SP1, V15.1, V16-V21); watch/force tables require V15.1+. Empty view uses IShowable.ShowInEditor(); " +
                 "kind=device also supports device/network/topology via Device.ShowInEditor(View) on all eight releases. " +
+                "On V20 Device is not IShowable: kind=device requires a nonempty view (device|network|topology); empty view refuses before dispatch. " +
                 "Opens directly by default; dryRun=true touches no UI.")]
         public CallToolResult ShowObjectInEditorV4(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable | plcWatchTable | plcForceTable (tables V15.1+).")]
@@ -101,7 +102,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: false (default) opens the editor without approval or project changes; true previews without touching the UI.")]
             bool dryRun=false,
             [Description("view: empty (default) uses parameterless ShowInEditor; device | network | topology selects the official device view. " +
-                "Only kind=device; all eight releases. UI only, no approval or project change; requires a Portal with user interface.")] string view="")
+                "Only kind=device; required for Device on V20, optional on other releases. UI only, no approval or project change; " +
+                "requires a Portal with user interface.")] string view="")
             => SessionToolContract
                 .Run("ShowObjectInEditor", false, false, () =>
                     ShowObjectInEditor(kind, V4Json.Serialize(devicePath ?? Array.Empty<string>()), V4Json.Serialize(itemPath ?? Array.Empty<string>()),

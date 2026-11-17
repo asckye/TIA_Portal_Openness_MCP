@@ -10,6 +10,28 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class ReadOnlySourceContracts
 {
     [Fact]
+    public void Test_suite_editor_requires_ui_and_previews_before_any_show_call()
+    {
+        var source = Read("src/Adapters/Native/Options/TestSuiteAdapter.cs");
+        var manage = EngineSources.BlockAfter(source, "public OptionalProductReply ManageTestSuiteCase(");
+        int mode = manage.IndexOf("mode != TiaPortalMode.WithUserInterface", StringComparison.Ordinal);
+        int preview = manage.IndexOf("if (dryRun) return \"Test Suite showInEditor preview", StringComparison.Ordinal);
+        int show = manage.IndexOf("rs.ShowInEditor()", StringComparison.Ordinal);
+        Assert.True(mode >= 0 && mode < preview && preview < show);
+        Contains(manage, "throw new AdapterPreconditionException", "_session.PortalMode");
+        Contains(Read("src/Adapters/Native/Options/OptionalProductSession.cs"), "_engine.ProjectPortal!.GetCurrentProcess().Mode");
+    }
+
+    [Fact]
+    public void Legacy_editor_binding_check_uses_the_shared_project_requirement()
+    {
+        var source = Read("src/ToolPipeline/ModelContextProtocol/Tools/McpServer.SerializedCalls.cs");
+        var validation = EngineSources.BlockAfter(source, "private static void ValidateReadyRuntimeTool(");
+        Contains(validation, "PreflightLogic.NeedsProject(", "portal.VerifyBinding(name)");
+        Contains(EngineSources.BlockAfter(source, "static partial void ValidateRuntimeBinding("), "ValidateRuntimeTool(method.Name,");
+    }
+
+    [Fact]
     public void Editor_opening_keeps_exact_lookup_and_native_refusals_before_the_ui_call()
     {
         var source = Read("src/Adapters/Native/Engineering/EngineeringServices.cs");

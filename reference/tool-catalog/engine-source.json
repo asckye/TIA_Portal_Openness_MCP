@@ -2759,7 +2759,7 @@
       "path": "src/Shared/EngineeringServicesTools.cs",
       "owner": "EngineeringServicesTools",
       "domain": "Project",
-      "signature": "public CallToolResult ShowObjectInEditorV4(\n            [Description(\"kind: device | deviceItem | plcBlock | plcType | plcTagTable | plcWatchTable | plcForceTable (tables V15.1+).\")]\n            string kind=\"device\",\n            string[]? devicePath = null,\n            string[]? itemPath = null,\n            string softwarePath=\"\",\n            string objectPath=\"\",\n            [Description(\"dryRun: false (default) opens the editor without approval or project changes; true previews without touching the UI.\")]\n            bool dryRun=false,\n            [Description(\"view: empty (default) uses parameterless ShowInEditor; device | network | topology selects the official device view. \" +\n                \"Only kind=device; all eight releases. UI only, no approval or project change; requires a Portal with user interface.\")] string view=\"\")",
+      "signature": "public CallToolResult ShowObjectInEditorV4(\n            [Description(\"kind: device | deviceItem | plcBlock | plcType | plcTagTable | plcWatchTable | plcForceTable (tables V15.1+).\")]\n            string kind=\"device\",\n            string[]? devicePath = null,\n            string[]? itemPath = null,\n            string softwarePath=\"\",\n            string objectPath=\"\",\n            [Description(\"dryRun: false (default) opens the editor without approval or project changes; true previews without touching the UI.\")]\n            bool dryRun=false,\n            [Description(\"view: empty (default) uses parameterless ShowInEditor; device | network | topology selects the official device view. \" +\n                \"Only kind=device; required for Device on V20, optional on other releases. UI only, no approval or project change; \" +\n                \"requires a Portal with user interface.\")] string view=\"\")",
       "parameters": {
         "kind": {
           "type": "string",
@@ -2796,7 +2796,7 @@
         "view": {
           "type": "string",
           "default": "\"\"",
-          "description": "view: empty (default) uses parameterless ShowInEditor; device | network | topology selects the official device view. Only kind=device; all eight releases. UI only, no approval or project change; requires a Portal with user interface.",
+          "description": "view: empty (default) uses parameterless ShowInEditor; device | network | topology selects the official device view. Only kind=device; required for Device on V20, optional on other releases. UI only, no approval or project change; requires a Portal with user interface.",
           "value": ""
         }
       }
@@ -14111,7 +14111,7 @@
       "path": "src/Shared/TestSuiteTools.cs",
       "owner": "TestSuiteTools",
       "domain": "Project",
-      "signature": "public CallToolResult ManageTestSuiteCase(\n            [Description(\"category: styleGuide | application | system.\")] string category,\n            string name,\n            [Description(\"action: read | rename | setScope | copyScope | createFromMasterCopy | showInEditor. \" +\n                \"showInEditor is UI only without approval; other mutating actions remain WRITE.\")] string action=\n                \"read\",\n            string kind=\"case\",\n            string newName=\"\",\n            string softwarePath=\"\",\n            [Description(\"instanceName: exact PLCSIM Advanced instance name.\")] string instanceName=\"\",\n            [Description(\"executionMode: SystemManagedPLCSIMInstance | ExternallyManagedPLCSIMInstance.\")] string executionMode=\"\",\n            [Description(\"opcUaServerAddress: OPC UA server endpoint URL.\")] string opcUaServerAddress=\"\",\n            [Description(\"serverInterfaceType: UserDefined | StandardSIMATIC | SiOMECompanionSpecification.\")] string serverInterfaceType=\"\",\n            [Description(\"interfaceFolderPath: folder path of the OPC UA server interface.\")] string interfaceFolderPath=\"\",\n            [Description(\"updateOptions: update option name ('' = default).\")] string updateOptions=\"\",\n            [Description(\"scope: Array of typed test scopes (see the tool description).\")] TestScope[] scope = null!,\n            [Description(\"targetName: exact name of the target object.\")] string targetName=\"\",\n            string masterCopyPath=\"\",\n            string libraryName=\"\",\n            [Description(\"dryRun: true (default) previews mutating actions; showInEditor always opens the UI without project changes or approval.\")]\n            bool dryRun=true)",
+      "signature": "public CallToolResult ManageTestSuiteCase(\n            [Description(\"category: styleGuide | application | system.\")] string category,\n            string name,\n            [Description(\"action: read | rename | setScope | copyScope | createFromMasterCopy | showInEditor. \" +\n                \"showInEditor is UI only without approval; other mutating actions remain WRITE.\")] string action=\n                \"read\",\n            string kind=\"case\",\n            string newName=\"\",\n            string softwarePath=\"\",\n            [Description(\"instanceName: exact PLCSIM Advanced instance name.\")] string instanceName=\"\",\n            [Description(\"executionMode: SystemManagedPLCSIMInstance | ExternallyManagedPLCSIMInstance.\")] string executionMode=\"\",\n            [Description(\"opcUaServerAddress: OPC UA server endpoint URL.\")] string opcUaServerAddress=\"\",\n            [Description(\"serverInterfaceType: UserDefined | StandardSIMATIC | SiOMECompanionSpecification.\")] string serverInterfaceType=\"\",\n            [Description(\"interfaceFolderPath: folder path of the OPC UA server interface.\")] string interfaceFolderPath=\"\",\n            [Description(\"updateOptions: update option name ('' = default).\")] string updateOptions=\"\",\n            [Description(\"scope: Array of typed test scopes (see the tool description).\")] TestScope[] scope = null!,\n            [Description(\"targetName: exact name of the target object.\")] string targetName=\"\",\n            string masterCopyPath=\"\",\n            string libraryName=\"\",\n            [Description(\"dryRun: true (default) previews without touching the UI; false executes. showInEditor requires a Portal with user interface \" +\n                \"and never changes the project or requests approval.\")]\n            bool dryRun=true)",
       "parameters": {
         "category": {
           "type": "string",
@@ -14205,7 +14205,7 @@
           "type": "bool",
           "default": "true",
           "value": true,
-          "description": "dryRun: true (default) previews mutating actions; showInEditor always opens the UI without project changes or approval."
+          "description": "dryRun: true (default) previews without touching the UI; false executes. showInEditor requires a Portal with user interface and never changes the project or requests approval."
         }
       }
     },

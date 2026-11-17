@@ -408,6 +408,12 @@ case ApplicationTestSet set: set.Delete(); break;
                 if (folder != null && !folder.Exists) throw new DirectoryNotFoundException("interfaceFolderPath does not exist: " + interfaceFolderPath);
                 if (action == "showInEditor")
                 {
+                    var mode = _session.PortalMode;
+                    meta["portalMode"] = mode.ToString();
+                    if (mode != TiaPortalMode.WithUserInterface)
+                        throw new AdapterPreconditionException("ManageTestSuiteCase.showInEditor needs a TIA Portal with user interface; this session runs "
+                            + mode + ". Attach to a TIA Portal window or start the isolated portal with user interface.", isArgument: false);
+                    if (dryRun) return "Test Suite showInEditor preview; the TIA Portal UI was not touched.";
                     meta["operationStarted"] = true;
                     switch (target) { case RuleSet rs: rs.ShowInEditor(); break; case TestCase tc: tc.ShowInEditor(); break; 
 #if OPTION_TEST_SETS

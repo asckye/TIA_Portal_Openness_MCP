@@ -32,6 +32,20 @@ public sealed class ShowObjectInEditorTests
                 Assert.True(JsonNode.DeepEquals(maintained, sequences.Single(s => (string?)s!["id"] == (string?)maintained!["id"])));
         }
         using var fixture = new DiscoveryFixture(release);
+        var usage = await fixture.Call("GetToolUsage", new { toolName = "ShowObjectInEditor" });
+        Assert.True((bool?)usage["ok"], usage.ToJsonString());
+        var examples = usage["data"]!["examples"]!.AsArray();
+        Assert.Contains(examples, e => (string?)e!["id"] == "sequence/watch-table");
+        Assert.Contains(examples, e => (string?)e!["id"] == "sequence/hardware-network");
+        var watchResult = await fixture.Call("GetToolUsage", new { exampleId = "sequence/watch-table" });
+        Assert.True((bool?)watchResult["ok"], watchResult.ToJsonString());
+        var watch = Assert.Single(watchResult["data"]!["examples"]!.AsArray())!;
+        Assert.Equal(new[] { "20", "21" }, watch["releaseKeys"]!.AsArray().Select(k => (string)k!));
+        Assert.Equal(release is "20" or "21", (bool?)watch["available"]);
+        var watchShow = watch["steps"]!.AsArray()[^1]!;
+        Assert.Equal("ShowObjectInEditor", (string?)watchShow["tool"]);
+        Assert.Equal("plcWatchTable", (string?)watchShow["arguments"]!["kind"]);
+        Assert.False((bool)watchShow["arguments"]!["dryRun"]!);
         var result = await fixture.Call("GetToolUsage", new { exampleId = "sequence/show-written-object", exampleKind = "sequence" });
         Assert.True((bool?)result["ok"], result.ToJsonString());
         var served = Assert.Single(result["data"]!["examples"]!.AsArray())!;

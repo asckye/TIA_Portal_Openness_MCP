@@ -10,6 +10,20 @@ public sealed class EditorSelectionTests
     [InlineData("device")]
     [InlineData("network")]
     [InlineData("topology")]
+    public void V20_device_requires_the_official_view_overload(string view)
+    {
+        var refusal = EngineeringServicesCapabilities.Unsupported("20", "ShowObjectInEditor", "device", view: view);
+        if (view.Length == 0) Assert.Contains("view=device|network|topology", refusal, StringComparison.Ordinal);
+        else Assert.Null(refusal);
+        foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "21" })
+            Assert.Null(EngineeringServicesCapabilities.Unsupported(release, "ShowObjectInEditor", "device", view: view));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("device")]
+    [InlineData("network")]
+    [InlineData("topology")]
     public void Device_views_use_only_the_official_selection(string view)
         => EngineeringServicesPolicy.EditorSelection("device", new[] { "Station" }, Array.Empty<string>(), "", "", view);
 

@@ -511,11 +511,14 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("executionMode", out var executionMode) ? executionMode.GetString() ?? "" : "",
             arguments.TryGetValue("password", out var optionalPassword) ? optionalPassword.GetString() ?? "" : "") != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
-        if (EngineeringServicesCapabilities.Unsupported(portedRelease!, tool.Name, scope,
+        var engineeringUnavailable = EngineeringServicesCapabilities.Unsupported(portedRelease!, tool.Name, scope,
             arguments.TryGetValue("customIdentityKey", out var customIdentity) ? customIdentity.GetString() ?? "" : "",
             arguments.TryGetValue("properties", out var engineeringProperties) && engineeringProperties.ValueKind == JsonValueKind.Object
-                ? engineeringProperties.EnumerateObject().Select(p => p.Name) : null) != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+                  ? engineeringProperties.EnumerateObject().Select(p => p.Name) : null,
+              arguments.TryGetValue("view", out var editorView) ? editorView.GetString() ?? "" : "");
+        if (engineeringUnavailable != null)
+            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName,
+                tool.Name == "ShowObjectInEditor" && portedRelease == "20" && scope == "device" ? engineeringUnavailable : null);
         if (LibraryCapabilities.Unsupported(portedRelease!, tool.Name, actionName,
             arguments.TryGetValue("sourceKind", out var sourceKind) ? sourceKind.GetString() ?? "" : "",
             arguments.TryGetValue("properties", out var libraryProperties) && libraryProperties.ValueKind == JsonValueKind.Object ? libraryProperties

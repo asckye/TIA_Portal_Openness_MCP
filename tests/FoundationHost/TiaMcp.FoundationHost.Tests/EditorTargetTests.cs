@@ -9,6 +9,19 @@ using Xunit;
 public sealed class EditorTargetTests
 {
     [Theory]
+    [InlineData("ShowObjectInEditor")]
+    [InlineData("ShowObjectInEditorV4")]
+    public void Editor_ui_requires_a_project_while_workbench_ui_stays_independent(string tool)
+    {
+        Assert.True(PreflightLogic.NeedsProject("UI", tool));
+        Assert.False(PreflightLogic.NeedsProject("UI", "ShowWorkbenchPage"));
+        var text = string.Join(" ", PreflightLogic.Precautions("UI", "Project", new PreflightLogic.Report(), false,
+            Array.Empty<PreflightLogic.ParameterSpec>()));
+        Assert.Contains("Workbench or TIA Portal editor", text, StringComparison.Ordinal);
+        Assert.Contains("no project change", text, StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData("rename")]
     [InlineData("setScope")]
     [InlineData("copyScope")]
@@ -34,8 +47,13 @@ public sealed class EditorTargetTests
         else { arguments["devicePath"] = new JsonArray("Station/Exact"); arguments["view"] = target; }
         using var fixture = new Fixture(release);
         var body = await fixture.Call("ShowObjectInEditor", arguments);
-        bool unsupported = table && release == "14sp1";
-        if (unsupported) Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        bool v20Device = !table && target == "" && release == "20";
+        bool unsupported = table && release == "14sp1" || v20Device;
+        if (unsupported)
+        {
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+            if (v20Device) Assert.Contains("view=device|network|topology", (string?)body["error"]?["message"], StringComparison.Ordinal);
+        }
         else
         {
             Assert.True((bool?)body["ok"], body.ToJsonString());
@@ -85,7 +103,32 @@ public sealed class EditorTargetTests
         Assert.True((bool?)body["ok"], body.ToJsonString());
         Assert.Equal(0, fixture.Approvals);
         Assert.Equal(1, fixture.Worker.Calls);
-        Assert.Equal(1, fixture.Worker.UiCalls);
+        Assert.Equal(preview ? 0 : 1, fixture.Worker.UiCalls);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Test_suite_editor_requires_a_portal_window_even_for_preview(bool preview)
+    {
+        using var fixture = new Fixture("21");
+        fixture.Worker.WithUserInterface = false;
+        var body = await fixture.Call("ManageTestSuiteCase", new JsonObject { ["category"] = "styleGuide", ["name"] = "ExactCase",
+            ["action"] = "showInEditor", ["dryRun"] = preview });
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal(0, fixture.Approvals);
+        Assert.Equal(0, fixture.Worker.UiCalls);
+    }
+
+    [Fact]
+    public async Task Served_test_suite_editor_example_executes_the_ui_action()
+    {
+        using var fixture = new DiscoveryFixture("21");
+        var body = await fixture.Call("GetToolUsage", new { toolName = "ManageTestSuiteCase", operation = "showInEditor" });
+        Assert.True((bool?)body["ok"], body.ToJsonString());
+        var arguments = body["data"]!["example"]!["request"]!["params"]!["arguments"]!;
+        Assert.Equal("showInEditor", (string?)arguments["action"]);
+        Assert.False((bool)arguments["dryRun"]!);
     }
 
     [Theory]
@@ -150,6 +193,7 @@ public sealed class EditorTargetTests
     private sealed class Worker : IFoundationWorker
     {
         internal int Calls, UiCalls, Writes;
+        internal bool WithUserInterface = true;
         internal JsonNode? Request;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
@@ -159,7 +203,10 @@ public sealed class EditorTargetTests
             Calls++; Request = arguments["request"]!.DeepClone();
             bool preview = (bool)Request["DryRun"]!;
             string action = (string)Request["Action"]!;
-            if ((string?)Request["Operation"] == "ShowObjectInEditor" ? !preview : action == "showInEditor") UiCalls++;
+            if (action == "showInEditor" && !WithUserInterface)
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                    "ManageTestSuiteCase.showInEditor needs a TIA Portal with user interface", isArgument: false);
+            if (!preview && ((string?)Request["Operation"] == "ShowObjectInEditor" || action == "showInEditor")) UiCalls++;
             if ((string?)Request["Operation"] == "ManageTestSuiteCase" && action is not ("showInEditor" or "read") && !preview) Writes++;
             return Task.FromResult<JsonNode?>(new JsonObject { ["Message"] = "Editor stand-in", ["Meta"] = new JsonObject {
                 ["operationSuccess"] = true, ["apiCallSuccess"] = true, ["mayHaveChanged"] = false, ["dryRun"] = preview } });

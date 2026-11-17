@@ -244,10 +244,20 @@ internal static class ToolUsageGenerator
             }
         }
         var table = indexed["sequence/foundation-tag-table-round-trip"]; var block = indexed["sequence/foundation-block-round-trip"];
+        JsonNode LastNonUi(JsonNode sequence)
+        {
+            var steps = sequence["steps"]!.AsArray();
+            int last = steps.Count - 1;
+            while (last >= 0 && Text(steps[last]!["tool"]) == "ShowObjectInEditor"
+                && TiaMcpServer.ModelContextProtocol.ToolMetadata.Find("ShowObjectInEditor")?.Operation == "UI") last--;
+            Require(last >= 0, "Round-trip requires a non-UI readback or compile step");
+            return steps[last]!;
+        }
+        var tableLast = LastNonUi(table); var blockLast = LastNonUi(block);
         var tableNames = table["steps"]!.AsArray().Select(s => Text(s!["tool"])).ToList(); var blockNames = block["steps"]!.AsArray().Select(s => Text(s!["tool"])).ToList();
-        Require(tableNames.IndexOf("ExportPlcTagTable") < tableNames.IndexOf("CreatePlcTag") && tableNames.IndexOf("CreatePlcTag") < tableNames.IndexOf("ImportPlcTagTable") && tableNames[^1] == "ListPlcTags" && Text(table["steps"]!.AsArray().Last()!["expect"]).Contains("tag added after export is gone", StringComparison.Ordinal), "Table round-trip readback lesson");
+        Require(tableNames.IndexOf("ExportPlcTagTable") < tableNames.IndexOf("CreatePlcTag") && tableNames.IndexOf("CreatePlcTag") < tableNames.IndexOf("ImportPlcTagTable") && Text(tableLast["tool"]) == "ListPlcTags" && Text(tableLast["expect"]).Contains("tag added after export is gone", StringComparison.Ordinal), "Table round-trip readback lesson");
         Require(table["steps"]!.AsArray().Any(s => Text(s!["tool"]) == "ExportPlcTagTable" && s["arguments"]!["dryRun"]?.GetValue<bool>() == false && Text(s["expect"]).Contains("Edit this exported file", StringComparison.Ordinal)), "Table exported edit lesson");
-        Require(blockNames.IndexOf("ExportPlcBlock") < blockNames.IndexOf("ImportPlcBlock") && blockNames.IndexOf("ImportPlcBlock") < blockNames.IndexOf("CompilePlcSoftware") && blockNames[^1] == "CompilePlcSoftware" && block["steps"]!.AsArray().Last()!["arguments"]!["dryRun"]?.GetValue<bool>() == false, "Block compile lesson");
+        Require(blockNames.IndexOf("ExportPlcBlock") < blockNames.IndexOf("ImportPlcBlock") && blockNames.IndexOf("ImportPlcBlock") < blockNames.IndexOf("CompilePlcSoftware") && Text(blockLast["tool"]) == "CompilePlcSoftware" && blockLast["arguments"]!["dryRun"]?.GetValue<bool>() == false, "Block compile lesson");
         Require(Text(block["preconditions"]).Contains("remove or move an old Main.xml", StringComparison.Ordinal) && Text(block["notes"]).Contains("Exports need no Workbench approval", StringComparison.Ordinal), "Block precondition/approval lesson");
         foreach (var sequence in new[] { table, block }) foreach (var step in sequence["steps"]!.AsArray().Where(s => imports.Contains(Text(s!["tool"])))) Require(step!["arguments"]!["overwrite"]?.GetValue<bool>() == true, "Round-trip replacement lesson");
         var refusal = indexed["sequence/foundation-approval-precheck"]; Require(Set(refusal["steps"]!.AsArray().Select(s => Text(s!["tool"]))).IsSupersetOf(imports.Concat(new[] { "CreatePlcTag", "CreatePlcTagTable", "CloseProject" })), "Precheck refusal coverage");

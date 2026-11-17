@@ -20,6 +20,7 @@ internal sealed class OptionalProductSession
         _request = request;
     }
     internal string ReleaseKey => _engine.PlcB5Session.ReleaseKey;
+    internal Siemens.Engineering.TiaPortalMode PortalMode => _engine.ProjectPortal!.GetCurrentProcess().Mode;
 #if PLC_SAFETY
     internal Siemens.Engineering.ProjectBase? CurrentProject => _engine.SecurityProject;
 #else

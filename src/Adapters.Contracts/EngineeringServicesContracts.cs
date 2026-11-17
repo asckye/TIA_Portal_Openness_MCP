@@ -49,8 +49,10 @@ namespace TiaMcp.Adapters.Contracts
         }
         public static string
             ? Unsupported(string release, string tool, string kind = "", string customIdentityKey = "", System.Collections.Generic.IEnumerable<string>
-                ? properties = null)
+                ? properties = null, string view = "")
         {
+            if (tool == "ShowObjectInEditor" && release == "20" && kind == "device" && view == "")
+                return "V20 Device does not implement IShowable; kind=device requires view=device|network|topology (Device.ShowInEditor(View)).";
             if (tool == "ShowObjectInEditor" && (kind == "plcWatchTable" || kind == "plcForceTable") && !AtLeast(release, "15.1"))
                 return "PLC watch and force table editors require V15.1 or later.";
             if (tool == "GetObjectIdentifier" && !AtLeast(release, "20")) return "ObjectIdentifierProvider requires V20 or later.";

@@ -6,6 +6,38 @@ namespace TiaMcp.SourceContracts.Tests;
 
 public sealed class ShowWrittenObjectSequenceTests
 {
+    private static bool WritesObject(JsonNode? step, string? kind = null)
+    {
+        if ((bool?)step!["arguments"]?["dryRun"] != false) return false;
+        string tool = (string)step["tool"]!;
+        return kind switch {
+            "device" => tool is "EnsureSubnet" or "AttachDeviceNodeToSubnet" or "ConnectDeviceNodesToProfinetSubnet",
+            "plcWatchTable" => tool is "SetPlcWatchTableModifyValue" or "ImportPlcWatchTableOffline",
+            "plcType" => tool is "ImportPlcType" or "ImportPlcProgramFromDirectory" or "GenerateBlocksFromExternalSource",
+            "plcTagTable" => tool is "ImportPlcTagTable" or "CreatePlcTagTable" or "CreatePlcTag" or "CreatePlcUserConstant",
+            "plcBlock" => tool is "ImportPlcBlock" or "ImportPlcBlockDocuments" or "ImportPlcProgramFromDirectory"
+                or "BuildAndImportPlcArtifact" or "GenerateBlocksFromExternalSource",
+            null => tool is "ImportPlcBlock" or "ImportPlcBlockDocuments" or "ImportPlcProgramFromDirectory"
+                or "BuildAndImportPlcArtifact" or "GenerateBlocksFromExternalSource" or "CreatePlcTag" or "ImportPlcTagTable"
+                or "ImportPlcType" or "CreatePlcTagTable",
+            _ => false
+        };
+    }
+
+    [Fact]
+    public void Every_automatic_show_has_a_real_write_of_that_object_kind_before_it()
+    {
+        var sequences = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.FindRoot(AppContext.BaseDirectory),
+            "reference/tool-examples/sequences.json")))!.AsArray();
+        foreach (var sequence in sequences)
+        {
+            var steps = sequence!["steps"]!.AsArray();
+            for (int index = 0; index < steps.Count; index++)
+                if ((string?)steps[index]!["tool"] == "ShowObjectInEditor")
+                    Assert.Contains(steps.Take(index), step => WritesObject(step, (string?)steps[index]!["arguments"]!["kind"]));
+        }
+    }
+
     [Fact]
     public void Watch_table_and_network_sequences_show_the_completed_target_after_readback()
     {
@@ -25,9 +57,9 @@ public sealed class ShowWrittenObjectSequenceTests
         foreach (string profile in new[] { "plc-foundation", "full-engine" })
         {
             var show = calls["profiles"]![profile]!["ShowObjectInEditor"]!;
-            Assert.Equal("plcWatchTable", (string?)show["operations"]!["plcWatchTable"]!["arguments"]!["kind"]);
-            Assert.Equal("network", (string?)show["operations"]!["network"]!["arguments"]!["view"]);
-            Assert.Contains("Watch-table example:", (string?)show["note"], StringComparison.Ordinal);
+            Assert.Empty(show["operations"]!.AsObject());
+            Assert.Contains("sequence/watch-table", (string?)show["note"], StringComparison.Ordinal);
+            Assert.Contains("sequence/hardware-network", (string?)show["note"], StringComparison.Ordinal);
             Assert.Equal("showInEditor", (string?)calls["profiles"]![profile]!["ManageTestSuiteCase"]!["operations"]!["showInEditor"]
                 !["arguments"]!["action"]);
         }
@@ -46,15 +78,18 @@ public sealed class ShowWrittenObjectSequenceTests
         var sequences = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference/tool-examples/sequences.json")))!.AsArray();
         var sequence = sequences.Single(s => (string?)s!["id"] == "sequence/" + id)!;
         var steps = sequence["steps"]!.AsArray();
+        var writes = steps.Select((step, index) => (step, index)).Where(p => WritesObject(p.step)).ToArray();
+        if (writes.Length == 0)
+        {
+            Assert.DoesNotContain(steps, s => (string?)s!["tool"] == "ShowObjectInEditor");
+            return;
+        }
         Assert.Equal("ShowObjectInEditor", (string?)steps[^1]!["tool"]);
-        int lastWrite = steps.Select((step, index) => (step, index))
-            .Where(p => ((string)p.step!["tool"]!).StartsWith("Import", StringComparison.Ordinal)
-                || (string?)p.step!["tool"] is "BuildAndImportPlcArtifact" or "GenerateBlocksFromExternalSource" or "CreatePlcTag")
-            .Max(p => p.index);
+        int lastWrite = writes.Max(p => p.index);
         Assert.All(steps.Where(s => (string?)s!["tool"] == "ShowObjectInEditor"), show =>
         {
             Assert.True(steps.IndexOf(show) > lastWrite, id);
-            Assert.False((bool)show!["arguments"]!["dryRun"]!);
+            Assert.False((bool?)show!["arguments"]!["dryRun"] ?? false);
             Assert.Contains("without user interface", (string?)show["expect"], StringComparison.Ordinal);
             Assert.Contains("engineer", (string?)show["expect"], StringComparison.Ordinal);
             Assert.DoesNotContain("expectedPlanHash", show["arguments"]!.AsObject().Select(p => p.Key));

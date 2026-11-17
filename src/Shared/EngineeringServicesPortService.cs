@@ -43,7 +43,8 @@ namespace TiaMcpServer.Siemens.Services
         private ResponseMessage Invoke(EngineeringServicesRequest request)
         {
             var unavailable = EngineeringServicesCapabilities
-                .Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Kind, request.CustomIdentityKey, request.CompilationSettings.Keys);
+                .Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Kind, request.CustomIdentityKey, request.CompilationSettings.Keys,
+                    request.View);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
             if (!request.DryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = identity(); }

@@ -94,9 +94,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 "SiOMECompanionSpecification[, interfaceFolderPath absolute directory]); copyScope (RuleSet.CopyScope(target rule set named by targetName)); " +
                 "createFromMasterCopy (RuleSetComposition / TestCaseComposition / SystemTestCaseComposition.CreateFrom(MasterCopy at masterCopyPath in the " +
                 "project library or the open global library libraryName), renamed to name when given); showInEditor (rule sets, test cases, test sets; " +
-                "WithUserInterface sessions; UI only, no approval or project change). Other mutating actions keep WRITE approval. " +
-                "Other actions default to preview; readback after the change; no test run or automatic save. Available from V17: styleGuide and " +
-                "application cases. System cases require V18; application test sets and importTestSets require V20. Application execution-mode scope " +
+                "WithUserInterface sessions required; dryRun=true never touches the UI; UI only, no approval or project change). " +
+                "Mutating actions keep WRITE approval. Default preview; readback after the change; no test run or automatic save. " +
+                "Available from V17: styleGuide and application cases. System cases require V18; application test sets and importTestSets require V20. " +
+                "Application execution-mode scope " +
                 "overloads, system SetScope and system CreateFrom require V19; system Delete requires V20. System ShowInEditor has no API. Missing actions " +
                 "refuse with UNSUPPORTED_CAPABILITY before native dispatch. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageTestSuiteCase(
@@ -118,7 +119,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("targetName: exact name of the target object.")] string targetName="",
             string masterCopyPath="",
             string libraryName="",
-            [Description("dryRun: true (default) previews mutating actions; showInEditor always opens the UI without project changes or approval.")]
+            [Description("dryRun: true (default) previews without touching the UI; false executes. showInEditor requires a Portal with user interface " +
+                "and never changes the project or requests approval.")]
             bool dryRun=true)
             => OptionalPackageContract
                 .Run("ManageTestSuiteCase", !dryRun && action != "read" && action != "showInEditor", () => _testSuite
