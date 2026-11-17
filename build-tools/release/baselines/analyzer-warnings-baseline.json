@@ -1686,24 +1686,6 @@
     {
       "rule": "CA2208",
       "path": "src/Logic/Generation/MachineCsv.cs",
-      "line": 114,
-      "column": 27,
-      "endLine": 114,
-      "endColumn": 105,
-      "message": "Method Import passes \u0027inputPath\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/MachineCsv/Import( StandardPackage package , string directory )",
-      "anchor": "new ArgumentException ( \u0022CSV headers must be nonempty and unique.\u0022 , \u0022inputPath\u0022 ) ",
-      "fingerprint": "71c24e13cd0ea6f6313225c88a6d9648acf2284d9325d73e792849e1424c42a6",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/MachineCsv.cs",
       "line": 120,
       "column": 54,
       "endLine": 120,
@@ -1758,24 +1740,6 @@
     {
       "rule": "CA2208",
       "path": "src/Logic/Generation/MachineCsv.cs",
-      "line": 117,
-      "column": 97,
-      "endLine": 117,
-      "endColumn": 173,
-      "message": "Method Import passes \u0027inputPath\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/MachineCsv/Import( StandardPackage package , string directory )",
-      "anchor": "new ArgumentException ( \u0022CSV row width differs from its header.\u0022 , \u0022inputPath\u0022 ) ",
-      "fingerprint": "c06fa8f6efeec0c96a210b8f6f00d33e3ad0cb79729380fed620855235edaca5",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/MachineCsv.cs",
       "line": 97,
       "column": 53,
       "endLine": 97,
@@ -1802,114 +1766,6 @@
       "member": "TiaMcp . Logic . Generation/MachineCsv/Import( StandardPackage package , string directory )/Cell( string key )",
       "anchor": "new ArgumentException ( \u0022Missing machine CSV field: \u0022 \u002B key , \u0022inputPath\u0022 ) ",
       "fingerprint": "7a6d605f35233481c12c7016cd853e9b1fa35775ce273fcc94fb9bd40a63147f",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/MachineCsv.cs",
-      "line": 226,
-      "column": 59,
-      "endLine": 226,
-      "endColumn": 118,
-      "message": "Method Parse passes \u0027inputPath\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/MachineCsv/Parse( string text )",
-      "anchor": "new ArgumentException ( \u0022Too many CSV columns.\u0022 , \u0022inputPath\u0022 ) ",
-      "fingerprint": "01c0d4c5466e80a8de5147c3cdd9770eb143e99a544f64cf641925ef3f625ba9",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/MachineCsv.cs",
-      "line": 229,
-      "column": 42,
-      "endLine": 229,
-      "endColumn": 114,
-      "message": "Method Parse passes \u0027inputPath\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/MachineCsv/Parse( string text )",
-      "anchor": "new ArgumentException ( \u0022Unexpected text after a CSV quote.\u0022 , \u0022inputPath\u0022 ) ",
-      "fingerprint": "2bd32fd6ac3e5fb071e44adf8fa31a02e00462123c3ee876905c9f9d4f67927a",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/MachineCsv.cs",
-      "line": 232,
-      "column": 31,
-      "endLine": 232,
-      "endColumn": 92,
-      "message": "Method Parse passes \u0027inputPath\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/MachineCsv/Parse( string text )",
-      "anchor": "new ArgumentException ( \u0022Unterminated CSV quote.\u0022 , \u0022inputPath\u0022 ) ",
-      "fingerprint": "4dda8c4aa721016c2ef7a2eacee4202898892cc7fef86a1c8ad83c9710b8b2b9",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/MachineCsv.cs",
-      "line": 216,
-      "column": 55,
-      "endLine": 216,
-      "endColumn": 115,
-      "message": "Method Parse passes \u0027inputPath\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/MachineCsv/Parse( string text )",
-      "anchor": "new ArgumentException ( \u0022Invalid CSV character.\u0022 , \u0022inputPath\u0022 ) ",
-      "fingerprint": "69d61ea85ebe918cb966a743a7affb959e864a39f2e46c74c48b2d06bdbb29f6",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/MachineCsv.cs",
-      "line": 230,
-      "column": 76,
-      "endLine": 230,
-      "endColumn": 142,
-      "message": "Method Parse passes \u0027inputPath\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/MachineCsv/Parse( string text )",
-      "anchor": "new ArgumentException ( \u0022CSV row/cell limit exceeded.\u0022 , \u0022inputPath\u0022 ) ",
-      "fingerprint": "795598bc8f37bd92f84993bd1b4cf7626c6c19c0e60a48ec616ac201959c09c2",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/MachineCsv.cs",
-      "line": 222,
-      "column": 76,
-      "endLine": 222,
-      "endColumn": 134,
-      "message": "Method Parse passes \u0027inputPath\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/MachineCsv/Parse( string text )",
-      "anchor": "new ArgumentException ( \u0022Invalid CSV quoting.\u0022 , \u0022inputPath\u0022 ) ",
-      "fingerprint": "9e9edcf3eb3e841c31d8d3e5cb48dcd1ce99e12a9eba05c7051af0d1fb6f8395",
       "reason": "json-field-name",
       "retirement": "",
       "contexts": [

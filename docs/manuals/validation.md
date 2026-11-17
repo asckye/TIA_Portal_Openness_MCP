@@ -65,6 +65,8 @@ dotnet run --project build-tools/release -- check-loosening -Base master -Record
 
 分析器基线仍只减不增。首次启用一组新规则时，维护者可使用 `check-analyzer-warnings -InitializeRules <逗号分隔规则> -ReviewData <审查文件> -Base <ref>`，并传入对应的 `-DiagnosticsDirectory`；命令拒绝基线已有的规则、原来已启用的规则、曾初始化的规则及未审查的新增项。初始化成功后在同一基线文件的 `initializedRules` 中记录规则；零行规则也记录，后续缩减基线保留该历史，删除初始化记录会触发审查。发布专属规则只接受包含物理 src 的 release 报告，不能用 merge 报告初始化；每条审查行都要求对应源文件的匹配 profile。`-UpdateBaseline -Complete`、`-Initialize` 和禁止 `-AllowGrowth` 的原有语义保留。本次不自动记录新警告。
 
+维护者批准定点移除 STALE 时，可在 `-UpdateBaseline -Complete` 后重复指定 `-UpdatePath <仓库相对源码路径>`。所选源码必须有完整编译上下文，未选路径的条目原样保留；全部已收集报告中的 NEW 仍会阻止更新。`-UpdatePath` 只用于基线维护，不能用于 `-Check`；无此选项时仍要求全仓基线覆盖。
+
 漏洞扫描运行当前解决方案的 `dotnet list ... package --vulnerable --include-transitive --format json --output-version 1 --source https://api.nuget.org/v3/index.json`，清除继承的离线恢复配置，要求返回源包含该 URL。项目只有 `path`、没有 `frameworks` 是有效的干净结果。未批准的 High/Critical 退出 1；Low/Moderate 只报告。网络、恢复、超时或无效报告写 `not run: <首条错误>` 并退出 2，不能报告为通过；缓存可返回有效咨询数据，不强制证明实时联网。单次上限 300 秒。
 
 ### 重新生成内容的审查提示

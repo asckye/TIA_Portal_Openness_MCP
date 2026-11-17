@@ -4784,7 +4784,7 @@
     "id": "sequence/plc-tag-table-excel",
     "topic": "plc-tag-table-excel",
     "purpose": "Edit an exported PLC tag table in Excel and re-import through the existing previewed import.",
-    "preconditions": "Bind softwarePath, tableName and folderPath to the same export target; use new output files. Review edits in Excel before fromTable.",
+    "preconditions": "Bind softwarePath, the matching PLC name (plc), the exact table name (table/tagTableName) and folderPath to the same export target; use new output files. Review edits in Excel before fromTable.",
     "notes": "CSV/XLSX conversion is offline. Missing rows are kept, keys never renamed, SystemConstant rows read-only. Excel locale with semicolon separator: use XLSX. ImportPlcTagTable overwrite=true uses its existing backup and approval. XML does not contain the original folder; never guess it. Native acceptance NOT RUN.",
     "releaseKeys": [
       "14sp1",
@@ -4873,7 +4873,8 @@
       {
         "tool": "ListPlcTags",
         "arguments": {
-          "softwarePath": "devices/PLC_1"
+          "plc": "<PLC name matching the exported softwarePath>",
+          "table": "<exact table name>"
         },
         "expect": "Read back modified and unchanged tags; continue paging as returned."
       },

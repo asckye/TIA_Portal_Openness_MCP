@@ -134,8 +134,12 @@ public sealed class AnalyzerWarningTests
         var result = new { ruleId = entry.Rule, level = "warning", message = new { text = entry.Message },
             locations = new[] { new { physicalLocation = new { artifactLocation = new { uri = new Uri(source).AbsoluteUri },
                 region = new { startLine = entry.Line, startColumn = entry.Column, endLine = entry.EndLine, endColumn = entry.EndColumn } } } } };
-        tree.Write("reports/" + suffix + ".sarif", JsonSerializer.Serialize(new { version = "2.1.0", runs = new[] { new { results = warning ? new[] { result } : [] } } }));
-        tree.Write("reports/" + suffix + ".inputs", "context|" + Path.Combine(tree.Root, "C.csproj") + "|net10.0|NET\n" + source + "|" + FileHash.Sha256(source) + "\n");
+        tree
+            .Write("reports/" + suffix + ".sarif", JsonSerializer
+                .Serialize(new { version = "2.1.0", runs = new[] { new { results = warning ? new[] { result } : [] } } }));
+        tree
+            .Write("reports/" + suffix + ".inputs", "context|" + Path.Combine(tree.Root, "C.csproj") + "|net10.0|NET\n" + source + "|" + FileHash
+                .Sha256(source) + "\n");
         return Path.Combine(tree.Root, "reports");
     }
 
@@ -246,7 +250,9 @@ public sealed class AnalyzerWarningTests
             File.WriteAllText(path, data.ToJsonString());
             Assert.Throws<ReleaseException>(() => AnalyzerWarnings.Collect(tree.Root, reports));
             Reports(tree, warning: false);
-            File.WriteAllText(receipt, File.ReadAllText(receipt).Replace("C.csproj", name + ".cs.csproj", StringComparison.Ordinal) + template + "|" + new string('0', 64) + "\n");
+            File
+                .WriteAllText(receipt, File.ReadAllText(receipt).Replace("C.csproj", name + ".cs.csproj", StringComparison.Ordinal) + template + "|"
+                    + new string('0', 64) + "\n");
             Assert.Throws<ReleaseException>(() => AnalyzerWarnings.Collect(tree.Root, reports));
         }
         finally { Directory.Delete(temporary, recursive: true); }
@@ -267,7 +273,9 @@ public sealed class AnalyzerWarningTests
         var missing = Path.Combine(runfile, foreignDirectory, "obj/release/Probe.cs.GlobalUsings.g.cs");
         var receipt = Path.Combine(reports, "a.inputs");
         var original = File.ReadAllText(receipt).Replace("C.csproj", program + ".csproj", StringComparison.Ordinal);
-        File.WriteAllText(receipt, original + other + "|" + new string('0', 64) + "\n" + missing + "|" + new string('0', 64) + "\n" + own + "|" + FileHash.Sha256(own) + "\n");
+        File
+            .WriteAllText(receipt, original + other + "|" + new string('0', 64) + "\n" + missing + "|" + new string('0', 64) + "\n" + own + "|" + FileHash
+                .Sha256(own) + "\n");
         Assert.True(File.Exists(other));
         Assert.False(File.Exists(missing));
         Assert.Single(AnalyzerWarnings.Collect(tree.Root, reports).Entries);
@@ -303,7 +311,8 @@ public sealed class AnalyzerWarningTests
         var reports = Path.Combine(tree.Root, "reports");
         var environment = new Dictionary<string, string?> { ["TIA_MCP_ANALYZER_REPORT_DIRECTORY"] = reports,
             ["RestoreConfigFile"] = config, ["NuGetAudit"] = "false", ["UseSharedCompilation"] = "false" };
-        void Run(params string[] arguments) => ProcessRunner.RequireSuccess(ProcessRunner.Run("dotnet", arguments, tree.Root, environment), "Analyzer compilation fixture");
+        void Run(params string[] arguments) => ProcessRunner
+            .RequireSuccess(ProcessRunner.Run("dotnet", arguments, tree.Root, environment), "Analyzer compilation fixture");
         void Build() => Run("build", program, "-c", "Release", "-p:TiaMcpCollectFileBasedPrograms=true");
         Build();
         var before = Directory.GetFiles(reports).ToDictionary(path => Path.GetFileName(path)!, FileHash.Sha256);
@@ -314,8 +323,12 @@ public sealed class AnalyzerWarningTests
         tree.Write("scripts/fixture.cs", source + "class PlantedScriptWarning { }\n");
         Build();
         var scriptWarnings = AnalyzerWarnings.Collect(tree.Root, reports);
-        Assert.Contains(AnalyzerWarnings.Compare(tree.Root, scriptWarnings, [], false), issue => issue.StartsWith("NEW IDE0040 scripts/fixture.cs", StringComparison.Ordinal));
-        tree.Write("project/project.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+        Assert
+            .Contains(AnalyzerWarnings.Compare(tree.Root, scriptWarnings, [], false), issue => issue
+                .StartsWith("NEW IDE0040 scripts/fixture.cs", StringComparison.Ordinal));
+        tree
+            .Write("project/project.csproj",
+                "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
         tree.Write("project/C.cs", "class PlantedProjectWarning { }\n");
         Run("build", Path.Combine(tree.Root, "project/project.csproj"), "-c", "Release");
         Assert.Contains(AnalyzerWarnings.Compare(tree.Root, AnalyzerWarnings.Collect(tree.Root, reports), [], false),
@@ -365,6 +378,53 @@ public sealed class AnalyzerWarningTests
         data["runs"]![0]!["results"]![0]!["ruleId"] = "CA2202";
         File.WriteAllText(path, data.ToJsonString());
         Assert.Equal(1, Run("-UpdateBaseline", "-Complete"));
+        Assert.Equal(bytes, File.ReadAllBytes(baseline));
+    }
+
+    [Fact]
+    public void ScopedUpdateRetainsOtherSourcesAndRequiresSelectedCompilationContext()
+    {
+        using var tree = new StaticTree(); var reports = Reports(tree);
+        var entry = AnalyzerWarnings.Collect(tree.Root, reports).Entries.Single() with { Reason = "test-fixture" };
+        tree.Write("src/Other.cs", Source);
+        var other = AnalyzerWarnings.Describe(tree.Root, "src/Other.cs", entry.Line, entry.Column, entry.EndLine, entry.EndColumn,
+            entry.Rule, entry.Message, Source) with { Reason = "untouched-review", Contexts = entry.Contexts };
+        var json = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
+        var baseline = tree.Write("baseline.json", JsonSerializer.Serialize(new AnalyzerWarningBaseline(1, [entry, other]), json));
+        string[] arguments = ["-Root", tree.Root, "-DiagnosticsDirectory", reports, "-Baseline", baseline];
+        int Run(params string[] args) => StaticCheckVectorTests.RunCommand("check-analyzer-warnings", [.. arguments, .. args]).ExitCode;
+        Reports(tree, warning: false);
+        var bytes = File.ReadAllBytes(baseline);
+        Assert.Equal(64, Run("-Check", "-UpdatePath", "src/C.cs"));
+        Assert.Equal(64, Run("-Initialize", "-UpdatePath", "src/C.cs"));
+        Assert.Equal(64, Run("-Capture", Path.Combine(tree.Root, "capture.json"), "-UpdatePath", "src/C.cs"));
+        Assert.Equal(1, Run("-UpdateBaseline", "-Complete", "-UpdatePath", "src/Other.cs"));
+        Assert.Equal(bytes, File.ReadAllBytes(baseline));
+        Assert.Equal(0, Run("-UpdateBaseline", "-Complete", "-UpdatePath", "src/C.cs"));
+        var retained = JsonSerializer.Deserialize<AnalyzerWarningBaseline>(File.ReadAllText(baseline), json)!;
+        Assert.Equal(JsonSerializer.Serialize(other, json), JsonSerializer.Serialize(Assert.Single(retained.Entries), json));
+    }
+
+    [Fact]
+    public void ScopedUpdateStillRefusesNewWarningsOutsideTheSelectedSource()
+    {
+        using var tree = new StaticTree(); var reports = Reports(tree);
+        var entry = AnalyzerWarnings.Collect(tree.Root, reports).Entries.Single() with { Reason = "test-fixture" };
+        var otherSource = tree.Write("src/Other.cs", Source);
+        var other = AnalyzerWarnings.Describe(tree.Root, "src/Other.cs", entry.Line, entry.Column, entry.EndLine, entry.EndColumn,
+            entry.Rule, entry.Message, Source) with { Reason = "test-fixture", Contexts = entry.Contexts };
+        var json = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
+        var baseline = tree.Write("baseline.json", JsonSerializer.Serialize(new AnalyzerWarningBaseline(1, [entry, other]), json));
+        Reports(tree, suffix: "b"); Reports(tree, warning: false);
+        string receipt = Path.Combine(reports, "b.inputs"), sarif = Path.Combine(reports, "b.sarif");
+        File.WriteAllText(receipt, File.ReadAllText(receipt).Replace(Path.Combine(tree.Root, "src/C.cs"), otherSource));
+        var data = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(sarif))!;
+        data["runs"]![0]!["results"]![0]!["ruleId"] = "CA2202";
+        data["runs"]![0]!["results"]![0]!["locations"]![0]!["physicalLocation"]!["artifactLocation"]!["uri"] = new Uri(otherSource).AbsoluteUri;
+        File.WriteAllText(sarif, data.ToJsonString());
+        var bytes = File.ReadAllBytes(baseline);
+        Assert.Equal(1, StaticCheckVectorTests.RunCommand("check-analyzer-warnings", ["-Root", tree.Root, "-DiagnosticsDirectory", reports,
+            "-Baseline", baseline, "-UpdateBaseline", "-Complete", "-UpdatePath", "src/C.cs"]).ExitCode);
         Assert.Equal(bytes, File.ReadAllBytes(baseline));
     }
 

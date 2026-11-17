@@ -303,8 +303,9 @@ public sealed class FoundationV4ContractsTests
     // NO-LOCK-2 adds the host-only GetCallResult tool on every release.
     // TIA-TEST-1 adds the host-owned ManagePlcTestLibrary on every release.
     // TIA-BATCH-2 adds ExportPlcTagTables on every release.
-    [InlineData("14sp1", 282)] [InlineData("15.1", 323)] [InlineData("16", 352)]
-    [InlineData("17", 375)] [InlineData("18", 401)] [InlineData("19", 477)]
+    // TIA-BATCH-3 adds ConvertEngineeringTable on every release.
+    [InlineData("14sp1", 283)] [InlineData("15.1", 324)] [InlineData("16", 353)]
+    [InlineData("17", 376)] [InlineData("18", 402)] [InlineData("19", 478)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();

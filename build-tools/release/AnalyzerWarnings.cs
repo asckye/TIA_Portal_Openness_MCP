@@ -138,7 +138,9 @@ internal static class AnalyzerWarnings
     private static bool TestSdkTemplate(string path)
     {
         var local = path.Replace('\\', '/');
-        return (OperatingSystem.IsWindows() ? Regex.IsMatch(local, @"\A[A-Za-z]:/") : local.StartsWith('/') && !local.StartsWith("//", StringComparison.Ordinal)) &&
+        return (OperatingSystem.IsWindows() ? Regex.IsMatch(local, @"\A[A-Za-z]:/") : local.StartsWith('/') && !local
+                .StartsWith("//", StringComparison.Ordinal))
+            &&
             Regex.IsMatch(local, @"/microsoft\.net\.test\.sdk/[^/]+/build/[^/]+/Microsoft\.NET\.Test\.Sdk\.Program\.cs$", RegexOptions.IgnoreCase);
     }
 
@@ -290,7 +292,8 @@ internal static class AnalyzerWarnings
         var all = collections.ToArray();
         var entries = all.SelectMany(collection => collection.Entries)
             .GroupBy(entry => (entry.Rule, entry.Path, entry.Line, entry.Column, entry.EndLine, entry.EndColumn, entry.Message))
-            .Select(group => group.First() with { Contexts = group.SelectMany(entry => entry.Contexts ?? []).Distinct().Order(StringComparer.Ordinal).ToArray() });
+            .Select(group => group.First() with { Contexts = group.SelectMany(entry => entry.Contexts ?? []).Distinct().Order(StringComparer.Ordinal).ToArray()
+                });
         var coverage = all.SelectMany(collection => collection.Coverage ?? [])
             .GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.SelectMany(pair => pair.Value).ToHashSet(StringComparer.Ordinal));
         var profiles = all.SelectMany(collection => collection.Profiles ?? [])
@@ -343,6 +346,9 @@ internal static class AnalyzerWarnings
             var modes = new[] { "Check", "UpdateBaseline", "Initialize", "InitializeRules" }.Count(options.Has);
             if (modes > 1 || options.Get("Capture") != null && modes != 0)
                 throw new ReleaseException("Analyzer check, capture, initialization and update modes are mutually exclusive", 64);
+            var updatePaths = options.All("UpdatePath").Select(path => RepositoryPath(root, path)).ToHashSet(StringComparer.Ordinal);
+            if (updatePaths.Count != 0 && !options.Has("UpdateBaseline"))
+                throw new ReleaseException("-UpdatePath requires -UpdateBaseline -Complete", 64);
             if (options.Has("AllowGrowth")) throw new ReleaseException("Analyzer baselines can only shrink; -AllowGrowth is not supported", 64);
             if (options.Get("ReviewData") != null && !options.Has("Initialize") && !options.Has("InitializeRules"))
                 throw new ReleaseException("-ReviewData requires -Initialize or -InitializeRules", 64);
@@ -394,25 +400,36 @@ internal static class AnalyzerWarnings
                 return SourceCheck.Report("Analyzer rule initialization", [],
                     $"Recorded {additions.Length} reviewed warnings for {rules.Count} newly enabled rules; existing entries preserved.");
             }
-            var issues = Compare(root, current, baseline, options.Has("Complete"));
+            var issues = Compare(root, current, baseline, options.Has("Complete") && updatePaths.Count == 0);
             if (options.Has("UpdateBaseline"))
             {
                 // Growth and incomplete builds never write the baseline. Only
                 // disappearance is accepted, preserving all review annotations.
                 if (!options.Has("Complete")) throw new ReleaseException("-UpdateBaseline requires -Complete", 64);
+                if (updatePaths.Any(path => !baseline.Any(entry => entry.Path == path)))
+                    throw new ReleaseException("Every -UpdatePath must name a reviewed baseline source", 64);
+                AnalyzerWarningCollection Selected() => current with {
+                    Entries = current.Entries.Where(entry => updatePaths.Contains(entry.Path)).ToArray() };
+                if (updatePaths.Count != 0)
+                    issues.AddRange(Compare(root, Selected(), baseline.Where(entry => updatePaths.Contains(entry.Path)).ToArray(), complete: true));
                 var blockers = issues.Where(issue => !issue.StartsWith("STALE ", StringComparison.Ordinal)).ToList();
                 if (blockers.Count != 0) return SourceCheck.Report("Analyzer warnings", blockers);
                 var counts = current.Entries.GroupBy(e => e.Fingerprint).ToDictionary(group => group.Key, group => group.Count());
-                var retained = baseline.Where(entry => !ReleaseRules.Expected(current, entry) ||
+                var retained = baseline.Where(entry => updatePaths.Count != 0 && !updatePaths.Contains(entry.Path)
+                    || !ReleaseRules.Expected(current, entry) ||
                     counts.TryGetValue(entry.Fingerprint, out var count) && count > 0 &&
                     (counts[entry.Fingerprint] = count - 1) >= 0).ToArray();
                 File.WriteAllText(path, JsonSerializer.Serialize(
                     new AnalyzerWarningBaseline(1, Order(retained), baselineDocument.InitializedRules), Json) + "\n");
                 Console.WriteLine($"Analyzer baseline shrank {baseline.Length} -> {retained.Length}.");
                 baseline = retained;
-                issues = Compare(root, current, retained, complete: true);
+                issues = Compare(root, current, retained, complete: updatePaths.Count == 0);
+                if (updatePaths.Count != 0)
+                    issues.AddRange(Compare(root, Selected(), retained.Where(entry => updatePaths.Contains(entry.Path)).ToArray(), complete: true));
             }
-            return SourceCheck.Report("Analyzer warnings", issues, $"{current.Entries.Length} warnings; {current.Sources.Count} compiled source files; {baseline.Length} reviewed entries.");
+            return SourceCheck
+                .Report("Analyzer warnings", issues,
+                    $"{current.Entries.Length} warnings; {current.Sources.Count} compiled source files; {baseline.Length} reviewed entries.");
         }
         catch (Exception ex) when (ex is IOException or JsonException or InvalidOperationException or KeyNotFoundException or ReleaseException)
         {
@@ -427,11 +444,14 @@ internal static class AnalyzerWarnings
     {
         var data = JsonSerializer.Deserialize<AnalyzerWarningBaseline>(File.ReadAllText(path), Json);
         if (data is not { Format: 1, Entries: not null }) throw new ReleaseException("Invalid analyzer baseline: " + path);
-        if (data.Entries.Any(entry => entry == null || entry.Rule == null || entry.Path == null || entry.Message == null || entry.Member == null || entry.Anchor == null || entry.Fingerprint == null ||
+        if (data.Entries
+                .Any(entry => entry == null || entry.Rule == null || entry.Path == null || entry.Message == null || entry.Member == null || entry
+                    .Anchor == null || entry.Fingerprint == null ||
             !Regex.IsMatch(entry.Rule, @"\A(?:CA|IDE)\d+\z") || entry.Line < 1 || entry.Column < 1 || entry.EndLine < entry.Line || entry.EndColumn < 1 ||
             entry.Contexts is not { Length: > 0 } || entry.Contexts.Any(string.IsNullOrWhiteSpace)))
             throw new ReleaseException("Malformed analyzer baseline entry: " + path);
-        if (data.Entries.DistinctBy(entry => (entry.Rule, entry.Path, entry.Line, entry.Column, entry.EndLine, entry.EndColumn, entry.Message)).Count() != data.Entries.Length)
+        if (data.Entries.DistinctBy(entry => (entry.Rule, entry.Path, entry.Line, entry.Column, entry.EndLine, entry.EndColumn, entry.Message)).Count() != data
+                .Entries.Length)
             throw new ReleaseException("Duplicate analyzer baseline location: " + path);
         if (data.InitializedRules is { } rules && (rules.Distinct().Count() != rules.Length ||
             rules.Any(rule => rule == null || !Regex.IsMatch(rule, @"\ACA\d{4}\z"))))
