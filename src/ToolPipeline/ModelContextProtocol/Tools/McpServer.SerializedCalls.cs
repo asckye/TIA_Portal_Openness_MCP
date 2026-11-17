@@ -163,7 +163,9 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 bool callToolDisabled = McpServer.ApprovalResultWrite(ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()))
-                    && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
+                    && !McpServer.EffectiveApprovalSettings(ProtocolTool.Name,
+                        System.Text.Json.JsonSerializer
+                            .Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())).Enabled;
                 string? targetName = request?.Params?.Arguments != null && request.Params.Arguments.TryGetValue("name", out var target)
                     && target.ValueKind == System.Text.Json.JsonValueKind.String ? target.GetString() : null;
                 using var bridgeNativeCalls = InvocationJournal.BeginNativeCallScope();
@@ -178,7 +180,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             bool write = McpServer.ApprovalResultWrite(ProtocolTool.Name,
                 System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
-            bool disabled = write && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath).Enabled;
+            bool disabled = write && !McpServer.EffectiveApprovalSettings(ProtocolTool.Name,
+                        System.Text.Json.JsonSerializer
+                            .Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())).Enabled;
             string? correlation = null;
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write,
                 McpServer.InvocationHostTag, McpServer.ReleaseKey, ProtocolTool.Name, correlation);
@@ -283,6 +287,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (fenced != null) return Recorded(await McpServer.FinishApprovalAsync(fenced, approval).ConfigureAwait(false));
                 if (McpServer.ReviewedApplyRefusal(ProtocolTool.Name, arguments) is { } queuedReplay)
                     return Recorded(await McpServer.FinishApprovalAsync(queuedReplay, approval).ConfigureAwait(false));
+                if (McpServer.OnlinePlanRefusal(ProtocolTool.Name,
+                    System.Text.Json.Nodes.JsonNode.Parse(arguments)!.AsObject()) is { } expired)
+                    return Recorded(await McpServer.FinishApprovalAsync(McpServer.V4Reject(ProtocolTool.Name, expired), approval).ConfigureAwait(false));
                 if (approval != null && !await McpServer.ApprovalStillMatchesAsync(approval,
                     System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()))
                         .ConfigureAwait(false))

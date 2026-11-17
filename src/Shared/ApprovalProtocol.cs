@@ -165,6 +165,16 @@ namespace TiaOpenness.Shared
             // Download and upload prompts are answered during the native call; the approver sees every answer the call will give.
             if (TiaMcpServer.Siemens.DownloadPromptPolicy.ApprovalPlan(tool, original) is JsonObject plan) compact["promptAnswerPlan"] = plan;
 #endif
+            if (tool == "DownloadPlc")
+                compact["onlineTarget"] = new JsonObject {
+#if TIA_GENERATION_PLANNER
+                    ["kind"] = TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind((string?)args["pgPcInterface"]),
+#else
+                    ["kind"] = PlcRendering::TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind((string?)args["pgPcInterface"]),
+#endif
+                    ["targetIpAddress"] = args["targetIpAddress"]?.DeepClone(),
+                    ["pgPcInterface"] = string.IsNullOrWhiteSpace((string?)args["pgPcInterface"]) ? "automatic" : (string?)args["pgPcInterface"],
+                    ["rhTarget"] = args["rhTarget"]?.DeepClone() ?? JsonValue.Create("") };
             string json = compact.ToJsonString();
             if (Encoding.UTF8.GetByteCount(json) > 64 * 1024)
                 compact = new JsonObject { ["displayTruncated"] = true, ["argumentByteLength"] = Encoding.UTF8.GetByteCount(args.ToJsonString()) };

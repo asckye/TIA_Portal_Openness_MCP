@@ -79,6 +79,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "TIA has not seen it yet). PLCSIM Advanced uses pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'." +
             " Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch)."
                 +
+            " Local adapters and subnet matches are reported before connecting; no matching local subnet is a warning " +
+                "(routed networks and Softbus may work)." +
             " An explicitly requested route that ConnectionConfiguration.ApplyConfiguration does not apply is refused with its reason." +
             " S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); " +
                 "trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted and TIA refuses the connection ('The device is not " +
@@ -114,10 +116,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 "report it (the download and upload password prompts from V17, OnlineAuthenticationConfiguration from V19, OnlinePasswordConfiguration on " +
                 "V21); true also sends it over a connection that is not TLS-secured.")] bool allowNonTlsLogin =
                 false)
-            => RuntimeToolContract.Run("ConnectOnlinePlc", false, true, () =>
+            => McpServer.RunOnlineNetworkCheck("ConnectOnlinePlc", ipAddress, () => RuntimeToolContract.Run("ConnectOnlinePlc", false, true, () =>
             {
                 return GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, pgPcInterface, trustDeviceCertificate, allowNonTlsLogin);
-            });
+            }));
 
         public ResponseOnlineState GoOnline(string softwarePath, string ipAddress = "", string password = "", string userName = "", string userType = "",
                 string rhTarget = "", string pgPcInterface = "", bool trustDeviceCertificate = false, bool allowNonTlsLogin = false)
@@ -275,10 +277,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "DownloadPlc"), Description(
             "[L1][Category:PLC-Online][ONLINE-WRITE][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware+CheckDownloadReadiness]" +
-            " Download the compiled PLC program to the physical CPU over the network." +
+            " Download the compiled PLC program to the CPU or PLCSIM instance at targetIpAddress." +
             " The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload)." +
             " SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior." +
-            " Workflow: ConnectPortal → OpenProject → CompilePlcSoftware → CheckDownloadReadiness → DownloadPlc → GetOnlineState." +
+            " Workflow: CompilePlcSoftware → SaveProject → CheckDownloadReadiness → DownloadPlc (preview, then execute)." +
             " The PLC must be offline (call DisconnectOnlinePlc first): the route is applied with ConnectionConfiguration.ApplyConfiguration, which throws " +
                 "while the device is online, and the download connects by itself."
                 +
@@ -293,6 +295,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 "allows it."
                 +
             " The approval request lists every prompt answer the call will give (promptAnswerPlan)." +
+            " An interface name containing PLCSIM is simulated; all others, including automatic selection, are physical." +
+            " Physical execution requires confirmPhysicalTarget=true and Workbench approval even when approval is switched off." +
+            " Unsaved or inconsistent projects are refused; unknown consistency is reported. Online write plans expire after 15 minutes by default." +
+            " Local adapters and subnet matches are reported before downloading; no matching local subnet is a warning " +
+                "(routed networks and Softbus may work)." +
             " On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU);" +
             " Meta.pgPcRoute reports which one was used. Override the interface with pgPcInterface when the pick is wrong; the explicit targetIpAddress " +
                 "is required, and a route that ApplyConfiguration does not apply is refused. An address outside the Workbench online-target list is refused."
@@ -372,13 +379,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
-                "")
-            => McpServer
+                "",
+            [Description("confirmPhysicalTarget: true explicitly acknowledges downloading to a real PLC. Required for execution unless pgPcInterface " +
+                "contains PLCSIM; automatic interface selection is physical. Include true in the reviewed preview as well. " +
+                "Workbench approval is still required.")] bool confirmPhysicalTarget = false)
+            => McpServer.RunOnlineNetworkCheck("DownloadPlc", targetIpAddress, () => McpServer
                 .RunWritePreview("DownloadPlc", dryRun, new {
                     softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, password, pgPcInterface, targetIpAddress,
                         userManagementMode, promptAnswers, moduleAccessPassword, blockBindingPassword, masterSecretPassword, rhTarget, trustDeviceCertificate,
                         allowSafetyProgramDownload, allowHardwareDifferences, allowActiveTestCancel, allowExpandedDownload, allowIdentificationDataLoad,
-                        allowNonTlsLogin, downloadScope
+                        allowNonTlsLogin, downloadScope, confirmPhysicalTarget
                 }, () => RuntimeToolContract.Run("DownloadPlc", false, true, () =>
             {
                 return DownloadToPlc(softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, password, pgPcInterface,
@@ -388,13 +398,14 @@ namespace TiaMcpServer.ModelContextProtocol
                         SafetyProgramDownload = allowSafetyProgramDownload, HardwareDifferences = allowHardwareDifferences, ActiveTestCancel =
                             allowActiveTestCancel,
                         ExpandedDownload = allowExpandedDownload, IdentificationDataLoad = allowIdentificationDataLoad, NonTlsLogin = allowNonTlsLogin },
-                            downloadScope);
-            }), expectedPlanHash, expectedProjectFile);
+                            downloadScope, confirmPhysicalTarget);
+            }), expectedPlanHash, expectedProjectFile));
 
         public ResponseDownload DownloadToPlc(string softwarePath, bool consistentBlocksOnly = true, bool keepActualValues = true, bool startAfterDownload =
                 true, bool stopBeforeDownload = true, string password = "", string pgPcInterface = "", string targetIpAddress = "", string userManagementMode =
                 "keep", string promptAnswersJson = "{}", string moduleAccessPassword = "", string blockBindingPassword = "", string masterSecretPassword = "",
-                string rhTarget = "", bool trustDeviceCertificate = false, DownloadAllowances? allowances = null, string downloadScope = "software")
+                string rhTarget = "", bool trustDeviceCertificate = false, DownloadAllowances? allowances = null, string downloadScope = "software",
+                bool confirmPhysicalTarget = false)
         {
             try
             {
@@ -415,7 +426,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     rhTarget ?? "",
                     trustDeviceCertificate,
                     allowances,
-                    string.IsNullOrWhiteSpace(downloadScope) ? "software" : downloadScope);
+                    string.IsNullOrWhiteSpace(downloadScope) ? "software" : downloadScope, confirmPhysicalTarget);
 
                 return result;
             }

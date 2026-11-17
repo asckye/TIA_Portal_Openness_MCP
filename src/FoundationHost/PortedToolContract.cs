@@ -59,6 +59,8 @@ internal static class PortedToolContract
         // The readiness guard of a bridged call asks whether this target refuses its arguments by capability (P8-04j2).
         // The answer depends only on the release, the tool and the arguments, so any registered instance answers it.
         McpServer.PortedCapabilityRefusals[(tool.Release, tool.ProtocolTool.Name)] = tool.RefusesByCapability;
+        if (tool.ProtocolTool.Name == "DownloadPlc")
+            McpServer.PortedAdmissionRefusals[(tool.Release, tool.ProtocolTool.Name)] = tool.AdmissionRefusal;
         return new ArgumentResultTool(tool.CapabilityAdmission(McpServer.WrapToolsForRelease(new[] { tool.ValidatedTool() }, tool.Release).Single()));
     }
 
@@ -274,10 +276,11 @@ internal sealed partial class FoundationTool
         return arguments;
     }
     // The same admission as CapabilityTool: only valid arguments reach the capability check.
-    internal bool RefusesByCapability(JsonElement arguments)
+    internal bool RefusesByCapability(JsonElement arguments) => AdmissionRefusal(arguments) != null;
+    internal CallToolResult? AdmissionRefusal(JsonElement arguments)
         => McpServer.ToolInvoker.ValidateArguments(portedDescriptor!, CapabilityInput(arguments), tool.InputSchema) == null
-            && RefusePortedCapability(arguments.EnumerateObject()
-                    .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal)) != null;
+            ? RefusePortedCapability(arguments.EnumerateObject()
+                .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal)) : null;
 
     private sealed class CapabilityTool(FoundationTool owner, McpServerTool inner) : McpServerTool
     {
@@ -474,6 +477,13 @@ internal sealed partial class FoundationTool
                         targetRefusal.Condition == null ? McpServer.ArgumentDetails(tool.Name, targetRefusal.Parameter)
                             : new PreconditionFailedDetails(targetRefusal.Condition, null)), current: true);
             }
+            if (tool.Name == "DownloadPlc" && arguments.TryGetValue("dryRun", out var downloadPreview)
+                && downloadPreview.ValueKind == JsonValueKind.False
+                && HostBehavior.DownloadTargetKind(Text("pgPcInterface")) == "physical"
+                && (!arguments.TryGetValue("confirmPhysicalTarget", out var physicalConfirmation)
+                    || physicalConfirmation.ValueKind != JsonValueKind.True))
+                return McpServer.TargetFailure(tool.Name, new AdapterPreconditionException(
+                    "DownloadPlc changes a real PLC; set confirmPhysicalTarget=true to execute.", null, false), false);
         }
         if (family.Name is "F27" or "F28")
         {

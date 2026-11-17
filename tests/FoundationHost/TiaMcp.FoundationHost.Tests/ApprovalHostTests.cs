@@ -215,6 +215,23 @@ public sealed class ApprovalHostTests
         Assert.Equal("TryUpload", (string?)upload["promptAnswerPlan"]!["answers"]!["UploadMissingProducts"]!["answer"]);
     }
 
+    [Theory]
+    [InlineData("PLCSIM", "plcsim", "PLCSIM")]
+    [InlineData("Intel(R) Ethernet", "physical", "Intel(R) Ethernet")]
+    [InlineData("", "physical", "automatic")]
+    public void Download_approval_card_names_the_online_target(string adapter, string kind, string displayAdapter)
+    {
+        var args = new JsonObject { ["softwarePath"] = "PLC_1", ["targetIpAddress"] = "192.0.2.10",
+            ["pgPcInterface"] = adapter, ["rhTarget"] = "backup", ["password"] = "fixture-secret" };
+        var pending = PendingApproval.Create("foundation", "21", "DownloadPlc", args.ToJsonString(), null, 120);
+        var target = JsonNode.Parse(pending.ParametersJson)!["onlineTarget"]!;
+        Assert.Equal(kind, (string?)target["kind"]);
+        Assert.Equal("192.0.2.10", (string?)target["targetIpAddress"]);
+        Assert.Equal(displayAdapter, (string?)target["pgPcInterface"]);
+        Assert.Equal("backup", (string?)target["rhTarget"]);
+        Assert.DoesNotContain("fixture-secret", pending.ParametersJson, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Foundation_missing_exact_installation_refuses_worker_tools_before_approval()
     {

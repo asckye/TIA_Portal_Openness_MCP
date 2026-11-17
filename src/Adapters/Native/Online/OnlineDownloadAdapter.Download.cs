@@ -79,6 +79,21 @@ namespace TiaMcp.Adapters.Native.Online
             if (plcSoftware == null)
                 return new OnlineDownloadResult { Ok = false, Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix() };
             RequireDownloadOffline(softwarePath, plcSoftware, rhTarget);
+            bool modified = _session.CurrentProject!.IsModified;
+            bool? consistent = null;
+            try
+            {
+                var consistency = _session.ReadPlcConsistency(softwarePath);
+                consistent = consistency.Any(x => x.Consistent == false) ? false
+                    : consistency.Count > 0 && consistency.All(x => x.Consistent == true) ? true : (bool?)null;
+            }
+            catch (Exception ex) when (_session.RecoverableAuditError(ex))
+            {
+                legitimation["consistencyReadWarning"] = "Compile consistency could not be read.";
+            }
+            if (OnlineTransitionPolicy.DownloadProjectRefusal(modified, consistent) is { } projectRefusal)
+                throw new AdapterPreconditionException(projectRefusal.Message, projectRefusal.Condition, null);
+            legitimation["consistency"] = consistent == true ? "consistent" : "unknown";
 
             // Declared outside the try so the catch can report which PG/PC route was used.
             DownloadRouteSelection? routeDiagnostics = null;

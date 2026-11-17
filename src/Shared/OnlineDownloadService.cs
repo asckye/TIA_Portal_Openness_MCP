@@ -73,10 +73,11 @@ internal sealed class OnlineDownloadService
             string rhTarget = "",
             bool trustDeviceCertificate = false,
             DownloadAllowances? allowances = null,
-            string downloadScope = "software")
+            string downloadScope = "software", bool confirmPhysicalTarget = false)
         =>
             Invoke<ResponseDownload>(new OnlineRequest {
-                Operation = "DownloadPlc", DryRun = false, SoftwarePath = softwarePath, ConsistentBlocksOnly = consistentBlocksOnly, KeepActualValues =
+                Operation = "DownloadPlc", DryRun = false, ConfirmPhysicalTarget = confirmPhysicalTarget, SoftwarePath = softwarePath,
+                ConsistentBlocksOnly = consistentBlocksOnly, KeepActualValues =
                     keepActualValues, StartAfterDownload = startAfterDownload, StopBeforeDownload = stopBeforeDownload, Password = password ?? "",
                     PgPcInterface = pgPcInterface ?? "", TargetIpAddress = targetIpAddress ?? "", UserManagementMode = userManagementMode, PromptAnswersJson =
                     promptAnswersJson, ModuleAccessPassword = moduleAccessPassword ?? "", BlockBindingPassword = blockBindingPassword ?? "",

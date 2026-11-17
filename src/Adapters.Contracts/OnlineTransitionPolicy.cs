@@ -62,6 +62,11 @@ public static class OnlineTransitionPolicy
             + "ConnectionConfiguration.ApplyConfiguration, which throws while the device is online, and connects by itself; call DisconnectOnlinePlc first.";
     }
 
+    public static (string Condition, string Message)? DownloadProjectRefusal(bool isModified, bool? consistent)
+        => isModified ? ("project-saved", "DownloadPlc requires a saved project. Call SaveProject after compilation before downloading.")
+            : consistent == false ? ("plc-compiled", "DownloadPlc requires consistent blocks and types. Run CompilePlcSoftware or CompileDevice, "
+                + "review the result, then SaveProject before downloading.") : null;
+
     // Siemens.Engineering.Compare.CompareResultState: ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant ("Comparison
     // of these 2 objects is irrelevant", 15.1+) are no difference. "Unknown" marks an element whose state could not be read. Every
     // other name, including FolderContentEqualOwnStateDifferent and names a later release may add, is reported as a difference.

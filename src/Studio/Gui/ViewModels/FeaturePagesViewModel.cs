@@ -496,8 +496,20 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     public string ConfirmationTitle => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteTitle" : "Approval.ConfirmTitle"];
     public string ConfirmationAction => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAction" : "Approval.ConfirmAction"];
     public string ConfirmationAccessible => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAccessible" : "Approval.ConfirmAccessible"];
-    public string ConfirmationConsequence => Loc.Current
-        .T(Request.RiskAction == "delete" ? "Approval.DeleteConsequence" : "Approval.OnlineConsequence", Request.Project);
+    public string ConfirmationConsequence
+    {
+        get
+        {
+            try
+            {
+                var target = System.Text.Json.Nodes.JsonNode.Parse(Request.ParametersJson)?["onlineTarget"];
+                if ((string?)target?["kind"] == "physical")
+                    return Loc.Current.T("Approval.PhysicalConsequence", (string?)target["targetIpAddress"] ?? "—");
+            }
+            catch (System.Text.Json.JsonException) /* swallow(parse-fallback): malformed display data retains the generic consequence. */ { }
+            return Loc.Current.T(Request.RiskAction == "delete" ? "Approval.DeleteConsequence" : "Approval.OnlineConsequence", Request.Project);
+        }
+    }
     public string HostVersion => Request.Host + " · " + Request.Release;
     public event EventHandler<int>? CountdownThreshold;
     public bool Pending => Request.State == ApprovalState.Pending;

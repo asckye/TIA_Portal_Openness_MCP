@@ -12,6 +12,9 @@ namespace TiaOpenness.Shared
     {
         internal bool Enabled { get; }
         internal int TimeoutSeconds { get; }
+        internal int OnlinePlanLifetimeSeconds { get; }
+        internal ApprovalSettings WithRequiredApproval(bool required)
+            => new ApprovalSettings(required, TimeoutSeconds, OnlinePlanLifetimeSeconds);
         internal static string SettingsPath => Path.Combine(DataLocations.Current.ConfigDirectory, "approval.settings");
         internal static bool IsNativeCrossReferenceTarget(string path)
         {
@@ -100,10 +103,12 @@ namespace TiaOpenness.Shared
         private static extern SafeFileHandle OpenIdentity(string path, uint access, uint share, IntPtr security, uint creation, uint flags, IntPtr template);
         [DllImport("kernel32.dll", EntryPoint = "GetFileInformationByHandle", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)] private static extern bool ReadIdentity(SafeFileHandle handle, out FileIdentity identity);
-        internal ApprovalSettings(bool enabled = true, int timeoutSeconds = 120)
+        internal ApprovalSettings(bool enabled = true, int timeoutSeconds = 120, int onlinePlanLifetimeSeconds = 900)
         {
             if (timeoutSeconds < 1 || timeoutSeconds > 3600) throw new ArgumentOutOfRangeException(nameof(timeoutSeconds));
-            Enabled = enabled; TimeoutSeconds = timeoutSeconds;
+            if (onlinePlanLifetimeSeconds < 1 || onlinePlanLifetimeSeconds > 86400)
+                throw new ArgumentOutOfRangeException(nameof(onlinePlanLifetimeSeconds));
+            Enabled = enabled; TimeoutSeconds = timeoutSeconds; OnlinePlanLifetimeSeconds = onlinePlanLifetimeSeconds;
         }
         internal static ApprovalSettings Load(string path)
         {
@@ -113,11 +118,15 @@ namespace TiaOpenness.Shared
                 {
                     if (!File.Exists(path)) return new ApprovalSettings();
                     var lines = File.ReadAllLines(path);
-                    if (lines.Length != 2 || (lines[0] != "enabled=true" && lines[0] != "enabled=false")
+                    if (lines.Length is not (2 or 3) || (lines[0] != "enabled=true" && lines[0] != "enabled=false")
                         || !lines[1].StartsWith("timeoutSeconds=", StringComparison.Ordinal)
                         || !int.TryParse(lines[1].Substring(15), NumberStyles.None, CultureInfo.InvariantCulture, out int seconds))
                         throw new InvalidDataException("Invalid approval settings.");
-                    return new ApprovalSettings(lines[0] == "enabled=true", seconds);
+                    int lifetime = 900;
+                    if (lines.Length == 3 && (!lines[2].StartsWith("onlinePlanLifetimeSeconds=", StringComparison.Ordinal)
+                        || !int.TryParse(lines[2].Substring(26), NumberStyles.None, CultureInfo.InvariantCulture, out lifetime)))
+                        throw new InvalidDataException("Invalid online plan lifetime.");
+                    return new ApprovalSettings(lines[0] == "enabled=true", seconds, lifetime);
                 }
             }
             catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException || ex is ArgumentException)
@@ -136,6 +145,8 @@ namespace TiaOpenness.Shared
                 {
                     writer
                         .Write("enabled=" + (Enabled ? "true" : "false") + "\ntimeoutSeconds=" + TimeoutSeconds.ToString(CultureInfo.InvariantCulture) + "\n");
+                    if (OnlinePlanLifetimeSeconds != 900)
+                        writer.Write("onlinePlanLifetimeSeconds=" + OnlinePlanLifetimeSeconds.ToString(CultureInfo.InvariantCulture) + "\n");
                     writer.Flush(); stream.Flush(true);
                 }
             }

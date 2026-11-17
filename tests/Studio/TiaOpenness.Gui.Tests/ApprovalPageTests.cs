@@ -336,6 +336,22 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             });
     }
 
+    [Theory]
+    [InlineData(AppLanguage.English, "This changes a real PLC at 192.0.2.10.")]
+    [InlineData(AppLanguage.Chinese, "这会改变 192.0.2.10 上的真实 PLC")]
+    public void Physical_download_consequence_names_the_target(AppLanguage language, string expected)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            using var fixture = new Fixture(ApprovalRisk.Destructive);
+            var request = FeaturePageFixtures.Request() with { Risk = ApprovalRisk.Destructive, RiskAction = "online",
+                ParametersJson = "{\"onlineTarget\":{\"kind\":\"physical\",\"targetIpAddress\":\"192.0.2.10\"}}" };
+            var row = new ApprovalRow(request, fixture.Model);
+            Assert.Contains(expected, row.ConfirmationConsequence, StringComparison.Ordinal);
+            Assert.Equal(Loc.Current.T("Approval.PhysicalConsequence", "192.0.2.10"), row.ConfirmationConsequence);
+        });
+    }
+
     private static bool RaiseKey(UIElement element, RoutedEvent routedEvent, Key key)
     {
         var args = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(element), 0, key) { RoutedEvent = routedEvent };

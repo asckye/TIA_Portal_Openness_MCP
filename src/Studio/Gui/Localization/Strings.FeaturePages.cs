@@ -111,6 +111,8 @@ internal static partial class Strings
         ("Approval.ConfirmTitle", "Approve this destructive operation?", "批准此破坏性操作？"),
         ("Approval.ConfirmDeleteTitle", "Delete the listed objects?", "删除列出的对象？"),
         ("Approval.DeleteConsequence", "The listed objects will be deleted from project {0}; this cannot be undone here.", "列出的对象将从项目 {0} 中删除，无法在此撤销。"),
+        ("Approval.PhysicalConsequence", "This changes a real PLC at {0}. People near the machine may be at risk.",
+            "这会改变 {0} 上的真实 PLC，机器旁的人员可能有危险。"),
         ("Approval.OnlineConsequence", "This will change the connected device for project {0}; this cannot be undone here.", "此操作将修改项目 {0} 连接的设备，无法在此撤销。"),
         ("Approval.Cancel", "Cancel", "取消"),
         ("Approval.ConfirmAction", "_Approve and execute", "批准并执行(_A)"),

@@ -192,8 +192,8 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
             bool write = AllToolDescriptors(includeUnavailable: true).TryGetValue(name ?? "", out _)
                 && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
-            bool disabled = write && McpApprovalContext.Value && !TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath)
-                .Enabled;
+            bool disabled = write && McpApprovalContext.Value
+                && !EffectiveApprovalSettings(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText()).Enabled;
             string requestId = Meta.Correlate(InvocationJournal.CorrelationId);
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, McpServer.InvocationHostTag, ReleaseKey, name ?? "", requestId);
             var fenced = write ? GenerationFenceRefusal(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText()) : null;
@@ -211,6 +211,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
                 return AuditBridgeResult(audit, rejected, disabled);
             }
+            if (PortedAdmissionRefusals.TryGetValue((ReleaseKey, name), out var admission)
+                && admission((arguments ?? EmptyArguments()).Json) is { } targetRefusal)
+                return AuditBridgeResult(audit, targetRefusal, disabled);
             if (string.Equals(name, "CallTool", StringComparison.Ordinal))
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
             bool issued = false;
@@ -301,6 +304,38 @@ namespace TiaMcpServer.ModelContextProtocol
             var pointer = ArgumentDetails(tool, parameter, evidence).Parameter;
             return new NotFoundDetails(pointer.Length == 0 ? null : pointer);
         }
+        internal static readonly System.Collections.Concurrent.ConcurrentDictionary<(string Release, string Tool),
+            Func<JsonElement, CallToolResult?>> PortedAdmissionRefusals = new();
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, OnlinePlanLifetime> OnlinePlans =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<object, OnlinePlanLifetime>();
+        private static readonly object DefaultOnlinePlanSession = new object();
+        private static readonly System.Threading.AsyncLocal<Func<DateTimeOffset>?> OnlinePlanClock =
+            new System.Threading.AsyncLocal<Func<DateTimeOffset>?>();
+        internal static Func<DateTimeOffset>? OnlinePlanClockForTests { get => OnlinePlanClock.Value; set => OnlinePlanClock.Value = value; }
+        private static DateTimeOffset OnlinePlanNow => OnlinePlanClock.Value?.Invoke() ?? DateTimeOffset.UtcNow;
+        private static OnlinePlanLifetime CurrentOnlinePlans => OnlinePlans.GetValue(CurrentApprovalSession() ?? DefaultOnlinePlanSession,
+            _ => new OnlinePlanLifetime());
+        internal static Error? OnlinePlanRefusal(string tool, JsonObject arguments)
+        {
+            if (IsReadOnlyApprovalPreview || HostBehavior.IsPreview(arguments, true)
+                || ToolTaxonomy.OperationOf(tool, null).Operation != "ONLINE-WRITE"
+                || arguments["expectedPlanHash"] is not JsonValue hash || !hash.TryGetValue<string>(out var value)
+                || !PendingApproval.IsHash(value)) return null;
+            return CurrentOnlinePlans.Refusal(value, OnlinePlanNow);
+        }
+
+        internal static CallToolResult RunOnlineNetworkCheck(string tool, string target, Func<CallToolResult> call)
+        {
+            var network = TiaMcpServer.Siemens.LocalNetworkPolicy.Inspect(target);
+            var result = call();
+            if (ResultBody(result) is not JsonObject body) return result;
+            if (body["data"] is not JsonObject data) body["data"] = data = new JsonObject();
+            data["localNetwork"] = network;
+            result.StructuredContent = body;
+            result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(body) } };
+            return result;
+        }
+
         private static JsonObject WritePreviewPlan(string tool, object arguments, bool writing)
         {
             var normalized = JsonSerializer.SerializeToNode(arguments)!.AsObject();
@@ -404,6 +439,31 @@ namespace TiaMcpServer.ModelContextProtocol
                     ? V4Reject(tool,
                             new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
                     : TargetFailure(tool, error, false);
+            }
+            if (ToolTaxonomy.OperationOf(tool, null).Operation == "ONLINE-WRITE")
+            {
+                string fingerprint = (string)plan["planHash"]!;
+                if (dryRun && !IsReadOnlyApprovalPreview)
+                {
+                    var issued = CurrentOnlinePlans.Preview(fingerprint, OnlinePlanNow,
+                        ApprovalSettings.Load(ApprovalSettings.SettingsPath).OnlinePlanLifetimeSeconds);
+                    plan["planHash"] = issued.Hash;
+                    plan["expiresUtc"] = issued.Expires.ToString("O");
+                }
+                else if (PendingApproval.IsHash(expectedPlanHash))
+                {
+                    if (!dryRun && CurrentOnlinePlans.Refusal(expectedPlanHash, OnlinePlanNow) is Error expired)
+                        return V4Reject(tool, expired);
+                    if (CurrentOnlinePlans.Matches(expectedPlanHash, fingerprint)) plan["planHash"] = expectedPlanHash;
+                }
+            }
+            if (tool == "DownloadPlc")
+            {
+                string kind = HostBehavior.DownloadTargetKind((string?)JsonSerializer.SerializeToNode(arguments)?["pgPcInterface"]);
+                plan["targetKind"] = kind;
+                plan["requiresPhysicalConfirmation"] = kind == "physical";
+                if (kind == "physical") plan["executionRequirement"] = "Set confirmPhysicalTarget=true in the reviewed preview and execution. "
+                    + "A human must approve in the Workbench even when approval is switched off.";
             }
             return null;
         }

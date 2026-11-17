@@ -23,6 +23,14 @@
 
 ### Changed
 - **Breaking:** every `SetUnifiedRuntimeSettings` execution now requires the preview's `expectedPlanHash` and `expectedProjectFile` alongside `previewToken`. The undocumented generic write path through `RuntimeSettings` is withdrawn from `SetUnifiedObjectProperties` and `SetUnifiedMultilingualProperty`; use `SetUnifiedRuntimeSettings` with capture/restore and readback.
+- DownloadPlc previews and approval cards identify physical versus PLCSIM targets, with a localized physical PLC warning naming the address. Physical execution requires `confirmPhysicalTarget=true`.
+- ConnectOnlinePlc and DownloadPlc report local IPv4 adapters and warn when no active adapter shares the target subnet. Routed networks and PLCSIM Softbus remain possible; no reachability probe is sent.
+- GetToolUsage includes compile/save/preview/execute sequences for PLCSIM and physical downloads, with release API compatibility notes.
+
+### Changed
+- Non-preview ONLINE-WRITE calls require Workbench approval even with approval switched off, except the three PLCSIM-only tools and DownloadPlc through an explicitly named PLCSIM interface.
+- DownloadPlc refuses unsaved or known inconsistent projects; compile and explicitly save first. Unknown consistency is reported. Online write preview plans expire after 15 minutes by default, configurable locally through `onlinePlanLifetimeSeconds` in approval.settings; expired execution returns PLAN_STALE.
+
 - `ApplyToolBatch` fills missing plan bindings from each item's stored preview; PLC tag-table imports and Unified tag creation now support the batch route.
 - **Breaking:** `ConnectOnlinePlc` requires an explicit IPv4 `ipAddress`; `DownloadPlc` and `UploadDeviceParameters` require an explicit IPv4 `targetIpAddress`, including previews. Openness online targets obey the optional `online-targets.settings` address/CIDR allow-list; invalid or unreadable lists fail closed and an empty list denies all targets. MCP cannot write the list or `secrets.vault`; a Workbench editor follows in a later beta. `ConnectOnlinePlc` is removed from V14 SP1; V15.1–V20 apply the supplied address before connecting and V21 uses the address overload.
 - `RenderPlcVisualDiff` adds `data.interfaceDifferences` with member field changes across all eight releases and treats omitted XML member defaults as equal to explicit defaults. `ComparePlcBlockDocuments.identicalAfterNormalization` now includes non-default member attributes, start values, comments and subelement start values when both documents are XML.

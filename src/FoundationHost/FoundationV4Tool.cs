@@ -1,5 +1,6 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias toolpipeline;
+using DeclaredHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
 using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
@@ -8,6 +9,7 @@ using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
 using WriteDigest = toolpipeline::TiaMcp.FoundationHost.WriteDigest;
 using UnifiedInputAdmission = toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService;
 #else
+using DeclaredHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
 using UnifiedInputAdmission = TiaMcpServer.Siemens.Services.UnifiedPortService;
@@ -162,6 +164,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
         bool write = IsApprovalWrite(arguments);
         var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
+        settings = settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool.Name, arguments));
         TiaOpenness.Shared.ApprovalOutcome? approval = null;
         string id = Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId
             ?? (sharedSession
@@ -298,6 +301,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(fenced);
             if (inner is FoundationTool { Ported: true } ported && ported.RefusePortedCapability(args) is { } unavailable)
                 return await Recorded(unavailable);
+            if (!internalPrecheck && DeclaredHost.OnlinePlanRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()) is Error expired)
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, expired, true));
             if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool
                     && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
@@ -354,6 +359,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                             request.Params = new CallToolRequestParams { Name = tool.Name, Arguments = precheckArguments };
                             try
                             {
+                                using var onlinePreview = DeclaredHost.BeginReadOnlyApprovalPreview();
                                 using var readOnlyAudit = TiaOpenness.Shared.AuditInvocation.ReadOnlyPreview();
                                 refusal = await InvokeCoreAsync(request, cancellationToken, settings, _ => { }, id, null, false, true);
                             }
@@ -398,6 +404,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (tool.Name is "SaveProject" or "SaveProjectCopy" && inner is FoundationTool saveTool)
                 unsettledBeforeSave = saveTool.Unsettled.ToJson();
             if (await FoundationHostPorts.BeforeDispatchAsync().ConfigureAwait(false) is { } batchRefusal) return await Recorded(batchRefusal);
+            if (!internalPrecheck && DeclaredHost.OnlinePlanRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()) is Error queuedExpiry)
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, queuedExpiry, true));
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval
                     .Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,
                     JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)

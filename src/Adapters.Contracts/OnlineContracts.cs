@@ -43,6 +43,7 @@ public sealed class OnlineRequest
     public string DestinationDirectory { get; set; } = "";
     public string TargetForSoftware { get; set; } = "CPU";
     public bool OverwriteOnMemoryCard { get; set; }
+    public bool ConfirmPhysicalTarget { get; set; }
     public bool ConfirmDownload { get; set; }
     public bool ConfirmUpload { get; set; }
     public bool DryRun { get; set; } = true;

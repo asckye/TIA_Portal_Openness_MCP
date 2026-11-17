@@ -134,7 +134,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var fenced = GenerationFenceRefusal(name, arguments);
             if (fenced != null) return fenced;
-            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            if (OnlinePlanRefusal(name, args) is Error expired) return V4Reject(name, expired);
+            var settings = EffectiveApprovalSettings(name, arguments);
             // A write that will wait for approval refuses a missing or unreadable caller file first, so no approval is
             // requested. Other calls validate inside their journaled lane (isolated host/child journals stay correlated).
             if (settings.Enabled && ApprovalWrite(name, arguments))
@@ -192,6 +193,17 @@ namespace TiaMcpServer.ModelContextProtocol
             defaultPreview = method.DryRun.Default;
             return method.DryRun.Present;
         }
+        internal static ApprovalSettings EffectiveApprovalSettings(string tool, string arguments)
+        {
+            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            var args = JsonNode.Parse(arguments)!.AsObject();
+            if (tool == "CallTool" && args["name"] is JsonValue name && name.TryGetValue<string>(out var target))
+            {
+                tool = target;
+                args = args["arguments"] as JsonObject ?? new JsonObject();
+            }
+            return settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool, args));
+        }
         internal static bool ApprovalResultWrite(string tool, string arguments)
         {
             if (!string.Equals(tool, "CallTool", StringComparison.OrdinalIgnoreCase)) return ApprovalWrite(tool, arguments);
@@ -213,7 +225,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             if (!ApprovalWrite(tool, arguments) || tool == "ApplyToolBatch") return null;
             var args = JsonNode.Parse(arguments)!.AsObject();
-            var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+            var settings = EffectiveApprovalSettings(tool, arguments);
             string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
             var pending = PendingApproval
                 .Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation
@@ -300,6 +312,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (fenced != null) return await BridgeWait.On(FinishApprovalAsync(fenced, approval)).ConfigureAwait(false);
             if (ReviewedApplyRefusal(name, arguments) is { } queuedReplay)
                 return await BridgeWait.On(FinishApprovalAsync(queuedReplay, approval)).ConfigureAwait(false);
+            if (OnlinePlanRefusal(name, JsonNode.Parse(arguments)!.AsObject()) is Error expired)
+                return await BridgeWait.On(FinishApprovalAsync(V4Reject(name, expired), approval)).ConfigureAwait(false);
             if (approval != null && !await BridgeWait.On(ApprovalStillMatchesAsync(approval, arguments)).ConfigureAwait(false))
                 return await BridgeWait.On(ChangedApprovalRefusalAsync(approval)).ConfigureAwait(false);
             var rejection = beforeDispatch == null ? null : await BridgeWait.On(beforeDispatch()).ConfigureAwait(false);
@@ -308,7 +322,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             { return await BridgeWait.On(FinishApprovalAsync(TargetFailure(name, error, false), approval)).ConfigureAwait(false); }
             if (ApprovalPreviewDepth.Value > 0) return await BridgeWait.On(FinishApprovalAsync(await BridgeWait.On(invoke()).ConfigureAwait(false), null,
-                ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled)).ConfigureAwait(false);
+                ApprovalWrite(name, arguments) && !EffectiveApprovalSettings(name, arguments).Enabled)).ConfigureAwait(false);
             TiaOpenness.Shared.AuditInvocation.StartCurrent();
             using var nativeCalls = InvocationJournal.BeginNativeCallScope();
             try
@@ -316,7 +330,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var invoked = await BridgeWait.On(invoke()).ConfigureAwait(false);
                 return await BridgeWait
                     .On(FinishApprovalAsync(ObserveSessionOutcome(name, invoked, ApprovalWrite(name, arguments), arguments), approval,
-                    McpApprovalContext.Value && ApprovalWrite(name, arguments) && !ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled))
+                    McpApprovalContext.Value && ApprovalWrite(name, arguments) && !EffectiveApprovalSettings(name, arguments).Enabled))
                         .ConfigureAwait(false);
             }
             catch { if (approval != null) await BridgeWait.On(ApprovalClient.Complete(approval, "unknown")).ConfigureAwait(false); throw; }

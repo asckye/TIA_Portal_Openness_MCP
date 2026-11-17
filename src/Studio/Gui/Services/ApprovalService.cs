@@ -59,7 +59,7 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
             ApprovalSettings next;
             lock (sync)
             {
-                next = new ApprovalSettings(enabled ?? settings.Enabled, seconds ?? settings.TimeoutSeconds);
+                next = new ApprovalSettings(enabled ?? settings.Enabled, seconds ?? settings.TimeoutSeconds, settings.OnlinePlanLifetimeSeconds);
                 if (next.Enabled == settings.Enabled && next.TimeoutSeconds == settings.TimeoutSeconds) return;
             }
             next.Save(settingsPath, audit);

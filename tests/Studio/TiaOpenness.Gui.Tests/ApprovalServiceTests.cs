@@ -13,6 +13,23 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class ApprovalServiceTests
 {
     private static string Scratch() => Path.GetFullPath(Path.Combine("bin-build", "P6-44", "gui-approval", Guid.NewGuid().ToString("N")));
+    [Fact]
+    public void Workbench_setting_changes_preserve_the_online_plan_lifetime()
+    {
+        string root = Scratch(), path = Path.Combine(root, "approval.settings");
+        Directory.CreateDirectory(root);
+        var audit = new AuditLog(Path.Combine(root, "audit"));
+        new ApprovalSettings(true, 120, 60).Save(path, audit);
+        using var service = new ApprovalService(path, "tia-gui-plan-settings-" + Guid.NewGuid().ToString("N"), audit);
+        service.Enabled = false;
+        service.TimeoutSeconds = 30;
+        var saved = ApprovalSettings.Load(path);
+        Assert.False(saved.Enabled);
+        Assert.Equal(30, saved.TimeoutSeconds);
+        Assert.Equal(60, saved.OnlinePlanLifetimeSeconds);
+        Assert.True(audit.Verify().Passed);
+    }
+
     [Theory]
     [InlineData("DeletePlcBlock", "{}", ApprovalRisk.Destructive)]
     [InlineData("DownloadPlc", "{}", ApprovalRisk.Destructive)]
