@@ -4769,6 +4769,13 @@
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
     },
+    "ExportPlcTagTables": {
+      "relationship": "no-direct-official-example",
+      "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
+      "documents": [],
+      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
+      "manualReferences": []
+    },
     "ExportPlcType": {
       "relationship": "related-api-patterns",
       "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
@@ -26054,6 +26061,19 @@
         },
         "meaning": "Merge after reviewing preview; complete Workbench approval when enabled."
       }
+    },
+    "ExportPlcTagTables": {
+      "arguments": {
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
+        "groupPath": "",
+        "exportDirectory": "C:\\TIA_MCP\\exports",
+        "recursive": true,
+        "maxItems": 128,
+        "dryRun": true,
+        "confirm": false
+      },
+      "envelopeVersion": 4,
+      "operations": {}
     }
   },
   "engineSourceSequences": [
@@ -48128,6 +48148,70 @@
           "validation": "Managed fixture checks only; native acceptance NOT RUN.",
           "inline": true,
           "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+        },
+        "ExportPlcTagTables": {
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "groupPath": "",
+            "exportDirectory": "C:\\TIA_MCP\\exports",
+            "recursive": true,
+            "maxItems": 128,
+            "dryRun": true,
+            "confirm": false
+          },
+          "parameters": {
+            "softwarePath": {
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ],
+              "exampleValue": "<exact softwarePath from GetProjectTree>"
+            },
+            "groupPath": {
+              "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
+            },
+            "exportDirectory": {
+              "meaning": "Existing absolute directory, prepared/selected before the preview. Batch XML exports do not create it and never overwrite files.",
+              "requiresBinding": true,
+              "exampleValue": "C:\\TIA_MCP\\exports"
+            },
+            "expectedInventoryHash": {
+              "exampleValue": "<expectedInventoryHash from this same preview>",
+              "meaning": "Copy data.inventoryHash from this same preview; real execution refuses a changed inventory or target.",
+              "requiresBinding": true
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
+              "meaning": "For every real call copy projectPath exactly from the selected discovery row; after AttachOpenProject verify it equals GetSessionState data.projectFile. Do not invent a path from a project name or extension.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPortalProcessProjects",
+                "GetSessionState"
+              ]
+            }
+          },
+          "operations": {},
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "confirm": true,
+              "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
+              "expectedInventoryHash": "<data.inventoryHash from this same batch export preview>"
+            },
+            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+          },
+          "validation": "Native acceptance NOT RUN on every release; offline tests do not prove TIA behavior.",
+          "resultContract": {
+            "type": "Envelope",
+            "schemaVersion": 4,
+            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
+          },
+          "resultReading": [
+            "Review data.inventoryHash, data.inventoryComplete and every data.items[].objectPath/result. Files use tagTables-<hash>.xml; use the returned outputFile for each objectPath. Root and user-group tables are included only within the exact selected group and recursive scope.",
+            "Execute with dryRun=false, confirm=true, expectedInventoryHash and expectedProjectFile from this same preview. No overwrite or automatic retry; inspect partial item results before another call."
+          ],
+          "note": "Use an existing exportDirectory. Copy exact MIN-ESCAPE softwarePath and groupPath from discovery. Optional unitName is available on V16–V21. Re-import each returned file with ImportPlcTagTable, folderPath = parent of objectPath; multiple calls can use PreviewToolBatch/ApplyToolBatch. ImportPlcProgramFromDirectory uses the explicit tagFolderPath and does not reconstruct groups from hashed filenames."
         }
       },
       "full-engine": {
@@ -68577,6 +68661,70 @@
           "validation": "Managed fixture checks only; native acceptance NOT RUN.",
           "inline": true,
           "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+        },
+        "ExportPlcTagTables": {
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "groupPath": "",
+            "exportDirectory": "C:\\TIA_MCP\\exports",
+            "recursive": true,
+            "maxItems": 128,
+            "dryRun": true,
+            "confirm": false
+          },
+          "parameters": {
+            "softwarePath": {
+              "meaning": "Copy the exact softwarePath in GetProjectTree data.value, e.g. devices/ExampleStation%2FLine A/ExamplePLC, or device-groups/ExampleGroup/devices/ExampleStation%2FLine A/ExamplePLC for a station inside a device group; preserve minimally escaped group and station segments. Ordinary tools also accept a unique short name such as ExamplePLC. Batch tools require the exact path and refuse an alias.",
+              "requiresBinding": true,
+              "tools": [
+                "GetProjectTree"
+              ],
+              "exampleValue": "<exact softwarePath from GetProjectTree>"
+            },
+            "groupPath": {
+              "meaning": "Use the exact escaped relative group path from GetSoftwareTree; pass an empty string for the PLC root when supported."
+            },
+            "exportDirectory": {
+              "meaning": "Existing absolute directory, prepared/selected before the preview. Batch XML exports do not create it and never overwrite files.",
+              "requiresBinding": true,
+              "exampleValue": "C:\\TIA_MCP\\exports"
+            },
+            "expectedInventoryHash": {
+              "exampleValue": "<expectedInventoryHash from this same preview>",
+              "meaning": "Copy data.inventoryHash from this same preview; real execution refuses a changed inventory or target.",
+              "requiresBinding": true
+            },
+            "expectedProjectFile": {
+              "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
+              "meaning": "For every real call copy projectPath exactly from the selected discovery row; after AttachOpenProject verify it equals GetSessionState data.projectFile. Do not invent a path from a project name or extension.",
+              "requiresBinding": true,
+              "tools": [
+                "ListPortalProcessProjects",
+                "GetSessionState"
+              ]
+            }
+          },
+          "operations": {},
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "confirm": true,
+              "expectedProjectFile": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
+              "expectedInventoryHash": "<data.inventoryHash from this same batch export preview>"
+            },
+            "meaning": "Merge these arguments into the preview arguments only after reviewing that same preview for the intended target. Bind the exact expectedProjectFile; a real write waits for Workbench approval. Use only after reviewing this same preview for the intended project."
+          },
+          "validation": "Native acceptance NOT RUN on every release; offline tests do not prove TIA behavior.",
+          "resultContract": {
+            "type": "Envelope",
+            "schemaVersion": 4,
+            "scope": "data retains Foundation domain fields and operation evidence; meta records outcome, execution, completeness and current native behavior policy."
+          },
+          "resultReading": [
+            "Review data.inventoryHash, data.inventoryComplete and every data.items[].objectPath/result. Files use tagTables-<hash>.xml; use the returned outputFile for each objectPath. Root and user-group tables are included only within the exact selected group and recursive scope.",
+            "Execute with dryRun=false, confirm=true, expectedInventoryHash and expectedProjectFile from this same preview. No overwrite or automatic retry; inspect partial item results before another call."
+          ],
+          "note": "Use an existing exportDirectory. Copy exact MIN-ESCAPE softwarePath and groupPath from discovery. Optional unitName is available on V16–V21. Re-import each returned file with ImportPlcTagTable, folderPath = parent of objectPath; multiple calls can use PreviewToolBatch/ApplyToolBatch. ImportPlcProgramFromDirectory uses the explicit tagFolderPath and does not reconstruct groups from hashed filenames."
         }
       }
     }

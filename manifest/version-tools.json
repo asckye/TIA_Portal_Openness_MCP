@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 281,
+      "toolCount": 282,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -293,7 +293,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 322,
+      "toolCount": 323,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -622,7 +622,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 351,
+      "toolCount": 352,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -980,7 +980,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 374,
+      "toolCount": 375,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1361,7 +1361,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 400,
+      "toolCount": 401,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1768,7 +1768,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 476,
+      "toolCount": 477,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2251,7 +2251,7 @@
     },
     "20": {
       "profile": "plc-foundation",
-      "toolCount": 499,
+      "toolCount": 500,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2757,7 +2757,7 @@
     },
     "21": {
       "profile": "plc-foundation",
-      "toolCount": 514,
+      "toolCount": 515,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -3278,7 +3278,7 @@
     }
   },
   "groupCounts": {
-    "all-releases": 280,
+    "all-releases": 281,
     "shared-subset": 219,
     "release-only": 20
   },
