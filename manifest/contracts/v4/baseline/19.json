@@ -14042,12 +14042,12 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5865a932d82df7c44d2ad16897c2797b427291578ab62315ad2e015387060188",
+      "descriptionSha256": "0028e0ae70eb0bd0537be83f180f4f754f0bdb683370b104aa3f1c3738cb4f7b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "blockPath": {
-            "description": "blockPath: fully qualified 'Group/Subgroup/Name' from GetSoftwareTree",
+            "description": "blockPath: fully qualified 'Group/Subgroup/Name' from GetSoftwareTree; names containing '/' or other reserved characters use the encoded form printed by read tools, e.g. 'Group/A%2FB'",
             "examples": [
               "Main"
             ],
