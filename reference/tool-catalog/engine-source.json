@@ -11921,7 +11921,7 @@
       "path": "src/Shared/RuntimeSettingsTools.cs",
       "owner": "RuntimeSettingsTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult UpdateUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not \" +\n                \"expectedProjectFile.\")] string expectedProject,\n            [Description(\"changes: structured AttributeMap<Scalar> input.\")] AttributeMap<Scalar> changes,\n            bool dryRun = true,\n            string previewToken = \"\", string expectedPlanHash = \"\", string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult UpdateUnifiedRuntimeSettingsV4(\n            string softwarePath,\n            [Description(\"Exact project NAME, e.g. ExampleProject; a file path is invalid. Match Project.Name, not \" +\n                \"expectedProjectFile.\")] string expectedProject,\n            [Description(\"changes: structured AttributeMap<Scalar> input.\")] AttributeMap<Scalar> changes,\n            bool dryRun = true,\n            string previewToken = \"\",\n            [Description(\"planHash from this tool's preview for the same arguments and bound project; required for execution.\")] string expectedPlanHash = \"\",\n            [Description(\"Absolute bound project file from the preview target identity; required for execution.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -11950,13 +11950,13 @@
         "expectedPlanHash": {
           "type": "string",
           "default": "\"\"",
-          "description": "",
+          "description": "planHash from this tool's preview for the same arguments and bound project; required for execution.",
           "value": ""
         },
         "expectedProjectFile": {
           "type": "string",
           "default": "\"\"",
-          "description": "",
+          "description": "Absolute bound project file from the preview target identity; required for execution.",
           "value": ""
         }
       },

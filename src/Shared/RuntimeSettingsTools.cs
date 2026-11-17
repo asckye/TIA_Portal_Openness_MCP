@@ -58,7 +58,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "expectedProjectFile.")] string expectedProject,
             [Description("changes: structured AttributeMap<Scalar> input.")] AttributeMap<Scalar> changes,
             bool dryRun = true,
-            string previewToken = "", string expectedPlanHash = "", string expectedProjectFile = "")
+            string previewToken = "",
+            [Description("planHash from this tool's preview for the same arguments and bound project; required for execution.")] string expectedPlanHash = "",
+            [Description("Absolute bound project file from the preview target identity; required for execution.")] string expectedProjectFile = "")
             => McpServer.RunNativeWritePreview("SetUnifiedRuntimeSettings", dryRun,
                 new { softwarePath, expectedProject, changes },
                 () => Update(softwarePath, expectedProject, changes, true, previewToken),
