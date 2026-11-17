@@ -38,6 +38,187 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     public static IEnumerable<object[]> Releases() => CanonicalParameterRound2Tests.Releases();
 
     [Theory, MemberData(nameof(Releases))]
+    public void Native_write_preview_keeps_native_scope_and_target_evidence(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var args = new { action = "delete", masterCopyPath = "Motor" };
+        int previews = 0, executions = 0;
+        var native = Host.V4Result("ManageLibraryMasterCopy", new JsonObject {
+            ["scope"] = "Native master copy resolution", ["resolvedPath"] = "Library/Motor", ["found"] = true,
+            ["dryRun"] = false, ["mayHaveChanged"] = true
+        });
+        var result = Host.RunNativeWritePreview("ManageLibraryMasterCopy", true, args,
+            () => { previews++; return native; },
+            () => { executions++; return Host.V4Result("ManageLibraryMasterCopy", new JsonObject(), completed: true); });
+        var data = result.StructuredContent!["data"]!;
+        Assert.True((bool?)result.StructuredContent["ok"]);
+        Assert.Equal(1, previews);
+        Assert.Equal(0, executions);
+        Assert.Equal("Native master copy resolution", (string?)data["scope"]);
+        Assert.Equal("Library/Motor", (string?)data["resolvedPath"]);
+        Assert.True((bool?)data["found"]);
+        Assert.Matches("^[0-9a-f]{64}$", (string)data["planHash"]!);
+        Assert.True(JsonNode.DeepEquals(JsonSerializer.SerializeToNode(args), data["plannedChanges"]));
+        Assert.True(JsonNode.DeepEquals(worker.Identity, data["targetIdentity"]));
+        Assert.True((bool?)data["targetBound"]);
+        Assert.True((bool?)data["dryRun"]);
+        Assert.False((bool?)data["mayHaveChanged"]);
+        Assert.Null(data["targetVerified"]);
+        Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Native_write_execution_refuses_missing_or_stale_confirmation_before_either_delegate(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var args = new { action = "delete", masterCopyPath = "Motor" };
+        int previews = 0, executions = 0;
+        CallToolResult Preview() { previews++; return Host.V4Result("ManageLibraryMasterCopy", new JsonObject()); }
+        CallToolResult Execute() { executions++; return Host.V4Result("ManageLibraryMasterCopy", new JsonObject(), completed: true); }
+        var plan = Host.RunWritePreview("ManageLibraryMasterCopy", true, args, Execute);
+        string hash = (string)plan.StructuredContent!["data"]!["planHash"]!;
+        foreach (var (expectedHash, project, code) in new[] {
+            ("", "C:/Projects/original.ap21", "INVALID_ARGUMENT"),
+            (new string('0', 64), "C:/Projects/original.ap21", "PLAN_STALE"),
+            (hash, "C:/Projects/other.ap21", "IDENTITY_MISMATCH")
+        })
+        {
+            var result = Host.RunNativeWritePreview("ManageLibraryMasterCopy", false, args, Preview, Execute, expectedHash, project);
+            Assert.False((bool?)result.StructuredContent!["ok"]);
+            Assert.Equal(code, (string?)result.StructuredContent["error"]!["code"]);
+            Assert.Equal("rejected-before-operation", (string?)result.StructuredContent["meta"]!["outcome"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent["meta"]!["execution"]);
+        }
+        Assert.Equal(0, previews);
+        Assert.Equal(0, executions);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Native_write_execution_uses_the_matching_plan_without_calling_preview(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var args = new { action = "delete", masterCopyPath = "Motor" };
+        var preview = Host.RunNativeWritePreview("ManageLibraryMasterCopy", true, args,
+            () => Host.V4Result("ManageLibraryMasterCopy", new JsonObject()), () => throw new InvalidOperationException());
+        var plan = preview.StructuredContent!["data"]!;
+        int previews = 0, executions = 0;
+        var result = Host.RunNativeWritePreview("ManageLibraryMasterCopy", false, args,
+            () => { previews++; return Host.V4Result("ManageLibraryMasterCopy", new JsonObject()); },
+            () => { executions++; return Host.V4Result("ManageLibraryMasterCopy",
+                new JsonObject { ["scope"] = "Native deletion readback", ["deleted"] = true }, completed: true); },
+            (string)plan["planHash"]!, "C:/Projects/original.ap21");
+        var data = result.StructuredContent!["data"]!;
+        Assert.True((bool?)result.StructuredContent["ok"]);
+        Assert.Equal(0, previews);
+        Assert.Equal(1, executions);
+        foreach (string field in new[] { "planHash", "plannedChanges", "targetIdentity", "targetBound" })
+            Assert.True(JsonNode.DeepEquals(plan[field], data[field]), field);
+        Assert.False((bool?)data["dryRun"]);
+        Assert.True((bool?)data["deleted"]);
+        Assert.Equal("Native deletion readback", (string?)data["scope"]);
+        Assert.Null(data["targetVerified"]);
+        Assert.Equal("completed", (string?)result.StructuredContent["meta"]!["execution"]);
+        Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Native_write_preview_returns_native_errors_unchanged_without_a_plan(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var native = Host.V4Reject("ManageLibraryMasterCopy", Host.InvalidInput("masterCopyPath"),
+            new JsonObject { ["nativeFailure"] = true });
+        string original = native.StructuredContent!.ToJsonString();
+        int previews = 0, executions = 0;
+        var result = Host.RunNativeWritePreview("ManageLibraryMasterCopy", true, new { action = "delete", masterCopyPath = "Motor" },
+            () => { previews++; return native; },
+            () => { executions++; return Host.V4Result("ManageLibraryMasterCopy", new JsonObject(), completed: true); });
+        Assert.Same(native, result);
+        Assert.Equal(original, result.StructuredContent!.ToJsonString());
+        Assert.Equal(original, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)!.ToJsonString());
+        Assert.Null(result.StructuredContent["data"]?["planHash"]);
+        Assert.Equal(1, previews);
+        Assert.Equal(0, executions);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Native_and_argument_only_previews_share_one_plan_contract(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var args = new { action = "delete", masterCopyPath = "Motor" };
+        CallToolResult Execute() => throw new InvalidOperationException("Preview must not execute.");
+        var native = Host.RunNativeWritePreview("ManageLibraryMasterCopy", true, args,
+            () => Host.V4Result("ManageLibraryMasterCopy", new JsonObject()), Execute);
+        var generic = Host.RunWritePreview("ManageLibraryMasterCopy", true, args, Execute);
+        foreach (string field in new[] { "planHash", "plannedChanges", "targetIdentity", "targetBound" })
+            Assert.True(JsonNode.DeepEquals(generic.StructuredContent!["data"]![field], native.StructuredContent!["data"]![field]), field);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Native_write_preview_applies_argument_refusals_before_either_delegate(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        int calls = 0;
+        CallToolResult Native() { calls++; return Host.V4Result("EnsureSubnet", new JsonObject()); }
+        var result = Host.RunNativeWritePreview("EnsureSubnet", true,
+            new { anchorDeviceItemPath = "PLC/CPU", subnetType = "PROFIBUS", subnetName = "PN" }, Native, Native);
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent!["error"]!["code"]);
+        Assert.Equal("/subnetType", (string?)result.StructuredContent["error"]!["details"]!["parameter"]);
+        Assert.Equal("rejected-before-operation", (string?)result.StructuredContent["meta"]!["outcome"]);
+        Assert.Null(result.StructuredContent["data"]?["planHash"]);
+        Assert.Equal(0, calls);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Native_write_plan_preserves_input_failure_semantics_before_either_delegate(string release)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "bin-build", "native-preview-files-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            string file = Path.Combine(root, "Screen.xml");
+            File.Copy(Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                "templates", "mcp-full-e2e-verify", "import", "MCP_E2E_Tags.xml"), file);
+            var args = new { importPath = file };
+            CallToolResult Unexpected() => throw new InvalidOperationException("No native operation may run.");
+            var preview = Host.RunWritePreview("ImportHmiScreen", true, args, Unexpected);
+            string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
+            File.Delete(file);
+            var missing = Host.RunNativeWritePreview("ImportHmiScreen", true, args, Unexpected, Unexpected);
+            Assert.Equal("INVALID_ARGUMENT", (string?)missing.StructuredContent!["error"]!["code"]);
+            Assert.Null(missing.StructuredContent["data"]?["planHash"]);
+            var stale = Host.RunNativeWritePreview("ImportHmiScreen", false, args, Unexpected, Unexpected,
+                hash, "C:/Projects/original.ap21");
+            Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
+            Assert.Equal("input-changed", (string?)stale.StructuredContent["error"]!["details"]!["reason"]);
+            Assert.Equal("rejected-before-operation", (string?)stale.StructuredContent["meta"]!["outcome"]);
+            Assert.Equal(0, worker.Calls);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Theory, MemberData(nameof(Releases))]
     public void Stale_write_plan_names_the_reconnect_cause(string release)
     {
         using var worker = new PlanWorker();

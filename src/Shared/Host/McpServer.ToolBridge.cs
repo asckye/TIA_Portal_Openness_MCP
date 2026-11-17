@@ -392,11 +392,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     new InvalidArgumentDetails("subnetType", TiaMcp.Adapters.Hardware.SubnetTypePolicy.AllowedValues,
                         expected: "Industrial Ethernet/PROFINET subnet type"));
         }
-        internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
-                string expectedProjectFile = "", bool writing = true)
+        private static CallToolResult? PrepareWritePreview(string tool, bool dryRun, object arguments, string expectedPlanHash,
+            bool writing, out JsonObject plan)
         {
+            plan = null!;
             if (dryRun && WritePreviewArgumentRefusal(tool, arguments) is Error argumentRefusal) return V4Reject(tool, argumentRefusal);
-            JsonObject plan;
             try { plan = WritePreviewPlan(tool, arguments, writing); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {
@@ -405,6 +405,12 @@ namespace TiaMcpServer.ModelContextProtocol
                             new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
                     : TargetFailure(tool, error, false);
             }
+            return null;
+        }
+        internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
+                string expectedProjectFile = "", bool writing = true)
+        {
+            if (PrepareWritePreview(tool, dryRun, arguments, expectedPlanHash, writing, out var plan) is CallToolResult rejected) return rejected;
             if (dryRun && writing) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
             return WritePlanResult(execute(), plan, dryRun, writing);
@@ -412,19 +418,33 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static async Task<CallToolResult> RunWritePreviewAsync(string tool, bool dryRun, object arguments,
             Func<Task<CallToolResult>> execute, string expectedPlanHash = "", string expectedProjectFile = "", bool writing = true)
         {
-            if (dryRun && WritePreviewArgumentRefusal(tool, arguments) is Error argumentRefusal) return V4Reject(tool, argumentRefusal);
-            JsonObject plan;
-            try { plan = WritePreviewPlan(tool, arguments, writing); }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
-            {
-                return !dryRun && expectedPlanHash.Length > 0
-                    ? V4Reject(tool,
-                            new Error("Input file changed or became unreadable; preview again.", new PlanStaleDetails(expectedPlanHash, "input-changed")))
-                    : TargetFailure(tool, error, false);
-            }
+            if (PrepareWritePreview(tool, dryRun, arguments, expectedPlanHash, writing, out var plan) is CallToolResult rejected) return rejected;
             if (dryRun && writing) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
             return WritePlanResult(await execute().ConfigureAwait(false), plan, dryRun, writing);
+        }
+        internal static CallToolResult RunNativeWritePreview(string tool, bool dryRun, object arguments,
+            Func<CallToolResult> preview, Func<CallToolResult> execute, string expectedPlanHash = "", string expectedProjectFile = "")
+        {
+            if (PrepareWritePreview(tool, dryRun, arguments, expectedPlanHash, writing: true, out var plan) is CallToolResult rejected) return rejected;
+            if (!dryRun)
+            {
+                if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing: true) is Error refusal) return V4Reject(tool, refusal);
+                return WritePlanResult(execute(), plan, dryRun: false, writing: true);
+            }
+            var result = preview();
+            var body = ResultBody(result) as JsonObject;
+            if (ResultSucceeded(body) != true) return result;
+            if (body?["data"] is JsonObject data)
+            {
+                foreach (string field in new[] { "planHash", "plannedChanges", "targetIdentity", "targetBound" })
+                    data[field] = plan[field]?.DeepClone();
+                data["dryRun"] = true;
+                data["mayHaveChanged"] = false;
+                result.StructuredContent = body;
+                result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(body) } };
+            }
+            return result;
         }
         internal static Paging OffsetPage(int offset, int limit, int total) => new Paging(PagingMode.Offset, offset, limit,
             (long)offset + limit < total ? offset + limit : (int?)null, null, null, total, (long)offset + limit >= total);
