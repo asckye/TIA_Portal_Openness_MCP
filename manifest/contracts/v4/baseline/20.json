@@ -27632,17 +27632,20 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c02ffc5735d47887854ae8d0b197c10e1c077b5ce56144608cd6f766610e5062",
+      "descriptionSha256": "8835d09d82f36358b5222f4ac4ffc8c516116ae5b5728995e555a6d9300e6798",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "action": {
-            "description": "action: deleteDevice | deleteItem | moveItem | copyItem.",
+            "description": "action: deleteDevice | deleteItem | moveItem | copyItem | changeType (V18+) | createSubnet | deleteSubnet.",
             "enum": [
               "deleteDevice",
               "deleteItem",
               "moveItem",
-              "copyItem"
+              "copyItem",
+              "changeType",
+              "createSubnet",
+              "deleteSubnet"
             ],
             "examples": [
               "deleteDevice"
@@ -27664,7 +27667,7 @@
             "type": "array"
           },
           "devicePath": {
-            "description": "devicePath: JSON array naming the station - [group, ..., station] or the unique station name, e.g. [\"PLC_2\"].",
+            "description": "devicePath: JSON array naming the station - [group, ..., station] or the unique station name, e.g. [\"PLC_2\"]. Required for device/item actions; [] (default) for subnet actions.",
             "examples": [
               [
                 "PLC_2"
@@ -27677,14 +27680,24 @@
           },
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews (CanPlug check only); false executes.",
+            "description": "dryRun: true (default) validates and previews native impact; false executes the bound plan.",
             "examples": [
               true
             ],
             "type": "boolean"
           },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: copy data.planHash from the matching preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: absolute project file from the preview's targetIdentity; required when dryRun=false.",
+            "type": "string"
+          },
           "itemPath": {
-            "description": "itemPath: JSON array of exact device-item names (deleteItem / moveItem / copyItem); [] for deleteDevice.",
+            "description": "itemPath: exact device-item names for deleteItem/moveItem/copyItem/changeType; [] for deleteDevice and subnet actions.",
             "items": {
               "type": "string"
             },
@@ -27694,10 +27707,19 @@
             "default": -1,
             "description": "position: for moveItem / copyItem - target slot / position number (-1 = let TIA pick).",
             "type": "integer"
+          },
+          "subnetName": {
+            "default": "",
+            "description": "subnetName: exact project subnet name for createSubnet/deleteSubnet; no anchor node is required.",
+            "type": "string"
+          },
+          "typeIdentifier": {
+            "default": "",
+            "description": "typeIdentifier: exact catalog TypeIdentifier for changeType; exact subnet type (e.g. System:Subnet.Ethernet) for createSubnet.",
+            "type": "string"
           }
         },
         "required": [
-          "devicePath",
           "action"
         ],
         "type": "object"

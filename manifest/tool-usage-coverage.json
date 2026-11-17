@@ -1,6 +1,6 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "bfd2bcbc45867a4f16a3db90d3fcadb9a107273cdb312288af22c3f476ce96ca",
+  "catalogSha256": "685b5fe70a49d3a0be8ab21368b672a91747b3a420ae34009e9fa04a260a7dd8",
   "uniqueTools": 518,
   "documents": 89,
   "versionToolPairs": 3210,
@@ -52,7 +52,7 @@
       "checkedToolCount": 281,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 164,
+      "operationExampleCount": 167,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -2517,6 +2517,21 @@
               "operation": "copyItem",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "changeType",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -3812,7 +3827,7 @@
       "checkedToolCount": 321,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 224,
+      "operationExampleCount": 227,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -6671,6 +6686,21 @@
               "operation": "copyItem",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "changeType",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -8333,7 +8363,7 @@
       "checkedToolCount": 350,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 278,
+      "operationExampleCount": 281,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -11507,6 +11537,21 @@
               "operation": "copyItem",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "changeType",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -13459,7 +13504,7 @@
       "checkedToolCount": 373,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 353,
+      "operationExampleCount": 356,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -16833,6 +16878,21 @@
               "operation": "copyItem",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "changeType",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -19230,7 +19290,7 @@
       "checkedToolCount": 399,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 429,
+      "operationExampleCount": 432,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -22995,6 +23055,21 @@
               "operation": "copyItem",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "changeType",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -25698,7 +25773,7 @@
       "checkedToolCount": 475,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 489,
+      "operationExampleCount": 492,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 0,
@@ -29971,6 +30046,21 @@
               "operation": "copyItem",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "changeType",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -33114,7 +33204,7 @@
       "checkedToolCount": 498,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 503,
+      "operationExampleCount": 506,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 2,
@@ -37507,6 +37597,21 @@
               "operation": "copyItem",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "changeType",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -40801,8 +40906,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "44e4f9fbf8ffa9a362e9f1bbf703f7f042a25cce44c18ceeeccab8c5483ef12c",
-      "runtimeSha256": "44e4f9fbf8ffa9a362e9f1bbf703f7f042a25cce44c18ceeeccab8c5483ef12c",
+      "sdkWorkerSha256": "ae71261264b22e5f07ce3ff4c0c1b868788e1e804034ccaf10207a2ff19f127a",
+      "runtimeSha256": "ae71261264b22e5f07ce3ff4c0c1b868788e1e804034ccaf10207a2ff19f127a",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -40811,7 +40916,7 @@
       "checkedToolCount": 513,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 551,
+      "operationExampleCount": 554,
       "programmingExampleCount": 25,
       "callSequenceCount": 40,
       "offlineBuilderExamplesExecuted": 2,
@@ -45307,6 +45412,21 @@
               "operation": "copyItem",
               "exampleKind": "parameterized-call-example",
               "releaseProblem": null
+            },
+            {
+              "operation": "changeType",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "createSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
+            },
+            {
+              "operation": "deleteSubnet",
+              "exampleKind": "parameterized-call-example",
+              "releaseProblem": null
             }
           ]
         },
@@ -48876,8 +48996,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "42b18042664a2af99a725259485e0d2709a185c11946ac77681c9fcc20f88a33",
-      "runtimeSha256": "42b18042664a2af99a725259485e0d2709a185c11946ac77681c9fcc20f88a33",
+      "sdkWorkerSha256": "accd01f860373a2e7d6381e8c8bb054fe8edf4b05fc0cadab0edaa446d02a8a2",
+      "runtimeSha256": "accd01f860373a2e7d6381e8c8bb054fe8edf4b05fc0cadab0edaa446d02a8a2",
       "workerModel": "foundation-host-plc-worker"
     }
   }

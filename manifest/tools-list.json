@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T11:10:10.4443724+00:00",
+  "generatedAt": "2026-11-17T11:35:07.2954174+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "f9f70309a5b3900d9807f1a1619f6e9cf0e48ae21e0ab07e84ea9e6609ac26f4",
+  "workerSha256": "25af856a3d4ab363612513ce6d1f23082716f77a526e6777808b341d46abbbe7",
   "toolCount": 518,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2835,
+    "parameters": 2839,
     "parametersUndocumented": 847,
     "parametersFromVocabulary": 695,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 164,
     "enumHints": 256,
-    "defaultHints": 1612,
+    "defaultHints": 1616,
     "examplesCurated": 518,
     "recipes": 40
   },
@@ -241,15 +241,19 @@
       "method": "ManageHardwareObjectV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "devicePath",
         "action",
+        "devicePath",
         "itemPath",
         "destinationDevicePath",
         "destinationItemPath",
         "position",
-        "dryRun"
+        "dryRun",
+        "typeIdentifier",
+        "subnetName",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Hardware][WRITE] Native deleteDevice/deleteItem/moveItem/copyItem. devicePath=[group,...,station] or [unique exact station name]; itemPath lists exact child names, preserving slashes in names. Move/copy require destinationDevicePath,destinationItemPath,position and pass native CanPlug check. dryRun=true default. Deletes may remove contained software. No save/download/online control. Example: {\"devicePath\":[\"PLC_2\"],\"action\":\"deleteDevice\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ManageHardwareObject\"), optionally operation or language.",
+      "description": "[L2][Hardware][WRITE] Native deleteDevice/deleteItem/moveItem/copyItem, changeType (V18+), createSubnet/deleteSubnet (all releases). Device actions require devicePath=[group,...,station] or [unique exact station name]; itemPath lists exact child names. Subnet actions require empty devicePath/itemPath and an exact subnetName. changeType/createSubnet require an exact typeIdentifier. Move/copy pass native CanPlug checks. dryRun=true validates and reads impact without writing; execution requires the preview's expectedPlanHash and expectedProjectFile. Deletes/type changes may affect software and network configuration. No save/download/online control. Example: {\"devicePath\":[\"PLC_2\"],\"action\":\"deleteDevice\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ManageHardwareObject\"), optionally operation or language.",
       "example": "{\"devicePath\":[\"PLC_2\"],\"action\":\"deleteDevice\",\"dryRun\":true}"
     },
     {
