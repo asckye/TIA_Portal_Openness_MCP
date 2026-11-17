@@ -105,9 +105,9 @@
     }
   },
   "capabilities": {
-    "mcpToolCount": 520,
+    "mcpToolCount": 521,
     "mcpToolLayers": {
-      "L2": 428,
+      "L2": 429,
       "L1": 74,
       "L0": 18
     },

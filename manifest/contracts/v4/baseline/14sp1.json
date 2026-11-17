@@ -210,6 +210,7 @@
         "AnalyzePlcSclSource",
         "AuditEngineeringExports",
         "ComparePlcBlockDocuments",
+        "ConvertEngineeringTable",
         "ExtractPlcBlockMetrics",
         "GeneratePlcDocumentation",
         "InstantiatePlcTemplates",
@@ -6110,6 +6111,95 @@
         "type": "object"
       },
       "name": "ConnectPortal",
+      "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "descriptionSha256": "07c30106ccea97ff549995fb2c7a789324a5c64c57d120468ebc31ec05c3f6bc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "description": "Optional unique column order for rows toTable; must include every supplied property.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "direction": {
+            "description": "toTable | fromTable.",
+            "enum": [
+              "toTable",
+              "fromTable"
+            ],
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Validate and preview without writing by default; false creates a new file, never imports.",
+            "type": "boolean"
+          },
+          "exportFile": {
+            "default": "",
+            "description": "New absolute .xlsx/.csv output, or .xml for plcTagTable fromTable; omitted uses the session directory and stable encoded table name. Pass a new exportFile if the default exists.",
+            "type": "string"
+          },
+          "format": {
+            "default": "xlsx",
+            "description": "xlsx | csv for toTable; default xlsx, text cells preserve addresses and leading zeros.",
+            "enum": [
+              "xlsx",
+              "csv"
+            ],
+            "type": "string"
+          },
+          "inputPath": {
+            "default": "",
+            "description": "Absolute input XML for plcTagTable toTable, or .csv/.xlsx for fromTable.",
+            "type": "string"
+          },
+          "kind": {
+            "description": "plcTagTable | rows.",
+            "enum": [
+              "plcTagTable",
+              "rows"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "default": 50,
+            "description": "Page size 1..200 for rows fromTable; default 50 for PreviewToolBatch.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Zero-based offset for rows fromTable.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "rows": {
+            "description": "1..1000 flat scalar objects for rows toTable; numbers use invariant text, booleans true/false, null empty.",
+            "type": "array"
+          },
+          "templatePath": {
+            "default": "",
+            "description": "Original exported tag table XML; required for plcTagTable fromTable.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "direction"
+        ],
+        "type": "object"
+      },
+      "name": "ConvertEngineeringTable",
       "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
     },
     {

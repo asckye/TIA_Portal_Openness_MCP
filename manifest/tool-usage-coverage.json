@@ -1,13 +1,13 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "afb1789b137fde6af12675062a736e5bd18e31a495cbbdb88fbc9c5466872852",
-  "uniqueTools": 520,
+  "catalogSha256": "f463e36edfd5023117a6dfa051ff0c9e527eff5b14abf6c1442cc2c8dcbe8fb4",
+  "uniqueTools": 521,
   "documents": 89,
-  "versionToolPairs": 3225,
+  "versionToolPairs": 3233,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
-  "callSequences": 44,
+  "callSequences": 45,
   "languages": [
     "scl",
     "scl-sd",
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 260,
-  "noDirectVendoredExampleMappings": 260,
+  "noDirectVendoredExampleMappings": 261,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -53,13 +53,13 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 282,
-      "checkedToolCount": 282,
+      "registeredToolCount": 283,
+      "checkedToolCount": 283,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 175,
       "programmingExampleCount": 25,
-      "callSequenceCount": 44,
+      "callSequenceCount": 45,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -484,6 +484,14 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ConvertEngineeringTable",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3875,13 +3883,13 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 323,
-      "checkedToolCount": 323,
+      "registeredToolCount": 324,
+      "checkedToolCount": 324,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 236,
       "programmingExampleCount": 25,
-      "callSequenceCount": 44,
+      "callSequenceCount": 45,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -4340,6 +4348,14 @@
             "guides/skills/session-and-project/SKILL.md",
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/TiaProcessSnippets.cs"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "ConvertEngineeringTable",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -8474,13 +8490,13 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 352,
-      "checkedToolCount": 352,
+      "registeredToolCount": 353,
+      "checkedToolCount": 353,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 290,
       "programmingExampleCount": 25,
-      "callSequenceCount": 44,
+      "callSequenceCount": 45,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -8943,6 +8959,14 @@
         },
         {
           "toolName": "ConnectProjectToWorkspace",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ConvertEngineeringTable",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -13678,13 +13702,13 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 375,
-      "checkedToolCount": 375,
+      "registeredToolCount": 376,
+      "checkedToolCount": 376,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 365,
       "programmingExampleCount": 25,
-      "callSequenceCount": 44,
+      "callSequenceCount": 45,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -14147,6 +14171,14 @@
         },
         {
           "toolName": "ConnectProjectToWorkspace",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ConvertEngineeringTable",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -19527,13 +19559,13 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 401,
-      "checkedToolCount": 401,
+      "registeredToolCount": 402,
+      "checkedToolCount": 402,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 441,
       "programmingExampleCount": 25,
-      "callSequenceCount": 44,
+      "callSequenceCount": 45,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -20030,6 +20062,14 @@
         },
         {
           "toolName": "ConnectProjectToWorkspace",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ConvertEngineeringTable",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -26073,13 +26113,13 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 477,
-      "checkedToolCount": 477,
+      "registeredToolCount": 478,
+      "checkedToolCount": 478,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 503,
       "programmingExampleCount": 25,
-      "callSequenceCount": 44,
+      "callSequenceCount": 45,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -26665,6 +26705,14 @@
         },
         {
           "toolName": "ConnectProjectToWorkspace",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ConvertEngineeringTable",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -33578,13 +33626,13 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 500,
-      "checkedToolCount": 500,
+      "registeredToolCount": 501,
+      "checkedToolCount": 501,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 517,
       "programmingExampleCount": 25,
-      "callSequenceCount": 44,
+      "callSequenceCount": 45,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -34197,6 +34245,14 @@
         },
         {
           "toolName": "ConnectProjectToWorkspace",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ConvertEngineeringTable",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -41358,19 +41414,19 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "b30e93c274991606d1f58312fdfa33a70839bc5aa2b2038d9a26bd8ee441e72e",
-      "runtimeSha256": "b30e93c274991606d1f58312fdfa33a70839bc5aa2b2038d9a26bd8ee441e72e",
+      "sdkWorkerSha256": "118062babdc9283942fc67269cddb548588f56b5c52d10a35c02093253809acc",
+      "runtimeSha256": "118062babdc9283942fc67269cddb548588f56b5c52d10a35c02093253809acc",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 515,
-      "checkedToolCount": 515,
+      "registeredToolCount": 516,
+      "checkedToolCount": 516,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 565,
       "programmingExampleCount": 25,
-      "callSequenceCount": 44,
+      "callSequenceCount": 45,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -42042,6 +42098,14 @@
         },
         {
           "toolName": "ConnectProjectToWorkspace",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "ConvertEngineeringTable",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -49522,8 +49586,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "440b7fd4d45ea7d3ecb9fedac3075e04ed78aaded5073ea372e1c79241b514d5",
-      "runtimeSha256": "440b7fd4d45ea7d3ecb9fedac3075e04ed78aaded5073ea372e1c79241b514d5",
+      "sdkWorkerSha256": "2d401eee4b0bf9f967c792e52facd170dd4616251476b9293825195818ae34c4",
+      "runtimeSha256": "2d401eee4b0bf9f967c792e52facd170dd4616251476b9293825195818ae34c4",
       "workerModel": "foundation-host-plc-worker"
     }
   }

@@ -1,23 +1,23 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-17T22:22:06.2843574+00:00",
+  "generatedAt": "2026-11-17T23:11:26.4859815+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "222605a4c789304de937695702d50b581070c52484311f4122b32366e0241d40",
-  "toolCount": 520,
+  "workerSha256": "ffc587a474b2a3de25ea5ca9dc9c650122da508ef0760844066bfb0daa68a733",
+  "toolCount": 521,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2884,
+    "parameters": 2895,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 690,
     "toolsWithUndocumentedParameters": 215,
-    "toolsWithEnumHints": 170,
-    "enumHints": 266,
-    "defaultHints": 1652,
-    "examplesCurated": 520,
-    "recipes": 44
+    "toolsWithEnumHints": 171,
+    "enumHints": 269,
+    "defaultHints": 1659,
+    "examplesCurated": 521,
+    "recipes": 45
   },
   "categories": [
     {
@@ -120,31 +120,6 @@
       ],
       "description": "[L2][HMI-Library][OFFLINE]Analyze a TIA global library folder offline by file-system structure. It does not connect to TIA Portal, open the library, import content, or modify files. Examples: GetToolUsage(toolName: \"AnalyzeGlobalLibraryPackage\"), optionally operation or language.",
       "example": "{\"libraryPath\":\"C:\\\\Examples\\\\Library.al21\"}"
-    },
-    {
-      "name": "ManageLibraryType",
-      "layer": "L2",
-      "category": "project",
-      "domain": "Library",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageLibraryTypeV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "typePath",
-        "action",
-        "libraryName",
-        "targetLibraryName",
-        "scopeSoftwarePaths",
-        "deleteUnusedVersionsMode",
-        "structureConflictResolutionMode",
-        "forceUpdateMode",
-        "confirmDelete",
-        "dryRun",
-        "properties"
-      ],
-      "description": "[L2][Library][WRITE] One exact library type: update (properties Name/DoNotUse/SetForUpdate), delete (all versions, needs confirmDelete), updateLibrary (LibraryType.UpdateLibrary into targetLibraryName with deleteUnusedVersionsMode/structureConflictResolutionMode/forceUpdateMode, target read back by GUID) and updateProject (LibraryType.UpdateProject per scopeSoftwarePaths entry: PLC / HMI / Unified HMI software paths). V21 Unified ScriptModuleType.Name writes are blocked due to reported native TIA crashes, including previews. Project-library SetForUpdate and property writes to protected global libraries are refused before setters. Default dryRun=true; preview does not prove native setter safety. No save/compile/download. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryType\"), optionally operation or language.",
-      "example": "{\"typePath\":\"Examples/FB_Motor\",\"action\":\"update\",\"properties\":{\"DoNotUse\":true},\"confirmDelete\":false,\"dryRun\":true}"
     },
     {
       "name": "ManageLibraryMasterCopy",
@@ -420,34 +395,6 @@
       "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"dryRun\":true,\"action\":\"read\"}"
     },
     {
-      "name": "ManageLibraryTypeVersion",
-      "layer": "L2",
-      "category": "project",
-      "domain": "Library",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageLibraryTypeVersionV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "typePath",
-        "version",
-        "action",
-        "libraryName",
-        "newVersion",
-        "dependenciesMode",
-        "author",
-        "comment",
-        "targetSoftwarePath",
-        "dryRun",
-        "targetGroupPath",
-        "updatePathsMode",
-        "expectedPlanHash",
-        "expectedProjectFile"
-      ],
-      "description": "[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances/instantiate. instantiate places a released code-block or Classic screen version in exact targetSoftwarePath/targetGroupPath (empty group=root); PLC types/documents use ManagePlcDocuments. updatePathsMode applies to code blocks on V20+ only. Mutations require the preview's expectedPlanHash and expectedProjectFile. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires exact targetSoftwarePath with a single instance and uses Edit(instanceInfo), while HMI edit uses Edit(). Versions use Major.Minor.Build without a V prefix. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryTypeVersion\"), optionally operation or language.",
-      "example": "{\"typePath\":\"UDT_Status\",\"version\":\"\\u003Cversion from target discovery\\u003E\",\"action\":\"read\",\"dryRun\":true}"
-    },
-    {
       "name": "ManageDeviceUsers",
       "layer": "L2",
       "category": "hardware",
@@ -473,27 +420,47 @@
       "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"family\":\"webserver\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
-      "name": "ManageDeviceServiceObjects",
+      "name": "ManageLibraryType",
+      "layer": "L2",
+      "category": "project",
+      "domain": "Library",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageLibraryTypeV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "typePath",
+        "action",
+        "libraryName",
+        "targetLibraryName",
+        "scopeSoftwarePaths",
+        "deleteUnusedVersionsMode",
+        "structureConflictResolutionMode",
+        "forceUpdateMode",
+        "confirmDelete",
+        "dryRun",
+        "properties"
+      ],
+      "description": "[L2][Library][WRITE] One exact library type: update (properties Name/DoNotUse/SetForUpdate), delete (all versions, needs confirmDelete), updateLibrary (LibraryType.UpdateLibrary into targetLibraryName with deleteUnusedVersionsMode/structureConflictResolutionMode/forceUpdateMode, target read back by GUID) and updateProject (LibraryType.UpdateProject per scopeSoftwarePaths entry: PLC / HMI / Unified HMI software paths). V21 Unified ScriptModuleType.Name writes are blocked due to reported native TIA crashes, including previews. Project-library SetForUpdate and property writes to protected global libraries are refused before setters. Default dryRun=true; preview does not prove native setter safety. No save/compile/download. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryType\"), optionally operation or language.",
+      "example": "{\"typePath\":\"Examples/FB_Motor\",\"action\":\"update\",\"properties\":{\"DoNotUse\":true},\"confirmDelete\":false,\"dryRun\":true}"
+    },
+    {
+      "name": "ManageDeviceUserGroup",
       "layer": "L2",
       "category": "hardware",
       "domain": "Hardware",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageDeviceServiceObjects",
+      "method": "ManageDeviceUserGroup",
       "returnType": "CallToolResult",
       "parameters": [
-        "devicePath",
-        "itemPath",
-        "family",
+        "groupPath",
         "action",
-        "name",
-        "filePath",
-        "confirmChange",
-        "dryRun",
-        "properties"
+        "newName",
+        "dryRun"
       ],
-      "description": "[L2][Hardware][WRITE] Typed objects behind three PLC services of the exact hardware object. family=webApplications (DefaultWebPagesFeature.WebApplicationConfigurations: read Name/ApplicationType/IsDefault, setDefault name). family=telecontrolDataPoints (TelecontrolManagement.TelecontrolDataPoints: read Name/DataPointType and DNP3/IEC DataPointIndex/MasterFunction or WDC DataPointIndex, update name + properties, delete, export/import filePath via ExportDataPoints/ImportDataPoints). family=certificateServices (CertificateManagementConfiguration, PLC families V3.0+: read Usage TIAPortal/Runtime, CertificateExpirationEventActivated, RemainingCertificateLifetime 10..90 % and CertificateSupportedServices Id/ServiceType/ServiceGroupName/ApplicationUri/Guid; update properties; setServiceGroupName name=<Id or Guid> properties {ServiceGroupName<=64}; createService; deleteService name=<Id or Guid>). Real changes need confirmChange with dryRun=false; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageDeviceServiceObjects\"), optionally operation or language.",
-      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"family\":\"webApplications\",\"confirmChange\":false,\"dryRun\":true,\"action\":\"read\"}"
+      "description": "[L2][Hardware][WRITE] Project device user groups (Project.DeviceGroups, DeviceUserGroup.Groups/Devices, UngroupedDevicesGroup): read (empty groupPath lists root devices, top-level groups and the ungrouped system group; a path lists that group), create (DeviceUserGroupComposition.Create, missing parents created), rename (one segment) and deleteEmpty. groupPath is an exact relative nested path. CreateFrom(MasterCopy) is not exposed. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageDeviceUserGroup\"), optionally operation or language.",
+      "example": "{\"dryRun\":true,\"action\":\"read\"}"
     },
     {
       "name": "ManageDccPin",
@@ -793,22 +760,80 @@
       "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\",\"folderKind\":\"screens\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
-      "name": "ManageDeviceUserGroup",
+      "name": "ManageClassicHmiCycle",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI-Classic",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageClassicHmiCycle",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "action",
+        "cycleName",
+        "filePath",
+        "importOptions",
+        "offset",
+        "limit",
+        "confirmDelete",
+        "dryRun",
+        "exportOptions",
+        "attributes"
+      ],
+      "description": "[L2][HMI-Classic][WRITE] Classic HMI cycles: read (all or exact cycleName with advertised time/unit attributes), export (new XML file), import (Override needs confirmDelete=true), delete (confirmDelete=true; system cycles refused), setAttributes (readback verified). CycleComposition has no native Create. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageClassicHmiCycle\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\",\"action\":\"read\",\"confirmDelete\":false,\"dryRun\":true}"
+    },
+    {
+      "name": "ManageDeviceServiceObjects",
       "layer": "L2",
       "category": "hardware",
       "domain": "Hardware",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageDeviceUserGroup",
+      "method": "ManageDeviceServiceObjects",
       "returnType": "CallToolResult",
       "parameters": [
-        "groupPath",
+        "devicePath",
+        "itemPath",
+        "family",
         "action",
-        "newName",
-        "dryRun"
+        "name",
+        "filePath",
+        "confirmChange",
+        "dryRun",
+        "properties"
       ],
-      "description": "[L2][Hardware][WRITE] Project device user groups (Project.DeviceGroups, DeviceUserGroup.Groups/Devices, UngroupedDevicesGroup): read (empty groupPath lists root devices, top-level groups and the ungrouped system group; a path lists that group), create (DeviceUserGroupComposition.Create, missing parents created), rename (one segment) and deleteEmpty. groupPath is an exact relative nested path. CreateFrom(MasterCopy) is not exposed. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageDeviceUserGroup\"), optionally operation or language.",
-      "example": "{\"dryRun\":true,\"action\":\"read\"}"
+      "description": "[L2][Hardware][WRITE] Typed objects behind three PLC services of the exact hardware object. family=webApplications (DefaultWebPagesFeature.WebApplicationConfigurations: read Name/ApplicationType/IsDefault, setDefault name). family=telecontrolDataPoints (TelecontrolManagement.TelecontrolDataPoints: read Name/DataPointType and DNP3/IEC DataPointIndex/MasterFunction or WDC DataPointIndex, update name + properties, delete, export/import filePath via ExportDataPoints/ImportDataPoints). family=certificateServices (CertificateManagementConfiguration, PLC families V3.0+: read Usage TIAPortal/Runtime, CertificateExpirationEventActivated, RemainingCertificateLifetime 10..90 % and CertificateSupportedServices Id/ServiceType/ServiceGroupName/ApplicationUri/Guid; update properties; setServiceGroupName name=<Id or Guid> properties {ServiceGroupName<=64}; createService; deleteService name=<Id or Guid>). Real changes need confirmChange with dryRun=false; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageDeviceServiceObjects\"), optionally operation or language.",
+      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"family\":\"webApplications\",\"confirmChange\":false,\"dryRun\":true,\"action\":\"read\"}"
+    },
+    {
+      "name": "ManageLibraryTypeVersion",
+      "layer": "L2",
+      "category": "project",
+      "domain": "Library",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageLibraryTypeVersionV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "typePath",
+        "version",
+        "action",
+        "libraryName",
+        "newVersion",
+        "dependenciesMode",
+        "author",
+        "comment",
+        "targetSoftwarePath",
+        "dryRun",
+        "targetGroupPath",
+        "updatePathsMode",
+        "expectedPlanHash",
+        "expectedProjectFile"
+      ],
+      "description": "[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances/instantiate. instantiate places a released code-block or Classic screen version in exact targetSoftwarePath/targetGroupPath (empty group=root); PLC types/documents use ManagePlcDocuments. updatePathsMode applies to code blocks on V20+ only. Mutations require the preview's expectedPlanHash and expectedProjectFile. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires exact targetSoftwarePath with a single instance and uses Edit(instanceInfo), while HMI edit uses Edit(). Versions use Major.Minor.Build without a V prefix. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryTypeVersion\"), optionally operation or language.",
+      "example": "{\"typePath\":\"UDT_Status\",\"version\":\"\\u003Cversion from target discovery\\u003E\",\"action\":\"read\",\"dryRun\":true}"
     },
     {
       "name": "ManageMachineDescription",
@@ -858,53 +883,6 @@
       ],
       "description": "[L2][PLC-TechnologyObjects][WRITE] Native Motion TO operations beyond cam/bit-address tools: add/removeMasterValue (aspect synchronous*/conveyor*/superimposingSetPoint, name=exact master TO path), create/update/deleteMapping (aspect toMapping/dbMemberMapping, name=alias, properties), connect/disconnect (aspect actor/sensor/torque/encoder/measuringInput/outputCam; target selects exactly one native overload: devicePath+itemPath[+secondItemPath|channelIndex|channelType+channelIoType+channelNumber for Connect(Channel)], dbMemberPath, plcTagPath, address, or encoder bit addresses; typed AxisEncoderHardwareConnectionInterface / TorqueHardwareConnectionInterface / MeasuringInput / OutputCam calls with typed readback rows), connectIdent (deviceItem target). Exact names; Offline PLC for real writes; deletes need confirmDelete=true. Default preview; native readback; no save/compile/download, never commands a drive. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageMotionAxis\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"objectPath\":\"Axis_1\",\"action\":\"read\",\"confirmDelete\":false,\"dryRun\":true}"
-    },
-    {
-      "name": "ManageMultiuserSession",
-      "layer": "L2",
-      "category": "project",
-      "domain": "Project",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageMultiuserSession",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "action",
-        "serverName",
-        "projectName",
-        "protocol",
-        "host",
-        "port",
-        "commitComment",
-        "offset",
-        "limit",
-        "confirmChange",
-        "dryRun"
-      ],
-      "description": "[L2][Project][WRITE] Multiuser/project-server access by exact alias: read (servers, open local sessions, bound session up-to-date flag and markings), listServerProjects, readLockState, listLocalSessions (serverName + projectName), connectServer (serverName, protocol Https/Http, host, port), disconnectServer, commit (CloseAndCommit with commitComment; closes the bound session). Mutations default to preview and need dryRun=false AND confirmChange=true. Never opens/creates local sessions or saves implicitly. Examples: GetToolUsage(toolName: \"ManageMultiuserSession\"), optionally operation or language.",
-      "example": "{\"confirmChange\":false,\"dryRun\":true,\"action\":\"read\"}"
-    },
-    {
-      "name": "ManageSafetyActivationTestGroup",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "Safety",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageSafetyActivationTestGroup",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "action",
-        "groupPath",
-        "name",
-        "masterCopyPath",
-        "libraryName",
-        "newName",
-        "confirmDelete",
-        "dryRun"
-      ],
-      "description": "[L2][Safety][WRITE] Activation test user groups of the Safety Validation Assistant (ActivationTestGroups, nested through ActivationTestUserGroup.Groups; groupPath = parent group, [] = root): read (all groups at that level, or one group with its activation tests when name is given), create (ActivationTestUserGroupComposition.Create(name)), createFromMasterCopy (CreateFrom(MasterCopy at masterCopyPath / libraryName)), rename (newName), delete (confirmDelete; nonempty groups are refused). V21 only; default preview; no automatic save. Examples: GetToolUsage(toolName: \"ManageSafetyActivationTestGroup\"), optionally operation or language.",
-      "example": "{\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
       "name": "ManageSafetyActivationTest",
@@ -1560,56 +1538,29 @@
       "example": "{\"subnetName\":\"PN_IE_1\",\"kind\":\"sync\",\"action\":\"create\",\"name\":\"ExampleSyncDomain\",\"confirmDelete\":false,\"dryRun\":true}"
     },
     {
-      "name": "ManageClassicHmiCycle",
+      "name": "ManageMultiuserSession",
       "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Classic",
+      "category": "project",
+      "domain": "Project",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageClassicHmiCycle",
+      "method": "ManageMultiuserSession",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
         "action",
-        "cycleName",
-        "filePath",
-        "importOptions",
+        "serverName",
+        "projectName",
+        "protocol",
+        "host",
+        "port",
+        "commitComment",
         "offset",
         "limit",
-        "confirmDelete",
-        "dryRun",
-        "exportOptions",
-        "attributes"
+        "confirmChange",
+        "dryRun"
       ],
-      "description": "[L2][HMI-Classic][WRITE] Classic HMI cycles: read (all or exact cycleName with advertised time/unit attributes), export (new XML file), import (Override needs confirmDelete=true), delete (confirmDelete=true; system cycles refused), setAttributes (readback verified). CycleComposition has no native Create. Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageClassicHmiCycle\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\",\"action\":\"read\",\"confirmDelete\":false,\"dryRun\":true}"
-    },
-    {
-      "name": "ManageSafetyFunction",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "Safety",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageSafetyFunction",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "activationTest",
-        "action",
-        "groupPath",
-        "name",
-        "sourceName",
-        "filePath",
-        "exportOptions",
-        "documentInfoOptions",
-        "importOptions",
-        "confirmDelete",
-        "dryRun",
-        "signals",
-        "properties"
-      ],
-      "description": "[L2][Safety][WRITE] Safety functions (test cases) of one activation test (activationTest + groupPath): read (all, or one by name - the generated SafetyFunction.Name or a unique TestName - with conditions and trace configuration: IsTraced, PretriggerTime, RecordingDuration, Signals), create (SafetyFunctionComposition.Create() then properties {testName, description}), createFrom (CreateFrom(source named by sourceName)), update (properties {testName, description}; official: attributes are editable only while the function has no test result), resetTestResult (ResetTestResult()), checkValidity / checkTraceValidity (TestValidity.CheckValidity on the function / its TraceConfiguration), setTrace (properties {isTraced, pretriggerTime, recordingDuration} + optional signals string[] -> TraceConfiguration.IsTraced + SetAttribute with readback; dynamic names/types PretriggerTime/RecordingDuration/Signals await native confirmation and must be readable on the target before any write), export (Export(FileInfo, ExportOptions[, DocumentInfoOptions]) -> new XML file), import (SafetyFunctionComposition.Import(file, importOptions None|Override|SkipInactiveCultures|ActivateInactiveCultures)), delete (confirmDelete). V21 only; default preview; no automatic save. Examples: GetToolUsage(toolName: \"ManageSafetyFunction\"), optionally operation or language.",
-      "example": "{\"activationTest\":\"Acceptance_1\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
+      "description": "[L2][Project][WRITE] Multiuser/project-server access by exact alias: read (servers, open local sessions, bound session up-to-date flag and markings), listServerProjects, readLockState, listLocalSessions (serverName + projectName), connectServer (serverName, protocol Https/Http, host, port), disconnectServer, commit (CloseAndCommit with commitComment; closes the bound session). Mutations default to preview and need dryRun=false AND confirmChange=true. Never opens/creates local sessions or saves implicitly. Examples: GetToolUsage(toolName: \"ManageMultiuserSession\"), optionally operation or language.",
+      "example": "{\"confirmChange\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
       "name": "ManageCfcChartProtection",
@@ -1634,40 +1585,59 @@
       "example": "{\"softwarePath\":\"PLC_1\",\"chartName\":\"Chart_1\",\"dryRun\":true,\"action\":\"read\"}"
     },
     {
-      "name": "ListUnifiedTagDefinitions",
+      "name": "ManageSafetyActivationTestGroup",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "Safety",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageSafetyActivationTestGroup",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "action",
+        "groupPath",
+        "name",
+        "masterCopyPath",
+        "libraryName",
+        "newName",
+        "confirmDelete",
+        "dryRun"
+      ],
+      "description": "[L2][Safety][WRITE] Activation test user groups of the Safety Validation Assistant (ActivationTestGroups, nested through ActivationTestUserGroup.Groups; groupPath = parent group, [] = root): read (all groups at that level, or one group with its activation tests when name is given), create (ActivationTestUserGroupComposition.Create(name)), createFromMasterCopy (CreateFrom(MasterCopy at masterCopyPath / libraryName)), rename (newName), delete (confirmDelete; nonempty groups are refused). V21 only; default preview; no automatic save. Examples: GetToolUsage(toolName: \"ManageSafetyActivationTestGroup\"), optionally operation or language.",
+      "example": "{\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
+    },
+    {
+      "name": "ListVersionControlWorkspaces",
+      "layer": "L1",
+      "category": "project",
+      "domain": "VersionControl",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "ListVersionControlWorkspacesV4",
+      "returnType": "CallToolResult",
+      "parameters": [],
+      "description": "[L1][VersionControl][READ] List this project's version control (VCI) workspaces: name, folder on disk, language, and how many objects are mapped. A workspace is the plain-text mirror of the project that Git can actually diff and commit. Read-only. Workspace and mapping deletion, user-group creation and library-property configuration are not exposed. Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListVersionControlWorkspaces\"), optionally operation or language.",
+      "example": "{}"
+    },
+    {
+      "name": "ListUnifiedLibraryFolderEntries",
       "layer": "L2",
       "category": "hmi",
       "domain": "HMI-Unified",
       "operation": "READ",
       "operationInferred": false,
-      "method": "ReadUnifiedTagDefinitionsV4",
+      "method": "ListUnifiedLibraryFolderV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
         "expectedProject",
+        "folderPath",
         "cursor",
         "limit",
         "budgetMs"
       ],
-      "description": "[L2][HMI-Unified][READ]Resume recursive root/table/group/UDT/array member definitions. Returns path-addressed records, own API fields and separately labelled root source inference. Unknown bounds remain gaps. limit counts evidence records, not tags. Follow nextCursor until null; inspect cumulative failures. Examples: GetToolUsage(toolName: \"ListUnifiedTagDefinitions\"), optionally operation or language.",
+      "description": "[L2][HMI-Unified][READ]Page only direct type/folder names in ONE exact project-library folder, for locating a referenced script/faceplate. No recursive search or default-version substitution. / selects root. Inspect returned folders before choosing the next exact path. Examples: GetToolUsage(toolName: \"ListUnifiedLibraryFolderEntries\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\"}"
-    },
-    {
-      "name": "ListHmiScreenPaths",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ListHmiScreenPathsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "offset",
-        "limit"
-      ],
-      "description": "[L2][HMI][READ]List full screen group paths, including nested folders. Paths start with / and URI-escape each name segment. offset/limit paginate the list; exact paths disambiguate same-named screens. Examples: GetToolUsage(toolName: \"ListHmiScreenPaths\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\"}"
     },
     {
       "name": "ListHmiConnections",
@@ -1904,21 +1874,6 @@
       "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"methodName\":\"GetAttributeInfos\",\"dryRun\":true}"
     },
     {
-      "name": "ListHmiScreens",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "GetHmiScreensV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath"
-      ],
-      "description": "[L2][HMI][READ] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist. Examples: GetToolUsage(toolName: \"ListHmiScreens\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\"}"
-    },
-    {
       "name": "InstantiatePlcTemplates",
       "layer": "L2",
       "category": "plc",
@@ -1938,20 +1893,38 @@
       "example": "{\"templatePath\":\"C:\\\\Examples\\\\templates\\\\Block.xml\",\"exportDirectory\":\"C:\\\\Examples\\\\generated\",\"dryRun\":true,\"rows\":[{\"fileName\":\"Example.xml\",\"values\":{\"Name\":\"Example\"}}]}"
     },
     {
-      "name": "InitializeEnvironment",
-      "layer": "L0",
-      "category": "session",
-      "domain": "Bootstrap",
-      "operation": "SESSION",
+      "name": "ListHmiScreenPaths",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI",
+      "operation": "READ",
       "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
+      "method": "ListHmiScreenPathsV4",
       "returnType": "CallToolResult",
       "parameters": [
+        "softwarePath",
         "offset",
         "limit"
       ],
-      "description": "[read-only Foundation readiness][SESSION] Reports the exact selected TIA release installation and matching Openness API, current Siemens TIA Openness group membership, readiness cause and fix, plus managed host registration diagnostics. No worker call, TIA launch, attach, repair or persistent settings change. Structural checks cover the entire registered catalog; registeredTools contains one bounded page. Retrieve the full roster using offset/limit and meta.paging.nextOffset. Examples: GetToolUsage(toolName: \"InitializeEnvironment\"), optionally operation or language.",
-      "example": "{}"
+      "description": "[L2][HMI][READ]List full screen group paths, including nested folders. Paths start with / and URI-escape each name segment. offset/limit paginate the list; exact paths disambiguate same-named screens. Examples: GetToolUsage(toolName: \"ListHmiScreenPaths\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\"}"
+    },
+    {
+      "name": "InspectSimaticSdCompatibility",
+      "layer": "L2",
+      "category": "session",
+      "domain": "Diagnostics",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "InspectSimaticSdCompatibilityV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "filePath",
+        "tiaMajor",
+        "installedUpdate"
+      ],
+      "description": "[L2][Diagnostics][READ] Offline SIMATIC SD format/patch preflight of one .s7dcl on the server (maximum 20 MiB). Reports V20 Update 4 language requirements, textual-interface data-loss warning and non-lossless format limits. installedUpdate=-1 means unknown; a supplied value is a caller assertion, never derived from SDK versions. Does not parse/compile or modify a project; not a syntax validator. Examples: GetToolUsage(toolName: \"InspectSimaticSdCompatibility\"), optionally operation or language.",
+      "example": "{\"filePath\":\"C:\\\\Examples\\\\documents\\\\FC_Add.s7dcl\"}"
     },
     {
       "name": "ImportUnifiedOpcUaAlarms",
@@ -2232,21 +2205,58 @@
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"sourceDirectory\":\"C:\\\\TIA_MCP\\\\imports\",\"dryRun\":true,\"confirm\":false,\"regexName\":\"^Main\\\\.xml$\",\"overwrite\":false}"
     },
     {
-      "name": "InspectSimaticSdCompatibility",
+      "name": "ImportPlcBlocksDocuments",
       "layer": "L2",
-      "category": "session",
-      "domain": "Diagnostics",
-      "operation": "READ",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
       "operationInferred": false,
-      "method": "InspectSimaticSdCompatibilityV4",
+      "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [
-        "filePath",
-        "tiaMajor",
-        "installedUpdate"
+        "softwarePath",
+        "groupPath",
+        "importPath",
+        "fileNamesWithoutExtension",
+        "overwrite",
+        "expectedPlanHash",
+        "dryRun",
+        "confirm",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Diagnostics][READ] Offline SIMATIC SD format/patch preflight of one .s7dcl on the server (maximum 20 MiB). Reports V20 Update 4 language requirements, textual-interface data-loss warning and non-lossless format limits. installedUpdate=-1 means unknown; a supplied value is a caller assertion, never derived from SDK versions. Does not parse/compile or modify a project; not a syntax validator. Examples: GetToolUsage(toolName: \"InspectSimaticSdCompatibility\"), optionally operation or language.",
-      "example": "{\"filePath\":\"C:\\\\Examples\\\\documents\\\\FC_Add.s7dcl\"}"
+      "description": "[PLC foundation; native unverified][WRITE] [batch-document-import-candidate] Exact V20/V21 ordered manifest of 1..16 admitted ordinary GlobalDB document sets. Reuses single document grammar and None-only native calls; all code/resource pairs remain locked. Whole-manifest hashes, complete collision inventory and exact project/group confirmation. Stop on first uncertainty, retain succeeded/failed/not-attempted evidence, inspect an unknown target before repeating that call. GetSessionState lists unsettled request IDs; no folder guessing, overwrite, culture activation, compile, save, retry or rollback. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksDocuments\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"dryRun\":true,\"confirm\":false,\"fileNamesWithoutExtension\":[\"\\u003Cexact document basename from the import directory\\u003E\"]}"
+    },
+    {
+      "name": "InitializeEnvironment",
+      "layer": "L0",
+      "category": "session",
+      "domain": "Bootstrap",
+      "operation": "SESSION",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "offset",
+        "limit"
+      ],
+      "description": "[read-only Foundation readiness][SESSION] Reports the exact selected TIA release installation and matching Openness API, current Siemens TIA Openness group membership, readiness cause and fix, plus managed host registration diagnostics. No worker call, TIA launch, attach, repair or persistent settings change. Structural checks cover the entire registered catalog; registeredTools contains one bounded page. Retrieve the full roster using offset/limit and meta.paging.nextOffset. Examples: GetToolUsage(toolName: \"InitializeEnvironment\"), optionally operation or language.",
+      "example": "{}"
+    },
+    {
+      "name": "ListHmiScreens",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "GetHmiScreensV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath"
+      ],
+      "description": "[L2][HMI][READ] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist. Examples: GetToolUsage(toolName: \"ListHmiScreens\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\"}"
     },
     {
       "name": "ListHmiTagTables",
@@ -2278,45 +2288,6 @@
       ],
       "description": "[L2][HMI][READ]List HMI tag names (best-effort). If tagTableName empty, returns tags found at root collection if available. Examples: GetToolUsage(toolName: \"ListHmiTags\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\"}"
-    },
-    {
-      "name": "ListIoSystems",
-      "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ListIoSystems",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "subnetName",
-        "devicePath",
-        "itemPath",
-        "offset",
-        "limit"
-      ],
-      "description": "[L2][Hardware][READ] Official IoSystem rows (Name, Number, Subnet, ConnectedIoDevices owner paths, HwIdentifiers, dynamic MultipleUseIoSystem/UseIoSystemNameAsDeviceNameExtension/MaxNumberIWlanLinksPerSegment/IsochronousTiTo*) scoped by exact subnetName (Subnet.IoSystems) or by the interface device item (devicePath + itemPath: NetworkInterface.IoControllers[].IoSystem and IoConnectors[].ConnectedToIoSystem, with IoController SyncRole/PnDeviceNumber/Addresses and IoConnector PnUpdateTime*/PnWatchdog*/RtClass/SyncRole rows). Attribute failures are listed per name. Paginated, no modification. Examples: GetToolUsage(toolName: \"ListIoSystems\"), optionally operation or language.",
-      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact CPU device item from GetProjectTree\\u003E\",\"\\u003Cexact interface device item from GetProjectTree\\u003E\"]}"
-    },
-    {
-      "name": "ListUnifiedLibraryFolderEntries",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Unified",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ListUnifiedLibraryFolderV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "expectedProject",
-        "folderPath",
-        "cursor",
-        "limit",
-        "budgetMs"
-      ],
-      "description": "[L2][HMI-Unified][READ]Page only direct type/folder names in ONE exact project-library folder, for locating a referenced script/faceplate. No recursive search or default-version substitution. / selects root. Inspect returned folders before choosing the next exact path. Examples: GetToolUsage(toolName: \"ListUnifiedLibraryFolderEntries\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\"}"
     },
     {
       "name": "ListUnifiedHmiApiTypes",
@@ -2790,40 +2761,69 @@
       "example": "{\"subnetName\":\"PN_IE_1\"}"
     },
     {
-      "name": "ListVersionControlWorkspaces",
-      "layer": "L1",
-      "category": "project",
-      "domain": "VersionControl",
+      "name": "ListIoSystems",
+      "layer": "L2",
+      "category": "hardware",
+      "domain": "Hardware",
       "operation": "READ",
       "operationInferred": false,
-      "method": "ListVersionControlWorkspacesV4",
+      "method": "ListIoSystems",
       "returnType": "CallToolResult",
-      "parameters": [],
-      "description": "[L1][VersionControl][READ] List this project's version control (VCI) workspaces: name, folder on disk, language, and how many objects are mapped. A workspace is the plain-text mirror of the project that Git can actually diff and commit. Read-only. Workspace and mapping deletion, user-group creation and library-property configuration are not exposed. Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListVersionControlWorkspaces\"), optionally operation or language.",
-      "example": "{}"
+      "parameters": [
+        "subnetName",
+        "devicePath",
+        "itemPath",
+        "offset",
+        "limit"
+      ],
+      "description": "[L2][Hardware][READ] Official IoSystem rows (Name, Number, Subnet, ConnectedIoDevices owner paths, HwIdentifiers, dynamic MultipleUseIoSystem/UseIoSystemNameAsDeviceNameExtension/MaxNumberIWlanLinksPerSegment/IsochronousTiTo*) scoped by exact subnetName (Subnet.IoSystems) or by the interface device item (devicePath + itemPath: NetworkInterface.IoControllers[].IoSystem and IoConnectors[].ConnectedToIoSystem, with IoController SyncRole/PnDeviceNumber/Addresses and IoConnector PnUpdateTime*/PnWatchdog*/RtClass/SyncRole rows). Attribute failures are listed per name. Paginated, no modification. Examples: GetToolUsage(toolName: \"ListIoSystems\"), optionally operation or language.",
+      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact CPU device item from GetProjectTree\\u003E\",\"\\u003Cexact interface device item from GetProjectTree\\u003E\"]}"
     },
     {
-      "name": "ImportPlcBlocksDocuments",
+      "name": "ListUnifiedTagDefinitions",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
-      "operation": "WRITE",
+      "category": "hmi",
+      "domain": "HMI-Unified",
+      "operation": "READ",
       "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
+      "method": "ReadUnifiedTagDefinitionsV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "groupPath",
-        "importPath",
-        "fileNamesWithoutExtension",
-        "overwrite",
-        "expectedPlanHash",
-        "dryRun",
-        "confirm",
-        "expectedProjectFile"
+        "expectedProject",
+        "cursor",
+        "limit",
+        "budgetMs"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [batch-document-import-candidate] Exact V20/V21 ordered manifest of 1..16 admitted ordinary GlobalDB document sets. Reuses single document grammar and None-only native calls; all code/resource pairs remain locked. Whole-manifest hashes, complete collision inventory and exact project/group confirmation. Stop on first uncertainty, retain succeeded/failed/not-attempted evidence, inspect an unknown target before repeating that call. GetSessionState lists unsettled request IDs; no folder guessing, overwrite, culture activation, compile, save, retry or rollback. Native acceptance NOT RUN. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlocksDocuments\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"dryRun\":true,\"confirm\":false,\"fileNamesWithoutExtension\":[\"\\u003Cexact document basename from the import directory\\u003E\"]}"
+      "description": "[L2][HMI-Unified][READ]Resume recursive root/table/group/UDT/array member definitions. Returns path-addressed records, own API fields and separately labelled root source inference. Unknown bounds remain gaps. limit counts evidence records, not tags. Follow nextCursor until null; inspect cumulative failures. Examples: GetToolUsage(toolName: \"ListUnifiedTagDefinitions\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\"}"
+    },
+    {
+      "name": "ManageSafetyFunction",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "Safety",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageSafetyFunction",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "activationTest",
+        "action",
+        "groupPath",
+        "name",
+        "sourceName",
+        "filePath",
+        "exportOptions",
+        "documentInfoOptions",
+        "importOptions",
+        "confirmDelete",
+        "dryRun",
+        "signals",
+        "properties"
+      ],
+      "description": "[L2][Safety][WRITE] Safety functions (test cases) of one activation test (activationTest + groupPath): read (all, or one by name - the generated SafetyFunction.Name or a unique TestName - with conditions and trace configuration: IsTraced, PretriggerTime, RecordingDuration, Signals), create (SafetyFunctionComposition.Create() then properties {testName, description}), createFrom (CreateFrom(source named by sourceName)), update (properties {testName, description}; official: attributes are editable only while the function has no test result), resetTestResult (ResetTestResult()), checkValidity / checkTraceValidity (TestValidity.CheckValidity on the function / its TraceConfiguration), setTrace (properties {isTraced, pretriggerTime, recordingDuration} + optional signals string[] -> TraceConfiguration.IsTraced + SetAttribute with readback; dynamic names/types PretriggerTime/RecordingDuration/Signals await native confirmation and must be readable on the target before any write), export (Export(FileInfo, ExportOptions[, DocumentInfoOptions]) -> new XML file), import (SafetyFunctionComposition.Import(file, importOptions None|Override|SkipInactiveCultures|ActivateInactiveCultures)), delete (confirmDelete). V21 only; default preview; no automatic save. Examples: GetToolUsage(toolName: \"ManageSafetyFunction\"), optionally operation or language.",
+      "example": "{\"activationTest\":\"Acceptance_1\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
       "name": "ManageSafetyFunctionCondition",
@@ -2850,27 +2850,21 @@
       "example": "{\"activationTest\":\"Acceptance_1\",\"safetyFunction\":\"Function_1\",\"action\":\"read\",\"dryRun\":true}"
     },
     {
-      "name": "ManageSivarcBlockDefinition",
+      "name": "ManageSafetyGlobalSettings",
       "layer": "L2",
       "category": "plc",
-      "domain": "PLC-Software",
+      "domain": "Safety",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageSivarcBlockDefinitionV4",
+      "method": "ManageSafetyGlobalSettings",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "blockPath",
-        "kind",
-        "name",
         "action",
-        "confirmDelete",
         "dryRun",
-        "properties",
-        "texts"
+        "properties"
       ],
-      "description": "[L2][PLC-Software][WRITE] One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. All block-definition reads and writes are refused with UNSUPPORTED_CAPABILITY on V20 before native access because SivarcDataProvider definition access can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcBlockDefinition\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
+      "description": "[L2][Safety][WRITE] Official Safety GlobalSettings service of the connected TIA Portal (portal-wide, no project needed): read/update SafetyModificationsPossible, GenerationOfDefaultFailsafeProgram, ManagementOfFailsafeInSoftwareUnitsEnvironment, UsernameForFChangeHistory (<=256 chars; empty resets). properties holds only those four names. dryRun=true default; update reads every value back. SafetyModificationsPossible=false locks all F-program changes in TIA regardless of login. Examples: GetToolUsage(toolName: \"ManageSafetyGlobalSettings\"), optionally operation or language.",
+      "example": "{\"dryRun\":true,\"action\":\"read\"}"
     },
     {
       "name": "SetUnifiedHmiRuntimeState",
@@ -4031,23 +4025,6 @@
       "example": "{}"
     },
     {
-      "name": "ManageSafetyGlobalSettings",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "Safety",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageSafetyGlobalSettings",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "action",
-        "dryRun",
-        "properties"
-      ],
-      "description": "[L2][Safety][WRITE] Official Safety GlobalSettings service of the connected TIA Portal (portal-wide, no project needed): read/update SafetyModificationsPossible, GenerationOfDefaultFailsafeProgram, ManagementOfFailsafeInSoftwareUnitsEnvironment, UsernameForFChangeHistory (<=256 chars; empty resets). properties holds only those four names. dryRun=true default; update reads every value back. SafetyModificationsPossible=false locks all F-program changes in TIA regardless of login. Examples: GetToolUsage(toolName: \"ManageSafetyGlobalSettings\"), optionally operation or language.",
-      "example": "{\"dryRun\":true,\"action\":\"read\"}"
-    },
-    {
       "name": "RunOfflineReleaseValidationSuite",
       "layer": "L2",
       "category": "project",
@@ -4062,6 +4039,24 @@
       ],
       "description": "[L2][Validation][EXECUTE]Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: \"RunOfflineReleaseValidationSuite\"), optionally operation or language.",
       "example": "{\"workspaceRoot\":\"C:\\\\Examples\\\\work\",\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
+    },
+    {
+      "name": "RunHmiTemplatePlcSyncPrecheckSuite",
+      "layer": "L2",
+      "category": "project",
+      "domain": "Validation",
+      "operation": "EXECUTE",
+      "operationInferred": false,
+      "method": "RunHmiTemplatePlcSyncPrecheckSuiteV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "templateDirectory",
+        "plcXmlPath",
+        "reportDirectory",
+        "mappingFilePath"
+      ],
+      "description": "[L2][Validation][EXECUTE]Offline-only helper: verify Unified HMI template RequiredTags against real PLC tag/DB-member XML symbols before any HMI binding. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: \"RunHmiTemplatePlcSyncPrecheckSuite\"), optionally operation or language.",
+      "example": "{\"templateDirectory\":\"C:\\\\Examples\\\\templates\",\"plcXmlPath\":\"C:\\\\Examples\\\\snapshot\",\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
     },
     {
       "name": "RunHmiActionScriptRecipeSafetySelfTest",
@@ -4361,26 +4356,6 @@
       "example": "{\"sourceDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"action\":\"inspect\"}"
     },
     {
-      "name": "MonitorPlcWatchTableS7",
-      "layer": "L2",
-      "category": "runtime",
-      "domain": "Online-Monitoring",
-      "operation": "ONLINE",
-      "operationInferred": false,
-      "method": "MonitorWatchTableLiveS7V4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "watchTableName",
-        "ip",
-        "rack",
-        "slot",
-        "expectModuleContains"
-      ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use ListPlcWatchTables to list table names. Current native policy; V4 safety behavior is not yet accepted. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"MonitorPlcWatchTableS7\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"Watch_1\",\"ip\":\"192.0.2.10\"}"
-    },
-    {
       "name": "ManageUmcUsers",
       "layer": "L2",
       "category": "project",
@@ -4404,6 +4379,39 @@
       ],
       "description": "[L2][Security][WRITE] UMC (central) users and groups of a protected project (UmacConfigurator.UmcUsers/UmcUserGroups) and the UMC server (UmcServerConfigurator). kind=user|group: read (all or exact name, paginated: Name, IsActive, DomainId, Description, roles), createOffline (UmcUserComposition.CreateOfflineUmcUser(name) / CreateOfflineUmcUserGroup()+SetName), importFromServer (UmcServer.GetUserByName/GetUserGroupByName then Create(info); needs serverUserName + serverPassword for the Authentication event, a UMC account with the UMC View right), rename (newName via SetName), activate/deactivate, delete (verified absent), assignRole/unassignRole (roleName = system or custom role, RoleAssociation.Add/Remove). kind=server: read (UmcServer scalars/attribute names), checkConsistency (UmcServerConfigurator.CheckConsistency), synchronize (Synchronize with the server; optional credentials). Real changes need confirmChange with dryRun=false; passwords go to the API as SecureString and are never echoed; local request DTOs retain managed strings until garbage collection. Authentication callbacks are serialized with credential disposal; server sync authentication behavior still needs VM confirmation. No save. ManageProjectUserManagement handles project (local) users. Examples: GetToolUsage(toolName: \"ManageUmcUsers\"), optionally operation or language.",
       "example": "{\"confirmChange\":false,\"dryRun\":true,\"action\":\"read\"}"
+    },
+    {
+      "name": "ManageTransferArea",
+      "layer": "L2",
+      "category": "hardware",
+      "domain": "Hardware",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ManageTransferArea",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "devicePath",
+        "itemPath",
+        "action",
+        "kind",
+        "name",
+        "type",
+        "positionNumber",
+        "extendedPositionNumber",
+        "partnerDevicePath",
+        "partnerItemPath",
+        "senderName",
+        "length",
+        "ruleIndex",
+        "targetDevicePath",
+        "targetItemPath",
+        "confirmDelete",
+        "dryRun",
+        "properties",
+        "attributes"
+      ],
+      "description": "[L2][Hardware][WRITE] Transfer areas of the exact interface device item. kind=standard: create (TransferAreaComposition.Create(name, type[, positionNumber]); type is an official TransferAreaType such as IN/OUT/MS/CD/TM/F_PS and cannot be changed later), delete, update (properties Name/Direction/LocalToPartnerLength/PartnerToLocalLength + attributes), createMappingRule/updateMappingRule/deleteMappingRule (TransferAreaMappingRules: Begin/End/IoType/Offset via properties, Target via targetDevicePath/targetItemPath, ruleIndex for update/delete). kind=multicast (CCDX, DDX): create on the sender interface toward partnerDevicePath/partnerItemPath (optional name, length), createReceiver for senderName, delete (sender deletes all receivers), update (Name/Comment/DataLength). Target by exact name or positionNumber. Deletes need confirmDelete. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageTransferArea\"), optionally operation or language.",
+      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"action\":\"create\",\"kind\":\"standard\",\"name\":\"ExampleTransfer\",\"type\":\"IN\",\"positionNumber\":0,\"confirmDelete\":false,\"dryRun\":true}"
     },
     {
       "name": "ManageTestSuiteCase",
@@ -4718,37 +4726,68 @@
       "example": "{\"category\":\"screens\",\"name\":\"Example_1\",\"action\":\"create\",\"dryRun\":true,\"collectionPath\":[{\"property\":\"Tables\",\"name\":\"ExampleTable\"},{\"property\":\"RuleGroups\",\"name\":\"ExampleGroup\"},{\"property\":\"Rules\"}]}"
     },
     {
-      "name": "ManageTransferArea",
+      "name": "ManageSivarcBlockDefinition",
       "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
+      "category": "plc",
+      "domain": "PLC-Software",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ManageTransferArea",
+      "method": "ManageSivarcBlockDefinitionV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "devicePath",
-        "itemPath",
-        "action",
+        "softwarePath",
+        "blockPath",
         "kind",
         "name",
-        "type",
-        "positionNumber",
-        "extendedPositionNumber",
-        "partnerDevicePath",
-        "partnerItemPath",
-        "senderName",
-        "length",
-        "ruleIndex",
-        "targetDevicePath",
-        "targetItemPath",
+        "action",
         "confirmDelete",
         "dryRun",
         "properties",
-        "attributes"
+        "texts"
       ],
-      "description": "[L2][Hardware][WRITE] Transfer areas of the exact interface device item. kind=standard: create (TransferAreaComposition.Create(name, type[, positionNumber]); type is an official TransferAreaType such as IN/OUT/MS/CD/TM/F_PS and cannot be changed later), delete, update (properties Name/Direction/LocalToPartnerLength/PartnerToLocalLength + attributes), createMappingRule/updateMappingRule/deleteMappingRule (TransferAreaMappingRules: Begin/End/IoType/Offset via properties, Target via targetDevicePath/targetItemPath, ruleIndex for update/delete). kind=multicast (CCDX, DDX): create on the sender interface toward partnerDevicePath/partnerItemPath (optional name, length), createReceiver for senderName, delete (sender deletes all receivers), update (Name/Comment/DataLength). Target by exact name or positionNumber. Deletes need confirmDelete. Default dryRun=true; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageTransferArea\"), optionally operation or language.",
-      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"action\":\"create\",\"kind\":\"standard\",\"name\":\"ExampleTransfer\",\"type\":\"IN\",\"positionNumber\":0,\"confirmDelete\":false,\"dryRun\":true}"
+      "description": "[L2][PLC-Software][WRITE] One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. All block-definition reads and writes are refused with UNSUPPORTED_CAPABILITY on V20 before native access because SivarcDataProvider definition access can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcBlockDefinition\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
+    },
+    {
+      "name": "MonitorPlcWatchTableS7",
+      "layer": "L2",
+      "category": "runtime",
+      "domain": "Online-Monitoring",
+      "operation": "ONLINE",
+      "operationInferred": false,
+      "method": "MonitorWatchTableLiveS7V4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "watchTableName",
+        "ip",
+        "rack",
+        "slot",
+        "expectModuleContains"
+      ],
+      "description": "[L2][Online-Monitoring][ONLINE] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use ListPlcWatchTables to list table names. Current native policy; V4 safety behavior is not yet accepted. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"MonitorPlcWatchTableS7\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"Watch_1\",\"ip\":\"192.0.2.10\"}"
+    },
+    {
+      "name": "ImportPlcBlockVerified",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ImportPlcBlockVerifiedV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "blockPath",
+        "importPath",
+        "evidenceDirectory",
+        "dryRun",
+        "previewToken",
+        "compileAfterImport"
+      ],
+      "description": "[L2][PLC-Software][WRITE] Overwrite one existing non-library PLC block in its exact current user group with a reviewed SimaticML file. Default dryRun=true exports a retained backup, preserves omitted scalar block attributes and returns planned.xml plus binding/content token. Execution requires SAME arguments and previewToken; re-exports current block, rechecks binding/content before import, then re-exports for strict document verification preserving wiring and literal values. Requires Offline and consistent exports. Refuses library-bound blocks, InstanceDB, changed name/type/number/layout/language and empty replacement logic. Missing interface members/networks still mean deletion. compileAfterImport=false by default; true explicitly compiles the imported block before readback, rejecting compile errors. Without compile, inconsistent readback remains failed/unverified. No save/download/rollback/retry; failures may leave changes. Native V20/V21 execution not yet validated. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportPlcBlockVerified\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true}"
     },
     {
       "name": "MovePlcBlockToGroup",
@@ -4771,27 +4810,6 @@
       ],
       "description": "[L2][PLC-Software][WRITE] Preview an exact block relocation under one plan hash. Apply requires confirm, expectedPlanHash and exact expectedProjectFile. Export and verify a retained WithDefaults recovery backup, then delete the source and import into the target without overwriting. Verify parent/name/number/language; report imported consistency and compile guidance separately. On target import or verification failure, automatically restore the block into the original group; first delete any imported target that failed verification. If target cleanup fails, do not attempt restoration and report the recovery file as the only verified copy. If restoration fails, report the recovery file as the only verified copy. The move operation is not automatically retried; this does not prevent its automatic restoration. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"MovePlcBlockToGroup\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockName\":\"FC_Example\",\"targetGroupPath\":\"Examples\",\"autoCreateGroup\":false,\"dryRun\":true,\"confirm\":false}"
-    },
-    {
-      "name": "OpenProject",
-      "layer": "L1",
-      "category": "project",
-      "domain": "Project",
-      "operation": "SESSION",
-      "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "path",
-        "dryRun",
-        "umacUserName",
-        "umacPassword",
-        "umacUserType",
-        "confirm",
-        "expectedProjectFile"
-      ],
-      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Refused while the TIA instance already has an open project or local session. Protected (UMAC) projects: pass umacUserName and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing credentials. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"OpenProject\"), optionally operation or language.",
-      "example": "{\"path\":\"\\u003Cexact caller-selected closed project file for this release\\u003E\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "PatchPlcBlockDocument",
@@ -5326,43 +5344,50 @@
       "example": "{\"artifacts\":[{\"id\":\"UDT_Status\"},{\"id\":\"FB_Motor\",\"dependencies\":[\"UDT_Status\"]}]}"
     },
     {
-      "name": "RunHmiTemplatePlcSyncPrecheckSuite",
-      "layer": "L2",
+      "name": "OpenProject",
+      "layer": "L1",
       "category": "project",
-      "domain": "Validation",
-      "operation": "EXECUTE",
+      "domain": "Project",
+      "operation": "SESSION",
       "operationInferred": false,
-      "method": "RunHmiTemplatePlcSyncPrecheckSuiteV4",
+      "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [
-        "templateDirectory",
-        "plcXmlPath",
-        "reportDirectory",
-        "mappingFilePath"
+        "path",
+        "dryRun",
+        "umacUserName",
+        "umacPassword",
+        "umacUserType",
+        "confirm",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Validation][EXECUTE]Offline-only helper: verify Unified HMI template RequiredTags against real PLC tag/DB-member XML symbols before any HMI binding. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: \"RunHmiTemplatePlcSyncPrecheckSuite\"), optionally operation or language.",
-      "example": "{\"templateDirectory\":\"C:\\\\Examples\\\\templates\",\"plcXmlPath\":\"C:\\\\Examples\\\\snapshot\",\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
+      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Refused while the TIA instance already has an open project or local session. Protected (UMAC) projects: pass umacUserName and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing credentials. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"OpenProject\"), optionally operation or language.",
+      "example": "{\"path\":\"\\u003Cexact caller-selected closed project file for this release\\u003E\",\"dryRun\":true,\"confirm\":false}"
     },
     {
-      "name": "ImportPlcBlockVerified",
+      "name": "ManageSinumerikArchive",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
+      "category": "hardware",
+      "domain": "Hardware",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ImportPlcBlockVerifiedV4",
+      "method": "ManageSinumerikArchive",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "blockPath",
-        "importPath",
-        "evidenceDirectory",
-        "dryRun",
-        "previewToken",
-        "compileAfterImport"
+        "action",
+        "filePath",
+        "devicePath",
+        "itemPath",
+        "modifiedDevicePath",
+        "modifiedItemPath",
+        "mode",
+        "comment",
+        "author",
+        "password",
+        "dryRun"
       ],
-      "description": "[L2][PLC-Software][WRITE] Overwrite one existing non-library PLC block in its exact current user group with a reviewed SimaticML file. Default dryRun=true exports a retained backup, preserves omitted scalar block attributes and returns planned.xml plus binding/content token. Execution requires SAME arguments and previewToken; re-exports current block, rechecks binding/content before import, then re-exports for strict document verification preserving wiring and literal values. Requires Offline and consistent exports. Refuses library-bound blocks, InstanceDB, changed name/type/number/layout/language and empty replacement logic. Missing interface members/networks still mean deletion. compileAfterImport=false by default; true explicitly compiles the imported block before readback, rejecting compile errors. Without compile, inconsistent readback remains failed/unverified. No save/download/rollback/retry; failures may leave changes. Native V20/V21 execution not yet validated. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportPlcBlockVerified\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true}"
+      "description": "[L2][Hardware][WRITE] SINUMERIK Project.HwUtilities archive/retrieve/fAddressArchive (.dsf). Exact device/item paths are Arrays. archive mode OnlyHardware/HardwareAndAllProgramBlocks; F-address archive selects productive and modified PLC items. Optional comment/author/password; passwords are not logged. dryRun defaults true. Existing output files refused; outputs hashed. Retrieve inserts a device without save; V16 returns void and provides no device identity, V17 and later return its name. Available on V16-V20. F-address archive is unavailable on V17. Password Archive/F-address overloads require V19; password Retrieve requires V20. Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSinumerikArchive\"), optionally operation or language.",
+      "example": "{\"action\":\"archive\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Example.dsf\",\"dryRun\":true,\"devicePath\":[\"\\u003Cexact SINUMERIK device from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact NCU PLC item\\u003E\"]}"
     },
     {
       "name": "ImportPlcBlockDocuments",
@@ -5388,45 +5413,22 @@
       "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"DB_Flags\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
     },
     {
-      "name": "ImportPlcBlock",
-      "layer": "L1",
+      "name": "ImportPlcAlarmInstanceTexts",
+      "layer": "L2",
       "category": "plc",
-      "domain": "PLC-Software",
+      "domain": "PLC-Alarms",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
+      "method": "ImportPlcAlarmInstanceTextsV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "groupPath",
-        "importPath",
-        "overwrite",
-        "dryRun",
-        "unitName",
-        "swImportOptions",
-        "importOptions",
-        "confirm",
-        "expectedProjectFile"
+        "filePath",
+        "cultures",
+        "dryRun"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [v17-exchange-safe-v1] Native XML import into exact group; V14 SCL interface-only XML cannot restore or replace full programs; empty group means root. No version rewrite or fallback. Preview by default; overwrite defaults false. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Explicit swImportOptions and culture importOptions default empty and appear in preview; unsupported combinations return UNSUPPORTED_CAPABILITY. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlock\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"importPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
-    },
-    {
-      "name": "DescribeHmiTagTable",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "DescribeHmiTagTableV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "tagTableName",
-        "maxMembers"
-      ],
-      "description": "[L2][HMI][READ]Describe one HMI tag table object (members/methods) by name under an HMI software. Examples: GetToolUsage(toolName: \"DescribeHmiTagTable\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\"}"
+      "description": "[L2][PLC-Alarms][WRITE] Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportPlcAlarmInstanceTexts\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\AlarmTexts.xlsx\",\"dryRun\":true,\"cultures\":[\"en-US\",\"zh-CN\"]}"
     },
     {
       "name": "DescribeHmiTag",
@@ -5654,24 +5656,6 @@
       "example": "{\"exportId\":\"\\u003CexportId from response\\u003E\"}"
     },
     {
-      "name": "DescribeObject",
-      "layer": "L2",
-      "category": "session",
-      "domain": "Reflection",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "DescribeObjectV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "objectKind",
-        "objectPath",
-        "softwarePath",
-        "maxMembers"
-      ],
-      "description": "[L2][Reflection][READ]Describe an Openness object via reflection. Use this first when a natural-language TIA operation has no direct MCP tool. objectKind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts Examples: GetToolUsage(toolName: \"DescribeObject\"), optionally operation or language.",
-      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\"}"
-    },
-    {
       "name": "DeleteEmptyUnifiedHmiScreenGroup",
       "layer": "L2",
       "category": "hmi",
@@ -5689,20 +5673,38 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"groupPath\":\"/Examples\",\"dryRun\":true}"
     },
     {
-      "name": "DecodePlcSimaticMl",
+      "name": "DescribeHmiTagTable",
       "layer": "L2",
-      "category": "project",
-      "domain": "Validation",
-      "operation": "OFFLINE",
+      "category": "hmi",
+      "domain": "HMI",
+      "operation": "READ",
       "operationInferred": false,
-      "method": "DecodePlcSimaticMlV4",
+      "method": "DescribeHmiTagTableV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "filePath",
-        "timeoutSeconds"
+        "softwarePath",
+        "tagTableName",
+        "maxMembers"
       ],
-      "description": "[L2][Validation][OFFLINE] Decode one V21 FC/FB SimaticML export with pinned MIT Czarnak/simaticml-decoder into readability-first SCL and metadata. Uses the bundled isolated CPython runtime; no Python installation or package download required. Does not execute project scripts, call TIA or write files. Output is analysis-only, NOT recompilable/reimportable; unknown instructions, warnings and native-format qualification gaps remain explicit. S7DCL/GRAPH/STL semantic translation is unsupported. V20 input is refused even when this tool runs in the V20 engine. Examples: GetToolUsage(toolName: \"DecodePlcSimaticMl\"), optionally operation or language.",
-      "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
+      "description": "[L2][HMI][READ]Describe one HMI tag table object (members/methods) by name under an HMI software. Examples: GetToolUsage(toolName: \"DescribeHmiTagTable\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\"}"
+    },
+    {
+      "name": "DeleteEmptyPlcBlockGroup",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "DeleteEmptyPlcBlockGroupV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "groupPath",
+        "dryRun"
+      ],
+      "description": "[L2][PLC-Software][WRITE] Delete one exact empty block group through ManagePlcUserGroup (family=blocks, action=deleteEmpty). Defaults to dryRun=true; execution follows the same Offline, exclusive access, approval and diagnostics. Compatibility forwarder; no separate native implementation. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DeleteEmptyPlcBlockGroup\"), optionally operation or language. Compatibility forwarder to ManagePlcUserGroup; identical preview, approval, diagnostics and result envelope. family=blocks; action=deleteEmpty; newName=",
+      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"Examples\",\"dryRun\":true}"
     },
     {
       "name": "CreateVersionControlWorkspace",
@@ -5946,21 +5948,60 @@
       "example": "{\"keyword\":\"\\u003Cexact catalog TypeIdentifier from SearchInstalledGsdDevices\\u003E\",\"deviceName\":\"PLC_2\",\"dryRun\":true}"
     },
     {
-      "name": "DeleteEmptyPlcBlockGroup",
+      "name": "CreateDevice",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
+      "category": "hardware",
+      "domain": "Hardware",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "DeleteEmptyPlcBlockGroupV4",
+      "method": "CreateDeviceV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "groupPath",
-        "dryRun"
+        "deviceName",
+        "family",
+        "dryRun",
+        "expectedPlanHash",
+        "confirm",
+        "expectedProjectFile",
+        "orderNumber",
+        "version"
       ],
-      "description": "[L2][PLC-Software][WRITE] Delete one exact empty block group through ManagePlcUserGroup (family=blocks, action=deleteEmpty). Defaults to dryRun=true; execution follows the same Offline, exclusive access, approval and diagnostics. Compatibility forwarder; no separate native implementation. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"DeleteEmptyPlcBlockGroup\"), optionally operation or language. Compatibility forwarder to ManagePlcUserGroup; identical preview, approval, diagnostics and result envelope. family=blocks; action=deleteEmpty; newName=",
-      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"Examples\",\"dryRun\":true}"
+      "description": "[L2][Hardware][WRITE] Compatibility forwarder to CreateHardwareDevice on V18–V21. orderNumber maps to preferredMlfb and version to preferredVersion; both are passed unchanged. Default dryRun=true. Uses the same exact catalog selection, inventory, plan hash, confirm and expectedProjectFile, one create, readback, result and diagnostics. V14 SP1–V17 retain the exact native device creation route with the same preview/hash/project contract. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CreateDevice\"), optionally operation or language. Compatibility forwarder to CreateHardwareDevice; identical preview, approval, diagnostics and result envelope. orderNumber -> preferredMlfb; version -> preferredVersion",
+      "example": "{\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\",\"dryRun\":true,\"confirm\":false}"
+    },
+    {
+      "name": "DecodePlcSimaticMl",
+      "layer": "L2",
+      "category": "project",
+      "domain": "Validation",
+      "operation": "OFFLINE",
+      "operationInferred": false,
+      "method": "DecodePlcSimaticMlV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "filePath",
+        "timeoutSeconds"
+      ],
+      "description": "[L2][Validation][OFFLINE] Decode one V21 FC/FB SimaticML export with pinned MIT Czarnak/simaticml-decoder into readability-first SCL and metadata. Uses the bundled isolated CPython runtime; no Python installation or package download required. Does not execute project scripts, call TIA or write files. Output is analysis-only, NOT recompilable/reimportable; unknown instructions, warnings and native-format qualification gaps remain explicit. S7DCL/GRAPH/STL semantic translation is unsupported. V20 input is refused even when this tool runs in the V20 engine. Examples: GetToolUsage(toolName: \"DecodePlcSimaticMl\"), optionally operation or language.",
+      "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
+    },
+    {
+      "name": "DescribeObject",
+      "layer": "L2",
+      "category": "session",
+      "domain": "Reflection",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "DescribeObjectV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "objectKind",
+        "objectPath",
+        "softwarePath",
+        "maxMembers"
+      ],
+      "description": "[L2][Reflection][READ]Describe an Openness object via reflection. Use this first when a natural-language TIA operation has no direct MCP tool. objectKind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTagTable|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts Examples: GetToolUsage(toolName: \"DescribeObject\"), optionally operation or language.",
+      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\"}"
     },
     {
       "name": "DescribeObjectProperty",
@@ -5996,42 +6037,6 @@
       ],
       "description": "[L1][PLC-Software][READ] Read a block's LOGIC as READABLE TEXT — the fast, accurate way to analyze LADDER (LAD) without hand-parsing FlgNet XML. For each LAD network it reconstructs the power flow as a boolean-ish expression (series = ' · ', parallel = ' + '), shows coils ( )/(S)/(R), MOVE/compare/timer boxes with their operands, and — critically — FLAGS any contact whose operand is a LITERAL CONSTANT with a literal-constant marker (a normally-open contact wired to FALSE silently disables its whole rung; this is nearly impossible to spot by eye). SCL/STL networks are rendered inline as code. Use this to understand or review LAD logic before editing. Requires: ConnectPortal + OpenProject + the block consistent (compile first if IsConsistent=false; export does not work in online mode — DisconnectOnlinePlc first). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree; names containing '/' or other reserved characters use the encoded form printed by read tools, e.g. 'Group/A%2FB'. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DescribePlcBlockLogic\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\"}"
-    },
-    {
-      "name": "DescribeService",
-      "layer": "L2",
-      "category": "session",
-      "domain": "Reflection",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "DescribeServiceV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "objectKind",
-        "objectPath",
-        "serviceTypeSuffix",
-        "softwarePath",
-        "maxMembers"
-      ],
-      "description": "[L2][Reflection][READ]GetService bridge: describe a Siemens.Engineering service by exact full type name or unique suffix. Ambiguous suffixes are refused. Examples: GetToolUsage(toolName: \"DescribeService\"), optionally operation or language.",
-      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"serviceTypeSuffix\":\"\\u003Cexact service type suffix from the Siemens API reference\\u003E\"}"
-    },
-    {
-      "name": "ExportAlarmTextLists",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Alarms",
-      "operation": "FILE",
-      "operationInferred": false,
-      "method": "ExportAlarmTextListsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "exportPath",
-        "exportFile"
-      ],
-      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export all PLC alarm text lists to an XLSX (Excel) file. Text lists contain the text strings shown for each alarm condition. Supports multi-language projects — all configured languages are exported. Typical use: export → translate in Excel → ImportAlarmTextLists. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmTextLists\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportAlarmTextLists.xlsx\"}"
     },
     {
       "name": "ExportAlarmInstanceTexts",
@@ -6601,44 +6606,65 @@
       "example": "{\"packageId\":\"tiamcp.basic\",\"version\":\"1.0.0\"}"
     },
     {
-      "name": "CreateDevice",
+      "name": "DescribeService",
       "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "WRITE",
+      "category": "session",
+      "domain": "Reflection",
+      "operation": "READ",
       "operationInferred": false,
-      "method": "CreateDeviceV4",
+      "method": "DescribeServiceV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "deviceName",
-        "family",
-        "dryRun",
-        "expectedPlanHash",
-        "confirm",
-        "expectedProjectFile",
-        "orderNumber",
-        "version"
+        "objectKind",
+        "objectPath",
+        "serviceTypeSuffix",
+        "softwarePath",
+        "maxMembers"
       ],
-      "description": "[L2][Hardware][WRITE] Compatibility forwarder to CreateHardwareDevice on V18–V21. orderNumber maps to preferredMlfb and version to preferredVersion; both are passed unchanged. Default dryRun=true. Uses the same exact catalog selection, inventory, plan hash, confirm and expectedProjectFile, one create, readback, result and diagnostics. V14 SP1–V17 retain the exact native device creation route with the same preview/hash/project contract. Native behaviorPolicy=current; V4 native acceptance is pending. Example: {\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CreateDevice\"), optionally operation or language. Compatibility forwarder to CreateHardwareDevice; identical preview, approval, diagnostics and result envelope. orderNumber -> preferredMlfb; version -> preferredVersion",
-      "example": "{\"orderNumber\":\"6ES7 515-2AM02-0AB0\",\"version\":\"V2.9\",\"deviceName\":\"PLC_2\",\"dryRun\":true,\"confirm\":false}"
+      "description": "[L2][Reflection][READ]GetService bridge: describe a Siemens.Engineering service by exact full type name or unique suffix. Ambiguous suffixes are refused. Examples: GetToolUsage(toolName: \"DescribeService\"), optionally operation or language.",
+      "example": "{\"objectKind\":\"Project\",\"objectPath\":\"\",\"serviceTypeSuffix\":\"\\u003Cexact service type suffix from the Siemens API reference\\u003E\"}"
     },
     {
-      "name": "ExportDeviceAml",
+      "name": "ConvertEngineeringTable",
       "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
+      "category": "plc",
+      "domain": "PLC-Builders",
       "operation": "FILE",
       "operationInferred": false,
-      "method": "ExportDeviceAmlV4",
+      "method": "ConvertEngineeringTableV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "devicePath",
-        "exportPath",
+        "kind",
+        "direction",
+        "inputPath",
+        "templatePath",
+        "rows",
+        "columns",
+        "format",
         "exportFile",
-        "exportDirectory"
+        "offset",
+        "limit",
+        "dryRun"
       ],
-      "description": "[L2][Hardware][FILE] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be an existing folder (file named <device>.aml) or a full .aml path in an existing directory; existing target files are refused. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry behavior remains pending V4 acceptance. Examples: GetToolUsage(toolName: \"ExportDeviceAml\"), optionally operation or language. exportPath and exportFile and exportDirectory are mutually exclusive parameter alternatives.",
-      "example": "{\"devicePath\":[\"PLC_1\"],\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\Device.aml\"}"
+      "description": "[L2][PLC-Builders][FILE] Offline conversion: kind plcTagTable or rows; direction toTable or fromTable. plcTagTable uses one exported SimaticML table; fromTable requires its templatePath. Fixed columns Kind, Name, DataType, Address, Value, then template scalar attributes in first-seen order and Comment[culture] ordered by culture. Culture syntax ^[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}$. Kind is Tag, Constant or read-only SystemConstant; (Kind,Name) is an exact key, never renamed. Merge updates/adds rows; omitted rows are kept, empty editable cells remove attributes/comments to TIA defaults. Unknown columns, case-insensitive name collisions and Kind changes refuse. Constants never emit ExternalAccessible. Header, DocumentInfo and unrelated XML are preserved. Delete explicitly through ManagePlcTagDefinition/ApplyToolBatch. rows toTable accepts 1..1000 flat scalar objects and optional column order; fromTable returns strings with offset/limit 1..200 (default 50), columns, total and V4 paging; writes no file. CSV is UTF-8 BOM, comma, all cells quoted with doubled quotes and LF; accepts no BOM and CR/LF/CRLF; rejects NUL, broken quotes, uneven nonempty rows and empty/duplicate headers. plcTagTable ignores every empty row; rows trims only trailing empty rows. Trailing empty styled XLSX cells are ignored. CSV export adds one apostrophe before = + - @, tab or CR, including when preceded by leading apostrophes; import removes exactly one such prefix. XLSX preserves apostrophes unchanged without a formula guard. Use XLSX when Excel's locale uses semicolon separators. XLSX uses one sheet PlcTagTable/Rows, all inline text cells; reads that sheet or the only sheet, shared/inline strings, raw numbers, booleans and formula cached values; refuses formulas without cache, errors, ambiguous sheets, .xls/.xlsm and encrypted files. Limits: 16 MiB uncompressed, 10000 data rows, 1024 columns, 65536 CSV/32767 XLSX characters per cell, 64 Mi logical XLSX characters. Default dryRun=true validates and previews columns/counts, changes (first 50 old/new rows) and planned exportFile without writing. false creates a new file, never overwrites; returns path, bytes and SHA-256. Omitted exportFile uses the session output directory, with stable name ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix or overwrite. Output extension must match format (xlsx default/csv), or xml for plcTagTable fromTable. Import the XML with ImportPlcTagTable overwrite=true after preview/approval, binding folderPath to the original table folder; then ListPlcTags readback and compile affected blocks. No TIA calls, imports or compilation. Examples: GetToolUsage(toolName: \"ConvertEngineeringTable\"), optionally operation or language.",
+      "example": "{\"kind\":\"plcTagTable\",\"direction\":\"toTable\",\"inputPath\":\"C:/Examples/exports/Tags.xml\",\"format\":\"xlsx\",\"exportFile\":\"C:/Examples/generated/Tags.xlsx\",\"dryRun\":true}"
+    },
+    {
+      "name": "ExportAlarmTextLists",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Alarms",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "ExportAlarmTextListsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "exportPath",
+        "exportFile"
+      ],
+      "description": "[L2][Category:PLC-Alarms][PreCondition:ConnectPortal+OpenProject][FILE] Export all PLC alarm text lists to an XLSX (Excel) file. Text lists contain the text strings shown for each alarm condition. Supports multi-language projects — all configured languages are exported. Typical use: export → translate in Excel → ImportAlarmTextLists. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportAlarmTextLists\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportAlarmTextLists.xlsx\"}"
     },
     {
       "name": "ConnectProjectToWorkspace",
@@ -7774,6 +7800,24 @@
       "example": "{\"processId\":12345}"
     },
     {
+      "name": "ExportDeviceAml",
+      "layer": "L2",
+      "category": "hardware",
+      "domain": "Hardware",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "ExportDeviceAmlV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "devicePath",
+        "exportPath",
+        "exportFile",
+        "exportDirectory"
+      ],
+      "description": "[L2][Hardware][FILE] Read-only: export a device's hardware configuration to an AutomationML (CAx) .aml file. The file contains the configured IP address, subnet/mask, PROFINET device name and topology — info GetDeviceItemNetworkInfo omits. devicePath is the station/device path from GetProjectTree (e.g. 'S7-1200 station_3'). exportPath may be an existing folder (file named <device>.aml) or a full .aml path in an existing directory; existing target files are refused. Does NOT modify the project or go online. Behavior policy is current; existing native selection/retry behavior remains pending V4 acceptance. Examples: GetToolUsage(toolName: \"ExportDeviceAml\"), optionally operation or language. exportPath and exportFile and exportDirectory are mutually exclusive parameter alternatives.",
+      "example": "{\"devicePath\":[\"PLC_1\"],\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\Device.aml\"}"
+    },
+    {
       "name": "ExportHmiConnection",
       "layer": "L2",
       "category": "hmi",
@@ -7811,48 +7855,6 @@
       ],
       "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language. exportDir and exportDirectory are mutually exclusive parameter alternatives.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"exportOptions\":\"WithDefaults\"}"
-    },
-    {
-      "name": "ExportHmiScreen",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI",
-      "operation": "FILE",
-      "operationInferred": false,
-      "method": "ExportHmiScreenV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "screenName",
-        "exportPath",
-        "exportOptions",
-        "exportFile"
-      ],
-      "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\<directory under GetSessionState data.outputRoot>\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"}"
-    },
-    {
-      "name": "GetToolUsage",
-      "layer": "L0",
-      "category": "session",
-      "domain": "Guide",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "toolName",
-        "query",
-        "documentId",
-        "operation",
-        "language",
-        "exampleId",
-        "exampleKind",
-        "offset",
-        "limit"
-      ],
-      "description": "[L0][Guide][READ] Unified tool and programming examples for this release: exact contracts, parameter sources and result interpretation. toolName selects a tool; language lists code examples; exampleId reads full files/steps. query/documentId searches/reads official source. Embedded data only. Examples: GetToolUsage(toolName: \"GetToolUsage\"), optionally operation or language.",
-      "example": "{\"toolName\":\"ListPlcBlocks\",\"operation\":\"\"}"
     },
     {
       "name": "GetTechnologyObjectTree",
@@ -8047,25 +8049,6 @@
       "example": "{}"
     },
     {
-      "name": "GetUnifiedAlarmCommon",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Unified",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ReadUnifiedAlarmCommonV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "category",
-        "name",
-        "offset",
-        "limit"
-      ],
-      "description": "[L2][HMI-Unified][READ] Read-only HmiAlarmCommon dump: alarmClasses with the four AlarmStatusVisuals states (colors as #AARRGGBB, flashing), or discreteAlarms/analogAlarms with AlarmBase scalars and every EventText/InfoText language. Exact optional name; live offset/limit pagination; AlarmParameterTags excluded. Examples: GetToolUsage(toolName: \"GetUnifiedAlarmCommon\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"category\":\"alarmClasses\"}"
-    },
-    {
       "name": "GetPortalInfo",
       "layer": "L2",
       "category": "session",
@@ -8083,24 +8066,42 @@
       "example": "{\"includeProcesses\":true,\"includeSessions\":true,\"includeProducts\":false}"
     },
     {
-      "name": "GetPlcWebVars",
-      "layer": "L2",
-      "category": "runtime",
-      "domain": "Online-Monitoring",
-      "operation": "ONLINE",
+      "name": "GetToolUsage",
+      "layer": "L0",
+      "category": "session",
+      "domain": "Guide",
+      "operation": "READ",
       "operationInferred": false,
-      "method": "ReadPlcWebVarsV4",
+      "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [
-        "host",
-        "username",
-        "password",
-        "vars",
-        "ignoreCertificateErrors",
-        "timeoutMs"
+        "toolName",
+        "query",
+        "documentId",
+        "operation",
+        "language",
+        "exampleId",
+        "exampleKind",
+        "offset",
+        "limit"
       ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read live values of PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (HTTPS JSON-RPC on the CPU; S7-1500 FW>=2.9, S7-1200 G2, ET 200SP CPU, Software Controller, PLCSIM Advanced). Independent of TIA Openness and of PUT/GET; optimized DBs are fine. Names use the Web API form, e.g. \"\\\"DB_Motor\\\".\\\"Speed\\\"\" or \"\\\"Tag_1\\\"\" (quotes may be omitted for plain names; array elements as \"\\\"DB\\\".\\\"Arr\\\"[3]\"). Read-only: never writes, forces or changes CPU mode. Preconditions: web server enabled on the CPU, the user has 'read variables' permission (the default Anonymous user usually has none). The CPU certificate is validated unless ignoreCertificateErrors=true. The password is passed straight to the API and never stored or logged. Each name is read individually; per-name errors are reported in items[].error. Session is cached per host+user and reused. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcWebVars\"), optionally operation or language.",
-      "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\",\"vars\":[\"\\u0022DB_Status\\u0022.\\u0022Ready\\u0022\"]}"
+      "description": "[L0][Guide][READ] Unified tool and programming examples for this release: exact contracts, parameter sources and result interpretation. toolName selects a tool; language lists code examples; exampleId reads full files/steps. query/documentId searches/reads official source. Embedded data only. Examples: GetToolUsage(toolName: \"GetToolUsage\"), optionally operation or language.",
+      "example": "{\"toolName\":\"ListPlcBlocks\",\"operation\":\"\"}"
+    },
+    {
+      "name": "GetPortalConnectionReadiness",
+      "layer": "L0",
+      "category": "session",
+      "domain": "Portal",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "processId"
+      ],
+      "description": "[PLC foundation; native unverified][READ] [runtime-query-candidate] Explicit processId metadata diagnosis without attach. Found never proves readiness or permission; those remain unknown/not-probed. No startup, repairs or project open. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetPortalConnectionReadiness\"), optionally operation or language.",
+      "example": "{\"processId\":12345}"
     },
     {
       "name": "GetPlcWebDiagnostics",
@@ -8322,19 +8323,58 @@
       "example": "{\"softwarePath\":\"PLC_1\",\"objectPath\":\"Main\",\"objectKind\":\"Block\",\"filter\":\"AllObjects\"}"
     },
     {
-      "name": "GetPortalConnectionReadiness",
-      "layer": "L0",
-      "category": "session",
-      "domain": "Portal",
+      "name": "GetPlcChecksums",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
       "operation": "READ",
       "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
+      "method": "ReadPlcChecksumsV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "processId"
+        "softwarePath"
       ],
-      "description": "[PLC foundation; native unverified][READ] [runtime-query-candidate] Explicit processId metadata diagnosis without attach. Found never proves readiness or permission; those remain unknown/not-probed. No startup, repairs or project open. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GetPortalConnectionReadiness\"), optionally operation or language.",
-      "example": "{\"processId\":12345}"
+      "description": "[L2][PLC-Software][READ] Native PlcChecksumProvider of the exact PLC software: Software (program checksum) and TextLists checksum strings, both read-only and null until the program is compiled; PLCs without checksum support (GetService returns null) answer supported=false. No modification. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcChecksums\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\"}"
+    },
+    {
+      "name": "GetPlcWebVars",
+      "layer": "L2",
+      "category": "runtime",
+      "domain": "Online-Monitoring",
+      "operation": "ONLINE",
+      "operationInferred": false,
+      "method": "ReadPlcWebVarsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "host",
+        "username",
+        "password",
+        "vars",
+        "ignoreCertificateErrors",
+        "timeoutMs"
+      ],
+      "description": "[L2][Online-Monitoring][ONLINE] Read live values of PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (HTTPS JSON-RPC on the CPU; S7-1500 FW>=2.9, S7-1200 G2, ET 200SP CPU, Software Controller, PLCSIM Advanced). Independent of TIA Openness and of PUT/GET; optimized DBs are fine. Names use the Web API form, e.g. \"\\\"DB_Motor\\\".\\\"Speed\\\"\" or \"\\\"Tag_1\\\"\" (quotes may be omitted for plain names; array elements as \"\\\"DB\\\".\\\"Arr\\\"[3]\"). Read-only: never writes, forces or changes CPU mode. Preconditions: web server enabled on the CPU, the user has 'read variables' permission (the default Anonymous user usually has none). The CPU certificate is validated unless ignoreCertificateErrors=true. The password is passed straight to the API and never stored or logged. Each name is read individually; per-name errors are reported in items[].error. Session is cached per host+user and reused. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcWebVars\"), optionally operation or language.",
+      "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\",\"vars\":[\"\\u0022DB_Status\\u0022.\\u0022Ready\\u0022\"]}"
+    },
+    {
+      "name": "GetUnifiedAlarmCommon",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI-Unified",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "ReadUnifiedAlarmCommonV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "category",
+        "name",
+        "offset",
+        "limit"
+      ],
+      "description": "[L2][HMI-Unified][READ] Read-only HmiAlarmCommon dump: alarmClasses with the four AlarmStatusVisuals states (colors as #AARRGGBB, flashing), or discreteAlarms/analogAlarms with AlarmBase scalars and every EventText/InfoText language. Exact optional name; live offset/limit pagination; AlarmParameterTags excluded. Examples: GetToolUsage(toolName: \"GetUnifiedAlarmCommon\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"category\":\"alarmClasses\"}"
     },
     {
       "name": "GetUnifiedAuditSettings",
@@ -8371,47 +8411,6 @@
       ],
       "description": "[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Allowed by default through V20 where the API exists (Unified V19+). V21 requires the human Workbench Allow native cross references (V21) switch for this session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. V21 TIA exits recorded: save before the first query; compilation is no guarantee. Not queried never means zero references; decoded results retain partial-coverage limits. Reflection cannot bypass the policy. No automatic retry after TIA exit. No complete offline replacement for Unified references is established. Native acceptance pending. Examples: GetToolUsage(toolName: \"GetUnifiedCrossReferences\"), optionally operation or language.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
-    },
-    {
-      "name": "GetUnifiedFaceplateInstance",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Unified",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ReadUnifiedFaceplateInstanceV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "expectedProject",
-        "screenPath",
-        "itemName",
-        "typePath",
-        "version",
-        "cursor",
-        "limit",
-        "budgetMs"
-      ],
-      "description": "[L2][HMI-Unified][READ]Trace one exact faceplate instance using its LibraryTypeInstanceInfo.LibraryTypeVersion. typePath/version are optional verification constraints. Reads interface assignments, events and bindings, and exports the connected version directly. Unavailable service/version is an explicit gap; no guessed type or default version. Examples: GetToolUsage(toolName: \"GetUnifiedFaceplateInstance\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"screenPath\":\"/Overview\",\"itemName\":\"MotorFaceplate_1\"}"
-    },
-    {
-      "name": "ImportPlcAlarmInstanceTexts",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Alarms",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ImportPlcAlarmInstanceTextsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "filePath",
-        "cultures",
-        "dryRun"
-      ],
-      "description": "[L2][PLC-Alarms][WRITE] Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportPlcAlarmInstanceTexts\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\AlarmTexts.xlsx\",\"dryRun\":true,\"cultures\":[\"en-US\",\"zh-CN\"]}"
     },
     {
       "name": "ImportOpcUaInterface",
@@ -8956,19 +8955,27 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"moduleName\":\"Status\"}"
     },
     {
-      "name": "GetPlcChecksums",
+      "name": "GetUnifiedFaceplateInstance",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
+      "category": "hmi",
+      "domain": "HMI-Unified",
       "operation": "READ",
       "operationInferred": false,
-      "method": "ReadPlcChecksumsV4",
+      "method": "ReadUnifiedFaceplateInstanceV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath"
+        "softwarePath",
+        "expectedProject",
+        "screenPath",
+        "itemName",
+        "typePath",
+        "version",
+        "cursor",
+        "limit",
+        "budgetMs"
       ],
-      "description": "[L2][PLC-Software][READ] Native PlcChecksumProvider of the exact PLC software: Software (program checksum) and TextLists checksum strings, both read-only and null until the program is compiled; PLCs without checksum support (GetService returns null) answer supported=false. No modification. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcChecksums\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\"}"
+      "description": "[L2][HMI-Unified][READ]Trace one exact faceplate instance using its LibraryTypeInstanceInfo.LibraryTypeVersion. typePath/version are optional verification constraints. Reads interface assignments, events and bindings, and exports the connected version directly. Unavailable service/version is an explicit gap; no guessed type or default version. Examples: GetToolUsage(toolName: \"GetUnifiedFaceplateInstance\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"screenPath\":\"/Overview\",\"itemName\":\"MotorFaceplate_1\"}"
     },
     {
       "name": "GetPlcBlockScopes",
@@ -9019,19 +9026,27 @@
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\"}"
     },
     {
-      "name": "GetCallResult",
-      "layer": "L0",
-      "category": "session",
-      "domain": "Diagnostics",
-      "operation": "READ",
+      "name": "GetPlcBlockFingerprints",
+      "layer": "L2",
+      "category": "plc-online",
+      "domain": "PLC-Online",
+      "operation": "ONLINE",
       "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
+      "method": "ReadPlcBlockFingerprintsV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "requestId"
+        "softwarePath",
+        "targetIpAddress",
+        "pgPcInterface",
+        "password",
+        "offset",
+        "limit",
+        "dryRun",
+        "trustDeviceCertificate",
+        "allowNonTlsLogin"
       ],
-      "description": "[L0][Diagnostics][READ] Read a running or completed call by requestId from this session. A running call returns in-progress. Keeps the latest 16 full completed results. After eviction, summaries without the original payload survive only for unread writes and unread unsettled IDs. Reading a summary removes it; later lookups return NOT_FOUND. Inner unknown write IDs resolve to their enclosing batch result when retained. Reading a completed result or summary acknowledges its related unknown writes and releases their identical-write guards. Inspect targets before repeating writes. Examples: GetToolUsage(toolName: \"GetCallResult\"), optionally operation or language.",
-      "example": "{\"requestId\":\"request-id-from-original-call\"}"
+      "description": "[L2][PLC-Online][ONLINE] Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback, and only over a TLS-secured connection where V21 reports IsSecureCommunication unless allowNonTlsLogin=true. FW >= 2.9 CPUs ask for certificate trust: trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted (TIA refuses the read), true trusts it for this call. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcBlockFingerprints\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"targetIpAddress\":\"192.0.2.10\",\"dryRun\":true}"
     },
     {
       "name": "GenerateSivarc",
@@ -9631,6 +9646,64 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTableName\":\"/Default tag table\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiTagTable.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
+      "name": "ExportHmiScreen",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI",
+      "operation": "FILE",
+      "operationInferred": false,
+      "method": "ExportHmiScreenV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "screenName",
+        "exportPath",
+        "exportOptions",
+        "exportFile"
+      ],
+      "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\<directory under GetSessionState data.outputRoot>\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"}"
+    },
+    {
+      "name": "GetCallResult",
+      "layer": "L0",
+      "category": "session",
+      "domain": "Diagnostics",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "requestId"
+      ],
+      "description": "[L0][Diagnostics][READ] Read a running or completed call by requestId from this session. A running call returns in-progress. Keeps the latest 16 full completed results. After eviction, summaries without the original payload survive only for unread writes and unread unsettled IDs. Reading a summary removes it; later lookups return NOT_FOUND. Inner unknown write IDs resolve to their enclosing batch result when retained. Reading a completed result or summary acknowledges its related unknown writes and releases their identical-write guards. Inspect targets before repeating writes. Examples: GetToolUsage(toolName: \"GetCallResult\"), optionally operation or language.",
+      "example": "{\"requestId\":\"request-id-from-original-call\"}"
+    },
+    {
+      "name": "ImportPlcBlock",
+      "layer": "L1",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "FoundationV4Tool.InvokeAsync",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "groupPath",
+        "importPath",
+        "overwrite",
+        "dryRun",
+        "unitName",
+        "swImportOptions",
+        "importOptions",
+        "confirm",
+        "expectedProjectFile"
+      ],
+      "description": "[PLC foundation; native unverified][WRITE] [v17-exchange-safe-v1] Native XML import into exact group; V14 SCL interface-only XML cannot restore or replace full programs; empty group means root. No version rewrite or fallback. Preview by default; overwrite defaults false. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Explicit swImportOptions and culture importOptions default empty and appear in preview; unsupported combinations return UNSUPPORTED_CAPABILITY. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ImportPlcBlock\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"importPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
+    },
+    {
       "name": "GetClassicHmiGlobalization",
       "layer": "L2",
       "category": "hmi",
@@ -9648,88 +9721,25 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\"}"
     },
     {
-      "name": "ManageSinumerikArchive",
-      "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageSinumerikArchive",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "action",
-        "filePath",
-        "devicePath",
-        "itemPath",
-        "modifiedDevicePath",
-        "modifiedItemPath",
-        "mode",
-        "comment",
-        "author",
-        "password",
-        "dryRun"
-      ],
-      "description": "[L2][Hardware][WRITE] SINUMERIK Project.HwUtilities archive/retrieve/fAddressArchive (.dsf). Exact device/item paths are Arrays. archive mode OnlyHardware/HardwareAndAllProgramBlocks; F-address archive selects productive and modified PLC items. Optional comment/author/password; passwords are not logged. dryRun defaults true. Existing output files refused; outputs hashed. Retrieve inserts a device without save; V16 returns void and provides no device identity, V17 and later return its name. Available on V16-V20. F-address archive is unavailable on V17. Password Archive/F-address overloads require V19; password Retrieve requires V20. Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSinumerikArchive\"), optionally operation or language.",
-      "example": "{\"action\":\"archive\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Example.dsf\",\"dryRun\":true,\"devicePath\":[\"\\u003Cexact SINUMERIK device from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact NCU PLC item\\u003E\"]}"
-    },
-    {
-      "name": "GetClassicHmiScreenTree",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI-Classic",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "GetClassicHmiScreenTree",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "kind",
-        "folderPath",
-        "maxDepth"
-      ],
-      "description": "[L2][HMI-Classic][READ] Typed folder tree of a classic (non-Unified) WinCC HMI device: ScreenSystemFolder / ScreenUserFolder (Screens, Folders), ScreenPopupSystemFolder / ScreenPopupUserFolder (ScreenPopups), ScreenTemplateSystemFolder / ScreenTemplateUserFolder (ScreenTemplates), ScreenSlideinSystemFolder (ScreenSlidein by SlideinType) plus ScreenOverview / ScreenGlobalElements presence. kind all/screens/popups/templates/slideins, optional folderPath under the family root, recursive to maxDepth; names only (first 500 per folder). Unified targets are refused. No modification. Examples: GetToolUsage(toolName: \"GetClassicHmiScreenTree\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\"}"
-    },
-    {
-      "name": "GetDeviceAddressing",
+      "name": "GetDccObject",
       "layer": "L2",
       "category": "hardware",
       "domain": "Hardware",
       "operation": "READ",
       "operationInferred": false,
-      "method": "GetDeviceAddressingV4",
+      "method": "ReadDccObject",
       "returnType": "CallToolResult",
       "parameters": [
         "devicePath",
         "itemPath",
-        "offset",
-        "limit"
-      ],
-      "description": "[L2][Hardware][READ] Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner paths. Paginated, no modification. Examples: GetToolUsage(toolName: \"GetDeviceAddressing\"), optionally operation or language.",
-      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"]}"
-    },
-    {
-      "name": "GetPlcBlockFingerprints",
-      "layer": "L2",
-      "category": "plc-online",
-      "domain": "PLC-Online",
-      "operation": "ONLINE",
-      "operationInferred": false,
-      "method": "ReadPlcBlockFingerprintsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "targetIpAddress",
-        "pgPcInterface",
-        "password",
         "offset",
         "limit",
-        "dryRun",
-        "trustDeviceCertificate",
-        "allowNonTlsLogin"
+        "driveObjectIndex",
+        "driveObjectNumber",
+        "objectPath"
       ],
-      "description": "[L2][PLC-Online][ONLINE] Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback, and only over a TLS-secured connection where V21 reports IsSecureCommunication unless allowNonTlsLogin=true. FW >= 2.9 CPUs ask for certificate trust: trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted (TIA refuses the read), true trusts it for this call. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcBlockFingerprints\"), optionally operation or language.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"targetIpAddress\":\"192.0.2.10\",\"dryRun\":true}"
+      "description": "[L2][Hardware][READ] Exact offline DCC chart/block/pin/library property path (objectPath [{property,name}] from the DriveControlChartContainer) with bounded scalar pagination; the typed views are ListDccCharts / ManageDccBlock / ManageDccPin. Complex properties excluded explicitly; no complete internal binding guarantee. Examples: GetToolUsage(toolName: \"GetDccObject\"), optionally operation or language.",
+      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"]}"
     },
     {
       "name": "GetPlcBlockEditCapabilities",
@@ -10212,25 +10222,40 @@
       "example": "{\"devicePath\":[\"PLC_1\"]}"
     },
     {
-      "name": "GetDccObject",
+      "name": "GetDeviceAddressing",
       "layer": "L2",
       "category": "hardware",
       "domain": "Hardware",
       "operation": "READ",
       "operationInferred": false,
-      "method": "ReadDccObject",
+      "method": "GetDeviceAddressingV4",
       "returnType": "CallToolResult",
       "parameters": [
         "devicePath",
         "itemPath",
         "offset",
-        "limit",
-        "driveObjectIndex",
-        "driveObjectNumber",
-        "objectPath"
+        "limit"
       ],
-      "description": "[L2][Hardware][READ] Exact offline DCC chart/block/pin/library property path (objectPath [{property,name}] from the DriveControlChartContainer) with bounded scalar pagination; the typed views are ListDccCharts / ManageDccBlock / ManageDccPin. Complex properties excluded explicitly; no complete internal binding guarantee. Examples: GetToolUsage(toolName: \"GetDccObject\"), optionally operation or language.",
-      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"]}"
+      "description": "[L2][Hardware][READ] Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner paths. Paginated, no modification. Examples: GetToolUsage(toolName: \"GetDeviceAddressing\"), optionally operation or language.",
+      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"]}"
+    },
+    {
+      "name": "GetClassicHmiScreenTree",
+      "layer": "L2",
+      "category": "hmi",
+      "domain": "HMI-Classic",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "GetClassicHmiScreenTree",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "kind",
+        "folderPath",
+        "maxDepth"
+      ],
+      "description": "[L2][HMI-Classic][READ] Typed folder tree of a classic (non-Unified) WinCC HMI device: ScreenSystemFolder / ScreenUserFolder (Screens, Folders), ScreenPopupSystemFolder / ScreenPopupUserFolder (ScreenPopups), ScreenTemplateSystemFolder / ScreenTemplateUserFolder (ScreenTemplates), ScreenSlideinSystemFolder (ScreenSlidein by SlideinType) plus ScreenOverview / ScreenGlobalElements presence. kind all/screens/popups/templates/slideins, optional folderPath under the family root, recursive to maxDepth; names only (first 500 per folder). Unified targets are refused. No modification. Examples: GetToolUsage(toolName: \"GetClassicHmiScreenTree\"), optionally operation or language.",
+      "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\"}"
     },
     {
       "name": "ManageSinumerikSafetyMode",
