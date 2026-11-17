@@ -1,6 +1,8 @@
 extern alias toolpipeline;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
+using TiaMcp.Logic.V4.Inputs;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using TiaMcp.Logic.Testing;
@@ -99,18 +101,61 @@ public sealed class PlcTestLibraryTests : IDisposable
         var obj = target switch { "scenario" => json["scenario"], "step" => json["scenario"]!["steps"]![0],
             "suite" => json["testSuite"], _ => json };
         obj!["unknownField"] = true;
-        Assert.ThrowsAny<Exception>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
+        Assert.Throws<InputRejectionException>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
     }
 
     [Theory]
     [InlineData("../x")]
+    [InlineData("valid\n")]
     [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
     public void Unsafe_or_long_ids_are_refused(string id)
     {
         var json = JsonNode.Parse(Scenario)!;
         json["id"] = id;
-        Assert.ThrowsAny<Exception>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
+        Assert.Throws<InputRejectionException>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
         Assert.Throws<ArgumentException>(() => Store.Read(id));
+    }
+
+    public static IEnumerable<object[]> ReservedIds()
+    {
+        var stems = new[] { "CON", "PRN", "AUX", "NUL" }.Concat(Enumerable.Range(1, 9).Select(i => "COM" + i))
+            .Concat(Enumerable.Range(1, 9).Select(i => "LPT" + i));
+        foreach (string stem in stems)
+            foreach (string id in new[] { stem, stem.ToLowerInvariant(), stem + ".case", stem.ToLowerInvariant() + ".json.extra" })
+                yield return new object[] { id };
+    }
+
+    [Theory, MemberData(nameof(ReservedIds))]
+    public void Windows_device_stems_are_refused_by_schema_boundary_and_library_before_IO(string id)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "21");
+        var json = JsonNode.Parse(Scenario)!;
+        json["id"] = id;
+        Assert.Throws<InputRejectionException>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
+        var error = TypedToolInput.For(typeof(PlcTestCaseDocument))!.Validate(JsonSerializer.SerializeToElement(json), "testCase");
+        Assert.Equal(TiaMcp.Logic.V4.ErrorCode.InvalidArgument, error!.Code);
+        Assert.Throws<ArgumentException>(() => PlcTestCaseDocument.ValidateId(id));
+        Assert.Throws<ArgumentException>(() => Store.Read(id));
+        Assert.Throws<ArgumentException>(() => Store.Delete(id));
+        Assert.Equal("INVALID_ARGUMENT", (string?)Tool.ManagePlcTestLibrary("read", id: id).StructuredContent!["error"]?["code"]);
+        Assert.Equal("INVALID_ARGUMENT", (string?)Tool.ManagePlcTestLibrary("delete", id: id).StructuredContent!["error"]?["code"]);
+        Assert.False(Directory.Exists(Library));
+    }
+
+    [Theory]
+    [InlineData("COM0")]
+    [InlineData("COM10.case")]
+    [InlineData("LPT0")]
+    [InlineData("LPT10.case")]
+    [InlineData("conveyor")]
+    [InlineData("PRN_template")]
+    public void Names_that_only_resemble_reserved_stems_remain_valid(string id)
+    {
+        var json = JsonNode.Parse(Scenario)!;
+        json["id"] = id;
+        Store.Save(PlcTestCaseDocument.Parse(json.ToJsonString()));
+        Assert.Equal(id, (string?)Store.Read(id)["testCase"]?["id"]);
     }
 
     [Theory]
@@ -131,7 +176,9 @@ public sealed class PlcTestLibraryTests : IDisposable
             case "tooMany": suite["names"] = new JsonArray(Enumerable.Range(0, 51).Select(i => (JsonNode)("TC_" + i)).ToArray()); break;
             case "wrongSet": suite["kind"] = "testSet"; suite["category"] = "system"; break;
         }
-        Assert.ThrowsAny<Exception>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
+        if (form == "empty" || form == "tooMany")
+            Assert.Throws<InputRejectionException>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
+        else Assert.Throws<ArgumentException>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
     }
 
     [Fact]
@@ -139,11 +186,11 @@ public sealed class PlcTestLibraryTests : IDisposable
     {
         var json = JsonNode.Parse(Scenario)!;
         json["scenario"]!["steps"] = new JsonArray(Enumerable.Range(0, 501).Select(_ => (JsonNode)new JsonObject { ["waitMs"] = 1 }).ToArray());
-        Assert.ThrowsAny<Exception>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
+        Assert.Throws<InputRejectionException>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
         json["scenario"]!["steps"]!.AsArray().RemoveAt(500);
         Assert.Equal(500, PlcTestCaseDocument.Parse(json.ToJsonString()).Document["scenario"]!["steps"]!.AsArray().Count);
         json["scenario"]!["steps"]![0] = new JsonObject { ["cycles"] = 1 };
-        Assert.ThrowsAny<Exception>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
+        Assert.Throws<InputRejectionException>(() => PlcTestCaseDocument.Parse(json.ToJsonString()));
     }
 
     [Fact]
@@ -211,6 +258,25 @@ public sealed class PlcTestLibraryTests : IDisposable
     public void Verdict_mapping_uses_native_reply_fields(string kind, string json, string expected)
         => Assert.Equal(expected, PlcTestRunRecord.MapVerdict(kind, JsonNode.Parse(json)!.AsObject()));
 
+    [Fact]
+    public void Assert_tag_read_exception_is_an_infrastructure_error_in_the_verdict_and_JUnit()
+    {
+        var reply = JsonNode.Parse("""
+            {"meta":{"operationSuccess":false},"data":{"verdict":"failed","steps":[
+            {"index":1,"kind":"assert","ok":false,"error":"Read tag failed: instance unavailable"}]}}
+            """)!.AsObject();
+        var run = Run("20261117-083000-1a2b3c4d");
+        run.Cases.Add(new() { Id = "read-fault", Verdict = PlcTestRunRecord.MapVerdict("plcsimScenario", reply),
+            Evidence = reply["data"]!.AsObject() });
+        Assert.Equal("error", run.Cases[0].Verdict);
+        Assert.Equal(3, run.ExitCode);
+        var xml = XDocument.Parse(PlcTestJUnitWriter.Write(run));
+        Assert.Equal("1", xml.Root!.Attribute("errors")!.Value);
+        Assert.Equal("0", xml.Root.Attribute("failures")!.Value);
+        Assert.Empty(xml.Descendants("failure"));
+        Assert.Contains("Read tag failed", Assert.Single(xml.Descendants("error")).Value);
+    }
+
     [Theory]
     [InlineData("completed", "passed", 0)]
     [InlineData("completed", "skipped,passed", 4)]
@@ -240,6 +306,138 @@ public sealed class PlcTestLibraryTests : IDisposable
         Assert.Equal(0, PlcTestRunRecord.Read(Runs, old.RunId).ExitCode);
         Assert.Equal(latest.CanonicalJson, PlcTestRunRecord.Read(Runs, latest.RunId).CanonicalJson);
         Assert.Equal("NOT_FOUND", (string?)Tool.ManagePlcTestLibrary("read", id: "missing").StructuredContent!["error"]?["code"]);
+        Assert.Equal("NOT_FOUND", (string?)Tool.ManagePlcTestLibrary("readRun", runId: "20261118-083000-1a2b3c4d")
+            .StructuredContent!["error"]?["code"]);
+    }
+
+    [Fact]
+    public void History_keeps_bad_and_locked_runs_and_latest_finds_the_newest_valid_record()
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "21");
+        var ids = Enumerable.Range(1, 5).Select(i => "20261117-08300" + i + "-1a2b3c4d").ToArray();
+        foreach (string id in ids) Run(id).Save(Runs);
+        File.WriteAllText(Path.Combine(Runs, ids[3], "run.json"), "not JSON");
+        File.Delete(Path.Combine(Runs, ids[2], "run.json"));
+        File.WriteAllText(Path.Combine(Runs, ids[1], "run.json"), "{}");
+        using var locked = new FileStream(Path.Combine(Runs, ids[4], "run.json"), FileMode.Open, FileAccess.Read, FileShare.None);
+        var page = Tool.ManagePlcTestLibrary("listRuns", limit: 2).StructuredContent!;
+        Assert.True((bool?)page["ok"], page.ToJsonString());
+        Assert.Equal(5, (int?)page["data"]?["matchingCount"]);
+        Assert.Equal(2, page["data"]!["items"]!.AsArray().Count);
+        Assert.All(page["data"]!["items"]!.AsArray(), row => {
+            Assert.False((bool?)row?["valid"]);
+            Assert.False(string.IsNullOrEmpty((string?)row?["error"]));
+        });
+        Assert.Equal(2, (int?)page["meta"]?["paging"]?["nextOffset"]);
+        var missingAndInvalid = Tool.ManagePlcTestLibrary("listRuns", offset: 2, limit: 2).StructuredContent!;
+        Assert.All(missingAndInvalid["data"]!["items"]!.AsArray(), row => Assert.False((bool?)row?["valid"]));
+        Assert.Equal(ids[0], PlcTestRunRecord.Read(Runs, "latest").RunId);
+        var latest = Tool.ManagePlcTestLibrary("readRun").StructuredContent!;
+        Assert.Equal(ids[0], (string?)latest["data"]?["run"]?["runId"]);
+        var exactBad = Tool.ManagePlcTestLibrary("readRun", runId: ids[4]).StructuredContent!;
+        Assert.Equal("IO_FAILED", (string?)exactBad["error"]?["code"]);
+        Assert.Contains(ids[4], (string)exactBad["error"]!["message"]!);
+        File.Delete(Path.Combine(Runs, ids[0], "run.json"));
+        var error = Assert.Throws<PlcTestRunReadException>(() => PlcTestRunRecord.Read(Runs, "latest"));
+        Assert.Equal(ids[4], error.RunId);
+        var allBad = Tool.ManagePlcTestLibrary("readRun").StructuredContent!;
+        Assert.Equal("IO_FAILED", (string?)allBad["error"]?["code"]);
+        Assert.Contains(ids[4], (string)allBad["error"]!["message"]!);
+    }
+
+    [Fact]
+    public void History_parses_only_the_requested_directory_page()
+    {
+        var ids = Enumerable.Range(1, 5).Select(i => "20261117-08300" + i + "-1a2b3c4d").Reverse().ToArray();
+        foreach (string id in ids) Directory.CreateDirectory(Path.Combine(Runs, id));
+        var read = new List<string>();
+        var page = PlcTestRunRecord.List(Runs, 1, 2, id => { read.Add(id); return Run(id); });
+        Assert.Equal(ids.Skip(1).Take(2), read);
+        Assert.Equal(5, (int?)page["matchingCount"]);
+        Assert.Equal(2, (int?)page["returnedCount"]);
+    }
+
+    [Fact]
+    public void Record_and_history_timestamps_have_exact_UTC_millisecond_bytes()
+    {
+        var run = Run("20261117-083000-1a2b3c4d");
+        run.StartedUtc = DateTimeOffset.Parse("2026-11-17T14:00:00+05:30", CultureInfo.InvariantCulture);
+        run.FinishedUtc = run.StartedUtc.AddMilliseconds(123);
+        run.Save(Runs);
+        byte[] bytes = File.ReadAllBytes(Path.Combine(Runs, run.RunId, "run.json"));
+        byte[] expected = Encoding.UTF8.GetBytes("\"startedUtc\": \"2026-11-17T08:30:00.000Z\",\n  "
+            + "\"finishedUtc\": \"2026-11-17T08:30:00.123Z\"");
+        Assert.True(bytes.AsSpan().IndexOf(expected) >= 0);
+        Assert.Equal(Encoding.UTF8.GetBytes("2026-11-17T08:30:00.000Z"),
+            Encoding.UTF8.GetBytes((string)PlcTestRunRecord.List(Runs)["items"]![0]!["startedUtc"]!));
+        Assert.Equal(run.CanonicalJson, PlcTestRunRecord.Read(Runs, run.RunId).CanonicalJson);
+    }
+
+    [Theory]
+    [InlineData("startedUtc")]
+    [InlineData("finishedUtc")]
+    public void Invalid_timestamp_is_a_typed_parse_error_and_an_invalid_history_row(string field)
+    {
+        var run = Run("20261117-083000-1a2b3c4d");
+        run.Save(Runs);
+        var json = run.Document;
+        json[field] = "not-a-timestamp";
+        Assert.Throws<JsonException>(() => PlcTestRunRecord.Parse(json.ToJsonString()));
+        File.WriteAllText(Path.Combine(Runs, run.RunId, "run.json"), json.ToJsonString());
+        var row = Assert.Single(PlcTestRunRecord.List(Runs)["items"]!.AsArray());
+        Assert.False((bool?)row?["valid"]);
+        Assert.Contains(run.RunId, (string)row!["error"]!);
+    }
+
+    public static IEnumerable<object[]> RequiredRunFields => new[] { "schemaVersion", "runId", "status", "startedUtc", "releaseKey",
+        "hostVersion", "planHash", "audit", "selection", "cases", "totals", "exitCode" }.Select(name => new object[] { name });
+
+    [Theory, MemberData(nameof(RequiredRunFields))]
+    public void Run_parser_refuses_null_and_missing_required_fields(string name)
+    {
+        var json = Run("20261117-083000-1a2b3c4d").Document;
+        json[name] = null;
+        Assert.Throws<InputRejectionException>(() => PlcTestRunRecord.Parse(json.ToJsonString()));
+        json.Remove(name);
+        Assert.Throws<InputRejectionException>(() => PlcTestRunRecord.Parse(json.ToJsonString()));
+    }
+
+    [Theory]
+    [InlineData("id")]
+    [InlineData("title")]
+    [InlineData("kind")]
+    [InlineData("caseSha256")]
+    [InlineData("verdict")]
+    [InlineData("durationMs")]
+    [InlineData("message")]
+    [InlineData("evidence")]
+    public void Run_parser_refuses_null_required_case_fields(string name)
+    {
+        var run = Run("20261117-083000-1a2b3c4d");
+        run.Cases.Add(new() { Id = "case" });
+        var json = run.Document;
+        json["cases"]![0]![name] = null;
+        Assert.Throws<InputRejectionException>(() => PlcTestRunRecord.Parse(json.ToJsonString()));
+    }
+
+    [Theory]
+    [InlineData("root")]
+    [InlineData("project")]
+    [InlineData("audit")]
+    [InlineData("selection")]
+    [InlineData("case")]
+    [InlineData("totals")]
+    public void Run_schema_version_one_refuses_unknown_properties(string scope)
+    {
+        var run = Run("20261117-083000-1a2b3c4d");
+        run.Project = new JsonObject { ["file"] = "fixture.ap21" };
+        run.Cases.Add(new() { Id = "case", Evidence = new JsonObject { ["vendorField"] = "evidence stays open" } });
+        var json = run.Document;
+        Assert.Equal("evidence stays open", (string?)PlcTestRunRecord.Parse(json.ToJsonString()).Cases[0].Evidence["vendorField"]);
+        var target = scope == "root" ? json : scope == "case" ? json["cases"]![0]! : json[scope]!;
+        target["unknown"] = true;
+        Assert.Throws<InputRejectionException>(() => PlcTestRunRecord.Parse(json.ToJsonString()));
     }
 
     [Fact]
@@ -274,7 +472,9 @@ public sealed class PlcTestLibraryTests : IDisposable
         var described = TiaOpenness.Shared.ToolUsageCatalog.Describe("ManagePlcTestLibrary", release, "full-engine", tool.ProtocolTool.Description!,
             JsonNode.Parse(schema.GetRawText())!.AsObject(), operation: "save", roster: fixture.Tools.Select(t => t.ProtocolTool.Name));
         Assert.Equal("save", (string?)described["example"]?["request"]?["params"]?["arguments"]?["action"]);
-        var result = await fixture.Call("ManagePlcTestLibrary", new { action = "save", testCase = new { schemaVersion = 1, id = "../bad" } });
+        var invalidCase = JsonNode.Parse(Scenario)!;
+        invalidCase["id"] = "../bad";
+        var result = await fixture.Call("ManagePlcTestLibrary", new { action = "save", testCase = invalidCase });
         Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
         var usage = await fixture.Call("GetToolUsage", new { toolName = "ManagePlcTestLibrary", operation = "save" });
         Assert.True((bool?)usage["ok"], usage.ToJsonString());
@@ -377,6 +577,35 @@ public sealed class PlcTestLibraryTests : IDisposable
         var failure = XDocument.Parse(PlcTestJUnitWriter.Write(run)).Descendants("failure").Single();
         Assert.Equal("TestSuite." + state, failure.Attribute("type")!.Value);
         Assert.Equal("TC_A: failed < &\nTC_B: warning", failure.Value);
+    }
+
+    [Fact]
+    public void JUnit_replaces_unrepresentable_XML_characters_and_preserves_valid_Unicode()
+    {
+        const string invalid = "\0\u0001\u0008\u000b\u000c\u000e\u001f\ufffe\uffff\ud800!\udc00";
+        string replacement = new('\ufffd', 10);
+        replacement += "!\ufffd";
+        var run = Run("20261117-083000-1a2b3c4d");
+        run.PlanHash = "hash" + invalid;
+        run.HostVersion = "version" + invalid;
+        run.Cases.Add(new() { Id = "id" + invalid, Title = "中文😀\t\n\r" + invalid, Requirement = "REQ" + invalid,
+            Kind = "testSuite", Verdict = "error", Message = "message" + invalid, Evidence = new JsonObject {
+                ["errorCode"] = "code" + invalid,
+                ["result"] = new JsonObject { ["messages"] = new JsonArray(new JsonObject {
+                    ["state"] = "Error", ["path"] = "path" + invalid, ["description"] = "description" + invalid }) }
+            } });
+        var xml = XDocument.Parse(PlcTestJUnitWriter.Write(run));
+        var item = Assert.Single(xml.Descendants("testcase"));
+        Assert.Equal("id" + replacement, item.Attribute("name")!.Value);
+        string Property(string name) => Assert.Single(xml.Descendants("property"), p => (string?)p.Attribute("name") == name).Attribute("value")!.Value;
+        Assert.Equal("中文😀\t\n\r" + replacement, Property("title"));
+        Assert.Equal("REQ" + replacement, Property("requirement"));
+        Assert.Equal("hash" + replacement, Property("planHash"));
+        Assert.Equal("version" + replacement, Property("hostVersion"));
+        var error = Assert.Single(item.Elements("error"));
+        Assert.Equal("message" + replacement, error.Attribute("message")!.Value);
+        Assert.Equal("code" + replacement, error.Attribute("type")!.Value);
+        Assert.Equal("path" + replacement + ": description" + replacement, error.Value);
     }
 
     private static PlcTestRunRecord Run(string id) => new() {

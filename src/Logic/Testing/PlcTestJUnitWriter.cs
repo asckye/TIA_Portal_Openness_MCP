@@ -19,7 +19,7 @@ namespace TiaMcp.Logic.Testing
             {
                 xml.WriteStartDocument();
                 xml.WriteStartElement("testsuites");
-                xml.WriteAttributeString("name", "TIA PLC tests");
+                Attribute(xml, "name", "TIA PLC tests");
                 Counts(xml, run.Cases.ToArray(), run.FinishedUtc.HasValue
                     ? Math.Max(0, (run.FinishedUtc.Value - run.StartedUtc).TotalSeconds) : run.Cases.Sum(c => c.DurationMs) / 1000.0, run);
                 foreach (string kind in new[] { "plcsimScenario", "testSuite" })
@@ -27,7 +27,7 @@ namespace TiaMcp.Logic.Testing
                     var cases = run.Cases.Where(c => c.Kind == kind).ToArray();
                     if (cases.Length == 0) continue;
                     xml.WriteStartElement("testsuite");
-                    xml.WriteAttributeString("name", kind);
+                    Attribute(xml, "name", kind);
                     Counts(xml, cases, cases.Sum(c => c.DurationMs) / 1000.0, run);
                     xml.WriteStartElement("properties");
                     Property(xml, "runId", run.RunId);
@@ -47,28 +47,28 @@ namespace TiaMcp.Logic.Testing
 
         private static void Counts(XmlWriter xml, PlcTestCaseResult[] cases, double seconds, PlcTestRunRecord run)
         {
-            xml.WriteAttributeString("tests", cases.Length.ToString(CultureInfo.InvariantCulture));
-            xml.WriteAttributeString("failures", cases.Count(c => c.Verdict == "failed").ToString(CultureInfo.InvariantCulture));
-            xml.WriteAttributeString("errors", cases.Count(c => c.Verdict == "error" || c.Verdict == "unknown").ToString(CultureInfo.InvariantCulture));
-            xml.WriteAttributeString("skipped", cases.Count(c => c.Verdict == "skipped").ToString(CultureInfo.InvariantCulture));
-            xml.WriteAttributeString("time", Seconds(seconds));
-            xml.WriteAttributeString("timestamp", run.StartedUtc.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture));
+            Attribute(xml, "tests", cases.Length.ToString(CultureInfo.InvariantCulture));
+            Attribute(xml, "failures", cases.Count(c => c.Verdict == "failed").ToString(CultureInfo.InvariantCulture));
+            Attribute(xml, "errors", cases.Count(c => c.Verdict == "error" || c.Verdict == "unknown").ToString(CultureInfo.InvariantCulture));
+            Attribute(xml, "skipped", cases.Count(c => c.Verdict == "skipped").ToString(CultureInfo.InvariantCulture));
+            Attribute(xml, "time", Seconds(seconds));
+            Attribute(xml, "timestamp", run.StartedUtc.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture));
         }
 
         private static void Property(XmlWriter xml, string name, string value)
         {
             xml.WriteStartElement("property");
-            xml.WriteAttributeString("name", name);
-            xml.WriteAttributeString("value", value);
+            Attribute(xml, "name", name);
+            Attribute(xml, "value", value);
             xml.WriteEndElement();
         }
 
         private static void Case(XmlWriter xml, PlcTestCaseResult item)
         {
             xml.WriteStartElement("testcase");
-            xml.WriteAttributeString("classname", "tia." + item.Kind);
-            xml.WriteAttributeString("name", item.Id);
-            xml.WriteAttributeString("time", Seconds(item.DurationMs / 1000.0));
+            Attribute(xml, "classname", "tia." + item.Kind);
+            Attribute(xml, "name", item.Id);
+            Attribute(xml, "time", Seconds(item.DurationMs / 1000.0));
             xml.WriteStartElement("properties");
             Property(xml, "title", item.Title);
             if (item.Requirement != null) Property(xml, "requirement", item.Requirement);
@@ -81,10 +81,10 @@ namespace TiaMcp.Logic.Testing
                     string type = item.Verdict == "unknown" ? "OUTCOME_UNKNOWN" : item.Verdict == "failed"
                         ? item.Kind == "plcsimScenario" ? "AssertionFailed" : "TestSuite." + (string?)Result(item.Evidence)?["state"]
                         : (string?)item.Evidence["error"]?["code"] ?? (string?)item.Evidence["errorCode"] ?? "TEST_ERROR";
-                    xml.WriteAttributeString("type", type);
+                    Attribute(xml, "type", type);
                 }
-                xml.WriteAttributeString("message", item.Message);
-                if (item.Verdict != "skipped") xml.WriteString(FailureDetails(item));
+                Attribute(xml, "message", item.Message);
+                if (item.Verdict != "skipped") xml.WriteString(XmlText(FailureDetails(item)));
                 xml.WriteEndElement();
             }
             xml.WriteEndElement();
@@ -111,5 +111,22 @@ namespace TiaMcp.Logic.Testing
         private static JsonObject? Result(JsonObject evidence) => evidence["result"] as JsonObject ?? evidence["meta"]?["result"] as JsonObject;
         private static string Value(JsonNode? value) => value?.ToJsonString() ?? "null";
         private static string Seconds(double value) => value.ToString("F3", CultureInfo.InvariantCulture);
+
+        private static void Attribute(XmlWriter xml, string name, string value) => xml.WriteAttributeString(name, XmlText(value));
+
+        // XML 1.0 cannot hold NUL, certain controls, U+FFFE/U+FFFF or unpaired UTF-16 surrogates.
+        // Replace each unrepresentable code unit with U+FFFD in attributes and text; preserve valid surrogate pairs.
+        private static string XmlText(string value)
+        {
+            var text = new StringBuilder(value.Length);
+            for (int i = 0; i < value.Length; i++)
+            {
+                char current = value[i];
+                if (char.IsHighSurrogate(current) && i + 1 < value.Length && char.IsLowSurrogate(value[i + 1]))
+                { text.Append(current); text.Append(value[++i]); }
+                else text.Append(XmlConvert.IsXmlChar(current) ? current : '\uFFFD');
+            }
+            return text.ToString();
+        }
     }
 }

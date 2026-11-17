@@ -14,7 +14,8 @@ namespace TiaMcp.Logic.Testing
     [JsonConverter(typeof(PlcTestCaseDocumentConverter))]
     public sealed class PlcTestCaseDocument
     {
-        public const string IdPattern = "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$";
+        public const string IdPattern = "^(?!(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])"
+            + "(?:\\.|\\z))[A-Za-z0-9][A-Za-z0-9._-]{0,63}\\z";
         private readonly JsonObject document;
         public string Id => (string)document["id"]!;
         public string Title => (string)document["title"]!;
@@ -49,6 +50,7 @@ namespace TiaMcp.Logic.Testing
             var input = parsed.RootElement;
             Schema.Check(input);
             var obj = JsonNode.Parse(json)!.AsObject();
+            ValidateId((string)obj["id"]!);
             string kind = (string)obj["kind"]!;
             if (kind == "plcsimScenario")
             {

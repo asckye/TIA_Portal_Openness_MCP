@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcp.Logic.Testing
 {
@@ -26,8 +27,9 @@ namespace TiaMcp.Logic.Testing
     public sealed class PlcTestRunRecord
     {
         private static readonly JsonSerializerOptions Options = new JsonSerializerOptions {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase, Converters = { new UtcTimestampConverter() }
         };
+        private static readonly InputSchema Schema = BuildSchema();
         public int SchemaVersion { get; set; } = 1;
         public string RunId { get; set; } = NewRunId();
         public string Status { get; set; } = "running";
@@ -53,6 +55,15 @@ namespace TiaMcp.Logic.Testing
 
         public static string NewRunId() => DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-", CultureInfo.InvariantCulture)
             + Guid.NewGuid().ToString("N").Substring(0, 8);
+
+        public static string FormatUtc(DateTimeOffset value) => value.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture);
+
+        private sealed class UtcTimestampConverter : JsonConverter<DateTimeOffset>
+        {
+            public override DateTimeOffset Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
+                => reader.TryGetDateTimeOffset(out var value) ? value : throw new JsonException("Invalid run timestamp.");
+            public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options) => writer.WriteStringValue(FormatUtc(value));
+        }
 
         public static int CalculateExitCode(string status, IEnumerable<string> verdicts)
         {
@@ -82,12 +93,15 @@ namespace TiaMcp.Logic.Testing
             if ((string?)data?["verdict"] == "passed" && ((bool?)reply["ok"] ?? (bool?)meta?["operationSuccess"]) == true)
                 return "passed";
             var failed = steps?.Where(s => (bool?)s?["ok"] == false).ToArray() ?? Array.Empty<JsonNode?>();
-            return (string?)data?["verdict"] == "failed" && failed.Length > 0 && failed.All(s => (string?)s?["kind"] == "assert")
+            return (string?)data?["verdict"] == "failed" && failed.Length > 0
+                && failed.All(s => (string?)s?["kind"] == "assert" && s?["error"] == null)
                 ? "failed" : "error";
         }
 
         public static PlcTestRunRecord Parse(string json)
         {
+            using var parsed = JsonDocument.Parse(json);
+            Schema.Check(parsed.RootElement);
             var record = JsonSerializer.Deserialize<PlcTestRunRecord>(json, Options) ?? throw new ArgumentException("Run record is missing.");
             ValidateRunId(record.RunId);
             if (record.SchemaVersion != 1 || !new[] { "running", "completed", "stopped" }.Contains(record.Status)
@@ -106,28 +120,99 @@ namespace TiaMcp.Logic.Testing
 
         public static PlcTestRunRecord Read(string runsDirectory, string runId)
         {
-            if (runId == "latest") runId = RunIds(runsDirectory).FirstOrDefault() ?? throw new FileNotFoundException("No PLC test run exists.");
+            if (runId == "latest")
+            {
+                PlcTestRunReadException? newestError = null;
+                foreach (string id in RunIds(runsDirectory))
+                {
+                    try { return ReadFile(runsDirectory, id); }
+                    catch (PlcTestRunReadException ex) { newestError ??= ex; }
+                }
+                if (newestError != null) throw newestError;
+                throw new FileNotFoundException("No PLC test run exists.");
+            }
             ValidateRunId(runId);
-            var record = Parse(File.ReadAllText(Path.Combine(runsDirectory, runId, "run.json"), Encoding.UTF8));
-            if (record.RunId != runId) throw new ArgumentException("runId must equal its directory name.");
-            return record;
+            if (!Directory.Exists(Path.Combine(runsDirectory, runId))) throw new FileNotFoundException("PLC test run was not found: " + runId);
+            return ReadFile(runsDirectory, runId);
         }
 
-        public static JsonArray List(string runsDirectory) => new JsonArray(RunIds(runsDirectory).Select(id => {
-            var record = Read(runsDirectory, id);
-            return (JsonNode)new JsonObject { ["runId"] = id, ["status"] = record.Status,
-                ["startedUtc"] = record.StartedUtc.ToString("O", CultureInfo.InvariantCulture),
-                ["totals"] = record.Totals, ["exitCode"] = record.ExitCode };
-        }).ToArray());
+        private static PlcTestRunRecord ReadFile(string runsDirectory, string runId)
+        {
+            try
+            {
+                var record = Parse(File.ReadAllText(Path.Combine(runsDirectory, runId, "run.json"), Encoding.UTF8));
+                if (record.RunId != runId) throw new ArgumentException("runId must equal its directory name.");
+                return record;
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is JsonException
+                || ex is ArgumentException || ex is InputRejectionException)
+            { throw new PlcTestRunReadException(runId, ex); }
+        }
+
+        public static JsonObject List(string runsDirectory, int offset = 0, int limit = 100)
+            => List(runsDirectory, offset, limit, id => ReadFile(runsDirectory, id));
+
+        internal static JsonObject List(string runsDirectory, int offset, int limit, Func<string, PlcTestRunRecord> read)
+        {
+            var ids = RunIds(runsDirectory).ToArray();
+            if (offset < 0 || offset > ids.Length || limit < 1 || limit > 100) throw new ArgumentException("Invalid run history page.");
+            var rows = new JsonArray();
+            foreach (string id in ids.Skip(offset).Take(limit))
+            {
+                try
+                {
+                    var record = read(id);
+                    rows.Add(new JsonObject { ["runId"] = id, ["status"] = record.Status, ["startedUtc"] = FormatUtc(record.StartedUtc),
+                        ["totals"] = record.Totals, ["exitCode"] = record.ExitCode, ["valid"] = true, ["error"] = null });
+                }
+                catch (PlcTestRunReadException ex)
+                {
+                    rows.Add(new JsonObject { ["runId"] = id, ["status"] = null, ["startedUtc"] = null, ["totals"] = null,
+                        ["exitCode"] = null, ["valid"] = false, ["error"] = ex.Message });
+                }
+            }
+            return new JsonObject { ["items"] = rows, ["matchingCount"] = ids.Length, ["returnedCount"] = rows.Count };
+        }
 
         private static IEnumerable<string> RunIds(string root) => Directory.Exists(root)
-            ? Directory.GetDirectories(root).Select(Path.GetFileName).Where(id => IsRunId(id!) && File.Exists(Path.Combine(root, id!, "run.json")))
+            ? Directory.GetDirectories(root).Select(Path.GetFileName).Where(id => IsRunId(id!))
                 .Select(id => id!).OrderByDescending(id => id, StringComparer.Ordinal)
             : Enumerable.Empty<string>();
         private static bool IsRunId(string id) => System.Text.RegularExpressions.Regex.IsMatch(id, "^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}\\z");
         private static void ValidateRunId(string id)
         {
             if (id == null || !IsRunId(id)) throw new ArgumentException("Invalid runId.", nameof(id));
+        }
+
+        private static InputSchema BuildSchema()
+        {
+            var text = InputSchema.String();
+            var nullableText = InputSchema.Union(text, InputSchema.Null());
+            var timestamp = InputSchema.String(minLength: 1);
+            var count = InputSchema.Integer(0);
+            var caseSchema = InputSchema.Object(new Dictionary<string, InputSchema> {
+                ["id"] = text, ["title"] = text, ["requirement"] = nullableText,
+                ["kind"] = InputSchema.String(allowed: new[] { "plcsimScenario", "testSuite" }), ["caseSha256"] = text,
+                ["verdict"] = InputSchema.String(allowed: new[] { "passed", "failed", "error", "skipped", "unknown" }),
+                ["durationMs"] = InputSchema.Integer(0, long.MaxValue), ["message"] = text,
+                ["evidence"] = InputSchema.Map(new InputSchema(JsonSerializer.SerializeToElement(new JsonObject())))
+            }, new[] { "id", "title", "kind", "caseSha256", "verdict", "durationMs", "message", "evidence" });
+            return InputSchema.Object(new Dictionary<string, InputSchema> {
+                ["schemaVersion"] = InputSchema.Integer(1, 1), ["runId"] = text, ["status"] = text,
+                ["startedUtc"] = timestamp, ["finishedUtc"] = InputSchema.Union(timestamp, InputSchema.Null()),
+                ["releaseKey"] = text, ["hostVersion"] = text, ["planHash"] = text,
+                ["project"] = InputSchema.Union(InputSchema.Null(), InputSchema.Object(new Dictionary<string, InputSchema> {
+                    ["file"] = text }, new[] { "file" })),
+                ["audit"] = InputSchema.Object(new Dictionary<string, InputSchema> { ["requestId"] = text }),
+                ["selection"] = InputSchema.Object(new Dictionary<string, InputSchema> {
+                    ["ids"] = InputSchema.Array(text), ["tags"] = InputSchema.Array(text) }),
+                ["cases"] = InputSchema.Array(caseSchema),
+                ["totals"] = InputSchema.Object(new Dictionary<string, InputSchema> {
+                    ["passed"] = count, ["failed"] = count, ["errors"] = count, ["skipped"] = count, ["unknown"] = count
+                }, new[] { "passed", "failed", "errors", "skipped", "unknown" }),
+                ["exitCode"] = InputSchema.Integer()
+            }, new[] { "schemaVersion", "runId", "status", "startedUtc", "finishedUtc", "releaseKey", "hostVersion", "project",
+                "planHash", "audit", "selection", "cases", "totals", "exitCode" });
         }
 
         // The temporary file is in the destination directory, so replacement is atomic on the same volume.
@@ -145,5 +230,12 @@ namespace TiaMcp.Logic.Testing
             }
             finally { if (File.Exists(temp)) File.Delete(temp); }
         }
+    }
+
+    public sealed class PlcTestRunReadException : IOException
+    {
+        public string RunId { get; }
+        internal PlcTestRunReadException(string runId, Exception cause) : base("Cannot read PLC test run '" + runId + "': " + cause.Message, cause)
+            => RunId = runId;
     }
 }

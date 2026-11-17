@@ -18783,7 +18783,7 @@
       "path": "src/Shared/PlcTestLibraryTools.cs",
       "owner": "PlcTestLibraryTools",
       "domain": "Simulation",
-      "signature": "public CallToolResult ManagePlcTestLibrary(\n            [Description(\"list | read | save | delete | listRuns | readRun.\")] string action,\n            [Description(\"Case id; read/delete only. 1..64 letters, digits, dot, underscore or hyphen; begins with a letter or digit.\")] string id = \"\",\n            [Description(\"Closed schemaVersion=1 case document; required for save. kind selects scenario or testSuite, exclusively.\")]\n            PlcTestCaseDocument? testCase = null,\n            [Description(\"Allow save to replace an existing case, returning its previous SHA-256.\")] bool overwrite = false,\n            [Description(\"Optional tags for list; any case-insensitive match selects a case. Invalid files remain visible.\")] string[]? tags = null,\n            [Description(\"Zero-based offset for list/listRuns.\")] int offset = 0,\n            [Description(\"Page size for list/listRuns, 1..100.\")] int limit = 100,\n            [Description(\"Exact history run id, or latest; readRun only.\")] string runId = \"latest\")",
+      "signature": "public CallToolResult ManagePlcTestLibrary(\n            [Description(\"list | read | save | delete | listRuns | readRun.\")] string action,\n            [Description(\"Case id; read/delete only. 1..64 letters, digits, dot, underscore or hyphen; starts with a letter or digit. \" +\n                \"Windows device stems (CON, PRN, AUX, NUL, COM1-9, LPT1-9) are refused before any extension.\")] string id = \"\",\n            [Description(\"Closed schemaVersion=1 case document; required for save. kind selects scenario or testSuite, exclusively.\")]\n            PlcTestCaseDocument? testCase = null,\n            [Description(\"Allow save to replace an existing case, returning its previous SHA-256.\")] bool overwrite = false,\n            [Description(\"Optional tags for list; any case-insensitive match selects a case. Invalid files remain visible.\")] string[]? tags = null,\n            [Description(\"Zero-based offset for list/listRuns.\")] int offset = 0,\n            [Description(\"Page size for list/listRuns, 1..100.\")] int limit = 100,\n            [Description(\"Exact history run id, or latest for the newest valid record; readRun only.\")] string runId = \"latest\")",
       "parameters": {
         "action": {
           "type": "string",
@@ -18793,7 +18793,7 @@
         "id": {
           "type": "string",
           "default": "\"\"",
-          "description": "Case id; read/delete only. 1..64 letters, digits, dot, underscore or hyphen; begins with a letter or digit.",
+          "description": "Case id; read/delete only. 1..64 letters, digits, dot, underscore or hyphen; starts with a letter or digit. Windows device stems (CON, PRN, AUX, NUL, COM1-9, LPT1-9) are refused before any extension.",
           "value": ""
         },
         "testCase": {
@@ -18829,10 +18829,11 @@
         "runId": {
           "type": "string",
           "default": "\"latest\"",
-          "description": "Exact history run id, or latest; readRun only.",
+          "description": "Exact history run id, or latest for the newest valid record; readRun only.",
           "value": "latest"
         }
-      }
+      },
+      "description": "[L1][Simulation][FILE] Manage stored PLC test cases and read run history under the data root on all eight releases. Actions: list (including invalid files), read, save, delete, listRuns, readRun. Save validates the closed schemaVersion=1 JSON; plcsimScenario uses the existing scenario validator; testSuite stores exact project case/test-set names. Existing cases need overwrite=true. Delete returns the document for restoration. list filters tags (any match) and uses offset/limit; history is newest first; invalid run files remain visible and only the requested directory page is parsed. readRun latest selects the newest valid record. Unreadable runs return IO_FAILED naming the run. Incomplete runs return exitCode=5. Host files only; no TIA or PLCSIM calls. Stored Test Suite selections require V17+, system V18+, application test sets V20+ when executed. Real installation acceptance pending."
     }
   },
   "behaviorCandidates": [
