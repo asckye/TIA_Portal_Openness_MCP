@@ -165,19 +165,21 @@ namespace TiaMcp.Adapters
                         Name = c.Name, Path = Child(selected.Path, c.Name), Kind = "system-constant", DataType = c.DataTypeName, Value = c.Value }))
                 .ToArray();
 
-        private PlcMutationResult Export(string operation, string file, bool dryRun, Action<FileInfo> export, string unitName = "")
+        private PlcMutationResult Export(string operation, string file, bool dryRun, Action<FileInfo> export, string unitName = "", bool stripVolatile = false)
         {
             var output = PlcFoundationPolicy.XmlOutput(file);
-            string? recovery=null;
-            if(!dryRun) recovery=PlcExportPublication.Publish(output,export);
-            var result=Mutation(operation,dryRun,scoped:unitName!="");
-            if(result is PlcScopedMutationResult scope) scope.UnitName=unitName;
+            string? recovery=null; bool normalized=false;
+            if(!dryRun) recovery=PlcExportPublication.Publish(output,export,stripVolatile,value=>normalized=value);
+            var mutation=Mutation(operation,dryRun);
+            var result=unitName=="" ? new PlcXmlExportMutationResult() : new PlcScopedXmlExportMutationResult { UnitName=unitName };
+            result.Operation=mutation.Operation; result.Executed=mutation.Executed; result.ProjectFile=mutation.ProjectFile;
+            result.VolatileNormalized=normalized;
             result.OutputFile=output.FullName; result.RecoveryDirectory=recovery; return result;
         }
         public PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true) =>
             ExportBlockScoped(softwarePath, blockPath, exportPath, preservePath, dryRun);
         public PlcMutationResult ExportBlockScoped(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true,
-                string unitName = "")
+                string unitName = "", bool stripVolatile = false)
         {
             var selected=ReadSelection(softwarePath);
             var path=PlcExchangePolicy.ObjectPath(blockPath,false,"blockPath");
@@ -187,13 +189,14 @@ namespace TiaMcp.Adapters
             TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("blocks",target.IsConsistent?new string[0]:new[]{blockPath},"blockPath");
             var file=PlcExchangePolicy.ExportDestination(exportPath,path,preservePath);
             var capability=PlcBlockXmlPolicy.Export(ReleaseKey,target.ProgrammingLanguage.ToString());
-            var result=Export("ExportBlock",file.FullName,dryRun,f=>{ RequireTargetOffline(selected); target.Export(f,ExportOptions.None); },unitName);
+            var result=Export("ExportBlock",file.FullName,dryRun,f=>{ RequireTargetOffline(selected); target.Export(f,ExportOptions.None); },unitName,
+                    stripVolatile);
             capability.Apply(result); return result;
         }
         public PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true) =>
             ExportTypeScoped(softwarePath, exportPath, typePath, preservePath, dryRun);
         public PlcMutationResult ExportTypeScoped(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true,
-                string unitName = "")
+                string unitName = "", bool stripVolatile = false)
         {
             var selected=ReadSelection(softwarePath);
             var path=PlcExchangePolicy.ObjectPath(typePath,false,"typePath");
@@ -202,15 +205,17 @@ namespace TiaMcp.Adapters
             var target=PlcExchangePolicy.Exact(types,x=>x.Path,path,"typePath").Value;
             TiaOpenness.Shared.NativeExportPolicy.RequireConsistent("types",target.IsConsistent?new string[0]:new[]{typePath},"typePath");
             var file=PlcExchangePolicy.ExportDestination(exportPath,path,preservePath);
-            return Export("ExportType", file.FullName, dryRun, f => { RequireTargetOffline(selected); target.Export(f, ExportOptions.None); },unitName);
+            return Export("ExportType", file.FullName, dryRun, f => { RequireTargetOffline(selected); target.Export(f, ExportOptions.None); },unitName,
+                    stripVolatile);
         }
         public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true) =>
             ExportTagTableScoped(softwarePath, tagTableName, exportPath, dryRun);
-        public PlcMutationResult ExportTagTableScoped(string softwarePath, string tagTableName, string exportPath, bool dryRun = true, string unitName = "")
+        public PlcMutationResult ExportTagTableScoped(string softwarePath, string tagTableName, string exportPath, bool dryRun = true,
+                string unitName = "", bool stripVolatile = false)
         {
             var tables=PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName).TagTables;
             var target=PlcExchangePolicy.Exact(tables,t=>t.Name,tagTableName,"tagTableName");
-            return Export("ExportTagTable", exportPath, dryRun, f => target.Export(f, ExportOptions.None),unitName);
+            return Export("ExportTagTable", exportPath, dryRun, f => target.Export(f, ExportOptions.None),unitName,stripVolatile);
         }
         public PlcMutationResult ImportBlocks(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true) =>
             ImportBlocksScoped(softwarePath, groupPath, importPath, overwrite, dryRun);

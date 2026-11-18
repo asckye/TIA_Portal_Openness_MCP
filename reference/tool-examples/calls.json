@@ -1002,7 +1002,8 @@
           "blockPath": "Main",
           "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -1033,6 +1034,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -1081,7 +1086,8 @@
           "groupPath": "",
           "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -1121,6 +1127,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -1166,7 +1176,8 @@
           "tagTableName": "默认变量表",
           "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -1198,6 +1209,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -1382,7 +1397,8 @@
           "exportDirectory": "C:\\Examples\\exports",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -1411,6 +1427,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -1457,7 +1477,8 @@
           "groupPath": "",
           "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -1497,6 +1518,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -19677,7 +19702,8 @@
           "recursive": true,
           "maxItems": 128,
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -19709,6 +19735,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -22885,7 +22915,8 @@
           "blockPath": "Main",
           "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -22916,6 +22947,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -22964,7 +22999,8 @@
           "groupPath": "",
           "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -23004,6 +23040,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -23067,7 +23107,8 @@
           "tagTableName": "默认变量表",
           "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -23099,6 +23140,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -23147,7 +23192,8 @@
           "exportDirectory": "C:\\Examples\\exports",
           "typePath": "UDT_Status",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -23176,6 +23222,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -23222,7 +23272,8 @@
           "groupPath": "",
           "exportDirectory": "C:\\TIA_MCP\\exports",
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -23262,6 +23313,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},
@@ -40427,7 +40482,8 @@
           "recursive": true,
           "maxItems": 128,
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "stripVolatile": true
         },
         "parameters": {
           "softwarePath": {
@@ -40459,6 +40515,10 @@
               "ListPortalProcessProjects",
               "GetSessionState"
             ]
+          },
+          "stripVolatile": {
+            "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+            "exampleValue": true
           }
         },
         "operations": {},

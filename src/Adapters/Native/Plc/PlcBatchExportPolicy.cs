@@ -22,7 +22,7 @@ namespace TiaMcp.Adapters
         { using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(value))).Replace("-","").ToLowerInvariant(); }
         internal static PlcBatchExportResult Run(string kind,string project,string software,string group,bool recursive,string directory,int maxItems,
                 bool dryRun,string expectedInventoryHash,IEnumerable<PlcBatchExportSource> inventory,Action requireOffline,Func<FileInfo,Action<FileInfo>,string
-                ?>? publish=null,string unitName="")
+                ?>? publish=null,string unitName="",bool stripVolatile=false)
         {
             if(kind!="blocks" && kind!="types" && kind!="tagTables") throw new AdapterPreconditionException("Unknown batch kind.","kind");
             if(maxItems<1 || maxItems>MaximumItems)
@@ -53,11 +53,10 @@ namespace TiaMcp.Adapters
             result.InventoryHash=
                 Hash(kind+"\n"+project+"\n"+software+"\n"+group+"\n"+recursive+"\n"+string
                     .Join("\n",result.Items.Select(x=>x.ObjectPath+"\t"+x.Status+"\t"+x.XmlContent+"\t"+x.OutputFile))
-                    +(unitName=="" ? "" : "\nunit:"+unitName));
+                    +(unitName=="" ? "" : "\nunit:"+unitName)+"\nstripVolatile:"+stripVolatile);
             if(dryRun) return result;
             if(!string.Equals(expectedInventoryHash,result.InventoryHash,StringComparison.Ordinal))
                 throw new AdapterPreconditionException("Execution requires the exact inventory hash from a fresh preview.","expectedInventoryHash");
-            publish=publish ?? PlcExportPublication.Publish;
             bool stopped=false;
             for(int i=0;i<sources.Length;i++)
             {
@@ -67,7 +66,9 @@ namespace TiaMcp.Adapters
                 try
                 {
                     requireOffline();
-                    var recovery=publish(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(item.OutputFile)),sources[i].Export);
+                    var file=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(item.OutputFile));
+                    var recovery=publish!=null ? publish(file,sources[i].Export)
+                        : PlcExportPublication.Publish(file,sources[i].Export,stripVolatile,value=>item.VolatileNormalized=value);
                     item.Status="exported";
                     if(recovery!=null) item.Evidence["recoveryDirectory"]=recovery;
                 }

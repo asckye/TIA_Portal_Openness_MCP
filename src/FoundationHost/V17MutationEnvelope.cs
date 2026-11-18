@@ -17,7 +17,7 @@ internal static class V17MutationEnvelope
                 ["contractVersion"]="v17-exchange-safe-v1",["nativeAcceptance"]="unverified"
         };
         foreach(var name in new[]{
-                "OutputFile","InputFile","InputSha256","AffectedNames","RecoveryDirectory","XmlContent","FullProgramRestoreSupported","Warnings",
+                "VolatileNormalized","OutputFile","InputFile","InputSha256","AffectedNames","RecoveryDirectory","XmlContent","FullProgramRestoreSupported","Warnings",
                 "SecondaryProjectGone"})
             if(result[name]!=null) meta[Wire(name)]=result[name]!.DeepClone();
         if(result["InputFile"]!=null)

@@ -5237,5 +5237,123 @@
         "expect": "Inspect ordered block, tag-table and screen results; repeat per actual software path and follow each paging cursor."
       }
     ]
+  },
+  {
+    "id": "sequence/compile-export-commit",
+    "topic": "compile-export-commit",
+    "purpose": "Compile the intended PLC, export deterministic native XML into a Git working tree, review and explicitly commit the exported files.",
+    "preconditions": "Project is already bound; exact softwarePath and projectFile are known. Git working tree and a new empty export directory inside it already exist. Replace every placeholder using the same session and preview.",
+    "notes": "All eight releases. Each compile, export and commit execution needs separate operator review and approval. ExportOptions.None and native call order are unchanged; stripVolatile is host-file post-processing. No automatic commit or save. Existing export destinations are never overwritten; choose a new directory for each export. Do not treat XML as a complete backup: V14 SP1 SCL and protected blocks may contain interfaces only. Native export/import acceptance NOT RUN. Limitation: no existing tool can remove a previous export directory from the Git working tree. ManagePlcGitRepository supports status/history/diff/show/stage/commit only; CleanupStagedImportFiles cannot delete arbitrary export paths. This sequence therefore creates a new directory per run and does not re-export into the same tracked paths. Git shows new files, not the real content changes of unchanged-path files; git diff HEAD omits untracked files. Inspect the exported files directly before committing. Same-path overwrite is deferred to the 4.1 one-call Git export follow-up.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Offline contract and fixture checks; native export/import acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Verify the intended bound project; copy its exact projectFile and the PLC software path from GetProjectTree."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": true
+        },
+        "expect": "Review the exact compile target; obtain operator approval before executing."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectFile from GetSessionState>"
+        },
+        "expect": "Continue only after a successful compile with zero errors; no server-side auto-commit or automatic save."
+      },
+      {
+        "tool": "ExportPlcBlocks",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "exportDirectory": "C:/Examples/PlcExports/exports/<new empty export directory>",
+          "stripVolatile": true,
+          "dryRun": true
+        },
+        "expect": "Directory must already exist inside the Git working tree and every planned destination must be new. Review the complete bounded inventory and obtain approval; copy inventoryHash and outputFile paths."
+      },
+      {
+        "tool": "ExportPlcBlocks",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "groupPath": "",
+          "exportDirectory": "C:/Examples/PlcExports/exports/<new empty export directory>",
+          "stripVolatile": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectFile from GetSessionState>",
+          "expectedInventoryHash": "<inventoryHash from this export preview>"
+        },
+        "expect": "Require every item exported; inspect per-file volatileNormalized. On partial or unknown results stop and inspect retained files; never retry automatically."
+      },
+      {
+        "tool": "ManagePlcGitRepository",
+        "arguments": {
+          "repositoryPath": "C:/Examples/PlcExports",
+          "action": "status",
+          "files": [
+            "<repository-relative outputFile from this successful export>"
+          ]
+        },
+        "expect": "Inspect status for the explicit exported paths; do not include unrelated changes."
+      },
+      {
+        "tool": "ManagePlcGitRepository",
+        "arguments": {
+          "repositoryPath": "C:/Examples/PlcExports",
+          "action": "diff",
+          "files": [
+            "<repository-relative outputFile from this successful export>"
+          ]
+        },
+        "expect": "This sequence uses a new directory per run: git diff HEAD does not show its untracked files and cannot demonstrate same-path content changes. Inspect every exported file directly before approval; same-path re-export is not supported by the existing tools."
+      },
+      {
+        "tool": "ManagePlcGitRepository",
+        "arguments": {
+          "repositoryPath": "C:/Examples/PlcExports",
+          "action": "commit",
+          "files": [
+            "<repository-relative outputFile from this successful export>"
+          ],
+          "message": "Export compiled PLC blocks",
+          "dryRun": true
+        },
+        "expect": "Review the exact explicit file list and commit message; obtain separate operator approval for this FILE write."
+      },
+      {
+        "tool": "ManagePlcGitRepository",
+        "arguments": {
+          "repositoryPath": "C:/Examples/PlcExports",
+          "action": "commit",
+          "files": [
+            "<repository-relative outputFile from this successful export>"
+          ],
+          "message": "Export compiled PLC blocks",
+          "dryRun": false
+        },
+        "expect": "Commit only the reviewed repository-relative exported paths. No push, branch changes or automatic compile-triggered commit."
+      }
+    ]
   }
 ]

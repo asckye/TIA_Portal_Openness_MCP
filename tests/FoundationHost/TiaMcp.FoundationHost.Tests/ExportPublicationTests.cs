@@ -28,6 +28,115 @@ internal static class ExportPublicationTests
         {
             if(Environment.OSVersion.Platform==PlatformID.Win32NT)
             {
+            foreach(bool bom in new[]{false,true})
+            foreach(string newline in new[]{"\n","\r\n"})
+            {
+                string Native(string created,string product)=>
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>"+newline+
+                    "<Document ID=\"0\">"+newline+"  <Engineering version=\"V17\" />"+newline+
+                    "  <DocumentInfo marker=\"keep\"><Created zone=\"UTC\">"+created+"</Created><ExportSetting>None</ExportSetting>"+
+                    "<InstalledProducts source=\"native\">"+product+"</InstalledProducts><!--keep--><Other>untouched</Other></DocumentInfo>"+newline+
+                    "  <SW.Blocks.FC ID=\"1\"><AttributeList><Name>块</Name><Text>line1&#xD;line2</Text></AttributeList>"+
+                    "<ObjectList><Member UId=\"7\"><![CDATA[unchanged]]></Member></ObjectList></SW.Blocks.FC>"+newline+"</Document>";
+                var encoding=new System.Text.UTF8Encoding(bom);
+                byte[] Bytes(string text)=>encoding.GetPreamble().Concat(encoding.GetBytes(text)).ToArray();
+                string Hash(byte[] bytes)=>Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes));
+                var first=Output("normalized-"+bom+"-"+newline.Length+"-first");
+                var second=Output("normalized-"+bom+"-"+newline.Length+"-second");
+                string source=Native("2026-01-01T12:00:00Z","<Product version=\"17\" />");
+                bool firstNormalized=false,secondNormalized=false;
+                PlcExportPublication.Publish(first,f=>File.WriteAllBytes(f.FullName,Bytes(source)),true,value=>firstNormalized=value);
+                PlcExportPublication.Publish(second,f=>File.WriteAllBytes(f.FullName,
+                    Bytes(Native("2026-11-17T23:59:59Z","<Product version=\"21\" /><Product version=\"18\" />"))),true,value=>secondNormalized=value);
+                var firstBytes=File.ReadAllBytes(first.FullName); var secondBytes=File.ReadAllBytes(second.FullName);
+                check(firstNormalized && secondNormalized && firstBytes.SequenceEqual(secondBytes) && Hash(firstBytes)==Hash(secondBytes),
+                    "Volatile-only differences publish identical bytes and hashes, BOM="+bom+", newline="+newline.Length);
+                check(firstBytes.Take(3).SequenceEqual(new byte[]{0xef,0xbb,0xbf})==bom,
+                    "Normalization preserves native UTF-8 BOM choice "+bom+"/"+newline.Length);
+                string text=File.ReadAllText(first.FullName);
+                check(newline=="\r\n" ? !text.Replace("\r\n","").Contains('\n') && text.Contains("\r\n") : !text.Contains('\r') && text.Contains('\n'),
+                    "Normalization preserves physical newline style "+bom+"/"+newline.Length);
+                var expected=System.Xml.Linq.XDocument.Parse(source);
+                expected.Root!.Element("DocumentInfo")!.Element("Created")!.Value="2000-01-01T00:00:00.0000000Z";
+                expected.Root.Element("DocumentInfo")!.Element("InstalledProducts")!.RemoveNodes();
+                check(System.Xml.Linq.XNode.DeepEquals(expected,System.Xml.Linq.XDocument.Load(first.FullName)),
+                    "Normalization preserves Engineering, ID/UId, attributes, comments, CDATA and all other nodes "+bom+"/"+newline.Length);
+                var native=Output("native-"+bom+"-"+newline.Length); bool normalized=true;
+                PlcExportPublication.Publish(native,f=>File.WriteAllBytes(f.FullName,Bytes(source)),false,value=>normalized=value);
+                check(!normalized && File.ReadAllBytes(native.FullName).SequenceEqual(Bytes(source)),
+                    "Disabled stripping publishes the exact native bytes "+bom+"/"+newline.Length);
+                var missing=Output("missing-info-"+bom+"-"+newline.Length);
+                string noInfo=source.Replace("<DocumentInfo", "<Nested><DocumentInfo").Replace("</DocumentInfo>","</DocumentInfo></Nested>");
+                normalized=true;
+                PlcExportPublication.Publish(missing,f=>File.WriteAllBytes(f.FullName,Bytes(noInfo)),true,value=>normalized=value);
+                check(!normalized && File.ReadAllBytes(missing.FullName).SequenceEqual(Bytes(noInfo)),
+                    "Only a direct DocumentInfo child is normalized; missing header keeps exact bytes "+bom+"/"+newline.Length);
+                var absentCreated=Output("missing-created-"+bom+"-"+newline.Length);
+                string missingCreated=source.Replace("<Created zone=\"UTC\">2026-01-01T12:00:00Z</Created>","");
+                PlcExportPublication.Publish(absentCreated,f=>File.WriteAllBytes(f.FullName,Bytes(missingCreated)),true);
+                var noCreatedDocument=System.Xml.Linq.XDocument.Load(absentCreated.FullName);
+                var noCreatedExpected=System.Xml.Linq.XDocument.Parse(missingCreated);
+                noCreatedExpected.Root!.Element("DocumentInfo")!.Element("InstalledProducts")!.RemoveNodes();
+                check(noCreatedDocument.Root!.Element("DocumentInfo")!.Element("Created")==null
+                    && System.Xml.Linq.XNode.DeepEquals(noCreatedExpected,noCreatedDocument),
+                    "Missing Created remains absent while installed products are normalized "+bom+"/"+newline.Length);
+                var writeFailure=Output("normalized-write-failure-"+bom+"-"+newline.Length);
+                string? nativeStage=null,partialSibling=null; bool reportedNormalized=false;
+                try
+                {
+                    PlcExportPublication.Publish(writeFailure,f=>{nativeStage=f.FullName;File.WriteAllBytes(f.FullName,Bytes(source));},true,
+                        value=>reportedNormalized=value,writeNormalized:(file,content,writerEncoding)=>{
+                            partialSibling=file.FullName;
+                            check(file.FullName!=nativeStage && file.DirectoryName==Path.GetDirectoryName(nativeStage)
+                                && File.ReadAllBytes(nativeStage!).SequenceEqual(Bytes(source)),
+                                "Normalization writer receives a sibling and native bytes remain intact "+bom+"/"+newline.Length);
+                            File.WriteAllText(file.FullName,content.Substring(0,content.Length/2),writerEncoding);
+                            throw new IOException("simulated partial normalized write failure");
+                        });
+                    throw new Exception("Simulated normalization write failure was accepted");
+                }
+                catch(IOException failure)
+                {
+                    check((string?)failure.Data["exportPhase"]=="normalize-output" && !File.Exists(writeFailure.FullName)
+                        && !reportedNormalized,"Failed normalization write never publishes or reports normalization "+bom+"/"+newline.Length);
+                    check((string?)failure.Data["stagedFile"]==nativeStage && File.ReadAllBytes(nativeStage!).SequenceEqual(Bytes(source))
+                        && (string?)failure.Data["stagedSha256"]==Hash(Bytes(source)).ToLowerInvariant(),
+                        "Failed normalization write retains exact native export and its SHA-256 evidence "+bom+"/"+newline.Length);
+                    check(partialSibling!=null && File.Exists(partialSibling)
+                        && !File.ReadAllBytes(partialSibling).SequenceEqual(Bytes(source))
+                        && Path.GetDirectoryName(partialSibling)==(string?)failure.Data["recoveryDirectory"],
+                        "Failed partial normalized sibling is retained separately for recovery "+bom+"/"+newline.Length);
+                }
+                var raceOutput=Output("normalized-race-"+bom+"-"+newline.Length);
+                try
+                {
+                    PlcExportPublication.Publish(raceOutput,f=>{File.WriteAllBytes(f.FullName,Bytes(source));File.WriteAllText(raceOutput.FullName,
+                            "competitor");},true);
+                    throw new Exception("Normalized publication overwrote a competing writer");
+                }
+                catch(IOException failure)
+                {
+                    check(Hash(File.ReadAllBytes((string)failure.Data["stagedFile"]!)).ToLowerInvariant()==(string?)failure.Data["stagedSha256"]
+                        && File.ReadAllBytes((string)failure.Data["stagedFile"]!).SequenceEqual(firstBytes),
+                        "Publication failure hashes the normalized staged bytes "+bom+"/"+newline.Length);
+                }
+            }
+            bool noHeader=true;
+            var unchanged=Output("no-document-info");
+            PlcExportPublication.Publish(unchanged,f=>File.WriteAllText(f.FullName,xml),true,value=>noHeader=value);
+            check(!noHeader && File.ReadAllBytes(unchanged.FullName).SequenceEqual(System.Text.Encoding.UTF8.GetBytes(xml)),
+                "Document without DocumentInfo is unchanged and reports false");
+            var duplicate=Output("duplicate-document-info");
+            try
+            {
+                PlcExportPublication.Publish(duplicate,f=>File.WriteAllText(f.FullName,"<Document><DocumentInfo/><DocumentInfo/></Document>"),true);
+                throw new Exception("Duplicate DocumentInfo accepted");
+            }
+            catch(IOException failure)
+            {
+                check((string?)failure.Data["exportPhase"]=="normalize-output" && !duplicate.Exists,
+                    "Ambiguous duplicate DocumentInfo is retained without publication");
+            }
             string? stagedDirectory=null;
             var good=Output("success");
             var recovery=PlcExportPublication.Publish(good,f=>{

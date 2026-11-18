@@ -21,11 +21,18 @@ namespace TiaMcp.Adapters
         }
         public PlcBatchDocumentExportResult ExportBlocksAsDocuments(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,bool preservePath=false,string expectedPlanHash="",bool dryRun=true) => (PlcBatchDocumentExportResult)Record(nameof(ExportBlocksAsDocuments), softwarePath, groupPath, exportPath, recursive, maxItems, preservePath, expectedPlanHash, dryRun)!;
         public PlcBatchDocumentImportResult ImportBlocksFromDocuments(string softwarePath,string groupPath,string importPath,string[] fileNamesWithoutExtension,bool overwrite=false,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="") => (PlcBatchDocumentImportResult)Record(nameof(ImportBlocksFromDocuments), softwarePath, groupPath, importPath, fileNamesWithoutExtension, overwrite, dryRun, expectedPlanHash, confirm, expectedProjectFile)!;
-        public PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true, string unitName = "") => (PlcBatchExportResult)Record(nameof(ExportBlocks), softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName)!;
+        public PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
+                string expectedInventoryHash="",bool dryRun=true, string unitName = "",
+                bool stripVolatile = false) => (PlcBatchExportResult)Record(nameof(ExportBlocks), softwarePath, groupPath, exportPath, recursive,
+                maxItems, expectedInventoryHash, dryRun, unitName, stripVolatile)!;
+        public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
+                string expectedInventoryHash="",bool dryRun=true, string unitName = "",
+                bool stripVolatile = false) => (PlcBatchExportResult)Record(nameof(ExportTypes), softwarePath, groupPath, exportPath, recursive,
+                maxItems, expectedInventoryHash, dryRun, unitName, stripVolatile)!;
         public PlcBatchExportResult ExportTagTables(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
-                string expectedInventoryHash="",bool dryRun=true,string unitName="") =>
-            (PlcBatchExportResult)Record(nameof(ExportTagTables),softwarePath,groupPath,exportPath,recursive,maxItems,expectedInventoryHash,dryRun,unitName)!;
-        public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,string expectedInventoryHash="",bool dryRun=true, string unitName = "") => (PlcBatchExportResult)Record(nameof(ExportTypes), softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName)!;
+                string expectedInventoryHash="",bool dryRun=true,string unitName="",bool stripVolatile=false) =>
+            (PlcBatchExportResult)Record(nameof(ExportTagTables),softwarePath,groupPath,exportPath,recursive,maxItems,
+                expectedInventoryHash,dryRun,unitName,stripVolatile)!;
         public PlcBatchImportResult ImportBlocksFromDirectory(string softwarePath,string groupPath,string dir,string regexName="",bool overwrite=false,bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",int maxItems=128, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null) => (PlcBatchImportResult)Record(nameof(ImportBlocksFromDirectory), softwarePath, groupPath, dir, regexName, overwrite, dryRun, importOrder, expectedPlanHash, confirm, expectedProjectFile, maxItems, unitName, swImportOptions, importOptions)!;
         public PlcBatchImportResult ImportPlcProgramFromDirectory(string softwarePath,string sourceDir,string typeGroupPath="",string tagFolderPath="",string technologyFolderPath="",string blockGroupPath="",string regexName="",bool compileAfter=false,bool stopOnImportFailure=true,bool dryRun=true,string[]? importOrder=null,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="",bool overwrite=false,int maxItems=128, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null) => (PlcBatchImportResult)Record(nameof(ImportPlcProgramFromDirectory), softwarePath, sourceDir, typeGroupPath, tagFolderPath, technologyFolderPath, blockGroupPath, regexName, compileAfter, stopOnImportFailure, dryRun, importOrder, expectedPlanHash, confirm, expectedProjectFile, overwrite, maxItems, unitName, swImportOptions, importOptions)!;
         public PlcDocumentExportResult ExportAsDocuments(string softwarePath,string blockPath,string exportPath,bool preservePath=false,string expectedPlanHash="",bool dryRun=true) => (PlcDocumentExportResult)Record(nameof(ExportAsDocuments), softwarePath, blockPath, exportPath, preservePath, expectedPlanHash, dryRun)!;
@@ -65,12 +72,23 @@ namespace TiaMcp.Adapters
         public PlcObjectInfo[] ListUserConstantsScoped(string plc, string table, string unitName = "", bool includeUnits = false) => ListUserConstants(plc, table, unitName, includeUnits);
         public PlcObjectInfo[] ListSystemConstants(string plc, string table, string unitName = "", bool includeUnits = false) => (PlcObjectInfo[])Record(nameof(ListSystemConstants), plc, table, unitName, includeUnits)!;
         public PlcObjectInfo[] ListSystemConstantsScoped(string plc, string table, string unitName = "", bool includeUnits = false) => ListSystemConstants(plc, table, unitName, includeUnits);
-        public PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true, string unitName = "") => (PlcMutationResult)Record(nameof(ExportBlock), softwarePath, blockPath, exportPath, preservePath, dryRun, unitName)!;
-        public PlcMutationResult ExportBlockScoped(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true, string unitName = "") => ExportBlock(softwarePath, blockPath, exportPath, preservePath, dryRun, unitName);
-        public PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true, string unitName = "") => (PlcMutationResult)Record(nameof(ExportType), softwarePath, exportPath, typePath, preservePath, dryRun, unitName)!;
-        public PlcMutationResult ExportTypeScoped(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true, string unitName = "") => ExportType(softwarePath, exportPath, typePath, preservePath, dryRun, unitName);
-        public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true, string unitName = "") => (PlcMutationResult)Record(nameof(ExportTagTable), softwarePath, tagTableName, exportPath, dryRun, unitName)!;
-        public PlcMutationResult ExportTagTableScoped(string softwarePath, string tagTableName, string exportPath, bool dryRun = true, string unitName = "") => ExportTagTable(softwarePath, tagTableName, exportPath, dryRun, unitName);
+        public PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true,
+                string unitName = "", bool stripVolatile = false) => (PlcMutationResult)Record(nameof(ExportBlock), softwarePath, blockPath,
+                exportPath, preservePath, dryRun, unitName, stripVolatile)!;
+        public PlcMutationResult ExportBlockScoped(string softwarePath, string blockPath, string exportPath, bool preservePath=false,
+                bool dryRun = true, string unitName = "", bool stripVolatile = false) => ExportBlock(softwarePath, blockPath, exportPath, preservePath,
+                dryRun, unitName, stripVolatile);
+        public PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true,
+                string unitName = "", bool stripVolatile = false) => (PlcMutationResult)Record(nameof(ExportType), softwarePath, exportPath, typePath,
+                preservePath, dryRun, unitName, stripVolatile)!;
+        public PlcMutationResult ExportTypeScoped(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true,
+                string unitName = "", bool stripVolatile = false) => ExportType(softwarePath, exportPath, typePath, preservePath, dryRun, unitName,
+                stripVolatile);
+        public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true, string unitName = "",
+                bool stripVolatile = false) => (PlcMutationResult)Record(nameof(ExportTagTable), softwarePath, tagTableName, exportPath, dryRun,
+                unitName, stripVolatile)!;
+        public PlcMutationResult ExportTagTableScoped(string softwarePath, string tagTableName, string exportPath, bool dryRun = true,
+                string unitName = "", bool stripVolatile = false) => ExportTagTable(softwarePath, tagTableName, exportPath, dryRun, unitName, stripVolatile);
         public PlcMutationResult ImportBlocks(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null) => (PlcMutationResult)Record(nameof(ImportBlocks), softwarePath, groupPath, importPath, overwrite, dryRun, unitName, swImportOptions, importOptions)!;
         public PlcMutationResult ImportBlocksScoped(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null) => ImportBlocks(softwarePath, groupPath, importPath, overwrite, dryRun, unitName, swImportOptions, importOptions);
         public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true, string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null) => (PlcMutationResult)Record(nameof(ImportTypes), softwarePath, groupPath, importPath, overwrite, dryRun, unitName, swImportOptions, importOptions)!;

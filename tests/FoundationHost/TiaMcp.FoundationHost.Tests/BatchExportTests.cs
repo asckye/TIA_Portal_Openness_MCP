@@ -11,7 +11,9 @@ internal static class BatchExportTests
         int native=0,offline=0,published=0;
         PlcBatchExportSource Source(string path,bool consistent=true)=>new() {Path=path,Consistent=consistent,Export=file=>{native++;File.WriteAllText(file.FullName,"<Document><Number>42</Number><Name>Original</Name></Document>");}};
         var sources=new[]{Source("z/CON"),Source("a/A"),Source("a/a"),Source("q/%2F..%5CCON")};
-        PlcBatchExportResult Run(bool dry,string hash="",IEnumerable<PlcBatchExportSource>? inventory=null,Func<FileInfo,Action<FileInfo>,string?>? publish=null,int max=128,Action? gate=null)=>PlcBatchExportPolicy.Run("blocks","/project.ap17","devices/PLC","",true,root,max,dry,hash,inventory??sources,gate??(()=>offline++),publish);
+        PlcBatchExportResult Run(bool dry,string hash="",IEnumerable<PlcBatchExportSource>? inventory=null,Func<FileInfo,Action<FileInfo>,
+                string?>? publish=null,int max=128,Action? gate=null,bool stripVolatile=false)=>PlcBatchExportPolicy.Run("blocks","/project.ap17",
+                "devices/PLC","",true,root,max,dry,hash,inventory??sources,gate??(()=>offline++),publish,stripVolatile:stripVolatile);
         void Refused(Action action,string message) {try {action(); throw new Exception("Accepted: "+message);} catch(TiaMcp.Adapters.Contracts.AdapterPreconditionException) {check(true,message);} catch(ArgumentException) {check(true,message);} }
         try
         {
@@ -28,6 +30,10 @@ internal static class BatchExportTests
             check(preview.Items.Select(x=>x.ObjectPath).SequenceEqual(preview.Items.Select(x=>x.ObjectPath).OrderBy(x=>x,StringComparer.Ordinal)),"Batch inventory uses ordinal ordering");
             check(preview.Items.Select(x=>x.OutputFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()==4 && preview.Items.All(x=>Path.GetFileName(x.OutputFile).StartsWith("blocks-") && Path.GetDirectoryName(x.OutputFile)==root),"Names including reserved devices, separators and case collisions never become output path segments");
             check(Run(true,inventory:sources.Reverse()).InventoryHash==preview.InventoryHash,"Batch preview hash does not depend on enumeration order");
+            var normalizedPreview=Run(true,stripVolatile:true);
+            check(normalizedPreview.InventoryHash!=preview.InventoryHash,"Volatile stripping participates in the inventory hash");
+            Refused(()=>Run(false,preview.InventoryHash,stripVolatile:true),"Native-byte preview cannot authorize normalized export");
+            Refused(()=>Run(false,normalizedPreview.InventoryHash),"Normalized preview cannot authorize native-byte export");
             Refused(()=>Run(true,max:3),"Oversized inventory fails instead of truncating");
             Refused(()=>Run(true,inventory:new[]{Source("dup"),Source("dup")}),"Duplicate exact object paths rejected");
             Refused(()=>Run(false,"wrong"),"Execution requires matching preview inventory hash");
@@ -83,6 +89,15 @@ internal static class BatchExportTests
                         .All(x=>File.ReadAllText(x.OutputFile).Contains("<Number>42</Number><Name>Original</Name>")),
                         "Windows batch publishes unmodified native XML numbers and symbols");
                 foreach(var item in actual.Items.Where(x=>x.Status=="exported"))File.Delete(item.OutputFile);
+                var headerSources=new[]{new PlcBatchExportSource { Path="Normalized",Consistent=true,Export=f=>File.WriteAllText(f.FullName,
+                    "<Document><Engineering version=\"V17\"/><DocumentInfo><Created>2026-11-17</Created>"+
+                    "<ExportSetting>None</ExportSetting><InstalledProducts><Product/></InstalledProducts></DocumentInfo></Document>") }};
+                var headerPreview=Run(true,inventory:headerSources,stripVolatile:true);
+                var normalized=Run(false,headerPreview.InventoryHash,inventory:headerSources,stripVolatile:true);
+                check(normalized.Items.Single().Status=="exported" && normalized.Items.Single().VolatileNormalized
+                    && File.ReadAllText(normalized.Items.Single().OutputFile).Contains("2000-01-01T00:00:00.0000000Z"),
+                    "Batch passes volatile stripping to publication and reports it per file");
+                File.Delete(normalized.Items.Single().OutputFile);
                 int attempts=0;var failure=
                     Run(false,preview.InventoryHash,inventory:sources
                         .Select(s=>new PlcBatchExportSource {

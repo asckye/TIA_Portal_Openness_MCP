@@ -93,7 +93,8 @@ internal static class CatalogGenerator
                     "StageImportFiles" => new Dictionary<string, string> { ["files"] = "StagedTextFile[]", ["dryRun"] = "bool" },
                     "ExportPlcTagTables" => new() {
                         ["softwarePath"] = "string", ["groupPath"] = "string", ["exportPath"] = "string", ["recursive"] = "bool",
-                        ["maxItems"] = "int", ["expectedInventoryHash"] = "string", ["dryRun"] = "bool", ["unitName"] = "string"
+                        ["maxItems"] = "int", ["expectedInventoryHash"] = "string", ["dryRun"] = "bool", ["unitName"] = "string",
+                        ["stripVolatile"] = "bool"
                     },
                     "ListStagedImportFiles" => [],
                     "CleanupStagedImportFiles" => new() { ["batchId"] = "string", ["dryRun"] = "bool" },

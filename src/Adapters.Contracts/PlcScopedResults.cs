@@ -18,6 +18,16 @@ namespace TiaMcp.Adapters.Contracts
         public string[] SwImportOptions { get; internal set; } = Array.Empty<string>();
         public string[] ImportOptions { get; internal set; } = Array.Empty<string>();
     }
+    internal class PlcXmlExportMutationResult : TiaMcp.Adapters.PlcMutationResult
+    {
+        public bool VolatileNormalized { get; internal set; }
+    }
+    internal sealed class PlcScopedXmlExportMutationResult : PlcXmlExportMutationResult
+    {
+        public string UnitName { get; internal set; } = "";
+        public string[] SwImportOptions { get; internal set; } = Array.Empty<string>();
+        public string[] ImportOptions { get; internal set; } = Array.Empty<string>();
+    }
     internal sealed class PlcScopedBatchImportResult : TiaMcp.Adapters.PlcBatchImportResult
     {
         public string UnitName { get; internal set; } = "";

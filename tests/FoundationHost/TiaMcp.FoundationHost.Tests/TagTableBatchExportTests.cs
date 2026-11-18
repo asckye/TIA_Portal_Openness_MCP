@@ -85,6 +85,52 @@ public sealed class TagTableBatchExportTests
         finally { Directory.Delete(directory, true); }
     }
 
+    [Theory, MemberData(nameof(B3HostPortsTests.Releases), MemberType = typeof(B3HostPortsTests))]
+    public void Volatile_normalization_is_bound_to_the_tag_table_inventory_and_published_file(string release)
+    {
+        string directory=Path.GetFullPath(Path.Combine("bin-build","tag-table-normalization-tests",Guid.NewGuid().ToString("N")));
+        Directory.CreateDirectory(directory);
+        string repository=TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        string nativeXml=File.ReadAllText(Path.Combine(repository,"templates/mcp-full-e2e-verify/import/MCP_E2E_Tags.xml"))
+            .Replace("2000-01-01T00:00:00.0000000Z","2026-11-17T12:34:56.0000000Z")
+            .Replace("<InstalledProducts />","<InstalledProducts><Product version=\"V21\" /></InstalledProducts>");
+        byte[] native=System.Text.Encoding.UTF8.GetBytes(nativeXml);
+        int exports=0;
+        var inventory=new[]{new PlcBatchExportSource { Path="G/Tags",Consistent=true,
+            Export=file=>{exports++;File.WriteAllBytes(file.FullName,native);} }};
+        PlcBatchExportResult Run(bool dry,bool strip,string hash="")=>PlcBatchExportPolicy.Run("tagTables","C:/Fixture.ap"+release,
+            "devices/PLC/CPU","",true,directory,128,dry,hash,inventory,()=>{},stripVolatile:strip);
+        try
+        {
+            var raw=Run(true,false);var normalized=Run(true,true);
+            Assert.NotEqual(raw.InventoryHash,normalized.InventoryHash);
+            Assert.Throws<AdapterPreconditionException>(()=>Run(false,true,raw.InventoryHash));
+            Assert.Throws<AdapterPreconditionException>(()=>Run(false,false,normalized.InventoryHash));
+            Assert.Equal(0,exports);
+            Assert.Empty(Directory.GetFileSystemEntries(directory));
+            var applied=Run(false,true,normalized.InventoryHash);
+            var item=Assert.Single(applied.Items);
+            if(Environment.OSVersion.Platform!=PlatformID.Win32NT)
+            {
+                Assert.Equal("failed",item.Status);
+                Assert.Equal(0,exports);
+                Assert.Empty(Directory.GetFileSystemEntries(directory));
+                return;
+            }
+            Assert.Equal(1,exports);
+            Assert.Equal("exported",item.Status);
+            Assert.True(item.VolatileNormalized);
+            var document=System.Xml.Linq.XDocument.Load(item.OutputFile);
+            Assert.Equal("2000-01-01T00:00:00.0000000Z",document.Root!.Element("DocumentInfo")!.Element("Created")!.Value);
+            Assert.Empty(document.Root.Element("DocumentInfo")!.Element("InstalledProducts")!.Nodes());
+            var expected=System.Xml.Linq.XDocument.Parse(System.Text.Encoding.UTF8.GetString(native).TrimStart('\ufeff'));
+            expected.Root!.Element("DocumentInfo")!.Element("Created")!.Value="2000-01-01T00:00:00.0000000Z";
+            expected.Root.Element("DocumentInfo")!.Element("InstalledProducts")!.RemoveNodes();
+            Assert.True(System.Xml.Linq.XNode.DeepEquals(expected,document));
+        }
+        finally { Directory.Delete(directory,true); }
+    }
+
     [Fact]
     public void Existing_batch_policy_and_dispatch_guards_include_tag_tables()
     {
@@ -101,17 +147,18 @@ public sealed class TagTableBatchExportTests
         using var worker = new InventoryWorker();
         var tool = FoundationTools.Create(worker).Single(tool => tool.ProtocolTool.Name == "ExportPlcTagTables");
         var server = DispatchProxy.Create<IMcpServer, ServerProxy>();
-        async Task<JsonNode> Preview(string group, bool recursive)
+        async Task<JsonNode> Preview(string group, bool recursive,bool stripVolatile=false)
         {
             var request = new RequestContext<CallToolRequestParams>(server) { Params = new() {
                 Name = tool.ProtocolTool.Name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(JsonSerializer.Serialize(new {
-                    softwarePath = "devices/PLC/CPU", groupPath = group, recursive, exportPath = directory
+                    softwarePath = "devices/PLC/CPU", groupPath = group, recursive, exportPath = directory,stripVolatile
                 }))
             } };
             var response = await tool.InvokeAsync(request);
             Assert.Equal("ExportTagTables", worker.Operation);
             Assert.Equal(group, (string?)worker.Arguments!["groupPath"]);
             Assert.Equal(recursive, (bool?)worker.Arguments["recursive"]);
+            Assert.Equal(stripVolatile,(bool?)worker.Arguments["stripVolatile"]);
             return JsonNode.Parse(response.Content.OfType<TextContentBlock>().Single().Text)!;
         }
         static string[] Paths(JsonNode result) => result["Items"]!.AsArray().Select(item => (string)item!["ObjectPath"]!).ToArray();
@@ -122,6 +169,9 @@ public sealed class TagTableBatchExportTests
             Assert.Equal(new[] { "G/T 2" }, Paths(await Preview("G", false)));
             Assert.Equal(new[] { "G/Sub/T 1", "G/T 2" }, Paths(await Preview("G", true)));
             Assert.Equal(new[] { "G%2FLine/变量表" }, Paths(await Preview("G%2FLine", true)));
+            var raw=await Preview("",true);
+            var normalized=await Preview("",true,true);
+            Assert.NotEqual((string?)raw["InventoryHash"],(string?)normalized["InventoryHash"]);
             Assert.Empty(Directory.GetFileSystemEntries(directory));
         }
         finally { Directory.Delete(directory, true); }
@@ -144,7 +194,8 @@ public sealed class TagTableBatchExportTests
                 });
             var result = PlcBatchExportPolicy.Run("tagTables", "C:/Fixture.ap21", (string)arguments["softwarePath"]!, group, recursive,
                 (string)arguments["exportPath"]!, (int)arguments["maxItems"]!, (bool)arguments["dryRun"]!,
-                (string)arguments["expectedInventoryHash"]!, sources, () => throw new InvalidOperationException("Preview cannot publish."));
+                (string)arguments["expectedInventoryHash"]!, sources, () => throw new InvalidOperationException("Preview cannot publish."),
+                stripVolatile:(bool)arguments["stripVolatile"]!);
             WorkerProtocol.ValidateExchangeResult(operation, arguments, JsonSerializer.SerializeToNode(result));
             return Task.FromResult(JsonSerializer.SerializeToNode(result));
         }

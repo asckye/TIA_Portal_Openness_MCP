@@ -8,6 +8,7 @@ namespace TiaMcp.Adapters
     {
         public string ObjectPath { get; internal set; } = "";
         public string OutputFile { get; internal set; } = "";
+        public bool VolatileNormalized { get; internal set; }
         public string Status { get; internal set; } = "planned";
         public string XmlContent { get; internal set; } = "native-xml";
         public string[] Warnings { get; internal set; } = new string[0];

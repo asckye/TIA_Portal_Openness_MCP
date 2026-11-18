@@ -20,7 +20,7 @@ namespace TiaMcp.Adapters
             return PlcExchangePolicy.Exact(inventory,x=>x.Path,path,parameter).Value;
         }
         public PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
-                string expectedInventoryHash="",bool dryRun=true, string unitName = "")
+                string expectedInventoryHash="",bool dryRun=true, string unitName = "", bool stripVolatile = false)
         {
             var selected=ReadSelection(softwarePath);
             var unit=PlcUnitScope.Optional(selected.Value,unitName);
@@ -41,10 +41,10 @@ namespace TiaMcp.Adapters
             }));
             return PlcBatchExportPolicy
                 .Run("blocks",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>
-                    RequireTargetOffline(selected),unitName:unitName);
+                    RequireTargetOffline(selected),unitName:unitName,stripVolatile:stripVolatile);
         }
         public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
-                string expectedInventoryHash="",bool dryRun=true, string unitName = "")
+                string expectedInventoryHash="",bool dryRun=true, string unitName = "", bool stripVolatile = false)
         {
             var selected=ReadSelection(softwarePath);
             var unit=PlcUnitScope.Optional(selected.Value,unitName);
@@ -64,10 +64,10 @@ namespace TiaMcp.Adapters
             }));
             return PlcBatchExportPolicy
                 .Run("types",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,expectedInventoryHash,sources,()=>
-                    RequireTargetOffline(selected),unitName:unitName);
+                    RequireTargetOffline(selected),unitName:unitName,stripVolatile:stripVolatile);
         }
         public PlcBatchExportResult ExportTagTables(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
-                string expectedInventoryHash="",bool dryRun=true,string unitName="")
+                string expectedInventoryHash="",bool dryRun=true,string unitName="",bool stripVolatile=false)
         {
             var selected=ReadSelection(softwarePath);
             var unit=PlcUnitScope.Optional(selected.Value,unitName);
@@ -86,7 +86,7 @@ namespace TiaMcp.Adapters
                 }
             }));
             return PlcBatchExportPolicy.Run("tagTables",Project().Path.FullName,selected.ExactPath,path,recursive,exportPath,maxItems,dryRun,
-                expectedInventoryHash,sources,()=>RequireTargetOffline(selected),unitName:unitName);
+                expectedInventoryHash,sources,()=>RequireTargetOffline(selected),unitName:unitName,stripVolatile:stripVolatile);
         }
         private static IEnumerable<Located<T>> BatchGroupsBounded<T>(IEnumerable<Located<T>> groups)
         {

@@ -33,6 +33,37 @@ public sealed class SoftwareUnitOperationBindingTests
         Assert.Equal("SkipInactiveCultures", import.RootElement.GetProperty("ImportOptions")[0].GetString());
     }
 
+    [Theory]
+    [InlineData(false, false), InlineData(false, true), InlineData(true, false), InlineData(true, true)]
+    public void XmlExportRepliesAddOnlyVolatileNormalizationToTheExistingScopeShape(bool scoped, bool normalized)
+    {
+        object Create(string name) => Activator.CreateInstance(typeof(IOpennessAdapter).Assembly
+            .GetType("TiaMcp.Adapters.Contracts." + name, true)!, true)!;
+        object previous = scoped ? Create("PlcScopedMutationResult") : new TiaMcp.Adapters.PlcMutationResult();
+        object current = Create(scoped ? "PlcScopedXmlExportMutationResult" : "PlcXmlExportMutationResult");
+        var sample = GoldenSamples.All().Single(row => row.Name == "PlcMutationResult.populated").Value;
+        foreach (var property in typeof(TiaMcp.Adapters.PlcMutationResult).GetProperties())
+        {
+            property.SetValue(previous, property.GetValue(sample));
+            property.SetValue(current, property.GetValue(sample));
+        }
+        if (scoped)
+            foreach (var value in new[] { previous, current }) value.GetType().GetProperty("UnitName")!.SetValue(value, "Unit A/B");
+        current.GetType().GetProperty("VolatileNormalized")!.SetValue(current, normalized);
+        foreach (bool host in new[] { false, true })
+        {
+            string Serialize(object value) => host ? JsonSerializer.Serialize(value, value.GetType(), McpJsonUtilities.DefaultOptions)
+                : WorkerJson.Serialize(value);
+            var before = System.Text.Json.Nodes.JsonNode.Parse(Serialize(previous))!.AsObject();
+            var after = System.Text.Json.Nodes.JsonNode.Parse(Serialize(current))!.AsObject();
+            string name = host ? McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName("VolatileNormalized") ?? "VolatileNormalized"
+                : "VolatileNormalized";
+            Assert.Equal(normalized, after[name]!.GetValue<bool>());
+            Assert.True(after.Remove(name));
+            Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(before, after), after.ToJsonString());
+        }
+    }
+
     public sealed class Facade
     {
         public string Unit = "";

@@ -114,7 +114,7 @@
       "path": "src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs",
       "owner": "PlcBlocksTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ExportBlockV4(\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)\")] string blockPath,\n            [Description(\"exportPath: directory that receives '<BlockName>.xml' - or, when it ends in .xml, the target file itself; the response reports the file written (Meta.exportedFile)\")] string exportPath,\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false)",
+      "signature": "public CallToolResult ExportBlockV4(\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)\")] string blockPath,\n            [Description(\"exportPath: directory that receives '<BlockName>.xml' - or, when it ends in .xml, the target file itself; the response reports the file written (Meta.exportedFile)\")] string exportPath,\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false, [Description(\"stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.\")] bool stripVolatile = false)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -140,8 +140,15 @@
         "exportDirectory": {
           "type": "string",
           "description": "Absolute output directory on the TIA host. exportPath: directory that receives '<BlockName>.xml' - or, when it ends in .xml, the target file itself; the response reports the file written (Meta.exportedFile) Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly."
+        },
+        "stripVolatile": {
+          "type": "bool",
+          "default": "false",
+          "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+          "value": false
         }
-      }
+      },
+      "description": "[v17-exchange-safe-v1] Export consistent native block XML into an existing directory; optional existing subdirectories preserve groups. Never overwrites. V14 SP1 SCL XML contains interfaces only, not a full program backup. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable."
     },
     "ImportPlcBlock": {
       "method": "ImportBlockV4",
@@ -408,7 +415,7 @@
       "path": "src/Engine/ModelContextProtocol/Tools/PlcBlocksTools.cs",
       "owner": "PlcBlocksTools",
       "domain": "PLC-Software",
-      "signature": "public Task<CallToolResult> ExportBlocksV4(\n            IMcpServer server,\n            RequestContext<CallToolRequestParams> context,\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"exportPath: defines the path where to export the blocks\")] string exportPath,\n            [Description(\"regexName: defines the name or regular expression to find the block. Use empty string (default) to find all\")] string regexName = \"\",\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false)",
+      "signature": "public Task<CallToolResult> ExportBlocksV4(\n            IMcpServer server,\n            RequestContext<CallToolRequestParams> context,\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"exportPath: defines the path where to export the blocks\")] string exportPath,\n            [Description(\"regexName: defines the name or regular expression to find the block. Use empty string (default) to find all\")] string regexName = \"\",\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false, [Description(\"stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.\")] bool stripVolatile = false)",
       "parameters": {
         "server": {
           "type": "IMcpServer",
@@ -443,8 +450,15 @@
         "exportDirectory": {
           "type": "string",
           "description": "Absolute output directory on the TIA host. exportPath: defines the path where to export the blocks Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly."
+        },
+        "stripVolatile": {
+          "type": "bool",
+          "default": "false",
+          "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+          "value": false
         }
-      }
+      },
+      "description": "[bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Know-how-protected blocks export only their public interface; they are listed as interface-only and cannot be imported again. stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable."
     },
     "ListPlcExternalSources": {
       "method": "GetPlcExternalSourcesV4",
@@ -626,7 +640,7 @@
       "path": "src/Engine/ModelContextProtocol/Tools/PlcTablesTools.cs",
       "owner": "PlcTablesTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ExportPlcTagTableV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"tagTableName: PLC tag table name\")] string tagTableName,\n            [Description(\"exportPath: full file path to write to\")] string exportPath)",
+      "signature": "public CallToolResult ExportPlcTagTableV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"tagTableName: PLC tag table name\")] string tagTableName,\n            [Description(\"exportPath: full file path to write to\")] string exportPath, [Description(\"stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.\")] bool stripVolatile = false)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -646,8 +660,15 @@
         "exportFile": {
           "type": "string",
           "description": "Absolute output file on the TIA host. exportPath: full file path to write to Supply at most one of exportPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly."
+        },
+        "stripVolatile": {
+          "type": "bool",
+          "default": "false",
+          "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+          "value": false
         }
-      }
+      },
+      "description": "[v17-exchange-safe-v1] Export one root-group tag table to a new XML file. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable."
     },
     "ImportPlcTagTable": {
       "method": "ImportPlcTagTableV4",
@@ -1040,7 +1061,7 @@
       "path": "src/Engine/ModelContextProtocol/Tools/TypesTools.cs",
       "owner": "TypesTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ExportTypeV4(\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"exportPath: defines the directory where to export the type; output file will be '<type name>.xml'\")] string exportPath,\n            [Description(\"typePath: defines the path in the project structure to the type\")] string typePath,\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false)",
+      "signature": "public CallToolResult ExportTypeV4(\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"exportPath: defines the directory where to export the type; output file will be '<type name>.xml'\")] string exportPath,\n            [Description(\"typePath: defines the path in the project structure to the type\")] string typePath,\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false, [Description(\"stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.\")] bool stripVolatile = false)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -1066,8 +1087,15 @@
         "exportDirectory": {
           "type": "string",
           "description": "Absolute output directory on the TIA host. exportPath: defines the directory where to export the type; output file will be '<type name>.xml' Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly."
+        },
+        "stripVolatile": {
+          "type": "bool",
+          "default": "false",
+          "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+          "value": false
         }
-      }
+      },
+      "description": "[v17-exchange-safe-v1] Export consistent native type XML into an existing directory. Never overwrites. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable."
     },
     "ImportPlcType": {
       "method": "ImportTypeV4",
@@ -1098,7 +1126,7 @@
       "path": "src/Engine/ModelContextProtocol/Tools/TypesTools.cs",
       "owner": "TypesTools",
       "domain": "PLC-Software",
-      "signature": "public Task<CallToolResult> ExportTypesV4(\n            IMcpServer server,\n            RequestContext<CallToolRequestParams> context,\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"exportPath: defines the path where to export the types\")] string exportPath,\n            [Description(\"regexName: defines the name or regular expression to find the block. Use empty string (default) to find all\")] string regexName = \"\",\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false)",
+      "signature": "public Task<CallToolResult> ExportTypesV4(\n            IMcpServer server,\n            RequestContext<CallToolRequestParams> context,\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"exportPath: defines the path where to export the types\")] string exportPath,\n            [Description(\"regexName: defines the name or regular expression to find the block. Use empty string (default) to find all\")] string regexName = \"\",\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false, [Description(\"stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.\")] bool stripVolatile = false)",
       "parameters": {
         "server": {
           "type": "IMcpServer",
@@ -1133,8 +1161,15 @@
         "exportDirectory": {
           "type": "string",
           "description": "Absolute output directory on the TIA host. exportPath: defines the path where to export the types Supply at most one of exportPath or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly."
+        },
+        "stripVolatile": {
+          "type": "bool",
+          "default": "false",
+          "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+          "value": false
         }
-      }
+      },
+      "description": "[bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable."
     },
     "PlanArtifactImportOrder": {
       "method": "PlanArtifactImportOrderV4",
@@ -18971,7 +19006,7 @@
       "path": "src/FoundationHost/FoundationTools.cs",
       "owner": "FoundationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ExportTagTables(string softwarePath, string groupPath, string exportPath, bool recursive = false, int maxItems = 128, string expectedInventoryHash = \"\", bool dryRun = true, string unitName = \"\")",
+      "signature": "public CallToolResult ExportTagTables(string softwarePath, string groupPath, string exportPath, bool recursive = false, int maxItems = 128, string expectedInventoryHash = \"\", bool dryRun = true, string unitName = \"\", bool stripVolatile = false)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -19033,8 +19068,15 @@
         "exportDirectory": {
           "type": "string",
           "description": "Existing absolute output directory on the TIA host. Mutually exclusive with exportPath. Omit to use the session output directory."
+        },
+        "stripVolatile": {
+          "type": "bool",
+          "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+          "default": "false",
+          "value": false
         }
-      }
+      },
+      "description": "[bounded-batch-xml-v1] Export PLC root and user-group tag tables from an exact PLC/group scope into an existing exportDirectory. Complete bounded inventory, recursive opt-in; maxItems 1..256, overflow refused. Preview first; execution requires its expectedInventoryHash, confirm=true and exact expectedProjectFile. Files are tagTables-<hash>.xml; each objectPath maps to its file. ExportOptions.None preserves native XML by default; no overwrite or retry; partial outcomes retained. Native acceptance NOT RUN. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Re-import each file with ImportPlcTagTable (folderPath = parent of objectPath), optionally through ApplyToolBatch, or use ImportPlcProgramFromDirectory with the intended tagFolderPath. stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable."
     },
     "ConvertEngineeringTable": {
       "method": "ConvertEngineeringTableV4",

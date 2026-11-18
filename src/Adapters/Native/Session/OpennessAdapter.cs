@@ -93,11 +93,11 @@ namespace TiaMcp.Adapters
                     string expectedPlanHash="",bool dryRun=true) =>
                 engine.ExportAsDocuments(softwarePath, blockPath, exportPath, preservePath, expectedPlanHash, dryRun);
             public PlcMutationResult ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath=false, bool dryRun = true,
-                    string unitName = "") =>
-                engine.ExportBlockScoped(softwarePath, blockPath, exportPath, preservePath, dryRun, unitName);
+                    string unitName = "", bool stripVolatile = false) =>
+                engine.ExportBlockScoped(softwarePath, blockPath, exportPath, preservePath, dryRun, unitName, stripVolatile);
             public PlcBatchExportResult ExportBlocks(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
-                    string expectedInventoryHash="",bool dryRun=true, string unitName = "") =>
-                engine.ExportBlocks(softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName);
+                    string expectedInventoryHash="",bool dryRun=true, string unitName = "", bool stripVolatile = false) =>
+                engine.ExportBlocks(softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName, stripVolatile);
             public PlcBatchDocumentExportResult ExportBlocksAsDocuments(string softwarePath,string groupPath,string exportPath,bool recursive=false,
                     int maxItems=128,bool preservePath=false,string expectedPlanHash="",bool dryRun=true) =>
                 engine.ExportBlocksAsDocuments(softwarePath, groupPath, exportPath, recursive, maxItems, preservePath, expectedPlanHash, dryRun);
@@ -172,16 +172,17 @@ namespace TiaMcp.Adapters
             public PlcTypeDetails[] ReadTypes(string softwarePath, string regexName = "") => engine.ReadTypes(softwarePath, regexName);
             public string[] ReadTagTableNames(string softwarePath) => engine.ReadTagTableNames(softwarePath);
             public PlcMutationResult ExportType(string softwarePath, string exportPath, string typePath, bool preservePath=false, bool dryRun = true,
-                    string unitName = "") =>
-                engine.ExportTypeScoped(softwarePath, exportPath, typePath, preservePath, dryRun, unitName);
+                    string unitName = "", bool stripVolatile = false) =>
+                engine.ExportTypeScoped(softwarePath, exportPath, typePath, preservePath, dryRun, unitName, stripVolatile);
             public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
-                    string expectedInventoryHash="",bool dryRun=true, string unitName = "") =>
-                engine.ExportTypes(softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName);
+                    string expectedInventoryHash="",bool dryRun=true, string unitName = "", bool stripVolatile = false) =>
+                engine.ExportTypes(softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName, stripVolatile);
+            public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true,
+                    string unitName = "", bool stripVolatile = false) =>
+                engine.ExportTagTableScoped(softwarePath, tagTableName, exportPath, dryRun, unitName, stripVolatile);
             public PlcBatchExportResult ExportTagTables(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
-                    string expectedInventoryHash="",bool dryRun=true, string unitName = "") =>
-                engine.ExportTagTables(softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName);
-            public PlcMutationResult ExportTagTable(string softwarePath, string tagTableName, string exportPath, bool dryRun = true, string unitName = "") =>
-                engine.ExportTagTableScoped(softwarePath, tagTableName, exportPath, dryRun, unitName);
+                    string expectedInventoryHash="",bool dryRun=true, string unitName = "", bool stripVolatile = false) =>
+                engine.ExportTagTables(softwarePath, groupPath, exportPath, recursive, maxItems, expectedInventoryHash, dryRun, unitName, stripVolatile);
             public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true,
                     string unitName = "", string[]? swImportOptions = null, string[]? importOptions = null) =>
                 engine.ImportTypesScoped(softwarePath, groupPath, importPath, overwrite, dryRun, unitName, swImportOptions, importOptions);

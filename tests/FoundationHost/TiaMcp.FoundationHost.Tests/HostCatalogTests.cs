@@ -141,6 +141,7 @@ public sealed class HostCatalogTests
         Assert.Equal(100, limit.GetProperty("maximum").GetInt32());
     }
 
+<<<<<<< HEAD
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
     [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void Technology_export_is_registered_on_every_release_and_watch_export_keeps_its_api_range(string release)
@@ -150,6 +151,24 @@ public sealed class HostCatalogTests
         Assert.Equal(release != "14sp1", host.Find("ExportPlcWatchTable") != null);
         Assert.NotNull(host.Find("SeedProjectFromReference"));
         Assert.DoesNotContain("preview only", host.Find("ExportTechnologyObject")!.Tool.Description!, StringComparison.Ordinal);
+=======
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"),
+            InlineData("21")]
+    public void Plc_xml_exports_declare_optional_volatile_stripping_on_every_release(string release)
+    {
+        var (host, _, _) = Build(release);
+        foreach (string name in new[] { "ExportPlcBlock", "ExportPlcType", "ExportPlcTagTable", "ExportPlcBlocks", "ExportPlcTypes", "ExportPlcTagTables" })
+        {
+            var schema = host.Find(name)!.Tool.InputSchema;
+            var parameter = schema.GetProperty("properties").GetProperty("stripVolatile");
+            Assert.Equal("boolean", parameter.GetProperty("type").GetString());
+            Assert.False(parameter.GetProperty("default").GetBoolean());
+            Assert.DoesNotContain(schema.GetProperty("required").EnumerateArray(), value => value.GetString() == "stripVolatile");
+            Assert.Contains("DocumentInfo", parameter.GetProperty("description").GetString());
+        }
+        foreach (string name in new[] { "ExportPlcBlockDocuments", "ExportPlcWatchTable", "ExportTechnologyObject" })
+            if (host.Find(name) is { } tool) Assert.False(tool.Tool.InputSchema.GetProperty("properties").TryGetProperty("stripVolatile", out _));
+>>>>>>> 07714483 (Add stripVolatile to PLC XML exports and keep the native export when normalisation fails)
     }
 
     [Fact]

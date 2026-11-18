@@ -53,6 +53,25 @@ internal static class ToolUsageTests
                 && (bool?)commonSequence["profileMatches"] == true && (bool?)commonSequence["available"] == true
                 && commonSequence["steps"]!.AsArray().All(step => roster.Any(tool => tool.ProtocolTool.Name == (string)step!["tool"]!)),
                 "shared connection sequence matches the actual registered contracts on every release: " + release);
+            var gitSequenceData = JsonNode.Parse(((TextContentBlock)(await Call(
+                "{\"exampleId\":\"sequence/compile-export-commit\",\"exampleKind\":\"sequence\"}")).Content.Single()).Text)!["data"]!;
+            var gitSequence = gitSequenceData["examples"]!.AsArray().Single()!;
+            check((bool?)gitSequence["available"] == true && (bool?)gitSequence["releaseMatches"] == true
+                && (bool?)gitSequence["profileMatches"] == true,
+                "compile/export/commit sequence is served on the actual public profile: " + release);
+            var gitSteps = gitSequence["steps"]!.AsArray();
+            check(gitSteps.Select(step => (string?)step!["tool"]).SequenceEqual(new[] { "GetSessionState", "CompilePlcSoftware",
+                "CompilePlcSoftware", "ExportPlcBlocks", "ExportPlcBlocks", "ManagePlcGitRepository", "ManagePlcGitRepository",
+                "ManagePlcGitRepository", "ManagePlcGitRepository" })
+                && gitSteps.Where(step => (string?)step!["tool"] == "ExportPlcBlocks")
+                    .All(step => (bool?)step!["arguments"]!["stripVolatile"] == true)
+                && (bool?)gitSteps.Last()!["arguments"]!["dryRun"] == false
+                && gitSteps.Last()!["arguments"]!["files"] is JsonArray { Count: > 0 },
+                "compile/export/commit sequence preserves separate reviewed steps and an explicit commit file list: " + release);
+            string gitNotes=(string)gitSequence["notes"]!;
+            check(gitNotes.Contains("no existing tool can remove") && gitNotes.Contains("new directory per run")
+                && gitNotes.Contains("does not re-export into the same tracked paths") && gitNotes.Contains("git diff HEAD"),
+                "compile/export/commit sequence states the existing directory-removal and same-path diff limitation: " + release);
             if (release is not ("20" or "21"))
             {
                 var indexEnvelope = JsonNode.Parse(((TextContentBlock)(await Call("{}")).Content.Single()).Text)!;
@@ -102,6 +121,10 @@ internal static class ToolUsageTests
                 check(JsonNode.DeepEquals(usage["inputSchema"], JsonNode.Parse(tool.ProtocolTool.InputSchema.GetRawText())), "usage reflects actual schema");
                 if(release is not ("20" or "21"))
                     check((string?)usage["example"]!["kind"]=="parameterized-call-example", "every deployed foundation tool has a maintained call example: "+release+"/"+tool.ProtocolTool.Name+" ("+(string?)usage["example"]!["kind"]+")");
+                if (tool.ProtocolTool.Name is "ExportPlcBlock" or "ExportPlcType" or "ExportPlcTagTable" or "ExportPlcBlocks"
+                    or "ExportPlcTypes" or "ExportPlcTagTables")
+                    check((bool?)usage["example"]!["request"]!["params"]!["arguments"]!["stripVolatile"] == true,
+                        "PLC XML export usage opts in to volatile normalization: " + release + "/" + tool.ProtocolTool.Name);
                 if(tool.ProtocolTool.Name is "BuildPlcUdt" or "BuildPlcGlobalDb")
                     check((string?)usage["example"]!["request"]!["params"]!["arguments"]!["outputReleaseKey"]==release,
                         "Foundation declaration example selects the serving release");
