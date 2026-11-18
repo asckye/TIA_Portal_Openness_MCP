@@ -5270,6 +5270,18 @@
           "identifier": "TiaMcp.SourceContracts.Tests.VersionCatalogWiring/PolicyWrapsFoundationDispatch( ):ddfecd1e10bd8e2c24145f0ab966f5ad449f2487ef86fa48be9462a3cc69da69:1"
         }
       ]
+    },
+    {
+      "task": "merge-batch-4",
+      "maintainerDate": "2026-11-18",
+      "reason": "Lead approval 2026-11-17 under the maintainer\u0027s standing approval: integration of TIA-GAPS-B, ECO-S2, TIA-GAPS-A3a, ECO-S4a and TIA-BATCH-4 with UNIFY-1 on master; expectation updates pin intended behaviour (secondary project disconnect guard under the shared session policy, stripVolatile parameters on the unified export definitions)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "DisconnectTests/Run( IMcpServer server , Action \u003C bool , string \u003E check , [ System . Runtime . CompilerServices . CallerFilePath ] string sourceFile = \u0022\u0022 ):703e8e82806136963bb456615ebac63bed4f3cf0998de88e4eef69ded50023e9:1"
+        }
+      ]
     }
   ]
 }
