@@ -5282,6 +5282,53 @@
           "identifier": "DisconnectTests/Run( IMcpServer server , Action \u003C bool , string \u003E check , [ System . Runtime . CompilerServices . CallerFilePath ] string sourceFile = \u0022\u0022 ):703e8e82806136963bb456615ebac63bed4f3cf0998de88e4eef69ded50023e9:1"
         }
       ]
+    },
+    {
+      "task": "TIA-SAFE-4",
+      "maintainerDate": "2026-11-18",
+      "reason": "Lead approval 2026-11-17 under the maintainer\u0027s standing approval: GetApprovalStatus adds one registered tool per release (\u002B1) and its roster/catalog lines",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EnforcedParameterPresetTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EnforcedParameterPresetTests/Without_presets_every_input_schema_matches_the_captured_contract( string release ):210085bcc876b18a10dcebeab46b9826559d1d1fa92206f75127770b9f527ded:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):256f96151a4b1fad7dd5c2d6c06d217b2287c82f07053acb7d4f79bfa7376a6e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):3859a7cea0f0395a7a5e44a17a7f100c95e6159a7b2664012c2bc1621817aeb3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):ba797ec8df60fcf063823be449234249d5e397ab2cd477899f536762155c40bb:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):cd4165bd5664fad85094d4838ef6b0a2ecdcebc66f9bfec4e6c1feda38931c33:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):cf8618511d49db04ff590bb1b5504ddd56039b047d9a73e0ecefb3eead5963c9:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):f7c9e3d6192e50671cacdd491338fa10f951b9d4fed8a96f4a8fbca2aacb78a6:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HostCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.HostCatalogTests/Catalog_preserves_every_master_input_and_output_schema( string release ):c89f8f64d9f734cb68b38aa4575126b291b3adef3c125cd7df7777783ad68777:1"
+        }
+      ]
     }
   ]
 }
