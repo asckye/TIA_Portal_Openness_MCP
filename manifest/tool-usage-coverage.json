@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "47b66a33d906cd8bab11e9e544e30977f8e878ca29f49f15288720578c78613a",
-  "uniqueTools": 523,
+  "catalogSha256": "185f0a24e41725b9beff6206fbee626086f02c7c9e1d075c2a17927e67813330",
+  "uniqueTools": 524,
   "documents": 89,
-  "versionToolPairs": 3251,
+  "versionToolPairs": 3259,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
@@ -24,7 +24,7 @@
     "csharp"
   ],
   "relatedOfficialPatternMappings": 260,
-  "noDirectVendoredExampleMappings": 263,
+  "noDirectVendoredExampleMappings": 264,
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -53,8 +53,8 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 286,
-      "checkedToolCount": 286,
+      "registeredToolCount": 287,
+      "checkedToolCount": 287,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 175,
@@ -1028,6 +1028,14 @@
             "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
             "guides/skills/software-hierarchy/SKILL.md"
           ],
+          "operations": []
+        },
+        {
+          "toolName": "GetApprovalStatus",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
           "operations": []
         },
         {
@@ -3910,8 +3918,8 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 327,
-      "checkedToolCount": 327,
+      "registeredToolCount": 328,
+      "checkedToolCount": 328,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 236,
@@ -5027,6 +5035,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetApprovalStatus",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -8544,8 +8560,8 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 355,
-      "checkedToolCount": 355,
+      "registeredToolCount": 356,
+      "checkedToolCount": 356,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 290,
@@ -9721,6 +9737,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetApprovalStatus",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -13772,8 +13796,8 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 378,
-      "checkedToolCount": 378,
+      "registeredToolCount": 379,
+      "checkedToolCount": 379,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 365,
@@ -15083,6 +15107,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetApprovalStatus",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -19645,8 +19677,8 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 404,
-      "checkedToolCount": 404,
+      "registeredToolCount": 405,
+      "checkedToolCount": 405,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 441,
@@ -21079,6 +21111,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetApprovalStatus",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -26215,8 +26255,8 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 480,
-      "checkedToolCount": 480,
+      "registeredToolCount": 481,
+      "checkedToolCount": 481,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 503,
@@ -27900,6 +27940,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetApprovalStatus",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -33744,8 +33792,8 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 503,
-      "checkedToolCount": 503,
+      "registeredToolCount": 504,
+      "checkedToolCount": 504,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 517,
@@ -35492,6 +35540,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetApprovalStatus",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -41548,14 +41604,14 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "5169020e70229257c6111d8ef1474cedd3054922414567bcea117f296635c2cc",
-      "runtimeSha256": "5169020e70229257c6111d8ef1474cedd3054922414567bcea117f296635c2cc",
+      "sdkWorkerSha256": "601f36dd483c4de21595e12172f387e32648d61d87c2b0c253358460420b44d7",
+      "runtimeSha256": "601f36dd483c4de21595e12172f387e32648d61d87c2b0c253358460420b44d7",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
       "releaseKey": "21",
-      "registeredToolCount": 518,
-      "checkedToolCount": 518,
+      "registeredToolCount": 519,
+      "checkedToolCount": 519,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 565,
@@ -43348,6 +43404,14 @@
         },
         {
           "toolName": "GenerateSivarc",
+          "usageProfile": "plc-foundation",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "no-direct-official-example",
+          "documents": [],
+          "operations": []
+        },
+        {
+          "toolName": "GetApprovalStatus",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
           "relationship": "no-direct-official-example",
@@ -49736,8 +49800,8 @@
         }
       ],
       "hostSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-      "sdkWorkerSha256": "432414c17616c62ef1c8ce375a9c863d70adbe246e2c44381db28a3a57dd92fe",
-      "runtimeSha256": "432414c17616c62ef1c8ce375a9c863d70adbe246e2c44381db28a3a57dd92fe",
+      "sdkWorkerSha256": "66ce0c332ca1972a7b247461e740b9e874e92df1855cc69bd043c7e1630e5a40",
+      "runtimeSha256": "66ce0c332ca1972a7b247461e740b9e874e92df1855cc69bd043c7e1630e5a40",
       "workerModel": "foundation-host-plc-worker"
     }
   }

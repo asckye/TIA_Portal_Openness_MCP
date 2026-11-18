@@ -1,23 +1,23 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-18T06:57:16.1153417+00:00",
+  "generatedAt": "2026-11-18T08:09:27.1251573+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "42e04d0f5003e4ba484b3bebdb38b8eddbbbc15a550e32b684ba06f595023784",
+  "workerSha256": "56cd978d6aa05d0fca2fa6dbea22935a1b92d8fe099c32f223bcf467920e5e72",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2906,
+    "parameters": 2914,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 690,
     "toolsWithUndocumentedParameters": 215,
-    "toolsWithEnumHints": 172,
-    "enumHints": 270,
-    "defaultHints": 1668,
+    "toolsWithEnumHints": 173,
+    "enumHints": 271,
+    "defaultHints": 1676,
     "examplesCurated": 524,
-    "recipes": 47
+    "recipes": 52
   },
   "categories": [
     {
@@ -4834,10 +4834,11 @@
         "umacUserName",
         "umacPassword",
         "umacUserType",
+        "openMode",
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Refused while the TIA instance already has an open project or local session. Protected (UMAC) projects: pass umacUserName and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing credentials. Examples: GetToolUsage(toolName: \"OpenProject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Refused while the TIA instance already has an open project or local session. This refusal applies to openMode=primary (default). openMode=secondary (V15.1–V21) requires a bound primary project and opens another exact-version .ap file read-only without changing the binding. CloseProject secondaryProjectFile closes only the secondary project this worker opened. Protected (UMAC) projects: pass umacUserName and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing credentials. Examples: GetToolUsage(toolName: \"OpenProject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"path\":\"\\u003Cexact caller-selected closed project file for this release\\u003E\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -6558,7 +6559,7 @@
       "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[PLC foundation; native unverified][SESSION] [acknowledged-disconnect-candidate] Disconnect this worker attachment. An attached existing process is detached. A TIA Portal this session started is disposed, which closes a headless instance. Disconnect refuses while a project is open in that instance. SaveProject and CloseProject first. Idle disconnect never starts a worker. A running native call refuses disconnect with worker-call-running until it finishes. No project required. No save, project close, launch or automatic reconnect. An idle responsive worker can detach after an unknown outcome. An idle faulted worker can be stopped after its call has ended. Call ConnectPortal and AttachOpenProject in this MCP session to reconnect with a new worker generation. Requests are never replayed. Native acceptance NOT RUN. Examples: GetToolUsage(toolName: \"DisconnectPortal\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][SESSION] [acknowledged-disconnect-candidate] Disconnect this worker attachment. An attached existing process is detached. A TIA Portal this session started is disposed, which closes a headless instance. Disconnect refuses while a project is open in that instance. SaveProject and CloseProject first. Idle disconnect never starts a worker. A running native call refuses disconnect with worker-call-running until it finishes. No project required. No save, project close, launch or automatic reconnect. An idle responsive worker can detach after an unknown outcome. An idle faulted worker can be stopped after its call has ended. Call ConnectPortal and AttachOpenProject in this MCP session to reconnect with a new worker generation. Requests are never replayed. Native acceptance NOT RUN. CloseProject secondaryProjectFile must close this session's recorded secondary first while its holding TIA process is alive. The path, holder PID and start time survive worker recovery. A confirmed exited or replaced holder clears the record without starting TIA. Examples: GetToolUsage(toolName: \"DisconnectPortal\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{}"
     },
     {
@@ -6684,7 +6685,7 @@
         "limit",
         "dryRun"
       ],
-      "description": "[L2][PLC-Builders][FILE] Offline conversion: kind plcTagTable or rows; direction toTable or fromTable. plcTagTable uses one exported SimaticML table; fromTable requires its templatePath. Fixed columns Kind, Name, DataType, Address, Value, then template scalar attributes in first-seen order and Comment[culture] ordered by culture. Culture syntax ^[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}$. Kind is Tag, Constant or read-only SystemConstant; (Kind,Name) is an exact key, never renamed. Merge updates/adds rows; omitted rows are kept, empty editable cells remove attributes/comments to TIA defaults. Unknown columns, case-insensitive name collisions and Kind changes refuse. Constants never emit ExternalAccessible. Header, DocumentInfo and unrelated XML are preserved. Delete explicitly through ManagePlcTagDefinition/ApplyToolBatch. rows toTable accepts 1..1000 flat scalar objects and optional column order; fromTable returns strings with offset/limit 1..200 (default 50), columns, total and V4 paging; writes no file. CSV is UTF-8 BOM, comma, all cells quoted with doubled quotes and LF; accepts no BOM and CR/LF/CRLF; rejects NUL, broken quotes, uneven nonempty rows and empty/duplicate headers. plcTagTable ignores every empty row; rows trims only trailing empty rows. Trailing empty styled XLSX cells are ignored. CSV export adds one apostrophe before = + - @, tab or CR, including when preceded by leading apostrophes; import removes exactly one such prefix. XLSX preserves apostrophes unchanged without a formula guard. Use XLSX when Excel's locale uses semicolon separators. XLSX uses one sheet PlcTagTable/Rows, all inline text cells; reads that sheet or the only sheet, shared/inline strings, raw numbers, booleans and formula cached values; refuses formulas without cache, errors, ambiguous sheets, .xls/.xlsm and encrypted files. Limits: 16 MiB uncompressed, 10000 data rows, 1024 columns, 65536 CSV/32767 XLSX characters per cell, 64 Mi logical XLSX characters. Default dryRun=true validates and previews columns/counts, changes (first 50 old/new rows) and planned exportFile without writing. false creates a new file, never overwrites; returns path, bytes and SHA-256. Omitted exportFile uses the session output directory, with stable name ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix or overwrite. Output extension must match format (xlsx default/csv), or xml for plcTagTable fromTable. Import the XML with ImportPlcTagTable overwrite=true after preview/approval, binding folderPath to the original table folder; then ListPlcTags readback and compile affected blocks. No TIA calls, imports or compilation. Examples: GetToolUsage(toolName: \"ConvertEngineeringTable\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Builders][FILE] Offline conversion: kind plcTagTable, dataBlockStartValues or rows; direction toTable or fromTable. plcTagTable uses one exported SimaticML table; fromTable requires its templatePath. Fixed columns Kind, Name, DataType, Address, Value, then template scalar attributes in first-seen order and Comment[culture] ordered by culture. Culture syntax ^[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}$. Kind is Tag, Constant or read-only SystemConstant; (Kind,Name) is an exact key, never renamed. Merge updates/adds rows; omitted rows are kept, empty editable cells remove attributes/comments to TIA defaults. Unknown columns, case-insensitive name collisions and Kind changes refuse. Constants never emit ExternalAccessible. dataBlockStartValues accepts one non-library global DB: columns Section, MemberPath, DataType, StartValue; exact section/path keys, encoded path segments (split then decode), unchanged DataType, no new members. Elementary scalar members are listed; arrays, structs, UDT/FB types and read-only/informative members are excluded and counted in notEditable. References (ConstantName) and bulk (IsBulkValue) are excluded; notEditableReasons lists each excluded member and reason. Existing plain literals also allow HW_IO, HW_ANY, HW_DEVICE, HW_MODULE, HW_SUBMODULE, DB_ANY and String/WString[constant]; these types require an existing value. DB edits validate and normalize typed literals before planning: Bool true/false, range-checked decimal integers (radix only when evidenced by that member's export), invariant Real/LReal, prefixed time/date literals, and quoted Char/String. Precision loss refuses with a suggested value. Empty DB cells cannot reset to the default; new type-default values refuse because TIA omits them on export; existing explicit defaults may remain unchanged. Missing StartValue may be added for elementary scalars; omitted rows remain unchanged. The file route allows 10000 rows, including over 100 edits; PatchPlcBlockDocument retains its 100-change/existing-StartValue rule. Header, DocumentInfo and unrelated XML are preserved. Delete explicitly through ManagePlcTagDefinition/ApplyToolBatch. rows toTable accepts 1..1000 flat scalar objects and optional column order; fromTable returns strings with offset/limit 1..200 (default 50), columns, total and V4 paging; writes no file. CSV is UTF-8 BOM, comma, all cells quoted with doubled quotes and LF; accepts no BOM and CR/LF/CRLF; rejects NUL, broken quotes, uneven nonempty rows and empty/duplicate headers. XML kinds ignore every empty row; rows trims only trailing empty rows. Trailing empty styled XLSX cells are ignored. CSV export adds one apostrophe before = + - @, tab or CR, including when preceded by leading apostrophes; import removes exactly one such prefix. XLSX preserves apostrophes unchanged without a formula guard. Use XLSX when Excel's locale uses semicolon separators. XLSX uses one sheet PlcTagTable/DataBlockStartValues/Rows, all inline text cells; reads that sheet or the only sheet, shared/inline strings, raw numbers, booleans and formula cached values; refuses formulas without cache, errors, ambiguous sheets, .xls/.xlsm and encrypted files. Errors retain original CSV physical line/XLSX row numbers, including skipped empty rows. Limits: 16 MiB uncompressed, 10000 data rows, 1024 columns, 65536 CSV/32767 XLSX characters per cell, 64 Mi logical XLSX characters. Default dryRun=true validates and previews columns/counts, changes (first 50 old/new rows) and planned exportFile without writing. false creates a new file, never overwrites; returns path, bytes and SHA-256. Omitted exportFile uses the session output directory, with stable name ConvertEngineeringTable.<encoded source table/block name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix or overwrite. Output extension must match format (xlsx default/csv), or xml for XML fromTable. For dataBlockStartValues use ImportPlcBlockVerified preview with evidenceDirectory, then execute with its previewToken; GetPlcBlockEditCapabilities readback and compile. For plcTagTable import the XML with ImportPlcTagTable overwrite=true after preview/approval, binding folderPath to the original table folder; then ListPlcTags readback and compile affected blocks. No TIA calls, imports or compilation. Examples: GetToolUsage(toolName: \"ConvertEngineeringTable\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"kind\":\"plcTagTable\",\"direction\":\"toTable\",\"inputPath\":\"C:/Examples/exports/Tags.xml\",\"format\":\"xlsx\",\"exportFile\":\"C:/Examples/generated/Tags.xlsx\",\"dryRun\":true}"
     },
     {
@@ -6768,7 +6769,7 @@
         "outputReleaseKey",
         "ladFcBlock"
       ],
-      "description": "[offline candidate; native unverified][OFFLINE] In-memory V21 LAD FC-call candidate generation with existing helpers. Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified. V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcLadFcBlock\"), optionally operation or language.",
+      "description": "[offline candidate; native unverified][OFFLINE] In-memory V21 LAD candidate generation. Each network contains exactly one call or rung. Rungs support contacts, edges, compares, OR, fan-out, coil/set/reset and MOVE with ENO chaining. Registered on V21 only. For timers, counters and math beyond A3a or other unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. No symbol/type resolution; compile is the authority. V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcLadFcBlock\"), optionally operation or language.",
       "example": "{\"outputReleaseKey\":\"21\",\"ladFcBlock\":{\"blockName\":\"FC_Lad\",\"blockNumber\":12,\"networks\":[{\"call\":{\"callName\":\"FC_Ready\",\"parameters\":[{\"name\":\"Ready\",\"section\":\"Output\",\"dataType\":\"Bool\",\"symbolPath\":[\"DB_Status\",\"Ready\"]}]}}]}}"
     },
     {
@@ -6849,7 +6850,7 @@
         "outputReleaseKey",
         "flgNet"
       ],
-      "description": "[offline candidate; native unverified][OFFLINE] In-memory V21 LAD FC-call candidate generation with existing helpers. V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildFlgNetCall\"), optionally operation or language.",
+      "description": "[offline candidate; native unverified][OFFLINE] In-memory V21 LAD candidate generation. Builds only one FC-call fragment; use BuildPlcLadFcBlock for rung networks on V21. For timers, counters and math beyond A3a, and all general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. A bare fragment cannot be imported. No symbol/type resolution; compile is the authority. V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildFlgNetCall\"), optionally operation or language.",
       "example": "{\"outputReleaseKey\":\"21\",\"flgNet\":{\"callName\":\"FC_Ready\",\"parameters\":[{\"name\":\"Ready\",\"section\":\"Output\",\"dataType\":\"Bool\",\"symbolPath\":[\"DB_Status\",\"Ready\"]}]}}"
     },
     {
@@ -7012,7 +7013,7 @@
         "projectName",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Bind an existing project/session only when both projectName and exact expectedProjectFile match; borrowed targets cannot be closed. Examples: GetToolUsage(toolName: \"AttachOpenProject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Bind an existing project/session only when both projectName and exact expectedProjectFile match; borrowed targets cannot be closed. V15.1–V21: a secondary reference (IsPrimary=false) cannot be bound as the active project; select the primary project. Examples: GetToolUsage(toolName: \"AttachOpenProject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"projectName\":\"\\u003Cfile name without extension from selected projectPath\\u003E\",\"expectedProjectFile\":\"\\u003Cexact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile\\u003E\"}"
     },
     {
@@ -7512,7 +7513,7 @@
         "offset",
         "limit"
       ],
-      "description": "[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). The cross-project mode (targetProjectName) needs a second project that was opened outside the MCP; no MCP tool opens a secondary project in 4.0. Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified. Examples: GetToolUsage(toolName: \"CompareProjects\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). The cross-project mode accepts targetProjectName as an exact full project file path or a project name. A held secondary is selected by its exact path even when its name equals the primary; other name-only lookups retain ambiguity errors. OpenProject openMode=secondary is available on V15.1–V21. Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified. Examples: GetToolUsage(toolName: \"CompareProjects\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"kind\":\"software\",\"softwarePath\":\"PLC_1\",\"targetSoftwarePath\":\"PLC_2\"}"
     },
     {
@@ -7592,10 +7593,11 @@
       "returnType": "CallToolResult",
       "parameters": [
         "dryRun",
+        "secondaryProjectFile",
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Close only an unmodified project/local session opened by this worker. No implicit save, discard, commit or TIA termination. Examples: GetToolUsage(toolName: \"CloseProject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Close only an unmodified project/local session opened by this worker. No implicit save, discard, commit or TIA termination. Close secondaryProjectFile only when this session records that exact secondary project (V15.1–V21); never saves it. Recovery retains its path, holding TIA PID and process start time. Close on another TIA refuses and keeps the record. On the same holding process, require IsPrimary=false; an absent exact path clears the record with data.secondaryProjectGone=true, including previews, and Executed=false. A confirmed exited or replaced holder clears the record. Close it explicitly before primary close or disconnect while the holder is alive. Examples: GetToolUsage(toolName: \"CloseProject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -9473,12 +9475,13 @@
         "expectedInventoryHash",
         "dryRun",
         "unitName",
+        "stripVolatile",
         "confirm",
         "expectedProjectFile",
         "exportDirectory"
       ],
       "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Examples: GetToolUsage(toolName: \"ExportPlcTypes\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false}"
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false,\"stripVolatile\":true}"
     },
     {
       "name": "ExportPlcType",
@@ -9496,12 +9499,13 @@
         "preservePath",
         "dryRun",
         "unitName",
+        "stripVolatile",
         "confirm",
         "expectedProjectFile",
         "exportDirectory"
       ],
       "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export consistent native type XML into an existing directory. Never overwrites. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Examples: GetToolUsage(toolName: \"ExportPlcType\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"typePath\":\"UDT_Status\",\"dryRun\":true,\"confirm\":false}"
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"typePath\":\"UDT_Status\",\"dryRun\":true,\"confirm\":false,\"stripVolatile\":true}"
     },
     {
       "name": "ExportPlcTestReport",
@@ -9538,12 +9542,13 @@
         "expectedInventoryHash",
         "dryRun",
         "unitName",
+        "stripVolatile",
         "confirm",
         "expectedProjectFile",
         "exportDirectory"
       ],
       "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Export PLC root and user-group tag tables from an exact PLC/group scope into an existing exportDirectory. Complete bounded inventory, recursive opt-in; maxItems 1..256, overflow refused. Preview first; execution requires its expectedInventoryHash, confirm=true and exact expectedProjectFile. Files are tagTables-<hash>.xml; each objectPath maps to its file. ExportOptions.None preserves native XML; no overwrite or retry; partial outcomes retained. Native acceptance NOT RUN. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Re-import each file with ImportPlcTagTable (folderPath = parent of objectPath), optionally through ApplyToolBatch, or use ImportPlcProgramFromDirectory with the intended tagFolderPath. Examples: GetToolUsage(toolName: \"ExportPlcTagTables\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"recursive\":true,\"maxItems\":128,\"dryRun\":true,\"confirm\":false}"
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"recursive\":true,\"maxItems\":128,\"dryRun\":true,\"confirm\":false,\"stripVolatile\":true}"
     },
     {
       "name": "ExportPlcTagTable",
@@ -9560,12 +9565,13 @@
         "exportPath",
         "dryRun",
         "unitName",
+        "stripVolatile",
         "confirm",
         "expectedProjectFile",
         "exportFile"
       ],
       "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export one root-group tag table to a new XML file. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Examples: GetToolUsage(toolName: \"ExportPlcTagTable\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"tagTableName\":\"\\u9ED8\\u8BA4\\u53D8\\u91CF\\u8868\",\"exportFile\":\"C:\\\\TIA_MCP\\\\exports\\\\Tags.xml\",\"dryRun\":true,\"confirm\":false}"
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"tagTableName\":\"\\u9ED8\\u8BA4\\u53D8\\u91CF\\u8868\",\"exportFile\":\"C:\\\\TIA_MCP\\\\exports\\\\Tags.xml\",\"dryRun\":true,\"confirm\":false,\"stripVolatile\":true}"
     },
     {
       "name": "ExportPlcProDiagInfo",
@@ -9630,12 +9636,13 @@
         "expectedInventoryHash",
         "dryRun",
         "unitName",
+        "stripVolatile",
         "confirm",
         "expectedProjectFile",
         "exportDirectory"
       ],
       "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Know-how-protected blocks export only their public interface; they are listed as interface-only and cannot be imported again. Examples: GetToolUsage(toolName: \"ExportPlcBlocks\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false}"
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false,\"stripVolatile\":true}"
     },
     {
       "name": "ExportPlcBlockDocuments",
@@ -9676,12 +9683,13 @@
         "preservePath",
         "dryRun",
         "unitName",
+        "stripVolatile",
         "confirm",
         "expectedProjectFile",
         "exportDirectory"
       ],
       "description": "[PLC foundation; native unverified][FILE] [v17-exchange-safe-v1] Export consistent native block XML into an existing directory; optional existing subdirectories preserve groups. Never overwrites. V14 SP1 SCL XML contains interfaces only, not a full program backup. Preview by default. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Examples: GetToolUsage(toolName: \"ExportPlcBlock\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"blockPath\":\"Main\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false}"
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"blockPath\":\"Main\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false,\"stripVolatile\":true}"
     },
     {
       "name": "ExportOpcUaInterface",

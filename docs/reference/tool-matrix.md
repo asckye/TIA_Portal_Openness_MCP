@@ -4,9 +4,9 @@
 
 本文件由 `dotnet run --project build-tools/release -- generate-tool-capability-matrix` 从 `manifest/tools-list.json`（八个 release 的注册工具目录并集）生成，分类来自主机共用的 `ToolTaxonomy`；运行时以 `tools/list` 为准。目录包含 Foundation 共享工具与引擎专用工具，不包含已撤回的生命周期工具。`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-11-17 23:30:53
+- 生成时间：2026-11-18 00:11:54
 - 产品文件版本：4.0.0.0
-- 工具数量：523
+- 工具数量：524
 
 ## 读法
 
@@ -16,7 +16,7 @@
 |---|---|---:|
 | `UI` | 改变工作台或 TIA 编辑器界面，不改工程、不需审批；TIA 编辑器操作需要有用户界面的 Portal 会话 | 7 |
 | `SESSION` | 会话与发现，包含工程保存、另存与关闭；写操作须审批 | 16 |
-| `READ` | 读取已打开工程，不改动 | 157 |
+| `READ` | 读取已打开工程，不改动 | 158 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 199 |
 | `FILE` | 导出/导入文件或生成离线产物 | 61 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 36 |
@@ -30,7 +30,7 @@
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 58 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (12)、`Reflection` (7)、`Exports` (5)、`Reports` (7)、`Workbench` (8) |
+| `session` | 会话与基础设施 / Session & infrastructure | 59 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (13)、`Reflection` (7)、`Exports` (5)、`Reports` (7)、`Workbench` (8) |
 | `project` | 工程与协作 / Project & collaboration | 79 | `Project` (35)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
 | `plc` | PLC 软件 / PLC software | 141 | `PLC-Software` (94)、`PLC-Builders` (13)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
@@ -38,7 +38,7 @@
 | `hmi` | HMI 人机界面 / HMI | 126 | `HMI` (31)、`HMI-Unified` (71)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 28 | `Online-Monitoring` (20)、`Simulation` (8) |
 
-## session — 会话与基础设施 / Session & infrastructure（58）
+## session — 会话与基础设施 / Session & infrastructure（59）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -81,11 +81,12 @@
 | `ListPortalProcessProjects` | L1 | SESSION | [PLC foundation; native unverified][SESSION] [runtime-query-candidate] Detached read of this release's process metadata; acquisition time is snapshot time, not process start. Separate OS start UTC is observation-only and may be unknown; no attach, launch or stable identity guarantee. Examples: GetToolUsage(toolName: "ListPortalProcessProjects"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending. |
 | `GetPortalInfo` | L2 | READ | Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project. Example: {"includeProcesses":true,"includeSessions":true,"includeProducts":false} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "GetPortalInfo"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending. |
 
-### [Diagnostics]（12）
+### [Diagnostics]（13）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `CheckProductUpdate` | L0 | SESSION | Read-only update check: compares this service's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact updater command. The service never replaces its own files: run runtime/tools/TiaMcp.Updater.exe with -InstallRoot <bundle-root> and -Check to inspect or without -Check to update. It refuses while an engine, Foundation host, worker or Workbench from this bundle runs, lists PIDs and never kills processes; -Rollback restores the previous install. The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal. Example: {} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "CheckProductUpdate"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending. |
+| `GetApprovalStatus` | L0 | READ | Read this session's pending approvals and latest 16 decisions without contacting TIA. Reports approval settings, always-confirmed online writes, configured online targets and vault names (never secret values). Approval is decided only by a person in the Workbench; this tool cannot approve, deny or change settings. Examples: GetToolUsage(toolName: "GetApprovalStatus"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending. |
 | `GetCallResult` | L0 | READ | Read a running or completed call by requestId from this session. A running call returns in-progress. Keeps the latest 16 full completed results. After eviction, summaries without the original payload survive only for unread writes and unread unsettled IDs. Reading a summary removes it; later lookups return NOT_FOUND. Inner unknown write IDs resolve to their enclosing batch result when retained. Reading a completed result or summary acknowledges its related unknown writes and releases their identical-write guards. Inspect targets before repeating writes. Examples: GetToolUsage(toolName: "GetCallResult"), optionally operation or language. |
 | `GetEnvironmentDiagnostics` | L0 | SESSION | One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. The default fix=false is a read-only diagnosis. Only fix=true ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Call this first when setup is failing or you are unsure the environment is ready. Example: {"fix":false} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: "GetEnvironmentDiagnostics"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending. |
 | `GetOpennessWorkerStatus` | L0 | READ | Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. FoundationHost owns one PLC worker per MCP session; a healthy worker is not proof of native TIA stability. Examples: GetToolUsage(toolName: "GetOpennessWorkerStatus"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending. |
