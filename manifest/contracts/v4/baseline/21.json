@@ -4282,7 +4282,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f2ec5b822326880c84fa1bc51d40631700cc4342e62481cd14aa70b6c474bf6a",
+      "descriptionSha256": "7ac49b253f613a2c0e9a0bd6b92bd1acacafd6627a5f086d37df43afb978c127",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7642,7 +7642,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "56edef489694ed03c51adc00918a9afbe30349ffe83a2369af74895d57b331b3",
+      "descriptionSha256": "4a321e285eb49a083cd12492e09bec72fc76d7dfe5a4fad3d50e2eb248d0bb6d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -9365,13 +9365,691 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "555f7568f7248b3ecfd1367734dca702ce8960076405145bcd03658694be0115",
+      "descriptionSha256": "acf981eb9eba82e73ac02c0a3fa299d4167d427cb2536ecc3446b3eb115c9b60",
       "inputSchema": {
+        "$defs": {
+          "branch": {
+            "additionalProperties": false,
+            "properties": {
+              "outputs": {
+                "items": {
+                  "$ref": "#/$defs/output"
+                },
+                "maxItems": 16,
+                "minItems": 1,
+                "type": "array"
+              },
+              "series": {
+                "items": {
+                  "$ref": "#/$defs/condition"
+                },
+                "maxItems": 32,
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "series",
+              "outputs"
+            ],
+            "type": "object"
+          },
+          "component": {
+            "anyOf": [
+              {
+                "maxLength": 4096,
+                "minLength": 0,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "index": {
+                    "items": {
+                      "maximum": 2147483647,
+                      "minimum": -2147483648,
+                      "type": "integer"
+                    },
+                    "maxItems": 6,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "name": {
+                    "maxLength": 4096,
+                    "minLength": 0,
+                    "pattern": "\\S",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "index"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "condition": {
+            "else": {
+              "$ref": "#/$defs/simpleCondition"
+            },
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "or"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "or"
+                },
+                "paths": {
+                  "items": {
+                    "items": {
+                      "$ref": "#/$defs/simpleCondition"
+                    },
+                    "maxItems": 16,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "maxItems": 8,
+                  "minItems": 2,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "kind",
+                "paths"
+              ],
+              "type": "object"
+            }
+          },
+          "global": {
+            "additionalProperties": false,
+            "not": {
+              "required": [
+                "local"
+              ]
+            },
+            "properties": {
+              "global": {
+                "items": {
+                  "$ref": "#/$defs/component"
+                },
+                "maxItems": 32,
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "global"
+            ],
+            "type": "object"
+          },
+          "network": {
+            "else": {
+              "additionalProperties": false,
+              "properties": {
+                "call": {
+                  "additionalProperties": false,
+                  "minProperties": 0,
+                  "properties": {
+                    "callName": {
+                      "maxLength": 4096,
+                      "minLength": 0,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "parameters": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "additionalProperties": false,
+                            "minProperties": 0,
+                            "properties": {
+                              "dataType": {
+                                "maxLength": 4096,
+                                "minLength": 0,
+                                "pattern": "\\S",
+                                "type": "string"
+                              },
+                              "name": {
+                                "maxLength": 4096,
+                                "minLength": 0,
+                                "pattern": "\\S",
+                                "type": "string"
+                              },
+                              "section": {
+                                "maxLength": 4096,
+                                "minLength": 0,
+                                "pattern": "\\S",
+                                "type": "string"
+                              },
+                              "sourceKind": {
+                                "enum": [
+                                  "global",
+                                  "local"
+                                ],
+                                "minLength": 0,
+                                "type": "string"
+                              },
+                              "symbolPath": {
+                                "items": {
+                                  "maxLength": 4096,
+                                  "minLength": 0,
+                                  "pattern": "\\S",
+                                  "type": "string"
+                                },
+                                "maxItems": 1000,
+                                "minItems": 0,
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "section",
+                              "dataType",
+                              "symbolPath"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "additionalProperties": false,
+                            "minProperties": 0,
+                            "properties": {
+                              "constantValue": {
+                                "maxLength": 4096,
+                                "minLength": 0,
+                                "type": "string"
+                              },
+                              "dataType": {
+                                "maxLength": 4096,
+                                "minLength": 0,
+                                "pattern": "\\S",
+                                "type": "string"
+                              },
+                              "name": {
+                                "maxLength": 4096,
+                                "minLength": 0,
+                                "pattern": "\\S",
+                                "type": "string"
+                              },
+                              "section": {
+                                "maxLength": 4096,
+                                "minLength": 0,
+                                "pattern": "\\S",
+                                "type": "string"
+                              },
+                              "sourceKind": {
+                                "enum": [
+                                  "constant"
+                                ],
+                                "minLength": 0,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "section",
+                              "dataType",
+                              "sourceKind",
+                              "constantValue"
+                            ],
+                            "type": "object"
+                          }
+                        ]
+                      },
+                      "maxItems": 1000,
+                      "minItems": 0,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "callName",
+                    "parameters"
+                  ],
+                  "type": "object"
+                },
+                "commentZhCn": {
+                  "maxLength": 4096,
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "titleZhCn": {
+                  "maxLength": 4096,
+                  "minLength": 0,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call"
+              ],
+              "type": "object"
+            },
+            "if": {
+              "required": [
+                "rung"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "commentZhCn": {
+                  "maxLength": 4096,
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "rung": {
+                  "$ref": "#/$defs/rung"
+                },
+                "titleZhCn": {
+                  "maxLength": 4096,
+                  "minLength": 0,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rung"
+              ],
+              "type": "object"
+            }
+          },
+          "operand": {
+            "else": {
+              "else": {
+                "else": {
+                  "else": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "constant": {
+                        "maxLength": 4096,
+                        "minLength": 0,
+                        "pattern": "\\S",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "constant"
+                    ],
+                    "type": "object"
+                  },
+                  "if": {
+                    "required": [
+                      "typed"
+                    ]
+                  },
+                  "then": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "typed": {
+                        "maxLength": 4096,
+                        "minLength": 0,
+                        "pattern": "^(T|TIME|LT|S5T)#.+",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "typed"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "if": {
+                  "required": [
+                    "literal"
+                  ]
+                },
+                "then": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "literal": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "Bool",
+                            "Byte",
+                            "Word",
+                            "DWord",
+                            "LWord",
+                            "SInt",
+                            "USInt",
+                            "Int",
+                            "UInt",
+                            "DInt",
+                            "UDInt",
+                            "LInt",
+                            "ULInt",
+                            "Real",
+                            "LReal"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "value": {
+                          "maxLength": 4096,
+                          "minLength": 0,
+                          "pattern": "\\S",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "value"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "literal"
+                  ],
+                  "type": "object"
+                }
+              },
+              "if": {
+                "required": [
+                  "local"
+                ]
+              },
+              "then": {
+                "$ref": "#/$defs/symbol"
+              }
+            },
+            "if": {
+              "required": [
+                "global"
+              ]
+            },
+            "then": {
+              "$ref": "#/$defs/symbol"
+            }
+          },
+          "output": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "coil",
+                      "set",
+                      "reset"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "operand": {
+                    "$ref": "#/$defs/symbol"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "operand"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "in": {
+                    "$ref": "#/$defs/operand"
+                  },
+                  "kind": {
+                    "const": "move"
+                  },
+                  "out": {
+                    "items": {
+                      "$ref": "#/$defs/symbol"
+                    },
+                    "maxItems": 8,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "then": {
+                    "items": {
+                      "$ref": "#/$defs/output"
+                    },
+                    "maxItems": 8,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "in",
+                  "out"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "rung": {
+            "additionalProperties": false,
+            "properties": {
+              "fanOut": {
+                "items": {
+                  "$ref": "#/$defs/branch"
+                },
+                "maxItems": 8,
+                "minItems": 1,
+                "type": "array"
+              },
+              "outputs": {
+                "items": {
+                  "$ref": "#/$defs/output"
+                },
+                "maxItems": 16,
+                "minItems": 0,
+                "type": "array"
+              },
+              "series": {
+                "items": {
+                  "$ref": "#/$defs/condition"
+                },
+                "maxItems": 32,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "series",
+              "outputs"
+            ],
+            "type": "object"
+          },
+          "simpleCondition": {
+            "else": {
+              "else": {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "no",
+                      "nc"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "operand": {
+                    "$ref": "#/$defs/symbol"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "operand"
+                ],
+                "type": "object"
+              },
+              "if": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "rising",
+                      "falling"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "rising",
+                      "falling"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "memory": {
+                    "$ref": "#/$defs/global"
+                  },
+                  "operand": {
+                    "$ref": "#/$defs/symbol"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "operand",
+                  "memory"
+                ],
+                "type": "object"
+              }
+            },
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "compare"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "not": {
+              "required": [
+                "paths"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "compare"
+                },
+                "left": {
+                  "$ref": "#/$defs/operand"
+                },
+                "op": {
+                  "enum": [
+                    "eq",
+                    "ne",
+                    "gt",
+                    "ge",
+                    "lt",
+                    "le"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                },
+                "right": {
+                  "$ref": "#/$defs/operand"
+                },
+                "type": {
+                  "enum": [
+                    "Bool",
+                    "Byte",
+                    "Word",
+                    "DWord",
+                    "LWord",
+                    "SInt",
+                    "USInt",
+                    "Int",
+                    "UInt",
+                    "DInt",
+                    "UDInt",
+                    "LInt",
+                    "ULInt",
+                    "Real",
+                    "LReal",
+                    "Time",
+                    "LTime"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "op",
+                "type",
+                "left",
+                "right"
+              ],
+              "type": "object"
+            }
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "required": [
+                  "global"
+                ]
+              },
+              {
+                "required": [
+                  "local"
+                ]
+              }
+            ],
+            "else": {
+              "additionalProperties": false,
+              "properties": {
+                "local": {
+                  "items": {
+                    "$ref": "#/$defs/component"
+                  },
+                  "maxItems": 32,
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "local"
+              ],
+              "type": "object"
+            },
+            "if": {
+              "required": [
+                "global"
+              ]
+            },
+            "then": {
+              "$ref": "#/$defs/global"
+            },
+            "type": "object"
+          }
+        },
         "additionalProperties": false,
         "properties": {
           "ladFcBlock": {
             "additionalProperties": false,
-            "minProperties": 0,
             "properties": {
               "blockName": {
                 "maxLength": 4096,
@@ -9456,147 +10134,10 @@
               },
               "networks": {
                 "items": {
-                  "additionalProperties": false,
-                  "minProperties": 0,
-                  "properties": {
-                    "call": {
-                      "additionalProperties": false,
-                      "minProperties": 0,
-                      "properties": {
-                        "callName": {
-                          "maxLength": 4096,
-                          "minLength": 0,
-                          "pattern": "\\S",
-                          "type": "string"
-                        },
-                        "parameters": {
-                          "items": {
-                            "anyOf": [
-                              {
-                                "additionalProperties": false,
-                                "minProperties": 0,
-                                "properties": {
-                                  "dataType": {
-                                    "maxLength": 4096,
-                                    "minLength": 0,
-                                    "pattern": "\\S",
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "maxLength": 4096,
-                                    "minLength": 0,
-                                    "pattern": "\\S",
-                                    "type": "string"
-                                  },
-                                  "section": {
-                                    "maxLength": 4096,
-                                    "minLength": 0,
-                                    "pattern": "\\S",
-                                    "type": "string"
-                                  },
-                                  "sourceKind": {
-                                    "enum": [
-                                      "global",
-                                      "local"
-                                    ],
-                                    "minLength": 0,
-                                    "type": "string"
-                                  },
-                                  "symbolPath": {
-                                    "items": {
-                                      "maxLength": 4096,
-                                      "minLength": 0,
-                                      "pattern": "\\S",
-                                      "type": "string"
-                                    },
-                                    "maxItems": 1000,
-                                    "minItems": 0,
-                                    "type": "array"
-                                  }
-                                },
-                                "required": [
-                                  "name",
-                                  "section",
-                                  "dataType",
-                                  "symbolPath"
-                                ],
-                                "type": "object"
-                              },
-                              {
-                                "additionalProperties": false,
-                                "minProperties": 0,
-                                "properties": {
-                                  "constantValue": {
-                                    "maxLength": 4096,
-                                    "minLength": 0,
-                                    "type": "string"
-                                  },
-                                  "dataType": {
-                                    "maxLength": 4096,
-                                    "minLength": 0,
-                                    "pattern": "\\S",
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "maxLength": 4096,
-                                    "minLength": 0,
-                                    "pattern": "\\S",
-                                    "type": "string"
-                                  },
-                                  "section": {
-                                    "maxLength": 4096,
-                                    "minLength": 0,
-                                    "pattern": "\\S",
-                                    "type": "string"
-                                  },
-                                  "sourceKind": {
-                                    "enum": [
-                                      "constant"
-                                    ],
-                                    "minLength": 0,
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "name",
-                                  "section",
-                                  "dataType",
-                                  "sourceKind",
-                                  "constantValue"
-                                ],
-                                "type": "object"
-                              }
-                            ]
-                          },
-                          "maxItems": 1000,
-                          "minItems": 0,
-                          "type": "array"
-                        }
-                      },
-                      "required": [
-                        "callName",
-                        "parameters"
-                      ],
-                      "type": "object"
-                    },
-                    "commentZhCn": {
-                      "maxLength": 4096,
-                      "minLength": 0,
-                      "type": "string"
-                    },
-                    "titleZhCn": {
-                      "maxLength": 4096,
-                      "minLength": 0,
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "call"
-                  ],
-                  "type": "object"
+                  "$ref": "#/$defs/network"
                 },
-                "maxItems": 1000,
-                "minItems": 0,
+                "maxItems": 64,
+                "minItems": 1,
                 "type": "array"
               },
               "outputs": {
@@ -11191,7 +11732,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d2f00fa5e8b5511af55e29af641e7603d7b5308198191f8802e8ca3b1295946c",
+      "descriptionSha256": "e5a7835ae6c912633b696c1d79ac53432ec1c871249b6b3f0e9fcc54a6b4d2b7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11208,6 +11749,11 @@
           "expectedProjectFile": {
             "default": "",
             "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "secondaryProjectFile": {
+            "default": "",
+            "description": "Exact session-recorded secondary project file on its holding TIA process; empty selects the bound primary project.",
             "type": "string"
           }
         },
@@ -11408,7 +11954,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "f4a10d10f30bb61528668b46d3d4b5ffb95786a51d135d74fbd5a919519fdc75",
+      "descriptionSha256": "bd0d809e9a031f9c98208d9db18f004a3d4c55b7be7c7c9b19baed809d98015b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11481,7 +12027,7 @@
           },
           "targetProjectName": {
             "default": "",
-            "description": "targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).",
+            "description": "targetProjectName: exact full file path or name of another project open in this TIA Portal instance. Use the recorded secondaryProjectFile after secondary open or recovery; a held secondary's name resolves through that exact path.",
             "type": "string"
           },
           "targetSoftwarePath": {
@@ -15989,7 +16535,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "07c30106ccea97ff549995fb2c7a789324a5c64c57d120468ebc31ec05c3f6bc",
+      "descriptionSha256": "15bb17ca4a8d503142c358b810764128d58b687b3298c2b4651a73caf69e011f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16015,7 +16561,7 @@
           },
           "exportFile": {
             "default": "",
-            "description": "New absolute .xlsx/.csv output, or .xml for plcTagTable fromTable; omitted uses the session directory and stable encoded table name. Pass a new exportFile if the default exists.",
+            "description": "New absolute .xlsx/.csv output, or .xml for XML fromTable; omitted uses the session directory and stable encoded table name. Pass a new exportFile if the default exists.",
             "type": "string"
           },
           "format": {
@@ -16029,13 +16575,14 @@
           },
           "inputPath": {
             "default": "",
-            "description": "Absolute input XML for plcTagTable toTable, or .csv/.xlsx for fromTable.",
+            "description": "Absolute input XML for plcTagTable/dataBlockStartValues toTable, or .csv/.xlsx for fromTable.",
             "type": "string"
           },
           "kind": {
-            "description": "plcTagTable | rows.",
+            "description": "plcTagTable | dataBlockStartValues | rows.",
             "enum": [
               "plcTagTable",
+              "dataBlockStartValues",
               "rows"
             ],
             "type": "string"
@@ -16058,7 +16605,7 @@
           },
           "templatePath": {
             "default": "",
-            "description": "Original exported tag table XML; required for plcTagTable fromTable.",
+            "description": "Original exported tag table/global DB XML; required for XML fromTable.",
             "type": "string"
           }
         },
@@ -17723,7 +18270,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e4b3fc6c515722d3911aa127309a23333c0ad00dd35cd865573e8cb1e6207eec",
+      "descriptionSha256": "d9c2318cf2cc3feb9a5ba19a071d7b370a0208cd7b083335b78ea7cdf4b5b81c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -19488,6 +20035,11 @@
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
           },
+          "stripVolatile": {
+            "default": false,
+            "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+            "type": "boolean"
+          },
           "unitName": {
             "default": "",
             "description": "Exact software unit name, V16–V21; empty selects PLC root. Paths are relative to this scope.",
@@ -19625,6 +20177,11 @@
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
+          },
+          "stripVolatile": {
+            "default": false,
+            "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+            "type": "boolean"
           },
           "unitName": {
             "default": "",
@@ -19808,6 +20365,11 @@
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
           },
+          "stripVolatile": {
+            "default": false,
+            "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+            "type": "boolean"
+          },
           "tagTableName": {
             "description": "Exact foundation argument: tagTableName",
             "type": "string"
@@ -19885,6 +20447,11 @@
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
+          },
+          "stripVolatile": {
+            "default": false,
+            "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+            "type": "boolean"
           },
           "unitName": {
             "default": "",
@@ -19984,6 +20551,11 @@
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
           },
+          "stripVolatile": {
+            "default": false,
+            "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+            "type": "boolean"
+          },
           "typePath": {
             "description": "Exact foundation argument: typePath",
             "type": "string"
@@ -20061,6 +20633,11 @@
           "softwarePath": {
             "description": "Exact foundation argument: softwarePath",
             "type": "string"
+          },
+          "stripVolatile": {
+            "default": false,
+            "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
+            "type": "boolean"
           },
           "unitName": {
             "default": "",
@@ -38914,7 +39491,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "91c49b6c61b2784d5126299e15ad07cfa4f3725e02eaf6d6e4652edd41c97457",
+      "descriptionSha256": "294222460469728f7d8f4102a09a009127b10ea8b0d4279136c4fc3c3f382bbc",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -38933,13 +39510,22 @@
             "description": "Exact foundation argument: expectedProjectFile",
             "type": "string"
           },
+          "openMode": {
+            "default": "primary",
+            "description": "primary (default) or secondary; secondary requires a bound primary project and preserves its binding.",
+            "enum": [
+              "primary",
+              "secondary"
+            ],
+            "type": "string"
+          },
           "path": {
             "description": "Exact foundation argument: path",
             "type": "string"
           },
           "umacPassword": {
             "default": "",
-            "description": "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.",
+            "description": "umacPassword: UMAC password or vault:<name> reference for umacUserName; the host resolves vault references only after its vault approval and destination checks. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.",
             "type": "string"
           },
           "umacUserName": {
