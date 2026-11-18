@@ -1,3 +1,4 @@
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -148,6 +149,7 @@ internal static class ToolUsageTests
             check(await Rejected("{\"toolName\":\"ConnectPortal\",\"query\":\"x\"}"), "conflicting selectors rejected: " + release);
             check(worker.Calls == 0, "usage never invokes worker even when native access enabled");
         }
+        foreach (var release in releases) await RunUnifiedTableSequences(server, check, release);
         if (!catalogChecks) return;
         var docId = "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Startdrive/ParameterSnippets.cs";
         var first = ToolUsageCatalog.ReadReference("", docId, 0, 7);
@@ -156,5 +158,57 @@ internal static class ToolUsageTests
         var map = ToolUsageCatalog.Mapping("ManageStartdriveParameter");
         map["documents"] = new JsonArray();
         check(ToolUsageCatalog.Mapping("ManageStartdriveParameter")["documents"]!.AsArray().Count > 0, "caller cannot corrupt shared catalog");
+    }
+
+    private static async Task RunUnifiedTableSequences(IMcpServer server, Action<bool, string> check, string release)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        IReadOnlyList<McpServerTool>? published = null;
+        var registry = LegacyHostToolRegistry.Create(worker, release, false, usageRoster: () => published!, hostPorts: false);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, registry);
+        published = pipeline.AllTools;
+        using var session = pipeline.EnterSession();
+        var guide = published.Single(tool => tool.ProtocolTool.Name == "GetToolUsage");
+        async Task<CallToolResult> Call(string args) => await guide.InvokeAsync(new RequestContext<CallToolRequestParams>(server) {
+            Params = new CallToolRequestParams { Name = "GetToolUsage",
+                Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args) } });
+        foreach (var topic in new[] { "unified-alarms-excel", "unified-tags-excel" })
+        {
+            if (release is "19" or "20" or "21")
+            {
+                var maintained = ToolUsageCatalog.Sequences().Single(row => (string?)row!["id"] == "sequence/" + topic)!;
+                foreach (var step in maintained["steps"]!.AsArray())
+                {
+                    var tool = published.Single(row => row.ProtocolTool.Name == (string)step!["tool"]!).ProtocolTool;
+                    var schema = new TiaMcp.Logic.V4.Inputs.InputSchema(tool.InputSchema);
+                    var args = JsonSerializer.Deserialize<JsonElement>(step!["arguments"]!.ToJsonString().Replace("{extension}", release));
+                    var error = schema.Validate(args, "arguments");
+                    check(error == null, "Unified table step matches schema: " + topic + "/" + release + "/" + tool.Name + ": " + error);
+                }
+            }
+            var response = await Call(JsonSerializer.Serialize(new { exampleId = "sequence/" + topic, exampleKind = "sequence" }));
+            check(response.IsError != true, "Unified table sequence is a known example: " + topic + "/" + release);
+            var examples = JsonNode.Parse(((TextContentBlock)response.Content.Single()).Text)!["data"]?["examples"] as JsonArray;
+            bool supported = release is "19" or "20" or "21";
+            check(examples != null && examples.Count == (supported ? 1 : 0),
+                "Unified table sequence is served only on V19-V21: " + topic + "/" + release);
+            if (!supported || examples is not { Count: 1 }) continue;
+            var sequence = examples[0]!;
+            check((bool?)sequence["available"] == true && (bool?)sequence["releaseMatches"] == true
+                && (bool?)sequence["profileMatches"] == true
+                && sequence["steps"]!.AsArray().All(step => published.Any(tool => tool.ProtocolTool.Name == (string)step!["tool"]!)),
+                "Unified table sequence uses the serving release's actual tools: " + topic + "/" + release);
+            var steps = sequence["steps"]!.AsArray();
+            var fromTable = steps.Single(step => (string?)step!["tool"] == "ConvertEngineeringTable"
+                && (string?)step["arguments"]!["direction"] == "fromTable")!;
+            var batch = steps.Single(step => (string?)step!["tool"] == "PreviewToolBatch")!;
+            string writeTool = topic == "unified-alarms-excel" ? "ManageUnifiedEngineeringObject" : "EnsureUnifiedHmiTag";
+            check((int?)fromTable["arguments"]!["limit"] == 50
+                && batch["arguments"]!["operations"]!.AsArray().All(item => (string?)item!["name"] == writeTool
+                    && (bool?)item["arguments"]!["dryRun"] == true)
+                && steps.Any(step => (string?)step!["tool"] == "ApplyToolBatch")
+                && steps.Last()!["tool"]!.GetValue<string>() == steps.First()!["tool"]!.GetValue<string>(),
+                "Unified table sequence pages fifty rows, previews single-object writes and reads back: " + topic + "/" + release);
+        }
     }
 }

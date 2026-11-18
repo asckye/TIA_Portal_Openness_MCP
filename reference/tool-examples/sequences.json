@@ -5923,5 +5923,321 @@
         "expect": "Compile explicitly and inspect diagnostics; no automatic save."
       }
     ]
+  },
+  {
+    "id": "sequence/unified-alarms-excel",
+    "topic": "unified-alarms-excel",
+    "purpose": "Review Unified discrete alarms in Excel, then create/update one alarm per batch item with multilingual texts.",
+    "preconditions": "Bind the intended V19-V21 project and exact Unified softwarePath. Discover existing alarm names, AlarmClass and trigger tags. Errors and AlarmTrigger must exist; Alarm_1 is absent and Alarm_2 exists in this sample. Bind cultures to active project languages. Substitute all sample values from project reads and the approved edit.",
+    "notes": "The table is the review artefact; ApplyToolBatch is the write. ConvertEngineeringTable kind=rows only converts flat scalar rows; it does not validate PLC bindings or turn rows into calls automatically. Read all source pages from an unchanged project. Flatten only reviewed editable fields; keep object paths and identities exact. Split path segments before decoding and encode reserved characters within names. fromTable returns strings: parse integer and boolean cells to the tool schema types, reject invalid values and unknown columns, and map each approved row to one single-object call. Use offset=0, limit=50, then the returned nextOffset (V4 meta.paging); 60 rows require two separately reviewed batches of 50 and 10. Preview and apply the current page before proceeding to the next. Review every child preview and target identity; ApplyToolBatch fills missing expectedPlanHash/expectedProjectFile from each stored child preview, never replacing explicit values. Obtain Workbench approval for the stored batch. A failed item is rolled back by its own journal; inspect cleanupRequired/rollback evidence. Earlier items stay and later items are NOT_EXECUTED. Inspect unknown outcomes before any replay. Read back the affected objects after every batch, including a failed one; never automatically replay a whole page. No implicit save, compile or download. Classic HMI alarms have no Openness API on any release. Native acceptance NOT RUN. ListUnifiedEngineeringObjects returns public scalars, not a complete alarm/text export. Use GetUnifiedAlarmCommon for existing multilingual texts; flatten its exact culture values alongside the scalar inventory, then add intended edits. Omit unedited cultures/properties; an explicit empty text clears that culture. Map EventText[culture] to texts.EventText[culture]; EventText1..9 and InfoText use the same mapping when needed. TriggerBitAddress/TriggerAddress are read-only; never write them. Reject actions other than create/update for this workflow. Alarm preview validates the existing AlarmClass/trigger binding; inspect per-field failures and incomplete evidence.",
+    "releaseKeys": [
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "requiresBinding": true,
+    "validation": "Schema and managed retrieval checks only; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "ListUnifiedEngineeringObjects",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "discreteAlarms",
+          "offset": 0,
+          "limit": 50
+        },
+        "expect": "Collect all pages using returned nextOffset/meta.paging. Inspect scalar field failures; do not treat this inventory as a complete text export."
+      },
+      {
+        "tool": "GetUnifiedAlarmCommon",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "discreteAlarms",
+          "offset": 0,
+          "limit": 50
+        },
+        "expect": "Read all pages of multilingual texts for the exact selected alarms. Join by exact alarm name, flatten EventText[culture] and retain unedited cultures; inspect failures and gaps."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "rows",
+          "direction": "toTable",
+          "rows": [
+            {
+              "Action": "create",
+              "Name": "Alarm_1",
+              "AlarmClass": "Errors",
+              "RaisedStateTag": "AlarmTrigger",
+              "RaisedStateTagBitNumber": 0,
+              "Priority": 8,
+              "EventText[en-US]": "Motor fault",
+              "EventText[zh-CN]": "电机故障"
+            },
+            {
+              "Action": "update",
+              "Name": "Alarm_2",
+              "AlarmClass": "Errors",
+              "RaisedStateTag": "AlarmTrigger",
+              "RaisedStateTagBitNumber": 1,
+              "Priority": 8,
+              "EventText[en-US]": "Drive fault",
+              "EventText[zh-CN]": "驱动故障"
+            }
+          ],
+          "columns": [
+            "Action",
+            "Name",
+            "AlarmClass",
+            "RaisedStateTag",
+            "RaisedStateTagBitNumber",
+            "Priority",
+            "EventText[en-US]",
+            "EventText[zh-CN]"
+          ],
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Unified-alarms.xlsx",
+          "dryRun": false
+        },
+        "expect": "Flatten reviewed scalar inventory plus intended create/update and text edits into rows (two representative rows shown). Preview conversion with dryRun=true first; execute to a new file. Open, review and edit in Excel; retain exact names."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "rows",
+          "direction": "fromTable",
+          "inputPath": "C:/Examples/generated/Unified-alarms.xlsx",
+          "offset": 0,
+          "limit": 50,
+          "dryRun": true
+        },
+        "expect": "Read up to 50 edited rows; retain nextOffset for the next page. Convert Priority/bit-number strings to integers. Validate Action and map text columns to culture maps; reject invalid rows before preview."
+      },
+      {
+        "tool": "PreviewToolBatch",
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "ManageUnifiedEngineeringObject",
+              "arguments": {
+                "softwarePath": "HMI_RT_1",
+                "category": "discreteAlarms",
+                "name": "Alarm_1",
+                "action": "create",
+                "properties": {
+                  "AlarmClass": "Errors",
+                  "RaisedStateTag": "AlarmTrigger",
+                  "RaisedStateTagBitNumber": 0,
+                  "Priority": 8
+                },
+                "texts": {
+                  "EventText": {
+                    "en-US": "Motor fault",
+                    "zh-CN": "电机故障"
+                  }
+                },
+                "dryRun": true
+              }
+            },
+            {
+              "name": "ManageUnifiedEngineeringObject",
+              "arguments": {
+                "softwarePath": "HMI_RT_1",
+                "category": "discreteAlarms",
+                "name": "Alarm_2",
+                "action": "update",
+                "properties": {
+                  "AlarmClass": "Errors",
+                  "RaisedStateTag": "AlarmTrigger",
+                  "RaisedStateTagBitNumber": 1,
+                  "Priority": 8
+                },
+                "texts": {
+                  "EventText": {
+                    "en-US": "Drive fault",
+                    "zh-CN": "驱动故障"
+                  }
+                },
+                "dryRun": true
+              }
+            }
+          ]
+        },
+        "expect": "Build one create/update call per approved row of this page (two shown); no items parameter. Review scalar/text changes and every child plan. Missing plan bindings are supplied from these stored previews during apply."
+      },
+      {
+        "tool": "ApplyToolBatch",
+        "arguments": {
+          "previewToken": "<previewToken from this reviewed page of PreviewToolBatch>"
+        },
+        "expect": "Approve and execute this exact page; inspect ordered per-item envelopes, rollback/cleanup and NOT_EXECUTED. Do not proceed blindly after failure or unknown outcome."
+      },
+      {
+        "tool": "GetUnifiedAlarmCommon",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "discreteAlarms",
+          "offset": 0,
+          "limit": 50
+        },
+        "expect": "Read all affected alarm text pages after this batch and compare each approved culture/text, including intentional empty-text clears. Inspect rollback/cleanup evidence on failed items."
+      },
+      {
+        "tool": "ListUnifiedEngineeringObjects",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "category": "discreteAlarms",
+          "offset": 0,
+          "limit": 50
+        },
+        "expect": "Read all affected alarm pages after each batch; compare scalar values with approved rows. Then read the next table page, rebuild and review its own batch."
+      }
+    ]
+  },
+  {
+    "id": "sequence/unified-tags-excel",
+    "topic": "unified-tags-excel",
+    "purpose": "Review Unified external tag definitions in Excel, validate PLC bindings row by row and apply approved tags through a batch.",
+    "preconditions": "Bind the intended V19-V21 project, exact HMI software path, existing tag table and HMI connection. Export the CURRENT PLC tag table(s) for every selected PLC binding and retain their exact PLC identity. Sample Start/Stop are Bool PLC tags. Replace sample rows and paths using project reads and the intended change.",
+    "notes": "The table is the review artefact; ApplyToolBatch is the write. ConvertEngineeringTable kind=rows only converts flat scalar rows; it does not validate PLC bindings or turn rows into calls automatically. Read all source pages from an unchanged project. Flatten only reviewed editable fields; keep object paths and identities exact. Split path segments before decoding and encode reserved characters within names. fromTable returns strings: parse integer and boolean cells to the tool schema types, reject invalid values and unknown columns, and map each approved row to one single-object call. Use offset=0, limit=50, then the returned nextOffset (V4 meta.paging); 60 rows require two separately reviewed batches of 50 and 10. Preview and apply the current page before proceeding to the next. Review every child preview and target identity; ApplyToolBatch fills missing expectedPlanHash/expectedProjectFile from each stored child preview, never replacing explicit values. Obtain Workbench approval for the stored batch. A failed item is rolled back by its own journal; inspect cleanupRequired/rollback evidence. Earlier items stay and later items are NOT_EXECUTED. Inspect unknown outcomes before any replay. Read back the affected objects after every batch, including a failed one; never automatically replay a whole page. No implicit save, compile or download. Classic HMI alarms have no Openness API on any release. Native acceptance NOT RUN. ListUnifiedTagDefinitions yields path-addressed evidence records for roots, members, UDTs and arrays; limit counts records, not tags. Follow nextCursor until null and inspect cumulative failures/gaps. Select supported external scalar root tags explicitly; do not flatten members or inferred root fields into invented tags. Before any batch preview, compare every proposed PLC binding against the current PLC export using exact PLC/tag identity: check hmiDataType compatibility and requested read/write access against DataType, ExternalAccessible, ExternalVisible and ExternalWritable. Do not guess type equivalence or assume a missing access flag means allowed. Report row number, PLC/tag, expected/actual type or access and reason for every mismatch or missing evidence; exclude unresolved rows from the batch until corrected and reviewed. The table codec does not perform this compatibility/access validation; it is a required caller review step. No new native validation is claimed. Keep requireVerifiedBinding=true and use explicit connectionName. EnsureUnifiedHmiTag creates or verifies a tag; it is not a general replacement/update tool for existing definitions.",
+    "releaseKeys": [
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "requiresBinding": true,
+    "validation": "Schema and managed retrieval checks only; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "ListUnifiedTagDefinitions",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "limit": 50
+        },
+        "expect": "Collect all nextCursor pages from the same binding; inspect own fields, separately labelled inference, failures and gaps. Select external scalar root tags only."
+      },
+      {
+        "tool": "ExportPlcTagTable",
+        "arguments": {
+          "softwarePath": "<exact PLC softwarePath from GetProjectTree>",
+          "tagTableName": "<exact PLC table for the selected bindings>",
+          "exportFile": "C:/Examples/exports/Unified-bindings.xml",
+          "dryRun": false,
+          "expectedProjectFile": "C:/Projects/Example.ap{extension}"
+        },
+        "expect": "Preview with dryRun=true first, then export the CURRENT matching PLC table; repeat for each table needed. Before previewing a write, report/refuse every row with incompatible type, insufficient read/write access or missing binding evidence."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "rows",
+          "direction": "toTable",
+          "rows": [
+            {
+              "tagTableName": "/Default tag table",
+              "tagName": "Start",
+              "plcName": "PLC_1",
+              "plcTag": "Start",
+              "hmiDataType": "Bool",
+              "connectionName": "HMI_Connection_1",
+              "requireVerifiedBinding": true
+            },
+            {
+              "tagTableName": "/Default tag table",
+              "tagName": "Stop",
+              "plcName": "PLC_1",
+              "plcTag": "Stop",
+              "hmiDataType": "Bool",
+              "connectionName": "HMI_Connection_1",
+              "requireVerifiedBinding": true
+            }
+          ],
+          "columns": [
+            "tagTableName",
+            "tagName",
+            "plcName",
+            "plcTag",
+            "hmiDataType",
+            "connectionName",
+            "requireVerifiedBinding"
+          ],
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/Unified-tags.xlsx",
+          "dryRun": false
+        },
+        "expect": "Flatten selected root definitions and intended new tags (two representative rows shown). Preview with dryRun=true first; write a new workbook. Edit and review in Excel; keep exact table paths, PLC identity and connection."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "rows",
+          "direction": "fromTable",
+          "inputPath": "C:/Examples/generated/Unified-tags.xlsx",
+          "offset": 0,
+          "limit": 50,
+          "dryRun": true
+        },
+        "expect": "Read up to 50 rows. Parse requireVerifiedBinding as boolean true. Validate each edited binding against the current PLC export with row-specific type/access errors before including it in a batch. Re-export if PLC declarations changed."
+      },
+      {
+        "tool": "PreviewToolBatch",
+        "arguments": {
+          "expectedProject": "Example",
+          "operations": [
+            {
+              "name": "EnsureUnifiedHmiTag",
+              "arguments": {
+                "hmiSoftwarePath": "HMI_RT_1",
+                "tagTableName": "/Default tag table",
+                "tagName": "Start",
+                "plcName": "PLC_1",
+                "plcTag": "Start",
+                "hmiDataType": "Bool",
+                "connectionName": "HMI_Connection_1",
+                "requireVerifiedBinding": true,
+                "dryRun": true
+              }
+            },
+            {
+              "name": "EnsureUnifiedHmiTag",
+              "arguments": {
+                "hmiSoftwarePath": "HMI_RT_1",
+                "tagTableName": "/Default tag table",
+                "tagName": "Stop",
+                "plcName": "PLC_1",
+                "plcTag": "Stop",
+                "hmiDataType": "Bool",
+                "connectionName": "HMI_Connection_1",
+                "requireVerifiedBinding": true,
+                "dryRun": true
+              }
+            }
+          ]
+        },
+        "expect": "Map every approved compatible row of this page to one EnsureUnifiedHmiTag call (two shown). Review every child target and binding. No unresolved mismatch row may be included."
+      },
+      {
+        "tool": "ApplyToolBatch",
+        "arguments": {
+          "previewToken": "<previewToken from this reviewed page of PreviewToolBatch>"
+        },
+        "expect": "Approve and execute the stored page; inspect each item, SymbolicVerified/readback and rollback/cleanup evidence. Inspect failure or unknown outcome before planning any further write."
+      },
+      {
+        "tool": "ListUnifiedTagDefinitions",
+        "arguments": {
+          "softwarePath": "HMI_RT_1",
+          "expectedProject": "Example",
+          "limit": 50
+        },
+        "expect": "Read all nextCursor pages and compare approved names, types, connections and PLC bindings after each batch. Then read the next table page and build a separate reviewed batch; 60 rows require 50 and 10."
+      }
+    ]
   }
 ]

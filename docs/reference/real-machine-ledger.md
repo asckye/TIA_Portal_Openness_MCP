@@ -10,6 +10,8 @@
 
 ## 未发布改动的验收边界
 
+TIA-BATCH-5a：**NOT RUN**。V21 工程副本上按 unified-alarms-excel 与 unified-tags-excel 各走一遍 60 行（两个批次），含一个故意失败的行，核对失败项回滚、其后为 NOT_EXECUTED、Excel 文件可读。另逐行对照当前 PLC 导出核对变量绑定的数据类型与读写权限，确认不匹配或证据缺失的行在批次预览前报告并排除；核对多语言报警文本与变更后的读回结果。
+
 TIA-BATCH-4：**NOT RUN**。在 V15.1 与 V21 工程副本上：导出含结构、数组、默认与非默认起始值的全局 DB，转 xlsx，修改 5 个起始值（含 1 个原为默认值的 Int 成员），转回 XML，ImportPlcBlockVerified 预览并执行，读回并编译；确认 TIA 接受新增的非默认 StartValue，并核对各基础类型字面量的导出规范形式；表格拒绝常量引用、批量值、清空单元格和新默认值。
 
 TIA-BATCH-2：**NOT RUN**。在 V14 SP1、V18、V21 工程副本上，用 ExportPlcTagTables 分别从 PLC 根组和一个精确用户组执行 recursive=false 与 recursive=true 两种预览和导出，覆盖根组非递归、根组递归、用户组非递归、用户组递归四种组合；工程包含用户组、子组及中文名、带 / 名称的变量表。核对非递归仅包含选定组本级的变量表，递归包含选定组及其全部子组的变量表，逐次核对文件数与 objectPath，并把其中一个文件用 ImportPlcTagTable 导回原组（overwrite=true）。
