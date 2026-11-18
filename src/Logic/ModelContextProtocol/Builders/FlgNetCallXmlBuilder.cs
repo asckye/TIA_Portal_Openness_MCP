@@ -25,6 +25,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         public static XElement BuildFlgNet(string callName, IEnumerable<FlgNetCallParameter> parameters)
+            => BuildFlgNet(callName, parameters, FlgNetNs);
+
+        public static XElement BuildFlgNet(string callName, IEnumerable<FlgNetCallParameter> parameters, XNamespace flgNetNamespace)
         {
             if (string.IsNullOrWhiteSpace(callName))
                 throw new ArgumentException("The FlgNet call block name must not be empty.", nameof(callName));
@@ -38,17 +41,17 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 parameter.AccessUid = uid++;
                 accessParts.Add(parameter.SourceKind == FlgNetSourceKind.LiteralConstant
-                    ? BuildLiteralAccess(parameter)
-                    : BuildGlobalAccess(parameter));
+                    ? BuildLiteralAccess(parameter, flgNetNamespace)
+                    : BuildGlobalAccess(parameter, flgNetNamespace));
             }
 
             var callUid = uid++;
-            var call = new XElement(FlgNetNs + "Call",
+            var call = new XElement(flgNetNamespace + "Call",
                 new XAttribute("UId", callUid),
-                new XElement(FlgNetNs + "CallInfo",
+                new XElement(flgNetNamespace + "CallInfo",
                     new XAttribute("Name", callName),
                     new XAttribute("BlockType", "FC"),
-                    parameterList.Select(x => new XElement(FlgNetNs + "Parameter",
+                    parameterList.Select(x => new XElement(flgNetNamespace + "Parameter",
                         new XAttribute("Name", x.ParameterName),
                         new XAttribute("Section", x.Section),
                         new XAttribute("Type", x.DataType)))));
@@ -56,10 +59,10 @@ namespace TiaMcpServer.ModelContextProtocol
             var wireUid = uid++;
             var wires = new List<XElement>
             {
-                new XElement(FlgNetNs + "Wire",
+                new XElement(flgNetNamespace + "Wire",
                     new XAttribute("UId", wireUid++),
-                    new XElement(FlgNetNs + "Powerrail"),
-                    new XElement(FlgNetNs + "NameCon",
+                    new XElement(flgNetNamespace + "Powerrail"),
+                    new XElement(flgNetNamespace + "NameCon",
                         new XAttribute("UId", callUid),
                         new XAttribute("Name", "en")))
             };
@@ -67,25 +70,25 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var parameter in parameterList)
             {
                 wires.Add(parameter.Section == "Output"
-                    ? new XElement(FlgNetNs + "Wire",
+                    ? new XElement(flgNetNamespace + "Wire",
                         new XAttribute("UId", wireUid++),
-                        new XElement(FlgNetNs + "NameCon",
+                        new XElement(flgNetNamespace + "NameCon",
                             new XAttribute("UId", callUid),
                             new XAttribute("Name", parameter.ParameterName)),
-                        new XElement(FlgNetNs + "IdentCon",
+                        new XElement(flgNetNamespace + "IdentCon",
                             new XAttribute("UId", parameter.AccessUid)))
-                    : new XElement(FlgNetNs + "Wire",
+                    : new XElement(flgNetNamespace + "Wire",
                         new XAttribute("UId", wireUid++),
-                        new XElement(FlgNetNs + "IdentCon",
+                        new XElement(flgNetNamespace + "IdentCon",
                             new XAttribute("UId", parameter.AccessUid)),
-                        new XElement(FlgNetNs + "NameCon",
+                        new XElement(flgNetNamespace + "NameCon",
                             new XAttribute("UId", callUid),
                             new XAttribute("Name", parameter.ParameterName))));
             }
 
-            return new XElement(FlgNetNs + "FlgNet",
-                new XElement(FlgNetNs + "Parts", accessParts.Concat(new[] { call })),
-                new XElement(FlgNetNs + "Wires", wires));
+            return new XElement(flgNetNamespace + "FlgNet",
+                new XElement(flgNetNamespace + "Parts", accessParts.Concat(new[] { call })),
+                new XElement(flgNetNamespace + "Wires", wires));
         }
 
         public static string BuildXml(string callName, IEnumerable<FlgNetCallParameter> parameters)
@@ -224,24 +227,24 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
 
-        private static XElement BuildGlobalAccess(FlgNetCallParameter parameter)
+        private static XElement BuildGlobalAccess(FlgNetCallParameter parameter, XNamespace flgNetNamespace)
         {
-            return new XElement(FlgNetNs + "Access",
+            return new XElement(flgNetNamespace + "Access",
                 new XAttribute("Scope", "GlobalVariable"),
                 new XAttribute("UId", parameter.AccessUid),
-                new XElement(FlgNetNs + "Symbol",
-                    parameter.SymbolPath.Select(x => new XElement(FlgNetNs + "Component",
+                new XElement(flgNetNamespace + "Symbol",
+                    parameter.SymbolPath.Select(x => new XElement(flgNetNamespace + "Component",
                         new XAttribute("Name", x)))));
         }
 
-        private static XElement BuildLiteralAccess(FlgNetCallParameter parameter)
+        private static XElement BuildLiteralAccess(FlgNetCallParameter parameter, XNamespace flgNetNamespace)
         {
-            return new XElement(FlgNetNs + "Access",
+            return new XElement(flgNetNamespace + "Access",
                 new XAttribute("Scope", "LiteralConstant"),
                 new XAttribute("UId", parameter.AccessUid),
-                new XElement(FlgNetNs + "Constant",
-                    new XElement(FlgNetNs + "ConstantType", parameter.DataType),
-                    new XElement(FlgNetNs + "ConstantValue", parameter.ConstantValue)));
+                new XElement(flgNetNamespace + "Constant",
+                    new XElement(flgNetNamespace + "ConstantType", parameter.DataType),
+                    new XElement(flgNetNamespace + "ConstantValue", parameter.ConstantValue)));
         }
 
         private static bool CompareSemantics(JsonObject golden, JsonObject generated)

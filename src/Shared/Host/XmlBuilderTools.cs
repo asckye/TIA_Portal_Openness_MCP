@@ -171,7 +171,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "BuildFlgNetCall"),
                 Description("[L2][PLC-Builders][OFFLINE] Build one V21 FlgNet/v5 FC-call fragment from " +
                     "{callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. For contacts, edges, compares, OR, " +
-                    "fan-out, coils and MOVE use BuildPlcLadFcBlock rung networks on V21. For timers, counters and math beyond A3a, and all " +
+                    "fan-out, coils, MOVE, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use BuildPlcLadFcBlock rung networks on V21. " +
+                    "For unsupported timers, counters and math or library/system instructions, and all " +
                     "general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. " +
                     "A bare fragment cannot be imported. Returns candidate XML in " +
                     "memory only; no files, connection or worker. Native acceptance NOT RUN.")]
@@ -247,7 +248,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     "{blockName,blockNumber,inputs?,outputs?,networks:[{call|rung,titleZhCn?,commentZhCn?}]}. Exactly one call or rung per " +
                     "network. Rung supports NO/NC, rising/falling edges with global memory, typed comparisons, OR groups, shared-prefix " +
                     "fan-out, coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins; " +
-                    "global constants and indexed component paths. Local symbols must start " +
+                    "global constants and indexed component paths. Time PT; Output/InOut pins require symbols. Known instruction names and " +
+                    "the MC_ prefix are reserved; no block resolution. Local symbols must start " +
                     "with a declared input/output. Limits: 64 networks, 256 parts per rung network, depth 16, strings 4096. No symbol/type " +
                     "resolution; compile is the authority. Returns XML only, no files, connection, import or worker. V21 only; native " +
                     "acceptance NOT RUN. For unsupported timers, counters and math or library/system instructions, author S7DCL text and import " +

@@ -39,9 +39,9 @@ internal sealed class OfflineLadderTool : McpServerTool
             Name = name, Description = "[offline candidate; native unverified] In-memory V21 LAD candidate generation. " +
                 (name == "BuildPlcLadFcBlock" ? "Each network contains exactly one call or rung. Rungs support contacts, edges, compares, OR, fan-out, " +
                     "coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins. " +
-                    "Global instances only. Registered on V21 only. For unsupported timers, counters and math or library/system instructions and other " +
+                    "Global instances only; Time PT; Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; no block resolution. Registered on V21 only. For unsupported timers, counters and math or library/system instructions and other " +
                     "unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. "
-                    : "Builds only one FC-call fragment; use BuildPlcLadFcBlock for rung networks on V21. For timers, counters and math beyond A3a, " +
+                    : "Builds only one FC-call fragment; use BuildPlcLadFcBlock for rung networks on V21. For TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use its rung outputs. For unsupported timers, counters and math or library/system instructions, " +
                         "and all general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. " +
                         "A bare fragment cannot be imported. ") +
                 "No symbol/type resolution; compile is the authority. " + OfflineCompositionBuilders.Warning + " No file reads/writes, connection or worker calls.",
@@ -65,7 +65,9 @@ internal sealed class OfflineLadderTool : McpServerTool
                 try { return value.GetString()!; }
                 catch (InvalidOperationException) { throw new ArgumentException("Invalid Unicode argument."); }
             }
-            var result = OfflineLadderBuilders.Build(name, Read("outputReleaseKey"), Read(jsonParameter));
+            var outputReleaseKey = Read("outputReleaseKey");
+            if (outputReleaseKey != "21") throw new ArgumentException("Explicit release 21 required.");
+            var result = OfflineLadderBuilders.Build(name, outputReleaseKey, Read(jsonParameter));
             cancellationToken.ThrowIfCancellationRequested();
             var wire = new JsonObject();
             foreach (var pair in result) wire[McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(pair.Key) ?? pair.Key] = pair.Value?.DeepClone();

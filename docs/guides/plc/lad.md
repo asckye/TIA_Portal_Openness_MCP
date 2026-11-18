@@ -13,9 +13,9 @@
 
 `BuildPlcLadFcBlock` 的每个网络须选 `call` 或 `rung` 之一。`rung` 支持常开/常闭、使用全局存储位的上升/下降沿、六种比较、OR 组、共用前段分支、普通/置位/复位线圈、MOVE 及其 ENO 串接。操作数支持全局常量、数组下标组件路径和本块声明的输入/输出局部变量；不解析符号或推断类型，编译结果才是依据。每个 rung 网络最多 256 个 Access/Part/Call，现有 64 网络和深度 16 限制不变。
 
-`rung` 还支持 TON/TOF/TP、CTU/CTD/CTUD，以及带命名引脚的用户 FC/FB 调用。定时器和计数器的 `instance` 使用全局符号路径；FB 调用的 `instance` 是全局实例 DB 名称，FC 调用不接受实例。CTU 必须给出 `reset`，CTD 必须给出 `load`，CTUD 必须给出 `down`、`reset`、`load`；辅助条件串从电源轨开始。`q`/`qd` 接输出列表，`et`/`cv` 接符号，未使用的输出接 `OpenCon`。只有 MOVE 和 CALL 接受由 ENO 驱动的 `then`。调用引脚名不区分大小写去重，不得使用 `en`/`eno`；Output 引脚必须接符号。先准备并编译实例与被调用块，生成器不解析这些对象或推断类型。
+`rung` 还支持 TON/TOF/TP、CTU/CTD/CTUD，以及带命名引脚的用户 FC/FB 调用。定时器和计数器的 `instance` 使用全局符号路径；FB 调用的 `instance` 是全局实例 DB 名称，FC 调用不接受实例。CTU 必须给出 `reset`，CTD 必须给出 `load`，CTUD 必须给出 `down`、`reset`、`load`；辅助条件串从电源轨开始。`q`/`qd` 接输出列表，`et`/`cv` 接符号，未使用的输出接 `OpenCon`。只有 MOVE 和 CALL 接受由 ENO 驱动的 `then`。调用引脚名不区分大小写去重，不得使用 `en`/`eno`；Output/InOut 引脚必须接符号。定时器 PT 固定为 Time，不接受 LT#/LTIME#。已知指令名和 `MC_` 前缀保留给指令，不能作为用户块名；此校验不解析块的真实身份。先准备并编译实例与被调用块，生成器不解析这些对象或推断类型。
 
-通过 `GetToolUsage(toolName="BuildPlcLadFcBlock", operation="rung")` 获取基础输入，`operation="rung-boxes"` 获取定时器、计数器和 FB 调用输入；导入与读回步骤见 `GetToolUsage(exampleId="sequence/plc-lad-rung-build-import")`。输出仅限 V21，原生导入与编译验收为 **NOT RUN**。任意算术、库或系统指令使用完整文档/同版本导出块。V20 的 SIMATIC SD 使用还取决于对应安装/更新；本包这些完整文档示例限定 V21。V14 SP1–V19 基础目录没有 V20/V21 的文档导入入口。
+通过 `GetToolUsage(toolName="BuildPlcLadFcBlock")` 查看契约与默认调用；完整的基础 rung、定时器、计数器和 FB 调用输入及导入、读回步骤见 `GetToolUsage(exampleId="sequence/plc-lad-rung-build-import")`。通用 `operation` 选择器要求目标工具具有 action/operation 参数，当前不能用它选择维护库中的 `rung`/`rung-boxes` 命名示例。公开输出仍仅限 V21，原生导入与编译验收为 **NOT RUN**。内部生成器已有八版格式及对应 XSD 检查：V14 SP1 使用 FlgNet/v1、V15.1 使用 v3、V16–V18 使用 v4、V19–V21 使用 v5；V14 SP1 拒绝数组下标。V14 SP1–V20 须逐版完成 VM 导入和编译验收后才开放注册及输出选择，XSD 通过不代替原生验收。任意算术、库或系统指令使用完整文档/同版本导出块。V20 的 SIMATIC SD 使用还取决于对应安装/更新；本包这些完整文档示例限定 V21。V14 SP1–V19 基础目录没有 V20/V21 的文档导入入口。
 
 ## V21 文档练习
 

@@ -301,6 +301,10 @@ Used since P8-81d, with the releases where the SDK has each member:
 Withdrawn by decision (2026-10-20): on V20 the four whole-block composers that write V21 documents (`BuildPlcFcBlock`,
 `BuildPlcFbBlock`, `BuildPlcLadFcBlock`, `BuildPlcAliasAlarmLad`) are not registered, and `BuildAndImportPlcArtifact` refuses
 `kind` fc/fb below V21. They stay on V21. They open on V20 only after an import of their output there has been verified.
+`BuildPlcLadFcBlock` now has internal output formats and per-release fragment XSD tests for all eight releases
+(FlgNet v1 on 14sp1, v3 on 15.1, v4 on 16–18, v5 on 19–21). V14 SP1 refuses array indices;
+Namespace appears from V18, SetENOAutomatically only on V21. Registration and outputReleaseKey remain V21-only
+under decision A3-2(b); native import/compile acceptance is NOT RUN on every release.
 
 SU-1 software-unit coverage (native acceptance **NOT RUN**):
 

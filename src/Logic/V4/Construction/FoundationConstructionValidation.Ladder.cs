@@ -10,21 +10,21 @@ namespace TiaMcp.Logic.V4.Construction
     {
         internal const int MaxRungParts = 256;
 
-        internal static void Rungs(ConstructionNode value, IReadOnlyCollection<string>? localMembers = null)
+        internal static void Rungs(ConstructionNode value, IReadOnlyCollection<string>? localMembers = null, string outputReleaseKey = "21")
         {
             if (value is LadFcBlockSpec lad)
             {
                 var locals = (lad.Inputs ?? Array.Empty<Member>()).Concat(lad.Outputs ?? Array.Empty<Member>()).Select(m => m.Name).ToArray();
                 for (int i = 0; i < lad.Networks.Count; i++)
                     if (lad.Networks[i].Rung is LadRung rung)
-                        Rung(rung, locals, "/networks/" + i.ToString(CultureInfo.InvariantCulture) + "/rung");
+                        Rung(rung, locals, "/networks/" + i.ToString(CultureInfo.InvariantCulture) + "/rung", outputReleaseKey);
             }
-            else if (value is LadRung rung) Rung(rung, localMembers ?? Array.Empty<string>(), "");
+            else if (value is LadRung rung) Rung(rung, localMembers ?? Array.Empty<string>(), "", outputReleaseKey);
             else if (value is LadNetwork network && network.Rung != null)
-                Rung(network.Rung, localMembers ?? Array.Empty<string>(), "/rung");
+                Rung(network.Rung, localMembers ?? Array.Empty<string>(), "/rung", outputReleaseKey);
         }
 
-        internal static void Rung(LadRung rung, IReadOnlyCollection<string> localMembers, string pointer)
+        internal static void Rung(LadRung rung, IReadOnlyCollection<string> localMembers, string pointer, string outputReleaseKey = "21")
         {
             var locals = new HashSet<string>(localMembers, StringComparer.Ordinal);
             int parts = 0;
@@ -42,6 +42,8 @@ namespace TiaMcp.Logic.V4.Construction
                     {
                         var component = operand.Components[i];
                         Id(component.Name, at + "/" + operand.Kind + "/" + i + (component.Index == null ? "" : "/name"));
+                        if (component.Index != null && outputReleaseKey == "14sp1")
+                            throw new InputRejectionException().At(at + "/" + operand.Kind + "/" + i + "/index", "array indices from V15.1");
                     }
                     if (operand.Kind == "local" && !locals.Contains(operand.Components[0].Name))
                         throw new InputRejectionException().At(at, "symbol rooted in a declared input or output");
@@ -80,7 +82,7 @@ namespace TiaMcp.Logic.V4.Construction
             void Call(LadOutput output, string here)
             {
                 Id(output.Block!, here + "/block");
-                Required(!SystemInstruction(output.Block!), here + "/block", "user FC/FB, not a system or library instruction");
+                Required(!SystemInstruction(output.Block!), here + "/block", "user FC/FB; known instruction names and MC_ prefix are reserved");
                 Required(output.BlockType != "FB" || output.InstanceDb != null, here + "/instance", "global instance DB for FB");
                 Required(output.BlockType != "FC" || output.InstanceDb == null, here + "/instance", "no instance on FC");
                 if (output.InstanceDb != null) Id(output.InstanceDb, here + "/instance");
@@ -93,7 +95,7 @@ namespace TiaMcp.Logic.V4.Construction
                     Required(!pin.Name.Equals("en", StringComparison.OrdinalIgnoreCase)
                         && !pin.Name.Equals("eno", StringComparison.OrdinalIgnoreCase) && names.Add(pin.Name),
                         at + "/name", "unique pin name other than en/eno");
-                    if (pin.Section == "Output") Symbol(pin.Value, at + "/value");
+                    if (pin.Section == "Output" || pin.Section == "InOut") Symbol(pin.Value, at + "/value");
                     else Operand(pin.Value, at + "/value");
                 }
                 if (output.Then != null) Outputs(output.Then, here + "/then");
@@ -140,6 +142,8 @@ namespace TiaMcp.Logic.V4.Construction
                     {
                         Operand(output.Instance!, here + "/instance", false);
                         Operand(output.Pt!, here + "/pt");
+                        Required(output.Pt!.Kind != "typed" || !(output.Pt.Value!.StartsWith("LT#", StringComparison.OrdinalIgnoreCase)
+                            || output.Pt.Value.StartsWith("LTIME#", StringComparison.OrdinalIgnoreCase)), here + "/pt", "Time operand, not LTime");
                         if (output.Et != null) Symbol(output.Et, here + "/et");
                         if (output.Q != null) Outputs(output.Q, here + "/q");
                     }

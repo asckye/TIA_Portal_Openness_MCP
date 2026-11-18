@@ -20,7 +20,7 @@ namespace TiaMcp.Logic.V4.Construction
         public ConstructionInput(ConstructionProfile profile = ConstructionProfile.FullEngine)
             : this(profile, null) { }
 
-        internal ConstructionInput(ConstructionProfile profile, IReadOnlyCollection<string>? localMembers)
+        internal ConstructionInput(ConstructionProfile profile, IReadOnlyCollection<string>? localMembers, string outputReleaseKey = "21")
         {
             V4Validation.Defined(profile);
             contract = new InputContract<JsonElement>(ConstructionSchemas.For(typeof(T)), ConstructionJson.InputBudget, json =>
@@ -29,7 +29,7 @@ namespace TiaMcp.Logic.V4.Construction
                 {
                     ConstructionJson.XmlCharacters(json);
                     var value = ConstructionJson.Read(typeof(T), json);
-                    FoundationConstructionValidation.Rungs(value, localMembers);
+                    FoundationConstructionValidation.Rungs(value, localMembers, outputReleaseKey);
                     if (profile == ConstructionProfile.Foundation)
                     {
                         if (typeof(T) == typeof(PlcArtifactSpec)) ValidateFoundationUnion(json);

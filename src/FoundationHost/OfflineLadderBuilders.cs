@@ -20,6 +20,14 @@ internal static class OfflineLadderBuilders
     internal static JsonObject Build(string toolName, string release, string json)
     {
         if (release != "21") throw new ArgumentException("Explicit release 21 required.");
+        return BuildForRelease(toolName, release, json);
+    }
+
+    internal static JsonObject BuildForRelease(string toolName, string release, string json)
+    {
+        if (toolName == "BuildFlgNetCall" && release != "21") throw new ArgumentException("Explicit release 21 required.");
+        var format = FlgNetFormat.ForRelease(release);
+        var ns = format.Namespace;
         if (string.IsNullOrWhiteSpace(json) || json.Length > OfflineCompositionBuilders.MaxJsonCharacters) throw new ArgumentException("Invalid JSON size.");
         using var parsed = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });
         var root = parsed.RootElement;
@@ -28,12 +36,13 @@ internal static class OfflineLadderBuilders
         JsonObject summary;
         string mode;
         int parameterCount = 0;
+        var rungNetworks = new HashSet<int>();
         if (toolName == "BuildFlgNetCall")
         {
-            var call = Call(root, ref parameterCount);
+            var call = Call(root, ref parameterCount, ns);
             document = new XDocument(new XDeclaration("1.0", "utf-8", null), call);
             summary = new JsonObject {
-                ["callName"] = (string?)call.Descendants(Ns + "CallInfo").Single().Attribute("Name"), ["parameterCount"] = parameterCount };
+                ["callName"] = (string?)call.Descendants(ns + "CallInfo").Single().Attribute("Name"), ["parameterCount"] = parameterCount };
             mode = "plc-build-flgnet-call-xml";
         }
         else if (toolName == "BuildPlcLadFcBlock")
@@ -66,16 +75,17 @@ internal static class OfflineLadderBuilders
                 var call = Alias(row, false, "callJson", "call");
                 bool hasRung = row.TryGetProperty("rung", out var rung);
                 if (hasRung == call.HasValue) throw new ArgumentException("Exactly one call or rung required.");
+                if (hasRung) rungNetworks.Add(networks.Count);
                 var flgNet = hasRung
                     ? FlgNetRungXmlBuilder.Build(ConstructionJson.Deserialize<LadRung>(rung.GetRawText(),
-                        inputs.Concat(outputs).Select(m => m.Name).ToArray()), new FlgNetFormat(), inputs.Concat(outputs).Select(m => m.Name).ToArray())
-                    : Call(call!.Value, ref parameterCount);
+                        inputs.Concat(outputs).Select(m => m.Name).ToArray(), release), format, inputs.Concat(outputs).Select(m => m.Name).ToArray())
+                    : Call(call!.Value, ref parameterCount, ns);
                 networks.Add(new PlcLadFcBlockXmlComposer.LadNetwork(flgNet,
                     Text(row, false, "titleZhCn", "title"), Text(row, false, "commentZhCn", "comment")));
             }
             document = PlcLadFcBlockXmlComposer
                 .Compose(blockName, number, inputs, outputs, networks, Text(root, false, "commentZhCn", "blockCommentZhCn", "comment"),
-                    Text(root, false, "titleZhCn", "blockTitleZhCn", "title"));
+                    Text(root, false, "titleZhCn", "blockTitleZhCn", "title"), release);
             summary = new JsonObject {
                 ["blockName"] = blockName, ["blockNumber"] = number, ["networkCount"] = networks.Count, ["inputCount"] = inputs.Length, ["outputCount"] =
                     outputs.Length, ["parameterCount"] = parameterCount
@@ -94,26 +104,30 @@ internal static class OfflineLadderBuilders
         var verified = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
         if (toolName == "BuildFlgNetCall")
         {
-            if (verified.Root?.Name != Ns + "FlgNet") throw new InvalidOperationException("Unexpected helper root.");
+            if (verified.Root?.Name != ns + "FlgNet") throw new InvalidOperationException("Unexpected helper root.");
         }
         else
         {
-            if (verified.Root?.Name != "Document" || (string?)verified.Root.Element("Engineering")?.Attribute("version") != "V21" || verified
-                    .Descendants("SW.Blocks.FC").Count() != 1 || verified.Descendants(XName.Get("Sections", OfflineBlockCompositionBuilders.InterfaceNamespace))
+            if (verified.Root?.Name != "Document"
+                || (string?)verified.Root.Element("Engineering")?.Attribute("version") != format.Declaration.EngineeringVersion
+                || verified.Descendants("SW.Blocks.FC").Count() != 1 || verified.Descendants(format.Declaration.InterfaceNamespace + "Sections")
                     .Count() != 1)
                 throw new InvalidOperationException("Unexpected composer document.");
             var ids = verified.Descendants().Attributes("ID").Select(x => x.Value).ToArray();
             if (ids.Distinct(StringComparer.Ordinal).Count() != ids.Length) throw new InvalidOperationException("Document ID collision.");
         }
-        foreach (var network in verified.Descendants(Ns + "FlgNet"))
-            if (network.Element(Ns + "Parts")!.Elements(Ns + "Part").Any()) FlgNetRungXmlBuilder.Verify(network);
+        int networkIndex = 0;
+        foreach (var network in verified.Descendants(ns + "FlgNet"))
+            if (rungNetworks.Contains(networkIndex++)) FlgNetRungXmlBuilder.Verify(network);
             else VerifyNetwork(network);
         JsonObject Flags() => new() {
-            ["offlineOnly"] = true, ["outputReleaseKey"] = "21", ["schemaValidated"] = false, ["importValidated"] = false, ["programSemanticsValidated"] = false
+            ["offlineOnly"] = true, ["outputReleaseKey"] = release, ["schemaValidated"] = false, ["importValidated"] = false,
+            ["programSemanticsValidated"] = false
         };
         var meta = Flags(); meta["success"] = true; meta["nativeAcceptance"] = "NOT RUN";
         meta["provenance"] = toolName == "BuildPlcLadFcBlock"
-            ? "V21 pure FlgNet call/rung builders and PlcLadFcBlockXmlComposer; no version conversion or native export provenance"
+            ? format.Declaration.EngineeringVersion + " pure FlgNet call/rung builders and PlcLadFcBlockXmlComposer; "
+                + "no version conversion or native export provenance"
             : "Unchanged V21 FlgNetCallXmlBuilder and PlcLadFcBlockXmlComposer pure methods; no version conversion";
         meta["validationScope"] =
             "Bounded structured inputs, generated XML well-formedness, per-network identifiers and wire references only; no symbol/type resolution";
@@ -129,8 +143,7 @@ internal static class OfflineLadderBuilders
                 xml
         };
     }
-    private static XNamespace Ns => FlgNetNamespace;
-    private static XElement Call(JsonElement root, ref int total)
+    private static XElement Call(JsonElement root, ref int total, XNamespace ns)
     {
         Properties(root, "callName", "name", "parameters");
         var name = Identifier(Text(root, true, "callName", "name"));
@@ -171,38 +184,39 @@ internal static class OfflineLadderBuilders
                 parameters.Add(FlgNetCallParameter.Global(port, section, type, components));
             }
         }
-        var result = FlgNetCallXmlBuilder.BuildFlgNet(name, parameters);
+        var result = FlgNetCallXmlBuilder.BuildFlgNet(name, parameters, ns);
         VerifyNetwork(result);
         return result;
     }
     private static void VerifyNetwork(XElement network)
     {
-        var parts = network.Element(Ns + "Parts")?.Elements().ToArray() ?? throw new InvalidOperationException("Missing parts.");
-        var wires = network.Element(Ns + "Wires")?.Elements(Ns + "Wire").ToArray() ?? throw new InvalidOperationException("Missing wires.");
+        var ns = network.Name.Namespace;
+        var parts = network.Element(ns + "Parts")?.Elements().ToArray() ?? throw new InvalidOperationException("Missing parts.");
+        var wires = network.Element(ns + "Wires")?.Elements(ns + "Wire").ToArray() ?? throw new InvalidOperationException("Missing wires.");
         var ids = parts.Concat(wires).Select(e => (string?)e.Attribute("UId") ?? "").ToArray();
         if (ids.Any(id => !int.TryParse(id, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int n) || n < 1)
                 || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length)
             throw new InvalidOperationException("UId collision.");
-        var call = parts.Single(e => e.Name == Ns + "Call");
-        var info = call.Element(Ns + "CallInfo")!;
-        var parameters = info.Elements(Ns + "Parameter").ToArray();
+        var call = parts.Single(e => e.Name == ns + "Call");
+        var info = call.Element(ns + "CallInfo")!;
+        var parameters = info.Elements(ns + "Parameter").ToArray();
         if ((string?)info.Attribute("BlockType") != "FC" || wires.Length != parameters.Length + 1 || parts.Length != parameters.Length + 1)
             throw new InvalidOperationException("Unexpected call shape.");
-        var accessIds = parts.Where(e => e.Name == Ns + "Access").Select(e => (string)e.Attribute("UId")!).ToHashSet(StringComparer.Ordinal);
+        var accessIds = parts.Where(e => e.Name == ns + "Access").Select(e => (string)e.Attribute("UId")!).ToHashSet(StringComparer.Ordinal);
         for (int i = 0; i < wires.Length; i++)
         {
             var ends = wires[i].Elements().ToArray();
             if (ends.Length != 2) throw new InvalidOperationException("Unexpected wire shape.");
-            var port = ends.Single(e => e.Name == Ns + "NameCon");
+            var port = ends.Single(e => e.Name == ns + "NameCon");
             if ((string?)port.Attribute("UId") != (string?)call.Attribute("UId")) throw new InvalidOperationException("Broken call reference.");
             if (i == 0)
             {
-                if (ends[0].Name != Ns + "Powerrail" || (string?)port.Attribute("Name") != "en") throw new InvalidOperationException("Invalid enable wire.");
+                if (ends[0].Name != ns + "Powerrail" || (string?)port.Attribute("Name") != "en") throw new InvalidOperationException("Invalid enable wire.");
             }
             else
             {
                 var parameter = parameters[i - 1];
-                var ident = ends.Single(e => e.Name == Ns + "IdentCon");
+                var ident = ends.Single(e => e.Name == ns + "IdentCon");
                 if (!accessIds.Remove((string)ident.Attribute("UId")!) || (string?)port.Attribute("Name") != (string?)parameter.Attribute("Name")
                         || (ends[0] == port) != ((string?)parameter.Attribute("Section") == "Output"))
                     throw new InvalidOperationException("Broken port wire.");

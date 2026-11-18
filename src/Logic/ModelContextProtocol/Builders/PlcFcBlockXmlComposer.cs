@@ -331,12 +331,20 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static XDocument BuildFcDocument(string blockName, int blockNumber,
             IReadOnlyCollection<PlcBlockMemberDefinition> inputs, IReadOnlyCollection<PlcBlockMemberDefinition> outputs,
-            string language, XElement blockObjList)
+            string language, XElement blockObjList, PlcDeclarationXmlFormat? format = null)
         {
+            format ??= PlcDeclarationXmlFormat.ForRelease("21");
+            XElement Section(string name, IReadOnlyCollection<PlcBlockMemberDefinition> members)
+            {
+                var section = BuildSection(name, members);
+                foreach (var element in section.DescendantsAndSelf())
+                    element.Name = format.InterfaceNamespace + element.Name.LocalName;
+                return section;
+            }
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
                 new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", "V21")),
+                    new XElement("Engineering", new XAttribute("version", format.EngineeringVersion)),
                     new XElement("DocumentInfo",
                         new XElement("Created", "2000-01-01T00:00:00.0000000Z"),
                         new XElement("ExportSetting", "None"),
@@ -345,19 +353,19 @@ namespace TiaMcpServer.ModelContextProtocol
                         new XAttribute("ID", "0"),
                         new XElement("AttributeList",
                             new XElement("Interface",
-                                new XElement(InterfaceNs + "Sections",
-                                    BuildSection("Input", inputs),
-                                    BuildSection("Output", outputs),
-                                    BuildSection("InOut", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Temp", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Constant", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Return", new[] { new PlcBlockMemberDefinition("Ret_Val", "Void") }))),
+                                new XElement(format.InterfaceNamespace + "Sections",
+                                    Section("Input", inputs),
+                                    Section("Output", outputs),
+                                    Section("InOut", Array.Empty<PlcBlockMemberDefinition>()),
+                                    Section("Temp", Array.Empty<PlcBlockMemberDefinition>()),
+                                    Section("Constant", Array.Empty<PlcBlockMemberDefinition>()),
+                                    Section("Return", new[] { new PlcBlockMemberDefinition("Ret_Val", "Void") }))),
                             new XElement("MemoryLayout", "Optimized"),
                             new XElement("Name", blockName),
-                            new XElement("Namespace"),
+                            format.HasObjectNamespace ? new XElement("Namespace") : null,
                             new XElement("Number", blockNumber),
                             new XElement("ProgrammingLanguage", language),
-                            new XElement("SetENOAutomatically", "false")),
+                            format.ReleaseKey == "21" ? new XElement("SetENOAutomatically", "false") : null),
                         blockObjList)));
         }
 

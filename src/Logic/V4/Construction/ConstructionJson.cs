@@ -39,9 +39,9 @@ namespace TiaMcp.Logic.V4.Construction
         internal static T Deserialize<T>(string json) where T : ConstructionNode
             => Deserialize<T>(json, null);
 
-        internal static T Deserialize<T>(string json, IReadOnlyCollection<string>? localMembers) where T : ConstructionNode
+        internal static T Deserialize<T>(string json, IReadOnlyCollection<string>? localMembers, string outputReleaseKey = "21") where T : ConstructionNode
         {
-            var result = new ConstructionInput<T>(ConstructionProfile.FullEngine, localMembers).Read(json, "spec");
+            var result = new ConstructionInput<T>(ConstructionProfile.FullEngine, localMembers, outputReleaseKey).Read(json, "spec");
             if (result.IsValid) return result.Value!;
             var error = new ArgumentException(result.Error!.Message, nameof(json));
             error.Data["V4Error"] = result.Error;

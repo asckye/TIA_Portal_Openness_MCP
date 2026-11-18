@@ -142,8 +142,11 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        public static JsonObject ComposeLadFcBlock(string json)
+        public static JsonObject ComposeLadFcBlock(string json) => ComposeLadFcBlockForRelease(json, "21");
+
+        internal static JsonObject ComposeLadFcBlockForRelease(string json, string outputReleaseKey)
         {
+            var format = FlgNetFormat.ForRelease(outputReleaseKey);
             var root = ParseObject(json, "$");
             var blockName = ReadString(root, "$.blockName", "blockName", "name");
             var blockNumber = ReadInt(root, "$.blockNumber", "blockNumber", "number");
@@ -175,9 +178,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         throw new ArgumentException("Exactly one call or rung required.");
                     var localMembers = inputs.Concat(outputs).Select(m => m.Name).ToArray();
                     var rung = ConstructionJson.Deserialize<LadRung>(
-                        n["rung"]?.ToJsonString() ?? "null", localMembers);
+                        n["rung"]?.ToJsonString() ?? "null", localMembers, outputReleaseKey);
                     built.Add(new PlcLadFcBlockXmlComposer.LadNetwork(
-                        FlgNetRungXmlBuilder.Build(rung, new FlgNetFormat(), localMembers), netTitle, netComment));
+                        FlgNetRungXmlBuilder.Build(rung, format, localMembers), netTitle, netComment));
                     continue;
                 }
                 var callJson = n["callJson"] as JsonObject ?? n["call"] as JsonObject;
@@ -190,13 +193,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     : parametersArray
                         .Select((x, j) => ReadFlgNetParameter(AsObject(x, "$.networks[" + i + "].callJson.parameters[" + j + "]"), j))
                         .ToArray();
-                var flgNet = FlgNetCallXmlBuilder.BuildFlgNet(callName, parameters);
+                var flgNet = FlgNetCallXmlBuilder.BuildFlgNet(callName, parameters, format.Namespace);
                 built.Add(new PlcLadFcBlockXmlComposer.LadNetwork(flgNet, netTitle, netComment));
             }
 
             var xml = hasRungs ? ConstructionAdapter.Entitize(
-                PlcLadFcBlockXmlComposer.Compose(blockName, blockNumber, inputs, outputs, built, blockComment, blockTitle))
-                : PlcLadFcBlockXmlComposer.ComposeXml(blockName, blockNumber, inputs, outputs, built, blockComment, blockTitle);
+                PlcLadFcBlockXmlComposer.Compose(blockName, blockNumber, inputs, outputs, built, blockComment, blockTitle, outputReleaseKey))
+                : PlcLadFcBlockXmlComposer.ComposeXml(blockName, blockNumber, inputs, outputs, built, blockComment, blockTitle, outputReleaseKey);
             if (hasRungs) ConstructionAdapter.VerifyOutput(xml, false);
             var result = BuildResult("plc-compose-lad-fc-block-xml", xml, new JsonObject
             {

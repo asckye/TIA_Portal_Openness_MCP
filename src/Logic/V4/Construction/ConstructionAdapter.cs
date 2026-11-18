@@ -44,17 +44,31 @@ namespace TiaMcp.Logic.V4.Construction
         public static CandidateXml BuildCandidate(ConstructionSpec spec, string outputReleaseKey,
             ConstructionProfile profile, bool innerOnly = false)
         {
+            if (spec is LadFcBlockSpec)
+                ConstructionJson.Require(outputReleaseKey == "21", "Explicit outputReleaseKey 21 required by this builder.");
+            return BuildCandidateCore(spec, outputReleaseKey, profile, innerOnly);
+        }
+
+        // Earlier LAD formats are exercised offline until per-release native acceptance opens the public selector.
+        internal static CandidateXml BuildLadCandidateForRelease(LadFcBlockSpec spec, string outputReleaseKey, ConstructionProfile profile)
+            => BuildCandidateCore(spec, outputReleaseKey, profile, false);
+
+        private static CandidateXml BuildCandidateCore(ConstructionSpec spec, string outputReleaseKey,
+            ConstructionProfile profile, bool innerOnly)
+        {
             ConstructionJson.Require(spec != null, "Construction spec is required.");
             V4Validation.Defined(profile);
             // Both the DTO boundary and programmatic adaptation retain the budgets.
             var json = ToBuilderJson(spec!);
-            if (spec is UdtSpec || spec is GlobalDbSpec) PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
+            if (spec is UdtSpec || spec is GlobalDbSpec || spec is LadFcBlockSpec) PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
             else ConstructionJson.Require(outputReleaseKey == "21", "Explicit outputReleaseKey 21 required by this builder.");
             ConstructionJson.Require(!innerOnly || spec is StructuredTextSpec, "innerOnly applies only to StructuredText.");
             foreach (var call in Calls(spec!))
                 ConstructionJson.Require(call.Parameters.All(p => p.EffectiveSource != CallSourceKind.Local),
                     "The current FlgNet builder has no local source implementation.");
             if (profile == ConstructionProfile.Foundation) FoundationConstructionValidation.Validate(spec!);
+            if (spec is LadFcBlockSpec && outputReleaseKey == "14sp1")
+                FoundationConstructionValidation.Rungs(spec, outputReleaseKey: outputReleaseKey);
 
             string xml;
             if (profile == ConstructionProfile.Foundation && spec is SclBlockSpec block)
@@ -74,10 +88,11 @@ namespace TiaMcp.Logic.V4.Construction
             else if (profile == ConstructionProfile.Foundation && spec is LadFcBlockSpec lad)
                 xml = Entitize(PlcLadFcBlockXmlComposer.Compose(lad.BlockName, lad.BlockNumber, Members(lad.Inputs), Members(lad.Outputs),
                     lad.Networks.Select(n => new PlcLadFcBlockXmlComposer.LadNetwork(
-                        n.Rung != null ? FlgNetRungXmlBuilder.Build(n.Rung, new FlgNetFormat(),
+                        n.Rung != null ? FlgNetRungXmlBuilder.Build(n.Rung, FlgNetFormat.ForRelease(outputReleaseKey),
                             (lad.Inputs ?? Array.Empty<Member>()).Concat(lad.Outputs ?? Array.Empty<Member>()).Select(m => m.Name).ToArray())
-                            : FlgNetCallXmlBuilder.BuildFlgNet(n.Call!.CallName, Parameters(n.Call)), n.TitleZhCn ?? "", n.CommentZhCn ?? "")),
-                    lad.CommentZhCn ?? "", lad.TitleZhCn ?? ""));
+                            : FlgNetCallXmlBuilder.BuildFlgNet(n.Call!.CallName, Parameters(n.Call),
+                                FlgNetFormat.ForRelease(outputReleaseKey).Namespace), n.TitleZhCn ?? "", n.CommentZhCn ?? "")),
+                    lad.CommentZhCn ?? "", lad.TitleZhCn ?? "", outputReleaseKey));
             else
             {
                 var result = spec switch
@@ -89,7 +104,7 @@ namespace TiaMcp.Logic.V4.Construction
                     FlgNetCallSpec _ => PlcBuilderToolJson.BuildFlgNetCall(json),
                     FcBlockSpec _ => PlcBuilderToolJson.ComposeFcBlock(json),
                     FbBlockSpec _ => PlcBuilderToolJson.ComposeFbBlock(json),
-                    LadFcBlockSpec _ => PlcBuilderToolJson.ComposeLadFcBlock(json),
+                    LadFcBlockSpec _ => PlcBuilderToolJson.ComposeLadFcBlockForRelease(json, outputReleaseKey),
                     _ => throw new ArgumentException("Unsupported construction type.")
                 };
                 ConstructionJson.Require(result["ok"]!.GetValue<bool>(), "The builder did not produce well-formed XML.");

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V16" />
+  <DocumentInfo>
+    <Created>2000-01-01T00:00:00.0000000Z</Created>
+    <ExportSetting>None</ExportSetting>
+    <InstalledProducts />
+  </DocumentInfo>
+  <SW.Blocks.FC ID="0">
+    <AttributeList>
+      <Interface>
+        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v4">
+          <Section Name="Input">
+            <Member Name="Local" Datatype="Int" />
+          </Section>
+          <Section Name="Output" />
+          <Section Name="InOut" />
+          <Section Name="Temp" />
+          <Section Name="Constant" />
+          <Section Name="Return">
+            <Member Name="Ret_Val" Datatype="Void" />
+          </Section>
+        </Sections>
+      </Interface>
+      <MemoryLayout>Optimized</MemoryLayout>
+      <Name>FC_Rung</Name>
+      <Number>42</Number>
+      <ProgrammingLanguage>LAD</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>zh-CN</Culture>
+              <Text></Text>
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <SW.Blocks.CompileUnit ID="3" CompositionName="CompileUnits">
+        <AttributeList>
+          <NetworkSource>
+            <FlgNet xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v4">
+              <Parts>
+                <Access Scope="GlobalVariable" UId="21">
+                  <Symbol>
+                    <Component Name="Enable" />
+                  </Symbol>
+                </Access>
+                <Access Scope="GlobalVariable" UId="22">
+                  <Symbol>
+                    <Component Name="CommandValue" />
+                  </Symbol>
+                </Access>
+                <Access Scope="GlobalVariable" UId="23">
+                  <Symbol>
+                    <Component Name="ResultValue" />
+                  </Symbol>
+                </Access>
+                <Access Scope="GlobalVariable" UId="24">
+                  <Symbol>
+                    <Component Name="StateValue" />
+                  </Symbol>
+                </Access>
+                <Access Scope="GlobalVariable" UId="25">
+                  <Symbol>
+                    <Component Name="Ready" />
+                  </Symbol>
+                </Access>
+                <Part Name="Contact" UId="26" />
+                <Call UId="27">
+                  <CallInfo Name="FB_User" BlockType="FB">
+                    <Instance Scope="GlobalVariable" UId="28">
+                      <Component Name="DB_User" />
+                    </Instance>
+                    <Parameter Name="Command" Section="Input" Type="Int" />
+                    <Parameter Name="Result" Section="Output" Type="Int" />
+                    <Parameter Name="State" Section="InOut" Type="Int" />
+                  </CallInfo>
+                </Call>
+                <Part Name="Coil" UId="29" />
+              </Parts>
+              <Wires>
+                <Wire UId="30">
+                  <Powerrail />
+                  <NameCon UId="26" Name="in" />
+                </Wire>
+                <Wire UId="31">
+                  <IdentCon UId="21" />
+                  <NameCon UId="26" Name="operand" />
+                </Wire>
+                <Wire UId="32">
+                  <NameCon UId="26" Name="out" />
+                  <NameCon UId="27" Name="en" />
+                </Wire>
+                <Wire UId="33">
+                  <IdentCon UId="22" />
+                  <NameCon UId="27" Name="Command" />
+                </Wire>
+                <Wire UId="34">
+                  <IdentCon UId="24" />
+                  <NameCon UId="27" Name="State" />
+                </Wire>
+                <Wire UId="35">
+                  <NameCon UId="27" Name="Result" />
+                  <IdentCon UId="23" />
+                </Wire>
+                <Wire UId="36">
+                  <NameCon UId="27" Name="eno" />
+                  <NameCon UId="29" Name="in" />
+                </Wire>
+                <Wire UId="37">
+                  <IdentCon UId="25" />
+                  <NameCon UId="29" Name="operand" />
+                </Wire>
+              </Wires>
+            </FlgNet>
+          </NetworkSource>
+          <ProgrammingLanguage>LAD</ProgrammingLanguage>
+        </AttributeList>
+        <ObjectList>
+          <MultilingualText ID="4" CompositionName="Comment">
+            <ObjectList>
+              <MultilingualTextItem ID="5" CompositionName="Items">
+                <AttributeList>
+                  <Culture>zh-CN</Culture>
+                  <Text></Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+          <MultilingualText ID="6" CompositionName="Title">
+            <ObjectList>
+              <MultilingualTextItem ID="7" CompositionName="Items">
+                <AttributeList>
+                  <Culture>zh-CN</Culture>
+                  <Text></Text>
+                </AttributeList>
+              </MultilingualTextItem>
+            </ObjectList>
+          </MultilingualText>
+        </ObjectList>
+      </SW.Blocks.CompileUnit>
+      <MultilingualText ID="8" CompositionName="Title">
+        <ObjectList>
+          <MultilingualTextItem ID="9" CompositionName="Items">
+            <AttributeList>
+              <Culture>zh-CN</Culture>
+              <Text></Text>
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+    </ObjectList>
+  </SW.Blocks.FC>
+</Document>

@@ -8,7 +8,7 @@ using System.Xml.Linq;
 namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
-    /// LAD FC 块 XML 组合器：把一个或多个 FlgNet/v5 网络包成完整的 LAD FC 块。
+    /// LAD FC 块 XML 组合器：把一个或多个按目标版本生成的 FlgNet 网络包成完整的 LAD FC 块。
     /// 与 SCL FC 不同，编程语言是 LAD，CompileUnit 的 NetworkSource 内含 FlgNet（非 StructuredText）。
     /// </summary>
     public static class PlcLadFcBlockXmlComposer
@@ -35,7 +35,8 @@ namespace TiaMcpServer.ModelContextProtocol
             IEnumerable<PlcBlockMemberDefinition> outputMembers,
             IEnumerable<LadNetwork> networks,
             string blockCommentZhCn = "",
-            string blockTitleZhCn = "")
+            string blockTitleZhCn = "",
+            string outputReleaseKey = "21")
         {
             if (string.IsNullOrWhiteSpace(blockName))
                 throw new ArgumentException("LAD FC block name must not be empty.", nameof(blockName));
@@ -82,7 +83,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
             blockObjList.Add(PlcBlockXmlHelpers.BuildMultilingualText(NextId(), NextId(), "Title", blockTitleZhCn));
 
-            return PlcBlockXmlHelpers.BuildFcDocument(blockName, blockNumber, inputs, outputs, "LAD", blockObjList);
+            return PlcBlockXmlHelpers.BuildFcDocument(blockName, blockNumber, inputs, outputs, "LAD", blockObjList,
+                PlcDeclarationXmlFormat.ForRelease(outputReleaseKey));
         }
 
         public static string ComposeXml(
@@ -92,10 +94,12 @@ namespace TiaMcpServer.ModelContextProtocol
             IEnumerable<PlcBlockMemberDefinition> outputMembers,
             IEnumerable<LadNetwork> networks,
             string blockCommentZhCn = "",
-            string blockTitleZhCn = "")
+            string blockTitleZhCn = "",
+            string outputReleaseKey = "21")
         {
             using var writer = new Utf8StringWriter();
-            Compose(blockName, blockNumber, inputMembers, outputMembers, networks, blockCommentZhCn, blockTitleZhCn).Save(writer, SaveOptions.None);
+            Compose(blockName, blockNumber, inputMembers, outputMembers, networks, blockCommentZhCn, blockTitleZhCn, outputReleaseKey)
+                .Save(writer, SaveOptions.None);
             return writer.ToString();
         }
 

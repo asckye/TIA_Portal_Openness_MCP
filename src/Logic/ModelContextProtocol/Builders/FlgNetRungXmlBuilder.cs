@@ -9,7 +9,23 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal sealed class FlgNetFormat
     {
-        internal XNamespace Namespace { get; } = "http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5";
+        internal PlcDeclarationXmlFormat Declaration { get; }
+        internal XNamespace Namespace { get; }
+        internal string SchemaFile { get; }
+        internal bool ArrayIndex => Declaration.ReleaseKey != "14sp1";
+
+        internal FlgNetFormat() : this("21") { }
+
+        private FlgNetFormat(string releaseKey)
+        {
+            Declaration = PlcDeclarationXmlFormat.ForRelease(releaseKey);
+            int version = releaseKey == "14sp1" ? 1 : releaseKey == "15.1" ? 3
+                : releaseKey == "16" || releaseKey == "17" || releaseKey == "18" ? 4 : 5;
+            Namespace = "http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v" + version;
+            SchemaFile = "SW.PlcBlocks.LADFBD" + (version == 1 ? "" : "_v" + version) + ".xsd";
+        }
+
+        internal static FlgNetFormat ForRelease(string releaseKey) => new FlgNetFormat(releaseKey);
     }
 
     // The typed boundary owns shape, local-member and part-budget validation. Nets

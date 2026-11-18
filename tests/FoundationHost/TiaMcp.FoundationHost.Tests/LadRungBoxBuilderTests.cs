@@ -100,6 +100,19 @@ public sealed class LadRungBoxBuilderTests
             output["instance"] = new JsonObject { ["local"] = new JsonArray("SECRET_CANARY") };
             yield return Invalid(output, "/instance");
         }
+        foreach (string value in new[] { "LT#1s", "LT#500ms" })
+        {
+            var timer = Timer(); timer["pt"] = new JsonObject { ["typed"] = value };
+            yield return Invalid(timer, "/pt");
+        }
+        var longTimer = Timer(); longTimer["pt"] = new JsonObject { ["typed"] = "LTIME#1s" };
+        yield return Invalid(longTimer, "/pt/typed");
+        foreach (var value in new[] { Literal(), new JsonObject { ["constant"] = "SECRET_CANARY" },
+            new JsonObject { ["typed"] = "T#1s" } })
+        {
+            var call = Call(); call["pins"]![2]!["value"] = value;
+            yield return Invalid(call, "/pins/2/value");
+        }
         var item = Timer(); item["et"] = Literal(); yield return Invalid(item, "/et");
         item = Timer(); item["q"] = new JsonArray(); yield return Invalid(item, "/q");
         item = Timer(); item["then"] = new JsonArray(Coil()); yield return Invalid(item, "");
