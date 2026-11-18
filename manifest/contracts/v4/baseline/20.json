@@ -16621,6 +16621,44 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
+      "descriptionSha256": "a2d582cc14575aaae44f6004407635be57b4022519bff24c6ddab18943df5bb6",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "exportDirectory": {
+            "default": "",
+            "description": "Absolute output directory. Empty uses <OutputRoot>/<session>; targets outside the output root need approval.",
+            "type": "string"
+          },
+          "format": {
+            "default": "fat",
+            "description": "Report format: junit | fat | sat | repro.",
+            "enum": [
+              "junit",
+              "fat",
+              "sat",
+              "repro"
+            ],
+            "type": "string"
+          },
+          "runId": {
+            "default": "latest",
+            "description": "Exact stored run id, or latest for the newest valid run.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "ExportPlcTestReport",
+      "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
       "descriptionSha256": "54357a1aec3b880fdad795b3bcfb876dc73ca14a9f60c13ad9ed9f6e9572d7bd",
       "inputSchema": {
         "additionalProperties": false,
@@ -36907,6 +36945,52 @@
         "type": "object"
       },
       "name": "RunPlcSimAdvancedTestScenario",
+      "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
+    },
+    {
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false
+      },
+      "descriptionSha256": "315c99dec8b6410e6087dde1961cb8c148485c7bf27fbc179f61e64c026aa5ff",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "dryRun": {
+            "default": true,
+            "description": "true validates and previews without worker calls; false executes the approved batch.",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Required for execution, including PLCSIM-only runs; use planHash from the matching preview.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Absolute bound project file required when a runnable Test Suite entry is selected.",
+            "type": "string"
+          },
+          "ids": {
+            "description": "Optional exact case ids, at most 100; case-insensitive. Combined with the tags filter.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tags": {
+            "description": "Optional tags, at most 32 of 1..64 characters; any case-insensitive match. Combined with ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "name": "RunPlcTestLibrary",
       "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
     },
     {
