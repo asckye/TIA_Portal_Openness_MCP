@@ -36771,7 +36771,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "15f697aae1be2a8400fdc7be95cb92d9317705d2b5abb7c36b5cddbb46f486c4",
+      "descriptionSha256": "f09d248e58d72747764a666cf55d83867a6244f18e61bd436ebbe25a6949d49b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -36782,6 +36782,11 @@
               "import"
             ],
             "type": "string"
+          },
+          "allowRemoveScreenItems": {
+            "default": false,
+            "description": "Permit import to replace existing or unreadable screen items. Import only.",
+            "type": "boolean"
           },
           "dryRun": {
             "default": true,

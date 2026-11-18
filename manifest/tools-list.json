@@ -1,21 +1,21 @@
 {
-  "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
+  "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-18T15:30:19.7881178+00:00",
+  "generatedAt": "2026-11-18T20:56:23.6450754+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
-  "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
-  "workerSha256": "055c7486244e3dce880aae130f762d10ca85729a484ef2c35de09800caa3a74d",
+  "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
+  "workerSha256": "ca08556596c5847d78751aaa74836f12ca177fbd8412f43382ceb86c6e5aad41",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2914,
+    "parameters": 2915,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 690,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 173,
     "enumHints": 271,
-    "defaultHints": 1676,
+    "defaultHints": 1677,
     "examplesCurated": 524,
     "recipes": 54
   },
@@ -4732,9 +4732,10 @@
         "screenName",
         "action",
         "filePath",
-        "dryRun"
+        "dryRun",
+        "allowRemoveScreenItems"
       ],
-      "description": "[L2][HMI][WRITE] SiVArc layout fields of one screen (classic WinCC Screen or Unified HmiScreen) through the V21 LayoutData screen service: action export writes the YML file (must not exist; verified by size and SHA-256), import applies a YML file and returns state / numberOfLayouts. screenName is an exact name or an absolute /Group/Screen path. Import defaults to preview; NotSupported on V20 or without the SiVArc option; never saves. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcScreenLayout\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][WRITE] Preview or apply a SiVArc layout export or import on a classic WinCC or Unified screen. Both actions preview by default. Export writes a new YML file on apply and verifies size and SHA-256. Import replaces the screen content with the file's layouts. Preview lists current items at risk. Apply requires allowRemoveScreenItems when items exist or cannot be read, and reports removed and added items when readable. screenName accepts an exact name or /Group/Screen path. Requires V21 and the SiVArc option. No project save. Native acceptance pending. Examples: GetToolUsage(toolName: \"ManageSivarcScreenLayout\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"action\":\"export\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Overview.yml\",\"dryRun\":true}"
     },
     {
