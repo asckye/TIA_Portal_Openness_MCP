@@ -41,13 +41,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 [Description("Optional new absolute .html/.pdf report path; empty returns JSON only.")] string reportPath = "")
             => OfflineToolExecution.RunOfflineAnalysisTool("AuditEngineeringExports", meta =>
             {
-                FileInfo? output;
-                try { output = string.IsNullOrEmpty(reportPath) ? null : NativeFileOutput.Plan(reportPath, nameof(reportPath)); }
-                catch (Exception ex) when (ex is ArgumentException || ex is IOException)
-                {
-                    throw new AdapterPreconditionException("Supply a new absolute reportPath in an existing directory; existing outputs cannot be overwritten.",
-                            "reportPath");
-                }
+                var output = string.IsNullOrEmpty(reportPath) ? null : OfflineToolExecution.PlanOutput(reportPath, nameof(reportPath),
+                    "Supply a new absolute reportPath in an existing directory; existing outputs cannot be overwritten.");
                 bool pdf = reportPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
                 if (output != null && !pdf && !reportPath.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
                     throw new AdapterPreconditionException("Set reportPath to a new .html or .pdf file.", "reportPath");

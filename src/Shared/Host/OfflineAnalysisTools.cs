@@ -110,7 +110,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 OfflineAnalysisLogic.ValidatePage(offset, limit);
                 var markers = OfflineAnalysisLogic.ParseMarkers(markersJson);
                 var extensions = OfflineAnalysisLogic.ParseExtensions(extensionsJson);
-                var csv = string.IsNullOrWhiteSpace(csvPath) ? null : NativeFileOutput.Plan(csvPath, nameof(csvPath));
+                var csv = string.IsNullOrWhiteSpace(csvPath) ? null : OfflineToolExecution.PlanOutput(csvPath, nameof(csvPath));
                 var files = OfflineAnalysisLogic.EnumerateDocuments(directory, recursive, extensions);
                 var rows = new System.Collections.Generic.List<OfflineAnalysisLogic.AnnotationRow>();
                 var failures = new JsonArray();

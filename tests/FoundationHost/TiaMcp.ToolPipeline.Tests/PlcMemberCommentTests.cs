@@ -34,6 +34,13 @@ public sealed class PlcMemberCommentTests
             Assert.Equal("转速", (string?)patch.StructuredContent!["data"]!["evidence"]!["result"]!["members"]![0]!["comments"]!["zh-CN"]);
             Assert.Equal(xml, File.ReadAllText(file));
             Assert.Single(Directory.GetFiles(directory));
+            string missing = Path.Combine(directory, "missing");
+            var refused = new PlcOfflineTools().PatchPlcBlockDocumentV4(file, edits, (string)inspection["documentFingerprint"]!,
+                Path.Combine(missing, "Motor.xml"), dryRun: false).StructuredContent!;
+            Assert.Equal("INVALID_ARGUMENT", (string?)refused["error"]?["code"]);
+            Assert.Equal("/outputPath", (string?)refused["error"]?["details"]?["parameter"]);
+            Assert.Equal("not-started", (string?)refused["meta"]?["execution"]);
+            Assert.False(Directory.Exists(missing));
             string output = Path.Combine(directory, "Motor.edited.xml");
             var written = new PlcOfflineTools().PatchPlcBlockDocumentV4(file, edits, (string)inspection["documentFingerprint"]!, output, dryRun: false);
             Assert.False(written.IsError, written.StructuredContent?.ToJsonString());

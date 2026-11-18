@@ -3,12 +3,23 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
 using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
     internal static class OfflineToolExecution
     {
+        internal static FileInfo PlanOutput(string path, string parameter, string? invalidPathMessage = null)
+        {
+            try { return NativeFileOutput.Plan(path, parameter); }
+            catch (Exception error) when (error is AdapterPreconditionException { Condition: "output-parent-missing" }
+                || invalidPathMessage != null && error is (ArgumentException or IOException))
+            {
+                throw new AdapterPreconditionException(invalidPathMessage ?? $"Supply a new absolute {parameter} in an existing directory.", parameter);
+            }
+        }
+
         internal static string ResolveCompareSide(string side, string filePath, string blockPath, string softwarePath, JsonObject meta, out string? tempDir)
         {
             tempDir = null;

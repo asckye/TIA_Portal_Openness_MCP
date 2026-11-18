@@ -123,7 +123,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("BuildDeviceAmlDocument", meta =>
             {
                 meta["mayHaveWrittenFiles"] = false;
-                var output = NativeFileOutput.Plan(outputPath, nameof(outputPath));
+                var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath));
                 if (!output.Extension.Equals(".aml", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("outputPath must end with .aml.");
                 var spec = HardwareAmlLogic.ParseSpec(specJson);
                 var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "";
