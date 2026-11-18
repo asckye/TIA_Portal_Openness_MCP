@@ -12393,14 +12393,198 @@
         },
         "parameters": {
           "ladFcBlock": {
-            "meaning": "Typed ladFcBlock value with exact camelCase fields; see inputSchema."
+            "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; literal values must be non-blank."
           },
           "outputReleaseKey": {
             "exampleValue": "21",
             "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
           }
         },
-        "operations": {},
+        "operations": {
+          "rung": {
+            "arguments": {
+              "outputReleaseKey": "21",
+              "ladFcBlock": {
+                "blockName": "FC_LadDemo",
+                "blockNumber": 42,
+                "networks": [
+                  {
+                    "rung": {
+                      "series": [
+                        {
+                          "kind": "no",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Start"
+                            ]
+                          }
+                        },
+                        {
+                          "kind": "nc",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Stop"
+                            ]
+                          }
+                        },
+                        {
+                          "kind": "or",
+                          "paths": [
+                            [
+                              {
+                                "kind": "no",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Auto"
+                                  ]
+                                }
+                              }
+                            ],
+                            [
+                              {
+                                "kind": "no",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Manual"
+                                  ]
+                                }
+                              }
+                            ]
+                          ]
+                        },
+                        {
+                          "kind": "compare",
+                          "op": "gt",
+                          "type": "Int",
+                          "left": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Count"
+                            ]
+                          },
+                          "right": {
+                            "literal": {
+                              "type": "Int",
+                              "value": "0"
+                            }
+                          }
+                        },
+                        {
+                          "kind": "compare",
+                          "op": "lt",
+                          "type": "Time",
+                          "left": {
+                            "global": [
+                              "DB_LadDemo",
+                              "ElapsedTime"
+                            ]
+                          },
+                          "right": {
+                            "typed": "T#1s"
+                          }
+                        }
+                      ],
+                      "outputs": [
+                        {
+                          "kind": "set",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Active"
+                            ]
+                          }
+                        },
+                        {
+                          "kind": "move",
+                          "in": {
+                            "constant": "LAD_LIMIT"
+                          },
+                          "out": [
+                            {
+                              "global": [
+                                "DB_LadDemo",
+                                {
+                                  "name": "Values",
+                                  "index": [
+                                    1
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "then": [
+                            {
+                              "kind": "move",
+                              "in": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  {
+                                    "name": "Values",
+                                    "index": [
+                                      1
+                                    ]
+                                  }
+                                ]
+                              },
+                              "out": [
+                                {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "LastValue"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "fanOut": [
+                        {
+                          "series": [
+                            {
+                              "kind": "rising",
+                              "operand": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "Reset"
+                                ]
+                              },
+                              "memory": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "EdgeMem"
+                                ]
+                              }
+                            }
+                          ],
+                          "outputs": [
+                            {
+                              "kind": "reset",
+                              "operand": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "Active"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "titleZhCn": "条件与分支",
+                    "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                  }
+                ]
+              }
+            },
+            "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
+            "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. Timer, counter and rung CALL forms are not part of A3a. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+          }
+        },
         "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
         "executionTest": "offline-in-memory",
         "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
@@ -37419,14 +37603,197 @@
         },
         "parameters": {
           "ladFcBlock": {
-            "meaning": "Typed ladFcBlock value with exact camelCase fields; see inputSchema."
+            "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; literal values must be non-blank."
           },
           "outputReleaseKey": {
             "exampleValue": "21",
             "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
           }
         },
-        "operations": {},
+        "operations": {
+          "rung": {
+            "arguments": {
+              "ladFcBlock": {
+                "blockName": "FC_LadDemo",
+                "blockNumber": 42,
+                "networks": [
+                  {
+                    "rung": {
+                      "series": [
+                        {
+                          "kind": "no",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Start"
+                            ]
+                          }
+                        },
+                        {
+                          "kind": "nc",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Stop"
+                            ]
+                          }
+                        },
+                        {
+                          "kind": "or",
+                          "paths": [
+                            [
+                              {
+                                "kind": "no",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Auto"
+                                  ]
+                                }
+                              }
+                            ],
+                            [
+                              {
+                                "kind": "no",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Manual"
+                                  ]
+                                }
+                              }
+                            ]
+                          ]
+                        },
+                        {
+                          "kind": "compare",
+                          "op": "gt",
+                          "type": "Int",
+                          "left": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Count"
+                            ]
+                          },
+                          "right": {
+                            "literal": {
+                              "type": "Int",
+                              "value": "0"
+                            }
+                          }
+                        },
+                        {
+                          "kind": "compare",
+                          "op": "lt",
+                          "type": "Time",
+                          "left": {
+                            "global": [
+                              "DB_LadDemo",
+                              "ElapsedTime"
+                            ]
+                          },
+                          "right": {
+                            "typed": "T#1s"
+                          }
+                        }
+                      ],
+                      "outputs": [
+                        {
+                          "kind": "set",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Active"
+                            ]
+                          }
+                        },
+                        {
+                          "kind": "move",
+                          "in": {
+                            "constant": "LAD_LIMIT"
+                          },
+                          "out": [
+                            {
+                              "global": [
+                                "DB_LadDemo",
+                                {
+                                  "name": "Values",
+                                  "index": [
+                                    1
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "then": [
+                            {
+                              "kind": "move",
+                              "in": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  {
+                                    "name": "Values",
+                                    "index": [
+                                      1
+                                    ]
+                                  }
+                                ]
+                              },
+                              "out": [
+                                {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "LastValue"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "fanOut": [
+                        {
+                          "series": [
+                            {
+                              "kind": "rising",
+                              "operand": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "Reset"
+                                ]
+                              },
+                              "memory": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "EdgeMem"
+                                ]
+                              }
+                            }
+                          ],
+                          "outputs": [
+                            {
+                              "kind": "reset",
+                              "operand": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "Active"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "titleZhCn": "条件与分支",
+                    "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                  }
+                ]
+              }
+            },
+            "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
+            "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. Timer, counter and rung CALL forms are not part of A3a. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+          }
+        },
         "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
         "executionTest": "offline-in-memory",
         "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -97,14 +98,119 @@ namespace TiaMcp.Logic.V4.Construction
     [JsonConverter(typeof(ConstructionJsonConverter))]
     public sealed class LadNetwork : ConstructionNode
     {
-        public FlgNetCallSpec Call { get; }
+        public FlgNetCallSpec? Call { get; }
+        public LadRung? Rung { get; }
         public string? TitleZhCn { get; }
         public string? CommentZhCn { get; }
         internal LadNetwork(JsonElement json) : base(json)
         {
-            Call = new FlgNetCallSpec(json.GetProperty("call"));
+            Call = json.TryGetProperty("call", out var call) ? new FlgNetCallSpec(call) : null;
+            Rung = json.TryGetProperty("rung", out var rung) ? new LadRung(rung) : null;
             TitleZhCn = json.TryGetProperty("titleZhCn", out var titleZhCn) ? titleZhCn.GetString() : null;
             CommentZhCn = json.TryGetProperty("commentZhCn", out var commentZhCn) ? commentZhCn.GetString() : null;
+        }
+    }
+
+    [JsonConverter(typeof(ConstructionJsonConverter))]
+    public sealed class LadComponent : ConstructionNode
+    {
+        public string Name { get; }
+        public IReadOnlyList<int>? Index { get; }
+        internal LadComponent(JsonElement json) : base(json)
+        {
+            Name = json.ValueKind == JsonValueKind.String ? json.GetString()! : json.GetProperty("name").GetString()!;
+            Index = json.ValueKind == JsonValueKind.Object ? ConstructionJson.Rows(json, "index", x => x.GetInt32()) : null;
+        }
+    }
+
+    [JsonConverter(typeof(ConstructionJsonConverter))]
+    public sealed class LadOperand : ConstructionNode
+    {
+        public string Kind { get; }
+        public IReadOnlyList<LadComponent>? Components { get; }
+        public string? DataType { get; }
+        public string? Value { get; }
+        internal LadOperand(JsonElement json) : base(json)
+        {
+            Kind = json.EnumerateObject().First().Name;
+            var value = json.GetProperty(Kind);
+            if (Kind == "global" || Kind == "local")
+                Components = Array.AsReadOnly(value.EnumerateArray().Select(x => new LadComponent(x)).ToArray());
+            else if (Kind == "literal")
+            {
+                DataType = value.GetProperty("type").GetString()!;
+                Value = value.GetProperty("value").GetString()!;
+            }
+            else Value = value.GetString()!;
+        }
+    }
+
+    [JsonConverter(typeof(ConstructionJsonConverter))]
+    public sealed class LadCondition : ConstructionNode
+    {
+        public string Kind { get; }
+        public LadOperand? Operand { get; }
+        public LadOperand? Memory { get; }
+        public string? Op { get; }
+        public string? DataType { get; }
+        public LadOperand? Left { get; }
+        public LadOperand? Right { get; }
+        public IReadOnlyList<IReadOnlyList<LadCondition>>? Paths { get; }
+        internal LadCondition(JsonElement json) : base(json)
+        {
+            Kind = json.GetProperty("kind").GetString()!;
+            Operand = json.TryGetProperty("operand", out var operand) ? new LadOperand(operand) : null;
+            Memory = json.TryGetProperty("memory", out var memory) ? new LadOperand(memory) : null;
+            Op = json.TryGetProperty("op", out var op) ? op.GetString() : null;
+            DataType = json.TryGetProperty("type", out var type) ? type.GetString() : null;
+            Left = json.TryGetProperty("left", out var left) ? new LadOperand(left) : null;
+            Right = json.TryGetProperty("right", out var right) ? new LadOperand(right) : null;
+            Paths = ConstructionJson.Rows<IReadOnlyList<LadCondition>>(json, "paths",
+                path => Array.AsReadOnly(path.EnumerateArray().Select(x => new LadCondition(x)).ToArray()));
+        }
+    }
+
+    [JsonConverter(typeof(ConstructionJsonConverter))]
+    public sealed class LadOutput : ConstructionNode
+    {
+        public string Kind { get; }
+        public LadOperand? Operand { get; }
+        public LadOperand? In { get; }
+        public IReadOnlyList<LadOperand>? Out { get; }
+        public IReadOnlyList<LadOutput>? Then { get; }
+        internal LadOutput(JsonElement json) : base(json)
+        {
+            Kind = json.GetProperty("kind").GetString()!;
+            Operand = json.TryGetProperty("operand", out var operand) ? new LadOperand(operand) : null;
+            In = json.TryGetProperty("in", out var input) ? new LadOperand(input) : null;
+            Out = ConstructionJson.Rows(json, "out", x => new LadOperand(x));
+            Then = ConstructionJson.Rows(json, "then", x => new LadOutput(x));
+        }
+    }
+
+    [JsonConverter(typeof(ConstructionJsonConverter))]
+    public sealed class LadBranch : ConstructionNode
+    {
+        public IReadOnlyList<LadCondition> Series { get; }
+        public IReadOnlyList<LadOutput> Outputs { get; }
+        internal LadBranch(JsonElement json) : base(json)
+        {
+            Series = ConstructionJson.Rows(json, "series", x => new LadCondition(x))!;
+            Outputs = ConstructionJson.Rows(json, "outputs", x => new LadOutput(x))!;
+        }
+    }
+
+    [JsonConverter(typeof(ConstructionJsonConverter))]
+    public sealed class LadRung : ConstructionNode
+    {
+        public IReadOnlyList<LadCondition> Series { get; }
+        public IReadOnlyList<LadOutput> Outputs { get; }
+        public IReadOnlyList<LadBranch>? FanOut { get; }
+        internal LadRung(JsonElement json) : base(json)
+        {
+            Series = ConstructionJson.Rows(json, "series", x => new LadCondition(x))!;
+            Outputs = ConstructionJson.Rows(json, "outputs", x => new LadOutput(x))!;
+            FanOut = ConstructionJson.Rows(json, "fanOut", x => new LadBranch(x));
         }
     }
 

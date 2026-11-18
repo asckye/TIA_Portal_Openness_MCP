@@ -15,6 +15,9 @@ manifest/** -text whitespace=cr-at-eol
 # Renderer goldens are compared byte for byte; keep their LF bytes on every checkout.
 tests/FoundationHost/TiaMcp.Engine.Tests/Fixtures/PlcRender/** -text
 
+# LAD candidate goldens compare the existing composer's exact output bytes.
+tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/LadRung/**/*.xml -text
+
 # Release-tool vectors keep their original bytes, including LF review subjects.
 tests/Release/TiaMcp.ReleaseTool.Tests/Vectors/** -text
 

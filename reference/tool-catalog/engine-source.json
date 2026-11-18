@@ -18872,7 +18872,8 @@
           "default": null,
           "description": "flgNet: FlgNetCallSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
         }
-      }
+      },
+      "description": "[L2][PLC-Builders][OFFLINE] Build one V21 FlgNet/v5 FC-call fragment from {callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. For contacts, edges, compares, OR, fan-out, coils and MOVE use BuildPlcLadFcBlock rung networks on V21. For timers, counters and math beyond A3a, and all general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. A bare fragment cannot be imported. Returns candidate XML in memory only; no files, connection or worker. Native acceptance NOT RUN."
     },
     "BuildPlcFcBlock": {
       "method": "ComposePlcFcBlockXmlV4",
@@ -18907,14 +18908,15 @@
       "path": "src/Shared/Host/XmlBuilderTools.cs",
       "owner": "XmlBuilderTools",
       "domain": "PLC-Builders",
-      "signature": "public CallToolResult ComposePlcLadFcBlockXmlV4(\n            [Description(\"ladFcBlock: LadFcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.\")] LadFcBlockSpec ladFcBlock)",
+      "signature": "public CallToolResult ComposePlcLadFcBlockXmlV4(\n            [Description(\"ladFcBlock: LadFcBlockSpec with exactly one call or rung per network. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding.\")] LadFcBlockSpec ladFcBlock)",
       "parameters": {
         "ladFcBlock": {
           "type": "LadFcBlockSpec",
           "default": null,
-          "description": "ladFcBlock: LadFcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
+          "description": "ladFcBlock: LadFcBlockSpec with exactly one call or rung per network. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
         }
-      }
+      },
+      "description": "[L2][PLC-Builders][OFFLINE] Compose a V21 LAD FC candidate from {blockName,blockNumber,inputs?,outputs?,networks:[{call|rung,titleZhCn?,commentZhCn?}]}. Exactly one call or rung per network. Rung supports NO/NC, rising/falling edges with global memory, typed comparisons, OR groups, shared-prefix fan-out, coil/set/reset and MOVE with ENO chaining; global constants and indexed component paths. Local symbols must start with a declared input/output. Limits: 64 networks, 256 parts per rung network, depth 16, strings 4096. No symbol/type resolution; compile is the authority. Returns XML only, no files, connection, import or worker. V21 only; native acceptance NOT RUN. For timers, counters and math beyond A3a or other unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block."
     },
     "ExportPlcTestReport": {
       "method": "ExportPlcTestReport",

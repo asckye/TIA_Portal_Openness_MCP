@@ -112,7 +112,13 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (parameter != null)
         {
             properties.Remove(parameter + "Json");
-            properties[parameter] = JsonNode.Parse(typedSchema!.Value.GetRawText());
+            var valueSchema = JsonNode.Parse(typedSchema!.Value.GetRawText())!.AsObject();
+            if (valueSchema["$defs"] is JsonNode definitions)
+            {
+                valueSchema.Remove("$defs");
+                schema["$defs"] = definitions;
+            }
+            properties[parameter] = valueSchema;
             var required = schema["required"]!.AsArray();
             for (int i = 0; i < required.Count; i++)
                 if (required[i]!.GetValue<string>() == parameter + "Json") required[i] = parameter;

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
+using TiaMcp.Logic.V4.Construction;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -153,6 +155,13 @@ namespace TiaMcpServer.ModelContextProtocol
             var nets = ReadArray(root, "networks", "$.networks");
             if (nets.Count == 0)
                 throw new ArgumentException("A LAD FC requires at least one networks[] element");
+            bool hasRungs = nets.OfType<JsonObject>().Any(n => n.ContainsKey("rung"));
+            if (hasRungs)
+            {
+                using var input = JsonDocument.Parse(json);
+                ConstructionJson.Budget(input.RootElement, new JsonSerializerOptions());
+                ConstructionJson.Limit(nets.Count, ConstructionJson.MaxNetworks);
+            }
 
             var built = new System.Collections.Generic.List<PlcLadFcBlockXmlComposer.LadNetwork>();
             for (var i = 0; i < nets.Count; i++)
@@ -160,7 +169,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 var n = AsObject(nets[i], "$.networks[" + i + "]");
                 var netTitle = ReadOptionalString(n, "titleZhCn", "title");
                 var netComment = ReadOptionalString(n, "commentZhCn", "comment");
-                // 每个 network 是一个 FC 调用：用 FlgNetCallXmlBuilder
+                if (n.ContainsKey("rung"))
+                {
+                    if (n.ContainsKey("call") || n.ContainsKey("callJson"))
+                        throw new ArgumentException("Exactly one call or rung required.");
+                    var localMembers = inputs.Concat(outputs).Select(m => m.Name).ToArray();
+                    var rung = ConstructionJson.Deserialize<LadRung>(
+                        n["rung"]?.ToJsonString() ?? "null", localMembers);
+                    built.Add(new PlcLadFcBlockXmlComposer.LadNetwork(
+                        FlgNetRungXmlBuilder.Build(rung, new FlgNetFormat(), localMembers), netTitle, netComment));
+                    continue;
+                }
                 var callJson = n["callJson"] as JsonObject ?? n["call"] as JsonObject;
                 if (callJson == null)
                     throw new ArgumentException("$.networks[" + i + "] requires a callJson object");
@@ -175,8 +194,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 built.Add(new PlcLadFcBlockXmlComposer.LadNetwork(flgNet, netTitle, netComment));
             }
 
-            var xml = PlcLadFcBlockXmlComposer.ComposeXml(blockName, blockNumber, inputs, outputs, built, blockComment, blockTitle);
-            return BuildResult("plc-compose-lad-fc-block-xml", xml, new JsonObject
+            var xml = hasRungs ? ConstructionAdapter.Entitize(
+                PlcLadFcBlockXmlComposer.Compose(blockName, blockNumber, inputs, outputs, built, blockComment, blockTitle))
+                : PlcLadFcBlockXmlComposer.ComposeXml(blockName, blockNumber, inputs, outputs, built, blockComment, blockTitle);
+            if (hasRungs) ConstructionAdapter.VerifyOutput(xml, false);
+            var result = BuildResult("plc-compose-lad-fc-block-xml", xml, new JsonObject
             {
                 ["blockName"] = blockName,
                 ["blockNumber"] = blockNumber,
@@ -184,6 +206,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["inputCount"] = inputs.Length,
                 ["outputCount"] = outputs.Length
             });
+            result["schemaValidated"] = false;
+            result["importValidated"] = false;
+            result["programSemanticsValidated"] = false;
+            result["nativeAcceptance"] = "NOT RUN";
+            return result;
         }
 
         public static JsonObject ComposeFbBlock(string json)

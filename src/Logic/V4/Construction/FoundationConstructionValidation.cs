@@ -8,7 +8,7 @@ namespace TiaMcp.Logic.V4.Construction
     // Foundation is deliberately narrower than the full engine's pure builders.
     // Sources: OfflineCompositionBuilders.cs:20, OfflineBlockCompositionBuilders.cs:14,
     // OfflineLadderBuilders.cs:17, OfflineXmlBuilders.cs:18. No host capability is inferred here.
-    internal static class FoundationConstructionValidation
+    internal static partial class FoundationConstructionValidation
     {
         private static readonly HashSet<string> LadderTypes = new HashSet<string>(StringComparer.Ordinal)
         { "Bool", "Byte", "Word", "DWord", "LWord", "SInt", "USInt", "Int", "UInt", "DInt", "UDInt", "LInt", "ULInt", "Real", "LReal" };

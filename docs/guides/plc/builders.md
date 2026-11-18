@@ -13,7 +13,7 @@ The builders create XML without connecting to TIA. Their presence in a version's
 | `BuildFlgNetCall` | One LAD network calling an FC | V21 candidate XML |
 | `BuildPlcFcBlock` | SCL FC | V21 candidate XML |
 | `BuildPlcFbBlock` | SCL FB, without an instance DB | V21 candidate XML |
-| `BuildPlcLadFcBlock` | LAD FC containing FC-call networks | V21 candidate XML |
+| `BuildPlcLadFcBlock` | LAD FC containing call or rung networks | V21 candidate XML |
 
 Use the exact release key: `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, or `21`. On V14 SP1–V19 the builders require an explicit `outputReleaseKey`; on V20/V21 they default to `21`, so pass the intended target explicitly. Changing an XML version marker is not a format conversion.
 
@@ -21,7 +21,7 @@ The declaration builders use Interface/v2 for V14 SP1, v3 for V15.1, v4 for V16/
 
 ## Prepare, import and check
 
-1. Read the selected tool's example with `GetToolUsage`. Builder input is a JSON **string** parameter, such as `udtJson` or `globalDbJson`; do not pass its members as top-level tool arguments.
+1. Read the selected tool's example with `GetToolUsage`. Supply its typed object parameter, such as `udt`, `globalDb` or `ladFcBlock`, directly with exact camelCase fields. Do not encode it as a JSON string or pass its members as top-level tool arguments.
 2. Build XML for the intended release and inspect the returned content. Build-only tools neither save a file nor import it.
 3. Save the returned XML on the computer running TIA/MCP. Resolve the PLC and group paths from the actual project tree.
 4. Use the current release's `ImportPlcType`, `ImportPlcBlock` or `ImportPlcTagTable` example for the relevant artifact. Check the actual imported object and path.
@@ -29,7 +29,7 @@ The declaration builders use Interface/v2 for V14 SP1, v3 for V15.1, v4 for V16/
 
 V20/V21 additionally expose `BuildAndImportPlcArtifact`. Its `dryRun=true` produces a plan; `dryRun=false` executes the import. Read its own example and output-format limits before using it. It is absent from the V14 SP1–V19 foundation catalog.
 
-The structured-text builder covers a small operation vocabulary, not a general SCL parser. For expressions, loops, state machines and timers, use complete SCL source examples through the [SCL workflow](scl.md). The LAD builders only build FC-call networks; [general LAD examples](lad.md) use a different route.
+The structured-text builder covers a small operation vocabulary, not a general SCL parser. For expressions, loops, state machines and timers, use complete SCL source examples through the [SCL workflow](scl.md). `BuildPlcLadFcBlock` also accepts typed `ladFcBlock` rung networks: contacts, global-memory edges, comparisons, OR groups, shared-prefix fan-out, coil/set/reset and MOVE with ENO chaining. Global constants and indexed component paths are supported; local symbols must start with a declared input/output. Each network selects exactly one `call` or `rung`, with at most 256 parts per rung network. There is no symbol/type resolution; compile is the authority. See the maintained `rung` operation and `sequence/plc-lad-rung-build-import` via `GetToolUsage`. Native import and compile acceptance remain **NOT RUN**; [general LAD examples](lad.md) cover the other routes.
 
 ## PLC data-type folders
 

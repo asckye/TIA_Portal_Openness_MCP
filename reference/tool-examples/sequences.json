@@ -5355,5 +5355,431 @@
         "expect": "Commit only the reviewed repository-relative exported paths. No push, branch changes or automatic compile-triggered commit."
       }
     ]
+  },
+  {
+    "id": "sequence/plc-lad-rung-build-import",
+    "topic": "plc-lad-rung",
+    "purpose": "Build a V21 LAD FC from compact rung JSON, import its DB first, compile and inspect native readback.",
+    "preconditions": "A V21 project copy, exact PLC paths, absent demo DB/FC and a project-defined Int constant LAD_LIMIT. No timer/counter/rung CALL emitters until A3b.",
+    "notes": "Candidate-only offline generation; native acceptance NOT RUN. Never rewrite release markers. Import, compile and export are separate reviewed steps. No automatic save or download. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #.",
+    "releaseKeys": [
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Contract checked; VM import and compile NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Confirm a V21 project copy and data.outputRoot. No automatic connection or save."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Resolve the exact PLC softwarePath and existing destination groups."
+      },
+      {
+        "tool": "BuildPlcGlobalDb",
+        "arguments": {
+          "outputReleaseKey": "{release}",
+          "globalDb": {
+            "dbName": "DB_LadDemo",
+            "dbNumber": 42,
+            "staticMembers": [
+              {
+                "name": "T1",
+                "datatype": "IEC_TIMER"
+              },
+              {
+                "name": "C1",
+                "datatype": "IEC_COUNTER"
+              },
+              {
+                "name": "EdgeMem",
+                "datatype": "Bool"
+              },
+              {
+                "name": "Start",
+                "datatype": "Bool"
+              },
+              {
+                "name": "Stop",
+                "datatype": "Bool"
+              },
+              {
+                "name": "Auto",
+                "datatype": "Bool"
+              },
+              {
+                "name": "Manual",
+                "datatype": "Bool"
+              },
+              {
+                "name": "Reset",
+                "datatype": "Bool"
+              },
+              {
+                "name": "Active",
+                "datatype": "Bool"
+              },
+              {
+                "name": "Count",
+                "datatype": "Int"
+              },
+              {
+                "name": "Values",
+                "datatype": "Array[1..8] of Int"
+              },
+              {
+                "name": "LastValue",
+                "datatype": "Int"
+              },
+              {
+                "name": "ElapsedTime",
+                "datatype": "Time"
+              }
+            ]
+          }
+        },
+        "expect": "Retain data.xml. T1/C1 reserve global instances for later timer/counter examples. Create the global Int constant LAD_LIMIT in the project before import; this builder does not define constants."
+      },
+      {
+        "tool": "BuildPlcLadFcBlock",
+        "arguments": {
+          "outputReleaseKey": "21",
+          "ladFcBlock": {
+            "blockName": "FC_LadDemo",
+            "blockNumber": 42,
+            "networks": [
+              {
+                "rung": {
+                  "series": [
+                    {
+                      "kind": "no",
+                      "operand": {
+                        "global": [
+                          "DB_LadDemo",
+                          "Start"
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "nc",
+                      "operand": {
+                        "global": [
+                          "DB_LadDemo",
+                          "Stop"
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "or",
+                      "paths": [
+                        [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Auto"
+                              ]
+                            }
+                          }
+                        ],
+                        [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Manual"
+                              ]
+                            }
+                          }
+                        ]
+                      ]
+                    },
+                    {
+                      "kind": "compare",
+                      "op": "gt",
+                      "type": "Int",
+                      "left": {
+                        "global": [
+                          "DB_LadDemo",
+                          "Count"
+                        ]
+                      },
+                      "right": {
+                        "literal": {
+                          "type": "Int",
+                          "value": "0"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "compare",
+                      "op": "lt",
+                      "type": "Time",
+                      "left": {
+                        "global": [
+                          "DB_LadDemo",
+                          "ElapsedTime"
+                        ]
+                      },
+                      "right": {
+                        "typed": "T#1s"
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "kind": "set",
+                      "operand": {
+                        "global": [
+                          "DB_LadDemo",
+                          "Active"
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "move",
+                      "in": {
+                        "constant": "LAD_LIMIT"
+                      },
+                      "out": [
+                        {
+                          "global": [
+                            "DB_LadDemo",
+                            {
+                              "name": "Values",
+                              "index": [
+                                1
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "then": [
+                        {
+                          "kind": "move",
+                          "in": {
+                            "global": [
+                              "DB_LadDemo",
+                              {
+                                "name": "Values",
+                                "index": [
+                                  1
+                                ]
+                              }
+                            ]
+                          },
+                          "out": [
+                            {
+                              "global": [
+                                "DB_LadDemo",
+                                "LastValue"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "fanOut": [
+                    {
+                      "series": [
+                        {
+                          "kind": "rising",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Reset"
+                            ]
+                          },
+                          "memory": {
+                            "global": [
+                              "DB_LadDemo",
+                              "EdgeMem"
+                            ]
+                          }
+                        }
+                      ],
+                      "outputs": [
+                        {
+                          "kind": "reset",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Active"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "titleZhCn": "条件与分支",
+                "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+              }
+            ]
+          }
+        },
+        "expect": "Retain data.xml as FC_LadDemo.xml. This is a V21 candidate; nativeAcceptance remains NOT RUN."
+      },
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "DB_LadDemo.xml",
+              "kind": "simaticml",
+              "content": "<complete data.xml returned by BuildPlcGlobalDb>"
+            },
+            {
+              "fileName": "FC_LadDemo.xml",
+              "kind": "simaticml",
+              "content": "<complete data.xml returned by BuildPlcLadFcBlock>"
+            }
+          ],
+          "dryRun": true
+        },
+        "expect": "Review the two complete documents."
+      },
+      {
+        "tool": "StageImportFiles",
+        "arguments": {
+          "files": [
+            {
+              "fileName": "DB_LadDemo.xml",
+              "kind": "simaticml",
+              "content": "<complete data.xml returned by BuildPlcGlobalDb>"
+            },
+            {
+              "fileName": "FC_LadDemo.xml",
+              "kind": "simaticml",
+              "content": "<complete data.xml returned by BuildPlcLadFcBlock>"
+            }
+          ],
+          "dryRun": false
+        },
+        "expect": "Approve staging and retain batchId and directory; staging does not import."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from StageImportFiles>",
+          "overwrite": false,
+          "importOrder": [
+            "DB_LadDemo.xml",
+            "FC_LadDemo.xml"
+          ],
+          "regexName": "^.+\\.xml$",
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": true
+        },
+        "expect": "Preview DB-before-FC import; retain planHash and confirm the bound project."
+      },
+      {
+        "tool": "ImportPlcProgramFromDirectory",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "sourceDir": "<directory from StageImportFiles>",
+          "overwrite": false,
+          "importOrder": [
+            "DB_LadDemo.xml",
+            "FC_LadDemo.xml"
+          ],
+          "regexName": "^.+\\.xml$",
+          "compileAfter": false,
+          "stopOnImportFailure": true,
+          "dryRun": false,
+          "confirm": true,
+          "expectedPlanHash": "<planHash from import preview>",
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "Approve once. On partial or unknown failure inspect project state before repeating any write."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "scope": "block",
+          "scopePath": "FC_LadDemo",
+          "dryRun": true
+        },
+        "expect": "Preview exact block compilability. No software-wide fallback."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "scope": "block",
+          "scopePath": "FC_LadDemo",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "Require zero errors and inspect all diagnostics; symbol and datatype resolution happen here."
+      },
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "blockPath": "FC_LadDemo",
+          "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>\\lad-readback",
+          "dryRun": true
+        },
+        "expect": "Preview readback export destination under this session output root."
+      },
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "blockPath": "FC_LadDemo",
+          "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>\\lad-readback",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact bound project file from GetSessionState>"
+        },
+        "expect": "Approve export of the actual imported block; retain XML and hash as native acceptance evidence."
+      },
+      {
+        "tool": "RenderPlcBlock",
+        "arguments": {
+          "inputPath": "<data.outputFile from completed ExportPlcBlock>",
+          "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html"
+        },
+        "expect": "Render the export and compare each network, indexed path, edge memory and ENO connection against the generated candidate."
+      },
+      {
+        "tool": "CleanupStagedImportFiles",
+        "arguments": {
+          "batchId": "<batchId from StageImportFiles>",
+          "dryRun": true
+        },
+        "expect": "Review the owned batch."
+      },
+      {
+        "tool": "CleanupStagedImportFiles",
+        "arguments": {
+          "batchId": "<batchId from StageImportFiles>",
+          "dryRun": false
+        },
+        "expect": "Approve cleanup after retaining export and diagnostics; this does not undo project changes."
+      },
+      {
+        "tool": "ShowObjectInEditor",
+        "arguments": {
+          "kind": "plcBlock",
+          "softwarePath": "<exact softwarePath from GetProjectTree>",
+          "objectPath": "FC_LadDemo",
+          "dryRun": false
+        },
+        "expect": "After successful import, compile and readback, show the exact block to the engineer. Omit this UI-only step when TIA has no UI; never show after a refused or unknown write."
+      }
+    ]
   }
 ]

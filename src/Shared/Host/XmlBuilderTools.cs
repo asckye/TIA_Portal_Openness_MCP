@@ -169,7 +169,12 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "BuildFlgNetCall"),
-                Description("[L2][PLC-Builders][OFFLINE] NARROW SCOPE: builds ONLY a LAD network that calls one FC with parameters. For general ladder (contacts/coils/SR/compare/Move/math) author S7DCL text and import with ImportPlcBlocksDocuments — there is no XML builder for those, and hand-written FlgNet XML is the usual cause of import errors. Build a TIA V21 LAD FlgNet/v5 FC call network XML from structured JSON. Input: {callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects.")]
+                Description("[L2][PLC-Builders][OFFLINE] Build one V21 FlgNet/v5 FC-call fragment from " +
+                    "{callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. For contacts, edges, compares, OR, " +
+                    "fan-out, coils and MOVE use BuildPlcLadFcBlock rung networks on V21. For timers, counters and math beyond A3a, and all " +
+                    "general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. " +
+                    "A bare fragment cannot be imported. Returns candidate XML in " +
+                    "memory only; no files, connection or worker. Native acceptance NOT RUN.")]
         public CallToolResult BuildFlgNetCallXmlV4(
             [Description("flgNet: FlgNetCallSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
                 "encoding.")] FlgNetCallSpec flgNet)
@@ -238,20 +243,23 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "BuildPlcLadFcBlock"),
-                Description("[L2][PLC-Builders][OFFLINE] NARROW SCOPE: every network must be an FC call; this cannot emit " +
-                "contacts/coils/SR/compare/Move/math. For general ladder, author S7DCL text (.s7dcl + .s7res) and import with ImportPlcBlocksDocuments " +
-                "instead. Compose a TIA V21 LAD FC block XML containing one or more FlgNet/v5 FC-call networks. Each network is an FC call described as { " +
-                "call: { callName, parameters[] }, titleZhCn?, commentZhCn? }. Top-level: blockName, blockNumber, optional inputs/outputs members, optional " +
-                "commentZhCn / titleZhCn. Returns XML only; does not connect to TIA Portal or import. Pair with ImportPlcBlock. Registered on V21 only: V20 " +
-                "withdraws this V21-format composer until an import of its output on V20 is verified.")]
+                Description("[L2][PLC-Builders][OFFLINE] Compose a V21 LAD FC candidate from " +
+                    "{blockName,blockNumber,inputs?,outputs?,networks:[{call|rung,titleZhCn?,commentZhCn?}]}. Exactly one call or rung per " +
+                    "network. Rung supports NO/NC, rising/falling edges with global memory, typed comparisons, OR groups, shared-prefix " +
+                    "fan-out, coil/set/reset and MOVE with ENO chaining; global constants and indexed component paths. Local symbols must start " +
+                    "with a declared input/output. Limits: 64 networks, 256 parts per rung network, depth 16, strings 4096. No symbol/type " +
+                    "resolution; compile is the authority. Returns XML only, no files, connection, import or worker. V21 only; native " +
+                    "acceptance NOT RUN. For timers, counters and math beyond A3a or other unsupported LAD, author S7DCL text and import " +
+                    "with ImportPlcBlocksDocuments, or start from an exported donor block.")]
         public CallToolResult ComposePlcLadFcBlockXmlV4(
-            [Description("ladFcBlock: LadFcBlockSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string " +
-                "encoding.")] LadFcBlockSpec ladFcBlock)
+            [Description("ladFcBlock: LadFcBlockSpec with exactly one call or rung per network. Supply the structured value " +
+                "directly; exact camelCase fields, no null or JSON string encoding.")] LadFcBlockSpec ladFcBlock)
             => OfflineContracts
                 .Run("BuildPlcLadFcBlock", () => ComposePlcLadFcBlockXml(ConstructionAdapter.ToBuilderJson(ladFcBlock)), writes: false, current: false);
 
         public ResponseXmlBuild ComposePlcLadFcBlockXml(
-            [Description("ladFcBlockJson: JSON object with blockName, blockNumber, networks[] (each with callJson{callName,parameters[]}, optional " +
+            [Description("ladFcBlockJson: JSON object with blockName, blockNumber, networks[] (each with " +
+                "callJson{callName,parameters[]} or rung{series,outputs,fanOut?}, optional " +
                 "titleZhCn/commentZhCn), optional inputs[]/outputs[] interface members with commentZhCn, optional commentZhCn/titleZhCn " +
                 "block-level.")] string ladFcBlockJson)
         {

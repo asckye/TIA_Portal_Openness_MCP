@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml;
 using System.Xml.Linq;
+using TiaMcp.Logic.V4.Construction;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.FoundationHost;
@@ -61,9 +62,16 @@ internal static class OfflineLadderBuilders
             var networks = new List<PlcLadFcBlockXmlComposer.LadNetwork>();
             foreach (var row in rows)
             {
-                Properties(row, "callJson", "call", "titleZhCn", "title", "commentZhCn", "comment");
-                var call = Call(Alias(row, true, "callJson", "call")!.Value, ref parameterCount);
-                networks.Add(new PlcLadFcBlockXmlComposer.LadNetwork(call, Text(row, false, "titleZhCn", "title"), Text(row, false, "commentZhCn", "comment")));
+                Properties(row, "callJson", "call", "rung", "titleZhCn", "title", "commentZhCn", "comment");
+                var call = Alias(row, false, "callJson", "call");
+                bool hasRung = row.TryGetProperty("rung", out var rung);
+                if (hasRung == call.HasValue) throw new ArgumentException("Exactly one call or rung required.");
+                var flgNet = hasRung
+                    ? FlgNetRungXmlBuilder.Build(ConstructionJson.Deserialize<LadRung>(rung.GetRawText(),
+                        inputs.Concat(outputs).Select(m => m.Name).ToArray()), new FlgNetFormat(), inputs.Concat(outputs).Select(m => m.Name).ToArray())
+                    : Call(call!.Value, ref parameterCount);
+                networks.Add(new PlcLadFcBlockXmlComposer.LadNetwork(flgNet,
+                    Text(row, false, "titleZhCn", "title"), Text(row, false, "commentZhCn", "comment")));
             }
             document = PlcLadFcBlockXmlComposer
                 .Compose(blockName, number, inputs, outputs, networks, Text(root, false, "commentZhCn", "blockCommentZhCn", "comment"),
@@ -97,20 +105,26 @@ internal static class OfflineLadderBuilders
             var ids = verified.Descendants().Attributes("ID").Select(x => x.Value).ToArray();
             if (ids.Distinct(StringComparer.Ordinal).Count() != ids.Length) throw new InvalidOperationException("Document ID collision.");
         }
-        foreach (var network in verified.Descendants(Ns + "FlgNet")) VerifyNetwork(network);
+        foreach (var network in verified.Descendants(Ns + "FlgNet"))
+            if (network.Element(Ns + "Parts")!.Elements(Ns + "Part").Any()) FlgNetRungXmlBuilder.Verify(network);
+            else VerifyNetwork(network);
         JsonObject Flags() => new() {
             ["offlineOnly"] = true, ["outputReleaseKey"] = "21", ["schemaValidated"] = false, ["importValidated"] = false, ["programSemanticsValidated"] = false
         };
         var meta = Flags(); meta["success"] = true; meta["nativeAcceptance"] = "NOT RUN";
-        meta["provenance"] = "Unchanged V21 FlgNetCallXmlBuilder and PlcLadFcBlockXmlComposer pure methods; no version conversion";
+        meta["provenance"] = toolName == "BuildPlcLadFcBlock"
+            ? "V21 pure FlgNet call/rung builders and PlcLadFcBlockXmlComposer; no version conversion or native export provenance"
+            : "Unchanged V21 FlgNetCallXmlBuilder and PlcLadFcBlockXmlComposer pure methods; no version conversion";
         meta["validationScope"] =
             "Bounded structured inputs, generated XML well-formedness, per-network identifiers and wire references only; no symbol/type resolution";
         var data = Flags(); data["ok"] = true; data["xmlParseOk"] = true; data["mode"] = mode; data["xml"] = xml; data["error"] = null; data["summary"] =
             summary;
+        if (toolName == "BuildPlcLadFcBlock") data["nativeAcceptance"] = "NOT RUN";
         data["safetyPolicy"] = new JsonObject {
             ["tia"] = "No connection, worker, import, compile or project modification.", ["write"] = "Returns XML in memory only; no file reads or writes." };
         return new JsonObject {
-            ["Message"] = "Candidate LAD call XML generated; schema, import and program validation pending.", ["Meta"] = meta, ["Ok"] = true, ["Data"] = data,
+            ["Message"] = toolName == "BuildPlcLadFcBlock" ? "Candidate LAD XML generated; schema, import and program validation pending."
+                : "Candidate LAD call XML generated; schema, import and program validation pending.", ["Meta"] = meta, ["Ok"] = true, ["Data"] = data,
                 ["Errors"] = null, ["Warnings"] = new JsonArray(OfflineCompositionBuilders.Warning), ["OutputPath"] = null, ["OutputFiles"] = null, ["Xml"] =
                 xml
         };

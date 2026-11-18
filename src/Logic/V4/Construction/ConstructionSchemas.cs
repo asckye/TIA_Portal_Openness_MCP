@@ -5,7 +5,7 @@ using TiaMcp.Logic.V4.Inputs;
 
 namespace TiaMcp.Logic.V4.Construction
 {
-    internal static class ConstructionSchemas
+    internal static partial class ConstructionSchemas
     {
         private static readonly InputSchema Text = InputSchema.String(ConstructionJson.MaxStringCharacters);
         private static readonly InputSchema Nonblank = InputSchema.String(ConstructionJson.MaxStringCharacters, pattern: @"\S");
@@ -84,11 +84,7 @@ namespace TiaMcp.Logic.V4.Construction
             schemas.Add(typeof(FbBlockSpec), Object(new[] { "blockName", "blockNumber", "structuredText" },
                 common.Concat(new[] { ("inouts", Rows(blockMember)), ("statics", Rows(blockMember)), ("temps", Rows(blockMember)) }).ToArray()));
             schemas.Add(typeof(PlcArtifactSpec), InputSchema.Union(PlcArtifactSpec.MemberTypes.Select(type => schemas[type]).ToArray()));
-            var network = Object(new[] { "call" }, ("call", call), ("titleZhCn", Text), ("commentZhCn", Text));
-            schemas.Add(typeof(LadNetwork), network);
-            schemas.Add(typeof(LadFcBlockSpec), Object(new[] { "blockName", "blockNumber", "networks" },
-                ("blockName", Nonblank), ("blockNumber", Integer), ("inputs", Rows(blockMember)), ("outputs", Rows(blockMember)),
-                ("networks", Rows(network)), ("commentZhCn", Text), ("titleZhCn", Text)));
+            AddLadderSchemas(schemas, call, blockMember);
             return schemas;
         }
     }

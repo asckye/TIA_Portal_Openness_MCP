@@ -37,8 +37,11 @@ namespace TiaMcp.Logic.V4.Construction
         // Existing builder callers retain ArgumentException. Contracts below use the
         // original rejection so budget errors retain their V4 limit/actual details.
         internal static T Deserialize<T>(string json) where T : ConstructionNode
+            => Deserialize<T>(json, null);
+
+        internal static T Deserialize<T>(string json, IReadOnlyCollection<string>? localMembers) where T : ConstructionNode
         {
-            var result = new ConstructionInput<T>().Read(json, "spec");
+            var result = new ConstructionInput<T>(ConstructionProfile.FullEngine, localMembers).Read(json, "spec");
             if (result.IsValid) return result.Value!;
             var error = new ArgumentException(result.Error!.Message, nameof(json));
             error.Data["V4Error"] = result.Error;
@@ -111,7 +114,9 @@ namespace TiaMcp.Logic.V4.Construction
             InputBudget.Check(json);
             ConstructionSchemas.For(type).Check(json);
             XmlCharacters(json);
-            return Read(type, json);
+            var value = Read(type, json);
+            FoundationConstructionValidation.Rungs(value);
+            return value;
         }
 
         internal static ConstructionNode Read(Type type, JsonElement json)
@@ -130,6 +135,12 @@ namespace TiaMcp.Logic.V4.Construction
             if (type == typeof(FcBlockSpec)) return new FcBlockSpec(json);
             if (type == typeof(FbBlockSpec)) return new FbBlockSpec(json);
             if (type == typeof(LadNetwork)) return new LadNetwork(json);
+            if (type == typeof(LadRung)) return new LadRung(json);
+            if (type == typeof(LadBranch)) return new LadBranch(json);
+            if (type == typeof(LadCondition)) return new LadCondition(json);
+            if (type == typeof(LadOutput)) return new LadOutput(json);
+            if (type == typeof(LadOperand)) return new LadOperand(json);
+            if (type == typeof(LadComponent)) return new LadComponent(json);
             if (type == typeof(LadFcBlockSpec)) return new LadFcBlockSpec(json);
             if (typeof(Statement).IsAssignableFrom(type))
             {

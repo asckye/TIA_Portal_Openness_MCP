@@ -33,6 +33,7 @@ namespace TiaMcp.Logic.V4.Construction
             if (spec is LadFcBlockSpec)
                 foreach (var network in (JsonArray)json["networks"]!)
                 {
+                    if (network!["rung"] != null) continue;
                     var call = network!["call"];
                     network.AsObject().Remove("call");
                     network["callJson"] = call;
@@ -73,7 +74,9 @@ namespace TiaMcp.Logic.V4.Construction
             else if (profile == ConstructionProfile.Foundation && spec is LadFcBlockSpec lad)
                 xml = Entitize(PlcLadFcBlockXmlComposer.Compose(lad.BlockName, lad.BlockNumber, Members(lad.Inputs), Members(lad.Outputs),
                     lad.Networks.Select(n => new PlcLadFcBlockXmlComposer.LadNetwork(
-                        FlgNetCallXmlBuilder.BuildFlgNet(n.Call.CallName, Parameters(n.Call)), n.TitleZhCn ?? "", n.CommentZhCn ?? "")),
+                        n.Rung != null ? FlgNetRungXmlBuilder.Build(n.Rung, new FlgNetFormat(),
+                            (lad.Inputs ?? Array.Empty<Member>()).Concat(lad.Outputs ?? Array.Empty<Member>()).Select(m => m.Name).ToArray())
+                            : FlgNetCallXmlBuilder.BuildFlgNet(n.Call!.CallName, Parameters(n.Call)), n.TitleZhCn ?? "", n.CommentZhCn ?? "")),
                     lad.CommentZhCn ?? "", lad.TitleZhCn ?? ""));
             else
             {
@@ -97,7 +100,8 @@ namespace TiaMcp.Logic.V4.Construction
         }
 
         internal static IEnumerable<FlgNetCallSpec> Calls(ConstructionSpec spec) => spec is FlgNetCallSpec call
-            ? new[] { call } : spec is LadFcBlockSpec lad ? lad.Networks.Select(n => n.Call) : Enumerable.Empty<FlgNetCallSpec>();
+            ? new[] { call } : spec is LadFcBlockSpec lad ? lad.Networks.Where(n => n.Call != null).Select(n => n.Call!)
+            : Enumerable.Empty<FlgNetCallSpec>();
 
         private static PlcBlockMemberDefinition[] Members(IReadOnlyList<Member>? members) =>
             (members ?? Array.Empty<Member>()).Select(m => new PlcBlockMemberDefinition(m.Name, m.Datatype, m.EffectiveComment)).ToArray();
@@ -107,7 +111,7 @@ namespace TiaMcp.Logic.V4.Construction
                 ? FlgNetCallParameter.Constant(p.Name, p.Section, p.DataType, p.ConstantValue!)
                 : FlgNetCallParameter.Global(p.Name, p.Section, p.DataType, p.SymbolPath!.ToArray())).ToArray();
 
-        private static string Entitize(XDocument document)
+        internal static string Entitize(XDocument document)
         {
             using var buffer = new Utf8Writer();
             using (var writer = XmlWriter.Create(buffer, new XmlWriterSettings { Indent = true, NewLineHandling = NewLineHandling.Entitize }))

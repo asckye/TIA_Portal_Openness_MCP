@@ -271,6 +271,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     string upstream = flowSource.TryGetValue(uid + ":in", out var src) ? TraceChain(src, parts, flowSource, guard) : "";
                     string lit = (p.Negated ? "/" : "") + (p.Operands.TryGetValue("operand", out var o) ? o : "?");
+                    if (p.Name == "PContact" || p.Name == "NContact")
+                        lit = (p.Name == "PContact" ? "RISING(" : "FALLING(") + lit + ", "
+                            + (p.Operands.TryGetValue("bit", out var bit) ? bit : "?") + ")";
                     return Series(upstream, lit);
                 }
                 if (IsCompare(p.Name))
@@ -284,7 +287,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (p.Name == "O")  // OR box: inputs in1,in2,... are parallel branches
                 {
                     var branches = new List<string>();
-                    foreach (var pin in p.Operands.Keys.Concat(new[] { "in1", "in2", "in3", "in4" }).Distinct())
+                    foreach (var pin in flowSource.Keys.Where(key => key.StartsWith(uid + ":in", StringComparison.Ordinal))
+                        .Select(key => key.Substring(uid.Length + 1)).OrderBy(pin => pin, StringComparer.Ordinal))
                     {
                         if (!pin.StartsWith("in", StringComparison.Ordinal)) continue;
                         if (flowSource.TryGetValue(uid + ":" + pin, out var src))
@@ -323,7 +327,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         // ---- helpers ----
 
-        private static bool IsContact(string n) => n == "Contact";
+        private static bool IsContact(string n) => n == "Contact" || n == "PContact" || n == "NContact";
         private static bool IsCoil(string n) => n == "Coil" || n == "SCoil" || n == "RCoil" || n == "SetCoil" || n == "ResetCoil";
         private static bool IsCompare(string n) => n is "Eq" or "Ne" or "Gt" or "Lt" or "Ge" or "Le";
         private static bool IsWritingBox(string n) => n == "Move" || n == "Call";
@@ -343,7 +347,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (p.Name == "Move")
             {
                 var src = p.Operands.TryGetValue("in", out var i) ? i : "?";
-                var dst = p.Operands.TryGetValue("out1", out var o) ? o : (p.Operands.TryGetValue("out", out var o2) ? o2 : "?");
+                var destinations = p.Operands.Where(pair => pair.Key.StartsWith("out", StringComparison.Ordinal))
+                    .OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Value).ToArray();
+                var dst = destinations.Length > 0 ? string.Join(", ", destinations) : "?";
                 return $"MOVE {src} → {dst}";
             }
             return DescribeBoxInline(p);

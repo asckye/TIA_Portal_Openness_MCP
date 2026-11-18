@@ -25,12 +25,23 @@ internal sealed class OfflineLadderTool : McpServerTool
         var properties = new JsonObject
         {
             [jsonParameter] = new JsonObject { ["type"] = "string", ["maxLength"] = OfflineCompositionBuilders.MaxJsonCharacters,
-                ["description"] = "Bounded call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{callJson:call}]}; optional inputs/outputs. Exact Input/Output directions; constant source must be explicit; omitted sourceKind means global; simple symbol components. 64 networks, 1000 total parameters, 1000 interface members, strings <=4096. No raw XML, paths, caller UIds or other LAD elements. See legacy-offline-ladder-candidate.md." },
+                ["description"] = "Call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{call|rung}]}; optional inputs/outputs. " +
+                    "Rung {series,outputs,fanOut?}: NO/NC, rising/falling with global memory, compare, OR, fan-out, coil/set/reset, MOVE with ENO chain. " +
+                    "Global constants, indexed components and local inputs/outputs. Exact camelCase. 64 networks, 256 parts per rung network, " +
+                    "1000 call parameters/interface members, depth 16, strings <=4096. No raw XML or caller UIds. " +
+                    "No symbol/type resolution; compile is the authority." },
             ["outputReleaseKey"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("21"), ["description"] = "Exact explicit V21 candidate output; independent of host selection. No conversion." }
         };
         tool = new Tool
         {
-            Name = name, Description = "[offline candidate; native unverified] In-memory V21 LAD FC-call candidate generation with existing helpers. " + (name == "BuildPlcLadFcBlock" ? "Registered on V21 only: V20 withdraws this V21-format composer until an import of its output on V20 is verified. " : "") + OfflineCompositionBuilders.Warning + " No file reads/writes, connection or worker calls.",
+            Name = name, Description = "[offline candidate; native unverified] In-memory V21 LAD candidate generation. " +
+                (name == "BuildPlcLadFcBlock" ? "Each network contains exactly one call or rung. Rungs support contacts, edges, compares, OR, fan-out, " +
+                    "coil/set/reset and MOVE with ENO chaining. Registered on V21 only. For timers, counters and math beyond A3a or other " +
+                    "unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. "
+                    : "Builds only one FC-call fragment; use BuildPlcLadFcBlock for rung networks on V21. For timers, counters and math beyond A3a, " +
+                        "and all general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. " +
+                        "A bare fragment cannot be imported. ") +
+                "No symbol/type resolution; compile is the authority. " + OfflineCompositionBuilders.Warning + " No file reads/writes, connection or worker calls.",
             InputSchema = JsonSerializer.SerializeToElement(new JsonObject
             {
                 ["type"] = "object", ["additionalProperties"] = false, ["required"] = new JsonArray(jsonParameter, "outputReleaseKey"), ["properties"] = properties
