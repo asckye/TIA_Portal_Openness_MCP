@@ -5346,6 +5346,23 @@
           "identifier": "TiaMcp.ReleaseTool.Tests.PlcPatternLibraryTests/Real_library_has_six_sources_and_one_not_run_row_per_required_cell( ):a049e145d04814226bb908627c4632d1f0fe712927e985a707a4da4d2d326372:1"
         }
       ]
+    },
+    {
+      "task": "ECO-S4c",
+      "maintainerDate": "2026-11-18",
+      "reason": "Exact evidence and source-file counts grew with the 14 V21 LAD cells and files; both assertions stay exact and stricter (maintainer standing approval of recommended options, 2026-11-17)",
+      "items": [
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PlcPatternLibraryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PlcPatternLibraryTests/Real_library_has_six_sources_and_one_not_run_row_per_required_cell( ):c2a8250fc663519a07b52196952484728714b0d149989ac1b3a730cbee0a9a75:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PlcPatternLibraryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PlcPatternLibraryTests/Real_library_has_six_sources_and_one_not_run_row_per_required_cell( ):ec12a09c0591d059b84d0fdb0bf72c6e6063897824a07df0fa62653586a6905a:1"
+        }
+      ]
     }
   ]
 }
