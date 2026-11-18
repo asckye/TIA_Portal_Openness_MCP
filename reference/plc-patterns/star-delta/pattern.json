@@ -14,7 +14,11 @@
     "StarFeedback、DeltaFeedback 是 FB 输入，接接触器辅助触点（吸合为 TRUE）；启动前须都断开，StarOn 与 DeltaOn 还分别受对侧反馈的即时互锁。",
     "StarOn/StarFeedback、DeltaOn/DeltaFeedback 各用独立 TON 检查持续不一致；超过 FeedbackLimit（默认 500 ms，须按设备吸合/释放时间设置）即锁存 FeedbackFault，同扫描撤销 MainOn、StarOn、DeltaOn 并返回待机。",
     "反馈故障不会自行清除；Reset=TRUE、Stop=TRUE、Start=FALSE 且两个辅助触点均断开时才可复位，恢复运行需要新的 Start 上升沿。FeedbackLimit 必须大于零。",
-    "辅助触点与普通软件反馈不是安全功能；实际设备仍需机械/电气互锁、合适的切换间隔与独立保护。"
+    "辅助触点与普通软件反馈不是安全功能；实际设备仍需机械/电气互锁、合适的切换间隔与独立保护。",
+    "LAD 变体仅限 V21，FC 绑定一个固定名称的全局状态 DB，每个扫描周期无条件调用一次 FC。第二组独立控制需要复制 FC 和 DB，使用新的名称及块号，并同步修改 FC 中的全局 DB 引用。",
+    "LAD 示例的 blockNumber 和 dbNumber 均为 9105，各模式分别使用 9101 至 9107；导入前检查目标工程，已占用的 FC 或 DB 号码必须替换为空闲号码。",
+    "LAD 先用 BuildPlcGlobalDb 构建并导入状态 DB，再用 BuildPlcLadFcBlock 构建 FC，经 StageImportFiles 和 ImportPlcProgramFromDirectory 导入并编译；指令与状态类型的原生接受性为 NOT RUN。",
+    "LAD 时间设置和已用时间保存在状态 DB 的 Time 成员中；plc-foundation 的 FC 接口不接受 Time。构建前检查 DB 中的初始时间值，每周期仍须无条件调用 FC。"
   ],
   "variants": [
     {
@@ -64,6 +68,56 @@
         "ImportPlcExternalSource",
         "GenerateBlocksFromExternalSource",
         "CompilePlcDiagnostics"
+      ]
+    },
+    {
+      "id": "lad",
+      "kind": "lad-rung-builder",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/star-delta/lad/PatStarDelta.db.json",
+          "encoding": "ASCII"
+        },
+        {
+          "path": "reference/plc-patterns/star-delta/lad/PatStarDelta.rung.json",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "DB",
+          "name": "DB_PatStarDeltaLad"
+        },
+        {
+          "kind": "FC",
+          "name": "FC_PatStarDeltaLad"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "TON",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is the merged A3a/A3b rung builder token, not verified against an offline official manual. The builder emits timer/counter Version 1.0; this is not a verified instruction version. Check the exact V21 Siemens manual page, state datatype and instruction version before native acceptance."
+        }
+      ],
+      "importSequence": "BuildPlcGlobalDb -> StageImportFiles -> ImportPlcProgramFromDirectory -> BuildPlcLadFcBlock -> StageImportFiles -> ImportPlcProgramFromDirectory -> CompilePlcDiagnostics -> ExportPlcBlock (V21 only)",
+      "tools": [
+        "BuildPlcGlobalDb",
+        "BuildPlcLadFcBlock",
+        "StageImportFiles",
+        "ImportPlcProgramFromDirectory",
+        "CompilePlcDiagnostics",
+        "ExportPlcBlock"
       ]
     }
   ]

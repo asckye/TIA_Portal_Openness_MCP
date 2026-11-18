@@ -11,7 +11,11 @@
     "ExtendRequest、RetractRequest 为保持请求；到达对应端位后撤销该方向输出，撤销 Enable 会停止驱动并清除计时。",
     "双向请求、双端位同时有效或非正超时值会锁存 Fault；任一行程超时同时锁存 TimedOut 并在本扫描撤销双向输出。",
     "复位须撤销两个方向请求并消除端位冲突；重新请求才开始下一次行程，不自动重试。",
-    "适用于失电时停止驱动的教学模型；实际阀型、保持力、换向间隔与失电后气缸运动须独立设计。"
+    "适用于失电时停止驱动的教学模型；实际阀型、保持力、换向间隔与失电后气缸运动须独立设计。",
+    "LAD 变体仅限 V21，FC 绑定一个固定名称的全局状态 DB，每个扫描周期无条件调用一次 FC。第二组独立控制需要复制 FC 和 DB，使用新的名称及块号，并同步修改 FC 中的全局 DB 引用。",
+    "LAD 示例的 blockNumber 和 dbNumber 均为 9103，各模式分别使用 9101 至 9107；导入前检查目标工程，已占用的 FC 或 DB 号码必须替换为空闲号码。",
+    "LAD 先用 BuildPlcGlobalDb 构建并导入状态 DB，再用 BuildPlcLadFcBlock 构建 FC，经 StageImportFiles 和 ImportPlcProgramFromDirectory 导入并编译；指令与状态类型的原生接受性为 NOT RUN。",
+    "LAD 时间设置和已用时间保存在状态 DB 的 Time 成员中；plc-foundation 的 FC 接口不接受 Time。构建前检查 DB 中的初始时间值，每周期仍须无条件调用 FC。"
   ],
   "variants": [
     {
@@ -57,6 +61,56 @@
         "ImportPlcExternalSource",
         "GenerateBlocksFromExternalSource",
         "CompilePlcDiagnostics"
+      ]
+    },
+    {
+      "id": "lad",
+      "kind": "lad-rung-builder",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/cylinder-timeout/lad/PatCylinderTimeout.db.json",
+          "encoding": "ASCII"
+        },
+        {
+          "path": "reference/plc-patterns/cylinder-timeout/lad/PatCylinderTimeout.rung.json",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "DB",
+          "name": "DB_PatCylinderTimeoutLad"
+        },
+        {
+          "kind": "FC",
+          "name": "FC_PatCylinderTimeoutLad"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "TON",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is the merged A3a/A3b rung builder token, not verified against an offline official manual. The builder emits timer/counter Version 1.0; this is not a verified instruction version. Check the exact V21 Siemens manual page, state datatype and instruction version before native acceptance."
+        }
+      ],
+      "importSequence": "BuildPlcGlobalDb -> StageImportFiles -> ImportPlcProgramFromDirectory -> BuildPlcLadFcBlock -> StageImportFiles -> ImportPlcProgramFromDirectory -> CompilePlcDiagnostics -> ExportPlcBlock (V21 only)",
+      "tools": [
+        "BuildPlcGlobalDb",
+        "BuildPlcLadFcBlock",
+        "StageImportFiles",
+        "ImportPlcProgramFromDirectory",
+        "CompilePlcDiagnostics",
+        "ExportPlcBlock"
       ]
     }
   ]

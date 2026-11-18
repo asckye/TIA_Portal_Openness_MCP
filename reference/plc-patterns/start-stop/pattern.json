@@ -8,7 +8,10 @@
     "适用范围为 S7-1200 和 S7-1500；不覆盖 S7-1200 G2。",
     "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
     "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
-    "Start 为电平请求；Stop 或 Fault 解除时若 Start 仍为 TRUE，将再次启动。现场重启策略由调用方实现。"
+    "Start 为电平请求；Stop 或 Fault 解除时若 Start 仍为 TRUE，将再次启动。现场重启策略由调用方实现。",
+    "LAD 变体仅限 V21，FC 绑定一个固定名称的全局状态 DB，每个扫描周期无条件调用一次 FC。第二组独立控制需要复制 FC 和 DB，使用新的名称及块号，并同步修改 FC 中的全局 DB 引用。",
+    "LAD 示例的 blockNumber 和 dbNumber 均为 9106，各模式分别使用 9101 至 9107；导入前检查目标工程，已占用的 FC 或 DB 号码必须替换为空闲号码。",
+    "LAD 先用 BuildPlcGlobalDb 构建并导入状态 DB，再用 BuildPlcLadFcBlock 构建 FC，经 StageImportFiles 和 ImportPlcProgramFromDirectory 导入并编译；指令与状态类型的原生接受性为 NOT RUN。"
   ],
   "variants": [
     {
@@ -42,6 +45,44 @@
         "ImportPlcExternalSource",
         "GenerateBlocksFromExternalSource",
         "CompilePlcDiagnostics"
+      ]
+    },
+    {
+      "id": "lad",
+      "kind": "lad-rung-builder",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/start-stop/lad/PatStartStop.db.json",
+          "encoding": "ASCII"
+        },
+        {
+          "path": "reference/plc-patterns/start-stop/lad/PatStartStop.rung.json",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "DB",
+          "name": "DB_PatStartStopLad"
+        },
+        {
+          "kind": "FC",
+          "name": "FC_PatStartStopLad"
+        }
+      ],
+      "instructions": [],
+      "importSequence": "BuildPlcGlobalDb -> StageImportFiles -> ImportPlcProgramFromDirectory -> BuildPlcLadFcBlock -> StageImportFiles -> ImportPlcProgramFromDirectory -> CompilePlcDiagnostics -> ExportPlcBlock (V21 only)",
+      "tools": [
+        "BuildPlcGlobalDb",
+        "BuildPlcLadFcBlock",
+        "StageImportFiles",
+        "ImportPlcProgramFromDirectory",
+        "CompilePlcDiagnostics",
+        "ExportPlcBlock"
       ]
     }
   ]

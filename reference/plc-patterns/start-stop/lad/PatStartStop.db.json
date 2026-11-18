@@ -1,0 +1,10 @@
+{
+  "dbName": "DB_PatStartStopLad",
+  "dbNumber": 9106,
+  "staticMembers": [
+    {
+      "name": "Run",
+      "datatype": "Bool"
+    }
+  ]
+}

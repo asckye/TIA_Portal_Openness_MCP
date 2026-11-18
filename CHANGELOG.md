@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Added
+- Classic PLC pattern library: seven V21-only LAD rung candidates use distinct DB/FC number pairs 9101–9107; replace occupied numbers before import. Each FC binds one global state DB; a second independent control requires copies of both with new names, numbers and updated DB references. TON/TOF/TP use independent OnTime/OffTime/PulseTime settings and SCL-aligned output names. All 14 LAD evidence cells remain NOT RUN; offline builder and fragment-XSD checks do not unlock serving.
 - `GetApprovalStatus` reports session-local pending approvals, the latest 16 decisions, approval policy, online-target entries and vault names on all eight releases without taking the Openness lane. Only a person in the Workbench can decide approvals.
 - Workbench settings add online-target and secret-vault editors, plus online-write plan lifetime. Secret values are entered in a password box and are never read back into the editor. Invalid target files require confirmed replacement, concurrent list changes refuse saves, and secret replacement/removal requires confirmation; empty secret values are refused.
 - TIA-BATCH-5a: GetToolUsage adds V19–V21 Unified alarm/tag Excel review workflows with paged rows, per-row PLC binding review and ApplyToolBatch writes; native acceptance NOT RUN.

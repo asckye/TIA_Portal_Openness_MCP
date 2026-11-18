@@ -1,0 +1,173 @@
+{
+  "blockName": "FC_PatTimersLad",
+  "blockNumber": 9107,
+  "inputs": [
+    {
+      "name": "Signal",
+      "datatype": "Bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "OnDone",
+      "datatype": "Bool"
+    },
+    {
+      "name": "OffActive",
+      "datatype": "Bool"
+    },
+    {
+      "name": "PulseActive",
+      "datatype": "Bool"
+    }
+  ],
+  "networks": [
+    {
+      "titleZhCn": "On-delay called every scan",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Signal"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TON",
+            "instance": {
+              "global": [
+                "DB_PatTimersLad",
+                "OnClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatTimersLad",
+                "OnTime"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "local": [
+                    "OnDone"
+                  ]
+                }
+              }
+            ],
+            "et": {
+              "global": [
+                "DB_PatTimersLad",
+                "OnElapsed"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Off-delay called every scan",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Signal"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TOF",
+            "instance": {
+              "global": [
+                "DB_PatTimersLad",
+                "OffClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatTimersLad",
+                "OffTime"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "local": [
+                    "OffActive"
+                  ]
+                }
+              }
+            ],
+            "et": {
+              "global": [
+                "DB_PatTimersLad",
+                "OffElapsed"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Pulse timer called every scan",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Signal"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TP",
+            "instance": {
+              "global": [
+                "DB_PatTimersLad",
+                "PulseClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatTimersLad",
+                "PulseTime"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "local": [
+                    "PulseActive"
+                  ]
+                }
+              }
+            ],
+            "et": {
+              "global": [
+                "DB_PatTimersLad",
+                "PulseElapsed"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

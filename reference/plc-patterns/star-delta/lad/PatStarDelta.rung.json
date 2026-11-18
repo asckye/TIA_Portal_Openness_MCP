@@ -1,0 +1,1201 @@
+{
+  "blockName": "FC_PatStarDeltaLad",
+  "blockNumber": 9105,
+  "inputs": [
+    {
+      "name": "Enable",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Start",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Stop",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Fault",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Reset",
+      "datatype": "Bool"
+    },
+    {
+      "name": "StarFeedback",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DeltaFeedback",
+      "datatype": "Bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "MainOn",
+      "datatype": "Bool"
+    },
+    {
+      "name": "StarOn",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DeltaOn",
+      "datatype": "Bool"
+    },
+    {
+      "name": "ConfigurationValid",
+      "datatype": "Bool"
+    },
+    {
+      "name": "FeedbackFault",
+      "datatype": "Bool"
+    }
+  ],
+  "networks": [
+    {
+      "titleZhCn": "Sample start before stop interlocks",
+      "rung": {
+        "series": [
+          {
+            "kind": "rising",
+            "operand": {
+              "local": [
+                "Start"
+              ]
+            },
+            "memory": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StartMemory"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StartPulse"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Require positive timer settings",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "gt",
+            "type": "Time",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StarDuration"
+              ]
+            },
+            "right": {
+              "typed": "T#0ms"
+            }
+          },
+          {
+            "kind": "compare",
+            "op": "gt",
+            "type": "Time",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "ChangeoverTime"
+              ]
+            },
+            "right": {
+              "typed": "T#0ms"
+            }
+          },
+          {
+            "kind": "compare",
+            "op": "gt",
+            "type": "Time",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "FeedbackLimit"
+              ]
+            },
+            "right": {
+              "typed": "T#0ms"
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "ConfigurationValid"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Reset feedback fault only stopped without contactor feedback",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Reset"
+              ]
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Stop"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Start"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "StarFeedback"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "DeltaFeedback"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "reset",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "FeedbackFault"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Start a new cycle only from idle",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Enable"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Stop"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Fault"
+              ]
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "ConfigurationValid"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "FeedbackFault"
+              ]
+            }
+          },
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StartPulse"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "StarFeedback"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "DeltaFeedback"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "10"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatStarDeltaLad",
+                  "Step"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Stop and faults dominate every transition",
+      "rung": {
+        "series": [
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "nc",
+                  "operand": {
+                    "local": [
+                      "Enable"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "Stop"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "Fault"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "nc",
+                  "operand": {
+                    "local": [
+                      "ConfigurationValid"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "global": [
+                      "DB_PatStarDeltaLad",
+                      "FeedbackFault"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatStarDeltaLad",
+                  "Step"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Time star phase",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "10"
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TON",
+            "instance": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StarClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StarDuration"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "global": [
+                    "DB_PatStarDeltaLad",
+                    "StarDone"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Time break before delta",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "20"
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TON",
+            "instance": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "GapClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "ChangeoverTime"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "global": [
+                    "DB_PatStarDeltaLad",
+                    "GapDone"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Complete changeover only with both contactors off",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "20"
+              }
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "GapDone"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "StarFeedback"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "DeltaFeedback"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "30"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatStarDeltaLad",
+                  "Step"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "End star phase",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "10"
+              }
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StarDone"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "20"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatStarDeltaLad",
+                  "Step"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Recover invalid phase",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "ne",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            }
+          },
+          {
+            "kind": "compare",
+            "op": "ne",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "10"
+              }
+            }
+          },
+          {
+            "kind": "compare",
+            "op": "ne",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "20"
+              }
+            }
+          },
+          {
+            "kind": "compare",
+            "op": "ne",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "30"
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatStarDeltaLad",
+                  "Step"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Main contactor remains on during changeover",
+      "rung": {
+        "series": [
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "compare",
+                  "op": "eq",
+                  "type": "Int",
+                  "left": {
+                    "global": [
+                      "DB_PatStarDeltaLad",
+                      "Step"
+                    ]
+                  },
+                  "right": {
+                    "literal": {
+                      "type": "Int",
+                      "value": "10"
+                    }
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "compare",
+                  "op": "eq",
+                  "type": "Int",
+                  "left": {
+                    "global": [
+                      "DB_PatStarDeltaLad",
+                      "Step"
+                    ]
+                  },
+                  "right": {
+                    "literal": {
+                      "type": "Int",
+                      "value": "20"
+                    }
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "compare",
+                  "op": "eq",
+                  "type": "Int",
+                  "left": {
+                    "global": [
+                      "DB_PatStarDeltaLad",
+                      "Step"
+                    ]
+                  },
+                  "right": {
+                    "literal": {
+                      "type": "Int",
+                      "value": "30"
+                    }
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "MainOn"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Star coil has opposing feedback interlock",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "10"
+              }
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "DeltaFeedback"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "StarOn"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Delta coil has opposing feedback interlock",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "Step"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "30"
+              }
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "StarFeedback"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "DeltaOn"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Detect star command feedback mismatch",
+      "rung": {
+        "series": [
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "StarOn"
+                    ]
+                  }
+                },
+                {
+                  "kind": "nc",
+                  "operand": {
+                    "local": [
+                      "StarFeedback"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "nc",
+                  "operand": {
+                    "local": [
+                      "StarOn"
+                    ]
+                  }
+                },
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "StarFeedback"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StarMismatch"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Detect delta command feedback mismatch",
+      "rung": {
+        "series": [
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "DeltaOn"
+                    ]
+                  }
+                },
+                {
+                  "kind": "nc",
+                  "operand": {
+                    "local": [
+                      "DeltaFeedback"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "nc",
+                  "operand": {
+                    "local": [
+                      "DeltaOn"
+                    ]
+                  }
+                },
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "DeltaFeedback"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "DeltaMismatch"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Supervise star feedback every scan",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StarMismatch"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TON",
+            "instance": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "StarFeedbackClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "FeedbackLimit"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "global": [
+                    "DB_PatStarDeltaLad",
+                    "StarFault"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Supervise delta feedback every scan",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "DeltaMismatch"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TON",
+            "instance": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "DeltaFeedbackClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "FeedbackLimit"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "global": [
+                    "DB_PatStarDeltaLad",
+                    "DeltaFault"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Latch feedback timeout and drop outputs in this scan",
+      "rung": {
+        "series": [
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "global": [
+                      "DB_PatStarDeltaLad",
+                      "StarFault"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "global": [
+                      "DB_PatStarDeltaLad",
+                      "DeltaFault"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "set",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "FeedbackFault"
+              ]
+            }
+          },
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatStarDeltaLad",
+                  "Step"
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "reset",
+            "operand": {
+              "local": [
+                "MainOn"
+              ]
+            }
+          },
+          {
+            "kind": "reset",
+            "operand": {
+              "local": [
+                "StarOn"
+              ]
+            }
+          },
+          {
+            "kind": "reset",
+            "operand": {
+              "local": [
+                "DeltaOn"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish persistent feedback fault",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatStarDeltaLad",
+                "FeedbackFault"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "FeedbackFault"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

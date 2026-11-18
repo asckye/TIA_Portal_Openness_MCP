@@ -148,8 +148,8 @@ internal sealed class PlcPatternLibrary
                 source.Append(Encoding.ASCII.GetString(bytes)).Append('\n');
             }
         }
-        Require(variantId != "lad", "LAD input validation is not implemented until S4c");
-        ValidateScl(source.ToString(), variant);
+        if (variantId == "lad") PlcPatternLadderInputs.Build(root, variant);
+        else ValidateScl(source.ToString(), variant);
     }
 
     private static void ValidateScl(string source, JsonNode variant)
@@ -241,7 +241,7 @@ internal sealed class PlcPatternLibrary
                     .Select(r => Text(r!["releaseKey"]) + "/" + Text(r["cpuFamily"])));
                 var example = new JsonObject {
                     ["id"] = "pattern/" + Text(pattern["id"])
-                        + (pattern["variants"]!.AsArray().Count == 1 && Text(variant["id"]) == "scl" ? "" : "/" + Text(variant["id"])),
+                        + (Text(variant["id"]) == "scl" ? "" : "/" + Text(variant["id"])),
                     ["language"] = "plc-pattern", ["sourceLanguage"] = Text(variant["id"]) == "lad" ? "lad" : "scl",
                     ["kind"] = Text(variant["id"]) == "lad" ? "builder-input" : "complete-source",
                     ["title"] = Copy(pattern["title"]!), ["summary"] = Copy(pattern["summary"]!), ["origin"] = "project pattern",
@@ -250,7 +250,9 @@ internal sealed class PlcPatternLibrary
                         string.Join(", ", verified.Select(r => Text(r!["package"]) is { Length: > 0 } package ? package : Text(r!["commit"])).Distinct())
                             + "; " +
                         string.Join(", ", verified.Select(r => Text(r!["date"])).Distinct())
-                            + "): external-source import, block generation and software compile with 0 errors on " +
+                            + (Text(variant["id"]) == "lad"
+                                ? "): V21 only; global DB and LAD FC XML import and software compile with 0 errors on "
+                                : "): external-source import, block generation and software compile with 0 errors on ") +
                         string.Join(", ", Strings(variant["cpuFamilies"])) + ". Absent: " + (absent.Length == 0 ? "none" : absent)
                             + ". Behaviour on a running PLC NOT RUN."
                 };

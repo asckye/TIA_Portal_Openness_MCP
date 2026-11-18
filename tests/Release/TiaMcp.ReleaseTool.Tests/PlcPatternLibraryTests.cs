@@ -1,5 +1,8 @@
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Schema;
 using TiaMcp.BuildCommon;
 using Xunit;
 using static TiaMcp.ReleaseTool.CatalogJson;
@@ -18,10 +21,13 @@ public sealed class PlcPatternLibraryTests
         Assert.Equal(new[] { "alarm-latch", "analog-scaling", "counters-ctu-ctd-ctud", "cylinder-timeout", "mc-power-axis",
             "modbus-rtu-master", "motor-fwd-rev", "sequence-station", "star-delta", "start-stop", "timers-ton-tof-tp" },
             library.Patterns.Select(p => Text(p!["id"])));
-        Assert.Equal(12, library.Patterns.SelectMany(p => p!["variants"]!.AsArray()).Sum(v => v!["files"]!.AsArray().Count));
-        Assert.Equal(168, library.Evidence.Count);
+        var variants = library.Patterns.SelectMany(p => p!["variants"]!.AsArray()).ToArray();
+        Assert.Equal(12, variants.Where(v => Text(v!["id"]) != "lad").Sum(v => v!["files"]!.AsArray().Count));
+        Assert.Equal(14, variants.Where(v => Text(v!["id"]) == "lad").Sum(v => v!["files"]!.AsArray().Count));
+        Assert.Equal(182, library.Evidence.Count);
         Assert.All(library.Evidence, row => { Assert.Equal("NOT RUN", Text(row!["status"])); Assert.Equal(5, row.AsObject().Count); });
-        var expected = library.Patterns.SelectMany(p => p!["variants"]!.AsArray().SelectMany(v => Keys.SelectMany(k =>
+        var expected = library.Patterns.SelectMany(p => p!["variants"]!.AsArray().OrderBy(v => Text(v!["id"]), StringComparer.Ordinal)
+            .SelectMany(v => (Text(v!["id"]) == "lad" ? new[] { "21" } : Keys).SelectMany(k =>
             Strings(v!["cpuFamilies"]).Order(StringComparer.Ordinal).Select(f => $"{Text(p["id"])}/{Text(v["id"])}/{k}/{f}"))));
         Assert.Equal(expected, library.Evidence.Select(r => $"{Text(r!["pattern"])}/{Text(r["variant"])}/{Text(r["releaseKey"])}/{Text(r["cpuFamily"])}"));
         Assert.Empty(PlcPatternLibrary.Served(Root));
@@ -423,6 +429,157 @@ public sealed class PlcPatternLibraryTests
         Assert.Throws<ReleaseException>(() => PlcPatternLibrary.Served(fixture.Root));
     }
 
+    public static IEnumerable<object[]> LadderPatterns() => new[] { "alarm-latch", "counters-ctu-ctd-ctud", "cylinder-timeout",
+        "motor-fwd-rev", "star-delta", "start-stop", "timers-ton-tof-tp" }.Select(id => new object[] { id });
+
+    [Fact]
+    public void Ladder_variants_have_distinct_db_and_fc_numbers_in_pattern_id_order()
+    {
+        var dbNumbers = new List<int>();
+        var fcNumbers = new List<int>();
+        foreach (var row in LadderPatterns())
+        {
+            var pattern = Read(Root, "reference/plc-patterns/" + (string)row[0] + "/pattern.json");
+            var variant = Assert.Single(pattern["variants"]!.AsArray(), v => Text(v!["id"]) == "lad")!;
+            var files = variant["files"]!.AsArray();
+            var db = Read(Root, Text(Assert.Single(files, f => Text(f!["path"]).EndsWith(".db.json", StringComparison.Ordinal))!["path"]));
+            var fc = Read(Root, Text(Assert.Single(files, f => Text(f!["path"]).EndsWith(".rung.json", StringComparison.Ordinal))!["path"]));
+            dbNumbers.Add(db["dbNumber"]!.GetValue<int>());
+            fcNumbers.Add(fc["blockNumber"]!.GetValue<int>());
+        }
+        Assert.Equal(new[] { 9101, 9102, 9103, 9104, 9105, 9106, 9107 }, dbNumbers);
+        Assert.Equal(dbNumbers, fcNumbers);
+        Assert.Equal(7, dbNumbers.Distinct().Count());
+        Assert.Equal(7, fcNumbers.Distinct().Count());
+    }
+
+    [Fact]
+    public void Ladder_timers_keep_independent_presets_and_scl_output_names()
+    {
+        const string directory = "reference/plc-patterns/timers-ton-tof-tp/lad/";
+        var db = Read(Root, directory + "PatTimers.db.json");
+        var fc = Read(Root, directory + "PatTimers.rung.json");
+        var settings = db["staticMembers"]!.AsArray().Where(m => m!["startValue"] != null).ToArray();
+        string[] times = ["OnTime", "OffTime", "PulseTime"];
+        string[] outputs = ["OnDone", "OffActive", "PulseActive"];
+        string[] elapsed = ["OnElapsed", "OffElapsed", "PulseElapsed"];
+        Assert.Equal(times, settings.Select(m => Text(m!["name"])));
+        Assert.All(settings, m => { Assert.Equal("Time", Text(m!["datatype"])); Assert.Equal("T#1s", Text(m["startValue"])); });
+        Assert.DoesNotContain(db["staticMembers"]!.AsArray(), m => Text(m!["name"]) == "Delay");
+        Assert.Equal(outputs, fc["outputs"]!.AsArray().Select(m => Text(m!["name"])));
+        Assert.Equal(new[] { "TON", "TOF", "TP" }, fc["networks"]!.AsArray().Select(n => Text(n!["rung"]!["outputs"]![0]!["type"])));
+        for (int i = 0; i < times.Length; i++)
+        {
+            var timer = fc["networks"]![i]!["rung"]!["outputs"]![0]!;
+            Assert.Equal(new[] { "DB_PatTimersLad", times[i] }, Strings(timer["pt"]!["global"]));
+            Assert.Equal(new[] { outputs[i] }, Strings(Assert.Single(timer["q"]!.AsArray())!["operand"]!["local"]));
+            Assert.Equal(new[] { "DB_PatTimersLad", elapsed[i] }, Strings(timer["et"]!["global"]));
+            Assert.Contains(db["staticMembers"]!.AsArray(), m => Text(m!["name"]) == elapsed[i] && Text(m["datatype"]) == "Time");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(LadderPatterns))]
+    public void Ladder_inputs_build_v21_state_db_and_fc_with_rungs_and_validate_official_xsd(string id)
+    {
+        var pattern = Read(Root, "reference/plc-patterns/" + id + "/pattern.json");
+        var variant = Assert.Single(pattern["variants"]!.AsArray(), v => Text(v!["id"]) == "lad")!;
+        Assert.Equal(new[] { "S7-1200", "S7-1500" }, Strings(variant["cpuFamilies"]));
+        Assert.Contains("V21 only", Text(variant["importSequence"]));
+        var documents = PlcPatternLadderInputs.Build(Root, variant);
+        Assert.Equal(2, documents.Count);
+        Assert.NotNull(documents[0].Root!.Element("SW.Blocks.GlobalDB"));
+        Assert.NotNull(documents[1].Root!.Element("SW.Blocks.FC"));
+        Assert.All(documents, d => Assert.Equal("V21", (string?)d.Root!.Element("Engineering")!.Attribute("version")));
+        XNamespace flg = "http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5";
+        var nets = documents[1].Descendants(flg + "FlgNet").ToArray();
+        Assert.NotEmpty(nets);
+        Assert.DoesNotContain(documents[1].Descendants(), e => e.Name.LocalName is "Call" or "StructuredText");
+        string? sdkRoot = Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT");
+        if (string.IsNullOrEmpty(sdkRoot))
+        {
+            Console.WriteLine("[XSD NOT RUN] Set TIA_MCP_TEST_PUBLIC_API_ROOT for V21 LAD and DB interface schema validation.");
+            return;
+        }
+        string directory = Path.Combine(sdkRoot, "TIA_V21_PublicAPI/V21/Schemas");
+        if (!Directory.Exists(directory)) directory = Path.Combine(sdkRoot, "TIA_V21_PublicAPI/V21/net48/Schemas");
+        foreach (var fragment in nets.Concat(documents[0].Descendants()
+            .Where(e => e.Name.LocalName == "Sections")))
+        {
+            string schema = fragment.Name.LocalName == "FlgNet" ? "SW.PlcBlocks.LADFBD_v5.xsd" : "SW.InterfaceSections_v5.xsd";
+            var schemas = new XmlSchemaSet { XmlResolver = new XmlUrlResolver() };
+            var issues = new List<string>();
+            schemas.ValidationEventHandler += (_, args) => issues.Add(args.Message);
+            schemas.Add(fragment.Name.NamespaceName, Path.Combine(directory, schema)); schemas.Compile();
+            new XDocument(new XElement(fragment)).Validate(schemas, (_, args) => issues.Add(args.Message));
+            Assert.True(issues.Count == 0, id + " " + schema + ": " + string.Join("; ", issues));
+        }
+    }
+
+    [Fact]
+    public void Ladder_gate_requires_both_v21_families_and_keeps_the_scl_example_identity()
+    {
+        using var fixture = new Fixture();
+        var evidence = fixture.Evidence();
+        var cells = evidence["rows"]!.AsArray().Where(r => Text(r!["pattern"]) == "start-stop" && Text(r["variant"]) == "lad").ToArray();
+        Assert.Equal(2, cells.Length);
+        Assert.All(cells, r => Assert.Equal("21", Text(r!["releaseKey"])));
+        Fixture.Verify(cells[0]!.AsObject()); fixture.SaveEvidence(evidence);
+        Assert.Empty(PlcPatternLibrary.Served(fixture.Root));
+        Fixture.Verify(cells[1]!.AsObject()); fixture.SaveEvidence(evidence);
+        var example = Assert.Single(PlcPatternLibrary.Served(fixture.Root))!;
+        Assert.Equal("pattern/start-stop/lad", Text(example["id"]));
+        Assert.Equal(new[] { "21" }, Strings(example["releaseKeys"]));
+        Assert.Equal("lad", Text(example["sourceLanguage"]));
+        Assert.Equal("builder-input", Text(example["kind"]));
+        Assert.Equal(new[] { "21" }, example["availability"]!.AsObject().Select(p => p.Key));
+        Assert.Contains("V21 only; global DB and LAD FC XML import", Text(example["validation"]));
+        var usage = ToolUsageGenerator.Generate(Root, PlcPatternLibrary.Served(fixture.Root));
+        var embedded = Assert.Single(usage["examples"]!.AsArray(), e => Text(e!["id"]) == "pattern/start-stop/lad")!;
+        Assert.Equal(2, embedded["files"]!.AsArray().Count);
+        Assert.All(embedded["files"]!.AsArray(), f => Assert.Equal(Hash(Encoding.ASCII.GetBytes(Text(f!["content"]))), Text(f["contentSha256"])));
+        fixture.VerifyStartStop();
+        Assert.Contains(PlcPatternLibrary.Served(fixture.Root), e => Text(e!["id"]) == "pattern/start-stop");
+        evidence = fixture.Evidence();
+        var failed = evidence["rows"]!.AsArray().First(r => Text(r!["pattern"]) == "start-stop" && Text(r["variant"]) == "lad")!;
+        failed["status"] = "failed"; failed["nativeMessage"] = "fixture LAD compile error";
+        fixture.SaveEvidence(evidence);
+        Assert.Equal("pattern/start-stop", Text(Assert.Single(PlcPatternLibrary.Served(fixture.Root))!["id"]));
+    }
+
+    [Theory]
+    [InlineData("unknown-rung-key")][InlineData("malformed-json")][InlineData("undeclared-local")]
+    [InlineData("undeclared-global")][InlineData("state-type")][InlineData("instruction")]
+    [InlineData("contains")][InlineData("encoding")][InlineData("absolute-operand")][InlineData("unknown-db-key")]
+    public void Invalid_ladder_inputs_are_rejected_before_any_evidence_can_serve_them(string mutation)
+    {
+        using var fixture = new Fixture();
+        string metadataPath = Path.Combine(fixture.Root, "reference/plc-patterns/timers-ton-tof-tp/pattern.json");
+        var metadata = JsonNode.Parse(File.ReadAllText(metadataPath))!;
+        var variant = Assert.Single(metadata["variants"]!.AsArray(), v => Text(v!["id"]) == "lad")!;
+        string dbPath = Path.Combine(fixture.Root, Text(variant["files"]![0]!["path"]));
+        string rungPath = Path.Combine(fixture.Root, Text(variant["files"]![1]!["path"]));
+        var db = JsonNode.Parse(File.ReadAllText(dbPath))!;
+        var block = JsonNode.Parse(File.ReadAllText(rungPath))!;
+        var rung = block["networks"]![0]!["rung"]!;
+        switch (mutation)
+        {
+            case "unknown-rung-key": rung["unknown"] = true; break;
+            case "undeclared-local": rung["series"]![0]!["operand"]!["local"]![0] = "Missing"; break;
+            case "undeclared-global": rung["outputs"]![0]!["instance"]!["global"]![0] = "DB_Missing"; break;
+            case "absolute-operand": rung["series"]![0]!["operand"]!["local"]![0] = "%I0.0"; break;
+            case "state-type": db["staticMembers"]![0]!["datatype"] = "TOF_TIME"; break;
+            case "unknown-db-key": db["unknown"] = true; break;
+            case "instruction": variant["instructions"]!.AsArray().RemoveAt(0); break;
+            case "contains": variant["contains"]![1]!["name"] = "FC_PatWrong"; break;
+            case "encoding": variant["files"]![1]!["encoding"] = "UTF-8"; break;
+        }
+        File.WriteAllText(metadataPath, Encode(metadata), new UTF8Encoding(false));
+        File.WriteAllText(dbPath, Encode(db), new UTF8Encoding(false));
+        File.WriteAllText(rungPath, mutation == "malformed-json" ? "{" : Encode(block), new UTF8Encoding(false));
+        Assert.Throws<ReleaseException>(() => PlcPatternLibrary.Load(fixture.Root));
+    }
+
     private sealed class Fixture : IDisposable
     {
         public string Root { get; } = Path.Combine(PlcPatternLibraryTests.Root, "bin-build", "plc-pattern-tests", Guid.NewGuid().ToString("N"));
@@ -439,7 +596,7 @@ public sealed class PlcPatternLibraryTests
         }
         public JsonNode Evidence() => Read(Root, "reference/plc-patterns/evidence.json");
         public IEnumerable<JsonObject> StartStopRows(JsonNode evidence) => evidence["rows"]!.AsArray()
-            .Where(r => Text(r!["pattern"]) == "start-stop").Select(r => r!.AsObject());
+            .Where(r => Text(r!["pattern"]) == "start-stop" && Text(r["variant"]) == "scl").Select(r => r!.AsObject());
         public void SaveEvidence(JsonNode evidence) => File
             .WriteAllText(Path.Combine(Root, "reference/plc-patterns/evidence.json"), Encode(evidence), new UTF8Encoding(false));
         public void VerifyStartStop()

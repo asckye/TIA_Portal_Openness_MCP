@@ -1,0 +1,22 @@
+{
+  "dbName": "DB_PatAlarmLatchLad",
+  "dbNumber": 9101,
+  "staticMembers": [
+    {
+      "name": "Latched",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Acknowledged",
+      "datatype": "Bool"
+    },
+    {
+      "name": "AckMemory",
+      "datatype": "Bool"
+    },
+    {
+      "name": "AckPulse",
+      "datatype": "Bool"
+    }
+  ]
+}

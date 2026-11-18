@@ -1,0 +1,112 @@
+{
+  "blockName": "FC_PatStartStopLad",
+  "blockNumber": 9106,
+  "inputs": [
+    {
+      "name": "Start",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Stop",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Fault",
+      "datatype": "Bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Run",
+      "datatype": "Bool"
+    }
+  ],
+  "networks": [
+    {
+      "titleZhCn": "Stop and fault dominate the seal-in",
+      "rung": {
+        "series": [
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Stop"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Fault"
+              ]
+            }
+          },
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "Start"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "global": [
+                      "DB_PatStartStopLad",
+                      "Run"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "global": [
+                "DB_PatStartStopLad",
+                "Run"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish persistent run state",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatStartStopLad",
+                "Run"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Run"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

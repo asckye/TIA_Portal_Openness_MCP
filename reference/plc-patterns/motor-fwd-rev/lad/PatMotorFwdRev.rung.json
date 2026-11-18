@@ -1,0 +1,533 @@
+{
+  "blockName": "FC_PatMotorFwdRevLad",
+  "blockNumber": 9104,
+  "inputs": [
+    {
+      "name": "Enable",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Fault",
+      "datatype": "Bool"
+    },
+    {
+      "name": "ForwardRequest",
+      "datatype": "Bool"
+    },
+    {
+      "name": "ReverseRequest",
+      "datatype": "Bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Forward",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Reverse",
+      "datatype": "Bool"
+    },
+    {
+      "name": "RequestConflict",
+      "datatype": "Bool"
+    }
+  ],
+  "networks": [
+    {
+      "titleZhCn": "Reject simultaneous direction requests",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "ForwardRequest"
+              ]
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "ReverseRequest"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "RequestConflict"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Default to no request",
+      "rung": {
+        "series": [],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatMotorFwdRevLad",
+                  "Wanted"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Accept forward request",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Enable"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Fault"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "RequestConflict"
+              ]
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "ForwardRequest"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "1"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatMotorFwdRevLad",
+                  "Wanted"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Accept reverse request",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Enable"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Fault"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "RequestConflict"
+              ]
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "ReverseRequest"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "-1"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatMotorFwdRevLad",
+                  "Wanted"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Drop the previous direction before changing",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "ne",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Direction"
+              ]
+            },
+            "right": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Wanted"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatMotorFwdRevLad",
+                  "Direction"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Measure continuous off time",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Direction"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TON",
+            "instance": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "OffClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "DeadTime"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "global": [
+                    "DB_PatMotorFwdRevLad",
+                    "OffDone"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Allow initial start or same direction or elapsed dead time",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Direction"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            }
+          },
+          {
+            "kind": "compare",
+            "op": "ne",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Wanted"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            }
+          },
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "compare",
+                  "op": "eq",
+                  "type": "Int",
+                  "left": {
+                    "global": [
+                      "DB_PatMotorFwdRevLad",
+                      "LastDirection"
+                    ]
+                  },
+                  "right": {
+                    "literal": {
+                      "type": "Int",
+                      "value": "0"
+                    }
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "compare",
+                  "op": "eq",
+                  "type": "Int",
+                  "left": {
+                    "global": [
+                      "DB_PatMotorFwdRevLad",
+                      "LastDirection"
+                    ]
+                  },
+                  "right": {
+                    "global": [
+                      "DB_PatMotorFwdRevLad",
+                      "Wanted"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "global": [
+                      "DB_PatMotorFwdRevLad",
+                      "OffDone"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Wanted"
+              ]
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatMotorFwdRevLad",
+                  "Direction"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Remember energized direction",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "ne",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Direction"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "0"
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "move",
+            "in": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Direction"
+              ]
+            },
+            "out": [
+              {
+                "global": [
+                  "DB_PatMotorFwdRevLad",
+                  "LastDirection"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish forward",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Direction"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "1"
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Forward"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish reverse",
+      "rung": {
+        "series": [
+          {
+            "kind": "compare",
+            "op": "eq",
+            "type": "Int",
+            "left": {
+              "global": [
+                "DB_PatMotorFwdRevLad",
+                "Direction"
+              ]
+            },
+            "right": {
+              "literal": {
+                "type": "Int",
+                "value": "-1"
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Reverse"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

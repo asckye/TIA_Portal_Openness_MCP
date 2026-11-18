@@ -1,0 +1,77 @@
+{
+  "dbName": "DB_PatStarDeltaLad",
+  "dbNumber": 9105,
+  "staticMembers": [
+    {
+      "name": "Step",
+      "datatype": "Int"
+    },
+    {
+      "name": "StartMemory",
+      "datatype": "Bool"
+    },
+    {
+      "name": "StartPulse",
+      "datatype": "Bool"
+    },
+    {
+      "name": "StarDone",
+      "datatype": "Bool"
+    },
+    {
+      "name": "GapDone",
+      "datatype": "Bool"
+    },
+    {
+      "name": "FeedbackFault",
+      "datatype": "Bool"
+    },
+    {
+      "name": "StarMismatch",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DeltaMismatch",
+      "datatype": "Bool"
+    },
+    {
+      "name": "StarFault",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DeltaFault",
+      "datatype": "Bool"
+    },
+    {
+      "name": "StarClock",
+      "datatype": "TON_TIME"
+    },
+    {
+      "name": "GapClock",
+      "datatype": "TON_TIME"
+    },
+    {
+      "name": "StarFeedbackClock",
+      "datatype": "TON_TIME"
+    },
+    {
+      "name": "DeltaFeedbackClock",
+      "datatype": "TON_TIME"
+    },
+    {
+      "name": "StarDuration",
+      "datatype": "Time",
+      "startValue": "T#5s"
+    },
+    {
+      "name": "ChangeoverTime",
+      "datatype": "Time",
+      "startValue": "T#500ms"
+    },
+    {
+      "name": "FeedbackLimit",
+      "datatype": "Time",
+      "startValue": "T#500ms"
+    }
+  ]
+}

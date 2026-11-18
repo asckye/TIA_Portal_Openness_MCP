@@ -118,10 +118,23 @@ NO-LOCK Part 4 的真机核对当前为 NOT RUN。获准连接测试环境后，
 经典 PLC 模式的源文件和元数据维护在 `reference/plc-patterns`，证据集中在
 [`evidence.json`](../../reference/plc-patterns/evidence.json)。每个 SCL 变体必须覆盖全部八版与声明的每个 CPU 家族：
 每格为 `verified`（外部源导入、块生成、软件编译零错误），或为附原生消息与 Siemens 官方网址的 `absent`；
-至少一格必须实测通过。任一格为 `NOT RUN` 或 `failed` 时整个变体不提供。LAD 变体后续单独以 V21 验证，
+至少一格必须实测通过。任一格为 `NOT RUN` 或 `failed` 时整个变体不提供。七个 LAD 候选变体单独以 V21 验证，
 未注册 builder 不算指令缺失。负责人从 VM 记录填写 TIA 更新、CPU 订货号与固件、包或提交、日期、运行编号、
 指令版本与导出哈希，再重新生成工具用法。离线无法核实的指令在 `pattern.json` 中标为 `unverified`，
 网址仅保留官方文档入口；提供前必须换成确切手册页并核实名称、版本。模式的 PLC 运行行为仍为 NOT RUN。
+
+LAD 候选覆盖启停、TON/TOF/TP、计数器、正反转、报警锁存、星三角与气缸超时。
+每组 `lad/*.db.json` 和 `lad/*.rung.json` 分别作为全局 DB、LAD FC 构建器的输入对象，
+显式指定 `outputReleaseKey="21"`；先构建并导入 DB，再构建并导入 FC，最后编译和导出。
+示例按模式 ID 顺序为七组 DB/FC 分别分配 9101 至 9107，同一组 DB 和 FC 使用相同号码；
+导入前检查目标工程，已占用的 FC 或 DB 号码必须替换为空闲号码。
+FC 绑定一个固定名称的全局状态 DB，每扫描无条件调用一次 FC。
+第二组独立控制需要复制 FC 和 DB，使用新的名称及块号，并同步修改 FC 中的全局 DB 引用。
+Time 设置与已用时间存于状态 DB，因为 plc-foundation 的 LAD FC 接口不接受 Time。
+三个定时器分别使用 OnTime、OffTime、PulseTime；布尔输出 OnDone、OffActive、PulseActive
+和已用时间 OnElapsed、OffElapsed、PulseElapsed 与 SCL 同名。
+离线测试构建全部输入并验证 V21 FlgNet 和 DB 接口 XSD，
+不证明指令实例类型、版本或控制行为已经被 TIA 接受；14 个 V21 家族证据单元仍为 NOT RUN。
 
 SCL 候选包含星三角、气缸超时、工位步序、Modbus RTU 与轴使能。Modbus 的 S7-1200（CM/CB 1241）和
 S7-1500（CM PtP）分别验证：除指令名称与版本，还须核对 `PORT` 类型、`MB_DB` 多重实例链接、数据缓冲区

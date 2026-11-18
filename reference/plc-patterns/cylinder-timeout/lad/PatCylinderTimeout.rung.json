@@ -1,0 +1,563 @@
+{
+  "blockName": "FC_PatCylinderTimeoutLad",
+  "blockNumber": 9103,
+  "inputs": [
+    {
+      "name": "Enable",
+      "datatype": "Bool"
+    },
+    {
+      "name": "ExtendRequest",
+      "datatype": "Bool"
+    },
+    {
+      "name": "RetractRequest",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Extended",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Retracted",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Reset",
+      "datatype": "Bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Extend",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Retract",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Fault",
+      "datatype": "Bool"
+    },
+    {
+      "name": "TimedOut",
+      "datatype": "Bool"
+    }
+  ],
+  "networks": [
+    {
+      "titleZhCn": "Conflicting commands or position feedback",
+      "rung": {
+        "series": [
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "ExtendRequest"
+                    ]
+                  }
+                },
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "RetractRequest"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "Extended"
+                    ]
+                  }
+                },
+                {
+                  "kind": "no",
+                  "operand": {
+                    "local": [
+                      "Retracted"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Conflict"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Reset only at rest without conflict",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Reset"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "ExtendRequest"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "RetractRequest"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Conflict"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "reset",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Fault"
+              ]
+            }
+          },
+          {
+            "kind": "reset",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "TimedOut"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Latch conflict or invalid time limits",
+      "rung": {
+        "series": [
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "global": [
+                      "DB_PatCylinderTimeoutLad",
+                      "Conflict"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "compare",
+                  "op": "le",
+                  "type": "Time",
+                  "left": {
+                    "global": [
+                      "DB_PatCylinderTimeoutLad",
+                      "ExtendLimit"
+                    ]
+                  },
+                  "right": {
+                    "typed": "T#0ms"
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "compare",
+                  "op": "le",
+                  "type": "Time",
+                  "left": {
+                    "global": [
+                      "DB_PatCylinderTimeoutLad",
+                      "RetractLimit"
+                    ]
+                  },
+                  "right": {
+                    "typed": "T#0ms"
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "set",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Fault"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Extend until end position",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Enable"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Fault"
+              ]
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "ExtendRequest"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Extended"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Extend"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Retract until end position",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Enable"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Fault"
+              ]
+            }
+          },
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "RetractRequest"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Retracted"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Retract"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Supervise extend command",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Extend"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TON",
+            "instance": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "ExtendClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "ExtendLimit"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "global": [
+                    "DB_PatCylinderTimeoutLad",
+                    "ExtendDone"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Supervise retract command",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Retract"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "timer",
+            "type": "TON",
+            "instance": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "RetractClock"
+              ]
+            },
+            "pt": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "RetractLimit"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "global": [
+                    "DB_PatCylinderTimeoutLad",
+                    "RetractDone"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Latch travel timeout",
+      "rung": {
+        "series": [
+          {
+            "kind": "or",
+            "paths": [
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "global": [
+                      "DB_PatCylinderTimeoutLad",
+                      "ExtendDone"
+                    ]
+                  }
+                }
+              ],
+              [
+                {
+                  "kind": "no",
+                  "operand": {
+                    "global": [
+                      "DB_PatCylinderTimeoutLad",
+                      "RetractDone"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "set",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "TimedOut"
+              ]
+            }
+          },
+          {
+            "kind": "set",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Fault"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Drop both commands during the fault scan",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Fault"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "reset",
+            "operand": {
+              "local": [
+                "Extend"
+              ]
+            }
+          },
+          {
+            "kind": "reset",
+            "operand": {
+              "local": [
+                "Retract"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish fault",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "Fault"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Fault"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish timeout",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatCylinderTimeoutLad",
+                "TimedOut"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "TimedOut"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

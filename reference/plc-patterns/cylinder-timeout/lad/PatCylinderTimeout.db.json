@@ -1,0 +1,44 @@
+{
+  "dbName": "DB_PatCylinderTimeoutLad",
+  "dbNumber": 9103,
+  "staticMembers": [
+    {
+      "name": "Conflict",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Fault",
+      "datatype": "Bool"
+    },
+    {
+      "name": "TimedOut",
+      "datatype": "Bool"
+    },
+    {
+      "name": "ExtendDone",
+      "datatype": "Bool"
+    },
+    {
+      "name": "RetractDone",
+      "datatype": "Bool"
+    },
+    {
+      "name": "ExtendClock",
+      "datatype": "TON_TIME"
+    },
+    {
+      "name": "RetractClock",
+      "datatype": "TON_TIME"
+    },
+    {
+      "name": "ExtendLimit",
+      "datatype": "Time",
+      "startValue": "T#3s"
+    },
+    {
+      "name": "RetractLimit",
+      "datatype": "Time",
+      "startValue": "T#3s"
+    }
+  ]
+}

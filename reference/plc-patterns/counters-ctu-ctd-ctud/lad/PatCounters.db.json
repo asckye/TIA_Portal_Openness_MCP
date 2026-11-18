@@ -1,0 +1,34 @@
+{
+  "dbName": "DB_PatCountersLad",
+  "dbNumber": 9102,
+  "staticMembers": [
+    {
+      "name": "UpMemory",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DownMemory",
+      "datatype": "Bool"
+    },
+    {
+      "name": "UpPulse",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DownPulse",
+      "datatype": "Bool"
+    },
+    {
+      "name": "UpCount",
+      "datatype": "CTU_INT"
+    },
+    {
+      "name": "DownCount",
+      "datatype": "CTD_INT"
+    },
+    {
+      "name": "BothCount",
+      "datatype": "CTUD_INT"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "dbName": "DB_PatMotorFwdRevLad",
+  "dbNumber": 9104,
+  "staticMembers": [
+    {
+      "name": "Direction",
+      "datatype": "Int"
+    },
+    {
+      "name": "LastDirection",
+      "datatype": "Int"
+    },
+    {
+      "name": "Wanted",
+      "datatype": "Int"
+    },
+    {
+      "name": "OffClock",
+      "datatype": "TON_TIME"
+    },
+    {
+      "name": "OffDone",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DeadTime",
+      "datatype": "Time",
+      "startValue": "T#2s"
+    }
+  ]
+}

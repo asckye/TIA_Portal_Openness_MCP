@@ -1,0 +1,330 @@
+{
+  "blockName": "FC_PatCountersLad",
+  "blockNumber": 9102,
+  "inputs": [
+    {
+      "name": "UpRequest",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DownRequest",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Reset",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Load",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Preset",
+      "datatype": "Int"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "UpValue",
+      "datatype": "Int"
+    },
+    {
+      "name": "DownValue",
+      "datatype": "Int"
+    },
+    {
+      "name": "BothValue",
+      "datatype": "Int"
+    },
+    {
+      "name": "UpReached",
+      "datatype": "Bool"
+    },
+    {
+      "name": "DownEmpty",
+      "datatype": "Bool"
+    },
+    {
+      "name": "BothHigh",
+      "datatype": "Bool"
+    },
+    {
+      "name": "BothLow",
+      "datatype": "Bool"
+    }
+  ],
+  "networks": [
+    {
+      "titleZhCn": "Sample up edge even while reset",
+      "rung": {
+        "series": [
+          {
+            "kind": "rising",
+            "operand": {
+              "local": [
+                "UpRequest"
+              ]
+            },
+            "memory": {
+              "global": [
+                "DB_PatCountersLad",
+                "UpMemory"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "global": [
+                "DB_PatCountersLad",
+                "UpPulse"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Sample down edge even while load",
+      "rung": {
+        "series": [
+          {
+            "kind": "rising",
+            "operand": {
+              "local": [
+                "DownRequest"
+              ]
+            },
+            "memory": {
+              "global": [
+                "DB_PatCountersLad",
+                "DownMemory"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "global": [
+                "DB_PatCountersLad",
+                "DownPulse"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Count up",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatCountersLad",
+                "UpPulse"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "counter",
+            "type": "CTU",
+            "instance": {
+              "global": [
+                "DB_PatCountersLad",
+                "UpCount"
+              ]
+            },
+            "valueType": "Int",
+            "pv": {
+              "local": [
+                "Preset"
+              ]
+            },
+            "cv": {
+              "local": [
+                "UpValue"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "local": [
+                    "UpReached"
+                  ]
+                }
+              }
+            ],
+            "reset": [
+              {
+                "kind": "no",
+                "operand": {
+                  "local": [
+                    "Reset"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Count down",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatCountersLad",
+                "DownPulse"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "counter",
+            "type": "CTD",
+            "instance": {
+              "global": [
+                "DB_PatCountersLad",
+                "DownCount"
+              ]
+            },
+            "valueType": "Int",
+            "pv": {
+              "local": [
+                "Preset"
+              ]
+            },
+            "cv": {
+              "local": [
+                "DownValue"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "local": [
+                    "DownEmpty"
+                  ]
+                }
+              }
+            ],
+            "load": [
+              {
+                "kind": "no",
+                "operand": {
+                  "local": [
+                    "Load"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Count both ways",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatCountersLad",
+                "UpPulse"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "counter",
+            "type": "CTUD",
+            "instance": {
+              "global": [
+                "DB_PatCountersLad",
+                "BothCount"
+              ]
+            },
+            "valueType": "Int",
+            "pv": {
+              "local": [
+                "Preset"
+              ]
+            },
+            "cv": {
+              "local": [
+                "BothValue"
+              ]
+            },
+            "q": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "local": [
+                    "BothHigh"
+                  ]
+                }
+              }
+            ],
+            "reset": [
+              {
+                "kind": "no",
+                "operand": {
+                  "local": [
+                    "Reset"
+                  ]
+                }
+              }
+            ],
+            "load": [
+              {
+                "kind": "no",
+                "operand": {
+                  "local": [
+                    "Load"
+                  ]
+                }
+              }
+            ],
+            "down": [
+              {
+                "kind": "no",
+                "operand": {
+                  "global": [
+                    "DB_PatCountersLad",
+                    "DownPulse"
+                  ]
+                }
+              }
+            ],
+            "qd": [
+              {
+                "kind": "coil",
+                "operand": {
+                  "local": [
+                    "BothLow"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

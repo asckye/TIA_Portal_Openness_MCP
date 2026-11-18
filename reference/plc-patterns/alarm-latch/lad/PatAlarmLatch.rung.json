@@ -1,0 +1,262 @@
+{
+  "blockName": "FC_PatAlarmLatchLad",
+  "blockNumber": 9101,
+  "inputs": [
+    {
+      "name": "Condition",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Acknowledge",
+      "datatype": "Bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Present",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Latched",
+      "datatype": "Bool"
+    },
+    {
+      "name": "Acknowledged",
+      "datatype": "Bool"
+    }
+  ],
+  "networks": [
+    {
+      "titleZhCn": "Sample acknowledgement edge",
+      "rung": {
+        "series": [
+          {
+            "kind": "rising",
+            "operand": {
+              "local": [
+                "Acknowledge"
+              ]
+            },
+            "memory": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "AckMemory"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "AckPulse"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "New condition clears previous acknowledgement",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Condition"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "Latched"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "reset",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "Acknowledged"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Latch active condition",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Condition"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "set",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "Latched"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Acknowledgement records the edge",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "AckPulse"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "set",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "Acknowledged"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Clear latch only after condition has gone",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "AckPulse"
+              ]
+            }
+          },
+          {
+            "kind": "nc",
+            "operand": {
+              "local": [
+                "Condition"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "reset",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "Latched"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish current condition",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "local": [
+                "Condition"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Present"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish latch",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "Latched"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Latched"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "titleZhCn": "Publish acknowledgement",
+      "rung": {
+        "series": [
+          {
+            "kind": "no",
+            "operand": {
+              "global": [
+                "DB_PatAlarmLatchLad",
+                "Acknowledged"
+              ]
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "kind": "coil",
+            "operand": {
+              "local": [
+                "Acknowledged"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

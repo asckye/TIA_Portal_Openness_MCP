@@ -1,0 +1,45 @@
+{
+  "dbName": "DB_PatTimersLad",
+  "dbNumber": 9107,
+  "staticMembers": [
+    {
+      "name": "OnClock",
+      "datatype": "TON_TIME"
+    },
+    {
+      "name": "OffClock",
+      "datatype": "TOF_TIME"
+    },
+    {
+      "name": "PulseClock",
+      "datatype": "TP_TIME"
+    },
+    {
+      "name": "OnTime",
+      "datatype": "Time",
+      "startValue": "T#1s"
+    },
+    {
+      "name": "OffTime",
+      "datatype": "Time",
+      "startValue": "T#1s"
+    },
+    {
+      "name": "PulseTime",
+      "datatype": "Time",
+      "startValue": "T#1s"
+    },
+    {
+      "name": "OnElapsed",
+      "datatype": "Time"
+    },
+    {
+      "name": "OffElapsed",
+      "datatype": "Time"
+    },
+    {
+      "name": "PulseElapsed",
+      "datatype": "Time"
+    }
+  ]
+}
