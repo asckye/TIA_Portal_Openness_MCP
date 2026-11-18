@@ -378,7 +378,9 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Enter_is_inert_and_cancel_or_escape_preserves_approval_and_reopening_clears_input"
             },
             ["TiaOpenness.Gui.Tests.WpfContextTests"] = new[] {
-                "Left_button_reader_matches_native_state_without_capture",
+                "Window_left_button_stays_released_when_the_native_button_state_changes_without_capture",
+                "Space_uses_window_input_even_when_the_native_queue_inherited_a_pressed_button",
+                "Space_waits_for_its_own_window_release_and_other_windows_keep_their_input_state",
                 "Space_wait_pumps_the_queued_mouse_release",
                 "Space_releases_capture_left_by_an_aborted_press",
                 "Space_releases_capture_when_key_delivery_throws",
