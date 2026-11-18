@@ -120,7 +120,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     // The process data location is cached at its first use, so
     // parallel test processes could share it. Production always uses the data location.
     internal string? SpillsDirectoryForTest { get; init; }
-    internal bool Disconnected => disconnecting;
+    internal bool Disconnected => disconnecting || sessionDisconnected;
     internal bool CallRunning
     {
         get
@@ -233,6 +233,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     private int? attachingProcessId;
     private JsonObject? disconnectAcknowledgement;
     private bool disconnectCompleted;
+    private volatile bool sessionDisconnected;
     private int unsettledLimitReported;
     private volatile bool disconnecting;
     private string? activeRequestId;
@@ -258,6 +259,21 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     internal JsonObject? SharedStatus
     {
         get { lock (stateSync) return sharedStatus == null ? null : (JsonObject)sharedStatus.DeepClone(); }
+    }
+    // Both ReadState paths publish the observation while holding stateSync.
+    private void CacheRuntimeState(JsonObject state)
+    {
+        hostState = (JsonObject)state.DeepClone();
+        if ((bool?)state["IsAttached"] == true || state["ProcessId"] != null) sessionDisconnected = false;
+    }
+    private void CacheSharedStatus(JsonObject status)
+    {
+        lock (stateSync)
+        {
+            StampSharedBinding(status);
+            sharedStatus = status;
+            if ((bool?)status["session"]?["isConnected"] == true) sessionDisconnected = false;
+        }
     }
     // Only the bundled worker gets the pre-dispatch readiness gate; an explicit --worker-exe (fixture) reports its own failures.
     internal bool Bundled { get; init; } = true;
@@ -431,7 +447,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             {
                 if (result?["PreviousOwnerRequests"] is JsonArray previousRequests)
                     Unsettled.ImportPreviousOwner(previousRequests.Select(value => value!.GetValue<string>()));
-                lock (stateSync) { attachedProcessId=arguments["processId"]!.GetValue<int>(); takenOverBy = null; }
+                lock (stateSync) { attachedProcessId=arguments["processId"]!.GetValue<int>(); takenOverBy = null; sessionDisconnected = false; }
                 ClearHostBinding();
                 lock (stateSync)
                     if (!Faulted && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc =
@@ -443,15 +459,18 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 string stateWire = await channel.CallAsync("adapter.ReadState", "{}", BindingChange.None, true,
                     timeouts.For("status"), CancellationToken.None);
                 var state = JsonNode.Parse(stateWire)!.AsObject();
-                lock (stateSync) attachedProcessId = (int?)state["ProcessId"];
-                ClearHostBinding();
-                UpdateApprovalIdentity(state);
-                lock (stateSync) hostState = (JsonObject)state.DeepClone();
-                lock (stateSync) hostProcessStartUtc = !Faulted && attachedProcessId.HasValue ? ProcessStartUtc(attachedProcessId.Value) : null;
-                lock (stateSync) ownsPortal = (bool?)state["CanDetachOnUncertainShutdown"] == false || (bool?)state["OwnsPortal"] == true;
+                lock (stateSync)
+                {
+                    attachedProcessId = (int?)state["ProcessId"];
+                    ClearHostBinding();
+                    UpdateApprovalIdentity(state);
+                    CacheRuntimeState(state);
+                    hostProcessStartUtc = !Faulted && attachedProcessId.HasValue ? ProcessStartUtc(attachedProcessId.Value) : null;
+                    ownsPortal = (bool?)state["CanDetachOnUncertainShutdown"] == false || (bool?)state["OwnsPortal"] == true;
+                }
             }
             if (operation == "ReadState" && result is JsonObject cachedState)
-                lock (stateSync) hostState = (JsonObject)cachedState.DeepClone();
+                lock (stateSync) CacheRuntimeState(cachedState);
             RememberRebindTarget(operation, arguments, result);
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
@@ -462,8 +481,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                     .CallAsync("adapter.HostObserve", "{\"operation\":\"status\",\"arguments\":{}}", BindingChange.None, true, timeouts.For("status"),
                         CancellationToken.None);
                 var status = JsonNode.Parse(statusWire)!.AsObject();
-                StampSharedBinding(status);
-                lock (stateSync) sharedStatus = status;
+                CacheSharedStatus(status);
             }
             if (token.IsCancellationRequested) TiaMcpServer.ModelContextProtocol.InvocationJournal
                 .Write(activeRequestId!, operation, "RETURNED_AFTER_CANCELLATION");

@@ -50,11 +50,13 @@
                     <Component Name="Values" AccessModifier="Array">
                       <Access Scope="LiteralConstant">
                         <Constant>
+                          <ConstantType>DInt</ConstantType>
                           <ConstantValue>-1</ConstantValue>
                         </Constant>
                       </Access>
                       <Access Scope="LiteralConstant">
                         <Constant>
+                          <ConstantType>DInt</ConstantType>
                           <ConstantValue>2</ConstantValue>
                         </Constant>
                       </Access>

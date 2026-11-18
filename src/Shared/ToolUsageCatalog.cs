@@ -277,14 +277,16 @@ namespace TiaOpenness.Shared
                 ? "This registered wrapper has no native implementation for release " + release + "; see interpretation and the tool description." : "";
             string selector = properties.ContainsKey("action") ? "action" : properties.ContainsKey("operation") ? "operation"
                 : name == "ConvertEngineeringTable" ? "direction" : "";
+            var call = CallExample(name, release, profile);
             var choices = selector.Length == 0 ? new JsonArray() : properties[selector]!["enum"] as JsonArray ?? new JsonArray();
+            if (selector.Length == 0 && call?["operations"] is JsonObject examples)
+                choices = new JsonArray(examples.Select(example => (JsonNode?)JsonValue.Create(example.Key)).ToArray());
             choices = new JsonArray(choices.Where(c => !string.IsNullOrEmpty((string?)c)).Select(c => c!.DeepClone()).ToArray());
             if (operation.Length > 0 && !choices.Any(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase)))
                 throw new ArgumentException("Unknown operation for this tool/release. Read its operations list.");
             if (operation.Length > 0) operation = (string)choices.First(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase))!;
             var curated = curatedArguments == null ? null : (JsonObject)JsonNode.Parse(curatedArguments)!;
             bool matches = curated != null && (operation.Length == 0 || (string?)(curated[selector] ?? properties[selector]?["default"]) == operation);
-            var call = CallExample(name, release, profile);
             JsonNode? callArguments = call?["arguments"]?.DeepClone();
             if (operation.Length > 0)
             {
@@ -310,7 +312,7 @@ namespace TiaOpenness.Shared
             // Show the initial operation explicitly, even when optional in the signature.
             foreach (var key in new[] { "action", "operation", "dryRun", "confirm" })
                 if (properties[key] is JsonObject prop && !args.ContainsKey(key)) args[key] = ExampleValue(key, prop);
-            if (operation.Length > 0) args[selector] = operation;
+            if (operation.Length > 0 && selector.Length > 0) args[selector] = operation;
             if (properties.ContainsKey("dryRun"))
                 args["dryRun"] = name == "ManageTestSuiteCase" && (string?)args["action"] == "showInEditor" ? JsonValue.Create(false)
                     : TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "UI"
@@ -341,7 +343,8 @@ namespace TiaOpenness.Shared
             var operations = new JsonArray();
             foreach (var choice in choices)
             {
-                var candidate = (JsonObject)args.DeepClone(); candidate[selector] = choice!.DeepClone();
+                var candidate = (JsonObject)args.DeepClone();
+                if (selector.Length > 0) candidate[selector] = choice!.DeepClone();
                 var variants = new JsonArray();
                 string discriminator = name == "ManageDeviceServiceObjects" ? "family" : name == "ManagePlcDocuments" ? "objectKind"
                     : name == "ManageSivarcBlockDefinition" ? "kind" : "";
@@ -357,7 +360,7 @@ namespace TiaOpenness.Shared
                     if (operation == (string?)choice && reason.Length == 0 && context != null && !chosenContext)
                     { args[discriminator] = context.DeepClone(); chosenContext = true; }
                 }
-                operations.Add(new JsonObject { ["operation"] = choice.DeepClone(), ["selector"] = selector,
+                operations.Add(new JsonObject { ["operation"] = choice!.DeepClone(), ["selector"] = selector,
                     ["variants"] = variants, ["exampleQuery"] = new JsonObject { ["toolName"] = name, ["operation"] = choice.DeepClone() } });
             }
             string selectedProblem = releaseProblem.Length > 0 ? releaseProblem : callProblem?.Invoke(args) ?? "";

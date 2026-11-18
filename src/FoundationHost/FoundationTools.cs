@@ -350,12 +350,7 @@ internal sealed partial class FoundationTool : McpServerTool
                 values["plannedExportRoot"] = exportRoot;
             if (CachedSessionState)
             {
-                var state = SharedSessionState.For(worker).Snapshot(release!);
-                var cached = FoundationV4Result.HostSessionState(release!, id!, state);
-                cached.StructuredContent!["data"]!["presets"] = System.Text.Json.JsonSerializer.SerializeToNode(
-                    EngineHostConfiguration.CurrentOrNull?.Presets ?? TiaMcp.Logic.V4.ParameterPresets.Empty);
-                cached.Content = new[] { new TextContentBlock { Text = cached.StructuredContent.ToJsonString() } };
-                return cached;
+                return FoundationV4Result.HostSessionState(release!, id!, SharedSessionState.For(worker).RuntimeData(release!));
             }
             var result=await worker.Call(definition.Operation,values,cancellationToken);
             raw = result?.DeepClone();
@@ -386,10 +381,7 @@ internal sealed partial class FoundationTool : McpServerTool
                 var reply = FoundationV4Result.Worker(release, definition, id!, values, raw, result);
                 if (definition.Name == "GetSessionState" && reply.StructuredContent?["data"] is JsonObject data)
                 {
-                    data["sessionState"] = SharedSessionState.For(worker).Snapshot(release);
-                    data["outputRoot"] = TiaOpenness.Shared.DataLocations.Current.OutputRoot;
-                    data["presets"] = System.Text.Json.JsonSerializer.SerializeToNode(
-                        EngineHostConfiguration.CurrentOrNull?.Presets ?? TiaMcp.Logic.V4.ParameterPresets.Empty);
+                    reply.StructuredContent["data"] = SharedSessionState.For(worker).RuntimeData(release, raw as JsonObject);
                     reply.Content = new[] { new TextContentBlock { Text = reply.StructuredContent.ToJsonString() } };
                 }
                 return reply;

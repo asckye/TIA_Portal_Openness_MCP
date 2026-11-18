@@ -132,8 +132,10 @@ public sealed class SessionRebindTests
         await worker.Call("project-lifecycle.ConnectIsolatedPortal", new(), CancellationToken.None);
         var restart = await worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restart["restarted"]);
+        Assert.True(worker.Disconnected);
         await worker.Call("project-lifecycle.ConnectIsolatedPortal", new(), CancellationToken.None);
         Assert.Equal(123, (int?)worker.OperatorSnapshot()["binding"]?["processId"]);
+        Assert.False(worker.Disconnected);
         Assert.False(worker.Faulted);
     }
 

@@ -143,7 +143,12 @@ namespace TiaMcp.Logic.V4
             if (result == "restored")
             {
                 outcome = Outcome.Failed;
-                error = new Error("The write failed; captured writes were restored and verified.",
+                string message = (string?)evidence["status"] == "ImportDidNotCreateModule"
+                    ? "Scripts.Import returned true, but the requested script module was not created. "
+                        + "Inspect the retained candidate JS/YAML pair in candidateDirectoryRelativeToTemp under the MCP temp directory "
+                        + "and the native invocation log before retrying."
+                    : "The write failed; captured writes were restored and verified.";
+                error = new Error(message,
                     new NativeOperationFailedDetails(null, null, Evidence(evidence, tool)));
             }
             else if (result == "partial")
@@ -161,7 +166,8 @@ namespace TiaMcp.Logic.V4
         {
             var keys = new[] {
                 "nativeState", "nativeStateType", "nativeResultReturned", "mayHaveChanged", "logFilePath", "nativeMessages", "targetFile", "targetFiles",
-                    "recoveryDirectory", "rollbackCompleted", "rollbackScope", "restoredChanges", "cleanupRequired",
+                    "recoveryDirectory", "candidateDirectory", "candidateDirectoryRelativeToTemp", "scriptCountAfterImport", "moduleExistsAfterImport",
+                    "rollbackCompleted", "rollbackScope", "restoredChanges", "cleanupRequired",
                     "rollbackRefused", "rollbackReachable", "unrestoredWrite", "connectionUnavailable", "writeOutcomeUnknown"
             };
             var details = keys.Where(evidence.ContainsKey).ToDictionary(k => k, k => JsonSerializer.SerializeToElement(evidence[k]), StringComparer.Ordinal);

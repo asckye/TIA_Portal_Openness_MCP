@@ -19,7 +19,7 @@ namespace TiaMcp.Adapters
 
         internal static string[] LibraryTargetFolderParts(string path) => PlcObjectPath.Parts(path, true, "targetGroupPath");
 
-        internal static IEnumerable<(object Item, string Name, string Path)> LibraryScopeObjects(object root, string contents, string groups,
+        internal static IEnumerable<(object Item, string Name, string Path)> LibraryScopeObjects(object root, string contents, string? groups,
             string path = "", bool tags = false)
         {
             foreach (var item in PlcGroupOperations.Items(PlcGroupOperations.Get(root, contents)))
@@ -34,9 +34,21 @@ namespace TiaMcp.Adapters
                         yield return (symbol, symbolName, itemPath + "/" + ObjectPathEncoding.EncodeSegment(symbolName));
                     }
             }
+            if (groups == null) yield break;
             foreach (var child in PlcGroupOperations.Items(PlcGroupOperations.Get(root, groups)))
                 foreach (var row in LibraryScopeObjects(child, contents, groups,
                     path + ObjectPathEncoding.EncodeSegment(PlcGroupOperations.Get(child, "Name").ToString()!) + "/", tags)) yield return row;
+        }
+
+        internal static IEnumerable<(object Item, string Name, string Path)> LibraryScopeWithSystemObjects(
+            object root, string contents, string systemGroups, string prefix)
+        {
+            foreach (var row in LibraryScopeObjects(root, contents, "Groups", prefix)) yield return row;
+            var system = root.GetType().GetProperty(systemGroups)?.GetValue(root);
+            if (system != null) foreach (var group in PlcGroupOperations.Items(system))
+                // PlcSystemTypeGroup exposes Types, but no nested Groups composition.
+                foreach (var row in LibraryScopeObjects(group, contents, systemGroups == "SystemTypeGroups" ? null : "Groups",
+                    prefix + "$system/" + ObjectPathEncoding.EncodeSegment(PlcGroupOperations.Get(group, "Name").ToString()!) + "/")) yield return row;
         }
 
         private static Dictionary<string, (object Item, string Name, string Path)[]> LibraryNameSnapshot(

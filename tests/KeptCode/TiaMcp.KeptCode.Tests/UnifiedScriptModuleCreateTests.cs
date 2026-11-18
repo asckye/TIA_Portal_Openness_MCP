@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Native.Hmi;
@@ -29,7 +30,7 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
     }
 
     public Func<string, string, UnifiedScriptPair>? ReadUnifiedScriptPair => UnifiedScriptFileCodec.ReadPair;
-    public Func<string, string, string, UnifiedScriptPair>? ComposeUnifiedScriptPair => UnifiedScriptFileCodec.ComposePair;
+    public Func<string, string, string, UnifiedScriptPair>? ComposeUnifiedScriptPair { get; private set; } = UnifiedScriptFileCodec.ComposePair;
     public Action<string, string>? RequireUnifiedPlainFile => UnifiedScriptFileCodec.RequirePlainFile;
     public Action<string>? ValidateUnifiedScript => UnifiedScriptFileCodec.ValidateScript;
     public Func<string, string, string, IEnumerable<Dictionary<string, object?>>>? DecodeUnifiedDocument => null;
@@ -46,8 +47,98 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
         }
         finally
         {
-            if (meta["candidateDirectory"] is string candidate) workDirectories.Add(Path.GetDirectoryName(candidate)!);
+            if (meta["candidateDirectoryRelativeToTemp"] is string relative)
+                workDirectories.Add(Path.GetDirectoryName(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, relative))!);
         }
+    }
+
+    private void AssertCandidateEvidence(HmiObject result, JsonNode reply)
+    {
+        string candidate = Assert.IsType<string>(software.Scripts.ImportDirectory);
+        Assert.Equal("<path>", result["candidateDirectory"]);
+        foreach (var evidence in new[] { reply["data"]!["evidence"]!, reply["error"]!["details"]!["evidence"]! })
+        {
+            Assert.Equal("<path>", (string?)evidence["candidateDirectory"]);
+            string relative = (string)evidence["candidateDirectoryRelativeToTemp"]!;
+            Assert.False(Path.IsPathRooted(relative));
+            Assert.Equal(candidate, Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, relative));
+        }
+        Assert.True(File.Exists(Path.Combine(candidate, "Status.hmi.yml")));
+        Assert.True(File.Exists(Path.Combine(candidate, "Status.hmi.js")));
+    }
+
+    [Fact]
+    public void True_import_without_a_module_is_a_known_failure_with_candidate_evidence()
+    {
+        for (int i = 0; i < 5; i++) software.Scripts.Modules.Add(new Module(software.Scripts, "Existing" + i, Code));
+        var preview = Create(true);
+        software.Scripts.NoInsertion = true;
+        var result = Create(false, (string)preview["token"]!);
+        Assert.Equal("ImportDidNotCreateModule", result["status"]);
+        Assert.Equal(true, result["importReturned"]);
+        Assert.Equal(false, result["moduleExistsAfterImport"]);
+        Assert.Equal(5, result["scriptCountAfterImport"]);
+        Assert.Equal(false, result["operationSuccess"]);
+        Assert.Equal(false, result["verificationSuccess"]);
+        Assert.Equal(false, result["mayHaveChanged"]);
+        Assert.NotEqual(true, result["writeOutcomeUnknown"]);
+        Assert.Contains("requested module does not exist", Assert.IsType<string>(result["nativeMessage"]));
+        Assert.NotNull(result["candidateDirectory"]);
+        Assert.NotNull(result["after"]);
+        Assert.Equal(new[] { "Import" }, software.Scripts.Effects);
+        Assert.Equal(5, software.Scripts.Modules.Count);
+        Assert.DoesNotContain(software.Scripts.Modules, module => module.Name == "Status");
+        var reply = TiaMcpServer.ModelContextProtocol.UnifiedHmiContract.Map("SetUnifiedGlobalScript",
+            new { Meta = result, Message = "Import did not create the module." }, writes: true, current: true).StructuredContent!;
+        Assert.False((bool?)reply["ok"]);
+        Assert.Equal("failed", (string?)reply["meta"]!["outcome"]);
+        Assert.NotEqual("OUTCOME_UNKNOWN", (string?)reply["error"]!["code"]);
+        Assert.Contains("requested script module was not created", (string?)reply["error"]!["message"]);
+        Assert.Contains("candidate JS/YAML pair", (string?)reply["error"]!["message"]);
+        var evidence = reply["error"]!["details"]!["evidence"]!;
+        AssertCandidateEvidence(result, reply);
+        Assert.Equal(5, (int?)evidence["scriptCountAfterImport"]);
+        Assert.False((bool?)evidence["moduleExistsAfterImport"]);
+    }
+
+    [Theory]
+    [InlineData("Other", false)]
+    [InlineData("STATUS", true)]
+    public void Changed_count_or_case_variant_after_import_keeps_the_write_unknown(string importedName, bool replaceExisting)
+    {
+        software.Scripts.Modules.Add(new Module(software.Scripts, "Existing", Code));
+        var preview = Create(true);
+        software.Scripts.AfterImport = () => {
+            if (replaceExisting) software.Scripts.Modules.RemoveAt(0);
+            software.Scripts.Modules.Add(new Module(software.Scripts, importedName, Code));
+        };
+        var result = Create(false, (string)preview["token"]!);
+        Assert.Equal("ImportUnverified", result["status"]);
+        Assert.Equal(true, result["mayHaveChanged"]);
+        AssertManualCleanup(result);
+        Assert.Equal(new[] { "Import" }, software.Scripts.Effects);
+        var reply = TiaMcpServer.ModelContextProtocol.UnifiedHmiContract.Map("SetUnifiedGlobalScript",
+            new { Meta = result, Message = "Unverified import." }, writes: true, current: true).StructuredContent!;
+        Assert.Equal("unknown", (string?)reply["meta"]!["outcome"]);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)reply["error"]!["code"]);
+        var evidence = reply["error"]!["details"]!["evidence"]!;
+        AssertCandidateEvidence(result, reply);
+        Assert.Equal(replaceExisting ? 1 : 2, (int?)evidence["scriptCountAfterImport"]);
+        Assert.Equal(importedName == "STATUS", (bool?)evidence["moduleExistsAfterImport"]);
+    }
+
+    [Fact]
+    public void Create_refuses_a_manifest_and_script_with_different_stems_before_import()
+    {
+        var preview = Create(true);
+        ComposeUnifiedScriptPair = (directory, name, code) => {
+            var pair = UnifiedScriptFileCodec.ComposePair(directory, name, code);
+            File.Move(Path.Combine(directory, pair.YamlName), Path.Combine(directory, "Different.hmi.yml"));
+            return UnifiedScriptFileCodec.ReadPair(directory, name);
+        };
+        var error = Assert.Throws<NotSupportedException>(() => Create(false, (string)preview["token"]!));
+        Assert.Contains("share a base name", error.Message);
+        Assert.Empty(software.Scripts.Effects);
     }
 
     [Fact]
@@ -181,13 +272,21 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
         internal readonly List<Module> Modules = new();
         internal readonly List<string> Effects = new();
         internal bool Accept = true, Mismatch;
-        internal bool FailExport, MalformedExport, ThrowAfterImport;
+        internal bool FailExport, MalformedExport, ThrowAfterImport, NoInsertion;
+        internal Action? AfterImport;
+        internal string? ImportDirectory;
         public int Count => Modules.Count;
         public Module this[int index] => Modules[index];
-        public bool Import(DirectoryInfo directory)
+        public bool Import(DirectoryInfo directory, string name)
         {
             Effects.Add("Import");
+            ImportDirectory = directory.FullName;
             var pair = UnifiedScriptFileCodec.ReadPair(directory.FullName, "Status");
+            Assert.Equal("Status", name);
+            Assert.Equal(pair.YamlName, name + ".hmi.yml");
+            Assert.Equal(pair.JsName, name + ".hmi.js");
+            if (NoInsertion) return true;
+            if (AfterImport != null) { AfterImport(); return true; }
             Modules.Add(new Module(this, "Status", Mismatch ? pair.Text + "// changed\n" : pair.Text));
             if (ThrowAfterImport) throw new IOException("Synthetic import failure after module insertion.");
             return Accept;

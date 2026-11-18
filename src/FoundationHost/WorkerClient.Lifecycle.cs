@@ -188,7 +188,7 @@ internal sealed partial class WorkerClient
 
     private void RecordDisconnect()
     {
-        lock (stateSync) { rebindTarget = null; rebindPending = false; }
+        lock (stateSync) { rebindTarget = null; rebindPending = false; sessionDisconnected = true; }
         TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(FoundationWorkerRequest.CorrelationId,
             "DisconnectPortal", "RECOVERY_DISCONNECT", details: new JsonObject { ["unsettled"] = Unsettled.ToJson(),
                 ["workerAcknowledged"] = disconnectAcknowledgement?["WorkerAcknowledged"]?.DeepClone() });

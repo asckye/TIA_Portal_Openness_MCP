@@ -219,7 +219,9 @@ public sealed class FoundationRecoveryTests
         var tools = new[] { "ConnectPortal", "AttachOpenProject", "DisconnectPortal", "GetSessionState" }
             .Select(name => (ModelContextProtocol.Server.McpServerTool)new FoundationV4Tool(
                 new FoundationTool(FoundationTools.Definitions.Single(definition => definition.Name == name), worker),
-                release, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true })).ToArray();
+                release, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true }))
+            .Append(LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false)
+                .Single(tool => tool.ProtocolTool.Name == "ConnectIsolatedPortal")).ToArray();
         using var session = new HostSession(release, "fixture", false, tools, tools,
             () => SharedSessionState.For(worker).OperatorSnapshot(release), worker.Dispose,
             lateResults: worker.LateResults, unsettled: worker.Unsettled);
@@ -236,16 +238,83 @@ public sealed class FoundationRecoveryTests
         }
         await Call("ConnectPortal", new { processId = 123 });
         await Call("AttachOpenProject", new { projectName = "fixture", expectedProjectFile = "C:/fixture.ap" + release });
+        string[] stateFields = { "releaseKey", "isAttached", "processId", "projectFile", "ownsProject", "isLocalSession", "identityStatus",
+            "runtimeConnectionStatus", "canDetachOnUncertainShutdown", "sessionState", "outputRoot", "presets" };
+        void FullState(JsonNode body)
+        {
+            Assert.Equal(stateFields.OrderBy(name => name), body["data"]!.AsObject().Select(field => field.Key).OrderBy(name => name));
+            Assert.Equal(release, (string?)body["data"]!["releaseKey"]);
+            Assert.Equal(TiaOpenness.Shared.DataLocations.Current.OutputRoot, (string?)body["data"]!["outputRoot"]);
+            Assert.IsType<JsonObject>(body["data"]!["presets"]);
+        }
+        var beforeUnknown = await Call("GetSessionState", new { });
+        FullState(beforeUnknown);
+        Assert.True((bool?)beforeUnknown["data"]!["isAttached"]);
+        Assert.Equal(123, (int?)beforeUnknown["data"]!["processId"]);
+        Assert.Equal("C:/fixture.ap" + release, (string?)beforeUnknown["data"]!["projectFile"]);
+        worker.Unsettled.Record("shape-unknown", "SetUnifiedGlobalScript", null, DateTimeOffset.UtcNow);
+        var afterUnknown = await Call("GetSessionState", new { });
+        FullState(afterUnknown);
+        foreach (string field in stateFields.Where(name => name != "sessionState"))
+            Assert.True(JsonNode.DeepEquals(beforeUnknown["data"]![field], afterUnknown["data"]![field]), field);
+        Assert.Single(afterUnknown["data"]!["sessionState"]!["unsettled"]!.AsArray());
         int previousPid = (int)worker.OperatorSnapshot()["pid"]!;
         var disconnected = await Call("DisconnectPortal", new { });
         Assert.Equal("disconnected", (string?)disconnected["data"]?["sessionState"]);
-        await Call("GetSessionState", new { });
+        var afterDisconnect = await Call("GetSessionState", new { });
+        FullState(afterDisconnect);
+        Assert.False((bool?)afterDisconnect["data"]!["isAttached"]);
+        Assert.Null(afterDisconnect["data"]!["processId"]);
+        Assert.Null(afterDisconnect["data"]!["projectFile"]);
+        Assert.False((bool?)afterDisconnect["data"]!["ownsProject"]);
+        Assert.False((bool?)afterDisconnect["data"]!["isLocalSession"]);
+        Assert.True((bool?)afterDisconnect["data"]!["sessionState"]!["disconnected"]);
+        Assert.Null(afterDisconnect["data"]!["sessionState"]!["binding"]);
+        // A subsequent read can reset the worker generation without reconnecting the session (raw-B 076 -> 077).
+        await worker.Call("ReadState", new(), CancellationToken.None);
+        var afterRead = await Call("GetSessionState", new { });
+        FullState(afterRead);
+        Assert.True((bool?)afterRead["data"]!["sessionState"]!["disconnected"]);
+        Assert.Null(afterRead["data"]!["projectFile"]);
         await Call("ConnectPortal", new { processId = 123 });
         await Call("AttachOpenProject", new { projectName = "fixture", expectedProjectFile = "C:/fixture.ap" + release });
+        var afterReconnect = await Call("GetSessionState", new { });
+        FullState(afterReconnect);
+        Assert.False((bool?)afterReconnect["data"]!["sessionState"]!["disconnected"]);
+        Assert.Equal("C:/fixture.ap" + release, (string?)afterReconnect["data"]!["projectFile"]);
         Assert.NotEqual(previousPid, (int?)worker.OperatorSnapshot()["pid"]);
         Assert.Equal(2, (long?)worker.OperatorSnapshot()["generation"]);
         Assert.Equal(sessionKey, session.SessionKey);
         Assert.False((bool?)session.Snapshot()["sessionState"]?["disconnected"]);
+        await worker.Call("FixtureNoProject", new(), CancellationToken.None);
+        await worker.Call("ReadState", new(), CancellationToken.None);
+        var attachedWithoutProject = await Call("GetSessionState", new { });
+        FullState(attachedWithoutProject);
+        Assert.True((bool?)attachedWithoutProject["data"]!["isAttached"]);
+        Assert.Equal(123, (int?)attachedWithoutProject["data"]!["processId"]);
+        Assert.Null(attachedWithoutProject["data"]!["projectFile"]);
+        Assert.False((bool?)attachedWithoutProject["data"]!["ownsProject"]);
+        foreach (bool scaffold in new[] { false, true })
+        {
+            var ack = await Call("DisconnectPortal", new { });
+            Assert.True((bool?)ack["data"]!["workerAcknowledged"]);
+            Assert.True((bool?)(await Call("GetSessionState", new { }))["data"]!["sessionState"]!["disconnected"]);
+            if (scaffold)
+                await worker.Call("project-lifecycle.ExecuteProjectScaffoldPrimitive", new() {
+                    ["request"] = JsonSerializer.SerializeToNode(new TiaMcp.Adapters.Contracts.ProjectScaffoldPrimitive { Kind = "connect" }) },
+                    CancellationToken.None);
+            else await Call("ConnectIsolatedPortal", new { });
+            var state = await Call("GetSessionState", new { });
+            FullState(state);
+            Assert.True((bool?)state["data"]!["isAttached"]);
+            Assert.Equal(123, (int?)state["data"]!["processId"]);
+            Assert.Equal(scaffold ? "C:/fixture.ap" + release : null, (string?)state["data"]!["projectFile"]);
+            Assert.Equal(scaffold ? 123 : (int?)null, (int?)state["data"]!["sessionState"]!["binding"]?["identity"]?["processId"]);
+            Assert.False((bool?)state["data"]!["sessionState"]!["disconnected"]);
+            Assert.True((bool?)state["data"]!["sessionState"]!["connected"]);
+            Assert.True(JsonNode.DeepEquals(beforeUnknown["data"]!["sessionState"]!["switches"], state["data"]!["sessionState"]!["switches"]));
+            Assert.Equal("idle", (string?)session.Snapshot()["worker"]!["state"]);
+        }
         await Call("DisconnectPortal", new { });
     }
 

@@ -18,6 +18,7 @@ internal static class EngineSessionFixture
         var identity = new ChannelIdentity(release, Hash(exe), Hash(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll")),
             Environment.ProcessId, args[Array.IndexOf(args, "--native-session") + 3]);
         int? attached = null;
+        string? boundProjectFile = null;
         PortalProcessLease? lease = null;
         long epoch = 0; bool uncertain = false, hasProject = true, unknownOnNextFamily = false;
         string? slowShutdownMarker = null;
@@ -94,7 +95,7 @@ internal static class EngineSessionFixture
                             ["exceptionType"] = pid == 903 ? "AdapterPreconditionException" : "InvalidOperationException" }.ToJsonString()));
                 if (leaseRoot != null) lease = PortalProcessLease.Acquire(leaseRoot, pid, 1);
                 if (leaseRoot != null && File.Exists(Path.Combine(leaseRoot, "block-attach"))) Hang();
-                attached = pid; epoch++;
+                attached = pid; boundProjectFile = null; epoch++;
                 if (pid == 905) epoch++;
                 var result = new JsonObject { ["Stage"] = "attached", ["OwnsPortal"] = false,
                     ["AttemptedPids"] = new JsonArray(pid), ["Strategy"] = "explicit", ["LaunchMode"] = "attach" };
@@ -107,14 +108,21 @@ internal static class EngineSessionFixture
             }
             if (request.Method == "adapter.project-lifecycle.ConnectIsolatedPortal")
             {
-                attached = 123; epoch++;
+                attached = 123; hasProject = false; epoch++;
                 return ChannelResponse.Success(TiaMcp.PlcWorker.WorkerJson.Serialize(
-                    new TiaMcp.Adapters.Contracts.SecurityResult { Message = "isolated fixture connected" }));
+                    new TiaMcp.Adapters.Contracts.SecurityResult { Message = "isolated fixture connected",
+                        Meta = new() { ["success"] = true, ["verified"] = true, ["isolated"] = true } }));
+            }
+            if (request.Method == "adapter.project-lifecycle.ExecuteProjectScaffoldPrimitive" && (string?)input["request"]?["Kind"] == "connect")
+            {
+                attached = 123; boundProjectFile = "C:/fixture.ap" + release; hasProject = true; epoch++;
+                return ChannelResponse.Success(new JsonObject { ["Message"] = "Connected to fixture portal.",
+                    ["Meta"] = new JsonObject { ["success"] = true, ["boundProcessId"] = attached, ["startedNew"] = false } }.ToJsonString());
             }
             if (request.Method is "adapter.CreateProject" or "adapter.OpenProject")
             {
                 bool executed = (bool?)input["dryRun"] == false;
-                if (executed) epoch++;
+                if (executed) { boundProjectFile = "C:/fixture.ap" + release; hasProject = true; epoch++; }
                 return ChannelResponse.Success(new JsonObject { ["ProjectFile"] = "C:/fixture.ap" + release,
                     ["Executed"] = executed, ["ProcessId"] = attached }.ToJsonString());
             }
@@ -125,7 +133,7 @@ internal static class EngineSessionFixture
                     ["WorkerAcknowledged"] = true, ["Detached"] = attached != null, ["ProcessId"] = attached,
                     ["SavedProject"] = false, ["ClosedProject"] = false, ["LaunchMode"] = "never" };
                 if (attached != null) epoch++;
-                attached = null;
+                attached = null; boundProjectFile = null;
                 lease?.SetUnsettledRequests(request.UnsettledRequests);
                 lease?.ReleaseCleanly(); lease = null;
                 return ChannelResponse.Success(result.ToJsonString());
@@ -147,6 +155,7 @@ internal static class EngineSessionFixture
             }
             if (request.Method == "adapter.BindProject")
             {
+                boundProjectFile = "C:/fixture.ap" + release; hasProject = true;
                 epoch++;
                 return ChannelResponse.Success(new JsonObject { ["ProjectFile"] = "C:/fixture.ap" + release,
                     ["Executed"] = true, ["ProcessId"] = attached }.ToJsonString());
@@ -154,6 +163,10 @@ internal static class EngineSessionFixture
             if (request.Method == "adapter.ReadPortalProcessProjects")
                 return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["Processes"] = new JsonArray(),
                     ["IdentityStrategy"] = "os-pid-and-start-time-observation-only" }.ToJsonString());
+            if (request.Method == "adapter.ReadState")
+                return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["IsAttached"] = attached != null, ["ProcessId"] = attached,
+                    ["ProjectFile"] = attached != null && hasProject ? boundProjectFile : null, ["OwnsProject"] = false, ["IsLocalSession"] = false,
+                    ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" }.ToJsonString());
             if (request.Method.StartsWith("adapter.") && request.Method != "adapter.FixtureInvoke")
                 return ChannelResponse.Success(new JsonObject { ["ReleaseKey"] = release, ["IsAttached"] = attached != null, ["ProcessId"] = attached,
                     ["ProjectFile"] = null, ["OwnsProject"] = false, ["IsLocalSession"] = false,

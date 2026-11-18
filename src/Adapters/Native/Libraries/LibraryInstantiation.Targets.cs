@@ -111,18 +111,10 @@ namespace TiaMcp.Adapters
             }
             var plc = EngineeringPlcSession.ExactPlcForEngineering(software, false);
             if (kind != "block") return LibraryScopeObjects(plc.TagTableGroup, "TagTables", "Groups", tags: kind == "tag");
-            IEnumerable<(object Item, string Name, string Path)> Objects(object root, string contents, string systemGroups, string prefix)
-            {
-                foreach (var row in LibraryScopeObjects(root, contents, "Groups", prefix)) yield return row;
-                var system = root.GetType().GetProperty(systemGroups)?.GetValue(root);
-                if (system != null) foreach (var group in PlcGroupOperations.Items(system))
-                    foreach (var row in LibraryScopeObjects(group, contents, "Groups",
-                        prefix + "$system/" + ObjectPathEncoding.EncodeSegment(PlcGroupOperations.Get(group, "Name").ToString()!) + "/")) yield return row;
-            }
             IEnumerable<(object Item, string Name, string Path)> SharedBlocks()
             {
-                foreach (var row in Objects(plc.BlockGroup, "Blocks", "SystemBlockGroups", "")) yield return row;
-                foreach (var row in Objects(plc.TypeGroup, "Types", "SystemTypeGroups", "$types/")) yield return row;
+                foreach (var row in LibraryScopeWithSystemObjects(plc.BlockGroup, "Blocks", "SystemBlockGroups", "")) yield return row;
+                foreach (var row in LibraryScopeWithSystemObjects(plc.TypeGroup, "Types", "SystemTypeGroups", "$types/")) yield return row;
 #if PLC_UNITS
                 IEnumerable<(object Unit, string Prefix)> Units()
                 {
@@ -142,8 +134,10 @@ namespace TiaMcp.Adapters
 #if PLC_SAFETY_UNITS
                     if (!string.IsNullOrEmpty(((PlcUnitBase)unit.Unit).NamespacePreset)) continue;
 #endif
-                    foreach (var row in Objects(PlcUnitScope.Blocks(plc, unit.Unit), "Blocks", "SystemBlockGroups", unit.Prefix)) yield return row;
-                    foreach (var row in Objects(PlcUnitScope.Types(plc, unit.Unit), "Types", "SystemTypeGroups", unit.Prefix + "$types/")) yield return row;
+                    foreach (var row in LibraryScopeWithSystemObjects(PlcUnitScope.Blocks(plc, unit.Unit), "Blocks", "SystemBlockGroups", unit.Prefix))
+                        yield return row;
+                    foreach (var row in LibraryScopeWithSystemObjects(PlcUnitScope.Types(plc, unit.Unit), "Types", "SystemTypeGroups",
+                        unit.Prefix + "$types/")) yield return row;
                 }
 #endif
             }

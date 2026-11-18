@@ -100,7 +100,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         xml.Add(new XAttribute("AccessModifier", "Array"));
                         foreach (int index in component.Index)
                             xml.Add(new XElement(_ns + "Access", new XAttribute("Scope", "LiteralConstant"),
-                                new XElement(_ns + "Constant", new XElement(_ns + "ConstantValue", index.ToString(CultureInfo.InvariantCulture)))));
+                                new XElement(_ns + "Constant", new XElement(_ns + "ConstantType", "DInt"),
+                                    new XElement(_ns + "ConstantValue", index.ToString(CultureInfo.InvariantCulture)))));
                     }
                     return xml;
                 });

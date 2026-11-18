@@ -17,6 +17,49 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class LibraryInstantiationTests
     {
+        [Theory, InlineData("ManageLibraryMasterCopy"), InlineData("ManageLibraryTypeVersion")]
+        public void Instantiate_preview_includes_system_types_without_reading_the_unavailable_Groups_member(string tool)
+        {
+            var root = new TypeRoot();
+            var system = new SystemTypeGroup { Name = "System types" };
+            system.Types.Add(new HardwareObject { Name = "ExistingType" });
+            root.SystemTypeGroups.Add(system);
+            var meta = new Dictionary<string, object?> { ["tool"] = tool };
+            var rows = LibraryEngine.LibraryScopeWithSystemObjects(root, "Types", "SystemTypeGroups", "$types/").ToArray();
+            Assert.Equal("$types/$system/System types/ExistingType", Assert.Single(rows).Path);
+            int creates = 0;
+            string message = LibraryEngine.InstantiateLibraryContentsCore("block", "PLC", "", new[] { "Motor" }, "", true, meta,
+                _ => { creates++; return new object(); }, _ => new NativeNamedList<HardwareObject>(),
+                () => LibraryEngine.LibraryScopeWithSystemObjects(root, "Types", "SystemTypeGroups", "$types/"),
+                () => new System.IO.MemoryStream(), () => new System.IO.MemoryStream());
+            Assert.Equal(0, creates);
+            Assert.Contains("Library instantiation preview", message);
+            Assert.Equal("block", meta["targetKind"]);
+            var target = Assert.IsType<Dictionary<string, object?>>(Assert.Single(Assert.IsType<List<object?>>(meta["targets"])));
+            Assert.Equal("Motor", target["name"]);
+            Assert.Equal(false, target["exists"]);
+            Assert.Throws<PlcSoftwareException>(() => LibraryEngine.InstantiateLibraryContentsCore("block", "PLC", "",
+                new[] { "ExistingType" }, "", true, meta, _ => throw new InvalidOperationException("No create in preview"),
+                _ => new NativeNamedList<HardwareObject>(), () => rows, () => new System.IO.MemoryStream(), () => new System.IO.MemoryStream()));
+            Assert.Equal(0, system.GroupsReads);
+        }
+
+        private sealed class TypeRoot
+        {
+            public NativeNamedList<HardwareObject> Types { get; } = new();
+            public NativeNamedList<TypeRoot> Groups { get; } = new();
+            public NativeNamedList<SystemTypeGroup> SystemTypeGroups { get; } = new();
+        }
+        private sealed class SystemTypeGroup : HardwareObject
+        {
+            internal int GroupsReads;
+            public NativeNamedList<HardwareObject> Types { get; } = new();
+            public object Groups
+            {
+                get { GroupsReads++; throw new NotSupportedException("Siemens.Engineering.SW.Types.PlcSystemTypeGroup.Groups is unavailable."); }
+            }
+        }
+
         [Fact]
         public void Committed_version_reaches_instantiation_and_in_work_version_is_refused()
         {

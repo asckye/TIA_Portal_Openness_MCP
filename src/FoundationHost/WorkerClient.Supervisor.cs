@@ -167,7 +167,7 @@ internal sealed partial class WorkerClient
     internal JsonObject OperatorSnapshot()
     {
         lock (stateSync) return new JsonObject { ["pid"] = process?.Id, ["generation"] = generation,
-            ["disconnected"] = disconnecting, ["stopping"] = stopping,
+            ["disconnected"] = Disconnected, ["stopping"] = stopping,
             ["connected"] = SharedSession ? sharedStatus?["session"]?["isConnected"]?.DeepClone()
                 : JsonValue.Create((bool?)hostState?["IsAttached"] ?? attachedProcessId.HasValue),
             ["secondaryProjectFile"] = secondaryProjectFile,
@@ -215,6 +215,10 @@ internal sealed partial class WorkerClient
             if (!SharedSession) HostSessionKey = new object();
         }
     }
+    internal JsonObject? CachedRuntimeState
+    {
+        get { lock (stateSync) return hostState == null ? null : (JsonObject)hostState.DeepClone(); }
+    }
     internal JsonObject HostSnapshot()
     {
         lock (stateSync)
@@ -251,11 +255,7 @@ internal sealed partial class WorkerClient
             if (CallRunning) return;
             var observed = await Observe("status", new JsonObject(), token);
             if (observed is JsonObject observedStatus)
-            {
-                var status = (JsonObject)observedStatus.DeepClone();
-                StampSharedBinding(status);
-                lock (stateSync) sharedStatus = status;
-            }
+                CacheSharedStatus((JsonObject)observedStatus.DeepClone());
         }
         else if (process != null && !Faulted && !disconnecting) await Call("ReadState", new JsonObject(), token);
     }

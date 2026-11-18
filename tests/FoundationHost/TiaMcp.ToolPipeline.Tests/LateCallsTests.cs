@@ -16,6 +16,25 @@ public sealed class LateCallsTests
         Content = new[] { new TextContentBlock { Text = "original content" } },
         StructuredContent = new JsonObject { ["meta"] = new JsonObject { ["requestId"] = id, ["outcome"] = outcome } } };
 
+    [Theory, InlineData(false), InlineData(true)]
+    public void Bridged_unknown_completion_keeps_the_actual_tool_in_state_and_unsettled_entries(bool detached)
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        using var call = store.CreateInvocation("CallTool", "outer", CancellationToken.None);
+        using (call.Enter())
+        {
+            LateCalls.IdentifyWrite("digest");
+            if (detached) LateCalls.Detach(Running("active"));
+            var result = Completed("actual", "unknown");
+            result.StructuredContent!["meta"]!["tool"] = "SetUnifiedGlobalScript";
+            call.Complete(result, unsettled);
+        }
+        Assert.Equal("SetUnifiedGlobalScript", (string?)Assert.Single(store.Snapshot())!["tool"]);
+        Assert.Equal("SetUnifiedGlobalScript", Assert.Single(unsettled.Snapshot()).Tool);
+        Assert.Equal("SetUnifiedGlobalScript", (string?)store.Read("21", "actual", unsettled)!.StructuredContent!["meta"]!["tool"]);
+    }
+
     [Fact]
     public void Final_result_is_reachable_by_both_request_ids_and_releases_its_guard()
     {
@@ -33,6 +52,7 @@ public sealed class LateCallsTests
         Assert.Equal("in-progress", (string?)store.Read("21", "active-id", unsettled)!.StructuredContent?["meta"]?["outcome"]);
         Assert.Equal("active-id", store.FindUnread("digest"));
         call.Complete(Completed("final-id"), unsettled);
+        Assert.Equal("SaveProject", (string?)Assert.Single(store.Snapshot())!["tool"]);
         Assert.Equal("succeeded", (string?)store.Read("21", "active-id", unsettled)!.StructuredContent?["meta"]?["outcome"]);
         Assert.Equal("final-id", (string?)store.Read("21", "final-id", unsettled)!.StructuredContent?["meta"]?["requestId"]);
         Assert.NotNull(store.Read("21", "outer-id", unsettled));

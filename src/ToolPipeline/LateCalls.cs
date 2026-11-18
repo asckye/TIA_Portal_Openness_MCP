@@ -262,18 +262,21 @@ public sealed class LateCalls
             {
                 if (tool == "GetCallResult" && entry == null) return;
                 string resultId = (string?)result.StructuredContent?["meta"]?["requestId"] ?? id;
+                string? resultTool = (string?)result.StructuredContent?["meta"]?["tool"];
                 if (entry == null)
                 {
                     if (result.StructuredContent == null || !UnsettledCalls.HasUnknownOutcome(result.StructuredContent) && UnsettledIds.Count == 0) return;
                     owner.entries.TryGetValue(resultId, out entry);
                     if (entry == null)
                     {
-                        entry = new Entry(new JsonObject { ["requestId"] = resultId, ["tool"] = tool,
+                        entry = new Entry(new JsonObject { ["requestId"] = resultId, ["tool"] = resultTool ?? tool,
                             ["sinceUtc"] = DateTimeOffset.UtcNow.ToString("O") }, Digest);
                         owner.Index(entry);
                     }
                 }
                 entry.Ids.Add(resultId);
+                resultTool ??= (string?)entry.Running["tool"] ?? tool;
+                entry.Running["tool"] = resultTool;
                 entry.Ids.UnionWith(UnsettledIds);
                 owner.Index(entry);
                 if (ReferenceEquals(owner.running, entry)) owner.running = null;
@@ -294,7 +297,7 @@ public sealed class LateCalls
                 {
                     if (UnsettledCalls.HasUnknownOutcome(result.StructuredContent))
                     {
-                        if (entry.Digest != null) unsettled?.Record(resultId, tool, entry.Digest, DateTimeOffset.UtcNow);
+                        if (entry.Digest != null) unsettled?.Record(resultId, resultTool, entry.Digest, DateTimeOffset.UtcNow);
                     }
                     else foreach (string alias in entry.Ids.Where(alias => !UnsettledIds.Contains(alias))) unsettled?.Settle(alias);
                 }

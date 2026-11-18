@@ -137,9 +137,9 @@ internal static class FoundationV4Result
         return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
             new Error(cause + " " + fix, new ResourceUnavailableDetails("tia-openness-environment")), false);
     }
-    internal static CallToolResult HostSessionState(string release, string id, JsonObject state)
-        => Wire(release, "GetSessionState", id, new JsonObject { ["sessionState"] = state }, Outcome.Succeeded,
-            Execution.ReadOnly, Completeness.Complete, null, true);
+    internal static CallToolResult HostSessionState(string release, string id, JsonObject data)
+        => Wire(release, "GetSessionState", id, data, Outcome.Succeeded,
+            Execution.ReadOnly, Completeness.Partial, null, true);
 
     internal static CallToolResult HostFailure(string release, string name, string id)
         => Wire(release, name, id, null, Outcome.ReadFailed, Execution.ReadOnly, Completeness.None,

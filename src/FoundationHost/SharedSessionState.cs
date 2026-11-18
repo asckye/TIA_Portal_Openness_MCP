@@ -2,6 +2,7 @@
 extern alias toolpipeline;
 using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
 using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
+using EngineHostConfiguration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
 #endif
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
@@ -17,6 +18,7 @@ internal sealed class SharedSessionState
     private readonly bool environmentCrossReferences = Environment.GetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES") == "1";
     internal Func<bool> HumanCrossReferences = () => false;
     internal Func<string?> HostSessionKey = () => null;
+    private JsonObject? runtimeState;
     private SharedSessionState(IFoundationWorker worker) => this.worker = worker;
     internal static SharedSessionState For(IFoundationWorker worker) => States.GetValue(worker, key => new(key));
 
@@ -53,6 +55,31 @@ internal sealed class SharedSessionState
     }
     internal JsonObject Snapshot(string release)
         => Snapshot(release, (worker as IFoundationWorkerSupervisor)?.OperatorSnapshot() ?? new JsonObject());
+    internal JsonObject RuntimeData(string release, JsonObject? observed = null)
+    {
+        if (observed != null) runtimeState = (JsonObject)observed.DeepClone();
+        var cached = observed ?? (worker as WorkerClient)?.CachedRuntimeState ?? runtimeState;
+        var transport = (worker as IFoundationWorkerSupervisor)?.OperatorSnapshot() ?? new JsonObject();
+        var state = Snapshot(release, transport);
+        var identity = state["binding"]?["identity"];
+        var pid = observed != null ? observed["ProcessId"] : identity?["processId"] ?? transport["binding"]?["processId"];
+        var file = observed != null ? observed["ProjectFile"] : identity?["projectPath"];
+        if (observed == null && identity == null && worker is not WorkerClient)
+        { pid = cached?["ProcessId"]; file = cached?["ProjectFile"]; }
+        bool attached = (bool?)state["disconnected"] != true && pid != null;
+        if (!attached) { pid = null; file = null; }
+        bool sameProject = pid != null && file != null && JsonNode.DeepEquals(pid, cached?["ProcessId"])
+            && JsonNode.DeepEquals(file, cached?["ProjectFile"]);
+        return new JsonObject {
+            ["releaseKey"] = release, ["isAttached"] = attached, ["processId"] = pid?.DeepClone(), ["projectFile"] = file?.DeepClone(),
+            ["ownsProject"] = sameProject && (bool?)cached?["OwnsProject"] == true,
+            ["isLocalSession"] = sameProject && (bool?)cached?["IsLocalSession"] == true,
+            ["identityStatus"] = "unverified-cached-pid", ["runtimeConnectionStatus"] = "not-probed",
+            ["canDetachOnUncertainShutdown"] = !attached || ((bool?)cached?["CanDetachOnUncertainShutdown"] ?? true),
+            ["sessionState"] = state, ["outputRoot"] = DataLocations.Current.OutputRoot,
+            ["presets"] = System.Text.Json.JsonSerializer.SerializeToNode(
+                EngineHostConfiguration.CurrentOrNull?.Presets ?? TiaMcp.Logic.V4.ParameterPresets.Empty) };
+    }
     private JsonObject Snapshot(string release, JsonObject transport)
     {
         var identity = Identity;
@@ -68,7 +95,7 @@ internal sealed class SharedSessionState
             || worker is not IFoundationWorkerSupervisor && identity?["processId"] != null);
         var switches = Switches(release);
         if (ended) switches["nativeCrossReferences"]!["allowed"] = false;
-        var result = new JsonObject { ["binding"] = identity == null ? null : new JsonObject { ["identity"] = identity },
+        var result = new JsonObject { ["binding"] = ended || identity == null ? null : new JsonObject { ["identity"] = identity },
             ["connected"] = !ended && connected,
             ["workerGeneration"] = transport["generation"]?.DeepClone(),
             ["unsettled"] = Unsettled.ToJson(),

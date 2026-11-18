@@ -49,10 +49,10 @@ namespace TiaMcp.Adapters.Native.Hmi
                 throw new NotSupportedException("Native returned paths do not match the exported JS/YAML pair.");
             return pair;
         }
-        private static object RequireAbsent(Func<object> resolveHmi, string moduleName)
+        private static object RequireAbsent(Func<object> resolveHmi, string moduleName, out int count)
         {
             var scripts = UnifiedScriptAccess.Scripts(resolveHmi());
-            int count = MigrationRead.Count(scripts);
+            count = MigrationRead.Count(scripts);
             for (int i = 0; i < count; i++)
             {
                 var name = MigrationRead.Get(MigrationRead.At(scripts, i), "Name")?.ToString();
@@ -78,10 +78,16 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["phase"] = "parseProposedText";
             UnifiedCodecs.ValidateScript(scriptCode);
             meta["syntaxValidation"] = "Esprima parse only; no script execution or TIA SyntaxCheck. Runtime references remain unverified.";
-            var work = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
+            var relativeWork = Path.Combine("TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
+            var work = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, relativeWork);
             var candidate = Path.Combine(work, "candidate"); Directory.CreateDirectory(candidate);
             var pair = UnifiedCodecs.ComposePair(candidate, moduleName, scriptCode);
-            meta["candidateDirectory"] = candidate;
+            meta["candidateDirectory"] = "<path>";
+            meta["candidateDirectoryRelativeToTemp"] = Path.Combine(relativeWork, "candidate");
+            // ComposePair returns a validated .hmi.yml manifest and its referenced script.
+            string importName = pair.YamlName.Substring(0, pair.YamlName.Length - ".hmi.yml".Length);
+            if (importName.Length == 0 || !string.Equals(pair.JsName, importName + ".hmi.js", StringComparison.Ordinal))
+                throw new NotSupportedException("The create candidate YAML and JavaScript files must share a base name.");
             meta["candidateRetention"] = "Native files stay on the MCP machine and may contain private project source; remove manually when no longer needed.";
             meta["after"] = pair.Evidence();
             var scope = new HmiObject { ["project"] = project, ["softwarePath"] = softwarePath, ["moduleName"] = moduleName,
@@ -91,27 +97,58 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["phase"] = "checkAbsence";
             if (dryRun)
             {
-                RequireAbsent(resolveHmi, moduleName);
+                RequireAbsent(resolveHmi, moduleName, out _);
                 meta["apiCallSuccess"] = true;
                 meta["status"] = "Preview"; meta["operationSuccess"] = true;
                 return "Review the complete proposed text and irreversible create. No import performed; apply the SAME content with this previewToken.";
             }
             HmiExactAccess.RequireToken(expectedToken, token);
-            var scripts = RequireAbsent(resolveHmi, moduleName);
-            var import = scripts.GetType().GetMethod("Import", new[] { typeof(DirectoryInfo) });
+            var scripts = RequireAbsent(resolveHmi, moduleName, out int countBefore);
+            var import = scripts.GetType().GetMethod("Import", new[] { typeof(DirectoryInfo), typeof(string) });
             if (import == null || import.ReturnType != typeof(bool))
-                throw new NotSupportedException("Official Scripts.Import(DirectoryInfo) -> bool is unavailable.");
-            meta["phase"] = "import"; meta["importMethod"] = "HmiSoftware.Scripts.Import(DirectoryInfo)";
+                throw new NotSupportedException("Official Scripts.Import(DirectoryInfo, string) -> bool is unavailable.");
+            meta["phase"] = "import"; meta["importMethod"] = "HmiSoftware.Scripts.Import(DirectoryInfo, string)";
             meta["apiCallSuccess"] = false; meta["importAttempted"] = true; meta["mayHaveChanged"] = true;
+            bool absenceVerified = false;
             EngineeringWriteJournal.Record(softwarePath + "/Scripts/" + moduleName + ": no Openness delete; remove manually in TIA if needed",
-                () => throw new NotSupportedException("Native script module create has no verified inverse; delete manually in TIA."));
-            bool returned = (bool)import.Invoke(scripts, new object[] { new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(candidate)) })!;
+                () => {
+                    if (!absenceVerified)
+                        throw new NotSupportedException("Native script module create has no verified inverse; delete manually in TIA.");
+                });
+            var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(candidate));
+            bool returned = (bool)import.Invoke(scripts, new object[] { directory, importName })!;
             meta["apiCallSuccess"] = true; meta["importReturned"] = returned;
             if (!returned)
             {
                 meta["status"] = "ImportRejected";
                 return "Native Import returned false. Partial changes cannot be excluded; inspect TIA and retained candidate files. No automatic retry; " +
                     "remove the module manually in TIA if needed.";
+            }
+            meta["phase"] = "verifyModuleExists";
+            var readbackScripts = UnifiedScriptAccess.Scripts(resolveHmi());
+            int readbackCount = MigrationRead.Count(readbackScripts);
+            meta["scriptCountAfterImport"] = readbackCount;
+            bool exactMatch = false, nameMatch = false;
+            for (int i = 0; i < readbackCount; i++)
+            {
+                var name = MigrationRead.Get(MigrationRead.At(readbackScripts, i), "Name")?.ToString();
+                exactMatch |= string.Equals(name, moduleName, StringComparison.Ordinal);
+                nameMatch |= string.Equals(name, moduleName, StringComparison.OrdinalIgnoreCase);
+            }
+            meta["moduleExistsAfterImport"] = nameMatch;
+            if (!exactMatch)
+            {
+                absenceVerified = readbackCount == countBefore && !nameMatch;
+                if (!absenceVerified)
+                {
+                    meta["status"] = "ImportUnverified";
+                    return "Scripts.Import returned true. The exact module name was missing and the count changed or a case variant exists. "
+                        + "Inspect the scripts and retained candidate files before retrying.";
+                }
+                meta["status"] = "ImportDidNotCreateModule";
+                meta["nativeMessage"] = "Scripts.Import returned true, but the requested module does not exist: " + moduleName;
+                return "Scripts.Import returned true without creating the requested module. Inspect the retained candidate JS/YAML pair and the native " +
+                    "invocation log on the TIA machine; compare with an exported module before retrying. No readback export was attempted.";
             }
             var verified = Export(resolveHmi, moduleName, Path.Combine(work, "verify"), "exportAfter", meta);
             if (verified == null)
