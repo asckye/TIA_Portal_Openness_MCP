@@ -5035,6 +5035,18 @@
           "identifier": "OutputRootApprovalTests/AssertOutputCoverage( Func \u003C string , JsonObject , IEnumerable \u003C string \u003E \u003E targets ):cec5be92d531b3c89beebf682c196f2d69447610512b0cf8210f59b7615ca4df:1"
         }
       ]
+    },
+    {
+      "task": "TIA-TEST-3",
+      "maintainerDate": "2026-11-18",
+      "reason": "Lead approval 2026-11-17: the host CLI subset gains the intended test report command",
+      "items": [
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/StaticPolicyTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.StaticPolicyTests/Package_cli_targets_the_host_subset_and_the_host_ships_the_installer( ):73a7a6ca96860d9490b575ca7747ab4ba3ef0b214767b17b5b28154e75f66471:1"
+        }
+      ]
     }
   ]
 }
