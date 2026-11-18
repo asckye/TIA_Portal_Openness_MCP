@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 286,
+      "toolCount": 287,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -96,6 +96,7 @@
         "GenerateErrorReport",
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
+        "GetApprovalStatus",
         "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
@@ -297,7 +298,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 327,
+      "toolCount": 328,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -399,6 +400,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetApprovalStatus",
         "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
@@ -630,7 +632,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 355,
+      "toolCount": 356,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -737,6 +739,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetApprovalStatus",
         "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
@@ -991,7 +994,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 378,
+      "toolCount": 379,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1105,6 +1108,7 @@
         "GeneratePlcDocumentation",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetApprovalStatus",
         "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
@@ -1375,7 +1379,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 404,
+      "toolCount": 405,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1497,6 +1501,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetApprovalStatus",
         "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
@@ -1785,7 +1790,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 480,
+      "toolCount": 481,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1935,6 +1940,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetApprovalStatus",
         "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
@@ -2271,7 +2277,7 @@
     },
     "20": {
       "profile": "plc-foundation",
-      "toolCount": 503,
+      "toolCount": 504,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2428,6 +2434,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetApprovalStatus",
         "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
@@ -2780,7 +2787,7 @@
     },
     "21": {
       "profile": "plc-foundation",
-      "toolCount": 518,
+      "toolCount": 519,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2943,6 +2950,7 @@
         "GeneratePlcLoadableFile",
         "GeneratePlcSourceFromBlocks",
         "GenerateSivarc",
+        "GetApprovalStatus",
         "GetCallResult",
         "GetClassicHmiGlobalization",
         "GetClassicHmiScreenTree",
@@ -3304,7 +3312,7 @@
     }
   },
   "groupCounts": {
-    "all-releases": 285,
+    "all-releases": 286,
     "shared-subset": 218,
     "release-only": 20
   },
@@ -5431,6 +5439,21 @@
         "21"
       ],
       "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetApprovalStatus",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

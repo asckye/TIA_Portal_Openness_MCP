@@ -194,6 +194,60 @@
           </Border>
         </Grid>
       </Grid>
+          <TextBlock Text="{l:Tr Settings.AlwaysConfirmed}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+          <TextBlock Text="{l:Tr Settings.DownloadSafety}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,12,0,8"/>
+          <TextBlock Text="{l:Tr Settings.DownloadSafetyHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+          <Label x:Name="PlanLifetimeLabel" AutomationProperties.Name="{l:Tr Settings.PlanLifetime}" Style="{StaticResource Primer.FormLabel}" Target="{Binding ElementName=OnlinePlanLifetime}" Content="{l:Tr Settings.PlanLifetime}"/>
+          <DockPanel Margin="0,0,0,12">
+            <Button Content="{l:Tr Settings.SavePlanLifetime}" AutomationProperties.Name="{l:Tr Settings.SavePlanLifetime}"
+              DockPanel.Dock="Right" Style="{StaticResource Primer.OutlinedAccent}" Click="OnSavePlanLifetime" Margin="8,0,0,0"/>
+            <TextBox x:Name="OnlinePlanLifetime" AutomationProperties.LabeledBy="{Binding ElementName=PlanLifetimeLabel}" AutomationProperties.Name="{l:Tr Settings.PlanLifetime}" Style="{StaticResource Primer.Input}"/>
+          </DockPanel>
+          <StackPanel x:Name="SafetyEditors">
+            <TextBlock x:Name="OnlineTargetsHeading" Text="{l:Tr Settings.OnlineTargets}" AutomationProperties.HeadingLevel="Level3"
+              Style="{StaticResource Primer.ContainerTitle}" Margin="0,12,0,8"/>
+            <TextBlock Text="{l:Tr Settings.OnlineTargetsHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <TextBlock x:Name="SafetyStatus" AutomationProperties.LiveSetting="Polite" Style="{StaticResource Primer.Text}"
+              TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <Button x:Name="ReplaceTargetFile" Content="{l:Tr Settings.ReplaceTargets}"
+              AutomationProperties.Name="{l:Tr Settings.ReplaceTargets}" Style="{StaticResource Primer.OutlinedAccent}"
+              Click="OnReplaceTargetFile" Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,0,0,8"/>
+            <StackPanel x:Name="TargetEditor">
+            <ListBox Style="{StaticResource Primer.List}" x:Name="OnlineTargets" AutomationProperties.LabeledBy="{Binding ElementName=OnlineTargetsHeading}" AutomationProperties.Name="{l:Tr Settings.OnlineTargets}"
+              ItemContainerStyle="{StaticResource Primer.TableItem}" MinHeight="72" MaxHeight="180" Margin="0,0,0,8"/>
+            <Label x:Name="TargetAddressLabel" AutomationProperties.Name="{l:Tr Settings.TargetAddress}" Style="{StaticResource Primer.FormLabel}" Target="{Binding ElementName=OnlineTargetInput}" Content="{l:Tr Settings.TargetAddress}"/>
+            <DockPanel Margin="0,0,0,8">
+              <Button Content="{l:Tr Settings.AddTarget}" AutomationProperties.Name="{l:Tr Settings.AddTarget}" DockPanel.Dock="Right"
+                Style="{StaticResource Primer.OutlinedAccent}" Click="OnAddTarget" Margin="8,0,0,0"/>
+              <TextBox x:Name="OnlineTargetInput" AutomationProperties.LabeledBy="{Binding ElementName=TargetAddressLabel}" AutomationProperties.Name="{l:Tr Settings.TargetAddress}" Style="{StaticResource Primer.Input}"/>
+            </DockPanel>
+            <WrapPanel Margin="0,0,0,12">
+              <Button Content="{l:Tr Settings.RemoveTarget}" AutomationProperties.Name="{l:Tr Settings.RemoveTarget}"
+                Style="{StaticResource Primer.OutlinedAccent}" Click="OnRemoveTarget" Margin="0,0,8,8"/>
+              <Button Content="{l:Tr Settings.SaveTargets}" AutomationProperties.Name="{l:Tr Settings.SaveTargets}"
+                Style="{StaticResource Primer.OutlinedAccent}" Click="OnSaveTargets" Margin="0,0,8,8"/>
+            </WrapPanel>
+            </StackPanel>
+            <Button x:Name="ReloadSafety" Content="{l:Tr Settings.ReloadSafety}" AutomationProperties.Name="{l:Tr Settings.ReloadSafety}"
+              Style="{StaticResource Primer.OutlinedAccent}" Click="OnReloadSafety" HorizontalAlignment="Left" Margin="0,0,0,12"/>
+            <TextBlock x:Name="SecretsHeading" Text="{l:Tr Settings.Secrets}" AutomationProperties.HeadingLevel="Level3"
+              Style="{StaticResource Primer.ContainerTitle}" Margin="0,12,0,8"/>
+            <TextBlock Text="{l:Tr Settings.SecretsHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <ListBox Style="{StaticResource Primer.List}" x:Name="SecretNames" AutomationProperties.LabeledBy="{Binding ElementName=SecretsHeading}" AutomationProperties.Name="{l:Tr Settings.Secrets}" SelectionChanged="OnSecretSelected"
+              ItemContainerStyle="{StaticResource Primer.TableItem}" MinHeight="72" MaxHeight="180" Margin="0,0,0,8"/>
+            <Label x:Name="SecretNameLabel" AutomationProperties.Name="{l:Tr Settings.SecretName}" Style="{StaticResource Primer.FormLabel}" Target="{Binding ElementName=SecretName}" Content="{l:Tr Settings.SecretName}"/>
+            <TextBox x:Name="SecretName" AutomationProperties.LabeledBy="{Binding ElementName=SecretNameLabel}" AutomationProperties.Name="{l:Tr Settings.SecretName}"
+              Style="{StaticResource Primer.Input}" MaxLength="64" Margin="0,0,0,8"/>
+            <Label x:Name="SecretValueLabel" AutomationProperties.Name="{l:Tr Settings.SecretValue}" Style="{StaticResource Primer.FormLabel}" Target="{Binding ElementName=SecretValue}" Content="{l:Tr Settings.SecretValue}"/>
+            <PasswordBox x:Name="SecretValue" AutomationProperties.LabeledBy="{Binding ElementName=SecretValueLabel}" AutomationProperties.Name="{l:Tr Settings.SecretValue}"
+              Style="{StaticResource Primer.SecretInput}" Margin="0,0,0,8"/>
+            <WrapPanel Margin="0,0,0,12">
+              <Button Content="{l:Tr Settings.SetSecret}" AutomationProperties.Name="{l:Tr Settings.SetSecret}"
+                Style="{StaticResource Primer.OutlinedAccent}" Click="OnSetSecret" Margin="0,0,8,8"/>
+              <Button x:Name="RemoveSecret" Content="{l:Tr Settings.RemoveSecret}" AutomationProperties.Name="{l:Tr Settings.RemoveSecret}"
+                Style="{StaticResource Primer.OutlinedAccent}" Click="OnRemoveSecret" IsEnabled="False" Margin="0,0,0,8"/>
+            </WrapPanel>
+          </StackPanel>
           <TextBlock Text="{l:Tr CrossReferences.Section}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,12,0,0"/>
           <TextBlock Text="{l:Tr CrossReferences.Risk}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,4,0,8"/>
           <ToggleButton AutomationProperties.Name="{l:Tr CrossReferences.Enabled}" x:Name="NativeCrossReferencesEnabled" Content="{l:Tr CrossReferences.Enabled}" Style="{StaticResource Primer.Switch}" Click="OnNativeCrossReferencesClick" Margin="0,8,0,12"/>

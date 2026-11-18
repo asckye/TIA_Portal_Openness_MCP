@@ -10,6 +10,54 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
+        [McpServerTool(Name = "GetApprovalStatus"),
+            Description("[L0][Diagnostics][READ] Read this session's pending approvals and latest 16 decisions without contacting TIA. " +
+                "Reports approval settings, always-confirmed online writes, configured online targets and vault names (never secret values). " +
+                "Approval is decided only by a person in the Workbench; this tool cannot approve, deny or change settings.")]
+        public static CallToolResult GetApprovalStatus()
+            => SessionToolContract.Run("GetApprovalStatus", false, false, ReadApprovalStatus);
+
+        private static JsonObject ReadApprovalStatus()
+        {
+            var settings = TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
+            var status = TiaOpenness.Shared.ApprovalStatusBoard.Snapshot(CurrentApprovalStatusSession());
+#if TIA_ENGINE_HOST
+            var available = TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull?.Catalog?.All.Keys
+                ?? TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(ReleaseKey).Select(entry => (string)entry!["currentName"]!);
+#else
+            var available = CatalogView.All.Keys;
+#endif
+            status["meta"] = ResponseMeta.Unstamped(true);
+            status["message"] = "Approval decisions belong to the person in the Workbench.";
+            status["approval"] = new JsonObject { ["enabled"] = settings.Enabled, ["timeoutSeconds"] = settings.TimeoutSeconds,
+                ["onlinePlanLifetimeSeconds"] = settings.OnlinePlanLifetimeSeconds };
+            status["alwaysConfirmed"] = new JsonObject {
+                ["rule"] = "ONLINE-WRITE execution requires Workbench approval even when the switch is off, except the three PLCSIM-only tools " +
+                    "and DownloadPlc to a verified PLCSIM target. Every execution resolving a vault reference also requires approval.",
+                ["tools"] = new JsonArray(available.Where(name => ToolTaxonomy.OperationOf(name, null).Operation == "ONLINE-WRITE"
+                    && name is not ("ManagePlcSimAdvancedInstance" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario"))
+                    .OrderBy(name => name, System.StringComparer.Ordinal).Select(name => (JsonNode)JsonValue.Create(name)!).ToArray()),
+                ["downloadException"] = "An explicit PLCSIM/Softbus interface, no overlapping non-PLCSIM subnet, and a matching running PLCSIM " +
+                    "Advanced instance or an exclusive PLCSIM adapter subnet are required. An automatic interface is physical; " +
+                    "an interface name or instance address alone does not establish a simulator." };
+            var targets = TiaOpenness.Shared.OnlineTargetSettings.Load(TiaOpenness.Shared.OnlineTargetSettings.SettingsPath);
+            status["onlineTargets"] = new JsonObject { ["configured"] = targets != null, ["valid"] = targets?.IsValid ?? true,
+                ["entries"] = new JsonArray((targets?.Entries ?? System.Array.Empty<string>())
+                    .Select(entry => (JsonNode)JsonValue.Create(entry)!).ToArray()) };
+            try
+            {
+                status["vault"] = new JsonObject { ["valid"] = true, ["referenceSyntax"] = "vault:<name>",
+                    ["names"] = new JsonArray(new TiaOpenness.Shared.SecretVault().Names(validateProtected: false)
+                        .Select(name => (JsonNode)JsonValue.Create(name)!).ToArray()) };
+            }
+            catch (System.IO.IOException) /* swallow(privacy): expose only the vault's unreadable state, never file contents or credentials. */
+            {
+                status["vault"] = new JsonObject { ["valid"] = false, ["referenceSyntax"] = "vault:<name>",
+                    ["names"] = new JsonArray(), ["condition"] = "secret-vault-unreadable" };
+            }
+            return status;
+        }
+
         [McpServerTool(Name = "GetCallResult"),
             Description("[L0][Diagnostics][READ] Read a running or completed call by requestId from this session. " +
                 "A running call returns in-progress. Keeps the latest 16 full completed results. After eviction, summaries without the original payload " +

@@ -38,7 +38,9 @@ public sealed class ApprovalPrecheckTests
                 PreviewEnded = DateTimeOffset.UtcNow;
             }
             if (Cancel) throw new OperationCanceledException(token);
-            if (Refusal != null) throw new WorkerOperationException("Fixture precondition: " + Refusal, -32602, "rejected-before-operation", JsonSerializer.Serialize(new { parameter = Refusal }));
+            if (Refusal != null)
+                throw new WorkerOperationException("Fixture precondition: " + Refusal, -32602, "rejected-before-operation", JsonSerializer
+                    .Serialize(new { parameter = Refusal }));
             if (!preview && Unknown) throw new WorkerOperationException("Fixture native write interrupted.", -32603, "unknown");
             return Task.FromResult<JsonNode?>(new JsonObject { ["Executed"] = !preview, ["ProjectFile"] = "C:/Test.ap19" });
         }
@@ -83,7 +85,8 @@ public sealed class ApprovalPrecheckTests
         var tool=new FoundationV4Tool(new FoundationTool(definition,worker),"18",
             ()=>new(false,1),(pending,current,_)=> { Assert.False(current.Enabled);return Task.FromResult(new ApprovalOutcome(pending,true,null)); });
         var args=new JsonObject();
-        foreach(var a in definition.Arguments) args[a.Name]=a.Required ? a.Type=="array" ? new JsonArray("A") : a.Type=="integer" ? JsonValue.Create(1) : a.Type=="boolean" ? JsonValue.Create(false) : JsonValue.Create("fixture") : JsonSerializer.SerializeToNode(a.Default);
+        foreach(var a in definition.Arguments) args[a.Name]=a.Required ? a.Type=="array" ? new JsonArray("A") : a.Type=="integer" ? JsonValue.Create(1) : a
+            .Type=="boolean" ? JsonValue.Create(false) : JsonValue.Create("fixture") : JsonSerializer.SerializeToNode(a.Default);
         args["dryRun"]=false;args["confirm"]=false;args["expectedProjectFile"]="C:/fixture.ap18";
         var body=(await tool.InvokeAsync(Request(tool.ProtocolTool.Name,args))).StructuredContent!;
         Assert.Equal("INVALID_ARGUMENT",(string?)body["error"]?["code"]);Assert.Equal("/confirm",(string?)body["error"]?["details"]?["parameter"]);
@@ -129,7 +132,8 @@ public sealed class ApprovalPrecheckTests
     {
         var worker = new Worker(); int waits = 0;
         var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTag"), worker), "19",
-            () => new(enabled, 1), (pending, _, _) => { waits++; if (changed) worker.Refusal = "name"; return Task.FromResult(new ApprovalOutcome(pending, !enabled, null)); });
+            () => new(enabled, 1), (pending, _, _) => {
+                waits++; if (changed) worker.Refusal = "name"; return Task.FromResult(new ApprovalOutcome(pending, !enabled, null)); });
         var args = Arguments("CreatePlcTag"); args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/Test.ap19";
         var watch = Stopwatch.StartNew();
         var result = await tool.InvokeAsync(Request("CreatePlcTag", args)); watch.Stop();
@@ -137,7 +141,9 @@ public sealed class ApprovalPrecheckTests
         Assert.Equal(changed ? "rejected-before-operation" : "succeeded", (string?)result.StructuredContent?["meta"]?["outcome"]);
         if (!enabled) Assert.Single(result.StructuredContent!["meta"]!["warnings"]!.AsArray(), w => (string?)w?["code"] == "APPROVAL_DISABLED");
         Directory.CreateDirectory("bin-build/P6-60");
-        File.AppendAllText("bin-build/P6-60/latency.txt", $"foundation enabled={enabled} changed={changed}: {watch.Elapsed.TotalMilliseconds:F3} ms; previews={worker.Previews}\n");
+        File
+            .AppendAllText("bin-build/P6-60/latency.txt",
+                $"foundation enabled={enabled} changed={changed}: {watch.Elapsed.TotalMilliseconds:F3} ms; previews={worker.Previews}\n");
     }
     [Fact]
     public async Task Warm_fixture_reports_added_preview_latency()
@@ -158,7 +164,9 @@ public sealed class ApprovalPrecheckTests
             Assert.True((bool?)result.StructuredContent?["ok"]);
             if (i >= 5) samples[setting].Add(watch.Elapsed.TotalMilliseconds);
         }
-        File.WriteAllText("bin-build/P6-60/foundation-latency.json", JsonSerializer.Serialize(samples.ToDictionary(p => p.Key ? "enabled" : "disabled", p => p.Value)));
+        File
+            .WriteAllText("bin-build/P6-60/foundation-latency.json", JsonSerializer
+                .Serialize(samples.ToDictionary(p => p.Key ? "enabled" : "disabled", p => p.Value)));
     }
     // The confirmation window opens after the precheck. Created before it, a request lost the precheck time from its configured
     // seconds, and a precheck as long as the window expired it before Workbench could show it (ImportStagingHostTests under
@@ -187,17 +195,67 @@ public sealed class ApprovalPrecheckTests
         Assert.Equal("CANCELLED", (string?)result.StructuredContent?["error"]?["code"]); Assert.Equal(0, waits); Assert.Equal(0, worker.Writes);
     }
     [Fact]
+    public async Task Standalone_approval_recording_uses_the_explicit_worker_without_a_shared_host_scope()
+    {
+        var worker = new Worker();
+        var inner = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTag"), worker);
+        var entered = new TaskCompletionSource<PendingApproval>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var decision = new TaskCompletionSource<ApprovalOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tool = new FoundationV4Tool(inner, "19", () => new(true, 60),
+            (pending, _, _) => { entered.SetResult(pending); return decision.Task; });
+        var args = Arguments("CreatePlcTag");
+        args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/Test.ap19";
+        Assert.Null(toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull);
+        var call = tool.InvokeAsync(Request("CreatePlcTag", args)).AsTask();
+        var pending = await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        try
+        {
+            var board = ApprovalStatusBoard.Snapshot(inner.ApprovalSessionKey);
+            Assert.Equal(pending.RequestId, (string?)Assert.Single(board["pending"]!.AsArray())!["requestId"]);
+            Assert.Empty(ApprovalStatusBoard.Snapshot(new Worker())["pending"]!.AsArray());
+        }
+        finally { decision.TrySetResult(new ApprovalOutcome(pending, false, "denied")); await call; }
+        Assert.Equal("denied", (string?)Assert.Single(ApprovalStatusBoard.Snapshot(inner.ApprovalSessionKey)["recent"]!.AsArray())!["outcome"]);
+        Assert.Equal(1, worker.Previews);
+        Assert.Equal(0, worker.Writes);
+    }
+
+    [Fact]
+    public async Task Shared_approval_still_requires_a_live_host_scope()
+    {
+        var worker = new Worker();
+        int waits = 0;
+        var inner = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTag"), worker);
+        var tool = new FoundationV4Tool(inner, "19", () => new(false, 60),
+            (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, true, null)); }, sharedSession: true);
+        var args = Arguments("CreatePlcTag");
+        args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/Test.ap19";
+        Assert.Null(toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull);
+        var result = await tool.InvokeAsync(Request("CreatePlcTag", args));
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+        Assert.Equal(0, waits);
+        Assert.Equal(0, worker.Writes);
+        Assert.Empty(ApprovalStatusBoard.Snapshot(inner.ApprovalSessionKey)["pending"]!.AsArray());
+    }
+
+    [Fact]
     public async Task Only_the_issued_unknown_write_is_unknown_and_later_independent_calls_reach_approval()
     {
         var worker = new Worker { Unknown = true }; int waits = 0;
-        FoundationV4Tool Tool(string source) => new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), "19", () => new(true, 1), (pending, _, _) => { waits++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
+        FoundationV4Tool Tool(string source) =>
+            new(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == source), worker), "19", () => new(true, 1), (pending, _, _) => {
+                waits++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); });
         var args = Arguments("CreatePlcTag"); args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/Test.ap19";
-        var first = await Tool("CreatePlcTag").InvokeAsync(Request("CreatePlcTag", args)); Assert.Equal("OUTCOME_UNKNOWN", (string?)first.StructuredContent?["error"]?["code"]);
+        var first = await Tool("CreatePlcTag").InvokeAsync(Request("CreatePlcTag", args)); Assert
+            .Equal("OUTCOME_UNKNOWN", (string?)first.StructuredContent?["error"]?["code"]);
         Assert.Equal(1, worker.Writes);
         worker.Unknown = false; args["name"] = "Other";
         foreach (var source in new[] { "CreatePlcTag", "GetProjectInfo", "ConnectPortal" })
         {
-            var tool = Tool(source); var result = await tool.InvokeAsync(Request(tool.ProtocolTool.Name, source == "CreatePlcTag" ? args : source == "ConnectPortal" ? new JsonObject { ["processId"] = 1 } : new()));
+            var tool = Tool(source); var result = await tool
+                .InvokeAsync(Request(tool.ProtocolTool.Name, source == "CreatePlcTag" ? args : source == "ConnectPortal" ? new JsonObject { ["processId"] = 1 }
+                        : new()));
             Assert.NotEqual("SESSION_RESET_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
         }
         Assert.Equal(2, waits); Assert.Equal(2, worker.Previews); Assert.Equal(2, worker.Writes); Assert.Equal(2, worker.Reads);

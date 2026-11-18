@@ -134,6 +134,7 @@ public sealed class ResponsivenessHarness(WpfContext wpf)
         internal FakeApprovals(ApprovalService real) { _real = real; real.PropertyChanged += (_, e) => Raise(e.PropertyName); }
         public bool Enabled { get => _real.Enabled; set => _real.Enabled = value; }
         public int TimeoutSeconds { get => _real.TimeoutSeconds; set => _real.TimeoutSeconds = value; }
+        public int OnlinePlanLifetimeSeconds { get => _real.OnlinePlanLifetimeSeconds; set => _real.OnlinePlanLifetimeSeconds = value; }
         public int PendingCount => _rows.Count(r => r.State == ApprovalState.Pending);
         public IReadOnlyList<ApprovalRequest> Requests => _rows;
         public event EventHandler<ApprovalRequest>? NewRequest;

@@ -24,17 +24,17 @@ public class SourceConsistencyTests(WpfContext wpf)
     private static readonly Regex MarkupKey = new(@"\{l:Tr\s+([A-Za-z][\w.]*)", RegexOptions.Compiled);
 
     // Loc.Current["X"], Loc.Current.T("X", ...), SetStatus("X", ...), Guarded("X", ...),
-    // LocalizedText.Key("X"), LocalizedText.Working("X")
+    // LocalizedText.Key("X"), LocalizedText.Working("X"), ConfirmSafety("X"), ShowSafetyError("X")
     private static readonly Regex[] CodeKeys =
     [
         new(@"TrExtension\s*\.\s*CreateBinding\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"Loc\s*\.\s*Current\[""([A-Za-z][\w.]*)""\]", RegexOptions.Compiled),
         new(@"Loc\s*\.\s*Current\s*\.\s*T\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"(?:SetStatus|AppendLocalized)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
-        new(@"\bGuarded\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
+        new(@"\b(?:Guarded|ConfirmSafety|ShowSafetyError)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"LocalizedText\s*\.\s*(?:Key|Working)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"SetLocalizedText\(""[^""]+"", [^,]+, ""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
-        new(@"(?:[?:]|=>)\s*""((?:Config|Shell|Mcp|Feature|Calls|Approval|Audit|Env)\.[\w.]+)""", RegexOptions.Compiled),
+        new(@"(?:[?:]|=>)\s*""((?:Config|Shell|Mcp|Feature|Calls|Approval|Audit|Env|Settings)\.[\w.]+)""", RegexOptions.Compiled),
     ];
 
     // {StaticResource Ui.Button} / {DynamicResource Primer.accent}

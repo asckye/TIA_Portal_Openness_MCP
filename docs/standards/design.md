@@ -222,14 +222,14 @@ runtime/v<发布键>/        （八个发布键相同）
 
 | TIA 版本 | 注册工具数 | lite 档 |
 |---|---:|---:|
-| V14 SP1 | 286 | 92 |
-| V15.1 | 327 | 95 |
-| V16 | 355 | 95 |
-| V17 | 378 | 95 |
-| V18 | 404 | 97 |
-| V19 | 480 | 97 |
-| V20 | 503 | 100 |
-| V21 | 518 | 103 |
+| V14 SP1 | 287 | 93 |
+| V15.1 | 328 | 96 |
+| V16 | 356 | 96 |
+| V17 | 379 | 96 |
+| V18 | 405 | 98 |
+| V19 | 481 | 98 |
+| V20 | 504 | 101 |
+| V21 | 519 | 104 |
 <!-- generated:tool-counts:end -->
 
 交付包由 `prepare` 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，排除 `runtime/verification/`；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。文件清单 `manifest/multi-version-build.json` 只在暂存目录生成，不入 Git；工具范围见[版本工具矩阵](../reference/version-tools.md)。已发布的归档保留各自记录的范围。

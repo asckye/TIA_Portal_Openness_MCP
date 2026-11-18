@@ -23,6 +23,7 @@ public partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
+        InitializeSafetyEditors();
         ShowSection("Appearance");
         VersionText.Text = Loc.Current.T("Common.WorkbenchVersion", MainViewModel.AppVersion).TrimStart('v');
     }
@@ -59,6 +60,8 @@ public partial class SettingsView : UserControl
         SectionTitle.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(section switch
             { "Service" => "Settings.Engine", "AI" => "Control.Section", _ => "Settings.Appearance" }));
         DetailScroll.ScrollToTop();
+        if (section == "AI") _ = LoadSafetyAsync();
+        else SecretValue.Clear();
     }
 
     internal static string ReadPackageName(string bundleRoot)
@@ -80,12 +83,14 @@ public partial class SettingsView : UserControl
     }
 
     internal void Dispose() {
+        SecretValue.Clear();
         if (_session != null) _session.PropertyChanged -= OnSessionChanged; _session = null; if (_approvals != null) _approvals
             .PropertyChanged -= OnApprovalChanged; _approvals = null;
     }
     private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.TimeoutSeconds))) return;
+        if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.TimeoutSeconds)
+            or nameof(IApprovalService.OnlinePlanLifetimeSeconds))) return;
         if (Dispatcher.CheckAccess()) UpdateApproval();
         else Dispatcher.BeginInvoke(UpdateApproval);
     }
@@ -97,6 +102,7 @@ public partial class SettingsView : UserControl
         Timeout60.IsChecked = _approvals.TimeoutSeconds == 60;
         Timeout120.IsChecked = _approvals.TimeoutSeconds == 120;
         Timeout300.IsChecked = _approvals.TimeoutSeconds == 300;
+        OnlinePlanLifetime.Text = _approvals.OnlinePlanLifetimeSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private async void OnApprovalClick(object sender, RoutedEventArgs e)

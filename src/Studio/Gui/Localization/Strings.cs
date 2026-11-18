@@ -15,7 +15,7 @@ internal static partial class Strings
 {
     /// <summary>key, English, Chinese.</summary>
     internal static (string Key, string En, string Zh)[] Catalogue =>
-        [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue, .. SessionCatalogue, .. LayoutCatalogue];
+        [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue, .. SessionCatalogue, .. LayoutCatalogue, .. SafetyCatalogue];
 
     private static readonly (string Key, string En, string Zh)[] SessionCatalogue =
     [

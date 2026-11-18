@@ -463,7 +463,8 @@ public sealed class NoLockTests
             "TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"),
             "offline fixture identity");
-        using var worker = new WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true) { Bundled = false };
+        // This fixture invokes Foundation tools directly, outside a shared EngineHostPipeline session.
+        using var worker = new WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true) { Bundled = false, SharedSession = false };
         await worker.Call("Attach", new() { ["processId"] = Environment.ProcessId }, CancellationToken.None);
         var definition = FoundationTools.Definitions.Single(item => item.Name == "SaveProject");
         var unknownTool =

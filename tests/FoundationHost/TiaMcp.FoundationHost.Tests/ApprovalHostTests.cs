@@ -1,3 +1,4 @@
+extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Logic.V4;
@@ -39,6 +40,7 @@ public sealed class ApprovalHostTests
     [InlineData(false)] [InlineData(true)]
     public async Task Foundation_call_carries_transport_actor_through_approval_journal_and_audit(bool human)
     {
+        using var approvalSession = LiveApprovalSession();
         string root = Path.Combine(AppContext.BaseDirectory, "actor-audit", Guid.NewGuid().ToString("N"));
         var log = new AuditLog(root); using var audit = AuditInvocation.UseLog(log);
         using var actor = human ? ActorScope.EnterWorkbench("attached-session", new string('c', 32)) : ActorScope.EnterCall("attached-session");
@@ -66,6 +68,7 @@ public sealed class ApprovalHostTests
     [InlineData("CloseProject")]
     public async Task Current_session_save_and_close_are_approved_without_changing_catalog_policy(string source)
     {
+        using var approvalSession = LiveApprovalSession();
         var before = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
         try
         {
@@ -103,6 +106,7 @@ public sealed class ApprovalHostTests
     [InlineData("disabled")]
     public async Task Foundation_write_audit_uses_response_id_and_starts_only_after_approval(string decision)
     {
+        using var approvalSession = LiveApprovalSession();
         string auditDirectory = Path.GetFullPath(Path.Combine("bin-build", "P6-55", "foundation-audit", Guid.NewGuid().ToString("N")));
         var audit = new AuditLog(auditDirectory);
         using var auditScope = AuditInvocation.UseLog(audit);
@@ -256,6 +260,10 @@ public sealed class ApprovalHostTests
         Assert.Equal(0, waits);
         Assert.Equal(0, worker.Calls);
     }
+
+    private static IDisposable LiveApprovalSession()
+        => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(new HardwareAddressingAdmissionTests.UnboundWorker()));
 
     private sealed class Worker : IFoundationWorker
     {

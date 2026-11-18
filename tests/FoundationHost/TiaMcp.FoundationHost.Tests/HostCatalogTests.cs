@@ -311,8 +311,12 @@ public sealed class HostCatalogTests
         string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
         var baseline = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "manifest/contracts/v4/baseline", release + ".json")))!;
         var (host, _, _) = Build(release);
-        Assert.Equal(baseline["tools"]!.AsArray().Select(tool => (string)tool!["name"]!).Order(StringComparer.Ordinal),
+        Assert.Equal(baseline["tools"]!.AsArray().Select(tool => (string)tool!["name"]!)
+            .Append("GetApprovalStatus").Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal),
             host.All.Keys.Order(StringComparer.Ordinal));
+        Assert.Empty(host.All["GetApprovalStatus"].Tool.InputSchema.GetProperty("properties").EnumerateObject());
+        Assert.Equal(host.All["GetCallResult"].Tool.OutputSchema!.Value.GetRawText(),
+            host.All["GetApprovalStatus"].Tool.OutputSchema!.Value.GetRawText());
         foreach (var row in baseline["tools"]!.AsArray())
         {
             string name = (string)row!["name"]!;

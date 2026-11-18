@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### Added
+- `GetApprovalStatus` reports session-local pending approvals, the latest 16 decisions, approval policy, online-target entries and vault names on all eight releases without taking the Openness lane. Only a person in the Workbench can decide approvals.
+- Workbench settings add online-target and secret-vault editors, plus online-write plan lifetime. Secret values are entered in a password box and are never read back into the editor. Invalid target files require confirmed replacement, concurrent list changes refuse saves, and secret replacement/removal requires confirmation; empty secret values are refused.
 - Host project presets now constrain bound identities and rebinding targets before writes; PLC presets cover explicitly reviewed `softwarePath`, `plc` and `plcSoftwarePath` selectors across domains. Equal normalized preset inputs are accepted, preserving generation and Workbench calls; project presets resolve final filesystem paths and long names.
 - Harden PLC presets for library instantiation targets; review nested software selectors and refuse unpinnable Software/Device reflection writes before approval.
 - Enforced host presets: `--preset-project-file` binds declared `expectedProjectFile` inputs and `--preset-plc-software` binds `softwarePath` on PLC tools. Preset fields disappear from schemas and examples; supplying them is refused before dispatch. `GetSessionState` reports the active values.

@@ -20117,6 +20117,17 @@
         "parameters": {},
         "operations": {},
         "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+      },
+      "GetApprovalStatus": {
+        "arguments": {},
+        "parameters": {},
+        "operations": {},
+        "validation": "Offline host fixtures verify session-isolated pending and recent decisions while another call awaits approval; no TIA or network connection.",
+        "resultReading": [
+          "Read approval.enabled and approval.timeoutSeconds. alwaysConfirmed describes online-write and vault-credential approval that cannot be disabled by the ordinary switch.",
+          "pending and recent belong only to this MCP session. Recent retains the latest 16 approval outcomes, not tool execution results. Only a person in the Workbench can approve.",
+          "onlineTargets reports configured, valid and entries. A configured empty or invalid list refuses targets. vault.names lists names only; use vault:<name>. An unreadable vault reports valid=false without values."
+        ]
       }
     },
     "full-engine": {
@@ -41126,6 +41137,17 @@
         "parameters": {},
         "operations": {},
         "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
+      },
+      "GetApprovalStatus": {
+        "arguments": {},
+        "parameters": {},
+        "operations": {},
+        "validation": "Offline host fixtures verify session-isolated pending and recent decisions while another call awaits approval; no TIA or network connection.",
+        "resultReading": [
+          "Read approval.enabled and approval.timeoutSeconds. alwaysConfirmed describes online-write and vault-credential approval that cannot be disabled by the ordinary switch.",
+          "pending and recent belong only to this MCP session. Recent retains the latest 16 approval outcomes, not tool execution results. Only a person in the Workbench can approve.",
+          "onlineTargets reports configured, valid and entries. A configured empty or invalid list refuses targets. vault.names lists names only; use vault:<name>. An unreadable vault reports valid=false without values."
+        ]
       }
     }
   }

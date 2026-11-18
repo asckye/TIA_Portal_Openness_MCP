@@ -30,10 +30,17 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly AsyncLocal<Func<object?>?> ApprovalSessionOverride = new AsyncLocal<Func<object?>?>();
         internal static Func<object?>? ApprovalSessionKeyForTests { get => ApprovalSessionOverride.Value; set => ApprovalSessionOverride.Value = value; }
         static partial void ApprovalSessionKey(ref object? key);
-        private static object? CurrentApprovalSession()
+        internal static object? CurrentApprovalSession()
         {
             if (ApprovalSessionOverride.Value is { } test) return test();
             object? key = null; ApprovalSessionKey(ref key); return key;
+        }
+        internal static object? CurrentApprovalStatusSession()
+        {
+#if TIA_ENGINE_HOST
+            if (ApprovalSessionOverride.Value == null && TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull == null) return null;
+#endif
+            return CurrentApprovalSession();
         }
         internal static CallToolResult ObserveSessionOutcome(string name, CallToolResult result, bool write, string arguments, bool preview = false, JsonArray
                 ? unsettledBeforeSave = null)
@@ -247,9 +254,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation
                     .CurrentRequestId);
             TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(pending.PlanHash);
-            if (ApprovalWaitOverride.Value is { } overrideWait) return await BridgeWait.On(overrideWait(pending, settings, token)).ConfigureAwait(false);
             if (settings.Enabled) ApprovalWaitSignal("begin", settings.TimeoutSeconds);
-            try { return await BridgeWait.On(ApprovalClient.Wait(pending, settings, token)).ConfigureAwait(false); }
+            var overrideWait = ApprovalWaitOverride.Value;
+            try { return await BridgeWait.On(ApprovalStatusBoard.Wait(CurrentApprovalSession(), pending,
+                () => overrideWait != null ? overrideWait(pending, settings, token) : ApprovalClient.Wait(pending, settings, token)))
+                    .ConfigureAwait(false); }
             finally { if (settings.Enabled) ApprovalWaitSignal("end", settings.TimeoutSeconds); }
         }
         static partial void ApprovalWaitSignal(string phase, int seconds);

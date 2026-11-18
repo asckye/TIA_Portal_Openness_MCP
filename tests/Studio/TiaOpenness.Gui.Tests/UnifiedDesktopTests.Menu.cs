@@ -213,6 +213,7 @@ public sealed partial class UnifiedDesktopTests
     private sealed class DelayedApprovalService : Stubs.IApprovalService, IDisposable
     {
         private readonly Stubs.ApprovalServiceStub inner = new();
+        public int OnlinePlanLifetimeSeconds { get => inner.OnlinePlanLifetimeSeconds; set => inner.OnlinePlanLifetimeSeconds = value; }
         internal readonly System.Threading.ManualResetEventSlim Entered = new(), Release = new();
         internal readonly System.Threading.Tasks.TaskCompletionSource<bool> Saved = new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
         public bool Enabled { get => inner.Enabled; set => inner.Enabled = value; }

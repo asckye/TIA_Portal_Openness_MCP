@@ -362,8 +362,9 @@ public sealed class NoLockTakeoverTests
             Set("TIA_MCP_FIXTURE_SLOW_GATE", root);
             string image = Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe");
             TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
-            Holder = new(release, image, AppContext.BaseDirectory, true) { Bundled = false, SpillsDirectoryForTest = root };
-            Newcomer = new(release, image, AppContext.BaseDirectory, true) { Bundled = false, SpillsDirectoryForTest = root };
+            // These fixture sessions invoke Foundation tools directly instead of entering EngineHostPipeline.
+            Holder = new(release, image, AppContext.BaseDirectory, true) { Bundled = false, SharedSession = false, SpillsDirectoryForTest = root };
+            Newcomer = new(release, image, AppContext.BaseDirectory, true) { Bundled = false, SharedSession = false, SpillsDirectoryForTest = root };
             HolderSession = new(release, "fixture", operatorOwned, [], [], Holder.OperatorSnapshot, () => { },
                 nativeConsentDirectory: root, lateResults: Holder.LateResults, unsettled: Holder.Unsettled, clock: Clock);
             NewSession = new(release, "fixture", false, [], [], Newcomer.OperatorSnapshot, () => { },

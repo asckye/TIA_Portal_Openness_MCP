@@ -187,6 +187,7 @@ internal static class ToolUsageGenerator
             .ToDictionary(group => group.Key, group => group.Any(tool => tool!["inputSchema"]!["properties"]!.AsObject().ContainsKey("expectedProjectFile")),
                     StringComparer.Ordinal);
         projectBinding.TryAdd("ConvertEngineeringTable", false);
+        projectBinding.TryAdd("GetApprovalStatus", false);
         void Check(string name, JsonNode args, string location)
         {
             Require(projectBinding.ContainsKey(name), "Unknown tool schema: " + location);

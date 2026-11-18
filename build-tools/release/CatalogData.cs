@@ -89,6 +89,9 @@ internal sealed class CatalogData
             CatalogJson.Source(root, "src/FoundationHost/PlcCrossReferenceAnalysis.cs").Contains("new(\"AnalyzePlcCrossReferences\"", StringComparison.Ordinal), "Closed XREF roster differs");
         foreach (var p in xref) HostOnly.Add(p.Key, p.Value);
         HostOnly.Add("GetCallResult", "READ");
+        HostOnly.Add("GetApprovalStatus", "READ");
+        CatalogJson.Require(metadata.Contains("[\"GetApprovalStatus\"] = new Classification(\"L0\", \"Diagnostics\", \"READ\",",
+            StringComparison.Ordinal), "GetApprovalStatus classification differs");
         HostOnly.Add("ManagePlcTestLibrary", "FILE");
         HostOnly.Add("RunPlcTestLibrary", "ONLINE-WRITE");
         HostOnly.Add("ExportPlcTestReport", "FILE");
@@ -174,6 +177,7 @@ internal sealed class CatalogData
         var reviewed = new Dictionary<string, (string Owner, string Operation)>
         {
             ["GetCallResult"] = ("NO-LOCK-2", "READ"),
+            ["GetApprovalStatus"] = ("TIA-SAFE-4", "READ"),
             ["ManagePlcTestLibrary"] = ("TIA-TEST-1", "FILE"),
             ["ExportPlcTagTables"] = ("TIA-BATCH-2", "FILE"),
             ["ConvertEngineeringTable"] = ("TIA-BATCH-3", "FILE"),

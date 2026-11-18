@@ -8,6 +8,7 @@ public interface IApprovalService : INotifyPropertyChanged
 {
     public bool Enabled { get; set; }
     public int TimeoutSeconds { get; set; }
+    public int OnlinePlanLifetimeSeconds { get; set; }
     public int PendingCount { get; }
     public IReadOnlyList<ApprovalRequest> Requests { get; }
     public event EventHandler<ApprovalRequest>? NewRequest;

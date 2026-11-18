@@ -306,5 +306,19 @@
       "20",
       "21"
     ]
+  },
+  "GetApprovalStatus": {
+    "owner": "TIA-SAFE-4",
+    "operation": "READ",
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ]
   }
 }

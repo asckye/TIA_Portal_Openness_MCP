@@ -52,20 +52,26 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
         get { lock (sync) return settings.TimeoutSeconds; }
         set => Save(null, value);
     }
-    private void Save(bool? enabled, int? seconds)
+    public int OnlinePlanLifetimeSeconds
+    {
+        get { lock (sync) return settings.OnlinePlanLifetimeSeconds; }
+        set => Save(null, null, value);
+    }
+    private void Save(bool? enabled, int? seconds, int? lifetime = null)
     {
         lock (saveSync)
         {
             ApprovalSettings next;
             lock (sync)
             {
-                next = new ApprovalSettings(enabled ?? settings.Enabled, seconds ?? settings.TimeoutSeconds, settings.OnlinePlanLifetimeSeconds);
-                if (next.Enabled == settings.Enabled && next.TimeoutSeconds == settings.TimeoutSeconds) return;
+                next = new ApprovalSettings(enabled ?? settings.Enabled, seconds ?? settings.TimeoutSeconds, lifetime ?? settings.OnlinePlanLifetimeSeconds);
+                if (next.Enabled == settings.Enabled && next.TimeoutSeconds == settings.TimeoutSeconds
+                    && next.OnlinePlanLifetimeSeconds == settings.OnlinePlanLifetimeSeconds) return;
             }
             next.Save(settingsPath, audit);
             lock (sync) settings = next;
         }
-        Raise(enabled.HasValue ? nameof(Enabled) : nameof(TimeoutSeconds));
+        Raise(enabled.HasValue ? nameof(Enabled) : seconds.HasValue ? nameof(TimeoutSeconds) : nameof(OnlinePlanLifetimeSeconds));
     }
     public int PendingCount { get { lock (sync) return pendingCount; } }
     public IReadOnlyList<ApprovalRequest> Requests { get { lock (sync) return published; } }

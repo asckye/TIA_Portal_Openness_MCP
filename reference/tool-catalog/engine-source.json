@@ -19193,6 +19193,15 @@
         }
       },
       "description": "[L2][Simulation][ONLINE-WRITE] Run 1..100 stored PLC test entries sequentially on all eight releases. ids and tags filter the library together; tags match any value, case-insensitively. Empty filters select the whole library. Default dryRun=true validates locally and returns the ordered plan and planHash without worker calls. Execution requires dryRun=false and expectedPlanHash; runnable Test Suite entries also require a bound project and absolute expectedProjectFile. One Workbench approval covers the batch. Failed/error cases do not stop the run; an unknown outcome stops without replay. Unsupported entries are skipped (Test Suite V17+, system V18+, application test sets V20+); all unsupported is refused. Writes run history and junit.xml under the data root, returns verdict totals and exitCode (0 passed, 3 failed/error, 4 skipped, 5 unknown/incomplete). Long runs block tools/call; asynchronous execution and cancellation are not available. Real PLCSIM Advanced / Test Suite installation acceptance is pending."
+    },
+    "GetApprovalStatus": {
+      "method": "GetApprovalStatus",
+      "path": "src/Shared/Host/McpServer.Worker.cs",
+      "owner": "McpServer",
+      "domain": "Diagnostics",
+      "signature": "public static CallToolResult GetApprovalStatus()",
+      "parameters": {},
+      "description": "[L0][Diagnostics][READ] Read this session's pending approvals and latest 16 decisions without contacting TIA. Reports approval settings, always-confirmed online writes, configured online targets and vault names (never secret values). Approval is decided only by a person in the Workbench; this tool cannot approve, deny or change settings."
     }
   },
   "behaviorCandidates": [

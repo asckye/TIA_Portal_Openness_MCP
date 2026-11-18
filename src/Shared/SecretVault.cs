@@ -27,7 +27,8 @@ namespace TiaOpenness.Shared
                     nameof(name));
         }
 
-        internal string[] Names() => Read().Keys.OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        internal string[] Names(bool validateProtected = true)
+            => (validateProtected ? Read() : ReadUnlocked(validateProtected: false)).Keys.OrderBy(name => name, StringComparer.Ordinal).ToArray();
         // Admission validates DPAPI and UTF-8 without constructing the credential string.
         internal bool ContainsName(string name)
         {

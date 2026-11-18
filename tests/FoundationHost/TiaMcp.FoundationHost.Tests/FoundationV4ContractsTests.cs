@@ -301,13 +301,15 @@ public sealed class FoundationV4ContractsTests
     // on V16/V17 (master 6cf6b132 roster; confirmed by the formal captures).
     // XREF adds the guarded offline AnalyzePlcCrossReferences tool on every release.
     // NO-LOCK-2 adds the host-only GetCallResult tool on every release.
+    // TIA-SAFE-4 adds the host-only GetApprovalStatus tool on every release.
     // TIA-TEST-1 adds the host-owned ManagePlcTestLibrary on every release.
     // TIA-BATCH-2 adds ExportPlcTagTables on every release.
     // TIA-BATCH-3 adds ConvertEngineeringTable on every release.
     // TIA-TEST-2 adds the host-owned RunPlcTestLibrary; TIA-TEST-3 adds ExportPlcTestReport on every release.
     // UNIFY-1D1 adds ExportTechnologyObject on V14 SP1 and V15.1.
-    [InlineData("14sp1", 286)] [InlineData("15.1", 327)] [InlineData("16", 355)]
-    [InlineData("17", 378)] [InlineData("18", 404)] [InlineData("19", 480)]
+    // TIA-SAFE-4 adds the GetApprovalStatus tool on every release.
+    [InlineData("14sp1", 287)] [InlineData("15.1", 328)] [InlineData("16", 356)]
+    [InlineData("17", 379)] [InlineData("18", 405)] [InlineData("19", 481)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();

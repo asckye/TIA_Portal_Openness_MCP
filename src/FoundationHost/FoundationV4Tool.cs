@@ -4,6 +4,7 @@ using DeclaredHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
 using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
+using EngineHostConfiguration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
 using InvocationHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
 using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
@@ -411,9 +412,13 @@ internal sealed class FoundationV4Tool : McpServerTool
                 // only now, as on the engine host. Otherwise a slow preview consumed the configured seconds, and a precheck
                 // longer than the window expired the request before Workbench could show it.
                 pending.Deadline = DateTimeOffset.UtcNow.AddSeconds(pending.TimeoutSeconds);
-                approval = approvalWait == null
-                    ? await TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
-                    : await approvalWait(pending, settings, cancellationToken);
+                // Standalone boundaries own their worker or implementation; observation must not require a separate shared-host scope.
+                object? approvalSession = !sharedSession && EngineHostConfiguration.CurrentOrNull == null
+                    ? (inner as FoundationTool)?.ApprovalSessionKey ?? inner : DeclaredHost.CurrentApprovalSession();
+                approval = await TiaOpenness.Shared.ApprovalStatusBoard.Wait(approvalSession, pending,
+                    () => approvalWait == null
+                        ? TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
+                        : approvalWait(pending, settings, cancellationToken));
                 capture(approval);
                 if (approval.Reason != null) return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.Confirmation(approval.Reason, pending.PlanHash, id,

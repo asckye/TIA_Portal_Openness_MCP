@@ -441,7 +441,10 @@ public sealed class EnforcedParameterPresetTests
         using var fixture = new Fixture(release, ParameterPresets.Empty);
         var baseline = JsonNode.Parse(File.ReadAllText(Path.Combine(Root(), "manifest/contracts/v4/baseline", release + ".json")))!;
         var tools = fixture.Pipeline.AllTools.ToDictionary(tool => tool.ProtocolTool.Name);
-        Assert.Equal(baseline["tools"]!.AsArray().Count, tools.Count);
+        var expectedNames = baseline["tools"]!.AsArray().Select(tool => (string)tool!["name"]!)
+            .Append("GetApprovalStatus").Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal);
+        Assert.Equal(expectedNames, tools.Keys.OrderBy(name => name, StringComparer.Ordinal));
+        Assert.Empty(tools["GetApprovalStatus"].ProtocolTool.InputSchema.GetProperty("properties").EnumerateObject());
         foreach (var expected in baseline["tools"]!.AsArray())
         {
             string name = (string)expected!["name"]!;

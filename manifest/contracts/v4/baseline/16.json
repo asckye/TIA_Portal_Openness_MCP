@@ -249,6 +249,7 @@
         "FindTools",
         "GenerateAcceptanceReport",
         "GenerateErrorReport",
+        "GetApprovalStatus",
         "GetEnvironmentDiagnostics",
         "GetExportContent",
         "GetNativeInvocationLog",
@@ -687,6 +688,7 @@
     "FindTools",
     "GenerateBlocksFromExternalSource",
     "GenerateErrorReport",
+    "GetApprovalStatus",
     "GetCallResult",
     "GetEnvironmentDiagnostics",
     "GetExportContent",
@@ -9822,6 +9824,22 @@
         "type": "object"
       },
       "name": "GenerateSivarc",
+      "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "descriptionSha256": "2af400429e3e458dc7cd052981bb5d14331662d06fa40ffc9ba4f06291a8f7d2",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "GetApprovalStatus",
       "outputSchemaSha256": "a96065aa1027368522a83c2c58b3d5b6b7ae24e9bdbc0ec3cfbf80ce9c0533cc"
     },
     {

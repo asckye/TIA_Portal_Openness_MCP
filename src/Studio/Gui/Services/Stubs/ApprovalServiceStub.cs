@@ -14,6 +14,16 @@ public sealed class ApprovalServiceStub : ObservableObject, IApprovalService
     internal ApprovalServiceStub(Func<DateTimeOffset> now) { _now = now; }
     private bool _enabled = true;
     private int _timeoutSeconds = 120;
+    private int _onlinePlanLifetimeSeconds = 900;
+    public int OnlinePlanLifetimeSeconds
+    {
+        get => _onlinePlanLifetimeSeconds;
+        set
+        {
+            if (value < 1 || value > 86400) throw new ArgumentOutOfRangeException(nameof(value));
+            Set(ref _onlinePlanLifetimeSeconds, value);
+        }
+    }
     public bool Enabled { get => _enabled; set => Set(ref _enabled, value); }
     public int PendingCount => _requests.Count(r => r.State == ApprovalState.Pending);
     public IReadOnlyList<ApprovalRequest> Requests => _requests.AsReadOnly();

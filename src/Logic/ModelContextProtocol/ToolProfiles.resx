@@ -6939,6 +6939,12 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "GetApprovalStatus",
+      "family": "F01",
+      "example": {}
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "GetEnvironmentDiagnostics",
       "family": "F01",
       "example": {
@@ -9396,6 +9402,12 @@
         "detail": "&lt;compiler output&gt;",
         "severity": "error"
       }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "GetApprovalStatus",
+      "family": "F01",
+      "example": {}
     },
     {
       "releaseKey": "15.1",
@@ -12272,6 +12284,12 @@
         "detail": "&lt;compiler output&gt;",
         "severity": "error"
       }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "GetApprovalStatus",
+      "family": "F01",
+      "example": {}
     },
     {
       "releaseKey": "16",
@@ -15441,6 +15459,12 @@
         "detail": "&lt;compiler output&gt;",
         "severity": "error"
       }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "GetApprovalStatus",
+      "family": "F01",
+      "example": {}
     },
     {
       "releaseKey": "17",
@@ -18926,6 +18950,12 @@
         "detail": "&lt;compiler output&gt;",
         "severity": "error"
       }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "GetApprovalStatus",
+      "family": "F01",
+      "example": {}
     },
     {
       "releaseKey": "18",
@@ -22585,6 +22615,12 @@
         "detail": "&lt;compiler output&gt;",
         "severity": "error"
       }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "GetApprovalStatus",
+      "family": "F01",
+      "example": {}
     },
     {
       "releaseKey": "19",
@@ -27338,6 +27374,12 @@
         "detail": "&lt;compiler output&gt;",
         "severity": "error"
       }
+    },
+    {
+      "releaseKey": "20",
+      "entry": "GetApprovalStatus",
+      "family": "F01",
+      "example": {}
     },
     {
       "releaseKey": "20",
@@ -32349,6 +32391,12 @@
         "detail": "&lt;compiler output&gt;",
         "severity": "error"
       }
+    },
+    {
+      "releaseKey": "21",
+      "entry": "GetApprovalStatus",
+      "family": "F01",
+      "example": {}
     },
     {
       "releaseKey": "21",
@@ -43230,6 +43278,19 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "GetApprovalStatus",
+        "currentName": "GetApprovalStatus",
+        "sourceName": "GetApprovalStatus",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "GetCallResult",
         "currentName": "GetCallResult",
         "sourceName": "GetCallResult",
@@ -52949,6 +53010,19 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "GetApprovalStatus",
+        "currentName": "GetApprovalStatus",
+        "sourceName": "GetApprovalStatus",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "GetCallResult",
         "currentName": "GetCallResult",
         "sourceName": "GetCallResult",
@@ -61289,6 +61363,19 @@
         "exampleSource": "full-engine"
       },
       {
+        "name": "GetApprovalStatus",
+        "currentName": "GetApprovalStatus",
+        "sourceName": "GetApprovalStatus",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "GetCallResult",
         "currentName": "GetCallResult",
         "sourceName": "GetCallResult",
@@ -66876,6 +66963,19 @@
           "generationOptions": "None",
           "dryRun": true
         },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetApprovalStatus",
+        "currentName": "GetApprovalStatus",
+        "sourceName": "GetApprovalStatus",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -73067,6 +73167,19 @@
           "generationOptions": "None",
           "dryRun": true
         },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetApprovalStatus",
+        "currentName": "GetApprovalStatus",
+        "sourceName": "GetApprovalStatus",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -79789,6 +79902,19 @@
           "generationOptions": "None",
           "dryRun": true
         },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetApprovalStatus",
+        "currentName": "GetApprovalStatus",
+        "sourceName": "GetApprovalStatus",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -86928,6 +87054,19 @@
           "generationOptions": "None",
           "dryRun": true
         },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetApprovalStatus",
+        "currentName": "GetApprovalStatus",
+        "sourceName": "GetApprovalStatus",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -95070,6 +95209,19 @@
           "generationOptions": "None",
           "dryRun": true
         },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
+        "name": "GetApprovalStatus",
+        "currentName": "GetApprovalStatus",
+        "sourceName": "GetApprovalStatus",
+        "profiles": [
+          "full",
+          "lite",
+          "plc-foundation"
+        ],
+        "arguments": {},
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
