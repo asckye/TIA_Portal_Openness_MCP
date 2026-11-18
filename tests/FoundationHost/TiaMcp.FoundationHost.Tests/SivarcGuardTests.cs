@@ -13,6 +13,65 @@ using Xunit;
 
 public sealed class SivarcGuardTests
 {
+    [Fact]
+    public void Layout_import_preserves_worker_refusal_condition_parameter_and_mutation_evidence()
+    {
+        using var scope = Host.HardwareContract.UseRelease("21");
+        int calls = 0;
+        var service = new Service((operation, arguments) => {
+            calls++;
+            Assert.Equal("sivarc.ExecuteSivarc", operation);
+            Assert.False((bool?)arguments["dryRun"]);
+            Assert.False((bool?)arguments["request"]!["AllowRemoveScreenItems"]);
+            return new JsonObject { ["Message"] = "Screen items would be removed.", ["Meta"] = new JsonObject {
+                ["status"] = "PreconditionFailed", ["precondition"] = "screen-items-would-be-removed", ["parameter"] = "allowRemoveScreenItems",
+                ["refusal"] = "Screen items would be removed.", ["operationSuccess"] = false, ["mayHaveChanged"] = false } };
+        }, () => "fixture.ap21");
+        var tools = new Host.SivarcTools(service);
+        string file = Path.Combine(Path.GetTempPath(), "G.yml");
+        var refused = tools.ManageSivarcScreenLayoutV4("HMI", "G", "import", file, dryRun: false).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]!["code"]);
+        Assert.Equal("screen-items-would-be-removed", (string?)refused["error"]!["details"]!["condition"]);
+        Assert.Equal("allowRemoveScreenItems", (string?)refused["error"]!["details"]!["parameter"]);
+        Assert.Equal("rejected-before-operation", (string?)refused["meta"]!["outcome"]);
+        Assert.False((bool?)refused["data"]!["evidence"]!["mayHaveChanged"]);
+        var invalid = tools.ManageSivarcScreenLayoutV4("HMI", "G", "export", file, allowRemoveScreenItems: true).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)invalid["error"]!["code"]);
+        Assert.Equal(1, calls);
+    }
+
+    [Fact]
+    public void Layout_import_consent_is_forwarded_on_the_preview_without_a_write()
+    {
+        using var scope = Host.HardwareContract.UseRelease("21");
+        var service = new Service((_, arguments) => {
+            Assert.True((bool?)arguments["request"]!["AllowRemoveScreenItems"]);
+            Assert.False((bool?)arguments["request"]!["IsWrite"]);
+            Assert.True((bool?)arguments["dryRun"]);
+            return new JsonObject { ["Message"] = "Preview", ["Meta"] = new JsonObject { ["operationSuccess"] = true } };
+        }, () => throw new InvalidOperationException("Preview requested write identity."));
+        var result = new Host.SivarcTools(service).ManageSivarcScreenLayoutV4("HMI", "G", "import", Path.Combine(Path.GetTempPath(), "G.yml"),
+            allowRemoveScreenItems: true);
+        Assert.True((bool?)result.StructuredContent!["ok"], result.StructuredContent.ToJsonString());
+    }
+
+    [Fact]
+    public void Layout_export_defaults_to_a_read_only_preview_in_the_host_envelope()
+    {
+        using var scope = Host.HardwareContract.UseRelease("21");
+        var service = new Service((_, arguments) => {
+            Assert.True((bool?)arguments["dryRun"]);
+            Assert.False((bool?)arguments["request"]!["IsWrite"]);
+            return new JsonObject { ["Message"] = "SiVArc layout export preview; no file written.", ["Meta"] = new JsonObject {
+                ["dryRun"] = true, ["mayHaveChanged"] = false, ["operationSuccess"] = true } };
+        }, () => throw new InvalidOperationException("Preview requested write identity."));
+        var result = new Host.SivarcTools(service).ManageSivarcScreenLayoutV4("HMI", "G", "export", Path.Combine(Path.GetTempPath(), "G.yml"));
+        var body = result.StructuredContent!;
+        Assert.True((bool?)body["ok"], body.ToJsonString());
+        Assert.Equal("read-only", (string?)body["meta"]!["execution"]);
+        Assert.Null(body["data"]!["evidence"]!["mayHaveWrittenFiles"]);
+    }
+
     public static IEnumerable<object[]> V20DefinitionCases()
     {
         foreach (string block in new[] { "Folder/FB_1", "Folder/FC_1", "Folder/DB_1", "Main_OB" })

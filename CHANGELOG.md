@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- V21 `ManageSivarcScreenLayout` previews both actions by default. Export preview leaves the output path untouched. Import preview lists the current screen items that the layout file would replace. Apply requires `allowRemoveScreenItems: true` when the screen contains items or its inventory cannot be read. The result reports item counts, removals and additions when both inventories are readable.
+- `CallTool` journal records now use the target operation and its preview arguments to report whether the call requested a write.
+
 ## [4.0.0-beta.6] - 2026-11-18
 
 ### Added

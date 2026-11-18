@@ -265,7 +265,7 @@ namespace TiaMcp.Logic.V4
                 || evidence["mayHaveChanged"] is JsonValue value && value.TryGetValue<bool>(out var changed) && changed
                 || string.IsNullOrWhiteSpace(evidence["precondition"]?.ToString())) return null;
             return new Error(SafeDiagnostic(evidence["refusal"]?.ToString()) ?? "TIA Portal refused the operation.",
-                new PreconditionFailedDetails(evidence["precondition"]!.ToString(), null));
+                new PreconditionFailedDetails(evidence["precondition"]!.ToString(), null, evidence["parameter"]?.ToString()));
         }
 
         internal static Error UnchangedNativeError(JsonObject evidence, string? fallback = null)

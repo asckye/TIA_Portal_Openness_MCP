@@ -1,4 +1,5 @@
 using TiaMcp.Adapters.Native.Engineering;
+using TiaMcp.Adapters.Native.Plc;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,6 +11,32 @@ namespace TiaMcp.Adapters.Native.Optional;
 
 internal static class OptionalNativeOperations
 {
+    internal static (string Name, string Type)[]? ScreenItemRows(object screen)
+    {
+        try
+        {
+            var items = PlcGroupOperations.Get(screen, "ScreenItems");
+            return PlcGroupOperations.Items(items).Select(item =>
+                ((string)PlcGroupOperations.Get(item, "Name"), item.GetType().Name)).ToArray();
+        }
+        catch (Exception) /* swallow(probe-optional): an unreadable inventory requires explicit removal consent */
+        { return null; }
+    }
+
+    internal static (string Name, string Type)[]? ScreenItemDifference(
+        (string Name, string Type)[]? from, (string Name, string Type)[]? other)
+    {
+        if (from == null || other == null) return null;
+        var counts = other.GroupBy(item => item).ToDictionary(group => group.Key, group => group.Count());
+        var difference = new List<(string Name, string Type)>();
+        foreach (var item in from)
+        {
+            if (counts.TryGetValue(item, out int count) && count > 0) counts[item] = count - 1;
+            else difference.Add(item);
+        }
+        return difference.ToArray();
+    }
+
     internal static object? Call(object target, string method, params object?[] arguments)
     {
         var candidates = target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)

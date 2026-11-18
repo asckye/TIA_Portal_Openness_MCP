@@ -43,6 +43,7 @@ public sealed class OptionalEngineeringRequest
     public string Expression { get; set; } = "";
     public int MaxResults { get; set; } = 0;
     public string ScreenName { get; set; } = "";
+    public bool AllowRemoveScreenItems { get; set; }
     public string FilePath { get; set; } = "";
     public string HmiDeviceName { get; set; } = "";
     public string PlcSoftwarePathsJson { get; set; } = "";

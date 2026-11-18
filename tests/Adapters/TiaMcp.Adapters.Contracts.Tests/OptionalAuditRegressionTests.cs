@@ -7,6 +7,35 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class OptionalAuditRegressionTests
 {
+    private sealed record Button(string Name);
+    private sealed record TextBox(string Name);
+    private sealed record Screen(object[] ScreenItems);
+
+    [Fact]
+    public void Layout_inventory_and_differences_identify_items_by_name_and_type()
+    {
+        var before = OptionalNativeOperations.ScreenItemRows(new Screen(new object[] { new Button("A"), new Button("B") }));
+        var after = OptionalNativeOperations.ScreenItemRows(new Screen(new object[] { new TextBox("B"), new Button("A") }));
+        Assert.Equal(new[] { ("A", "Button"), ("B", "Button") }, before);
+        Assert.Equal(new[] { ("B", "Button") }, OptionalNativeOperations.ScreenItemDifference(before, after));
+        Assert.Equal(new[] { ("B", "TextBox") }, OptionalNativeOperations.ScreenItemDifference(after, before));
+        var empty = OptionalNativeOperations.ScreenItemRows(new Screen(Array.Empty<object>()));
+        Assert.Empty(empty!);
+        Assert.Equal(before, OptionalNativeOperations.ScreenItemDifference(before, empty));
+        Assert.Equal(new[] { ("A", "Button") }, OptionalNativeOperations.ScreenItemDifference(
+            new[] { ("A", "Button"), ("A", "Button") }, new[] { ("A", "Button") }));
+    }
+
+    [Fact]
+    public void An_unreadable_layout_inventory_cannot_establish_removals_or_additions()
+    {
+        Assert.Null(OptionalNativeOperations.ScreenItemRows(new object()));
+        Assert.Null(OptionalNativeOperations.ScreenItemRows(new Screen(new object[] { new Button("A"), new object() })));
+        var empty = OptionalNativeOperations.ScreenItemRows(new Screen(Array.Empty<object>()));
+        Assert.Null(OptionalNativeOperations.ScreenItemDifference(null, empty));
+        Assert.Null(OptionalNativeOperations.ScreenItemDifference(empty, null));
+    }
+
     public sealed class Telegram
     {
         public readonly List<string> Calls = new();

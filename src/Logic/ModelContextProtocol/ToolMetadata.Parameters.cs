@@ -1366,6 +1366,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ManageSivarcScreenLayout.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["ManageSivarcScreenLayout.screenName"] = new ParameterHint("\"\\u003CscreenName\\u003E\""),
             ["ManageSivarcScreenLayout.action"] = new ParameterHint("\"export\"", "export", "import"),
+            ["ManageSivarcScreenLayout.allowRemoveScreenItems"] = new ParameterHint("false"),
             ["ManageSivarcScreenLayout.filePath"] = new ParameterHint("\"C:\\\\Temp\\\\file.xml\""),
             ["ManageSivarcTableRule.category"] = new ParameterHint("\"\\u003Ccategory\\u003E\""),
             ["ManageSivarcTableRule.tablePath"] = new ParameterHint("\"\\u003CFolder/Name\\u003E\""),

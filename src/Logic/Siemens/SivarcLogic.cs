@@ -280,9 +280,14 @@ namespace TiaMcpServer.Siemens
 
         // ---- screen layout data ----------------------------------------------------------------------------------------------------
         internal static readonly string[] LayoutActions = { "export", "import" };
-        internal static bool ValidateLayoutRequest(string screenName, string action, string filePath, bool dryRun)
+        internal static bool LayoutImportRefusal(int itemCount, bool readable, bool allowRemoveScreenItems)
+            => !allowRemoveScreenItems && (!readable || itemCount > 0);
+
+        internal static bool ValidateLayoutRequest(string screenName, string action, string filePath, bool dryRun, bool allowRemoveScreenItems = false)
         {
             RequireName(screenName, "screenName", 1024); RequireOneOf(action, LayoutActions, "action");
+            if (allowRemoveScreenItems && action != "import")
+                throw new ArgumentException("allowRemoveScreenItems applies to import only.", nameof(allowRemoveScreenItems));
             if (string.IsNullOrWhiteSpace(filePath) || !Path.IsPathRooted(filePath))
                 throw new ArgumentException("Absolute filePath (.yml layout file on the TIA Portal machine) required.");
             return action == "import" && !dryRun;

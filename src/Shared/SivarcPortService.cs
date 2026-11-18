@@ -81,11 +81,12 @@ internal sealed class SivarcService
         OptionalEngineeringPort.Input(request, itemPathJson);
         return _port.Invoke("sivarc.ExecuteSivarc", request);
     }
-    public ResponseMessage ManageSivarcScreenLayout(string softwarePath, string screenName, string action, string filePath, bool dryRun = true)
+    public ResponseMessage ManageSivarcScreenLayout(string softwarePath, string screenName, string action, string filePath,
+        bool dryRun = true, bool allowRemoveScreenItems = false)
     {
         var request = new OptionalEngineeringRequest {
-            Operation = "ManageSivarcScreenLayout", IsWrite = !dryRun && !(action == "read" || action == "checkValidity" || action == "checkTraceValidity"),
-                SoftwarePath = softwarePath, ScreenName = screenName, Action = action, FilePath = filePath, DryRun = dryRun
+            Operation = "ManageSivarcScreenLayout", IsWrite = !dryRun, SoftwarePath = softwarePath, ScreenName = screenName,
+            Action = action, FilePath = filePath, DryRun = dryRun, AllowRemoveScreenItems = allowRemoveScreenItems
         };
         return _port.Invoke("sivarc.ExecuteSivarc", request);
     }

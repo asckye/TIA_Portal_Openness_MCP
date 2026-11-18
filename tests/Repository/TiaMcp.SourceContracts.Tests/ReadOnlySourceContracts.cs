@@ -10,6 +10,28 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class ReadOnlySourceContracts
 {
     [Fact]
+    public void Sivarc_layout_export_preview_and_import_refusal_precede_mutation()
+    {
+        var method = EngineSources.BlockAfter(Read("src/Adapters/Native/Optional/SivarcAdapter.Definitions.cs"),
+            "public HardwareAddressingReply ManageSivarcScreenLayout(");
+        var export = EngineSources.BlockAfter(method, "if (action == \"export\")");
+        int plan = export.IndexOf("NativeFileOutput.Plan(filePath)", StringComparison.Ordinal);
+        int preview = export.IndexOf("if (dryRun) return", StringComparison.Ordinal);
+        int write = export.IndexOf("meta[\"mayHaveWrittenFiles\"] = true", StringComparison.Ordinal);
+        int exportCall = export.IndexOf("layout.Export(file)", StringComparison.Ordinal);
+        Assert.True(plan >= 0 && plan < preview && preview < write && write < exportCall);
+        int firstRead = method.IndexOf("PlanImport(OptionalNativeOperations.ScreenItemRows(screen))", StringComparison.Ordinal);
+        int refused = method.IndexOf("return previewOrRefusal", StringComparison.Ordinal);
+        int access = method.IndexOf("_session.AcquireHmiEditAccess()", StringComparison.Ordinal);
+        int guardedRead = method.IndexOf("var before = OptionalNativeOperations.ScreenItemRows(screen)", StringComparison.Ordinal);
+        int guard = method.IndexOf("if (PlanImport(before) is string refusal) return refusal", StringComparison.Ordinal);
+        int import = method.IndexOf("layout.Import(input)", StringComparison.Ordinal);
+        int after = method.IndexOf("var after = OptionalNativeOperations.ScreenItemRows(screen)", StringComparison.Ordinal);
+        Assert.True(firstRead >= 0 && firstRead < refused && refused < access && access < guardedRead);
+        Assert.True(guardedRead < guard && guard < import && import < after);
+    }
+
+    [Fact]
     public void Test_suite_editor_requires_ui_and_previews_before_any_show_call()
     {
         var source = Read("src/Adapters/Native/Options/TestSuiteAdapter.cs");

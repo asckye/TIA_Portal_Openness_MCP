@@ -211,15 +211,17 @@ namespace TiaMcpServer.ModelContextProtocol
             // The call projection starts at the transport boundary. The tool's BEFORE row is written inside its lane,
             // after approval, so journal BEFORE/terminal pairs never overlap on the Openness lane.
             string id = InvocationJournal.NewId(correlation ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId);
+            string arguments = System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>());
+            bool isWrite = ProtocolTool.Name == "CallTool"
+                ? McpServer.ApprovalResultWrite(ProtocolTool.Name, arguments) : McpServer.IsWriteTool(ProtocolTool.Name);
             using var journal = InvocationJournal.Observe(id, ProtocolTool.Name, McpServer.InvocationHostTag, McpServer.ReleaseKey,
-                McpServer.IsWriteTool(ProtocolTool.Name),
+                isWrite,
                 () => System.Text.Json.JsonSerializer.Serialize(request.Params?.Arguments, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
             CallToolResult Recorded(CallToolResult result)
             {
                 journal.Complete(() => System.Text.Json.JsonSerializer.Serialize(result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                 return result;
             }
-            string arguments = System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>());
             var precheck = await McpServer.PrecheckBeforeApproval(ProtocolTool.Name, arguments, async previewArguments =>
             {
                 var previewLane = await Dispatch.ToolDispatchLanes.Acquire(ProtocolTool.Name, cancellationToken).ConfigureAwait(false);

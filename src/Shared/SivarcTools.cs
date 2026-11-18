@@ -253,20 +253,22 @@ namespace TiaMcpServer.ModelContextProtocol
         => _sivarc
             .ResolveSivarcExpression(softwarePath,blockPath,devicePathJson,itemPathJson,libraryItemKind,libraryItemPath,expression,libraryName,maxResults);
         [McpServerTool(Name="ManageSivarcScreenLayout"),
-                Description("[L2][HMI][WRITE] SiVArc layout fields of one screen (classic WinCC Screen or Unified HmiScreen) through the V21 LayoutData " +
-                "screen service: action export writes the YML file (must not exist; verified by size and SHA-256), import applies a YML file and returns " +
-                "state / numberOfLayouts. screenName is an exact name or an absolute /Group/Screen path. Import defaults to preview; NotSupported on V20 or " +
-                "without the SiVArc option; never saves. Current native policy; V4 native acceptance is pending.")]
+                Description("[L2][HMI][WRITE] Preview or apply a SiVArc layout export or import on a classic WinCC or Unified screen. " +
+                "Both actions preview by default. Export writes a new YML file on apply and verifies size and SHA-256. " +
+                "Import replaces the screen content with the file's layouts. Preview lists current items at risk. " +
+                "Apply requires allowRemoveScreenItems when items exist or cannot be read, and reports removed and added items when readable. " +
+                "screenName accepts an exact name or /Group/Screen path. Requires V21 and the SiVArc option. No project save. Native acceptance pending.")]
         public CallToolResult ManageSivarcScreenLayoutV4(
             string softwarePath,
             [Description("screenName: exact screen name.")] string screenName,
             [Description("action: the operation to perform - export | import.")] string action,
             [Description("filePath: absolute YML (.yml) layout file; new output or existing import file.")] string filePath,
-            bool dryRun=true)
-            => LibraryToolContract.Run("ManageSivarcScreenLayout", action == "export" || !dryRun, true, () =>
+            bool dryRun=true,
+            [Description("Permit import to replace existing or unreadable screen items. Import only.")] bool allowRemoveScreenItems=false)
+            => LibraryToolContract.Run("ManageSivarcScreenLayout", !dryRun, true, () =>
             {
-                LibraryToolContract.Check(() => { SivarcLogic.ValidateLayoutRequest(screenName, action, filePath, dryRun); });
-                return ManageSivarcScreenLayout(softwarePath, screenName, action, filePath, dryRun);
+                LibraryToolContract.Check(() => { SivarcLogic.ValidateLayoutRequest(screenName, action, filePath, dryRun, allowRemoveScreenItems); });
+                return ManageSivarcScreenLayout(softwarePath, screenName, action, filePath, dryRun, allowRemoveScreenItems);
             });
 
         internal ResponseMessage ManageSivarcScreenLayout(
@@ -274,8 +276,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string screenName,
             string action,
             string filePath,
-            bool dryRun=true)
-        => _sivarc.ManageSivarcScreenLayout(softwarePath,screenName,action,filePath,dryRun);
+            bool dryRun=true,
+            bool allowRemoveScreenItems=false)
+        => _sivarc.ManageSivarcScreenLayout(softwarePath, screenName, action, filePath, dryRun, allowRemoveScreenItems);
         [McpServerTool(Name="UpgradeSivarcDefinitions"),
                 Description("[L2][PLC-Software][WRITE] Upgrade the SiVArc definitions of one PLC (SivarcDefinitionsUpgrader.Upgrade on the PlcSoftware: " +
                 "legacy SIVARCCOND / SIVARCTEXT functions become tag / text definitions in the block plug-ins). Returns warningCount and the recursive " +

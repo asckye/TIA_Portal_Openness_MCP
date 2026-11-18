@@ -114,6 +114,13 @@ namespace TiaMcp.Engine.Tests
             check(Fails<ArgumentException>(() => SivarcLogic.ValidateExpressionRequest("Block_2", "[\"D\"]", "[\"I\"]", "libraryType", "T", "x", 0)), "sivarc expression: maxResults 0 refused");
 
             // ---- layout data ----
+            check(Fails<ArgumentException>(() => SivarcLogic.ValidateLayoutRequest("G", "export", yml, true, true)),
+                "sivarc layout: export refuses import-only removal consent");
+            foreach (bool readable in new[] { false, true })
+                foreach (int count in new[] { 0, 2 })
+                    foreach (bool allow in new[] { false, true })
+                        check(SivarcLogic.LayoutImportRefusal(count, readable, allow) == (!allow && (count > 0 || !readable)),
+                            $"sivarc layout: import refusal with count={count}, readable={readable}, allow={allow}");
             check(!SivarcLogic.ValidateLayoutRequest("Screen_1", "export", yml, false) && !SivarcLogic.ValidateLayoutRequest("/Group/Screen_2", "import", yml, true) && SivarcLogic.ValidateLayoutRequest("Screen_2", "import", yml, false), "sivarc layout: export never writes the project, import only for real");
             check(Fails<ArgumentException>(() => SivarcLogic.ValidateLayoutRequest("Screen_1", "copy", yml, true)), "sivarc layout: unknown action refused");
             check(Fails<ArgumentException>(() => SivarcLogic.ValidateLayoutRequest("Screen_1", "export", "layouts.yml", true)), "sivarc layout: relative file refused");

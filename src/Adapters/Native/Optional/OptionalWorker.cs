@@ -75,7 +75,8 @@ public sealed partial class PlcFoundationEngine
                         request.LibraryItemPath, request.Expression, request.LibraryName, request.MaxResults);
 #endif
                 case "ManageSivarcScreenLayout": return new SivarcAdapter(session)
-                    .ManageSivarcScreenLayout(request.SoftwarePath, request.ScreenName, request.Action, request.FilePath, request.DryRun);
+                    .ManageSivarcScreenLayout(request.SoftwarePath, request.ScreenName, request.Action, request.FilePath,
+                        request.DryRun, request.AllowRemoveScreenItems);
 #if SIVARC_UPGRADER
                 case "UpgradeSivarcDefinitions": return new SivarcAdapter(session).UpgradeSivarcDefinitions(request.SoftwarePath, request.DryRun);
 #endif

@@ -13036,7 +13036,7 @@
       "path": "src/Shared/SivarcTools.cs",
       "owner": "SivarcTools",
       "domain": "HMI",
-      "signature": "public CallToolResult ManageSivarcScreenLayoutV4(\n            string softwarePath,\n            [Description(\"screenName: exact screen name.\")] string screenName,\n            [Description(\"action: the operation to perform - export | import.\")] string action,\n            [Description(\"filePath: absolute YML (.yml) layout file; new output or existing import file.\")] string filePath,\n            bool dryRun=true)",
+      "signature": "public CallToolResult ManageSivarcScreenLayoutV4(\n            string softwarePath,\n            [Description(\"screenName: exact screen name.\")] string screenName,\n            [Description(\"action: the operation to perform - export | import.\")] string action,\n            [Description(\"filePath: absolute YML (.yml) layout file; new output or existing import file.\")] string filePath,\n            bool dryRun=true,\n            [Description(\"Permit import to replace existing or unreadable screen items. Import only.\")] bool allowRemoveScreenItems=false)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -13061,8 +13061,15 @@
           "type": "bool",
           "default": "true",
           "value": true
+        },
+        "allowRemoveScreenItems": {
+          "type": "bool",
+          "default": "false",
+          "description": "Permit import to replace existing or unreadable screen items. Import only.",
+          "value": false
         }
-      }
+      },
+      "description": "[L2][HMI][WRITE] Preview or apply a SiVArc layout export or import on a classic WinCC or Unified screen. Both actions preview by default. Export writes a new YML file on apply and verifies size and SHA-256. Import replaces the screen content with the file's layouts. Preview lists current items at risk. Apply requires allowRemoveScreenItems when items exist or cannot be read, and reports removed and added items when readable. screenName accepts an exact name or /Group/Screen path. Requires V21 and the SiVArc option. No project save. Native acceptance pending."
     },
     "UpgradeSivarcDefinitions": {
       "method": "UpgradeSivarcDefinitionsV4",

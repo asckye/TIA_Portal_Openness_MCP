@@ -218,11 +218,11 @@ namespace TiaMcp.Adapters.Native.Optional
             });
 
         // ---- tools: screen layout data (V21 LayoutData on a classic Screen or Unified HmiScreen) -------------------------------------------
-        public HardwareAddressingReply ManageSivarcScreenLayout(string softwarePath, string screenName, string action, string filePath, bool dryRun = true)
+        public HardwareAddressingReply ManageSivarcScreenLayout(string softwarePath, string screenName, string action, string filePath,
+            bool dryRun = true, bool allowRemoveScreenItems = false)
             => _session.RunHmiStepTool("ManageSivarcScreenLayout", meta =>
             {
-                bool write = Logic.ValidateLayoutRequest(screenName, action, filePath, dryRun);
-                using var access = write ? _session.AcquireHmiEditAccess() : null;
+                Logic.ValidateLayoutRequest(screenName, action, filePath, dryRun, allowRemoveScreenItems);
                 var screen = _session.ResolveHmiScreenOrThrow(softwarePath, screenName);
                 meta["softwarePath"] = softwarePath; meta["screenName"] = screenName; meta["screenClass"] = screen.GetType().Name; meta["action"] = action;
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -237,14 +237,49 @@ namespace TiaMcp.Adapters.Native.Optional
                 if (action == "export")
                 {
                     var file = NativeFileOutput.Plan(filePath); meta["file"] = file.FullName;
+                    if (dryRun) return "SiVArc layout export preview; no file written.";
                     meta["mayHaveWrittenFiles"] = true;
                     layout.Export(file); meta["output"] = NativeFileOutput.Verify(file);
                     return "SiVArc screen layouts exported to the YML file (LayoutData.Export); project unchanged.";
                 }
                 var input = HardwareServicesLogic.RequireExistingInputFile(filePath, "filePath"); meta["file"] = input.FullName;
-                if (!write) return "SiVArc layout import preview; nothing changed (LayoutData.Import would apply the file's layouts to the screen).";
+                string? PlanImport((string Name, string Type)[]? items)
+                {
+                    var inventory = Inventory(items);
+                    meta["screenItemsBefore"] = inventory;
+                    meta["wouldRemoveScreenItems"] = inventory["rows"];
+                    if (items == null) meta["dataComplete"] = false;
+                    bool requiresAllow = Logic.LayoutImportRefusal(items?.Length ?? 0, items != null, allowRemoveScreenItems: false);
+                    meta["requiresAllowRemoveScreenItems"] = requiresAllow;
+                    string effect = "Import replaces the screen content with the file's layouts. " + (items == null
+                        ? "Current screen items could not be read and may be removed." : $"All {items.Length} current screen items are removed.");
+                    if (dryRun) return "SiVArc layout import preview. " + effect;
+                    if (!requiresAllow || allowRemoveScreenItems) return null;
+                    meta["status"] = "PreconditionFailed";
+                    meta["precondition"] = "screen-items-would-be-removed";
+                    meta["parameter"] = "allowRemoveScreenItems";
+                    meta["operationSuccess"] = false;
+                    string refusal = effect + " Set allowRemoveScreenItems to true to apply.";
+                    meta["refusal"] = refusal;
+                    return refusal;
+                }
+                if ((dryRun || !allowRemoveScreenItems) && PlanImport(OptionalNativeOperations.ScreenItemRows(screen)) is string previewOrRefusal)
+                    return previewOrRefusal;
+                using var access = _session.AcquireHmiEditAccess();
+                // A screen that was empty at admission may have gained items while edit access was pending.
+                var before = OptionalNativeOperations.ScreenItemRows(screen);
+                if (PlanImport(before) is string refusal) return refusal;
                 meta["mayHaveChanged"] = true;
                 LayoutDataImportResult result = layout.Import(input);
+                var after = OptionalNativeOperations.ScreenItemRows(screen);
+                var removed = OptionalNativeOperations.ScreenItemDifference(before, after);
+                var added = OptionalNativeOperations.ScreenItemDifference(after, before);
+                meta["screenItemsAfter"] = Inventory(after);
+                meta["removedScreenItems"] = ItemRows(removed);
+                meta["addedScreenItems"] = ItemRows(added);
+                meta["removedScreenItemCount"] = removed?.Length;
+                meta["addedScreenItemCount"] = added?.Length;
+                if (after == null) meta["dataComplete"] = false;
                 meta["result"] = new HmiObject { ["state"] = result.State.ToString(), ["numberOfLayouts"] = result.NumberOfLayouts };
                 meta["nativeResultReturned"] = true;
                 meta["nativeState"] = result.State.ToString();
@@ -256,6 +291,14 @@ namespace TiaMcp.Adapters.Native.Optional
                 return "SiVArc screen layouts imported (LayoutData.Import); inspect result.state; project not saved.";
 #endif
             });
+
+#if OPTIONAL_V21
+        private static HmiObject[]? ItemRows((string Name, string Type)[]? items)
+            => items?.Select(item => new HmiObject { ["name"] = item.Name, ["type"] = item.Type }).ToArray();
+
+        private static HmiObject Inventory((string Name, string Type)[]? items)
+            => new HmiObject { ["readable"] = items != null, ["count"] = items?.Length, ["rows"] = ItemRows(items) };
+#endif
 
         // ---- tools: definitions upgrader --------------------------------------------------------------------------------------------------
         public HardwareAddressingReply UpgradeSivarcDefinitions(string softwarePath, bool dryRun = true)

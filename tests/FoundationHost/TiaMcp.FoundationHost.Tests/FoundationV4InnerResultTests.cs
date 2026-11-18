@@ -9,6 +9,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 public sealed class FoundationV4InnerResultTests : IDisposable
@@ -21,6 +22,29 @@ public sealed class FoundationV4InnerResultTests : IDisposable
     private static RequestContext<CallToolRequestParams> Request(string name)
         => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
             Params = new CallToolRequestParams { Name = name, Arguments = new Dictionary<string, JsonElement>() } };
+
+    [Theory]
+    [InlineData("CallTool", "ManageSivarcScreenLayout", false, true)]
+    [InlineData("CallTool", "ManageSivarcScreenLayout", true, false)]
+    [InlineData("CallTool", "GetSessionState", false, false)]
+    [InlineData("PreviewToolCall", "ManageSivarcScreenLayout", false, false)]
+    public async Task Bridge_journal_classifies_the_requested_operation(string bridge, string target, bool dryRun, bool expected)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21");
+        var rows = new List<string>();
+        Host.InvocationJournal.ConfigureOutput(rows.Add);
+        try
+        {
+            object arguments = target == "GetSessionState" ? new { } : new { softwarePath = "HMI", screenName = "G",
+                action = "export", filePath = Path.Combine(fixture.Root, "G.yml"), dryRun };
+            await fixture.Call(bridge, new { name = target, arguments });
+            var calls = rows.Select(row => JsonNode.Parse(row)!)
+                .Where(row => (int?)row["callProjection"] == 1 && (string?)row["tool"] == bridge).ToArray();
+            Assert.Equal(new[] { "BEFORE", "RETURNED" }, calls.Select(row => (string?)row["phase"]));
+            Assert.All(calls, row => Assert.Equal(expected, (bool?)row["isWrite"]));
+        }
+        finally { Host.InvocationJournal.ConfigureOutput(null); }
+    }
 
     [Theory]
     [InlineData(false)]

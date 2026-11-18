@@ -31572,14 +31572,21 @@
           "filePath": "C:\\Examples\\exports\\Overview.yml",
           "dryRun": true
         },
-        "parameters": {},
+        "parameters": {
+          "allowRemoveScreenItems": {
+            "meaning": "Review the import preview before permitting removal of existing screen items. Required on apply if the inventory is unreadable or contains items.",
+            "exampleValue": false
+          }
+        },
         "operations": {
           "export": {
             "arguments": {}
           },
           "import": {
             "arguments": {
-              "action": "import"
+              "action": "import",
+              "filePath": "C:\\Examples\\imports\\Overview.yml",
+              "allowRemoveScreenItems": true
             }
           }
         },
