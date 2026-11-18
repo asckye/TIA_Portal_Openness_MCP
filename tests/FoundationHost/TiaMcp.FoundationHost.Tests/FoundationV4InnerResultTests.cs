@@ -1,3 +1,4 @@
+extern alias toolpipeline;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -146,6 +147,43 @@ public sealed class FoundationV4InnerResultTests : IDisposable
         Assert.NotNull(actualProperties["Value"]);
         Assert.Null(actualProperties["value"]);
         Assert.True(JsonNode.DeepEquals(referenceProperties, actualProperties));
+    }
+
+    [Theory]
+    [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Compile_export_commit_usage_preserves_schema_arguments_and_export_bindings(string release)
+    {
+        var git = McpServerTool.Create(new toolpipeline::TiaMcpServer.ModelContextProtocol.GitWorkflowTools().ManagePlcGitRepositoryV4);
+        var inner = new ToolUsageTool(release, () => new[] { git });
+        var request = Request("GetToolUsage");
+        request.Params = new CallToolRequestParams { Name = "GetToolUsage",
+            Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                """{"exampleId":"sequence/compile-export-commit"}""") };
+        var result = await new FoundationV4Tool(inner, release, () => new ApprovalSettings(true, 1)).InvokeAsync(request);
+        Assert.True((bool?)result.StructuredContent!["ok"], result.StructuredContent.ToJsonString());
+        var steps = result.StructuredContent["data"]!["examples"]![0]!["steps"]!.AsArray();
+        var commits = steps.Where(step => (string?)step!["tool"] == "ManagePlcGitRepository"
+            && (string?)step["arguments"]!["action"] == "commit").Select(step => step!["arguments"]!.AsObject()).ToArray();
+        Assert.Equal(2, commits.Length);
+        var schema = git.ProtocolTool.InputSchema;
+        var properties = schema.GetProperty("properties").EnumerateObject().Select(property => property.Name).ToHashSet();
+        foreach (var arguments in commits)
+        {
+            Assert.All(arguments, argument => Assert.Contains(argument.Key, properties));
+            Assert.All(schema.GetProperty("required").EnumerateArray(), parameter => Assert.True(arguments.ContainsKey(parameter.GetString()!)));
+            Assert.Equal("Export compiled PLC blocks", (string?)arguments["message"]);
+            Assert.Null(arguments["summary"]);
+        }
+        Assert.True((bool?)commits[0]["dryRun"]);
+        Assert.False((bool?)commits[1]["dryRun"]);
+        var business = commits.Select(arguments => arguments.DeepClone().AsObject()).ToArray();
+        foreach (var arguments in business) arguments.Remove("dryRun");
+        Assert.True(JsonNode.DeepEquals(business[0], business[1]));
+        var export = steps.Single(step => (string?)step!["tool"] == "ExportPlcBlocks" && (bool?)step["arguments"]!["dryRun"] == false)!;
+        Assert.True((bool?)export["arguments"]!["confirm"]);
+        Assert.Equal("<exact projectFile from GetSessionState>", (string?)export["arguments"]!["expectedProjectFile"]);
+        Assert.Equal("<inventoryHash from this export preview>", (string?)export["arguments"]!["expectedInventoryHash"]);
     }
 
     [Fact]

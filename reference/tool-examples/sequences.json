@@ -5339,7 +5339,7 @@
           "message": "Export compiled PLC blocks",
           "dryRun": true
         },
-        "expect": "Review the exact explicit file list and commit message; obtain separate operator approval for this FILE write."
+        "expect": "Review the exact explicit file list and message; obtain separate operator approval for this FILE write. Use the declared message argument. Keep these business inputs identical for execution; this Git tool declares no project or plan-hash arguments."
       },
       {
         "tool": "ManagePlcGitRepository",

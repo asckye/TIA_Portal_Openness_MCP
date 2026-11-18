@@ -381,7 +381,7 @@ internal static class FoundationV4Result
         bool rawUsage = name == "GetToolUsage" && (portedUsage
             || TiaMcp.Versioning.TiaVersionCatalog.Get(release).EngineOutputDirectory != null
                 && (usageName == null || TiaOpenness.Shared.ToolUsageCatalog.ExampleSource(usageName, release) == "full-engine"));
-        var data = rawUsage ? raw!.DeepClone().AsObject() : Object(raw);
+        var data = rawUsage ? raw!.DeepClone().AsObject() : Object(raw, preserveArguments: name == "GetToolUsage");
         // Collapse the legacy wrapper while retaining all domain and candidate evidence.
         if (data["data"] is JsonObject nested)
         {
@@ -439,12 +439,12 @@ internal static class FoundationV4Result
     private static bool Incomplete(JsonNode? node) => node is JsonArray rows ? rows.Any(Incomplete)
         : node is JsonObject obj && (obj["unavailableAttributes"] is JsonArray { Count: > 0 }
             || Flag(obj, "truncated") == true || Flag(obj, "complete") == false || obj.Any(p => Incomplete(p.Value)));
-    internal static JsonObject Object(JsonNode? raw) => Fields(raw) switch {
+    internal static JsonObject Object(JsonNode? raw, bool preserveArguments = false) => Fields(raw, preserveArguments) switch {
         JsonObject obj => obj, JsonArray items => new JsonObject { ["items"] = items },
         JsonNode value => new JsonObject { ["value"] = value }, _ => new JsonObject() };
-    private static JsonNode? Fields(JsonNode? raw)
+    private static JsonNode? Fields(JsonNode? raw, bool preserveArguments = false)
     {
-        if (raw is JsonArray rows) return new JsonArray(rows.Select(Fields).ToArray());
+        if (raw is JsonArray rows) return new JsonArray(rows.Select(row => Fields(row, preserveArguments)).ToArray());
         if (raw is not JsonObject obj) return raw?.DeepClone();
         // Machine parameter names belong to the package schema, including their case.
         if ((string?)obj["schema"] == "tiamcp.machine/1") return obj.DeepClone();
@@ -452,7 +452,9 @@ internal static class FoundationV4Result
         foreach (var pair in obj)
         {
             var key = JsonNamingPolicy.CamelCase.ConvertName(pair.Key);
-            data[key == "message" ? "summary" : key] = key is "value" or "evidence" ? pair.Value?.DeepClone() : Fields(pair.Value);
+            // Usage arguments are caller inputs, so their exact schema keys and nested property names must survive result mapping.
+            data[key == "message" ? "summary" : key] = key is "value" or "evidence" || preserveArguments && key == "arguments"
+                ? pair.Value?.DeepClone() : Fields(pair.Value, preserveArguments);
         }
         return data;
     }
