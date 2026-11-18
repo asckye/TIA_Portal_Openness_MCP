@@ -5454,6 +5454,18 @@
           "identifier": "TiaMcp.SourceContracts.Tests.PlcServiceLookupSources/LoadableProviderUsesSharedResolver( ):b039a94ab140cfae9a6696718a97e662c456f120d0a309d952e31518503c99eb:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-12A",
+      "maintainerDate": "2026-11-18",
+      "reason": "Stale preview token now requires the specific AdapterPreconditionException with condition preview-stale and parameter previewToken instead of the generic InvalidOperationException (stricter; lead approval under maintainer standing approval, 2026-11-18)",
+      "items": [
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/VerifiedReadbackTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.VerifiedReadbackTests/Preview_token_still_refuses_changed_block_content( string before , string after ):771ed317abec6a96548dd0e42da4113ba7bd0d0756391a96a0e4174e301cbfa5:1"
+        }
+      ]
     }
   ]
 }
