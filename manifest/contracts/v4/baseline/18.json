@@ -7025,7 +7025,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8c07319655aaf08a37175184e2cdbb5e5373ad75a53e1510c8cb7fbe4ec09c40",
+      "descriptionSha256": "43958eb8d7d4cafbef8eebff6fdd0b3d59ece5951f20aa81e2ad0ef8b4ef3a42",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -8644,7 +8644,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0d84f603725103d908499e5661dfd81f944056b54b2f72c4b904286842ad070c",
+      "descriptionSha256": "5bca8998d12a58a1044e88efe0973fcd15a3ac229cfd8f9d976b9814f07c0aa4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -8682,6 +8682,11 @@
             "default": "",
             "description": "blockBindingPassword: optional password for the BlockBindingPassword prompt (know-how protected blocks bound to a CPU/card). Never logged.",
             "type": "string"
+          },
+          "confirmPhysicalTarget": {
+            "default": false,
+            "description": "confirmPhysicalTarget: true explicitly acknowledges downloading to a real PLC. Required unless destination IP, PG/PC interface and all local adapter subnets establish a PLCSIM target under the rule above. Include true in the reviewed preview as well. Workbench approval is still required.",
+            "type": "boolean"
           },
           "consistentBlocksOnly": {
             "default": true,
@@ -8733,7 +8738,7 @@
           },
           "pgPcInterface": {
             "default": "",
-            "description": "pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'. Leave empty to auto-pick the adapter that shares a subnet with the CPU. Run CheckDownloadReadiness to see the available names.",
+            "description": "pgPcInterface: PG/PC interface name (substring, case-insensitive) from ListTransferRoutes. PLCSIM downloads must explicitly name the PLCSIM virtual adapter or PLCSIM/Softbus interface. Empty enables automatic route selection and is always physical, requiring confirmPhysicalTarget=true and Workbench approval for execution.",
             "examples": [
               "PLCSIM"
             ],
