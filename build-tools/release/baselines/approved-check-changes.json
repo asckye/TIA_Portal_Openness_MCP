@@ -5329,6 +5329,23 @@
           "identifier": "TiaMcp.FoundationHost.Tests.HostCatalogTests/Catalog_preserves_every_master_input_and_output_schema( string release ):c89f8f64d9f734cb68b38aa4575126b291b3adef3c125cd7df7777783ad68777:1"
         }
       ]
+    },
+    {
+      "task": "final-batch",
+      "maintainerDate": "2026-11-18",
+      "reason": "Lead approval 2026-11-18 under the maintainer\u0027s standing approval: PLC pattern library counts grow with the S4b patterns (6 to 11 patterns, 96 to 168 evidence rows), exact assertions kept",
+      "items": [
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PlcPatternLibraryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PlcPatternLibraryTests/Real_library_has_six_sources_and_one_not_run_row_per_required_cell( ):3e9149ce778421406668655a5ca7cb79e827b9df056079a0b390b50e6c5726f4:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PlcPatternLibraryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PlcPatternLibraryTests/Real_library_has_six_sources_and_one_not_run_row_per_required_cell( ):a049e145d04814226bb908627c4632d1f0fe712927e985a707a4da4d2d326372:1"
+        }
+      ]
     }
   ]
 }
