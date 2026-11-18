@@ -46,7 +46,7 @@ internal static class DisconnectTests
         var disconnectSource=engine.Split("public PlcDisconnectResult Disconnect()")[1].Split("public void Dispose()")[0];
         check(!disconnectSource.Contains("Project()") && !disconnectSource.Contains("IsModified") && !disconnectSource.Contains(".Save(") && !disconnectSource
                 .Contains(".Close("),"Dirty/bound project is not inspected, saved or closed by Disconnect source");
-        check(engine.Split("public void Dispose()")[1].Contains("if (!disconnect.Attempted) Disconnect();"),
+        check(engine.Split("public void Dispose()")[1].Contains("if (!disconnect.Attempted) DisconnectCore(false);"),
                 "Final Dispose source does not retry a failed explicit detach");
         var idle=new PlcDisconnectState();
         check(!idle.Execute(null,null,()=>throw new Exception("Must not detach")).Detached,"Worker idle acknowledged without native action");

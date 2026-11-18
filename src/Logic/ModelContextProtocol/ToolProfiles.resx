@@ -36263,7 +36263,8 @@
         "blockPath": "Main",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36275,7 +36276,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36287,7 +36289,8 @@
         "tagTableName": "默认变量表",
         "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36301,7 +36304,8 @@
         "recursive": true,
         "maxItems": 128,
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36313,7 +36317,8 @@
         "exportDirectory": "C:\\Examples\\exports",
         "typePath": "UDT_Status",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36325,7 +36330,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36745,7 +36751,8 @@
         "blockPath": "Main",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36757,7 +36764,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36769,7 +36777,8 @@
         "tagTableName": "默认变量表",
         "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36783,7 +36792,8 @@
         "recursive": true,
         "maxItems": 128,
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36795,7 +36805,8 @@
         "exportDirectory": "C:\\Examples\\exports",
         "typePath": "UDT_Status",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -36807,7 +36818,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37247,7 +37259,8 @@
         "blockPath": "Main",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37259,7 +37272,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37271,7 +37285,8 @@
         "tagTableName": "默认变量表",
         "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37285,7 +37300,8 @@
         "recursive": true,
         "maxItems": 128,
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37297,7 +37313,8 @@
         "exportDirectory": "C:\\Examples\\exports",
         "typePath": "UDT_Status",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37309,7 +37326,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37749,7 +37767,8 @@
         "blockPath": "Main",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37761,7 +37780,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37773,7 +37793,8 @@
         "tagTableName": "默认变量表",
         "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37787,7 +37808,8 @@
         "recursive": true,
         "maxItems": 128,
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37799,7 +37821,8 @@
         "exportDirectory": "C:\\Examples\\exports",
         "typePath": "UDT_Status",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -37811,7 +37834,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38264,7 +38288,8 @@
         "blockPath": "Main",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38276,7 +38301,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38288,7 +38314,8 @@
         "tagTableName": "默认变量表",
         "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38302,7 +38329,8 @@
         "recursive": true,
         "maxItems": 128,
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38314,7 +38342,8 @@
         "exportDirectory": "C:\\Examples\\exports",
         "typePath": "UDT_Status",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38326,7 +38355,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38787,7 +38817,8 @@
         "blockPath": "Main",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38799,7 +38830,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38811,7 +38843,8 @@
         "tagTableName": "默认变量表",
         "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38825,7 +38858,8 @@
         "recursive": true,
         "maxItems": 128,
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38837,7 +38871,8 @@
         "exportDirectory": "C:\\Examples\\exports",
         "typePath": "UDT_Status",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -38849,7 +38884,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39310,7 +39346,8 @@
         "blockPath": "Main",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39334,7 +39371,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39358,7 +39396,8 @@
         "tagTableName": "默认变量表",
         "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39372,7 +39411,8 @@
         "recursive": true,
         "maxItems": 128,
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39384,7 +39424,8 @@
         "exportDirectory": "C:\\Examples\\exports",
         "typePath": "UDT_Status",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39396,7 +39437,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39886,7 +39928,8 @@
         "blockPath": "Main",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39910,7 +39953,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39934,7 +39978,8 @@
         "tagTableName": "默认变量表",
         "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39948,7 +39993,8 @@
         "recursive": true,
         "maxItems": 128,
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39960,7 +40006,8 @@
         "exportDirectory": "C:\\Examples\\exports",
         "typePath": "UDT_Status",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {
@@ -39972,7 +40019,8 @@
         "groupPath": "",
         "exportDirectory": "C:\\TIA_MCP\\exports",
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "stripVolatile": true
       }
     },
     {

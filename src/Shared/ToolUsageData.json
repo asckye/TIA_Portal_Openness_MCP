@@ -25797,7 +25797,190 @@
         }
       },
       "parameters": {},
-      "operations": {},
+      "operations": {
+        "rung": {
+          "arguments": {
+            "ladFcBlock": {
+              "blockName": "FC_LadDemo",
+              "blockNumber": 42,
+              "networks": [
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "no",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Start"
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "nc",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Stop"
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "or",
+                        "paths": [
+                          [
+                            {
+                              "kind": "no",
+                              "operand": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "Auto"
+                                ]
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "kind": "no",
+                              "operand": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "Manual"
+                                ]
+                              }
+                            }
+                          ]
+                        ]
+                      },
+                      {
+                        "kind": "compare",
+                        "op": "gt",
+                        "type": "Int",
+                        "left": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Count"
+                          ]
+                        },
+                        "right": {
+                          "literal": {
+                            "type": "Int",
+                            "value": "0"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "compare",
+                        "op": "lt",
+                        "type": "Time",
+                        "left": {
+                          "global": [
+                            "DB_LadDemo",
+                            "ElapsedTime"
+                          ]
+                        },
+                        "right": {
+                          "typed": "T#1s"
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "set",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Active"
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "move",
+                        "in": {
+                          "constant": "LAD_LIMIT"
+                        },
+                        "out": [
+                          {
+                            "global": [
+                              "DB_LadDemo",
+                              {
+                                "name": "Values",
+                                "index": [
+                                  1
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "then": [
+                          {
+                            "kind": "move",
+                            "in": {
+                              "global": [
+                                "DB_LadDemo",
+                                {
+                                  "name": "Values",
+                                  "index": [
+                                    1
+                                  ]
+                                }
+                              ]
+                            },
+                            "out": [
+                              {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "LastValue"
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "fanOut": [
+                      {
+                        "series": [
+                          {
+                            "kind": "rising",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Reset"
+                              ]
+                            },
+                            "memory": {
+                              "global": [
+                                "DB_LadDemo",
+                                "EdgeMem"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "reset",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Active"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "titleZhCn": "条件与分支",
+                  "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                }
+              ]
+            }
+          },
+          "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
+          "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. Timer, counter and rung CALL forms are not part of A3a. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "executionTest": "offline-in-memory",
       "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
@@ -29650,7 +29833,8 @@
             "blockPath": "Main",
             "exportDirectory": "C:\\TIA_MCP\\exports",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -29681,6 +29865,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -29729,7 +29917,8 @@
             "groupPath": "",
             "exportDirectory": "C:\\TIA_MCP\\exports",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -29769,6 +29958,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -29814,7 +30007,8 @@
             "tagTableName": "默认变量表",
             "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -29846,6 +30040,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -30030,7 +30228,8 @@
             "exportDirectory": "C:\\Examples\\exports",
             "typePath": "UDT_Status",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -30059,6 +30258,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -30105,7 +30308,8 @@
             "groupPath": "",
             "exportDirectory": "C:\\TIA_MCP\\exports",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -30145,6 +30349,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -41016,14 +41224,198 @@
           },
           "parameters": {
             "ladFcBlock": {
-              "meaning": "Typed ladFcBlock value with exact camelCase fields; see inputSchema."
+              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; literal values must be non-blank."
             },
             "outputReleaseKey": {
               "exampleValue": "21",
               "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
             }
           },
-          "operations": {},
+          "operations": {
+            "rung": {
+              "arguments": {
+                "outputReleaseKey": "21",
+                "ladFcBlock": {
+                  "blockName": "FC_LadDemo",
+                  "blockNumber": 42,
+                  "networks": [
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Start"
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "nc",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Stop"
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "or",
+                            "paths": [
+                              [
+                                {
+                                  "kind": "no",
+                                  "operand": {
+                                    "global": [
+                                      "DB_LadDemo",
+                                      "Auto"
+                                    ]
+                                  }
+                                }
+                              ],
+                              [
+                                {
+                                  "kind": "no",
+                                  "operand": {
+                                    "global": [
+                                      "DB_LadDemo",
+                                      "Manual"
+                                    ]
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "kind": "compare",
+                            "op": "gt",
+                            "type": "Int",
+                            "left": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Count"
+                              ]
+                            },
+                            "right": {
+                              "literal": {
+                                "type": "Int",
+                                "value": "0"
+                              }
+                            }
+                          },
+                          {
+                            "kind": "compare",
+                            "op": "lt",
+                            "type": "Time",
+                            "left": {
+                              "global": [
+                                "DB_LadDemo",
+                                "ElapsedTime"
+                              ]
+                            },
+                            "right": {
+                              "typed": "T#1s"
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "set",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Active"
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "move",
+                            "in": {
+                              "constant": "LAD_LIMIT"
+                            },
+                            "out": [
+                              {
+                                "global": [
+                                  "DB_LadDemo",
+                                  {
+                                    "name": "Values",
+                                    "index": [
+                                      1
+                                    ]
+                                  }
+                                ]
+                              }
+                            ],
+                            "then": [
+                              {
+                                "kind": "move",
+                                "in": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    {
+                                      "name": "Values",
+                                      "index": [
+                                        1
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "out": [
+                                  {
+                                    "global": [
+                                      "DB_LadDemo",
+                                      "LastValue"
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "fanOut": [
+                          {
+                            "series": [
+                              {
+                                "kind": "rising",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Reset"
+                                  ]
+                                },
+                                "memory": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "EdgeMem"
+                                  ]
+                                }
+                              }
+                            ],
+                            "outputs": [
+                              {
+                                "kind": "reset",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Active"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "titleZhCn": "条件与分支",
+                      "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                    }
+                  ]
+                }
+              },
+              "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
+              "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. Timer, counter and rung CALL forms are not part of A3a. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+            }
+          },
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
           "executionTest": "offline-in-memory",
           "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
@@ -48325,7 +48717,8 @@
             "recursive": true,
             "maxItems": 128,
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -48357,6 +48750,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -48397,11 +48794,11 @@
             },
             "templatePath": {
               "requiresBinding": true,
-              "meaning": "Use the original exported XML for plcTagTable fromTable."
+              "meaning": "Use the original exported XML for plcTagTable/dataBlockStartValues fromTable."
             },
             "exportFile": {
               "requiresBinding": true,
-              "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for plcTagTable fromTable; omit for session output."
+              "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for XML fromTable; omit for session output."
             }
           },
           "operations": {
@@ -48470,6 +48867,50 @@
                 "dryRun": true
               },
               "argumentsMode": "complete"
+            },
+            "dbToTable": {
+              "arguments": {
+                "kind": "dataBlockStartValues",
+                "direction": "toTable",
+                "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+                "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+                "dryRun": true,
+                "format": "xlsx"
+              },
+              "argumentsMode": "complete"
+            },
+            "dbToTableExecute": {
+              "arguments": {
+                "kind": "dataBlockStartValues",
+                "direction": "toTable",
+                "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+                "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+                "dryRun": false,
+                "format": "xlsx"
+              },
+              "argumentsMode": "complete"
+            },
+            "dbFromTable": {
+              "arguments": {
+                "kind": "dataBlockStartValues",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+                "exportFile": "C:/Examples/generated/DB-edited.xml",
+                "dryRun": true,
+                "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml"
+              },
+              "argumentsMode": "complete"
+            },
+            "dbFromTableExecute": {
+              "arguments": {
+                "kind": "dataBlockStartValues",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+                "exportFile": "C:/Examples/generated/DB-edited.xml",
+                "dryRun": false,
+                "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml"
+              },
+              "argumentsMode": "complete"
             }
           },
           "validation": "Offline managed fixtures; native import and Excel-saved workbook acceptance NOT RUN. Bind paths to supplied files.",
@@ -48481,7 +48922,9 @@
             "rows toTable accepts 1..1000 flat scalar objects and optional columns; scalars become invariant strings, null empty. fromTable returns string objects, columns, total and meta.paging (offset, limit 1..200, default 50, nextOffset). It writes no file, including dryRun=false.",
             "For XML fromTable, templatePath is the original export. Review changes, execute conversion, then preview/approve ImportPlcTagTable with overwrite=true and importPath=exportFile. Bind softwarePath and folderPath to the original export target; XML alone does not encode its folder. ListPlcTags readback and compile affected blocks. Delete tags explicitly with ManagePlcTagDefinition through ApplyToolBatch.",
             "rows example: ConvertEngineeringTable({\"kind\":\"rows\",\"direction\":\"toTable\",\"rows\":[{\"Name\":\"Motor\",\"Address\":\"%M0.0\",\"Enabled\":true}],\"columns\":[\"Name\",\"Address\",\"Enabled\"],\"format\":\"xlsx\",\"exportFile\":\"C:/Examples/generated/Rows.xlsx\",\"dryRun\":false}). Read it with kind=rows,direction=fromTable,inputPath=that file,offset=0,limit=50.",
-            "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_."
+            "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_.",
+            "dataBlockStartValues: one non-library global DB; columns Section, MemberPath, DataType, StartValue. MemberPath segments use MIN-ESCAPE (split before decoding). Only elementary scalars are listed; arrays, structs, UDT/FB types and read-only/informative members are excluded and counted in notEditable. Exact keys and DataType must match; omitted members stay unchanged, new members refuse. Missing StartValue may be added for elementary types only. File limit 10000 rows/16 MiB permits more than 100 changes; PatchPlcBlockDocument still requires existing StartValue and 1..100 changes. Review up to 50 old/new values, execute to a new XML, then ImportPlcBlockVerified preview with evidenceDirectory and execution with the returned previewToken; read back with GetPlcBlockEditCapabilities and compile. Native acceptance NOT RUN.",
+            "DB start-value edits validate typed literals before planning: Bool true/false; bounded decimal integers (radix only if evidenced by the same member export); invariant Real/LReal with a decimal point, refusing precision loss with a suggested value; typed Time/LTime/S5Time/Date/TOD/DT/LDT and quoted Char/String literals. Empty cells cannot reset values to the default. New type-default values refuse because ExportOptions.None omits them, so verified import would mismatch; existing explicit defaults stay unchanged. ConstantName and IsBulkValue are excluded with notEditableReasons. Existing plain scalar values additionally allow HW_IO, HW_ANY, HW_DEVICE, HW_MODULE, HW_SUBMODULE, DB_ANY and String/WString[constant]. Errors retain original CSV physical line/XLSX row numbers, including dropped empty rows. Native export normalization still requires real-machine acceptance."
           ],
           "execution": {
             "arguments": {
@@ -51533,7 +51976,8 @@
             "blockPath": "Main",
             "exportDirectory": "C:\\TIA_MCP\\exports",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -51564,6 +52008,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -51612,7 +52060,8 @@
             "groupPath": "",
             "exportDirectory": "C:\\TIA_MCP\\exports",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -51652,6 +52101,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -51715,7 +52168,8 @@
             "tagTableName": "默认变量表",
             "exportFile": "C:\\TIA_MCP\\exports\\Tags.xml",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -51747,6 +52201,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -51795,7 +52253,8 @@
             "exportDirectory": "C:\\Examples\\exports",
             "typePath": "UDT_Status",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -51824,6 +52283,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -51870,7 +52333,8 @@
             "groupPath": "",
             "exportDirectory": "C:\\TIA_MCP\\exports",
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -51910,6 +52374,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -66012,14 +66480,197 @@
           },
           "parameters": {
             "ladFcBlock": {
-              "meaning": "Typed ladFcBlock value with exact camelCase fields; see inputSchema."
+              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; literal values must be non-blank."
             },
             "outputReleaseKey": {
               "exampleValue": "21",
               "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
             }
           },
-          "operations": {},
+          "operations": {
+            "rung": {
+              "arguments": {
+                "ladFcBlock": {
+                  "blockName": "FC_LadDemo",
+                  "blockNumber": 42,
+                  "networks": [
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Start"
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "nc",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Stop"
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "or",
+                            "paths": [
+                              [
+                                {
+                                  "kind": "no",
+                                  "operand": {
+                                    "global": [
+                                      "DB_LadDemo",
+                                      "Auto"
+                                    ]
+                                  }
+                                }
+                              ],
+                              [
+                                {
+                                  "kind": "no",
+                                  "operand": {
+                                    "global": [
+                                      "DB_LadDemo",
+                                      "Manual"
+                                    ]
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "kind": "compare",
+                            "op": "gt",
+                            "type": "Int",
+                            "left": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Count"
+                              ]
+                            },
+                            "right": {
+                              "literal": {
+                                "type": "Int",
+                                "value": "0"
+                              }
+                            }
+                          },
+                          {
+                            "kind": "compare",
+                            "op": "lt",
+                            "type": "Time",
+                            "left": {
+                              "global": [
+                                "DB_LadDemo",
+                                "ElapsedTime"
+                              ]
+                            },
+                            "right": {
+                              "typed": "T#1s"
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "set",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Active"
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "move",
+                            "in": {
+                              "constant": "LAD_LIMIT"
+                            },
+                            "out": [
+                              {
+                                "global": [
+                                  "DB_LadDemo",
+                                  {
+                                    "name": "Values",
+                                    "index": [
+                                      1
+                                    ]
+                                  }
+                                ]
+                              }
+                            ],
+                            "then": [
+                              {
+                                "kind": "move",
+                                "in": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    {
+                                      "name": "Values",
+                                      "index": [
+                                        1
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "out": [
+                                  {
+                                    "global": [
+                                      "DB_LadDemo",
+                                      "LastValue"
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "fanOut": [
+                          {
+                            "series": [
+                              {
+                                "kind": "rising",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Reset"
+                                  ]
+                                },
+                                "memory": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "EdgeMem"
+                                  ]
+                                }
+                              }
+                            ],
+                            "outputs": [
+                              {
+                                "kind": "reset",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Active"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "titleZhCn": "条件与分支",
+                      "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                    }
+                  ]
+                }
+              },
+              "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
+              "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. Timer, counter and rung CALL forms are not part of A3a. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+            }
+          },
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
           "executionTest": "offline-in-memory",
           "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
@@ -69075,7 +69726,8 @@
             "recursive": true,
             "maxItems": 128,
             "dryRun": true,
-            "confirm": false
+            "confirm": false,
+            "stripVolatile": true
           },
           "parameters": {
             "softwarePath": {
@@ -69107,6 +69759,10 @@
                 "ListPortalProcessProjects",
                 "GetSessionState"
               ]
+            },
+            "stripVolatile": {
+              "meaning": "Opt in to a fixed DocumentInfo Created timestamp and empty InstalledProducts. Engineering version, IDs and all other nodes are retained; false preserves native bytes. Inspect data.volatileNormalized (or data.items[].result.data.volatileNormalized for batches). Native import acceptance NOT RUN.",
+              "exampleValue": true
             }
           },
           "operations": {},
@@ -69147,11 +69803,11 @@
             },
             "templatePath": {
               "requiresBinding": true,
-              "meaning": "Use the original exported XML for plcTagTable fromTable."
+              "meaning": "Use the original exported XML for plcTagTable/dataBlockStartValues fromTable."
             },
             "exportFile": {
               "requiresBinding": true,
-              "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for plcTagTable fromTable; omit for session output."
+              "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for XML fromTable; omit for session output."
             }
           },
           "operations": {
@@ -69220,6 +69876,50 @@
                 "dryRun": true
               },
               "argumentsMode": "complete"
+            },
+            "dbToTable": {
+              "arguments": {
+                "kind": "dataBlockStartValues",
+                "direction": "toTable",
+                "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+                "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+                "dryRun": true,
+                "format": "xlsx"
+              },
+              "argumentsMode": "complete"
+            },
+            "dbToTableExecute": {
+              "arguments": {
+                "kind": "dataBlockStartValues",
+                "direction": "toTable",
+                "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+                "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+                "dryRun": false,
+                "format": "xlsx"
+              },
+              "argumentsMode": "complete"
+            },
+            "dbFromTable": {
+              "arguments": {
+                "kind": "dataBlockStartValues",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+                "exportFile": "C:/Examples/generated/DB-edited.xml",
+                "dryRun": true,
+                "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml"
+              },
+              "argumentsMode": "complete"
+            },
+            "dbFromTableExecute": {
+              "arguments": {
+                "kind": "dataBlockStartValues",
+                "direction": "fromTable",
+                "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+                "exportFile": "C:/Examples/generated/DB-edited.xml",
+                "dryRun": false,
+                "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml"
+              },
+              "argumentsMode": "complete"
             }
           },
           "validation": "Offline managed fixtures; native import and Excel-saved workbook acceptance NOT RUN. Bind paths to supplied files.",
@@ -69231,7 +69931,9 @@
             "rows toTable accepts 1..1000 flat scalar objects and optional columns; scalars become invariant strings, null empty. fromTable returns string objects, columns, total and meta.paging (offset, limit 1..200, default 50, nextOffset). It writes no file, including dryRun=false.",
             "For XML fromTable, templatePath is the original export. Review changes, execute conversion, then preview/approve ImportPlcTagTable with overwrite=true and importPath=exportFile. Bind softwarePath and folderPath to the original export target; XML alone does not encode its folder. ListPlcTags readback and compile affected blocks. Delete tags explicitly with ManagePlcTagDefinition through ApplyToolBatch.",
             "rows example: ConvertEngineeringTable({\"kind\":\"rows\",\"direction\":\"toTable\",\"rows\":[{\"Name\":\"Motor\",\"Address\":\"%M0.0\",\"Enabled\":true}],\"columns\":[\"Name\",\"Address\",\"Enabled\"],\"format\":\"xlsx\",\"exportFile\":\"C:/Examples/generated/Rows.xlsx\",\"dryRun\":false}). Read it with kind=rows,direction=fromTable,inputPath=that file,offset=0,limit=50.",
-            "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_."
+            "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_.",
+            "dataBlockStartValues: one non-library global DB; columns Section, MemberPath, DataType, StartValue. MemberPath segments use MIN-ESCAPE (split before decoding). Only elementary scalars are listed; arrays, structs, UDT/FB types and read-only/informative members are excluded and counted in notEditable. Exact keys and DataType must match; omitted members stay unchanged, new members refuse. Missing StartValue may be added for elementary types only. File limit 10000 rows/16 MiB permits more than 100 changes; PatchPlcBlockDocument still requires existing StartValue and 1..100 changes. Review up to 50 old/new values, execute to a new XML, then ImportPlcBlockVerified preview with evidenceDirectory and execution with the returned previewToken; read back with GetPlcBlockEditCapabilities and compile. Native acceptance NOT RUN.",
+            "DB start-value edits validate typed literals before planning: Bool true/false; bounded decimal integers (radix only if evidenced by the same member export); invariant Real/LReal with a decimal point, refusing precision loss with a suggested value; typed Time/LTime/S5Time/Date/TOD/DT/LDT and quoted Char/String literals. Empty cells cannot reset values to the default. New type-default values refuse because ExportOptions.None omits them, so verified import would mismatch; existing explicit defaults stay unchanged. ConstantName and IsBulkValue are excluded with notEditableReasons. Existing plain scalar values additionally allow HW_IO, HW_ANY, HW_DEVICE, HW_MODULE, HW_SUBMODULE, DB_ANY and String/WString[constant]. Errors retain original CSV physical line/XLSX row numbers, including dropped empty rows. Native export normalization still requires real-machine acceptance."
           ],
           "execution": {
             "arguments": {
@@ -74496,6 +75198,692 @@
             ]
           },
           "expect": "Inspect ordered block, tag-table and screen results; repeat per actual software path and follow each paging cursor."
+        }
+      ]
+    },
+    {
+      "id": "sequence/compile-export-commit",
+      "topic": "compile-export-commit",
+      "purpose": "Compile the intended PLC, export deterministic native XML into a Git working tree, review and explicitly commit the exported files.",
+      "preconditions": "Project is already bound; exact softwarePath and projectFile are known. Git working tree and a new empty export directory inside it already exist. Replace every placeholder using the same session and preview.",
+      "notes": "All eight releases. Each compile, export and commit execution needs separate operator review and approval. ExportOptions.None and native call order are unchanged; stripVolatile is host-file post-processing. No automatic commit or save. Existing export destinations are never overwritten; choose a new directory for each export. Do not treat XML as a complete backup: V14 SP1 SCL and protected blocks may contain interfaces only. Native export/import acceptance NOT RUN. Limitation: no existing tool can remove a previous export directory from the Git working tree. ManagePlcGitRepository supports status/history/diff/show/stage/commit only; CleanupStagedImportFiles cannot delete arbitrary export paths. This sequence therefore creates a new directory per run and does not re-export into the same tracked paths. Git shows new files, not the real content changes of unchanged-path files; git diff HEAD omits untracked files. Inspect the exported files directly before committing. Same-path overwrite is deferred to the 4.1 one-call Git export follow-up.",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "Offline contract and fixture checks; native export/import acceptance NOT RUN.",
+      "steps": [
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "Verify the intended bound project; copy its exact projectFile and the PLC software path from GetProjectTree."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "dryRun": true
+          },
+          "expect": "Review the exact compile target; obtain operator approval before executing."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectFile from GetSessionState>"
+          },
+          "expect": "Continue only after a successful compile with zero errors; no server-side auto-commit or automatic save."
+        },
+        {
+          "tool": "ExportPlcBlocks",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "groupPath": "",
+            "exportDirectory": "C:/Examples/PlcExports/exports/<new empty export directory>",
+            "stripVolatile": true,
+            "dryRun": true
+          },
+          "expect": "Directory must already exist inside the Git working tree and every planned destination must be new. Review the complete bounded inventory and obtain approval; copy inventoryHash and outputFile paths."
+        },
+        {
+          "tool": "ExportPlcBlocks",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "groupPath": "",
+            "exportDirectory": "C:/Examples/PlcExports/exports/<new empty export directory>",
+            "stripVolatile": true,
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectFile from GetSessionState>",
+            "expectedInventoryHash": "<inventoryHash from this export preview>"
+          },
+          "expect": "Require every item exported; inspect per-file volatileNormalized. On partial or unknown results stop and inspect retained files; never retry automatically."
+        },
+        {
+          "tool": "ManagePlcGitRepository",
+          "arguments": {
+            "repositoryPath": "C:/Examples/PlcExports",
+            "action": "status",
+            "files": [
+              "<repository-relative outputFile from this successful export>"
+            ]
+          },
+          "expect": "Inspect status for the explicit exported paths; do not include unrelated changes."
+        },
+        {
+          "tool": "ManagePlcGitRepository",
+          "arguments": {
+            "repositoryPath": "C:/Examples/PlcExports",
+            "action": "diff",
+            "files": [
+              "<repository-relative outputFile from this successful export>"
+            ]
+          },
+          "expect": "This sequence uses a new directory per run: git diff HEAD does not show its untracked files and cannot demonstrate same-path content changes. Inspect every exported file directly before approval; same-path re-export is not supported by the existing tools."
+        },
+        {
+          "tool": "ManagePlcGitRepository",
+          "arguments": {
+            "repositoryPath": "C:/Examples/PlcExports",
+            "action": "commit",
+            "files": [
+              "<repository-relative outputFile from this successful export>"
+            ],
+            "message": "Export compiled PLC blocks",
+            "dryRun": true
+          },
+          "expect": "Review the exact explicit file list and commit message; obtain separate operator approval for this FILE write."
+        },
+        {
+          "tool": "ManagePlcGitRepository",
+          "arguments": {
+            "repositoryPath": "C:/Examples/PlcExports",
+            "action": "commit",
+            "files": [
+              "<repository-relative outputFile from this successful export>"
+            ],
+            "message": "Export compiled PLC blocks",
+            "dryRun": false
+          },
+          "expect": "Commit only the reviewed repository-relative exported paths. No push, branch changes or automatic compile-triggered commit."
+        }
+      ]
+    },
+    {
+      "id": "sequence/plc-lad-rung-build-import",
+      "topic": "plc-lad-rung",
+      "purpose": "Build a V21 LAD FC from compact rung JSON, import its DB first, compile and inspect native readback.",
+      "preconditions": "A V21 project copy, exact PLC paths, absent demo DB/FC and a project-defined Int constant LAD_LIMIT. No timer/counter/rung CALL emitters until A3b.",
+      "notes": "Candidate-only offline generation; native acceptance NOT RUN. Never rewrite release markers. Import, compile and export are separate reviewed steps. No automatic save or download. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #.",
+      "releaseKeys": [
+        "21"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "Contract checked; VM import and compile NOT RUN.",
+      "steps": [
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "Confirm a V21 project copy and data.outputRoot. No automatic connection or save."
+        },
+        {
+          "tool": "GetProjectTree",
+          "arguments": {},
+          "expect": "Resolve the exact PLC softwarePath and existing destination groups."
+        },
+        {
+          "tool": "BuildPlcGlobalDb",
+          "arguments": {
+            "outputReleaseKey": "{release}",
+            "globalDb": {
+              "dbName": "DB_LadDemo",
+              "dbNumber": 42,
+              "staticMembers": [
+                {
+                  "name": "T1",
+                  "datatype": "IEC_TIMER"
+                },
+                {
+                  "name": "C1",
+                  "datatype": "IEC_COUNTER"
+                },
+                {
+                  "name": "EdgeMem",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "Start",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "Stop",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "Auto",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "Manual",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "Reset",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "Active",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "Count",
+                  "datatype": "Int"
+                },
+                {
+                  "name": "Values",
+                  "datatype": "Array[1..8] of Int"
+                },
+                {
+                  "name": "LastValue",
+                  "datatype": "Int"
+                },
+                {
+                  "name": "ElapsedTime",
+                  "datatype": "Time"
+                }
+              ]
+            }
+          },
+          "expect": "Retain data.xml. T1/C1 reserve global instances for later timer/counter examples. Create the global Int constant LAD_LIMIT in the project before import; this builder does not define constants."
+        },
+        {
+          "tool": "BuildPlcLadFcBlock",
+          "arguments": {
+            "outputReleaseKey": "21",
+            "ladFcBlock": {
+              "blockName": "FC_LadDemo",
+              "blockNumber": 42,
+              "networks": [
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "no",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Start"
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "nc",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Stop"
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "or",
+                        "paths": [
+                          [
+                            {
+                              "kind": "no",
+                              "operand": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "Auto"
+                                ]
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "kind": "no",
+                              "operand": {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "Manual"
+                                ]
+                              }
+                            }
+                          ]
+                        ]
+                      },
+                      {
+                        "kind": "compare",
+                        "op": "gt",
+                        "type": "Int",
+                        "left": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Count"
+                          ]
+                        },
+                        "right": {
+                          "literal": {
+                            "type": "Int",
+                            "value": "0"
+                          }
+                        }
+                      },
+                      {
+                        "kind": "compare",
+                        "op": "lt",
+                        "type": "Time",
+                        "left": {
+                          "global": [
+                            "DB_LadDemo",
+                            "ElapsedTime"
+                          ]
+                        },
+                        "right": {
+                          "typed": "T#1s"
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "set",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Active"
+                          ]
+                        }
+                      },
+                      {
+                        "kind": "move",
+                        "in": {
+                          "constant": "LAD_LIMIT"
+                        },
+                        "out": [
+                          {
+                            "global": [
+                              "DB_LadDemo",
+                              {
+                                "name": "Values",
+                                "index": [
+                                  1
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "then": [
+                          {
+                            "kind": "move",
+                            "in": {
+                              "global": [
+                                "DB_LadDemo",
+                                {
+                                  "name": "Values",
+                                  "index": [
+                                    1
+                                  ]
+                                }
+                              ]
+                            },
+                            "out": [
+                              {
+                                "global": [
+                                  "DB_LadDemo",
+                                  "LastValue"
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "fanOut": [
+                      {
+                        "series": [
+                          {
+                            "kind": "rising",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Reset"
+                              ]
+                            },
+                            "memory": {
+                              "global": [
+                                "DB_LadDemo",
+                                "EdgeMem"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "reset",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Active"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "titleZhCn": "条件与分支",
+                  "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                }
+              ]
+            }
+          },
+          "expect": "Retain data.xml as FC_LadDemo.xml. This is a V21 candidate; nativeAcceptance remains NOT RUN."
+        },
+        {
+          "tool": "StageImportFiles",
+          "arguments": {
+            "files": [
+              {
+                "fileName": "DB_LadDemo.xml",
+                "kind": "simaticml",
+                "content": "<complete data.xml returned by BuildPlcGlobalDb>"
+              },
+              {
+                "fileName": "FC_LadDemo.xml",
+                "kind": "simaticml",
+                "content": "<complete data.xml returned by BuildPlcLadFcBlock>"
+              }
+            ],
+            "dryRun": true
+          },
+          "expect": "Review the two complete documents."
+        },
+        {
+          "tool": "StageImportFiles",
+          "arguments": {
+            "files": [
+              {
+                "fileName": "DB_LadDemo.xml",
+                "kind": "simaticml",
+                "content": "<complete data.xml returned by BuildPlcGlobalDb>"
+              },
+              {
+                "fileName": "FC_LadDemo.xml",
+                "kind": "simaticml",
+                "content": "<complete data.xml returned by BuildPlcLadFcBlock>"
+              }
+            ],
+            "dryRun": false
+          },
+          "expect": "Approve staging and retain batchId and directory; staging does not import."
+        },
+        {
+          "tool": "ImportPlcProgramFromDirectory",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "sourceDir": "<directory from StageImportFiles>",
+            "overwrite": false,
+            "importOrder": [
+              "DB_LadDemo.xml",
+              "FC_LadDemo.xml"
+            ],
+            "regexName": "^.+\\.xml$",
+            "compileAfter": false,
+            "stopOnImportFailure": true,
+            "dryRun": true
+          },
+          "expect": "Preview DB-before-FC import; retain planHash and confirm the bound project."
+        },
+        {
+          "tool": "ImportPlcProgramFromDirectory",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "sourceDir": "<directory from StageImportFiles>",
+            "overwrite": false,
+            "importOrder": [
+              "DB_LadDemo.xml",
+              "FC_LadDemo.xml"
+            ],
+            "regexName": "^.+\\.xml$",
+            "compileAfter": false,
+            "stopOnImportFailure": true,
+            "dryRun": false,
+            "confirm": true,
+            "expectedPlanHash": "<planHash from import preview>",
+            "expectedProjectFile": "<exact bound project file from GetSessionState>"
+          },
+          "expect": "Approve once. On partial or unknown failure inspect project state before repeating any write."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "scope": "block",
+            "scopePath": "FC_LadDemo",
+            "dryRun": true
+          },
+          "expect": "Preview exact block compilability. No software-wide fallback."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "scope": "block",
+            "scopePath": "FC_LadDemo",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact bound project file from GetSessionState>"
+          },
+          "expect": "Require zero errors and inspect all diagnostics; symbol and datatype resolution happen here."
+        },
+        {
+          "tool": "ExportPlcBlock",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "blockPath": "FC_LadDemo",
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>\\lad-readback",
+            "dryRun": true
+          },
+          "expect": "Preview readback export destination under this session output root."
+        },
+        {
+          "tool": "ExportPlcBlock",
+          "arguments": {
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "blockPath": "FC_LadDemo",
+            "exportDirectory": "C:\\<directory under GetSessionState data.outputRoot>\\lad-readback",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact bound project file from GetSessionState>"
+          },
+          "expect": "Approve export of the actual imported block; retain XML and hash as native acceptance evidence."
+        },
+        {
+          "tool": "RenderPlcBlock",
+          "arguments": {
+            "inputPath": "<data.outputFile from completed ExportPlcBlock>",
+            "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html"
+          },
+          "expect": "Render the export and compare each network, indexed path, edge memory and ENO connection against the generated candidate."
+        },
+        {
+          "tool": "CleanupStagedImportFiles",
+          "arguments": {
+            "batchId": "<batchId from StageImportFiles>",
+            "dryRun": true
+          },
+          "expect": "Review the owned batch."
+        },
+        {
+          "tool": "CleanupStagedImportFiles",
+          "arguments": {
+            "batchId": "<batchId from StageImportFiles>",
+            "dryRun": false
+          },
+          "expect": "Approve cleanup after retaining export and diagnostics; this does not undo project changes."
+        },
+        {
+          "tool": "ShowObjectInEditor",
+          "arguments": {
+            "kind": "plcBlock",
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "objectPath": "FC_LadDemo",
+            "dryRun": false
+          },
+          "expect": "After successful import, compile and readback, show the exact block to the engineer. Omit this UI-only step when TIA has no UI; never show after a refused or unknown write."
+        }
+      ]
+    },
+    {
+      "id": "sequence/db-start-values-excel",
+      "topic": "db-start-values-excel",
+      "purpose": "Edit global DB start values in Excel and import through the existing verified block workflow.",
+      "preconditions": "Bind softwarePath and blockPath to the same non-library global DB. Use the exact single-block ExportPlcBlock file returned by the export, new output files and an existing evidenceDirectory. Review Excel edits before conversion.",
+      "notes": "Conversion is offline and preserves omitted members. Arrays, structs, UDT/FB types and read-only/informative members are excluded. Elementary scalar defaults may acquire StartValue; 10000-row file limit permits more than 100 edits. No interface changes. Review import preview and approve execution; use its exact previewToken. No automatic retry or save. Native acceptance NOT RUN. StartValue ConstantName/IsBulkValue members are excluded with reasons. Only validated, lossless typed literals are planned; empty cells and new type-default values refuse. Existing explicit defaults may remain unchanged.",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "Schema and official-layout offline fixtures; native acceptance NOT RUN.",
+      "steps": [
+        {
+          "tool": "ExportPlcBlock",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "blockPath": "DB_HMI_Interface",
+            "exportDirectory": "C:/Examples/exports",
+            "dryRun": true,
+            "confirm": false
+          },
+          "expect": "Review the exact block and planned outputFile in the existing export directory; this preview does not export."
+        },
+        {
+          "tool": "ExportPlcBlock",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "blockPath": "DB_HMI_Interface",
+            "exportDirectory": "C:/Examples/exports",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact projectPath from the selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+          },
+          "expect": "Execute the approved export. Retain data.outputFile; for this root block it is C:/Examples/exports/DB_HMI_Interface.xml. Bind every subsequent inputPath/templatePath to that exact result. ExportPlcBlock has no expectedPlanHash parameter."
+        },
+        {
+          "tool": "ConvertEngineeringTable",
+          "arguments": {
+            "kind": "dataBlockStartValues",
+            "direction": "toTable",
+            "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+            "format": "xlsx",
+            "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+            "dryRun": true
+          },
+          "expect": "Review columns, notEditable counts and changed rows; Excel edits only StartValue. Preview writes no file; execution creates a new file."
+        },
+        {
+          "tool": "ConvertEngineeringTable",
+          "arguments": {
+            "kind": "dataBlockStartValues",
+            "direction": "toTable",
+            "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+            "format": "xlsx",
+            "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+            "dryRun": false
+          },
+          "expect": "Review columns, notEditable counts and changed rows; Excel edits only StartValue. Preview writes no file; execution creates a new file."
+        },
+        {
+          "tool": "ConvertEngineeringTable",
+          "arguments": {
+            "kind": "dataBlockStartValues",
+            "direction": "fromTable",
+            "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+            "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml",
+            "exportFile": "C:/Examples/generated/DB-edited.xml",
+            "dryRun": true
+          },
+          "expect": "Review columns, notEditable counts and changed rows; Excel edits only StartValue. Preview writes no file; execution creates a new file."
+        },
+        {
+          "tool": "ConvertEngineeringTable",
+          "arguments": {
+            "kind": "dataBlockStartValues",
+            "direction": "fromTable",
+            "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+            "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml",
+            "exportFile": "C:/Examples/generated/DB-edited.xml",
+            "dryRun": false
+          },
+          "expect": "Review columns, notEditable counts and changed rows; Excel edits only StartValue. Preview writes no file; execution creates a new file."
+        },
+        {
+          "tool": "ImportPlcBlockVerified",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "blockPath": "DB_HMI_Interface",
+            "importPath": "C:/Examples/generated/DB-edited.xml",
+            "evidenceDirectory": "C:/Examples/evidence",
+            "dryRun": true
+          },
+          "expect": "Review retained backup, planned.xml and returned previewToken; no project write."
+        },
+        {
+          "tool": "ImportPlcBlockVerified",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "blockPath": "DB_HMI_Interface",
+            "importPath": "C:/Examples/generated/DB-edited.xml",
+            "evidenceDirectory": "C:/Examples/evidence",
+            "dryRun": false,
+            "previewToken": "<previewToken from matching preview>"
+          },
+          "expect": "Approve exact import; strict readback must verify the complete block. Inspect failures without replay."
+        },
+        {
+          "tool": "GetPlcBlockEditCapabilities",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "blockPath": "DB_HMI_Interface"
+          },
+          "expect": "Read back default and non-default start values and unchanged members."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "dryRun": true
+          },
+          "expect": "Review compilation scope and bound target."
+        },
+        {
+          "tool": "CompilePlcSoftware",
+          "arguments": {
+            "softwarePath": "devices/PLC_1",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "C:/Projects/Example.ap{projectExtension}"
+          },
+          "expect": "Compile explicitly and inspect diagnostics; no automatic save."
         }
       ]
     }
