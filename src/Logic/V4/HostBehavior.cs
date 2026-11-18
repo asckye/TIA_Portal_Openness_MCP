@@ -249,7 +249,7 @@ namespace TiaMcp.Logic.V4
                 void Collect(JsonObject? source)
                 {
                     if (source == null) return;
-                    foreach (string key in new[] { "nativeMessage", "phase", "cleanupRequired", "restored", "recoveryDirectory" })
+                    foreach (string key in new[] { "nativeMessage", "phase", "cleanupRequired", "restored" })
                         if (source[key] is { } value) retained[key] = value.DeepClone();
                 }
                 Collect(reply);
