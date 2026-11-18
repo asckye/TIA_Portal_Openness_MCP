@@ -20,6 +20,22 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class McpPanelTests(WpfContext wpf)
 {
+    [Fact]
+    public async Task Workbench_client_accepts_the_PLC_preset_value_when_the_parameter_is_hidden()
+    {
+        const string software = "devices/Station/PLC_1";
+        await using var host = new McpOperatorFixture { Presets = new Dictionary<string, string> { ["softwarePath"] = software } };
+        await using var client = host.Client();
+        await Attach(client, host);
+        Assert.Null(client.ToolSchema("ListPlcBlocks")!["properties"]!["softwarePath"]);
+        using var project = new McpProjectClient(client);
+        var blocks = await project.ListBlocksAsync(software);
+        Assert.Single(blocks);
+        Assert.Equal(software, (string?)Assert.Single(host.Calls).Arguments["softwarePath"]);
+        var refusal = await Assert.ThrowsAsync<InvalidOperationException>(() => project.ListBlocksAsync("devices/Other/PLC"));
+        Assert.Contains("INVALID_ARGUMENT", refusal.Message);
+        Assert.Single(host.Calls);
+    }
     private static async Task Attach(McpSessionClient client, McpOperatorFixture host)
         => await client.AttachAsync(Assert.Single(await client.DiscoverAsync(host.Host.ReleaseKey)));
 

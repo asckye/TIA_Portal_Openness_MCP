@@ -70,6 +70,7 @@ namespace TiaMcp.FoundationHost
 
     internal sealed class EngineSessionContext(IEngineWorker worker)
     {
+        internal IReadOnlyDictionary<string, string> Presets = ParameterPresets.Empty;
         internal IEngineWorker Worker { get; } = worker;
         internal string WorkerBaseDirectory = AppContext.BaseDirectory;
         internal Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession>? StagingOwner;
@@ -137,16 +138,18 @@ namespace TiaMcp.FoundationHost
         }
 
         public EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile,
-            IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null)
-            : this(path, workerPath, releaseKey, worker, profile, sharedTools, sharedEssentials, null) { }
+            IReadOnlyList<McpServerTool>? sharedTools = null, ISet<string>? sharedEssentials = null,
+            IReadOnlyDictionary<string, string>? presets = null)
+            : this(path, workerPath, releaseKey, worker, profile, sharedTools, sharedEssentials, null, presets) { }
 
         // Only in-process tests supply a transform of the host-built catalog.
         internal EngineHostPipeline(string path, string workerPath, string releaseKey, IEngineWorker worker, string profile,
             IReadOnlyList<McpServerTool>? sharedTools, ISet<string>? sharedEssentials,
-            Func<IToolCatalogView, IToolCatalogView>? catalogForTest)
+            Func<IToolCatalogView, IToolCatalogView>? catalogForTest, IReadOnlyDictionary<string, string>? presets = null)
         {
             EngineHostConfiguration.ReleaseKey = releaseKey;
-            context = new EngineSessionContext(worker) { WorkerBaseDirectory = Path.GetDirectoryName(Path.GetFullPath(workerPath))! };
+            context = new EngineSessionContext(worker) { WorkerBaseDirectory = Path.GetDirectoryName(Path.GetFullPath(workerPath))!,
+                Presets = presets ?? ParameterPresets.Empty };
             using var session = EnterSession();
             EngineHostConfiguration.StagingOwner = () => stagingLifetime.Session;
             var catalog = new FoundationCatalog(releaseKey, sharedTools ?? Array.Empty<McpServerTool>(), sharedEssentials);
@@ -170,10 +173,11 @@ namespace TiaMcp.FoundationHost
                 .Select(t => (McpServerTool)new SessionTool(this, t)).ToArray();
         }
 
-        internal EngineHostPipeline(string releaseKey, IEngineWorker worker, IReadOnlyList<McpServerTool> sharedTools)
+        internal EngineHostPipeline(string releaseKey, IEngineWorker worker, IReadOnlyList<McpServerTool> sharedTools,
+            IReadOnlyDictionary<string, string>? presets = null)
         {
             EngineHostConfiguration.ReleaseKey = releaseKey;
-            context = new EngineSessionContext(worker);
+            context = new EngineSessionContext(worker) { Presets = presets ?? ParameterPresets.Empty };
             using var session = EnterSession();
             context.StagingOwner = () => stagingLifetime.Session;
             var catalog = new FoundationCatalog(releaseKey, sharedTools);

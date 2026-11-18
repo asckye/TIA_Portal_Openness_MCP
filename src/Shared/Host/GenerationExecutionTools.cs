@@ -224,7 +224,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (tool == null) {
                     step.Availability.Tool = "absent"; Unavailable(step.Phase, "Tool " + step.Tool + " is not registered on this release."); continue; }
                 step.Availability.Tool = "present";
-                var schema = tool.Tool.InputSchema.GetProperty("properties");
+                var schema = tool.ImplementationSchema.GetProperty("properties");
                 if (schema.TryGetProperty("expectedProjectFile", out _)) step.Arguments["expectedProjectFile"] = JsonSerializer.SerializeToElement(project);
                 if (schema.TryGetProperty("confirm", out _)) step.Arguments["confirm"] = JsonSerializer.SerializeToElement(true);
                 if (schema.TryGetProperty("plc", out _) && step.Arguments.TryGetValue("softwarePath", out var plc))
@@ -239,7 +239,10 @@ namespace TiaMcpServer.ModelContextProtocol
                                 + " has no reviewed current-policy preview rule; replan after its prerequisites are complete.");
                 var validationArguments = JsonSerializer.SerializeToNode(step.Arguments)!.AsObject();
                 if (StepReviewRules.Supports(step)) validationArguments["expectedPlanHash"] = new string('0', 64);
-                var error = new InputSchema(tool.Tool.InputSchema).Validate(JsonSerializer.SerializeToElement(validationArguments), "arguments");
+                var prepared = TiaMcp.FoundationHost.CanonicalParameterTool.ApplyDefaults(step.Tool,
+                    new ToolArguments(JsonSerializer.SerializeToElement(validationArguments)), out var error, prepareDirectory: false);
+                error ??= new InputSchema(tool.Tool.InputSchema).Validate(
+                    TiaMcp.FoundationHost.CanonicalParameterTool.PublicArguments(tool, prepared).Json, "arguments");
                 if (error != null) Unavailable(step.Phase, "Tool " + step.Tool + " cannot bind the planner arguments: " + error.Message);
                 step.ArgumentDigest = CanonicalJson.ArgumentHash(JsonSerializer.SerializeToElement(step.Arguments));
             }

@@ -178,12 +178,24 @@ namespace TiaMcpServer.ModelContextProtocol
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
             if (SecretVaultArguments.Validate(name, arguments) is { } vaultError)
             { result = V4Reject(name, vaultError); return; }
+#if TIA_ENGINE_HOST
+            var validationArguments = TiaMcp.FoundationHost.CanonicalParameterTool.PublicRequestArguments(method, request, arguments);
+#else
+            var validationArguments = arguments;
+#endif
             var error = name is "GetOpcUaAccessControl" or "ManageOpcUaAccessControl" && VersionToolProblem(name) is { Length: > 0 } unavailable
                 ? new Error(unavailable, new UnsupportedCapabilityDetails(ReleaseKey, name, null))
-                : ToolInvoker.ValidateArguments(method, arguments, method.Tool.InputSchema, typedFamiliesOnly: true);
+                : ToolInvoker.ValidateArguments(method, validationArguments, method.Tool.InputSchema, typedFamiliesOnly: true);
             if (error == null)
             {
-                try { error = ToolInvoker.Bind(name, new ToolArguments(arguments), out _); }
+                try
+                {
+#if TIA_ENGINE_HOST
+                    error = ToolInvoker.Bind(name, TiaMcp.FoundationHost.CanonicalParameterTool.RequestArguments(request), out _);
+#else
+                    error = ToolInvoker.Bind(name, new ToolArguments(arguments), out _);
+#endif
+                }
                 catch (InputRejectionException rejection) { error = rejection.ToError(rejection.IsLimit ? "arguments" : ""); }
             }
             if (error != null) result = V4TargetReject(name, error, current: CurrentBehaviorTargets(name, arguments));
@@ -232,6 +244,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
+#if TIA_ENGINE_HOST
+            arguments = TiaMcp.FoundationHost.CanonicalParameterTool.PublicRequestArguments(method, request, arguments);
+#endif
             var error = validate != null ? validate(arguments, ProtocolTool.InputSchema)
                 : McpServer.ToolInvoker.ValidateArguments(method, arguments, ProtocolTool.InputSchema);
             return error != null

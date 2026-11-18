@@ -165,6 +165,8 @@ namespace TiaMcpServer.ModelContextProtocol
 #if TIA_ENGINE_HOST
             arguments = TiaMcp.FoundationHost.CanonicalParameterTool.ApplyDefaults(name, arguments ?? EmptyArguments(), out var defaultError);
             if (defaultError != null) return V4Reject(name, defaultError);
+            if (TiaMcp.FoundationHost.PresetProjectGuard.Check(name,
+                JsonNode.Parse(arguments.Value.Json.GetRawText())!.AsObject()) is { } presetRefusal) return V4Reject(name, presetRefusal);
             if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.CompatibilityTargets.ContainsKey(name)

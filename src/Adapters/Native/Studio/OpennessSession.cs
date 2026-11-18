@@ -127,6 +127,11 @@ namespace TiaOpenness.Openness
                 if (processId.HasValue && _portal.GetCurrentProcess().Id != processId.Value)
                     throw new InvalidOperationException("Studio is already connected to another TIA Portal process. Disconnect before choosing a different " +
                         "PID.");
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+                string presetProject = Environment.GetEnvironmentVariable(TiaMcp.Adapters.Contracts.ProjectFilePreset.WorkerVariable);
+                if (!string.IsNullOrEmpty(presetProject))
+                    TiaMcp.Adapters.Contracts.ProjectFilePreset.RequireTarget(presetProject, _project?.Path.FullName);
+#endif
                 return GetState();
             }
 
@@ -165,7 +170,13 @@ namespace TiaOpenness.Openness
                     Console.Error.Flush();
 
                     // An attached instance keeps its project; bind the primary one (secondary projects are read-only and hidden).
-                    _project = PrimaryProject(_portal);
+                    var primaryProject = PrimaryProject(_portal);
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+                    string presetProject = Environment.GetEnvironmentVariable(TiaMcp.Adapters.Contracts.ProjectFilePreset.WorkerVariable);
+                    if (!string.IsNullOrEmpty(presetProject))
+                        TiaMcp.Adapters.Contracts.ProjectFilePreset.RequireTarget(presetProject, primaryProject?.Path.FullName);
+#endif
+                    _project = primaryProject;
                     if (_project != null) IndexProject();
                     return GetState();
                 }

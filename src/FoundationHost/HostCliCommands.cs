@@ -313,7 +313,7 @@ EXIT CODES: 0 success; 2 rejected / doctor not ready / no successful config writ
   install-plc-tools preserves pip's nonzero exit status.
   The host subset never changes a TIA project. MCP project operations retain their V4 results.
 
-" + HostOptions.WorkerTimeoutHelp;
+" + HostOptions.WorkerTimeoutHelp + "\n" + HostOptions.PresetHelp;
 
         private const string SchemaText =
 @"PROJECT SPEC (YAML or JSON). JSON is canonical; YAML is for humans.

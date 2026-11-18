@@ -418,7 +418,7 @@ public sealed partial class PipelineTests
         public IReadOnlyList<ToolDescriptor> Lite => All.Values.ToArray();
         public JsonArray BehaviorCapabilities { get; }
         public ToolDescriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var value) ? value : null;
-        internal Catalog(string release, bool all, string? workerTool = null, string? batchReadTool = null)
+        internal Catalog(string release, bool all, string? workerTool = null, string? batchReadTool = null, bool projectPresets = false)
         {
             var root = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", release + ".json")))!;
             var names = new[] { "SaveProject", "GetSessionState", "GetCallResult", "ListExportHandles", "CallTool", "GetOpennessWorkerStatus",
@@ -434,12 +434,13 @@ public sealed partial class PipelineTests
                         "array" or "object" => typeof(JsonElement).FullName!, _ => "System.String" } : typeof(JsonElement).FullName!,
                     false, null, null, "", false, Array.Empty<string>())).ToArray();
                 var classification = ToolMetadata.Find(name)!;
-                return new ToolDescriptor(name, "", new Tool { Name = name, InputSchema = schema },
+                var descriptor = new ToolDescriptor(name, "", new Tool { Name = name, InputSchema = schema },
                     new ToolDescriptorClassification(classification.Layer, classification.Domain,
                             name == workerTool ? "READ" : classification.Operation, classification.BatchRead || name == batchReadTool, classification
                                 .BatchWrite),
                     name + "()", parameters, new ToolDryRunDescriptor(schema.GetProperty("properties").TryGetProperty("dryRun", out _), true), null,
                     name == workerTool ? "worker" : ToolExecution.Table[name]);
+                return projectPresets ? CanonicalParameterTool.Describe(descriptor) : descriptor;
             }).ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
             DeclaredToolMetadata.Create("GetCallResult", typeof(McpServer).GetMethod(nameof(McpServer.GetCallResult))!,
                 _ => throw new InvalidOperationException("Metadata only."), out var callResult);
@@ -458,12 +459,14 @@ public sealed partial class PipelineTests
         internal Worker Worker { get; } = new();
         internal Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>> Wait =
             (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null));
-        internal Fixture(string release = "21", bool all = false, string? workerTool = null, string? runtimeRelease = null, string? batchReadTool = null)
+        internal Fixture(string release = "21", bool all = false, string? workerTool = null, string? runtimeRelease = null, string? batchReadTool = null,
+            IReadOnlyDictionary<string, string>? presets = null)
         {
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.Combine(AppContext.BaseDirectory, "fixture-data"));
             previous = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             EngineHostConfiguration.ReleaseKey = runtimeRelease ?? release; EngineHostConfiguration.Worker = Worker;
-            Catalog = new Catalog(release, all, workerTool, batchReadTool);
+            EngineHostConfiguration.Current.Presets = presets ?? ParameterPresets.Empty;
+            Catalog = new Catalog(release, all, workerTool, batchReadTool, presets != null);
             McpServer.ConfigureToolBridge(Catalog, new WorkerToolInvoker(Catalog, Worker, lifetime), () => true, new HashSet<string>(Catalog.All.Keys));
             InvocationJournal.BindingSnapshot = () => Worker.Binding as JsonObject;
             InvocationJournal.ConfigureOutput(_ => { });
@@ -474,6 +477,7 @@ public sealed partial class PipelineTests
         internal Task<CallToolResult> Call(string name, string json) => tools[name]
             .InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>())
             { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json) } }).AsTask();
+        internal McpServerTool Tool(string name) => tools[name];
         public void Dispose()
         {
             McpServer.ApprovalWaitOverrideForTests = null; InvocationJournal.ConfigureOutput(null);

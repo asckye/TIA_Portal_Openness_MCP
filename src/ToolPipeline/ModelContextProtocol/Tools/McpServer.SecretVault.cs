@@ -341,6 +341,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var original = request.Params;
             request.Params = new CallToolRequestParams { Name = ProtocolTool.Name, Meta = original?.Meta, ProgressToken = original?.ProgressToken,
                 Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(resolved.ToJsonString()) };
+#if TIA_ENGINE_HOST
+            TiaMcp.FoundationHost.CanonicalParameterTool.PreserveRequestArguments(original, request.Params);
+#endif
             try { return SecretVaultArguments.Scrub(await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)); }
             catch (Exception failure)
             { return SecretVaultArguments.Scrub(McpServer.TargetFailure(ProtocolTool.Name, failure, true)); }

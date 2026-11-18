@@ -225,6 +225,9 @@ namespace TiaOpenness.Shared
             {
                 var row = (JsonObject)record!.DeepClone();
                 bool sequenceRecord = row["steps"] is JsonArray;
+                if (row["steps"] is JsonArray presetSteps && schemaFor != null)
+                    foreach (var step in presetSteps.OfType<JsonObject>())
+                        if (step["arguments"] is JsonObject arguments) OmitPresetArguments((string)step["tool"]!, arguments, schemaFor);
                 if (exampleKind == "sequence" && !sequenceRecord || exampleKind == "language" && sequenceRecord) continue;
                 bool releaseMatches = row["releaseKeys"]!.AsArray().Any(v => (string?)v == release);
                 bool profileMatches = row["profile"] == null || (string?)row["profile"] == (profile == "engine-source" ? "full-engine" : profile);
@@ -325,6 +328,7 @@ namespace TiaOpenness.Shared
                     : TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation == "UI"
                     ? properties["dryRun"]?["default"]?.DeepClone() ?? JsonValue.Create(false) : JsonValue.Create(true);
             if (properties.ContainsKey("confirm")) args["confirm"] = false;
+            if (schemaFor != null) OmitPresetArguments(name, args, schemaFor);
             var origins = new JsonObject();
             var available = new HashSet<string>(roster ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
             foreach (var property in properties)
@@ -407,6 +411,20 @@ namespace TiaOpenness.Shared
                 if (response["interpretation"]?["profile"] != null) response["interpretation"]!["profile"] = "plc-foundation";
             }
             return response;
+        }
+
+        private static void OmitPresetArguments(string name, JsonObject arguments, Func<string, JsonObject?> schemaFor)
+        {
+            if (schemaFor(name)?["properties"] is JsonObject properties)
+                foreach (string key in arguments.Select(pair => pair.Key).Where(key =>
+                    TiaMcp.Logic.V4.ParameterPresets.Applies(name, key) && (!properties.ContainsKey(key)
+                        || ((string?)properties[key]?["$comment"])?.Contains(TiaMcp.Logic.V4.ParameterPresets.ConditionalSchemaComment) == true
+                            && TiaMcp.Logic.V4.ParameterPresets.PlcTarget(name, key, arguments))).ToArray()) arguments.Remove(key);
+            if (name is "CallTool" or "PreviewToolCall" && arguments["name"] is JsonValue target && arguments["arguments"] is JsonObject nested)
+                OmitPresetArguments(target.GetValue<string>(), nested, schemaFor);
+            if (name is "RunReadOnlyToolBatch" or "PreviewToolBatch" && arguments["operations"] is JsonArray operations)
+                foreach (var operation in operations.OfType<JsonObject>())
+                    if (operation["arguments"] is JsonObject input) OmitPresetArguments((string)operation["name"]!, input, schemaFor);
         }
 
         private static JsonArray Reading(JsonObject? contract, JsonObject? call)

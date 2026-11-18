@@ -85,6 +85,33 @@ Python 默认解释器为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python
 
 八版都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 worker。使用工作台生成的宿主命令；隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。
 
+宿主可追加 `--preset-project-file <绝对项目文件>` 和 `--preset-plc-software <softwarePath>`。
+项目文件必须存在且匹配所选发布键：V14 SP1 为 `.ap14`，V15.1 为 `.ap15_1`，V16–V21 为 `.ap16`–`.ap21`；
+V17–V21 也接受对应的 `.als17`–`.als21` 本地会话文件。PLC 路径不能为空或带首尾空白。
+项目文件在启动时解析为文件系统最终路径和长文件名；大小写、分隔符、`.`/`..`、8.3 名称和重解析目标按同一规范身份比较。
+所有 `WRITE`、`ONLINE-WRITE` 调用在派发前核对实际绑定项目，包括没有 `expectedProjectFile` 参数的工具；不符时返回
+`PRECONDITION_FAILED` 并指出 `--preset-project-file`。关闭项目后不能通过归档恢复、另存为或脚手架创建切换到另一项目再写入。
+`RetrieveProjectArchive` 的执行会产生新目录且归档内项目身份事前未知，因此启用现有项目文件预设时拒绝执行，绑定预设项目后仍可预览。
+打开、附着、另存为和脚手架创建的目标须符合预设；连接的自动主项目绑定也受约束。审批后、实际派发前再次核对绑定。
+
+PLC 预设覆盖所有领域中实际选择 PLC 软件的 `softwarePath`、`plc`、`plcSoftwarePath` 和库实例化的 `targetSoftwarePath`，包括安全、测试套件、地址、库和反射工具。
+`ImportLibraryTypeDocuments.targetSoftwarePath` 也注入同一预设；`CompareProjects.targetSoftwarePath` 是已审查的只读比较操作数，保持显式输入。
+逐项清单及排除理由维护于 `ParameterPresets.SoftwareParameters` 和 `ReviewedSoftwareParameters`。
+八版契约检查递归扫描对象、数组和组合 Schema 中以 `SoftwarePath`/`SoftwarePaths` 结尾或以 `plc` 开头的参数（不区分大小写）。
+复数库作用域、HMI 生成输入、嵌套测试/规则引用、工作台表单、离线文件和符号等已审查字段保持显式输入；它们不按单个 PLC 所有者路径替换。
+混合工具按以下选择器启用 PLC 预设：反射工具 `objectKind=Block/Type`；`CreateLibraryMasterCopy sourceKind=block/type`；
+`GetObjectIdentifier`、`ShowObjectInEditor` 的 `kind=plc*`；`ManageDriveTelegrams action=connectTechnologyObject`；
+`SetDeviceAddress` 的 `processImageObName` 非空；`ManageLibraryMasterCopy action=instantiate` 且 `targetKind=block/blockGroup/tagTable/tag`；
+`ManageLibraryTypeVersion action=instantiate`。后者预设目标路径，不保证 Classic HMI 版本可用于该 PLC 目标。
+启用 PLC 预设时，`InvokeObject`、`InvokeService` 在审批前拒绝 `objectKind=Software`（含 `plcsoftware`、`plc_software`、`plc-software`）、
+`Device` 和 `DeviceItem`（含 `device_item`、`device-item`），错误指出预设值；这些反射入口无法可靠固定到单个 CPU。
+`Block`、`Type` 继续按 `softwarePath` 注入并接受相同预设值。HMI 专用工具和混合工具的 HMI 目标保持调用方输入。
+
+无条件预设字段从 `tools/list` 的 `properties`、`required` 和 `GetToolUsage` 示例移除；混合工具保留依赖选择器的字段。
+省略时由宿主注入；传入与预设规范化后相同的值也接受，不同值返回 `INVALID_ARGUMENT` 与 `/<参数名>`。
+PLC 路径按配置的原字符串比较，项目路径按规范文件身份比较。直接调用、`CallTool`、批处理、生成和工作台使用相同规则；
+`GetSessionState.data.presets` 返回当前值。注入在验证和计划哈希计算前完成，现有审批规则保留。工作台没有预设设置界面。
+
 worker 超时预算为：默认 120 秒，每个代次首次附着 300 秒，编译、传输、导入导出、归档和库更新 300 秒。`--worker-timeout-config` 或 `TIA_MCP_WORKER_TIMEOUTS` 设置分类预算，`--worker-timeout-seconds` 设置默认预算。派发前可取消。调用超过等待预算时返回 `in-progress` 和 `OPERATION_IN_PROGRESS`，原调用继续执行。用 `activeRequestId` 调用 `GetCallResult(requestId)` 读取最终结果。
 
 MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认须经工作台审批。`dryRun=true` 和候选工具 `mode=preview` 不等待审批。`SaveProject`、`SaveProjectCopy` 和 `CloseProject` 实际执行同样须审批；连接、附着、打开和分离不审批。拒绝、120 秒默认超时或工作台不可用会在派发前返回 `CONFIRMATION_REQUIRED`。审批、执行与响应共享 requestId。MCP 向调用方指定的输出根之外写文件也须审批；用 `GetSessionState` 的 `data.outputRoot` 查询可免审批的输出目录（根内重解析点除外），预览和工作台选择的文件目标沿用原行为。

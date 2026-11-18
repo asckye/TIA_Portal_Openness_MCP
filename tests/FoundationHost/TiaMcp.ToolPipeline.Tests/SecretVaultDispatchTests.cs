@@ -1,10 +1,12 @@
 extern alias foundationhost;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
@@ -17,6 +19,34 @@ public sealed partial class PipelineTests
 {
     private const string VaultSecret = "vault:plaintext-that-looks-like-a-reference";
     private static readonly JsonSerializerOptions ReadableJson = new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+    [Theory, InlineData("19", false), InlineData("19", true), InlineData("21", false), InlineData("21", true)]
+    public async Task Vault_resolution_preserves_hidden_PLC_preset_provenance_through_direct_and_bridge_dispatch(string release, bool bridge)
+    {
+        using var fixture = new Fixture(all: true, workerTool: "GetPlcBlockFingerprints", runtimeRelease: release,
+            presets: new Dictionary<string, string> { ["softwarePath"] = "PLC_1" });
+        using var vault = new VaultFixture();
+        var args = FingerprintArguments(); args.Remove("softwarePath"); args["dryRun"] = false;
+        new ApprovalSettings(false, 1).Save(ApprovalSettings.SettingsPath);
+        int approvals = 0;
+        fixture.Wait = (card, settings, _) => {
+            approvals++; Assert.True(settings.Enabled); Assert.Contains("PLC_1", card.ParametersJson);
+            Assert.All(fixture.Worker.Dispatches, call => Assert.Equal("vault:plc1", (string?)call.Arguments["password"]));
+            return Task.FromResult(new ApprovalOutcome(card, false, null));
+        };
+        fixture.Worker.Payload = VaultSecret;
+        string name = bridge ? "CallTool" : "GetPlcBlockFingerprints";
+        var input = bridge ? new JsonObject { ["name"] = "GetPlcBlockFingerprints", ["arguments"] = args } : args;
+        var tool = fixture.Tool(name);
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+            Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(input.ToJsonString()) } };
+        var result = await CanonicalParameterTool.InvokeWithDefaults(tool, request, CancellationToken.None);
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
+        Assert.Equal(1, approvals);
+        Assert.All(fixture.Worker.Dispatches, call => Assert.Equal("PLC_1", (string?)call.Arguments["softwarePath"]));
+        Assert.Equal(VaultSecret, (string?)fixture.Worker.Dispatches.Last().Arguments["password"]);
+        Assert.DoesNotContain(VaultSecret, JsonSerializer.Serialize(result, ReadableJson));
+    }
 
     [Theory]
     [InlineData("19", false)] [InlineData("19", true)]

@@ -261,6 +261,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     }
     // Only the bundled worker gets the pre-dispatch readiness gate; an explicit --worker-exe (fixture) reports its own failures.
     internal bool Bundled { get; init; } = true;
+    internal string? PresetProjectFile { get; init; }
     string IFoundationSessionWorker.ApprovalIdentity => ApprovalIdentity;
     bool IFoundationSessionWorker.Faulted => Faulted;
     JsonObject? IFoundationSessionWorker.Running => Running;

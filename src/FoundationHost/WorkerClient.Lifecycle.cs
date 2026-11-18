@@ -76,6 +76,7 @@ internal sealed partial class WorkerClient
                 foreach (var argument in new WorkerLaunchOptions(releaseKey, apiDirectory, nonce, WithUi, TiaPortalLocation).Arguments())
                     start.ArgumentList.Add(argument);
                 start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = SpillsDirectory;
+                start.Environment[TiaMcp.Adapters.Contracts.ProjectFilePreset.WorkerVariable] = PresetProjectFile;
                 start.Environment["TIA_MCP_HOST_PROCESS_ID"] = Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 if (NativeCrossReferenceSessionFile != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionFileVariable] =
                     NativeCrossReferenceSessionFile;

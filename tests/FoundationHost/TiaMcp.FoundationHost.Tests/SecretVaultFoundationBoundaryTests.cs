@@ -11,6 +11,33 @@ using Xunit;
 
 public sealed class SecretVaultFoundationBoundaryTests
 {
+    [Theory, InlineData("19"), InlineData("21")]
+    public async Task Preset_injection_keeps_vault_precheck_approval_resolution_and_scrubbing_in_order(string release)
+    {
+        using var vault = new VaultFileScope(); vault.Vault.Set("plc1", SecretVaultTests.Secret, vault.Audit);
+        using var worker = new CompileWorker();
+        var definition = FoundationTools.ForRelease(FoundationTools.Definitions.Single(d => d.Name == "CompilePlcSoftware"), release);
+        int approvals = 0;
+        var inner = new FoundationV4Tool(new FoundationTool(definition, worker), release, () => new(false, 1), (card, settings, _) => {
+            approvals++; Assert.True(settings.Enabled);
+            Assert.Contains("PLC_PINNED", card.ParametersJson);
+            Assert.DoesNotContain(SecretVaultTests.Secret, JsonSerializer.Serialize(card));
+            Assert.All(worker.Dispatches, call => {
+                Assert.True((bool?)call["dryRun"]); Assert.Equal("PLC_PINNED", (string?)call["softwarePath"]);
+                Assert.Equal("vault:plc1", (string?)call["password"]);
+            });
+            return Task.FromResult(new ApprovalOutcome(card, false, null));
+        });
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release, presets: new Dictionary<string, string> {
+            ["softwarePath"] = "PLC_PINNED", ["expectedProjectFile"] = "C:/Fixture.ap19" });
+        var result = await tool.InvokeAsync(Request("CompilePlcSoftware", new { password = "vault:plc1", dryRun = false, confirm = true }));
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
+        Assert.Equal(1, approvals); Assert.Equal(2, worker.Dispatches.Count);
+        Assert.All(worker.Dispatches, call => Assert.Equal("PLC_PINNED", (string?)call["softwarePath"]));
+        Assert.Equal(SecretVaultTests.Secret, (string?)worker.Dispatches.Last()["password"]);
+        Assert.DoesNotContain(SecretVaultTests.Secret, JsonSerializer.Serialize(result));
+    }
+
     [Theory]
     [InlineData("19")] [InlineData("21")]
     public async Task Foundation_internal_precheck_receives_only_the_reference_then_approved_execution_receives_the_secret(string release)

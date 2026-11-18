@@ -42,10 +42,15 @@ namespace TiaMcp.Logic.V4.Inputs
     public readonly struct ToolArguments
     {
         public JsonElement Json { get; }
+        // In-process provenance is not serialized; nested host boundaries can recognize their own injected values.
+        internal object? PresetOwner { get; }
+        internal string? PresetTool { get; }
+        internal ToolArguments(JsonElement value, object presetOwner, string presetTool) : this(value)
+        { PresetOwner = presetOwner; PresetTool = presetTool; }
         public ToolArguments(JsonElement value)
         {
             if (value.ValueKind != JsonValueKind.Object) throw new ArgumentException("Tool arguments must be an object.");
-            new InputBudget().Check(value); Json = value.Clone();
+            new InputBudget().Check(value); Json = value.Clone(); PresetOwner = null; PresetTool = null;
         }
     }
 

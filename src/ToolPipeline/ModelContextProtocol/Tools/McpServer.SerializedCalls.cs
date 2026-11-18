@@ -230,6 +230,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 var original = request!.Params;
                 request.Params = new CallToolRequestParams { Name = ProtocolTool.Name,
                     Arguments = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(previewArguments) };
+#if TIA_ENGINE_HOST
+                TiaMcp.FoundationHost.CanonicalParameterTool.PreserveRequestArguments(original, request.Params);
+#endif
                 try
                 {
                     McpServer.ValidateCallerInputFiles(ProtocolTool.Name, previewArguments);

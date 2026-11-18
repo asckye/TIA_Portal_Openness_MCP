@@ -41,6 +41,24 @@ Read the connected server's `tools/list` and `GetToolUsage()` index. Select tool
 
 ## Retrieve an example
 
+For a fixed engineering target, append `--preset-project-file <absolute existing project file>` and/or
+`--preset-plc-software <softwarePath>` to the MCP host's argument list in the client configuration. The project extension must
+match the selected release (`.ap14`, `.ap15_1`, `.ap16`–`.ap21`, or `.als17`–`.als21` for local sessions); the PLC path must be
+non-empty without surrounding whitespace. The project path is resolved to its final filesystem identity and long name.
+Every WRITE/ONLINE-WRITE dispatch must use that bound project, even tools without an `expectedProjectFile` input. Binding
+targets must also match; retrieving an archive into its new directory is refused while an existing-file project preset is active.
+The PLC preset covers PLC software selectors named `softwarePath`, `plc`, `plcSoftwarePath` and library `targetSoftwarePath` across all domains. Mixed tools
+use `objectKind=Block/Type`, `sourceKind=block/type`, `kind=plc*`, `action=connectTechnologyObject`, or non-empty
+`processImageObName`. Library master-copy instantiate targets apply for block/blockGroup/tagTable/tag; library type-version instantiate and
+ImportLibraryTypeDocuments target paths use the same preset. CompareProjects' target path remains a reviewed READ operand.
+InvokeObject/InvokeService refuse Software (including plcsoftware/plc_software/plc-software), Device and DeviceItem (including device_item/device-item)
+before approval while a PLC preset is set; Block/Type still use softwarePath. HMI targets and reviewed plural scopes/nested reference metadata remain explicit.
+The exact enforced list and reviewed exceptions are in ParameterPresets.SoftwareParameters and ReviewedSoftwareParameters; coverage scans all eight
+schemas recursively for names ending SoftwarePath/SoftwarePaths or starting plc, case-insensitively.
+Read `GetSessionState.data.presets` and served schemas/examples after restarting the host. Unconditional fields are hidden;
+mixed selectors remain visible. Omitted values are injected, equal normalized values are accepted, and different values return
+`INVALID_ARGUMENT`. This applies to direct calls, bridges, batches, generation and Workbench calls. There is no Workbench settings page.
+
 | Need | GetToolUsage selector |
 |---|---|
 | Arguments, value origins and response interpretation | `toolName`, optionally `operation` |

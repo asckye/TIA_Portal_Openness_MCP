@@ -319,6 +319,8 @@ namespace TiaMcpServer.ModelContextProtocol
             Func<Task<CallToolResult?>>? beforeDispatch = null)
         {
 #if TIA_ENGINE_HOST
+            if (TiaMcp.FoundationHost.PresetProjectGuard.Check(name, JsonNode.Parse(arguments)!.AsObject()) is { } presetRefusal)
+                return V4Reject(name, presetRefusal);
             using var digestScope = TiaMcp.FoundationHost.WriteDigest.Enter();
 #endif
             // Target approval must finish before acquiring its lane. The identity
@@ -348,6 +350,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 return await BridgeWait.On(ChangedApprovalRefusalAsync(approval)).ConfigureAwait(false);
             var rejection = beforeDispatch == null ? null : await BridgeWait.On(beforeDispatch()).ConfigureAwait(false);
             if (rejection != null) return await BridgeWait.On(FinishApprovalAsync(rejection, approval)).ConfigureAwait(false);
+#if TIA_ENGINE_HOST
+            if (TiaMcp.FoundationHost.PresetProjectGuard.Check(name, JsonNode.Parse(arguments)!.AsObject()) is { } presetDispatchRefusal)
+                return await BridgeWait.On(FinishApprovalAsync(V4Reject(name, presetDispatchRefusal), approval)).ConfigureAwait(false);
+#endif
             try { ValidateCallerInputFiles(name, arguments); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             { return await BridgeWait.On(FinishApprovalAsync(TargetFailure(name, error, false), approval)).ConfigureAwait(false); }

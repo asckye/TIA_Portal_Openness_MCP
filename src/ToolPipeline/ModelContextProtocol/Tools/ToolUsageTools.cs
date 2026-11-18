@@ -37,6 +37,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     return McpServer.V4Reject("GetToolUsage", McpServer.InvalidInput("exampleKind"));
                 if (offset < 0 || limit < 1 || limit > 200) throw new ArgumentException("offset >= 0 and limit 1..200 are required.");
                 var methods = McpServer.AllToolDescriptors();
+                JsonObject? SchemaFor(string target) => methods.TryGetValue(target, out var descriptor)
+                    ? JsonNode.Parse(descriptor.Tool.InputSchema.GetRawText())!.AsObject() : null;
                 var release = McpServer.ReleaseKey;
                 Paging? paging = null;
                 if ((toolName.Length > 0 || operation.Length > 0 || language.Length > 0 || exampleId.Length > 0) && (query.Length > 0 || documentId.Length > 0))
@@ -56,16 +58,17 @@ namespace TiaMcpServer.ModelContextProtocol
                     usage = ToolUsageCatalog.Describe(name, release, ToolUsageCatalog.ExampleSource(toolName, release), McpServer.ToolDescription(method),
                         (JsonObject)JsonNode.Parse(tool.InputSchema.GetRawText())!, example?.ArgumentsJson, example?.Note, operation,
                         methods.Keys, UsageResultContract(name),
-                        args => Siemens.ToolVersionPolicy.CallProblem(release, name, key => args[key]?.ToString()));
+                        args => Siemens.ToolVersionPolicy.CallProblem(release, name, key => args[key]?.ToString()), schemaFor: SchemaFor);
                     if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
                         usage["examples"] = ToolUsageCatalog
                             .Examples(release, ToolUsageCatalog.ExampleSource(toolName, release), methods.Keys, language, exampleId, name,
-                                    exampleKind)["examples"]!
+                                    exampleKind, schemaFor: SchemaFor)["examples"]!
                                 .DeepClone();
                 }
                 else if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
                     usage = ToolUsageCatalog
-                        .Examples(release, ToolUsageCatalog.ExampleSource(toolName, release), methods.Keys, language, exampleId, exampleKind: exampleKind);
+                        .Examples(release, ToolUsageCatalog.ExampleSource(toolName, release), methods.Keys, language, exampleId, exampleKind: exampleKind,
+                            schemaFor: SchemaFor);
                 else
                 {
                     usage = ToolUsageCatalog.ReadReference(query, documentId, offset, limit);
@@ -77,7 +80,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         usage["toolCount"] = names.Length;
                         usage["behaviorCapabilities"] = McpServer.CatalogView.BehaviorCapabilities.DeepClone();
                         total = Math.Max(names.Length, total);
-                        usage["exampleLibrary"] = ToolUsageCatalog.Examples(release, ToolUsageCatalog.ExampleSource(toolName, release), methods.Keys);
+                        usage["exampleLibrary"] = ToolUsageCatalog.Examples(release, ToolUsageCatalog.ExampleSource(toolName, release), methods.Keys,
+                            schemaFor: SchemaFor);
                     }
                     if (offset > total) return McpServer.V4Reject("GetToolUsage", McpServer.InvalidInput("offset"));
                     paging = McpServer.OffsetPage(offset, limit, total);

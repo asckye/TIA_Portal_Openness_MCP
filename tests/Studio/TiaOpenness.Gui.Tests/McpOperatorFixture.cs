@@ -1,3 +1,4 @@
+extern alias PlcRendering;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,6 +31,7 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     private readonly JsonObject state;
     internal readonly OperatorHost Host;
     internal bool HoldApproval, RejectPreview, RejectApply;
+    internal IReadOnlyDictionary<string, string> Presets = new Dictionary<string, string>();
     internal bool CandidatePolicies;
     internal bool GenerationRunActive;
     internal bool MissingCreationPlanHash;
@@ -97,7 +99,8 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
                     JsonElement schema = CandidatePolicies ? CandidateSchema(name) ?? JsonSerializer.SerializeToElement(definition["inputSchema"])
                         : JsonSerializer.SerializeToElement(definition["inputSchema"]);
                     schemas[name] = JsonNode.Parse(schema.GetRawText())!.AsObject();
-                    tools.Add(new FixtureTool(new Tool { Name = name, InputSchema = schema }, this));
+                    tools.Add(new FixtureTool(new Tool { Name = name,
+                        InputSchema = PlcRendering::TiaMcp.Logic.V4.ParameterPresets.Schema(name, schema, Presets) }, this));
                 }
                 await using var server = McpServerFactory.Create(new StreamServerTransport(stream, stream, "fixture"), new McpServerOptions {
                     ServerInfo = new() { Name = "operator fixture", Version = "1" }, Capabilities = new() { Tools = new() { ToolCollection = tools } } });
@@ -130,6 +133,16 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     {
         var arguments = JsonSerializer.SerializeToNode(request.Arguments)!.AsObject();
         var schema = schemas[name];
+        var names = PlcRendering::TiaMcp.Logic.V4.ParameterPresets.Names(name, JsonSerializer.SerializeToElement(schema), Presets);
+        if (PlcRendering::TiaMcp.Logic.V4.ParameterPresets.Refusal(name, arguments, names, Presets) is { } presetError)
+        {
+            var refusal = Envelope(name, new(), "INVALID_ARGUMENT");
+            refusal.StructuredContent!["error"] = JsonNode.Parse(PlcRendering::TiaMcp.Logic.V4.V4Json.Serialize(presetError));
+            refusal.Content = [new TextContentBlock { Text = refusal.StructuredContent.ToJsonString() }];
+            return refusal;
+        }
+        foreach (string parameter in names.Where(parameter => PlcRendering::TiaMcp.Logic.V4.ParameterPresets.PlcTarget(name, parameter, arguments)))
+            arguments[parameter] = PlcRendering::TiaMcp.Logic.V4.ParameterPresets.Value(Presets, parameter);
         if (arguments.Any(a => schema["properties"]?[a.Key] == null)
             || (schema["required"] as JsonArray ?? new()).Any(field => !arguments.ContainsKey((string)field!)))
             throw new InvalidDataException("Fixture request does not satisfy the advertised schema for " + name);

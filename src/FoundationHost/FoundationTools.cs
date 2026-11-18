@@ -5,6 +5,7 @@ using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
 using UnknownSettlement = toolpipeline::TiaMcp.FoundationHost.UnknownSettlement;
 using WriteDigest = toolpipeline::TiaMcp.FoundationHost.WriteDigest;
 using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
+using EngineHostConfiguration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -324,7 +325,11 @@ internal sealed partial class FoundationTool : McpServerTool
             if (CachedSessionState)
             {
                 var state = SharedSessionState.For(worker).Snapshot(release!);
-                return FoundationV4Result.HostSessionState(release!, id!, state);
+                var cached = FoundationV4Result.HostSessionState(release!, id!, state);
+                cached.StructuredContent!["data"]!["presets"] = System.Text.Json.JsonSerializer.SerializeToNode(
+                    EngineHostConfiguration.CurrentOrNull?.Presets ?? TiaMcp.Logic.V4.ParameterPresets.Empty);
+                cached.Content = new[] { new TextContentBlock { Text = cached.StructuredContent.ToJsonString() } };
+                return cached;
             }
             var result=await worker.Call(definition.Operation,values,cancellationToken);
             raw = result?.DeepClone();
@@ -357,6 +362,8 @@ internal sealed partial class FoundationTool : McpServerTool
                 {
                     data["sessionState"] = SharedSessionState.For(worker).Snapshot(release);
                     data["outputRoot"] = TiaOpenness.Shared.DataLocations.Current.OutputRoot;
+                    data["presets"] = System.Text.Json.JsonSerializer.SerializeToNode(
+                        EngineHostConfiguration.CurrentOrNull?.Presets ?? TiaMcp.Logic.V4.ParameterPresets.Empty);
                     reply.Content = new[] { new TextContentBlock { Text = reply.StructuredContent.ToJsonString() } };
                 }
                 return reply;

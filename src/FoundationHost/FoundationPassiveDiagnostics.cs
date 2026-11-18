@@ -302,7 +302,8 @@ internal static class LegacyHostToolRegistry
 {
     internal static IReadOnlyList<McpServerTool> Create(IFoundationWorker worker, string releaseKey, bool nativeSessionConfigured,
         string? apiDirectory = null, string? apiDirectorySource = null, Func<JsonObject>? readinessProvider = null,
-        Func<IReadOnlyList<McpServerTool>>? usageRoster = null, Func<string, string>? exampleProfile = null, bool hostPorts = true)
+        Func<IReadOnlyList<McpServerTool>>? usageRoster = null, Func<string, string>? exampleProfile = null, bool hostPorts = true,
+        IReadOnlyDictionary<string, string>? presets = null)
     {
         TiaVersionCatalog.Get(releaseKey);
         var tools = FoundationTools.Create(worker, releaseKey).Concat(PortedToolContract.Create(worker, releaseKey)).Concat(OfflineXmlTools.Create())
@@ -335,10 +336,13 @@ internal static class LegacyHostToolRegistry
         tools.Clear(); tools.AddRange(wrapped);
         CompatibilityTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
         CanonicalBatchTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
+        presets ??= TiaMcp.Logic.V4.ParameterPresets.Empty;
         for (int i = 0; i < tools.Count; i++)
             if (TiaMcp.Logic.V4.CanonicalToolParameters.Aliases(tools[i].ProtocolTool.Name).Count != 0
-                || TiaMcp.Logic.V4.CanonicalToolParameters.HasStringDevice(tools[i].ProtocolTool.Name))
-                tools[i] = new CanonicalParameterTool(tools[i], releaseKey);
+                || TiaMcp.Logic.V4.CanonicalToolParameters.HasStringDevice(tools[i].ProtocolTool.Name)
+                || presets.ContainsKey("expectedProjectFile")
+                || TiaMcp.Logic.V4.ParameterPresets.Names(tools[i].ProtocolTool.Name, tools[i].ProtocolTool.InputSchema, presets).Length != 0)
+                tools[i] = new CanonicalParameterTool(tools[i], releaseKey, presets: presets);
         if (hostPorts && ReleaseCatalogData.Releases[releaseKey].FoundationReadinessBoundary)
         {
             var all = FoundationHostPorts.Create(worker, releaseKey, tools.AsReadOnly(), readiness, apiDirectory);

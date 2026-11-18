@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using TiaMcp.Adapters;
 using TiaMcp.FoundationHost;
 using TiaMcp.Generation.Planning.Tests;
@@ -17,6 +18,18 @@ using Configuration = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguratio
 
 public sealed class StagedGenerationTests
 {
+    [Theory, InlineData("14sp1"), InlineData("21")]
+    public void PLC_preset_allows_PlanProjectGeneration_readback_and_ApplyGenerationPlan_steps(string release)
+    {
+        using var fixture = new Fixture(release, plcPreset: true);
+        var plan = fixture.Plan();
+        Assert.True(fixture.PresetReads > 0);
+        Assert.NotEmpty(plan["steps"]!.AsArray());
+        Assert.Empty(plan["unavailable"]!.AsArray());
+        var applied = fixture.Apply(plan);
+        Assert.True((bool?)applied["ok"], applied.ToJsonString());
+        Assert.True(fixture.Worker.Writes > 0);
+    }
     [Fact]
     public void Illegal_project_identity_fails_before_planning_or_writing()
     {
@@ -108,8 +121,14 @@ public sealed class StagedGenerationTests
         private readonly string previousRelease = Configuration.ReleaseKey;
         private IDisposable? hostScope;
         private Catalog catalog = null!;
-        internal Fixture(string release, int maximumSteps = 10000, bool newProject = false)
+        private readonly bool plcPreset;
+        private bool presetRead;
+        internal int PresetReads;
+        internal static readonly string[] PresetReadNames = { "GetSessionState", "GetProjectTree", "GetSoftwareTree", "GetPlcBlockInfo",
+            "GetPlcTypeInfo", "GetPlcObjectFingerprints", "ListPlcExternalSources", "ListPlcTagTables", "ListPlcTags" };
+        internal Fixture(string release, int maximumSteps = 10000, bool newProject = false, bool plcPreset = false)
         {
+            this.plcPreset = plcPreset;
             Release = release; Project = Path.Combine(Root, "project", "Fixture.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release)).Replace('\\', '/');
             NewProject = newProject;
             if (release is "20" or "21") BindingGeneration = "ee1d86cbdfd1483c9d772d68c251728a";
@@ -133,6 +152,7 @@ public sealed class StagedGenerationTests
             hostScope?.Dispose();
             Configuration.ReleaseKey = Release;
             hostScope = Configuration.Enter(new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(Worker));
+            if (plcPreset) Configuration.Current.Presets = new Dictionary<string, string> { ["softwarePath"] = "PLC1" };
             var tools = new[] { "ImportPlcExternalSource", "GenerateBlocksFromExternalSource", "DeletePlcExternalSource" }.Select(name =>
                 new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == name), Worker), Release,
                     () => new ApprovalSettings(true, 1), (pending, _, _) => {
@@ -141,7 +161,17 @@ public sealed class StagedGenerationTests
                     })).ToArray();
             var record = new FoundationV4Tool(new GenerationTool("PublishGenerationRecord", Release, executionSession: Session), Release,
                 () => new ApprovalSettings(true, 1), (pending, _, _) => { StepWaits++; return Task.FromResult(GenerationStepApproval.Match(pending) ?? throw new Exception("Record requested a second approval.")); });
-            var registered = tools.Append(record).ToArray(); catalog = new Catalog(registered);
+            McpServerTool[] registered = tools.Append(record).ToArray();
+            if (plcPreset)
+            {
+                registered = registered.Concat(PresetReadNames.Where(name => Ordinary(name) != null).Select(name => (McpServerTool)new PresetReadTool(
+                    new Tool { Name = name, InputSchema = Ordinary(name)!.ImplementationSchema }, args => {
+                    presetRead = true; PresetReads++;
+                    try { return Call(name, args, null); }
+                    finally { presetRead = false; }
+                }))).Select(tool => (McpServerTool)new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(tool, Release)).ToArray();
+            }
+            catalog = new Catalog(registered, plcPreset ? Ordinary : null);
             Host.ConfigureToolBridge(catalog, new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, Worker, lifetime, registered), () => false, new HashSet<string>());
         }
         internal void Reconnect()
@@ -155,6 +185,10 @@ public sealed class StagedGenerationTests
         }
         internal JsonObject Plan(string[]? adopt = null)
         {
+            var request = new RequestContext<CallToolRequestParams>(
+                System.Reflection.DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
+                { Params = new CallToolRequestParams { Name = "PlanProjectGeneration", Arguments = new Dictionary<string, JsonElement>() } };
+            using var progress = Host.UseProgressRequest(request, CancellationToken.None);
             LastPlan = Session.Plan(Planner.Package(), GenerationDocuments.Canonical(Planner.Machine), adopt).StructuredContent!["data"]!["plan"]!.AsObject();
             return LastPlan;
         }
@@ -168,6 +202,8 @@ public sealed class StagedGenerationTests
         }
         private CallToolResult Call(string name, JsonObject args, Func<CallToolResult?>? check)
         {
+            if (plcPreset && !presetRead && PresetReadNames.Contains(name))
+                return Host.DispatchGenerationStep(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), check ?? (() => null));
             if (name == "GetSessionState")
             {
                 if (Created) createdStateReads++;
@@ -264,13 +300,15 @@ public sealed class StagedGenerationTests
                 string member = name == "MovePlcBlockToGroup" ? "MoveBlockToGroupV4" : name + "V4";
                 toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, owner.GetMethod(member)!,
                     _ => throw new InvalidOperationException("Metadata only."), out var current, Release);
-                return current;
+                return plcPreset ? toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Describe(current!) : current;
             }
 
             var path = new DirectoryInfo(AppContext.BaseDirectory);
             while (path != null && !File.Exists(Path.Combine(path.FullName, "CLAUDE.md"))) path = path.Parent;
             var schemas = BaselineSchemas(Path.Combine(path!.FullName, "manifest/contracts/v4/baseline", Release + ".json"));
-            return !schemas.TryGetValue(name, out var schema) ? null : new Descriptor(name, "", new Tool { Name = name, InputSchema = schema }, null, "", Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation");
+            if (!schemas.TryGetValue(name, out var schema)) return null;
+            var result = new Descriptor(name, "", new Tool { Name = name, InputSchema = schema }, null, "", Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation");
+            return plcPreset ? toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Describe(result) : result;
         }
         // Parse each 10-21 MB baseline once instead of on every step (same reason as GenerationExecutionTests.BaselineSchemas);
         // duplicate tool names still fail.
@@ -290,13 +328,32 @@ public sealed class StagedGenerationTests
     }
     private sealed class Catalog : toolpipeline::TiaMcpServer.ModelContextProtocol.IToolCatalogView
     {
+        private readonly Func<string, Descriptor?>? fallback;
         public IReadOnlyDictionary<string, Descriptor> All { get; }
         public IReadOnlyDictionary<string, Descriptor> IncludingUnavailable => All;
         public IReadOnlyList<Descriptor> Lite => All.Values.ToArray();
         public JsonArray BehaviorCapabilities => new();
-        public Descriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var tool) ? tool : null;
-        internal Catalog(IEnumerable<FoundationV4Tool> tools) => All = tools.ToDictionary(t => t.ProtocolTool.Name, t => new Descriptor(t.ProtocolTool.Name,
-            t.ProtocolTool.Description!, t.ProtocolTool, new("L1", "PLC", "WRITE", false, true), "source fixture", Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation"));
+        public Descriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var tool) ? tool : fallback?.Invoke(name);
+        internal Catalog(IEnumerable<McpServerTool> tools, Func<string, Descriptor?>? fallback = null)
+        {
+            this.fallback = fallback;
+            All = tools.ToDictionary(t => t.ProtocolTool.Name, t => {
+                var descriptor = new Descriptor(t.ProtocolTool.Name, t.ProtocolTool.Description ?? "", t.ProtocolTool,
+                    new("L1", "PLC", Fixture.PresetReadNames.Contains(t.ProtocolTool.Name) ? "READ" : "WRITE", false, true), "source fixture",
+                    Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(true, true), null, "foundation");
+                if (t is toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool canonical)
+                { descriptor.ImplementationSchema = canonical.ImplementationSchema; descriptor.ImplementationRequired = canonical.ImplementationRequired; }
+                return descriptor;
+            });
+        }
+    }
+
+    private sealed class PresetReadTool(Tool tool, Func<JsonObject, CallToolResult> read) : ModelContextProtocol.Server.McpServerTool
+    {
+        public override Tool ProtocolTool => tool;
+        public override ValueTask<CallToolResult> InvokeAsync(ModelContextProtocol.Server.RequestContext<CallToolRequestParams> request,
+            CancellationToken cancellationToken = default)
+            => ValueTask.FromResult(read(JsonSerializer.SerializeToNode(request.Params!.Arguments)!.AsObject()));
     }
     private sealed class Worker(Fixture fixture) : IFoundationSessionWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {

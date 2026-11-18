@@ -46,7 +46,10 @@ namespace TiaMcp.FoundationHost
 
                         declared.Execution == "host" ? "host" : "foundation");
                     if (implementation is CanonicalParameterTool portedParameters)
+                    {
                         ported.ImplementationRequired = portedParameters.ImplementationRequired;
+                        ported.ImplementationSchema = portedParameters.ImplementationSchema;
+                    }
                     all[tool.Name] = ported; unavailable[tool.Name] = ported;
                     continue;
                 }
@@ -67,7 +70,11 @@ namespace TiaMcp.FoundationHost
                 var descriptor = new ToolDescriptor(tool.Name, tool.Description ?? "", tool, SharedClassification(tool),
                     tool.Name + "(" + string.Join(", ", parameters.Select(p => p.Name + ": " + p.FriendlyType)) + ")", parameters,
                     new ToolDryRunDescriptor(parameters.Any(p => p.Name == "dryRun"), true), null, "foundation");
-                if (implementation is CanonicalParameterTool canonical) descriptor.ImplementationRequired = canonical.ImplementationRequired;
+                if (implementation is CanonicalParameterTool canonical)
+                {
+                    descriptor.ImplementationRequired = canonical.ImplementationRequired;
+                    descriptor.ImplementationSchema = canonical.ImplementationSchema;
+                }
                 all[tool.Name] = descriptor; unavailable[tool.Name] = descriptor;
             }
             All = all; IncludingUnavailable = unavailable;

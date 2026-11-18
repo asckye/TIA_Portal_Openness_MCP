@@ -5,6 +5,9 @@
 ## [Unreleased]
 
 ### Added
+- Host project presets now constrain bound identities and rebinding targets before writes; PLC presets cover explicitly reviewed `softwarePath`, `plc` and `plcSoftwarePath` selectors across domains. Equal normalized preset inputs are accepted, preserving generation and Workbench calls; project presets resolve final filesystem paths and long names.
+- Harden PLC presets for library instantiation targets; review nested software selectors and refuse unpinnable Software/Device reflection writes before approval.
+- Enforced host presets: `--preset-project-file` binds declared `expectedProjectFile` inputs and `--preset-plc-software` binds `softwarePath` on PLC tools. Preset fields disappear from schemas and examples; supplying them is refused before dispatch. `GetSessionState` reports the active values.
 - V19–V21 `SetUnifiedGlobalScript action=create` adds one absent global script module from complete JavaScript through native JS/YAML import, with preview, collision refusal and exact export readback. Openness has no script-module delete; remove an unwanted create manually in TIA. Native acceptance is NOT RUN.
 - `ExportPlcTestReport` exports JUnit, FAT/SAT and reproduction reports; `tia test report` reads stored runs and returns CI exit codes on all eight releases (Test Suite selections V17+, system V18+, test sets V20+).
 - `ManagePlcTestLibrary` stores validated PLC scenario and Test Suite selections and reads run history on all eight releases; execution of Test Suite entries requires V17+, system tests V18+, and application test sets V20+.

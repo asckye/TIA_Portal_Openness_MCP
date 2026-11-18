@@ -116,6 +116,7 @@ internal static class SharedReleaseHost
         new WorkerClient(options.ReleaseKey, options.WorkerExe, options.ApiDirectory, options.NativeEnabled, options.EngineTimeoutSeconds, options
             .WorkerTimeoutConfig)
         { Bundled = options.BundledWorker, WithUi = options.WithUi, TiaPortalLocation = options.TiaPortalLocation,
+            PresetProjectFile = options.Presets.GetValueOrDefault("expectedProjectFile"),
             SharedSession = ReleaseCatalogData.Releases[options.ReleaseKey].SharedSession };
 
     private static Session CreateSession(HostOptions options, Func<IToolCatalogView, IToolCatalogView>? catalogForTest = null, Func<IFoundationSessionWorker,
@@ -136,13 +137,13 @@ internal static class SharedReleaseHost
                 .Readiness(options.ReleaseKey, installation, installationSource);
             Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker.Readiness(production, notReady);
             var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
-                options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false);
+                options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false, presets: options.Presets);
             LocalStabilityTelemetry.StartupStage("session.registry.created");
             if (toolsForTest != null) shared = toolsForTest(worker, shared);
             var services = FoundationHostPorts.CreateServices(worker, options.ReleaseKey, readiness, options.ApiDirectory);
             LocalStabilityTelemetry.StartupStage("session.services.created");
             var pipeline = new EngineHostPipeline("", options.WorkerExe, options.ReleaseKey, services,
-                options.Profile, shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest);
+                options.Profile, shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest, options.Presets);
             LocalStabilityTelemetry.StartupStage("session.pipeline.created");
             services.Roster = () => roster!;
             services.ResetExports = pipeline.ResetExports;

@@ -42,6 +42,17 @@ internal sealed class HostOptions
     public string? TiaPortalLocation { get; init; }
     public string Profile { get; init; } = "lite";
     public string? HostCommand { get; init; }
+    public IReadOnlyDictionary<string, string> Presets { get; init; } = TiaMcp.Logic.V4.ParameterPresets.Empty;
+    internal const string PresetHelp =
+        "--preset-project-file <absolute existing .apN/.alsN file> pins the canonical filesystem project identity for all WRITE/ONLINE-WRITE dispatches " +
+        "and binding targets (.alsN where local sessions exist). --preset-plc-software <softwarePath> pins PLC selectors named softwarePath, plc and " +
+        "plcSoftwarePath, library instantiate targetSoftwarePath and ImportLibraryTypeDocuments.targetSoftwarePath, across all domains. " +
+        "Mixed tools use objectKind=Block/Type, sourceKind=block/type, kind=plc*, action=connectTechnologyObject " +
+        "or non-empty processImageObName, and library instantiate action/targetKind. InvokeObject/InvokeService refuse Software (including PLC aliases), " +
+        "Device and DeviceItem while a PLC preset is set. HMI selectors, READ comparison operands, reviewed plural scopes " +
+        "and nested references stay explicit. " +
+        "See ParameterPresets.SoftwareParameters and ReviewedSoftwareParameters for exact coverage. " +
+        "Omitted presets are injected; equal normalized values are accepted; different values are refused. Unconditional preset fields are hidden.";
     public int? OperatorOwner { get; init; }
 
     internal void ConfigureEngineeringResolver()
@@ -67,7 +78,7 @@ internal sealed class HostOptions
         var valued = new[] {
             "--release-key", "--tia-major-version", "--worker-exe", "--public-api", "--tia-portal-location", "--transport", "--http-prefix", "--http-api-key",
                 "--http-allowed-origins", "--logging", "--worker-timeout-seconds", "--worker-timeout-config", "--profile", "--host-command", "--operator-owner",
-                "--catalog-tools-list", "--catalog-package", "--catalog-generated-at"
+                "--catalog-tools-list", "--catalog-package", "--catalog-generated-at", "--preset-project-file", "--preset-plc-software"
         };
         for (int i = 0; i < args.Length; i++)
         {
@@ -89,6 +100,25 @@ internal sealed class HostOptions
         if (options.ContainsKey("--release-key") && options.ContainsKey("--tia-major-version"))
             TiaVersionCatalog.RequireMatchingEngine(release, Value("--tia-major-version"));
         var version = TiaVersionCatalog.RequireRunnable(release);
+        var presets = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (options.TryGetValue("--preset-project-file", out var project))
+        {
+            if (!Path.IsPathFullyQualified(project) || !File.Exists(project))
+                throw new ArgumentException("--preset-project-file requires an absolute existing project file for the selected release.");
+            string canonicalProject = TiaMcp.Logic.V4.PresetProjectPath.Canonical(project);
+            string extension = Path.GetExtension(canonicalProject);
+            string major = release == "15.1" ? "15_1" : version.MajorVersion.ToString(CultureInfo.InvariantCulture);
+            if (!string.Equals(extension, ".ap" + major, StringComparison.OrdinalIgnoreCase)
+                    && !(version.MajorVersion >= 17 && string.Equals(extension, ".als" + major, StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException("--preset-project-file requires an absolute existing project file for the selected release.");
+            presets.Add("expectedProjectFile", canonicalProject);
+        }
+        if (options.TryGetValue("--preset-plc-software", out var software))
+        {
+            if (string.IsNullOrWhiteSpace(software) || software != software.Trim())
+                throw new ArgumentException("--preset-plc-software requires a non-empty softwarePath without surrounding whitespace.");
+            presets.Add("softwarePath", software);
+        }
         int timeout = 120;
         if (options.ContainsKey("--worker-timeout-seconds")
                 && (!int
@@ -151,6 +181,7 @@ internal sealed class HostOptions
         }
         return new HostOptions {
             BundleRoot = bundleRoot, ReleaseKey = release, HttpAllowedOrigins = allowedOrigins,
+            Presets = new System.Collections.ObjectModel.ReadOnlyDictionary<string, string>(presets),
             OperatorOwner = operatorOwner,
             HostCommand = options.ContainsKey("--host-command") ? Value("--host-command") : null,
             EngineTimeoutSeconds = timeout, WithUi = flags.Contains("--with-ui"),

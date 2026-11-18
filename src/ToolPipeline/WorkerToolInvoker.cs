@@ -66,6 +66,11 @@ namespace TiaMcp.FoundationHost
             if (string.IsNullOrWhiteSpace(name)) return McpServer.InvalidInput("name");
             var tool = catalog.Find(name, true);
             if (tool == null || name != tool.Name) return new Error("Tool is not registered in this release.", new ToolNotFoundDetails(name));
+            if (CanonicalParameterTool.PresetNames(tool).Length != 0)
+            {
+                arguments = CanonicalParameterTool.ApplyDefaults(name, arguments, out var defaultError, prepareDirectory: false, applyExportDefaults: false);
+                if (defaultError != null) return defaultError;
+            }
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var property in arguments.Json.EnumerateObject())
                 if (!seen.Add(property.Name)) return McpServer.InvalidInput("", "object with unique fields");
@@ -76,7 +81,7 @@ namespace TiaMcp.FoundationHost
                 : tool.Parameters.FirstOrDefault(p => p.Name == key)?.DefaultText);
             if (problem.Length == 0 && !catalog.All.ContainsKey(name)) problem = "Tool is not available in this release.";
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
-            var error = ValidateArguments(tool, arguments.Json, tool.Tool.InputSchema);
+            var error = ValidateArguments(tool, CanonicalParameterTool.PublicArguments(tool, arguments).Json, tool.Tool.InputSchema);
             if (error == null && name == "RunPlcCompanionTool"
                 && TiaOpenness.Shared.OnlineTargetSettings.CompanionRefusal(
                     arguments.Json.TryGetProperty("mode", out var mode) ? mode.GetString() ?? "catalog" : "catalog") is { } companionRefusal)
@@ -95,6 +100,9 @@ namespace TiaMcp.FoundationHost
         private static Type? ParameterType(string name) => typeof(TypedToolInput).Assembly.GetType(name) ?? Type.GetType(name);
         public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false)
         {
+            var presetError = ParameterPresets.Refusal(tool.Name, JsonNode.Parse(arguments.GetRawText())!.AsObject(),
+                CanonicalParameterTool.PresetNames(tool), EngineHostConfiguration.CurrentOrNull?.Presets ?? ParameterPresets.Empty);
+            if (presetError != null) return presetError;
             if (tool.Name == "GetNativeInvocationLog" && TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.PagingError(arguments) is { } paging)
                 return paging;
             var navigation = TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateNavigation(tool.Name, schema, arguments);
@@ -172,14 +180,15 @@ namespace TiaMcp.FoundationHost
 
         private async Task<ToolInvocationResult> DispatchAsync(ToolDescriptor tool, ToolArguments arguments, bool preview)
         {
+            arguments = CanonicalParameterTool.ApplyDefaults(tool.Name, arguments, out var presetError);
+            if (presetError != null)
+                return new ToolInvocationResult(CanonicalParameterTool.Reject(McpServer.ReleaseKey, tool.Name, presetError), false);
             using var diagnostics = NativeFailureDiagnostics.Begin(InvocationJournal.CorrelationId, arguments.Json);
             if (tool.Execution == "foundation"
                 || CanonicalToolParameters.Aliases(tool.Name).Count == 0 && !CanonicalToolParameters.HasStringDevice(tool.Name))
                 return RestrictArguments(tool, arguments, await DispatchCoreAsync(tool, arguments, preview).ConfigureAwait(false));
             var input = JsonNode.Parse(arguments.Json.GetRawText())!.AsObject();
-            var prepared = CanonicalParameterTool.ApplyDefaults(tool.Name, arguments, out var error);
-            if (error != null) return new ToolInvocationResult(CanonicalParameterTool.Reject(McpServer.ReleaseKey, tool.Name, error), false);
-            var effective = JsonNode.Parse(prepared.Json.GetRawText())!.AsObject();
+            var effective = input;
             var adapted = new ToolArguments(JsonSerializer.SerializeToElement(CanonicalToolParameters.LegacyArguments(tool.Name, effective)));
             var result = await DispatchCoreAsync(tool, adapted, preview).ConfigureAwait(false);
             return RestrictArguments(tool, arguments,
@@ -200,8 +209,11 @@ namespace TiaMcp.FoundationHost
 
         private async Task<ToolInvocationResult> DispatchCoreAsync(ToolDescriptor tool, ToolArguments arguments, bool preview)
         {
+            var projectError = PresetProjectGuard.Check(tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject());
+            if (projectError != null) return new ToolInvocationResult(CanonicalParameterTool.Reject(McpServer.ReleaseKey, tool.Name, projectError), false);
             if (tool.Execution == "foundation")
             {
+                arguments = CanonicalParameterTool.PublicArguments(tool, arguments);
                 var request = new RequestContext<CallToolRequestParams>(McpServer.CurrentCallServer!) {
                     Params = new CallToolRequestParams {
                         Name = tool.Name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.Json.GetRawText()) }
@@ -217,6 +229,8 @@ namespace TiaMcp.FoundationHost
                 using var progress = (worker as IEngineWorkerProgress)?.UseProgress(preview ? null : McpServer.WorkerProgressRelay());
                 using var lane = await TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire(tool.Name, token).ConfigureAwait(false);
                 TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(lane);
+                if (PresetProjectGuard.Check(tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject()) is { } queuedPresetError)
+                    return new ToolInvocationResult(CanonicalParameterTool.Reject(McpServer.ReleaseKey, tool.Name, queuedPresetError), false);
                 string id = TiaOpenness.Shared.AuditInvocation.CurrentRequestId ?? InvocationJournal.CorrelationId;
                 string phase = "THREW";
                 InvocationJournal.Write(id, "worker:" + tool.Name, "BEFORE");
@@ -260,8 +274,8 @@ namespace TiaMcp.FoundationHost
                     default)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                return (await owner.DispatchAsync(tool, new ToolArguments(JsonSerializer.SerializeToElement(
-                    request.Params?.Arguments ?? new Dictionary<string, JsonElement>())), McpServer.IsReadOnlyApprovalPreview).ConfigureAwait(false)).Result;
+                return (await owner.DispatchAsync(tool, CanonicalParameterTool.RequestArguments(request),
+                    McpServer.IsReadOnlyApprovalPreview).ConfigureAwait(false)).Result;
             }
         }
     }

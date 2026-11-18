@@ -184,5 +184,40 @@ public sealed class BundleRootTests : IDisposable
     private static string RepositoryRoot([CallerFilePath] string file = "") =>
         Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, "../../.."));
 
+    [Theory]
+    [InlineData("14sp1", ".ap14")]
+    [InlineData("15.1", ".ap15_1")]
+    [InlineData("16", ".ap16")]
+    [InlineData("17", ".als17")]
+    [InlineData("18", ".ap18")]
+    [InlineData("19", ".als19")]
+    [InlineData("20", ".ap20")]
+    [InlineData("21", ".als21")]
+    public void Host_presets_validate_the_exact_release_file_and_PLC_path(string release, string extension)
+    {
+        Put("manifest/package-manifest.json", "fixture"); Put("Project" + extension, "fixture");
+        var options = HostOptions.Parse(new[] { "--bundle-root", scratch, "--release-key", release,
+            "--preset-project-file", At("Project" + extension), "--preset-plc-software", "PLC_1" }, scratch);
+        Assert.Equal(At("Project" + extension), options.Presets["expectedProjectFile"]);
+        Assert.Equal("PLC_1", options.Presets["softwarePath"]);
+        foreach (string invalid in new[] { "Project" + extension, At("missing" + extension), At("Project.ap13"), "" })
+            Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--bundle-root", scratch, "--release-key", release,
+                "--preset-project-file", invalid }, scratch));
+        Put("wrong.ap13", "fixture");
+        Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--bundle-root", scratch, "--release-key", release,
+            "--preset-project-file", At("wrong.ap13") }, scratch));
+        foreach (string invalid in new[] { "", " ", " PLC_1", "PLC_1 " })
+            Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--bundle-root", scratch, "--release-key", release,
+                "--preset-plc-software", invalid }, scratch));
+    }
+
+    [Theory, InlineData("14sp1", ".als14"), InlineData("15.1", ".als15_1"), InlineData("16", ".als16"), InlineData("15.1", ".ap15")]
+    public void Host_presets_refuse_unavailable_local_sessions_and_the_old_V15_extension(string release, string extension)
+    {
+        Put("manifest/package-manifest.json", "fixture"); Put("Project" + extension, "fixture");
+        Assert.Throws<ArgumentException>(() => HostOptions.Parse(new[] { "--bundle-root", scratch, "--release-key", release,
+            "--preset-project-file", At("Project" + extension) }, scratch));
+    }
+
     public void Dispose() { if (Directory.Exists(scratch)) Directory.Delete(scratch, true); }
 }
