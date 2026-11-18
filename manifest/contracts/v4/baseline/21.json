@@ -9367,7 +9367,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "acf981eb9eba82e73ac02c0a3fa299d4167d427cb2536ecc3446b3eb115c9b60",
+      "descriptionSha256": "3e9d13ea8fceb2050693a33c4ebae731d0d8303511a737a9e49ac980cda4185a",
       "inputSchema": {
         "$defs": {
           "branch": {
@@ -9774,63 +9774,344 @@
             }
           },
           "output": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
+            "else": {
+              "else": {
+                "else": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "coil",
+                            "set",
+                            "reset"
+                          ],
+                          "minLength": 0,
+                          "type": "string"
+                        },
+                        "operand": {
+                          "$ref": "#/$defs/symbol"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "operand"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "in": {
+                          "$ref": "#/$defs/operand"
+                        },
+                        "kind": {
+                          "const": "move"
+                        },
+                        "out": {
+                          "items": {
+                            "$ref": "#/$defs/symbol"
+                          },
+                          "maxItems": 8,
+                          "minItems": 1,
+                          "type": "array"
+                        },
+                        "then": {
+                          "items": {
+                            "$ref": "#/$defs/output"
+                          },
+                          "maxItems": 8,
+                          "minItems": 1,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "in",
+                        "out"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "call"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "block": {
+                      "maxLength": 4096,
+                      "minLength": 0,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "blockType": {
+                      "enum": [
+                        "FC",
+                        "FB"
+                      ],
+                      "minLength": 0,
+                      "type": "string"
+                    },
+                    "instance": {
+                      "maxLength": 4096,
+                      "minLength": 0,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "kind": {
+                      "const": "call"
+                    },
+                    "pins": {
+                      "items": {
+                        "$ref": "#/$defs/pin"
+                      },
+                      "maxItems": 64,
+                      "minItems": 0,
+                      "type": "array"
+                    },
+                    "then": {
+                      "items": {
+                        "$ref": "#/$defs/output"
+                      },
+                      "maxItems": 8,
+                      "minItems": 1,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "block",
+                    "blockType",
+                    "pins"
+                  ],
+                  "type": "object"
+                }
+              },
+              "if": {
                 "properties": {
                   "kind": {
                     "enum": [
-                      "coil",
-                      "set",
-                      "reset"
+                      "counter"
                     ],
                     "minLength": 0,
                     "type": "string"
-                  },
-                  "operand": {
-                    "$ref": "#/$defs/symbol"
                   }
                 },
                 "required": [
-                  "kind",
-                  "operand"
-                ],
-                "type": "object"
+                  "kind"
+                ]
               },
-              {
+              "then": {
                 "additionalProperties": false,
                 "properties": {
-                  "in": {
-                    "$ref": "#/$defs/operand"
+                  "cv": {
+                    "$ref": "#/$defs/symbol"
                   },
-                  "kind": {
-                    "const": "move"
-                  },
-                  "out": {
+                  "down": {
                     "items": {
-                      "$ref": "#/$defs/symbol"
+                      "$ref": "#/$defs/condition"
                     },
-                    "maxItems": 8,
+                    "maxItems": 16,
                     "minItems": 1,
                     "type": "array"
                   },
-                  "then": {
+                  "instance": {
+                    "$ref": "#/$defs/global"
+                  },
+                  "kind": {
+                    "const": "counter"
+                  },
+                  "load": {
+                    "items": {
+                      "$ref": "#/$defs/condition"
+                    },
+                    "maxItems": 16,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "pv": {
+                    "$ref": "#/$defs/operand"
+                  },
+                  "q": {
                     "items": {
                       "$ref": "#/$defs/output"
                     },
                     "maxItems": 8,
                     "minItems": 1,
                     "type": "array"
+                  },
+                  "qd": {
+                    "items": {
+                      "$ref": "#/$defs/output"
+                    },
+                    "maxItems": 8,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "reset": {
+                    "items": {
+                      "$ref": "#/$defs/condition"
+                    },
+                    "maxItems": 16,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "type": {
+                    "enum": [
+                      "CTU",
+                      "CTD",
+                      "CTUD"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
+                  },
+                  "valueType": {
+                    "enum": [
+                      "SInt",
+                      "Int",
+                      "DInt",
+                      "USInt",
+                      "UInt",
+                      "UDInt",
+                      "LInt",
+                      "ULInt"
+                    ],
+                    "minLength": 0,
+                    "type": "string"
                   }
                 },
                 "required": [
                   "kind",
-                  "in",
-                  "out"
+                  "type",
+                  "instance",
+                  "valueType",
+                  "pv"
                 ],
                 "type": "object"
               }
-            ]
+            },
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "timer"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "additionalProperties": false,
+              "properties": {
+                "et": {
+                  "$ref": "#/$defs/symbol"
+                },
+                "instance": {
+                  "$ref": "#/$defs/global"
+                },
+                "kind": {
+                  "const": "timer"
+                },
+                "pt": {
+                  "$ref": "#/$defs/operand"
+                },
+                "q": {
+                  "items": {
+                    "$ref": "#/$defs/output"
+                  },
+                  "maxItems": 8,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "type": {
+                  "enum": [
+                    "TON",
+                    "TOF",
+                    "TP"
+                  ],
+                  "minLength": 0,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "type",
+                "instance",
+                "pt"
+              ],
+              "type": "object"
+            }
+          },
+          "pin": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "maxLength": 4096,
+                "minLength": 0,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "section": {
+                "enum": [
+                  "Input",
+                  "Output",
+                  "InOut"
+                ],
+                "minLength": 0,
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "Bool",
+                  "Byte",
+                  "Word",
+                  "DWord",
+                  "LWord",
+                  "SInt",
+                  "USInt",
+                  "Int",
+                  "UInt",
+                  "DInt",
+                  "UDInt",
+                  "LInt",
+                  "ULInt",
+                  "Real",
+                  "LReal",
+                  "Time",
+                  "LTime"
+                ],
+                "minLength": 0,
+                "type": "string"
+              },
+              "value": {
+                "$ref": "#/$defs/operand"
+              }
+            },
+            "required": [
+              "name",
+              "section",
+              "type",
+              "value"
+            ],
+            "type": "object"
           },
           "rung": {
             "additionalProperties": false,

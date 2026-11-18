@@ -1,7 +1,7 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.5_20261116",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-18T08:09:27.1251573+00:00",
+  "generatedAt": "2026-11-18T08:44:42.9021923+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "1f5d25ba0205a1fba80b836e7ccfec12063cb99283588fda071ab6fd68b7655c",
@@ -17,7 +17,7 @@
     "enumHints": 271,
     "defaultHints": 1676,
     "examplesCurated": 524,
-    "recipes": 52
+    "recipes": 54
   },
   "categories": [
     {
@@ -6769,7 +6769,7 @@
         "outputReleaseKey",
         "ladFcBlock"
       ],
-      "description": "[offline candidate; native unverified][OFFLINE] In-memory V21 LAD candidate generation. Each network contains exactly one call or rung. Rungs support contacts, edges, compares, OR, fan-out, coil/set/reset and MOVE with ENO chaining. Registered on V21 only. For timers, counters and math beyond A3a or other unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. No symbol/type resolution; compile is the authority. V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcLadFcBlock\"), optionally operation or language.",
+      "description": "[offline candidate; native unverified][OFFLINE] In-memory V21 LAD candidate generation. Each network contains exactly one call or rung. Rungs support contacts, edges, compares, OR, fan-out, coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins. Global instances only. Registered on V21 only. For unsupported timers, counters and math or library/system instructions and other unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. No symbol/type resolution; compile is the authority. V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcLadFcBlock\"), optionally operation or language.",
       "example": "{\"outputReleaseKey\":\"21\",\"ladFcBlock\":{\"blockName\":\"FC_Lad\",\"blockNumber\":12,\"networks\":[{\"call\":{\"callName\":\"FC_Ready\",\"parameters\":[{\"name\":\"Ready\",\"section\":\"Output\",\"dataType\":\"Bool\",\"symbolPath\":[\"DB_Status\",\"Ready\"]}]}}]}}"
     },
     {

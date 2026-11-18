@@ -1,13 +1,13 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "185f0a24e41725b9beff6206fbee626086f02c7c9e1d075c2a17927e67813330",
+  "catalogSha256": "99fcf9687c3ab5e0c602f78aef988618cbb7c094f4ad368284b9ce8e56b3f54b",
   "uniqueTools": 524,
   "documents": 89,
   "versionToolPairs": 3259,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
-  "callSequences": 52,
+  "callSequences": 54,
   "languages": [
     "scl",
     "scl-sd",
@@ -59,7 +59,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 175,
       "programmingExampleCount": 25,
-      "callSequenceCount": 52,
+      "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -3924,7 +3924,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 236,
       "programmingExampleCount": 25,
-      "callSequenceCount": 52,
+      "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -8566,7 +8566,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 290,
       "programmingExampleCount": 25,
-      "callSequenceCount": 52,
+      "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -13802,7 +13802,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 365,
       "programmingExampleCount": 25,
-      "callSequenceCount": 52,
+      "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -19683,7 +19683,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 441,
       "programmingExampleCount": 25,
-      "callSequenceCount": 52,
+      "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -26261,7 +26261,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 503,
       "programmingExampleCount": 25,
-      "callSequenceCount": 52,
+      "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildPlcGlobalDb",
@@ -33798,7 +33798,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 517,
       "programmingExampleCount": 25,
-      "callSequenceCount": 52,
+      "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
@@ -41616,7 +41616,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 565,
       "programmingExampleCount": 25,
-      "callSequenceCount": 52,
+      "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCall",
