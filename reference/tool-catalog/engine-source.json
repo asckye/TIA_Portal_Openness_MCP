@@ -19499,6 +19499,7 @@
     "RenderPlcBlockDocument": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "RepairAndReimportPlcBlock": "Preset by the server: expectedProjectFile, softwarePath. Equal normalized values are accepted; different values are refused.",
     "ResolveSivarcExpression": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
+    "RunPlcTestLibrary": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
     "SaveProject": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
     "ScanAccessibleDevices": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "SeedProjectFromReference": "Preset by the server: expectedProjectFile, plcSoftwarePath. Equal normalized values are accepted; different values are refused.",
