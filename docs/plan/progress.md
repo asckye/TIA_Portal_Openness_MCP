@@ -1,23 +1,28 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-17，已发布 v4.0.0-beta.5（`52d2d417`）
+状态：现行 · 最后核对：2026-11-18，v4.0.0-beta.6 源码已准备，待发布
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
-- **2026-11-17 维护者决定：beta.6 发布前在 V21 上补测所有 beta.6 新增和改动的工具**（用 beta.6 候选包部署到 V21 VM，单独测试会话，格式同 `bin-build/vm-test/beta5-v21`），补测完成前不发布。beta.5 的 V21 补测已完成：142 个工具中 beta.4 问题已修 79 个，剩余高级 5、中级 7 个归入 VMFIX-12。
+- **2026-11-18，[beta.6](../releases/v4.0.0-beta.6.md) 源码已准备，维护者已确认发布。** 十项新功能均有交付，BATCH-5b 移到 4.1；beta.6 之后不再发 beta.7，直接进入 RC。
+  另纳入 SHOW-EDITOR、VMFIX-10D、UNIFY-1 A–D1、V20 SiVArc 保护及两轮 V21 修复。逐项范围和验收边界见[开发计划](plan.md)。
+- V21 首轮 A、B 批共 129 行通过、28 行按设计拒绝、21 行失败、7 行未运行。复测 69 行中 65 行通过；确认会话状态、库预览和 LAD 分步导入的修复。
+  复测后，V19–V21 拒绝脚本模块创建，V21 拒绝以触点开头的 LAD 扇出分支。两项保护及断开后的身份状态修正尚待真机复验。
+  V20 C2、D 是 beta.5 结果；其余七版均未运行 beta.6 真机测试。
+- RC 接下来处理 VMFIX-12、UNIFY-1 剩余部分和收件箱 LOW。主机合并后执行完整门禁、候选准备和公开发布。
 
-- **2026-11-17 已发布 v4.0.0-beta.5（`52d2d417`），GitHub 预发布，不设为 latest。** beta.4 V21 回归修复（VMFIX-6b 至 11，VMFIX-10D 除外）、B21、B27、B28、NO-LOCK 1–8、DES-4R2/R3、TIDY-7、HOST-RENAME、LONG-LINE-GATE 和 LOW-B5 已合并。维护者决定 beta.5 不等虚拟机，MTA-1（已实现、门禁通过、未合并，等八版 VM 冒烟）与 VMFIX-10D 移至 beta.6，见[开发计划](plan.md#400-beta5)。NO-LOCK 8b 删除 `meta.requiresSessionReset` 与 `SESSION_RESET_REQUIRED`，类型化结果的 `data.requiresSessionReset` 改为 `data.outcomeUnknown`；客户端改读 `meta.outcome` 和 `GetSessionState.unsettled`，见 [CHANGELOG](../../CHANGELOG.md)。主机仍须运行 `merge-check -All` 和 `prepare`，维护者确认后才能公开。CI-RED（`69e5c073`）已修复 GitHub `validate-bundle` 的样本换行与中文编码问题。beta.5 全部变化仍待真机复验。
+- 2026-11-17 的 beta.5 V21 补测覆盖 142 个工具，确认 79 个 beta.4 问题已修复。余下 5 个高级和 7 个中级问题归入 VMFIX-12。
 
 - **2026-11-13 维护者决定：新功能移出 beta.5。** beta.5 只做 beta.4 真机回归修复、NO-LOCK、DES-4R2/R3 和合并后的整理；API-P1a–d、TIA-TEST、TIA-SAFE、TIA-BATCH、TIA-GAPS、ECO-S、SELF 共十项移到 beta.6，4.0 正式版仍以它们完成为条件，见[开发计划](plan.md)。
 
 - **2026-11-11 恢复开发，2026-11-13 核对基线。** beta.4 V21 回归的修复主体已合并（VMFIX-6a、7A、7B、8、8B、9A、9B、10A、10B、10C、EXAMPLES-B4）；归属表在维护者本机 `bin-build/refactor/tasks/VM-B4-MAP.md`。beta.5 剩余工作逐条核实后列在[开发计划](plan.md#400-beta5)，判据为任务说明点名的源文件与测试是否存在并具备所述行为；提交信息不带任务编号，不能据此判断。
-- 当前版本 [`4.0.0-beta.5`](../releases/v4.0.0-beta.5.md) 已于 2026-11-17 发布为预发布（`52d2d417`，安装包 SHA-256 `697ba5188daeee762511012ca4da2ad65ecf6eb9ec7a17a48fbc3a2d1e88821f`），GitHub latest 仍为正式版 [v3.3.0](../releases/v3.3.0.md)。预发布不设为 latest，3.3 安装不提示升级。发布前 `merge-check -All` 通过（116 个作业），`prepare` 402 秒，`publish-prepared` 6.5 秒。
+- 最近已发布版本 [`4.0.0-beta.5`](../releases/v4.0.0-beta.5.md) 已于 2026-11-17 发布为预发布（`52d2d417`，安装包 SHA-256 `697ba5188daeee762511012ca4da2ad65ecf6eb9ec7a17a48fbc3a2d1e88821f`），GitHub latest 仍为正式版 [v3.3.0](../releases/v3.3.0.md)。预发布不设为 latest，3.3 安装不提示升级。发布前 `merge-check -All` 通过（116 个作业），`prepare` 402 秒，`publish-prepared` 6.5 秒。
 - beta.4 已集成默认写入预览、批次与安全移块、回滚日志、参数模型、会话恢复、原生原因、输出根审批、确认词、relay 与工作台页面重绘。所有这些变化仍待真实 TIA Portal 复验。
 - `prepare` 构建、打包、检查 ZIP 并上传私有草稿，完整候选准备已含新鲜依赖漏洞扫描。扫描接入前的构建打包实测约 6 分钟，不能作为含扫描的完整耗时。`publish-prepared` 公开封存候选，300 秒硬预算，beta.3 实测 6.9 秒。beta.4 的构建、打包和检查实测 347 秒；上传受本机网络影响，经本机代理约 4–54 KB/s，绕过代理约 148 KB/s（约 20 分钟），beta.3 约 350 KB/s（8 分 10 秒）。上传没有进度显示和超时，待修。
 - 合并门为 `merge-check`，含 38 个注册套件与两组 full 传输检查。FAST-GATE 目标约 10 分钟；2026-11-05 宽范围改动实测 731 秒（约 12 分钟），优化前约 21 分钟。beta.4 候选的 `merge-check -All` 实测 779 秒（约 13 分钟），数量门槛保留。没有 nightly，GitHub CI 不阻塞合并。
-- 架构仍为八版 FoundationHost，每个 MCP 会话一个 PLC worker。V20/V21 使用 MTA，V14 SP1–V19 使用 STA，MTA-1 已实现但未合并，移至 beta.6 等八版 VM 冒烟。工具列表呈现已统一为 `plc-foundation`，默认 lite，完整行为统一仍由 UNIFY-1 完成。
+- 架构仍为八版 FoundationHost，每个 MCP 会话一个 PLC worker。V20/V21 使用 MTA，V14 SP1–V19 使用 STA，MTA-1 在单独分支等待八版 VM 冒烟。工具列表默认 lite；UNIFY-1 A–D1 的准入、会话、状态和披露已集成。
 - 名称为自动化工程工作台，现有程序、插件、服务和仓库标识继续使用。GitHub 仓库改名尚未执行。
 
 机器地址、PID 和运行状态须从当前环境确认，本页不据历史记录推断。
@@ -54,7 +59,7 @@
 - S8 D1 A、D2 已定，AI 调用将拒绝网络路径，含 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。仍未实现，排 4.0 前。T3 D1 保留并解释 `rollbackCompleted`，D2 迁移 bridge 路由测试，顺序为 U4/C2 → T2 → T3，S9/U3/S8 可独立进行。
 - VMFIX-6 D1–D5 已批准，纯 ASCII SCL 无 BOM，非 ASCII 保留 BOM 与导入限制说明，词过滤从变量名移到 options，停止迁入旧审批关闭设置，参数细节交 DES-4 Part 2，CreateDevice 确定拒绝的 not-started 分类保留。6a 排队，6b 跟随 Part 2。
 - DES-4 D1–D6 已批准，别名保留至 5.0，规范导出参数和数组 devicePath，项目名与文件身份分开，默认会话目录，空串改动限于改名参数。Part 1 已集成。参数 JSON pointer 与原生 `innererror` 分属 Parts 2、3，2026-11-05 移到 beta.5。
-- UNIFY-1 仍是 4.0 条件，替代 Q6a/Q6b/P8-04n2 并吸收 C9。U1 解除无 API 依据的工艺导出限制，U2 统一无 TIA 与能力准入，U4 保留需实测的 s7res 配对并移除无依据的 None-only 限制，U5 开放旧版 seed HMI，U8 按能力选择生成指纹并兼容历史记录。U3 线程模型留待实机，U6 实机保护保留，U7 V21 builder 保持到 4.1。尚未完成。
+- UNIFY-1 仍是 4.0 条件，替代 Q6a/Q6b/P8-04n2 并吸收 C9。U1 解除无 API 依据的工艺导出限制，U2 统一无 TIA 与能力准入，U4 保留需实测的 s7res 配对并移除无依据的 None-only 限制，U5 开放旧版 seed HMI，U8 按能力选择生成指纹并兼容历史记录。U3 线程模型留待实机，U6 实机保护保留，U7 V21 builder 保持到 4.1。A–D1 已集成，其余排 RC。
 - VMAUTO-1 已取消，先前自动回归方案失效。beta.4 公开后另开 AI 会话，书面指定 VM、工程副本、覆盖与通过规则，只在副本写入，原始结果固定格式保存在 `bin-build/vm-test/<run>/`。归档分支保留，Campaign.Alive 缺陷未修复，正式回归尚未开始。
 - FAST-GATE D1/D2/D4 批准，D3 仅在 Part 2 后仍超 10 分钟时考虑，D5–D8 暂缓。HANG-GUARD 批准的 151 处等待、速度断言与预算调整已集成，WriteGuard 15/20 秒保持。传输每组最多八版，WinError 10055 后共享标记限制为四版。TREND-ALERT 超近期中位数两倍只提示，至少五条历史、最近至多二十条，坏数据与存储失败不改退出码，prepare 显示最近提示。
 - TIDY-7、HOST-RENAME、LONG-LINE-GATE 移到 beta.5 开头，等 DES-4 Parts 2、3 合并，因为未完成分支无法可靠跟随文件拆分和改名。仅 High/Medium 审查发现触发返工，Low 合并后排期并在影响用户时披露。超过三轮审查先停下复核设计，告知维护者。
