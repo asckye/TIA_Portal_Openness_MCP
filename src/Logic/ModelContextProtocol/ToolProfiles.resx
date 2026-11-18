@@ -6015,6 +6015,15 @@
     },
     {
       "releaseKey": "14sp1",
+      "entry": "ExportPlcTestReport",
+      "family": "F01",
+      "example": {
+        "runId": "latest",
+        "format": "fat"
+      }
+    },
+    {
+      "releaseKey": "14sp1",
       "entry": "FindTools",
       "family": "F01",
       "example": {
@@ -8462,6 +8471,15 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "15.1",
+      "entry": "ExportPlcTestReport",
+      "family": "F01",
+      "example": {
+        "runId": "latest",
+        "format": "fat"
       }
     },
     {
@@ -11329,6 +11347,15 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "16",
+      "entry": "ExportPlcTestReport",
+      "family": "F01",
+      "example": {
+        "runId": "latest",
+        "format": "fat"
       }
     },
     {
@@ -14489,6 +14516,15 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "17",
+      "entry": "ExportPlcTestReport",
+      "family": "F01",
+      "example": {
+        "runId": "latest",
+        "format": "fat"
       }
     },
     {
@@ -17965,6 +18001,15 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "18",
+      "entry": "ExportPlcTestReport",
+      "family": "F01",
+      "example": {
+        "runId": "latest",
+        "format": "fat"
       }
     },
     {
@@ -21615,6 +21660,15 @@
       "family": "F01",
       "example": {
         "exportId": "&lt;exportId from response&gt;"
+      }
+    },
+    {
+      "releaseKey": "19",
+      "entry": "ExportPlcTestReport",
+      "family": "F01",
+      "example": {
+        "runId": "latest",
+        "format": "fat"
       }
     },
     {
@@ -27532,6 +27586,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTestReport",
+        "currentName": "ExportPlcTestReport",
+        "sourceName": "ExportPlcTestReport",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
       },
       {
         "name": "ExportPlcType",
@@ -37247,6 +37316,21 @@
         "exampleSource": "plc-foundation"
       },
       {
+        "name": "ExportPlcTestReport",
+        "currentName": "ExportPlcTestReport",
+        "sourceName": "ExportPlcTestReport",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "ExportPlcType",
         "currentName": "ExportPlcType",
         "sourceName": "ExportType",
@@ -45695,6 +45779,21 @@
         "exampleSource": "plc-foundation"
       },
       {
+        "name": "ExportPlcTestReport",
+        "currentName": "ExportPlcTestReport",
+        "sourceName": "ExportPlcTestReport",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
+      },
+      {
         "name": "ExportPlcType",
         "currentName": "ExportPlcType",
         "sourceName": "ExportType",
@@ -51170,6 +51269,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTestReport",
+        "currentName": "ExportPlcTestReport",
+        "sourceName": "ExportPlcTestReport",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
       },
       {
         "name": "ExportPlcType",
@@ -57321,6 +57435,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTestReport",
+        "currentName": "ExportPlcTestReport",
+        "sourceName": "ExportPlcTestReport",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
       },
       {
         "name": "ExportPlcType",
@@ -63991,6 +64120,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTestReport",
+        "currentName": "ExportPlcTestReport",
+        "sourceName": "ExportPlcTestReport",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
       },
       {
         "name": "ExportPlcType",
@@ -71088,6 +71232,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTestReport",
+        "currentName": "ExportPlcTestReport",
+        "sourceName": "ExportPlcTestReport",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
       },
       {
         "name": "ExportPlcType",
@@ -79209,6 +79368,21 @@
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
+      },
+      {
+        "name": "ExportPlcTestReport",
+        "currentName": "ExportPlcTestReport",
+        "sourceName": "ExportPlcTestReport",
+        "profiles": [
+          "full",
+          "plc-foundation"
+        ],
+        "arguments": {
+          "runId": "latest",
+          "format": "fat"
+        },
+        "envelopeVersion": 4,
+        "exampleSource": "full-engine"
       },
       {
         "name": "ExportPlcType",
