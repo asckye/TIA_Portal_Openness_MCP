@@ -5047,6 +5047,18 @@
           "identifier": "TiaMcp.ReleaseTool.Tests.StaticPolicyTests/Package_cli_targets_the_host_subset_and_the_host_ships_the_installer( ):73a7a6ca96860d9490b575ca7747ab4ba3ef0b214767b17b5b28154e75f66471:1"
         }
       ]
+    },
+    {
+      "task": "TIA-SAFE-2/3\u002BECO-S3",
+      "maintainerDate": "2026-11-18",
+      "reason": "Lead approval 2026-11-17: the source contract names the new wrapper chain (vault and preset wrappers added, every original wrapper kept in order)",
+      "items": [
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/VersionCatalogWiring.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.VersionCatalogWiring/PolicyWrapsFoundationDispatch( ):7f35ffe0c01efbf11d40e482083ef381d322399c1bc19ef10f176f2ef7166c18:1"
+        }
+      ]
     }
   ]
 }
