@@ -5363,6 +5363,18 @@
           "identifier": "TiaMcp.ReleaseTool.Tests.PlcPatternLibraryTests/Real_library_has_six_sources_and_one_not_run_row_per_required_cell( ):ec12a09c0591d059b84d0fdb0bf72c6e6063897824a07df0fa62653586a6905a:1"
         }
       ]
+    },
+    {
+      "task": "GATE-FLAKES",
+      "maintainerDate": "2026-11-18",
+      "reason": "GUI reader test renamed and re-scoped to assert per-window state independent of the native button, per independent review (maintainer standing approval of recommended options, 2026-11-17)",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WpfContextTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WpfContextTests/Left_button_reader_matches_native_state_without_capture( ):e7ad4b90983c335f0d1aac27319c20e8b74f0702a25698a2f35178d7a571b502"
+        }
+      ]
     }
   ]
 }
