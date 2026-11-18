@@ -86,9 +86,11 @@ namespace TiaMcp.Adapters
                 }
                 if (meta["status"] as string == "ReadOrWriteFailed") EngineeringCredentialRules.TryRecordRefusal(error, meta);
                 if (HmiReadSafety.ConnectionUnavailable(error)) RecordHmiFault(meta);
+                MutationEvidence.RecordStepFailure(error, meta);
                 reply.Message = tool + " failed";
             }
-            reply.OutcomeUnknown = writing && (meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true
+            reply.OutcomeUnknown = writing && !MutationEvidence.ProvesNoMutation(meta)
+                && (meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true
                 || meta.TryGetValue("connectionUnavailable", out var unavailable) && unavailable is true
                 || !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial")
                     && meta.TryGetValue("mayHaveChanged", out var changed) && changed is true

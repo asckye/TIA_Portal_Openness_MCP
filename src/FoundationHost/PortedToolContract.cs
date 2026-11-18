@@ -436,7 +436,9 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("copyMode", out var copyMode) ? copyMode.GetString() ?? "" : "",
             arguments.TryGetValue("generateOption", out var generateOption) ? generateOption.GetString() ?? "None" : "None") != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
-        string Text(string name) => arguments.TryGetValue(name, out var value) ? value.GetString() ?? "" : "";
+        string Text(string name) => arguments.TryGetValue(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString()! : "";
+        string TextPath(string name) => arguments.TryGetValue(name, out var value) && value.ValueKind == JsonValueKind.Array
+            ? string.Join("/", value.EnumerateArray().Select(segment => segment.GetString())) : Text(name);
         if (OnlineTargetPolicy.AddressParameter(tool.Name) is "ip" or "host" or "endpointUrl"
             && TiaOpenness.Shared.OnlineTargetSettings.RuntimeRefusal(tool.Name, Text(OnlineTargetPolicy.AddressParameter(tool.Name)!)) is { } runtimeTarget)
             return McpServer.V4TargetReject(tool.Name,
@@ -511,7 +513,7 @@ internal sealed partial class FoundationTool
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         b4.Aspect = Text(tool.Name == "ConfigureMotionHardwareConnection" ? "interfaceKind" : "aspect");
         if (family.Name == "F13") b4.Path = Text("objectPath");
-        b4.GroupPath = Text(tool.Name.StartsWith("ImportTechnologyObject", StringComparison.Ordinal) ? "folderPath" : "groupPath");
+        b4.GroupPath = TextPath(tool.Name.StartsWith("ImportTechnologyObject", StringComparison.Ordinal) ? "folderPath" : "groupPath");
         if (tool.Name == "ManagePlcSoftwareUnit" && arguments.TryGetValue("properties", out var properties)
             && properties.ValueKind == JsonValueKind.Object && properties.TryGetProperty("NamespacePreset", out _))
             b4.Properties["NamespacePreset"] = new HardwareScalar();
@@ -586,10 +588,6 @@ internal sealed partial class FoundationTool
             workerFailure = error;
             var workerError = error as WorkerOperationException;
             var retained = workerError?.EvidenceJson is string json ? JsonNode.Parse(json) : null;
-            if (tool.Name == "SetUnifiedGlobalScript" && workerError?.Outcome == "unknown" && retained is JsonObject hmiReply
-                && hmiReply["Value"] is JsonObject value
-                && value["Meta"] is JsonObject hmiMeta)
-                error.Data[nameof(HmiInspectionContract.ScriptImportEvidence)] = HmiInspectionContract.ScriptImportEvidence(hmiMeta);
             if (workerError?.Outcome == "rejected-before-operation" && retained is JsonObject deviceEvidence
                 && deviceEvidence["status"]?.ToString() == "Ambiguous" && deviceEvidence["target"] != null)
                 error.Data["nativeResultEvidence"] = deviceEvidence;
@@ -617,7 +615,7 @@ internal sealed partial class FoundationTool
                 var objectReply = reply as JsonObject;
                 lastReply = objectReply;
                 nativeDiagnostics = FoundationV4Result.NativeDiagnostics(reply);
-                priorMutation |= mayWrite;
+                priorMutation |= mayWrite && (bool?)objectReply?["MayHaveChanged"] != false;
                 return reply;
             }
             catch (WorkerOperationException error) when (PortedToolContract.IsDeviceRefusal(operation, error))
@@ -752,14 +750,23 @@ internal sealed partial class FoundationTool
                 body["data"]!["earlierMutationMayHaveChanged"] = true;
                 result.Content = new[] { new TextContentBlock { Text = body.ToJsonString() } };
             }
-            return await SettlePortedResult(FoundationV4Result.ReconcileWorker(result, nativeDiagnostics), arguments).ConfigureAwait(false);
+            return await SettlePortedResult(FoundationV4Result.ReconcileWorker(result, nativeDiagnostics, tool.Name,
+                priorMutation ? null : workerFailure), arguments).ConfigureAwait(false);
         }
         catch (TargetInvocationException error) when (error.InnerException != null)
         {
             if (FoundationV4Result.Classified(lastReply))
+            {
+                if (tool.Name == "SetUnifiedGlobalScript" && (string?)lastReply!["meta"]?["outcome"] == "unknown")
+                {
+                    var facts = HostBehavior.ScriptImportEvidence(lastReply["error"]?["details"]?["evidence"] as JsonObject ?? new JsonObject());
+                    return await SettlePortedResult(FoundationV4Result.UnknownScriptImport(portedRelease!, Meta.Correlate(InvocationJournal.CorrelationId),
+                        facts, priorMutation), arguments).ConfigureAwait(false);
+                }
                 return await SettlePortedResult(FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
                     StructuredContent = lastReply.DeepClone(), Content = new[] { new TextContentBlock { Text = lastReply.ToJsonString() } } },
                     nativeDiagnostics), arguments).ConfigureAwait(false);
+            }
             var cause = workerFailure ?? error.InnerException;
             bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
                 && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var dry)
@@ -782,7 +789,8 @@ internal sealed partial class FoundationTool
             var result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                 operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
                     : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, lastReply?["Failure"] != null ? lastReply : null, cause);
-            return await SettlePortedResult(FoundationV4Result.ReconcileWorker(result, nativeDiagnostics), arguments).ConfigureAwait(false);
+            return await SettlePortedResult(FoundationV4Result.ReconcileWorker(result, nativeDiagnostics, tool.Name,
+                priorMutation ? null : workerFailure), arguments).ConfigureAwait(false);
         }
     }
 }

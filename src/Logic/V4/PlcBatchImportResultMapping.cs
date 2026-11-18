@@ -16,8 +16,12 @@ namespace TiaMcp.Logic.V4
             Error Unknown() =>
                 new Error("Import outcome is unknown; inspect the recovery directory and remaining changes before establishing a new session.",
                     new OutcomeUnknownDetails("batch-import", evidence));
-            Error Failed() =>
-                new Error("Batch import stopped; inspect restoration and remaining-change evidence.", new NativeOperationFailedDetails(null, null, evidence));
+            Error Failed(JsonObject item)
+            {
+                string? reason = HostBehavior.SafeDiagnostic((string?)item["nativeMessage"]);
+                return new Error(reason ?? "Batch import stopped; inspect restoration and remaining-change evidence.",
+                    new NativeOperationFailedDetails(null, reason, evidence));
+            }
             var items = data["items"]!.AsArray(); var mapped = new JsonArray();
             var blockers = items.OfType<JsonObject>().Where(x => (string?)x["status"] == "replace-blocked").ToArray();
             Error Blocked() =>
@@ -45,7 +49,7 @@ namespace TiaMcp.Logic.V4
                         ? new Error("Recovery failed for this replacement before any import.",
                             new PreconditionFailedDetails("recovery-export", (string?)item["relativePath"]))
                     : state == "not-attempted" ? new Error("Not executed after a batch admission failure.", new NotExecutedDetails(cause)) : outcome != Outcome
-                        .Succeeded ? Failed() : null;
+                        .Succeeded ? Failed(item) : null;
                 Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown
                     : preview ? Execution.ReadOnly : Execution.Completed;
                 var child = Envelope.Create(item, error, new Meta(DateTimeOffset.UtcNow, release, tool, id, outcome, execution,

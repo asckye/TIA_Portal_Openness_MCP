@@ -160,8 +160,8 @@ namespace TiaMcp.Adapters
                                 BatchReturnedGroup(t,tags!,request.TagGroup)
                         })
                         .ToArray();
-                    return PlcNativeImportOptions.Blocks(PlcNative.Blocks(blocks),file,option,sw).Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks))
-                        .ToArray();
+                    return ImportBlocksWithReadback(PlcNative.Blocks(blocks), file, option, sw, request.Overwrite || recovery ? null : planned.Name)
+                        .Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
                 }
                 string Blocker(PlcBatchImportObject target)
                 {

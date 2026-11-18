@@ -79,6 +79,7 @@ internal sealed class OptionalProductsAdapter
                     ?? throw new ArgumentException("modifiedItemPathJson must select the modified PLC device item.");
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["filePath"] = file.FullName; meta["mayHaveChanged"] = false;
                 meta["mayHaveWrittenFiles"] = false;
+                if (plc != null) OptionalProductCapabilities.RequireArchivePlc(plc.Classification == DeviceItemClassifications.CPU, plc.IsBuiltIn);
                 if (dryRun) return "SINUMERIK archive operation preview; no native archive/retrieve call.";
                 using var secure = string.IsNullOrEmpty(password) ? null : EngineeringCredentialRules.ToSecureString(password);
                 if (action == "retrieve")

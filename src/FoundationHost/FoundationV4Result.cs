@@ -36,6 +36,21 @@ internal static class FoundationV4Result
         => LateCalls.InProgress(release, name, running);
     internal static CallToolResult LateFailure(string release, string name, string id)
         => Wire(release, name, id, null, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, Unknown(), true);
+    internal static CallToolResult WarnStatusUnavailable(CallToolResult result)
+    {
+        if (result.StructuredContent?["meta"] is JsonObject meta && (meta["warnings"] ??= new JsonArray()) is JsonArray warnings)
+        {
+            warnings.Add(JsonNode.Parse(V4Json.Serialize(new Warning(WarningCode.IncompleteData,
+                "The worker returned its result, but the subsequent session status read failed.", Empty))));
+            var content = result.Content.ToList();
+            var text = new TextContentBlock { Text = result.StructuredContent.ToJsonString() };
+            if (content.FirstOrDefault() is TextContentBlock) content[0] = text;
+            else content.Insert(0, text);
+            result.Content = content;
+        }
+        return result;
+    }
+
     internal static CallToolResult WorkerFailure(CallToolResult result, string release, string name, string id, bool mutation, Exception? failure)
     {
         if (failure == null || result.IsError != true || Classified(result.StructuredContent)
@@ -76,10 +91,15 @@ internal static class FoundationV4Result
         return null;
     }
 
-    internal static CallToolResult ReconcileWorker(CallToolResult result, JsonObject? diagnostics)
+    internal static CallToolResult ReconcileWorker(CallToolResult result, JsonObject? diagnostics, string? tool = null,
+        Exception? lastFailure = null)
     {
         if (result.StructuredContent is not JsonObject source) return result;
         var body = (JsonObject)source.DeepClone();
+        if ((string?)body["error"]?["code"] == "OUTCOME_UNKNOWN" && lastFailure is WorkerOperationException { Outcome: "unknown" }
+            && body["error"]?["details"]?["evidence"] is JsonObject retained
+            && tool != null && HostBehavior.WorkerReplyEvidence(tool, lastFailure) is { } unknownEvidence)
+            foreach (var field in unknownEvidence) retained[field.Key] = JsonSerializer.SerializeToNode(field.Value);
         if (diagnostics != null && body["error"] is JsonObject error && (string?)error["code"] == "NATIVE_OPERATION_FAILED"
             && error["details"] is JsonObject details)
         {
@@ -151,6 +171,19 @@ internal static class FoundationV4Result
 
     internal static bool PreviewHasNoEffect(JsonNode? body) => HostBehavior.PreviewHasNoEffect(body);
 
+    internal static CallToolResult UnknownScriptImport(string release, string id, IReadOnlyDictionary<string, JsonElement> facts,
+        bool priorMutation)
+    {
+        var data = JsonSerializer.SerializeToNode(facts)!.AsObject();
+        if (priorMutation) data["earlierMutationMayHaveChanged"] = true;
+        return Wire(release, "SetUnifiedGlobalScript", id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
+            priorMutation ? EarlierMutation(facts) : HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Unknown, null, facts), true);
+    }
+
+    private static Error EarlierMutation(IReadOnlyDictionary<string, JsonElement> evidence) =>
+        new("An earlier operation may have changed state. Do not repeat this call. Read GetCallResult(requestId) and inspect the target.",
+            new OutcomeUnknownDetails("tool-call", evidence));
+
     internal static Error WorkerRejection(Exception exception)
     {
         var worker = exception as WorkerOperationException;
@@ -169,11 +202,11 @@ internal static class FoundationV4Result
             data["failure"] = JsonNode.Parse(NativeFailureDiagnostics.Evidence(JsonSerializer.SerializeToElement(workerDiagnostic)).GetRawText());
         if (exception != null && TiaOpenness.Shared.HostFailurePolicy.PriorMutation(exception))
         {
+            if (name == "SetUnifiedGlobalScript")
+                return UnknownScriptImport(release, id, HostBehavior.WorkerReplyEvidence(name, exception) ?? Empty, true);
             data ??= new JsonObject();
             data["earlierMutationMayHaveChanged"] = true;
-            return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
-                new Error("An earlier operation may have changed state. Do not repeat this call. Read GetCallResult(requestId) and inspect the target.",
-                    new OutcomeUnknownDetails("tool-call", Empty)), true);
+            return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, EarlierMutation(Empty), true);
         }
         var worker = exception as WorkerOperationException;
         string? exceptionType = worker == null ? exception?.GetType().Name : worker.ExceptionType;
@@ -186,6 +219,10 @@ internal static class FoundationV4Result
             HostBehavior.SanitizeEvidence(retained);
             data ??= new JsonObject();
             data["evidence"] = retained;
+            if (name == "ImportPlcBlock" && worker.KnownNoMutation && retained is JsonObject importEvidence
+                && (bool?)importEvidence["verifiedAbsent"] == true && (bool?)importEvidence["mayHaveChanged"] == false)
+                return Wire(release, name, id, data, Outcome.Failed, Execution.Completed, Completeness.Complete,
+                    HostBehavior.UnchangedNativeError(importEvidence), true);
             if ((string?)retained?["recoveryStatus"] == "backup-skipped")
             {
                 data["recoveryStatus"] = "backup-skipped";
@@ -221,6 +258,11 @@ internal static class FoundationV4Result
             native: worker != null, hResult: nativeFailure ? hResult : null);
         string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.ExceptionReason(exception);
         bool readCancelled = dispatched && !mutation && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;
+        if (kind == TiaOpenness.Shared.HostFailureKind.Unknown)
+        {
+            details = HostBehavior.WorkerReplyEvidence(name, exception, details) ?? details;
+            if (name == "SetUnifiedGlobalScript") return UnknownScriptImport(release, id, details, false);
+        }
         if (kind == TiaOpenness.Shared.HostFailureKind.Unknown && exception.Data["workerRecoveryMessage"] is string recoveryMessage)
             return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
                 new Error(HostBehavior.SafeDiagnostic(recoveryMessage)!, new OutcomeUnknownDetails("tool-call", details, reason)), true);

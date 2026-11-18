@@ -99,14 +99,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             try { return action(meta); }
             catch (Exception error)
             {
-                var cause = error.GetBaseException();
                 meta["mayHaveChanged"] = MayHaveChanged || meta["mayHaveChanged"] is true;
-                meta["v4FailureCode"] = cause is NotSupportedException ? "UNSUPPORTED_CAPABILITY"
-                    : cause is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException ? "INVALID_ARGUMENT"
-                    : cause is System.IO.FileNotFoundException || cause is System.IO.DirectoryNotFoundException ? "NOT_FOUND"
-                    : cause is HardwareAddressingException hardware ? hardware.Status == "InvalidState" ? "PRECONDITION_FAILED" : hardware.Status
-                    : cause is PlcSoftwareException portal ? portal.Code == "InvalidState" ? "PRECONDITION_FAILED" : portal.Code
-                    : cause is InvalidOperationException ? "PRECONDITION_FAILED" : "NATIVE_OPERATION_FAILED";
+                meta["v4FailureCode"] = MutationEvidence.FailureCode(error);
                 throw;
             }
         }

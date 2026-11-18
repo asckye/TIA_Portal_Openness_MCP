@@ -20,9 +20,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 while (cause.InnerException != null) cause = cause.InnerException;
                 Error? rejection = cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
                     parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(portal)) : null;
-                var retained = tool == "SetUnifiedGlobalScript" && writes
-                    ? cause.Data[nameof(ScriptImportEvidence)] as IReadOnlyDictionary<string, JsonElement> : null;
-                return Result(tool, null, rejection ?? NativeFailureDiagnostics.FromException(Failure(writes, retained), exception),
+                var retained = writes ? HostBehavior.WorkerReplyEvidence(tool, exception) : null;
+                return Result(tool, null, rejection ?? NativeFailureDiagnostics.FromException(Failure(writes, retained, tool), exception),
                     rejection != null ? Outcome.RejectedBeforeOperation
                     : writes ? Outcome.Unknown : Outcome.ReadFailed, rejection != null ? Completeness.None : Completeness.Unknown, writes, current);
             }
@@ -47,26 +46,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     : "The request could not be admitted; inspect the retained evidence.", details);
         }
 
-        internal static IReadOnlyDictionary<string, JsonElement> ScriptImportEvidence(JsonObject meta)
-        {
-            // Unknown writes expose recorded import facts. Worker messages and nested diagnostics can contain private text.
-            var retained = new JsonObject();
-            foreach (var key in new[] { "phase", "importAttempted", "importReturned", "scriptCountAfterImport", "moduleExistsAfterImport",
-                "nativeExceptionType", "mayHaveChanged", "writeOutcomeUnknown", "rollbackCompleted" })
-                if (meta[key] is JsonValue value) retained[key] = value.DeepClone();
-            if (meta["candidateDirectory"] is JsonValue) retained["candidateDirectory"] = "<path>";
-            if (meta["candidateDirectoryRelativeToTemp"] is JsonValue locator && locator.TryGetValue<string>(out var relative))
-                retained["candidateDirectoryRelativeToTemp"] = System.IO.Path.IsPathRooted(relative) ? "<path>" : relative;
-            return NativeFailureDiagnostics.Evidence(JsonSerializer.SerializeToElement(retained)).EnumerateObject()
-                .ToDictionary(field => field.Name, field => field.Value, StringComparer.Ordinal);
-        }
-
-        private static Error Failure(bool writes, IReadOnlyDictionary<string, JsonElement>? evidence = null)
+        private static Error Failure(bool writes, IReadOnlyDictionary<string, JsonElement>? evidence = null, string? tool = null)
         {
             evidence ??= new Dictionary<string, JsonElement>();
+            string stage = tool is "InvokeObject" or "InvokeService" ? "reflection-operation" : "HMI/reflection operation";
             return writes
                 ? new Error("The write outcome is unconfirmed. Inspect the target before repeating this call. Never replay it automatically. " +
-                    "GetSessionState lists unsettled request IDs.", new OutcomeUnknownDetails("HMI/reflection operation", evidence))
+                    "GetSessionState lists unsettled request IDs.", new OutcomeUnknownDetails(stage, evidence))
                 : new Error("The read did not establish success.", new NativeOperationFailedDetails(null, null, evidence));
         }
 
@@ -97,7 +83,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 ?? HostBehavior
                     .KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
-            else if (unknown) { outcome = Outcome.Unknown; error = Failure(true); }
+            else if ((Flag(evidence, "invocationAttempted") == true || (string?)evidence["rollbackOutcome"] == "restored")
+                && HostBehavior.UnchangedNativeFailure(evidence, success))
+            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence); }
+            else if (unknown) { outcome = Outcome.Unknown; error = Failure(true, tool: tool); }
             else if (compileFailed) {
                 outcome = Outcome.Failed; error = CompileResultMapping.Errors(new JsonObject { ["evidence"] = evidence.DeepClone() }) ?? Failure(false); }
             else if (knownMismatch) {
@@ -137,7 +126,7 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Partial; }
             if (tool == "SetUnifiedGlobalScript" && writes && error?.Details is OutcomeUnknownDetails scriptUnknown)
             {
-                var retained = ScriptImportEvidence(evidence);
+                var retained = HostBehavior.ScriptImportEvidence(evidence);
                 error = new Error(error.Message, new OutcomeUnknownDetails(scriptUnknown.Stage, retained, scriptUnknown.Reason));
                 return Result(tool, JsonSerializer.SerializeToNode(retained)!.AsObject(), error, outcome, completeness, writes, current, paging);
             }

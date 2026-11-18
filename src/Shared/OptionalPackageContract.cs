@@ -94,11 +94,13 @@ namespace TiaMcpServer.ModelContextProtocol
             bool verificationFailed = Flag(data, "expectedPresenceVerified") == false || Flag(data, "verifiedAbsent") == false;
             if (verificationFailed) success = false;
             bool notStarted = Flag(data, "operationNotStarted") == true;
-            bool unchangedFailure = HostBehavior.UnchangedNativeFailure(data, success);
+            bool fileFailure = tool == "ManageSinumerikArchive" && data["action"]?.ToString() is "archive" or "fAddressArchive"
+                && HostBehavior.UnchangedNativeFailure(data, success, allowWrittenFiles: true);
+            bool unchangedFailure = fileFailure || HostBehavior.UnchangedNativeFailure(data, success);
             // A lost worker acknowledgement leaves writes unknown; reads report a read failure.
             bool testUncertain = tool == "RunTestSuiteCase" && writes && (reset || Flag(data, "connectionUnavailable") == true
                 || status == "HmiConnectionUnavailable" || rejection == null && !notStarted && !testVerdict.HasValue);
-            bool unknown = outcomeLost || testUncertain || writes && issued && success != true && !testVerdict.HasValue
+            bool unknown = outcomeLost || testUncertain || writes && issued && !fileFailure && success != true && !testVerdict.HasValue
                 || rejection == null && writes && !notStarted && (stateRequired && !stateKnown
                 || reset && issued || success != true && !nativeKnown && !verificationFailed && !unchangedFailure);
             int imported = (data["imported"] as JsonArray)?.Count ?? 0;

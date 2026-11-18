@@ -124,6 +124,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is NotSupportedException ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null))
                     : null;
                 if (error != null && !write) return Result(tool, null, error, Outcome.RejectedBeforeOperation, current);
+                if (tool == "ImportDeviceAml" && write && HostBehavior.WorkerReplyEvidence(tool, ex) is { } retained
+                    && retained.TryGetValue("phase", out var phase) && phase.ValueKind == JsonValueKind.String && phase.GetString() == "import")
+                    return Result(tool, null, AmlImportFailure(retained), Outcome.Unknown, current, write);
                 return Result(tool, null, NativeFailureDiagnostics.FromException(Failure(write, new JsonObject()), ex),
                     write ? Outcome.Unknown : Outcome.ReadFailed, current);
             }
@@ -178,7 +181,12 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = write ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence); }
             else if (unknown || write && verdict != true && (issued || !started.HasValue) && applied == 0
                 && Bool(evidence, "postStateKnown") != true && status != "InvalidState" && status != "HmiReadSessionBlocked")
-            { outcome = Outcome.Unknown; error = Failure(true, evidence); }
+            {
+                outcome = Outcome.Unknown;
+                error = tool == "ImportDeviceAml" && (string?)evidence["phase"] == "import"
+                    ? AmlImportFailure(evidence.Where(p => p.Key is "phase" or "nativeMessage" or "deviceCountBefore" or "deviceCountAfter")
+                        .ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))) : Failure(true, evidence);
+            }
             else if (write && applied > 0 && verdict != true)
             {
                 outcome = Outcome.Partial; error =
@@ -233,6 +241,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else if (node is JsonArray array) foreach (var item in array) if (item != null) Sanitize(item);
         }
+        private static Error AmlImportFailure(IReadOnlyDictionary<string, JsonElement> evidence)
+        {
+            var retained = JsonSerializer.SerializeToNode(evidence)!.AsObject();
+            HostBehavior.SanitizeEvidence(retained);
+            return new Error("Inspect the device and network configuration before repeating the AML import.",
+                new OutcomeUnknownDetails("hardware-operation", retained.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
+        }
+
         private static Error Failure(bool unknown, JsonObject evidence)
         {
             var details = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(evidence.ToJsonString())!;

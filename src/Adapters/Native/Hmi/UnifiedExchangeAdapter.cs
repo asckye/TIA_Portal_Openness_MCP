@@ -56,6 +56,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (exporting)
                 {
                     if (dryRun) return "Unified tag export preview; no file written.";
+                    if ((int)meta["tagCountBefore"]! == 0)
+                    {
+                        meta["files"] = new HmiArray();
+                        return "No tags to export. No file written.";
+                    }
                     dir.Create(); meta["mayHaveWrittenFiles"] = true;
                     var native = name.Length == 0 ? tags.Export(dir) : tags.Export(dir, name);
                     meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["directoryListing"] =
@@ -106,6 +111,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                         throw new ArgumentException("fileName applies to a single module export (HmiScriptModule.Export(dir, name)); the composition export " +
                         "names files itself.");
                     if (dryRun) return "Unified script module export preview; no file written.";
+                    if (module == null && (int)meta["moduleCountBefore"]! == 0)
+                    {
+                        meta["files"] = new HmiArray();
+                        return "No script modules to export. No file written.";
+                    }
                     dir.Create(); meta["mayHaveWrittenFiles"] = true;
                     var native = module == null ? modules.Export(dir) : name.Length == 0 ? module.Export(dir) : module.Export(dir, name);
                     meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["directoryListing"] =

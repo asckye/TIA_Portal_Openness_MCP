@@ -37,6 +37,21 @@ public sealed class RoundTwoRegressionTests
         Assert.Equal(supported ? 1 : 0, inner.Unsettled.Snapshot().Count);
     }
 
+    [Theory, MemberData(nameof(VerifiedImportOutcomeTests.Releases), MemberType = typeof(VerifiedImportOutcomeTests))]
+    public async Task Explicit_no_change_reply_does_not_taint_the_next_rejection(string release)
+    {
+        const string name = "BuildProjectScaffold";
+        using var worker = new FlowWorker(name, false, false, release, unchanged: true);
+        var inner = Tool(worker, release, name);
+        var tool = new FoundationV4Tool(inner, release, () => new(false, 1));
+        var body = (await tool.InvokeAsync(Request(name, Arguments(name, tool.ProtocolTool.InputSchema)))).StructuredContent!;
+        Assert.Equal(2, worker.Mutations);
+        Assert.NotEqual("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.False((bool?)body["data"]?["earlierMutationMayHaveChanged"] ?? false);
+        Assert.Empty(inner.Unsettled.Snapshot());
+    }
+
     public static IEnumerable<object[]> FirstRefusals()
     {
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
@@ -135,7 +150,7 @@ public sealed class RoundTwoRegressionTests
         DispatchProxy.Create<IMcpServer, WorkerRobustnessTests.ServerProxy>()) {
             Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
 
-    private sealed class FlowWorker(string tool, bool timeout, bool firstRefusal, string release, bool collectedSourceRefusal = false)
+    private sealed class FlowWorker(string tool, bool timeout, bool firstRefusal, string release, bool collectedSourceRefusal = false, bool unchanged = false)
         : IFoundationWorker
     {
         internal int Mutations;
@@ -163,8 +178,9 @@ public sealed class RoundTwoRegressionTests
                 Mutations++;
                 if (kind == "addDevice") return Task.FromResult<JsonNode?>(new JsonObject {
                     ["Ok"] = true, ["DeviceName"] = "PLC_1", ["Meta"] = new JsonObject { ["success"] = true } });
-                return Task.FromResult<JsonNode?>(new JsonObject { ["Message"] = "Fixture completed.",
-                    ["Meta"] = new JsonObject { ["success"] = true } });
+                var reply = new JsonObject { ["Message"] = "Fixture completed.", ["Meta"] = new JsonObject { ["success"] = true } };
+                if (unchanged) reply["MayHaveChanged"] = false;
+                return Task.FromResult<JsonNode?>(reply);
             }
             throw new InvalidOperationException("Unexpected fixture operation: " + operation);
         }

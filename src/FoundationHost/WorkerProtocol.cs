@@ -2,11 +2,12 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcp.FoundationHost;
 
-internal sealed class WorkerOperationException(string message,int code,string outcome,string? evidenceJson = null) : Exception(message)
+internal sealed class WorkerOperationException(string message,int code,string outcome,string? evidenceJson = null)
+    : Exception(message), TiaMcp.Adapters.Contracts.IWorkerFailureEvidence
 {
     internal int Code { get; }=code;
     internal string Outcome { get; }=outcome;
-    internal string? EvidenceJson { get; }=evidenceJson;
+    public string? EvidenceJson { get; }=evidenceJson;
     internal string? Parameter { get; }=ParameterFrom(evidenceJson);
     internal string? ExceptionType { get; }=FieldFrom(evidenceJson, "exceptionType");
     internal string? Condition { get; }=FieldFrom(evidenceJson, "condition");

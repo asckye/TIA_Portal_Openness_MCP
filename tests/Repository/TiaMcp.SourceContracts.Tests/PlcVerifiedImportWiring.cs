@@ -8,6 +8,18 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class PlcVerifiedImportWiring
 {
     [Fact]
+    public void Override_import_and_both_exports_use_the_workflows_phase_independent_consistency_signal()
+    {
+        string source = SourceFamily.Read(Path.Combine(Repository.FindRoot(AppContext.BaseDirectory),
+            "src/Adapters/Native/Plc/PlcVerifiedImportBoundary.cs"));
+        string compact = Regex.Replace(source, @"\s+", "");
+        Assert.Contains("if(!PlcBlockPrimitives.IsConsistent(block))thrownewPlcSoftwareException(\"BlockInconsistent\",", compact,
+            StringComparison.Ordinal);
+        Assert.Contains("ImportOptions.Override)", compact, StringComparison.Ordinal);
+        Assert.Contains("Export=Export,Import=Import", compact, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Lease_release_does_not_index_connectionUnavailable()
     {
         string source = SourceFamily.Read(Path.Combine(Repository.FindRoot(AppContext.BaseDirectory),

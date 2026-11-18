@@ -8,7 +8,7 @@ namespace TiaMcp.Adapters.Contracts
     public sealed class AdapterPreconditionException : InvalidOperationException
     {
         public bool IsArgument { get; }
-        public string? ParamName { get; }
+        public string? ParamName { get; private set; }
         // Explicit precondition code (for example openness-access-denied) reported as PRECONDITION_FAILED details.condition.
         public string? Condition { get; private set; }
 
@@ -17,6 +17,9 @@ namespace TiaMcp.Adapters.Contracts
 
         public static AdapterPreconditionException NotFound(string message, string? parameter = null)
             => new AdapterPreconditionException(message, parameter, false) { Condition = "not-found" };
+
+        public static AdapterPreconditionException Failed(string message, string condition, string parameter)
+            => new AdapterPreconditionException(message, condition: condition, innerException: null) { ParamName = parameter };
 
         public AdapterPreconditionException(string message, string? parameter = null, bool isArgument = true, Exception? innerException = null)
             : base(new ArgumentException(message, parameter).Message, innerException)

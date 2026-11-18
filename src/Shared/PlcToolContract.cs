@@ -112,6 +112,8 @@ namespace TiaMcpServer.ModelContextProtocol
             // The original exception remains in the existing diagnostic log, not the wire data.
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, true, !writes, nativeRead: InvocationJournal.NativeCallIssued);
             var evidence = HostBehavior.FailureEvidence(exception.GetType().Name, exception.Message);
+            if (kind == TiaOpenness.Shared.HostFailureKind.Unknown)
+                evidence = HostBehavior.WorkerReplyEvidence(tool, exception, evidence)!;
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
             return Result(tool, new JsonObject { ["evidence"] = moveEvidence ?? JsonSerializer.SerializeToNode(evidence) },
                 NativeFailureDiagnostics.FromException(HostBehavior.FailureError(kind, parameter, evidence,

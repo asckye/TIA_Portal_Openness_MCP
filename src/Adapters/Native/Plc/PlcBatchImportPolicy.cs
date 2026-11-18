@@ -393,8 +393,11 @@ namespace TiaMcp.Adapters
                         catch(Exception) when(i==0 && !item.Attempted) { throw; }
                         catch(Exception error) /* swallow(native-fallback): a failed recheck after prior imports or an issued import stops the batch and retains recovery evidence */
                         {
-                            bool unknown=item.Attempted && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailureException));
-                            item.Status="failed";item.Failure=unknown ? "native-outcome-uncertain" : item.Attempted ? "native-import-or-verification-failed"
+                            bool absent = item.Attempted && !returned && !request.Overwrite && error.Data["verifiedAbsent"] is true;
+                            item.NativeMessage = error.Data["nativeMessage"] as string;
+                            bool unknown=item.Attempted && !absent && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailureException));
+                            item.Status="failed";item.Failure=absent ? "native-import-refused-absent" : unknown ? "native-outcome-uncertain"
+                                : item.Attempted ? "native-import-or-verification-failed"
                                 : "target-recheck-failed";
                             result.NativeOutcomeUnknown=unknown;
                             stopped=true;

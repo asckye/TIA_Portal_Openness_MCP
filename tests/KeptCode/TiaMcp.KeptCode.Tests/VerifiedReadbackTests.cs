@@ -169,7 +169,9 @@ namespace TiaMcp.Engine.Tests
             using var fixture = new Fixture(Xml(false));
             var preview = fixture.Run(true);
             fixture.Current = fixture.Current.Replace(before, after);
-            Assert.Throws<InvalidOperationException>(() => fixture.Run(false, (string)preview["token"]!));
+            var refusal = Assert.Throws<AdapterPreconditionException>(() => fixture.Run(false, (string)preview["token"]!));
+            Assert.Equal("preview-stale", refusal.Condition);
+            Assert.Equal("previewToken", refusal.ParamName);
             Assert.Equal(0, fixture.Imports);
         }
     }

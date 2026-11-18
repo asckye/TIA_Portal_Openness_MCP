@@ -40,22 +40,48 @@ public sealed class UnifiedObjectServicesAdapterTests
         finally { UnifiedRequestValues.Inputs = previous; }
     }
 
-    private sealed class Session : IUnifiedSession
+    [Fact]
+    public void Refused_native_plant_creation_verifies_the_exact_node_is_absent()
+    {
+        var views = new PlantViews();
+        var session = new Session(views);
+        var result = new UnifiedObjectServicesAdapter(session).ManageUnifiedPlantNode("/View_A", "create", dryRun: false);
+        Assert.Equal(1, views.Attempts);
+        Assert.Empty(views);
+        Assert.Equal(false, result.Meta["mayHaveChanged"]);
+        Assert.Equal("restored", result.Meta["rollbackOutcome"]);
+        Assert.Equal("Plant view creation refused.", result.Meta["nativeMessage"]);
+    }
+
+    private sealed class PlantViews : List<object>
+    {
+        internal int Attempts;
+        public object Create(string name) { Attempts++; throw new InvalidOperationException("Plant view creation refused."); }
+    }
+
+    private sealed class Access : IDisposable { public void Dispose() { } }
+    private sealed class Session(PlantViews? views = null) : IUnifiedSession
     {
         internal int Resolves, EditAccess;
         public object? CurrentProject => null;
         public object? HmiReadFault => null;
         public MigrationPages MigrationPages => throw new InvalidOperationException();
         public object ExactUnifiedRoot(string path) { Resolves++; throw new InvalidOperationException("Unexpected native target resolution."); }
-        public object ExactPlantViews() => throw new InvalidOperationException();
+        public object ExactPlantViews() => views ?? throw new InvalidOperationException();
         public object ResolveHmiSoftwareOrThrow(string path) => ExactUnifiedRoot(path);
         public string UnifiedCollection(string category) => throw new InvalidOperationException();
-        public IDisposable AcquireHmiEditAccess() { EditAccess++; throw new InvalidOperationException("Unexpected edit access."); }
+        public IDisposable AcquireHmiEditAccess()
+        {
+            EditAccess++;
+            return views != null ? new Access() : throw new InvalidOperationException("Unexpected edit access.");
+        }
         public void RecordHmiReadFault(HmiObject meta) => throw new InvalidOperationException();
         public HmiMessage RunHmiStepTool(string tool, Func<HmiObject, string> action, bool requiresProject = true)
         {
             var meta = new HmiObject();
-            return new HmiMessage { Message = action(meta), Meta = meta };
+            var message = views == null ? action(meta) : TiaMcp.Adapters.Native.Engineering.EngineeringWriteJournal.RunReported(meta, () => action(meta),
+                error => error.Message);
+            return new HmiMessage { Message = message, Meta = meta };
         }
     }
 }

@@ -219,6 +219,55 @@ namespace TiaMcp.Logic.V4
             return evidence;
         }
 
+        internal static IReadOnlyDictionary<string, JsonElement> ScriptImportEvidence(JsonObject meta)
+        {
+            // Worker messages and nested diagnostics can contain script text.
+            var retained = new JsonObject();
+            foreach (var key in new[] { "phase", "importAttempted", "importReturned", "scriptCountAfterImport", "moduleExistsAfterImport",
+                "nativeExceptionType", "mayHaveChanged", "writeOutcomeUnknown", "rollbackCompleted" })
+                if (meta[key] is JsonValue value) retained[key] = value.DeepClone();
+            if (meta["candidateDirectory"] is JsonValue) retained["candidateDirectory"] = "<path>";
+            if (meta["candidateDirectoryRelativeToTemp"] is JsonValue locator && locator.TryGetValue<string>(out var relative))
+                retained["candidateDirectoryRelativeToTemp"] = System.IO.Path.IsPathRooted(relative) ? "<path>" : relative;
+            return NativeFailureDiagnostics.Evidence(JsonSerializer.SerializeToElement(retained)).EnumerateObject()
+                .ToDictionary(field => field.Name, field => field.Value, StringComparer.Ordinal);
+        }
+
+        internal static IReadOnlyDictionary<string, JsonElement>? WorkerReplyEvidence(string tool, Exception error,
+            IReadOnlyDictionary<string, JsonElement>? initial = null)
+        {
+            for (Exception? cause = error; cause != null; cause = cause.InnerException)
+            {
+                if (cause is not TiaMcp.Adapters.Contracts.IWorkerFailureEvidence { EvidenceJson: string json }) continue;
+                JsonObject? reply;
+                try { reply = JsonNode.Parse(json) as JsonObject; }
+                catch (JsonException) /* swallow(parse-fallback): malformed optional evidence cannot replace the original failure */ { continue; }
+                if (reply == null) continue;
+                if (tool == "SetUnifiedGlobalScript")
+                    return ScriptImportEvidence((reply["Value"] as JsonObject)?["Meta"] as JsonObject ?? reply["Meta"] as JsonObject ?? reply);
+                var retained = new JsonObject();
+                void Collect(JsonObject? source)
+                {
+                    if (source == null) return;
+                    foreach (string key in new[] { "nativeMessage", "phase", "cleanupRequired", "restored", "recoveryDirectory" })
+                        if (source[key] is { } value) retained[key] = value.DeepClone();
+                }
+                Collect(reply);
+                foreach (var owner in new[] { reply, reply["Value"] as JsonObject, reply["Step"] as JsonObject, reply["Import"] as JsonObject,
+                      reply["Observation"] as JsonObject })
+                {
+                    Collect(owner?["Meta"] as JsonObject);
+                    Collect((owner?["Failure"] as JsonObject)?["Evidence"] as JsonObject);
+                }
+                if (retained.Count == 0) continue;
+                SanitizeEvidence(retained);
+                var result = initial?.ToDictionary(p => p.Key, p => p.Value) ?? new Dictionary<string, JsonElement>();
+                foreach (var pair in retained) result[pair.Key] = JsonSerializer.SerializeToElement(pair.Value);
+                return result;
+            }
+            return tool == "SetUnifiedGlobalScript" ? new Dictionary<string, JsonElement>() : initial;
+        }
+
         internal static Error? ExpectedProjectArgument(string? expectedProject)
         {
             if (expectedProject == null || expectedProject.IndexOfAny(new[] { '/', '\\', ':' }) < 0) return null;

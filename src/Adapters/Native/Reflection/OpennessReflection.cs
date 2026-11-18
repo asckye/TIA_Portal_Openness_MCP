@@ -212,6 +212,9 @@ namespace TiaMcp.Adapters.Reflection
                 }
             }
 
+            object? originalNumber = null;
+            var block = resultKind.Equals("Block", StringComparison.OrdinalIgnoreCase) && methodName == "SetAttribute"
+                && argValues.Count == 2 && Equals(argValues[0], "Number") ? instance as Siemens.Engineering.IEngineeringObject : null;
             bool invocationAttempted = false;
             try
             {
@@ -227,6 +230,7 @@ namespace TiaMcp.Adapters.Reflection
                     };
                 }
 
+                if (block != null) originalNumber = binding.OriginalNumber;
                 invocationAttempted = true;
                 var result = binding.Method.Invoke(instance, binding.Arguments);
 
@@ -255,11 +259,24 @@ namespace TiaMcp.Adapters.Reflection
             }
             catch (TargetInvocationException tie)
             {
+                var reason = tie.GetBaseException().Message;
+                var meta = ReflectionSession.Meta(false, ("invocationAttempted", invocationAttempted), ("nativeMessage", reason),
+                    ("phase", "invoke"), ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT"));
+                if (originalNumber is byte or sbyte or short or ushort or int or uint or long or ulong && invocationAttempted)
+                {
+                    try
+                    {
+                        if (Equals(block!.GetAttribute("Number"), originalNumber))
+                        {
+                            meta["mayHaveChanged"] = false;
+                            meta["apiCallSuccess"] = false;
+                        }
+                    }
+                    catch (Exception) { /* swallow(probe-optional): an unavailable readback leaves the attempted write uncertain */ }
+                }
                 return new OpennessObservation
                 {
-                    Message = tie.InnerException?.Message ?? tie.Message,
-                    Meta = ReflectionSession.Meta(false, ("invocationAttempted", invocationAttempted),
-                        ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT")),
+                    Message = reason, Meta = meta,
                     ObjectKind = resultKind,
                     ObjectPath = resultPath
                 };
@@ -270,6 +287,7 @@ namespace TiaMcp.Adapters.Reflection
                 {
                     Message = ex.Message,
                     Meta = ReflectionSession.Meta(false, ("invocationAttempted", invocationAttempted),
+                        ("nativeMessage", ex.GetBaseException().Message), ("phase", "invoke"),
                         ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT")),
                     ObjectKind = resultKind,
                     ObjectPath = resultPath

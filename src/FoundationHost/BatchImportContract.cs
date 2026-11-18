@@ -66,6 +66,9 @@ internal static class BatchImportContract
                 }
             }
             Object(planned);Hash(Text(item,"InputSha256"));var status=Text(item,"Status");var attempted=Flag(item,"Attempted");var failure=Text(item,"Failure");
+            if (failure == "native-import-refused-absent" && (!attempted || returned.Count != 0 || status != "failed"
+                || (string?)item["Action"] != "create" || item["Replaced"] != null || string.IsNullOrWhiteSpace((string?)item["NativeMessage"])))
+                throw new InvalidDataException("Invalid readback evidence for refused block creation.");
             foreach(var actual in returned) {
                 if(actual==null && status=="failed" && attempted) continue;if(actual is not JsonObject obj)
                     throw new InvalidDataException("Malformed returned identity.");Object(obj,status!="failed");
@@ -94,7 +97,7 @@ internal static class BatchImportContract
             }
             else if(status=="failed") {
                 if(failed
-                        || (attempted ? failure is not ("native-outcome-uncertain" or "native-import-or-verification-failed")
+                        || (attempted ? failure is not ("native-outcome-uncertain" or "native-import-or-verification-failed" or "native-import-refused-absent")
                             : failure is not ("target-recheck-failed" or "backup-failed")))
                     throw new InvalidDataException("Invalid failure sequence.");failed=true;failures++;
             }
@@ -121,7 +124,8 @@ internal static class BatchImportContract
             throw new InvalidDataException("Restored summary disagrees with item evidence.");
         if(result["RemainingChanged"] is JsonArray remaining && !JsonNode
                 .DeepEquals(remaining,
-                    new JsonArray(items.Where(x=>(bool?)x?["Attempted"]==true && (string?)x?["RestoreStatus"]!="restored").Select(x=>x!["Planned"]!.DeepClone())
+                    new JsonArray(items.Where(x=>(bool?)x?["Attempted"]==true && (string?)x?["RestoreStatus"]!="restored"
+                        && (string?)x?["Failure"]!="native-import-refused-absent").Select(x=>x!["Planned"]!.DeepClone())
                         .ToArray())))
             throw new InvalidDataException("Remaining-change summary disagrees with item evidence.");
         if(result["Failed"] is not JsonArray failedItems || failedItems.Count!=failures)

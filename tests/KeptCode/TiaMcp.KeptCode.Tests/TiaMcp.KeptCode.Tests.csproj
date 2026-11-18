@@ -19,6 +19,7 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedScreenItemsAdapter.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedEngineeringAdapter.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedObjectServicesAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/AlarmWorkbookReadback.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedMultilingualText.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedHmiAccess.cs" />

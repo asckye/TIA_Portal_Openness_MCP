@@ -109,7 +109,7 @@ namespace TiaMcp.Adapters.Native.Online
             OnlineTransitionPolicy.RequireAddress(ipAddress, nameof(ipAddress));
             TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
             rhTarget = TiaMcp.Adapters.Contracts.EngineeringCredentialRules.ValidateRhTarget(rhTarget);
-            var meta = new HmiObject { ["trustDeviceCertificate"] = trustDeviceCertificate };
+            var meta = new HmiObject { ["trustDeviceCertificate"] = trustDeviceCertificate, ["writeAttempted"] = false };
             // 未连接工程或路径无效时，在线状态未经测量，不能报告为 Offline。
             if (_session.IsProjectNull())
             {
@@ -148,8 +148,10 @@ namespace TiaMcp.Adapters.Native.Online
                     catch (Exception ex) { rhApplyError = ex.GetBaseException().Message; }
                     var rhRefusal = OnlineTransitionPolicy.RouteApplyRefusal(true, rhApplied, rhApplyError, ipAddress!);
                     if (rhRefusal != null) throw new InvalidOperationException(rhRefusal);
+                    meta["writeAttempted"] = true;
                     OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup();
 #else
+                    meta["writeAttempted"] = true;
                     OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary(rhAddress) : rh.GoOnlineToBackup(rhAddress);
 #endif
                     var rhName = OnlineTransitionPolicy.WaitWhileConnecting(rhState.ToString(),
@@ -165,8 +167,10 @@ namespace TiaMcp.Adapters.Native.Online
                 if (provider == null)
                 {
                     // 缺少在线服务时状态未知，不能报告为已确认离线。
+                    LegacyResponseMetadata.Complete(meta, false);
                     return new OnlineStateResult
                     {
+                        Meta = meta,
                         State = "Unknown",
                         IsOnline = false,
                         IsReachable = false,
@@ -215,6 +219,7 @@ namespace TiaMcp.Adapters.Native.Online
                 }
                 routeNote = " Route: " + selection.Description + ".";
 
+                meta["writeAttempted"] = true;
                 OnlineState resultState;
 #if !ONLINE_ADDRESS_OVERLOAD
                 resultState = provider.GoOnline();
@@ -246,6 +251,8 @@ namespace TiaMcp.Adapters.Native.Online
                 string stateNow = "";
                 try { stateNow = _session.ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware)?.State.ToString() ?? ""; } catch (Exception) { /* swallow(probe-optional): a failed state probe must preserve the original GoOnline failure */ }
                 meta["success"] = false; meta["error"] = string.Join(" <- ", chain);
+                meta["nativeMessage"] = meta["error"];
+                meta["phase"] = meta["writeAttempted"] is true ? "goOnline" : "routeSelection";
                 if (stateNow.Length > 0) meta["onlineStateAfter"] = stateNow;
                 var hint = stateNow == "Incompatible"
                     ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadPlc), then go online." : "";

@@ -9,6 +9,13 @@ namespace TiaMcp.Adapters.Hardware
     // channels, addressing, device user groups, device users, port interconnections). No Siemens.Engineering dependency.
     internal static class HardwareNetworkPolicy
     {
+        internal static void RequireStandardTransferAreaMode(bool isIoDevice)
+        {
+            if (!isIoDevice)
+                throw AdapterPreconditionException.Failed("Standard transfer area creation requires I-device mode on the selected interface.",
+                    "i-device-interface", "itemPath");
+        }
+
         // Dynamic attributes named in the official chapters ("Functions on networks" / "Functions on device items").
         // Presence is decided by TIA at runtime; every read is captured per attribute, never assumed.
         internal static readonly string[] IoSystemAttributes = {

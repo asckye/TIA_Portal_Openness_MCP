@@ -13,6 +13,43 @@ namespace TiaMcp.Engine.Tests
         public CallerInputFilesTests() => Directory.CreateDirectory(root);
         public void Dispose() => Directory.Delete(root, true);
 
+        [Fact]
+        public void Alarm_readback_compares_worksheet_data_and_ignores_package_timestamps()
+        {
+            var repo = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+            var source = Path.Combine(repo, "tests", "FoundationHost", "TiaMcp.ToolPipeline.Tests", "Fixtures", "TableExchange", "inline-text.xlsx");
+            var file = Path.Combine(root, "alarm-readback.xlsx");
+            File.Copy(source, file);
+            var before = TiaMcp.Adapters.Native.Plc.AlarmWorkbookReadback.Parts(file);
+            Assert.NotNull(before);
+            using (var archive = System.IO.Compression.ZipFile.Open(file, System.IO.Compression.ZipArchiveMode.Update))
+                archive.GetEntry("xl/worksheets/sheet1.xml")!.LastWriteTime = DateTimeOffset.UtcNow.AddYears(-1);
+            Assert.Equal(before, TiaMcp.Adapters.Native.Plc.AlarmWorkbookReadback.Parts(file));
+            using (var archive = System.IO.Compression.ZipFile.Open(file, System.IO.Compression.ZipArchiveMode.Update))
+            {
+                var entry = archive.GetEntry("xl/worksheets/sheet1.xml")!;
+                string xml;
+                using (var reader = new StreamReader(entry.Open())) xml = reader.ReadToEnd();
+                entry.Delete();
+                using var writer = new StreamWriter(archive.CreateEntry("xl/worksheets/sheet1.xml").Open());
+                writer.Write(xml.Replace("</t>", " changed</t>"));
+            }
+            Assert.NotEqual(before, TiaMcp.Adapters.Native.Plc.AlarmWorkbookReadback.Parts(file));
+        }
+
+        [Theory]
+        [InlineData("SW.Tags.PlcTagTable")]
+        [InlineData("SW.Blocks.FC")]
+        public void Technology_import_hashing_refuses_another_native_document_kind(string element)
+        {
+            string file = Path.Combine(root, "MCP_B5_Input.xml");
+            File.WriteAllText(file, "<Document><" + element + " ID='0'><AttributeList><Name>FC_A</Name></AttributeList></" + element + "></Document>");
+            var error = Assert.Throws<AdapterPreconditionException>(() =>
+                TiaMcp.Logic.V4.CallerInputFiles.Snapshot("ImportTechnologyObject", new JsonObject { ["importPath"] = file }));
+            Assert.True(error.IsArgument);
+            Assert.Equal("importPath", error.ParamName);
+        }
+
         [Theory]
         [InlineData("", true)]
         [InlineData("a/b", true)]

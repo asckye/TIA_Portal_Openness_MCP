@@ -116,8 +116,18 @@ namespace TiaMcp.Adapters.Native.Plc
                         "Inspect all returned names.");
                     var readbackDir = Directory.CreateDirectory(Path.Combine(directoryPath, "tia-readback-" + Guid.NewGuid().ToString("N")));
                     meta["mayHaveWrittenFiles"] = true; meta["readbackDirectory"] = readbackDir.FullName;
-                    var readback = InvocationJournal
-                        .Native("ScopedBlock.verifyExport", () => group.Blocks.Find(imported[0]).ExportAsDocuments(readbackDir, name));
+                    DocumentExportResult readback;
+                    try
+                    {
+                        readback = InvocationJournal.Native("ScopedBlock.verifyExport",
+                            () => group.Blocks.Find(imported[0]).ExportAsDocuments(readbackDir, name));
+                    }
+                    catch (Exception error)
+                    {
+                        meta["readbackWarning"] = error.GetBaseException().Message;
+                        meta["dataComplete"] = false;
+                        return "Block documents imported and existence verified. Verification export failed.";
+                    }
                     meta["verificationResult"] = DocumentExportRow(readback);
                     if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(readback.State))
                         throw new InvalidOperationException("Import succeeded, but verification export failed.");

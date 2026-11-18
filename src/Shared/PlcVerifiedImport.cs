@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -27,13 +28,24 @@ namespace TiaMcpServer.ModelContextProtocol
             return value.GetString();
         }
 
+        public static string CandidateName(string xml) => Candidate(() => PlcDocumentEditing.Name(PlcDocumentEditing.Parse(xml)));
+
+        private static T Candidate<T>(Func<T> read)
+        {
+            try { return read(); }
+            catch (Exception error) when (error is ArgumentException or System.Xml.XmlException or InvalidOperationException)
+            { throw new AdapterPreconditionException(error.Message, "importPath"); }
+        }
+
         public static string Execute(string candidateXml, string binding, string evidenceRoot, bool dryRun, string expectedToken,
             Action<string> export, Action<string> import, Action verifyBinding, JsonObject meta, Action? compile = null)
         {
             meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["operationSuccess"] = false;
             meta["verificationSuccess"] = false; meta["automaticRollback"] = false; meta["compileRequested"] = compile != null;
-            PlcDocumentEditing.Parse(candidateXml);
-            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview previewToken is required.");
+            meta["phase"] = "plan";
+            CandidateName(candidateXml);
+            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken))
+                throw new AdapterPreconditionException("Preview previewToken is required.", "previewToken");
             if (!Path.IsPathRooted(evidenceRoot)) throw new ArgumentException("Absolute evidence directory required.");
             var root = new DirectoryInfo(Path.GetFullPath(evidenceRoot));
             for (var p = root; p != null; p = p.Parent)
@@ -44,11 +56,15 @@ namespace TiaMcpServer.ModelContextProtocol
             var beforePath = Path.Combine(folder, "before.xml");
             var plannedPath = Path.Combine(folder, "planned.xml");
             var afterPath = Path.Combine(folder, "after.xml");
-            meta["phase"] = "exportBefore"; verifyBinding(); export(beforePath);
+            meta["phase"] = "exportBefore"; verifyBinding();
+            try { export(beforePath); }
+            catch (PlcSoftwareException error) when (error.Code == "BlockInconsistent")
+            { throw AdapterPreconditionException.Failed(error.Message, "block-inconsistent", "blockPath"); }
+            meta["phase"] = "plan";
             var before = PlcDocumentEditing.Read(beforePath);
             meta["backup"] = new JsonObject { ["path"] = beforePath, ["sha256"] = PlcDocumentEditing.Hash(File.ReadAllBytes(beforePath)) };
             var preserved = new JsonArray();
-            var planned = PlcDocumentEditing.PrepareImport(before, candidateXml, preserved);
+            var planned = Candidate(() => PlcDocumentEditing.PrepareImport(before, candidateXml, preserved));
             var expected = PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(planned));
             var tokenData = new JsonObject { ["session"] = Session, ["binding"] = binding, ["compileRequested"] = compile != null,
                 ["before"] = PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(before)), ["planned"] = expected };
@@ -68,8 +84,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["phase"] = "preview"; meta["operationSuccess"] = true;
                 return "Preview and original backup retained. Inspect planned.xml; apply the same candidate and token to overwrite.";
             }
+            meta["phase"] = "tokenCheck";
             if (!string.Equals(token, expectedToken, StringComparison.Ordinal))
-                throw new InvalidOperationException("Preview no longer matches binding/current block/candidate. No import attempted.");
+            {
+                meta["tokenInputs"] = new JsonObject {
+                    ["binding"] = PlcDocumentEditing.HashText(binding), ["before"] = PlcDocumentEditing.HashText((string)tokenData["before"]!),
+                    ["planned"] = meta["plannedFingerprint"]!.DeepClone() };
+                throw AdapterPreconditionException.Failed("Preview no longer matches binding/current block/candidate. No import attempted.",
+                    "preview-stale", "previewToken");
+            }
             verifyBinding();
             meta["phase"] = "import"; meta["mayHaveChanged"] = true;
             meta["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = binding, ["restoreFrom"] = beforePath,

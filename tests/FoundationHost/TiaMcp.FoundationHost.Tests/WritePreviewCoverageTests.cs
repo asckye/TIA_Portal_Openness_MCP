@@ -1418,6 +1418,12 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             // Use the maintained SIMATIC XML fixture for the file contents.
             string xml = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
                 "templates", "mcp-full-e2e-verify", "import", "MCP_E2E_Tags.xml");
+            if (tool == "ImportTechnologyObject")
+            {
+                xml = Path.Combine(root, "MCP_B5_Axis.xml");
+                File.WriteAllText(xml, "<Document><SW.TechnologicalObjects.TechnologicalInstanceDB ID='0'><AttributeList><Name>MCP_B5_Axis</Name>" +
+                    "</AttributeList></SW.TechnologicalObjects.TechnologicalInstanceDB></Document>");
+            }
             if (arguments.ContainsKey("importPath")) arguments["importPath"] = xml;
             var inputDirectories = new[] { "dir", "referenceDir", "libraryPath" }.Concat(
                 TiaMcp.Logic.V4.CanonicalToolParameters.Aliases(tool)

@@ -5,6 +5,13 @@ namespace TiaMcp.Adapters.Contracts;
 
 public static class OptionalProductCapabilities
 {
+    public static void RequireArchivePlc(bool isCpu, bool integrated)
+    {
+        if (!isCpu || !integrated)
+            throw AdapterPreconditionException.Failed("Archive requires the integrated PLC of a SINUMERIK station.",
+                "sinumerik-integrated-plc", "itemPath");
+    }
+
     public static string? Unsupported(string release, string tool, string category = "", string kind = "", string action = "",
         string executionMode = "", string password = "")
     {

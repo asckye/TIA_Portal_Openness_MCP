@@ -250,7 +250,10 @@ namespace TiaMcp.Adapters
                 }
                 if (!meta.TryGetValue("nativeMessage", out var nativeMessage) || nativeMessage == null)
                     meta["nativeMessage"] = ex.GetBaseException().Message;
-                reply.OutcomeUnknown = writing && (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)
+                if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)) meta["connectionUnavailable"] = true;
+                MutationEvidence.RecordStepFailure(ex, meta);
+                reply.OutcomeUnknown = writing && !MutationEvidence.ProvesNoMutation(meta)
+                    && (meta.TryGetValue("connectionUnavailable", out var lost) && lost is true
                     || reply.MayHaveChanged && !meta.ContainsKey("after")
                         && !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial"));
                 if (reply.OutcomeUnknown) { meta["writeOutcomeUnknown"] = true; }

@@ -92,6 +92,7 @@ namespace TiaMcp.Adapters
                 meta["sourceFile"] = HardwareAmlPolicy.Verify(source); meta["plannedLogFile"] = log.FullName;
                 meta["deviceCountBefore"] = EnumerateAllDevices().Count();
                 if (dryRun) return "CAx/AutomationML import preview; source hashed, nothing imported.";
+                meta["phase"] = "import";
                 try
                 {
 #if PLC_CAX_TRANSFER_RESULT

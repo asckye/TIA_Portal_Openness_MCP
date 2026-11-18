@@ -178,7 +178,8 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (Flag(data, "mayHaveChanged") == false || Flag(data, "writeAttempted") == false)
             {
                 outcome = Outcome.RejectedBeforeOperation; error =
-                    new Error("The operation did not pass its preconditions.", new PreconditionFailedDetails("runtime-before-write", null));
+                    new Error(HostBehavior.SafeDiagnostic((string?)raw["message"]) ?? "The operation did not pass its preconditions.",
+                        new PreconditionFailedDetails("runtime-before-write", null));
             }
             else { outcome = Outcome.Unknown; error = Failure(true); }
 

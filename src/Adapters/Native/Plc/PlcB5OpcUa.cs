@@ -225,17 +225,23 @@ namespace TiaMcp.Adapters.Native.Plc
                     };
 
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
-                PlcB5Scalar.TryInvokeMethodByName(item, "Export", new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath)));
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(exportPath));
+                EngineeringGroupOperations.Call(item, "Export", new[] { typeof(FileInfo) }, file);
+                var verified = NativeFileOutput.Verify(file);
                 return new PlcB5Reply
                 {
                     Message = $"{interfaceType} '{interfaceName}' exported to '{exportPath}'.",
-                    Meta = new PlcB5Object { ["exportPath"] = exportPath }
+                    Meta = ResponseMeta.Unstamped(true, ("exportPath", exportPath), ("file", verified), ("mayHaveChanged", false),
+                        ("mayHaveWrittenFiles", true), ("action", "export"))
                 };
             }
             catch (Exception ex)
             {
                 _session.RecordExportFailure(ex);
-                return new PlcB5Reply { Message = $"Export failed: {ex.Message}" };
+                string reason = ex.GetBaseException().Message;
+                return new PlcB5Reply { Message = $"Export failed: {reason}",
+                    Meta = ResponseMeta.Unstamped(false, ("action", "export"), ("apiCallSuccess", false),
+                    ("mayHaveChanged", false), ("mayHaveWrittenFiles", File.Exists(exportPath)), ("nativeMessage", reason)) };
             }
         }
 

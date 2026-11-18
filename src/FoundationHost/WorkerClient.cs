@@ -57,16 +57,32 @@ internal interface IFoundationSessionWorker : IFoundationWorker
 
 internal static class FoundationWorkerRequest
 {
-    private static readonly AsyncLocal<(string Id, string Name)?> Current = new();
+    private static readonly AsyncLocal<Scope?> Current = new();
     internal static string CorrelationId => Current.Value?.Id ?? TiaOpenness.Shared.AuditInvocation.CurrentRequestId
         ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CurrentCallId ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId;
     internal static string? ToolName => Current.Value?.Name ?? TiaMcpServer.ModelContextProtocol.InvocationJournal.CurrentTool;
-    internal static IDisposable Use(string id, string name)
+    internal static Scope Use(string id, string name) => Current.Value = new Scope(id, name, Current.Value);
+
+    internal sealed class Scope(string id, string name, Scope? previous) : IDisposable
     {
-        var previous = Current.Value; Current.Value = (id, name);
-        return new Scope(() => Current.Value = previous);
+        internal string Id => id;
+        internal string Name => name;
+        internal bool StatusUnavailable { get; set; }
+        public void Dispose() => Current.Value = previous;
     }
-    private sealed class Scope(Action restore) : IDisposable { public void Dispose() => restore(); }
+
+    internal static async Task<bool> RefreshAfterReply(Func<Task> refresh, Action invalidate)
+    {
+        try { await refresh().ConfigureAwait(false); return true; }
+        catch (Exception error) when (error is ChannelFailureException or IOException or TimeoutException or JsonException or InvalidOperationException
+            or OperationCanceledException)
+        {
+            invalidate();
+            if (Current.Value is { } scope) scope.StatusUnavailable = true;
+            TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(CorrelationId, "worker:post-call status", "THREW", error.GetType().Name);
+            return false;
+        }
+    }
     internal static async Task<string> Dispatch(ChannelClient channel, string method, string args, BindingChange change,
         bool readOnly, TimeSpan timeout, bool firstAttach, Action<JsonObject> onRunning, Task<JsonObject>? dialogReported, CancellationToken token,
         Action<Task<string>>? onDrain = null)
@@ -453,39 +469,52 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                     if (!Faulted && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc =
                         startBeforeAttach;
             }
+            bool statusAvailable = true;
             if (change == BindingChange.MayAdvance && operation != "Disconnect" && channel.BindingEpoch > epochBefore)
             {
                 unansweredHostProbe = true;
-                string stateWire = await channel.CallAsync("adapter.ReadState", "{}", BindingChange.None, true,
-                    timeouts.For("status"), CancellationToken.None);
-                var state = JsonNode.Parse(stateWire)!.AsObject();
-                lock (stateSync)
-                {
-                    attachedProcessId = (int?)state["ProcessId"];
-                    ClearHostBinding();
-                    UpdateApprovalIdentity(state);
-                    CacheRuntimeState(state);
-                    hostProcessStartUtc = !Faulted && attachedProcessId.HasValue ? ProcessStartUtc(attachedProcessId.Value) : null;
-                    ownsPortal = (bool?)state["CanDetachOnUncertainShutdown"] == false || (bool?)state["OwnsPortal"] == true;
-                }
+                statusAvailable = await FoundationWorkerRequest.RefreshAfterReply(async () => {
+                    string stateWire = await channel.CallAsync("adapter.ReadState", "{}", BindingChange.None, true,
+                        timeouts.For("status"), CancellationToken.None);
+                    var state = JsonNode.Parse(stateWire)!.AsObject();
+                    lock (stateSync)
+                    {
+                        attachedProcessId = (int?)state["ProcessId"];
+                        ClearHostBinding();
+                        UpdateApprovalIdentity(state);
+                        CacheRuntimeState(state);
+                        hostProcessStartUtc = !Faulted && attachedProcessId.HasValue ? ProcessStartUtc(attachedProcessId.Value) : null;
+                        ownsPortal = (bool?)state["CanDetachOnUncertainShutdown"] == false || (bool?)state["OwnsPortal"] == true;
+                    }
+                }, () => {
+                    lock (stateSync)
+                    {
+                        ClearHostBinding();
+                        attachedProcessId = null;
+                        rebindTarget = null;
+                        approvalIdentity = new JsonObject();
+                    }
+                });
             }
             if (operation == "ReadState" && result is JsonObject cachedState)
                 lock (stateSync) CacheRuntimeState(cachedState);
             RememberRebindTarget(operation, arguments, result);
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
-            if (!settling && SharedSession && !WorkerOperations.IsIndependentRuntime(operation))
+            if (statusAvailable && !settling && SharedSession && !WorkerOperations.IsIndependentRuntime(operation))
             {
                 unansweredHostProbe = true;
-                var statusWire = await channel
-                    .CallAsync("adapter.HostObserve", "{\"operation\":\"status\",\"arguments\":{}}", BindingChange.None, true, timeouts.For("status"),
-                        CancellationToken.None);
-                var status = JsonNode.Parse(statusWire)!.AsObject();
-                CacheSharedStatus(status);
+                statusAvailable = await FoundationWorkerRequest.RefreshAfterReply(async () => {
+                    var statusWire = await channel
+                        .CallAsync("adapter.HostObserve", "{\"operation\":\"status\",\"arguments\":{}}", BindingChange.None, true, timeouts.For("status"),
+                            CancellationToken.None);
+                    var status = JsonNode.Parse(statusWire)!.AsObject();
+                    CacheSharedStatus(status);
+                }, () => { lock (stateSync) sharedStatus = null; });
             }
             if (token.IsCancellationRequested) TiaMcpServer.ModelContextProtocol.InvocationJournal
                 .Write(activeRequestId!, operation, "RETURNED_AFTER_CANCELLATION");
-            unansweredHostProbe = false;
+            unansweredHostProbe = !statusAvailable;
             return result;
         }
         catch(Exception ex)

@@ -138,6 +138,8 @@
     <Compile Include="../../../src/FoundationHost/V17ProjectEnvelope.cs" Link="V17ProjectEnvelope.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../../../src/PlcWorker/FoundationProcessLease.cs" Link="FoundationProcessLease.cs" />
+    <Compile Include="../../../src/PlcWorker/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
+    <Compile Include="../../../src/Shared/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerJson.cs" Link="WorkerJson.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerFailurePolicy.cs" Link="WorkerFailurePolicy.cs" />

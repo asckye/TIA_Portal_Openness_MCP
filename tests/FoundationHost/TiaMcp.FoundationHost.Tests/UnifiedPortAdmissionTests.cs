@@ -1105,7 +1105,8 @@ public sealed class UnifiedPortAdmissionTests
         arguments["dryRun"] = false;
         arguments["expectedPlanHash"] = preview["data"]!["planHash"]!.DeepClone();
         arguments["expectedProjectFile"] = "C:/fixture.ap21";
-        var body = (await tool.InvokeAsync(Request(name, arguments))).StructuredContent!;
+        var result = await tool.InvokeAsync(Request(name, arguments));
+        var body = result.StructuredContent!;
         Assert.Equal(1, worker.Applies);
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
         var evidence = body["error"]!["details"]!["evidence"]!;
@@ -1118,6 +1119,9 @@ public sealed class UnifiedPortAdmissionTests
         Assert.False((bool?)evidence["moduleExistsAfterImport"]);
         Assert.Equal("<path>", (string?)evidence["candidateDirectory"]);
         Assert.DoesNotContain("PRIVATE_FIXTURE", body.ToJsonString(), StringComparison.Ordinal);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.DoesNotContain("PRIVATE_FIXTURE", text, StringComparison.Ordinal);
+        Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(text)));
     }
 
     [Fact]
@@ -1145,6 +1149,55 @@ public sealed class UnifiedPortAdmissionTests
             ["readError"] = "PRIVATE_FIXTURE read error", ["failures"] = new[] { new { reason = "PRIVATE_FIXTURE nested reason" } }
         }
     };
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void Unknown_script_import_filters_worker_and_native_text_on_the_HMI_and_ported_failure_paths(bool priorMutation)
+    {
+        const string tool = "SetUnifiedGlobalScript";
+        var reply = JsonSerializer.SerializeToNode(new HmiReply { Value = ScriptReadbackFailure() })!.AsObject();
+        reply["nativeMessage"] = "PRIVATE_FIXTURE outer native diagnostic";
+        reply["Failure"] = new JsonObject { ["Message"] = "PRIVATE_FIXTURE worker failure",
+            ["Evidence"] = new JsonObject { ["nativeMessage"] = "PRIVATE_FIXTURE failure detail" } };
+        var exception = new WorkerOperationException("PRIVATE_FIXTURE worker exception", -32603, "unknown", reply.ToJsonString());
+        exception.Data["workerRecoveryMessage"] = "PRIVATE_FIXTURE recovery diagnostic";
+        if (priorMutation) exception.Data["foundationPriorMutation"] = true;
+        var hmi = Host.HmiInspectionContract.Run(tool, true, true, () => throw exception);
+        var caught = FoundationV4Result.Failure("21", tool, "fixture", true, true, reply, exception);
+        if (priorMutation) Assert.True((bool?)caught.StructuredContent?["data"]?["earlierMutationMayHaveChanged"]);
+        var reconciled = FoundationV4Result.ReconcileWorker(caught, FoundationV4Result.NativeDiagnostics(reply), tool, exception);
+        foreach (var result in new[] { hmi, caught, reconciled })
+        {
+            var body = result.StructuredContent!;
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+            var facts = body["error"]!["details"]!["evidence"]!;
+            Assert.True((bool?)facts["importReturned"]);
+            Assert.Equal("exportAfter", (string?)facts["phase"]);
+            Assert.DoesNotContain("PRIVATE_FIXTURE", body.ToJsonString(), StringComparison.Ordinal);
+            var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+            Assert.DoesNotContain("PRIVATE_FIXTURE", text, StringComparison.Ordinal);
+            Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(text)));
+        }
+    }
+
+    [Fact]
+    public void Unknown_script_import_without_worker_evidence_drops_a_native_exception_message()
+    {
+        const string tool = "SetUnifiedGlobalScript";
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "21");
+        var cause = new IOException("PRIVATE_FIXTURE native exception without worker evidence");
+        cause.Data["recoveryWarning"] = "PRIVATE_FIXTURE recovery warning";
+        foreach (var result in new[] { FoundationV4Result.Failure("21", tool, "fixture", true, true, null, cause),
+            Host.McpServer.TargetFailure(tool, cause, true, """{"dryRun":false}""") })
+        {
+            var body = result.StructuredContent!;
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+            Assert.Empty(body["error"]!["details"]!["evidence"]!.AsObject());
+            Assert.DoesNotContain("PRIVATE_FIXTURE", body.ToJsonString(), StringComparison.Ordinal);
+            var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+            Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(text)));
+        }
+    }
 
     private sealed class ApprovalWorker(bool bound = false, bool failReadback = false) : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {

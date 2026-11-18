@@ -74,7 +74,7 @@ namespace TiaOpenness.Shared
             if (reportedOutcome == "rejected-before-operation")
                 return reportedCode == -32602 ? HostFailureKind.Argument : HostFailureKind.Precondition;
             // Untyped exceptions from an issued write do not prove that nothing changed.
-            if (!dispatched)
+            if (!dispatched || KnownNoMutation(error))
                 return error is OperationCanceledException ? HostFailureKind.Cancelled
                     : error is ArgumentException || reportedCode == -32602 ? HostFailureKind.Argument : HostFailureKind.Precondition;
             if (readOnly && error is OperationCanceledException) return HostFailureKind.Cancelled;

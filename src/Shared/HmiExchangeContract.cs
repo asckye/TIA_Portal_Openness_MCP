@@ -80,7 +80,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 || (evidence["modules"] as JsonArray)?.Count == 500 || (evidence["modulesAfter"] as JsonArray)?.Count == 500
                 || (evidence["directoryListing"] as JsonArray)?.Count == 500 || (evidence["importCandidates"] as JsonArray)?.Count == 200
                 || (evidence["displayNames"] as JsonArray)?.Count == 2000 || (evidence["displayNamesAfter"] as JsonArray)?.Count == 2000;
-            bool unknownWrite = writes && (Flag("writeOutcomeUnknown") == true
+            bool exportOnly = (tool is "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules") && (string?)evidence["action"] == "export"
+                && Flag("mayHaveChanged") == false;
+            bool unknownWrite = writes && !exportOnly && (Flag("writeOutcomeUnknown") == true
                 || Flag("connectionUnavailable") == true
                 || Flag("verifiedAbsent") == false || (success != true && changed && Flag("nativeSuccess") != true)
                 || (success != true && files && Flag("apiCallSuccess") != true && Flag("partialArtifactExists") != true));
@@ -92,6 +94,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 ?? HostBehavior
                     .KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
+            else if (exportOnly && success == false)
+            {
+                outcome = Outcome.Failed;
+                error = HostBehavior.UnchangedNativeError(evidence);
+            }
             else if (status == "HmiReadSessionBlocked")
             {
                 outcome = writes ? Outcome.Unknown : Outcome.ReadFailed;

@@ -172,6 +172,9 @@ namespace TiaMcp.Adapters
                 {
                     if (existing.Any(a => string.Equals(a.Name, name, StringComparison.Ordinal)))
                         throw new InvalidOperationException("Transfer area name already used on this interface: " + name);
+                    var mode = network.InterfaceOperatingMode;
+                    meta["interfaceOperatingMode"] = mode.ToString();
+                    HardwareNetworkPolicy.RequireStandardTransferAreaMode((mode & InterfaceOperatingModes.IoDevice) != 0);
                     meta["requestedName"] = name; meta["requestedType"] = type; meta["requestedPositionNumber"] = positionNumber;
                     if (dryRun) return "Transfer area create preview; nothing changed (type cannot be changed afterwards).";
                     meta["mayHaveChanged"] = true;

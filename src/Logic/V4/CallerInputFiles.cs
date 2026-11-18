@@ -89,6 +89,11 @@ namespace TiaMcp.Logic.V4
                     foreach (string path in paths)
                     {
                         using var stream = NativeInputPolicy.OpenRead(path, input.Parameter);
+                        if (tool == "ImportTechnologyObject" && input.Parameter == "importPath")
+                        {
+                            RequireTechnologyDocument(stream, input.Parameter);
+                            stream.Position = 0;
+                        }
                         using var sha = SHA256.Create();
                         string hash = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
                         string name = input.Directory ? path.Substring(full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Length + 1)
@@ -100,6 +105,29 @@ namespace TiaMcp.Logic.V4
                 inputs.Add(new JsonObject { ["parameter"] = input.Parameter, ["files"] = files });
             }
             return inputs;
+        }
+
+        private static void RequireTechnologyDocument(Stream input, string parameter)
+        {
+            try
+            {
+                using var reader = System.Xml.XmlReader.Create(input, new System.Xml.XmlReaderSettings {
+                    DtdProcessing = System.Xml.DtdProcessing.Prohibit, XmlResolver = null });
+                reader.MoveToContent();
+                bool document = reader.Name == "Document" && reader.NamespaceURI.Length == 0;
+                bool technologyObject = false;
+                while (reader.Read())
+                {
+                    if (reader.NodeType != System.Xml.XmlNodeType.Element || reader.Depth != 1) continue;
+                    if (reader.NamespaceURI.Length == 0 && reader.Name is "Engineering" or "DocumentInfo") continue;
+                    if (technologyObject || reader.NamespaceURI.Length != 0 || reader.Name != "SW.TechnologicalObjects.TechnologicalInstanceDB")
+                        break;
+                    technologyObject = true;
+                }
+                if (document && technologyObject && reader.EOF) return;
+            }
+            catch (System.Xml.XmlException error) { throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(error.Message, parameter); }
+            throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Select a SIMATIC XML export of a technology object.", parameter);
         }
 
         private static IEnumerable<(string Parameter, string Path, bool Directory)> Inputs(string tool, JsonObject arguments)

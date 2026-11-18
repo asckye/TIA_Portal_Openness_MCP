@@ -267,6 +267,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                     Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
             }
+            if (workerRequest.StatusUnavailable) result = FoundationV4Result.WarnStatusUnavailable(result);
             journal?.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
             return result;
         }

@@ -134,7 +134,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     .KnownRefusalWithMessage(evidence, success, HardwareContract.ReleaseKey, tool, nativeMessage, field => McpServer
                         .MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
-            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success, allowWrittenFiles: (string?)evidence["action"] == "export"))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
             else if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
             { outcome = Outcome.Unknown; error = Unknown(); }
@@ -223,6 +223,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var warnings = new List<Warning> { new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) };
             if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
+            if (data?["evidence"]?["readbackWarning"] is JsonValue readback)
+                warnings.Add(new Warning(WarningCode.NativeWarning, HostBehavior.SafeDiagnostic(readback.ToString()) ?? "Verification export failed.",
+                    new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The observation covers only the reported scope and available fields.", new Dictionary<string,
                         JsonElement>()));

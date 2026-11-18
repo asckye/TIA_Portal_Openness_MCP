@@ -111,7 +111,9 @@ namespace TiaMcp.Adapters.Reflection
         {
             internal readonly MethodInfo Method;
             internal readonly object?[] Arguments;
-            internal MethodBinding(MethodInfo method, object?[] arguments) { Method = method; Arguments = arguments; }
+            internal readonly object? OriginalNumber;
+            internal MethodBinding(MethodInfo method, object?[] arguments, object? originalNumber)
+            { Method = method; Arguments = arguments; OriginalNumber = originalNumber; }
             public void Dispose()
             {
                 foreach (var secret in Arguments.OfType<SecureString>()) secret.Dispose();
@@ -130,6 +132,7 @@ namespace TiaMcp.Adapters.Reflection
                     var parameters = method.GetParameters();
                     var converted = new object?[values.Count];
                     bool matches = false;
+                    object? originalNumber = null;
                     try
                     {
                         for (int i = 0; i < values.Count; i++)
@@ -142,6 +145,7 @@ namespace TiaMcp.Adapters.Reflection
                                 var current = instance.GetType().GetMethod("GetAttribute", new[] { typeof(string) })?
                                     .Invoke(instance, new object[] { attribute });
                                 if (current != null) type = current.GetType();
+                                if (attribute == "Number") originalNumber = current;
                             }
                             if (value == null)
                             {
@@ -168,7 +172,7 @@ namespace TiaMcp.Adapters.Reflection
                         if (!matches) foreach (var secret in converted.OfType<SecureString>()) secret.Dispose();
                     }
                     if (!matches) continue;
-                    var binding = new MethodBinding(method, converted);
+                    var binding = new MethodBinding(method, converted, originalNumber);
                     if (selected != null)
                     {
                         binding.Dispose();

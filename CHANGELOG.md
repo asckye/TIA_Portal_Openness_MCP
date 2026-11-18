@@ -12,6 +12,10 @@
 - `GetPlcBlockFingerprints` and `GeneratePlcLoadableFile` report `PRECONDITION_FAILED` with condition `service-not-provided` when the CPU does not supply the registered service. The result identifies the CPU and the owners searched. Loadable-file previews check the service before the output path.
 - A missing parent directory for native adapter output returns `PRECONDITION_FAILED` with the path parameter. Host offline tools report `INVALID_ARGUMENT` for a caller-supplied output path whose parent is missing. A technology-object create rejected for an unavailable type/version reports `technology-type-version-unavailable` after verified rollback.
 - `AnalyzeHmiTemplateReference` reads the items and PLC bindings in the shipped HMI screens, identifies empty screens and excludes alarm-class files from screen counts.
+- `ImportPlcBlockVerified` 在写入前拒绝过期的预览令牌，返回 `preview-stale` 和三个用于核对的哈希。普通块创建被拒后，若回读确认块不存在，返回原生原因；批次保留此前已导入的块。
+- 安全激活测试的预览接受组路径数组。未尝试上线时返回路由拒绝原因。已返回的 worker 调用遇到后续状态读取失败时保留原结果，并附状态警告。
+- Unified 空变量表和空脚本模块导出返回零个文件。PLC 块文档导入成功且已确认目标存在后，验证导出抛错以警告返回。硬件 AML 和 SiVArc 的未知结果保留可用的原生诊断。
+- `ImportTechnologyObject` 在预览和执行前验证 XML 的对象类型。标准传输区和 SINUMERIK 归档的预览会检查所选硬件。PLC 告警实例文本导入或块编号设置抛错后，可用的回读证据会随原生错误返回。
 
 ## [4.0.0-beta.6] - 2026-11-18
 

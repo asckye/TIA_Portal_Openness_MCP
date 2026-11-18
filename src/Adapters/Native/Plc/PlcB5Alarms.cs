@@ -366,7 +366,12 @@ namespace TiaMcp.Adapters.Native.Plc
                     }
                     if (dryRun) return "Text list XLSX export preview; no file written.";
                     meta["mayHaveWrittenFiles"] = true;
-                    TextListXlsxResult result = languages.Length == 0 ? provider.ExportToXlsx(file) : provider.ExportToXlsx(file, request.TextLists, languages);
+                    TextListXlsxResult result;
+                    try { result = languages.Length == 0 ? provider.ExportToXlsx(file) : provider.ExportToXlsx(file, request.TextLists, languages); }
+                    catch (Exception ex) when (ex.GetBaseException().GetType().Name == "TextListNotFoundException")
+                    {
+                        throw AdapterPreconditionException.Failed(NativeReason(ex), "plc-text-lists", "softwarePath");
+                    }
                     meta["apiCallSuccess"] = true; meta["nativeState"] = result?.State.ToString(); meta["logFile"] = result?.LogFilePath?.FullName;
                     NativeResultState.Record(meta, result?.State, false, result?.LogFilePath?.FullName, file.FullName);
                     if (result?.State == TextListXlsxResultState.Error)
@@ -410,8 +415,46 @@ namespace TiaMcp.Adapters.Native.Plc
                             ["culture"] = l.Culture.Name, ["active"] = settings.ActiveLanguages.Any(a => a.Culture.Name == l.Culture.Name) })
                         .ToArray());
                 if (dryRun) return "Alarm instance text import preview; file contents not applied.";
-                meta["mayHaveChanged"] = true;
-                var result = (PlcAlarmTextXlsxResult)EngineeringGroupOperations.Call(provider, "ImportInstanceTextsFromXlsx", signature, file, languages);
+                string[]? Snapshot()
+                {
+                    DirectoryInfo? directory = null;
+                    try
+                    {
+                        directory = Directory.CreateDirectory(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory,
+                            "alarm-readback-" + Guid.NewGuid().ToString("N")));
+                        var export = new FileInfo(Path.Combine(directory.FullName, "InstanceTexts.xlsx"));
+                        var snapshot = provider.ExportInstanceTextsToXlsx(export, Array.Empty<Language>(), PlcAlarmTextXlsxExportOption.All);
+                        return snapshot?.State == PlcAlarmTextXlsxResultState.OK && export.Exists ? AlarmWorkbookReadback.Parts(export.FullName) : null;
+                    }
+                    catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error))
+                    { /* swallow(probe-optional): missing baseline/readback cannot prove an import unchanged */ return null; }
+                    finally
+                    {
+                        try { directory?.Delete(true); }
+                        catch (IOException) { /* swallow(cleanup): a locked snapshot does not alter the native import outcome */ }
+                        catch (UnauthorizedAccessException) { /* swallow(cleanup): retain the original outcome when temporary removal is unavailable */ }
+                    }
+                }
+                var before = Snapshot();
+                meta["phase"] = "import"; meta["mayHaveChanged"] = true;
+                PlcAlarmTextXlsxResult result;
+                try { result = (PlcAlarmTextXlsxResult)EngineeringGroupOperations.Call(provider, "ImportInstanceTextsFromXlsx", signature, file, languages); }
+                catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error))
+                {
+                    if (before != null)
+                    {
+                        try
+                        {
+                            if (Snapshot() is string[] after && before.SequenceEqual(after, StringComparer.Ordinal))
+                            {
+                                meta["mayHaveChanged"] = false;
+                                meta["alarmTextsUnchanged"] = true;
+                            }
+                        }
+                        catch (Exception probe) { meta["readbackWarning"] = probe.GetBaseException().Message; }
+                    }
+                    throw;
+                }
                 meta["apiCallSuccess"] = true; meta["nativeResult"] = EngineeringScalarProperties.Read(result);
                 meta["nativeState"] = result.State.ToString(); meta["logFilePath"] = result.LogFilePath?.FullName;
                 NativeResultState.Record(meta, result.State, true, result.LogFilePath?.FullName, file.FullName);

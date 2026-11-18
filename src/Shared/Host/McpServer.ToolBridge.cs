@@ -230,7 +230,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     catch (Exception failure)
                     {
-                        var result = TargetFailure(name, failure, issued);
+                        var result = TargetFailure(name, failure, issued, original.GetRawText());
                         return changed ? SecretVaultArguments.Scrub(result) : result;
                     }
                 },
@@ -239,7 +239,7 @@ namespace TiaMcpServer.ModelContextProtocol
             { return AuditBridgeResult(audit, V4TargetReject(name, new Error("The request was cancelled before dispatch.",
                 new CancelledDetails("tool-queue")), CurrentBehaviorTargets(name, (arguments ?? EmptyArguments()).Json)), disabled); }
             catch (Exception ex)
-            { return AuditBridgeResult(audit, TargetFailure(name, ex, issued), disabled); }
+            { return AuditBridgeResult(audit, TargetFailure(name, ex, issued, (arguments ?? EmptyArguments()).Json.GetRawText()), disabled); }
         }
 
         private static CallToolResult AuditBridgeResult(TiaOpenness.Shared.AuditInvocation? audit, CallToolResult result, bool disabled = false)
@@ -249,7 +249,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return result;
         }
 
-        internal static CallToolResult TargetFailure(string tool, Exception error, bool issued)
+        internal static CallToolResult TargetFailure(string tool, Exception error, bool issued, string? arguments = null)
         {
             error = TiaOpenness.Shared.HostFailurePolicy.Unwrap(error);
 #if TIA_ENGINE_HOST
@@ -267,15 +267,24 @@ namespace TiaMcpServer.ModelContextProtocol
                 ? ClassificationOf(method) : null;
             var fallback = classification == null ? ToolMetadata.Find(tool) : null;
             string operation = classification?.Operation ?? fallback?.Operation ?? ToolTaxonomy.OperationOf(tool, null).Operation;
-            bool readOnly = ApprovalPreviewDepth.Value > 0 || operation is "READ" or "OFFLINE" || operation == "SESSION"
+#if TIA_ENGINE_HOST
+            if (arguments == null && ProgressRequest.Value?.Params is { } request && request.Name == tool)
+                arguments = JsonSerializer.Serialize(request.Arguments ?? new Dictionary<string, JsonElement>());
+#endif
+            bool preview = arguments != null && TryDryRunDefault(tool, out bool defaultPreview)
+                && HostBehavior.IsPreview(JsonNode.Parse(arguments)!.AsObject(), defaultPreview);
+            bool readOnly = ApprovalPreviewDepth.Value > 0 || preview
+                || operation is "READ" or "OFFLINE" || operation == "SESSION"
                 && (classification?.BatchRead ?? fallback?.BatchRead) == true;
             var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(error, issued, readOnly,
                 reportedCode: error is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode
                     .InvalidParams ? -32602 : (int?)null,
                 nativeRead: InvocationJournal.NativeCallIssued);
-            var evidence = HostBehavior.FailureEvidence(error.GetType().Name, error.Message);
+            bool scriptUnknown = tool == "SetUnifiedGlobalScript" && kind == TiaOpenness.Shared.HostFailureKind.Unknown;
+            var evidence = scriptUnknown ? HostBehavior.WorkerReplyEvidence(tool, error)! : HostBehavior.FailureEvidence(error.GetType().Name, error.Message);
             var data = new JsonObject { ["evidence"] = JsonSerializer.SerializeToNode(evidence) };
-            foreach (var retained in HostBehavior.RetainedRecoveryEvidence(error)) data[retained.Key] = retained.Value?.DeepClone();
+            if (!scriptUnknown)
+                foreach (var retained in HostBehavior.RetainedRecoveryEvidence(error)) data[retained.Key] = retained.Value?.DeepClone();
             string? parameter = TiaOpenness.Shared.HostFailurePolicy.Parameter(error);
             string? message = HostBehavior.AdmissionDiagnostic(error);
             bool readCancelled = issued && readOnly && kind == TiaOpenness.Shared.HostFailureKind.Cancelled;

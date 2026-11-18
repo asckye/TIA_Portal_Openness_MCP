@@ -229,20 +229,59 @@ namespace TiaMcp.Adapters
                 .Exact(BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName))), x => x.Path, PlcExchangePolicy
                     .ObjectPath(groupPath,true,"groupPath"),"groupPath")
                 .Value;
+            string? newBlock = null;
+            void Precheck(XDocument document)
+            {
+                PlcFoundationPolicy.RequireImportAvailable(document, "SW.Blocks.", overwrite,
+                    name => BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName)))
+                        .Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, n => g.Value.Blocks.Find(n), b => b.Name, name)));
+                var objects = document.Root!.Elements().Where(e => e.Name != "Engineering" && e.Name != "DocumentInfo").ToArray();
+                if (!overwrite && objects.Length == 1 && objects[0].Name.NamespaceName == ""
+                    && objects[0].Name.LocalName is "SW.Blocks.FC" or "SW.Blocks.FB" or "SW.Blocks.OB" or "SW.Blocks.GlobalDB" or "SW.Blocks.InstanceDB")
+                    newBlock = ImportNames(document).SingleOrDefault();
+            }
             return ImportXml("ImportBlocks",input,dryRun,()=>
-                    WithTargetOffline(selected,()=>PlcNativeImportOptions
-                        .Blocks(target.Blocks, input, PlcNativeImportOptions.General(overwrite, importOptions), swImportOptions).Select(b=>b.Name)),
-                    ()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName), document => PlcFoundationPolicy
-                    .RequireImportAvailable(document, "SW.Blocks.", overwrite,
-                name => BlockGroups(PlcUnitScope.Blocks(selected.Value, PlcUnitScope.Optional(selected.Value, unitName)))
-                    .Any(g => PlcFoundationPolicy.SymbolExists(g.Value.Blocks, selectedName => g.Value.Blocks.Find(selectedName), b => b.Name, name))), unitName
-                    : unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target.Blocks
+                    WithTargetOffline(selected,()=>ImportBlocksWithReadback(target.Blocks, input,
+                        PlcNativeImportOptions.General(overwrite, importOptions), swImportOptions, newBlock).Select(b=>b.Name)),
+                    ()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName), Precheck, unitName: unitName,
+                    swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target.Blocks
                     .Where(b => ImportNames(document).Contains(b.Name))
                     .Select(b => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget {
                         Object = groupPath + "/" + b.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy
                             .ExportBlocker(b.IsConsistent, b.IsKnowHowProtected), Export = file =>
                             WithTargetOffline(selected, () => { b.Export(file, ExportOptions.WithDefaults); return true; })
                     }));
+        }
+        private static IList<PlcBlock> ImportBlocksWithReadback(PlcBlockComposition blocks, FileInfo file, ImportOptions options,
+            string[]? softwareOptions, string? newBlock)
+        {
+            try { return PlcNativeImportOptions.Blocks(blocks, file, options, softwareOptions); }
+            catch (EngineeringException native)
+            {
+                native.Data["phase"] = "import";
+                native.Data["nativeMessage"] = NativeFailureText.Compose(native.Message, null, Array.Empty<string>());
+                try
+                {
+                    var data = native.MessageData;
+                    string reason = NativeFailureText.Compose(data.Text, data.DetailText,
+                        native.DetailMessageData.SelectMany(detail => new[] { detail.Text, detail.DetailText }));
+                    if (reason.Length > 0) native.Data["nativeMessage"] = reason;
+                }
+                catch (Exception) { /* swallow(probe-optional): retain the original Siemens exception message */ }
+                if (newBlock != null && options == ImportOptions.None && (softwareOptions == null || softwareOptions.Length == 0))
+                {
+                    try
+                    {
+                        if (!PlcFoundationPolicy.SymbolExists(blocks, n => blocks.Find(n), block => block.Name, newBlock))
+                        {
+                            native.Data["foundationKnownNoMutation"] = true;
+                            native.Data["verifiedAbsent"] = true;
+                        }
+                    }
+                    catch (Exception) { /* swallow(probe-optional): an unreadable destination leaves the native write uncertain */ }
+                }
+                throw;
+            }
         }
         public PlcMutationResult ImportTypes(string softwarePath, string groupPath, string importPath, bool overwrite = false, bool dryRun = true) =>
             ImportTypesScoped(softwarePath, groupPath, importPath, overwrite, dryRun);

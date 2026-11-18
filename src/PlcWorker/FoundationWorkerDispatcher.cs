@@ -1,15 +1,30 @@
+#if NETFRAMEWORK
 extern alias plcsim;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using TiaMcp.Adapters.Contracts;
+#if NETFRAMEWORK
 using TiaMcp.Adapters;
+#endif
 using TiaMcp.WorkerChannel;
 
 namespace TiaMcp.PlcWorker
 {
+    internal static class WorkerOperationResponse
+    {
+        internal static ChannelResponse Complete(object? result, bool readOnly, WorkerSessionOutcomeState sessionOutcome)
+        {
+            if (result is IWorkerOperationReply reply && !readOnly && reply.OutcomeUnknown)
+                sessionOutcome.MarkUncertain();
+            return ChannelResponse.Success(WorkerJson.Serialize(result));
+        }
+    }
+
+#if NETFRAMEWORK
     internal sealed class WorkerPrimitiveFailureException : Exception
     {
         internal ChannelFailureException Failure { get; }
@@ -168,8 +183,6 @@ namespace TiaMcp.PlcWorker
                 enteredOperation=true;
                 if(name=="Disconnect") disconnectAttempted=true;
                 var result = method.Invoke(engine, call);
-                if (result is IWorkerOperationReply reply && !readOnly && reply.OutcomeUnknown)
-                    sessionOutcome.MarkUncertain();
                 if(name=="Disconnect") disconnected=true;
                 if (name == "ReadState")
                 {
@@ -177,7 +190,7 @@ namespace TiaMcp.PlcWorker
                     state["CanDetachOnUncertainShutdown"] = engine.CanDetachOnUncertainShutdown;
                     return ChannelResponse.Success(state.ToJsonString());
                 }
-                return ChannelResponse.Success(WorkerJson.Serialize(result));
+                return WorkerOperationResponse.Complete(result, readOnly, sessionOutcome);
             }
             catch (Exception ex)
             {
@@ -193,4 +206,5 @@ namespace TiaMcp.PlcWorker
             }
         }
     }
+#endif
 }

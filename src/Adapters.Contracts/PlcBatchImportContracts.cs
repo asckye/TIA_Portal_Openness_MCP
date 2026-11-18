@@ -27,6 +27,8 @@ namespace TiaMcp.Adapters
         public string Status { get; internal set; } = "planned";
         public bool Attempted { get; internal set; }
         public string Failure { get; internal set; } = "";
+        public string? NativeMessage { get; internal set; }
+        internal bool MayHaveChanged => Attempted && Failure != "native-import-refused-absent";
         public string[] RecognizedDependencies { get; internal set; } = new string[0];
         public PlcBatchImportObject[] ReturnedObjects { get; internal set; } = new PlcBatchImportObject[0];
     }
@@ -37,7 +39,7 @@ namespace TiaMcp.Adapters
     }
     public class PlcBatchImportResult : TiaMcp.Adapters.Contracts.IWorkerOperationReply
     {
-        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Items.Any(x => x.Attempted);
+        bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.MayHaveChanged => Items.Any(x => x.MayHaveChanged);
         public bool Executed { get; internal set; }
         public string ProjectFile { get; internal set; } = "";
         public string SoftwarePath { get; internal set; } = "";
@@ -49,7 +51,7 @@ namespace TiaMcp.Adapters
         public bool NativeOutcomeUnknown { get; internal set; }
         public string RecoveryFailure { get; internal set; } = "";
         public PlcBatchImportObject[] Restored => Items.Where(x => x.RestoreStatus == "restored").Select(x => x.Replaced!).ToArray();
-        public PlcBatchImportObject[] RemainingChanged => Items.Where(x => x.Attempted && x.RestoreStatus != "restored").Select(x => x.Planned).ToArray();
+        public PlcBatchImportObject[] RemainingChanged => Items.Where(x => x.MayHaveChanged && x.RestoreStatus != "restored").Select(x => x.Planned).ToArray();
         bool TiaMcp.Adapters.Contracts.IWorkerOperationReply.OutcomeUnknown => NativeOutcomeUnknown;
         public string[] Imported => Items.Where(x=>x.Status=="imported" && x.RestoreStatus!="restored").SelectMany(x=>x.ReturnedObjects.Select(o=>o.Name))
             .ToArray();

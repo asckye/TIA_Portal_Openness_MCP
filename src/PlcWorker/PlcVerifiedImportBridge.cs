@@ -29,7 +29,7 @@ namespace TiaMcp.PlcWorker
         internal static PlcVerifiedCandidate Validate(PlcSoftwareRequest request)
         {
             var xml = PlcDocumentEditing.Read(request.FilePath);
-            return new PlcVerifiedCandidate { Xml = xml, Name = PlcDocumentEditing.Name(PlcDocumentEditing.Parse(xml)) };
+            return new PlcVerifiedCandidate { Xml = xml, Name = PlcVerifiedImport.CandidateName(xml) };
         }
         internal static string Execute(PlcVerifiedExecution execution)
         {

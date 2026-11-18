@@ -147,6 +147,43 @@ public sealed class PortedPortalAdmissionTests
         }
     }
 
+    [Theory]
+    [InlineData("ManageSafetyActivationTestGroup")]
+    [InlineData("ManageSafetyActivationTest")]
+    public async Task Safety_preview_preserves_the_group_path_array(string name)
+    {
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(contextWorker, "21");
+        using var worker = new SafetyPreviewWorker();
+        using var lifetime = new Host.ImportStagingHostLifetime();
+        var tools = LegacyHostToolRegistry.Create(worker, "21", false);
+        var catalog = new Catalog("21");
+        using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(contextWorker) {
+            Catalog = catalog, Invoker = new Engine.WorkerToolInvoker(catalog, contextWorker, lifetime, tools) });
+        var tool = tools.Single(t => t.ProtocolTool.Name == name);
+        var args = new JsonObject { ["name"] = "G", ["action"] = "create", ["dryRun"] = true, ["groupPath"] = new JsonArray("MCP_B5_ATG") };
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+            Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
+        var body = (await tool.InvokeAsync(request)).StructuredContent!;
+        Assert.True((bool?)body["ok"] == true, body.ToJsonString());
+        Assert.True(JsonNode.DeepEquals(args["groupPath"], Assert.Single(worker.Requests)!["GroupPath"]));
+    }
+
+    private sealed class SafetyPreviewWorker : IFoundationWorker
+    {
+        internal List<JsonNode?> Requests = new();
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject {
+                ["ProcessId"] = 123, ["IsAttached"] = true, ["ProjectFile"] = "C:/Fixture.ap21" });
+            Assert.Equal("plc-safety.ExecuteSafetyValidation", operation);
+            Requests.Add(arguments["request"]);
+            return Task.FromResult<JsonNode?>(new JsonObject { ["Message"] = "Safety preview", ["Meta"] = new JsonObject {
+                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["dryRun"] = true } });
+        }
+        public void Dispose() { }
+    }
+
     private sealed class TechnologyWorker : IFoundationWorker
     {
         internal int Calls, TechnologyCalls;
@@ -566,7 +603,7 @@ public sealed class PortedPortalAdmissionTests
         return examples["profiles"]!["full-engine"]!["CompareUnifiedGraphicSelections"]!["arguments"]!.ToJsonString();
     }
 
-    private sealed class Catalog : Host.IToolCatalogView
+    internal sealed class Catalog : Host.IToolCatalogView
     {
         public IReadOnlyDictionary<string, Host.ToolDescriptor> All { get; }
         public IReadOnlyDictionary<string, Host.ToolDescriptor> IncludingUnavailable => All;

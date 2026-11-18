@@ -28,8 +28,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     void Export(string path) {
                         var block = Resolve();
                         if (!PlcBlockPrimitives.IsConsistent(block))
-                            throw new InvalidOperationException("Block is inconsistent; export verification is unavailable. No automatic compile or further " +
-                            "import.");
+                            throw new PlcSoftwareException("BlockInconsistent",
+                                "Block is inconsistent; export verification is unavailable. No automatic compile or further import.");
                         PlcBlockPrimitives
                             .Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.WithDefaults | ExportOptions
                                 .WithReadOnly);

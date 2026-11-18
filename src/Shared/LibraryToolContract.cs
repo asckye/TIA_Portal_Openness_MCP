@@ -61,7 +61,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             Completeness.None, current: current);
                 }
                 return Result(tool, new JsonObject { ["exceptionType"] = ex.GetType().Name },
-                    writes ? Unknown() : NativeFailureDiagnostics.FromException(NativeFailure(), ex),
+                    writes ? Unknown(tool is "ManageSivarcRuleContainer" or "GenerateSivarc" ? HostBehavior.WorkerReplyEvidence(tool, ex) : null)
+                        : NativeFailureDiagnostics.FromException(NativeFailure(), ex),
                     writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, current: current);
             }
         }
@@ -132,7 +133,12 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
             else if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
-            { outcome = Outcome.Unknown; error = Unknown(); }
+            {
+                outcome = Outcome.Unknown;
+                var reason = tool is "ManageSivarcRuleContainer" or "GenerateSivarc"
+                    ? HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"] ?? nativeMessage) : null;
+                error = Unknown(reason == null ? null : new Dictionary<string, JsonElement> { ["nativeMessage"] = JsonSerializer.SerializeToElement(reason) });
+            }
             else if (projectMissing)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (status == "HmiReadSessionBlocked")
@@ -213,10 +219,10 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error NativeFailure(string? nativeMessage = null) =>
             new Error(nativeMessage ?? "The engineering operation did not establish success.",
                 new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
-        private static Error Unknown() =>
+        private static Error Unknown(IReadOnlyDictionary<string, JsonElement>? evidence = null) =>
             new Error("The write outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. GetSessionState lists " +
                 "unsettled request IDs.",
-                new OutcomeUnknownDetails("engineering-operation", new Dictionary<string, JsonElement>()));
+                new OutcomeUnknownDetails("engineering-operation", evidence ?? new Dictionary<string, JsonElement>()));
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Completeness completeness,
             bool writes = false, Paging? paging = null, bool current = true)
         {

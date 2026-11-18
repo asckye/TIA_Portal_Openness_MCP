@@ -43,8 +43,23 @@ namespace TiaMcp.PlcWorker
             var deviceError = cause.GetBaseException() as PlcSoftwareException;
             bool ambiguousDevice = deviceError?.Code == "Ambiguous" && deviceError.Data["target"] is string
                 && deviceError.Data["mayHaveChanged"] is not true;
-            if (condition == null && !ambiguousDevice) return evidence;
+            bool unchanged = TiaOpenness.Shared.HostFailurePolicy.KnownNoMutation(cause);
+            string? nativeReason = cause.Data["nativeMessage"] as string;
+            if (condition == null && !ambiguousDevice && !unchanged && nativeReason == null) return evidence;
             var node = System.Text.Json.Nodes.JsonNode.Parse(evidence)!.AsObject();
+            if (unchanged)
+            {
+                node["mayHaveChanged"] = false;
+                node["phase"] = cause.Data["phase"] as string;
+                node["nativeMessage"] = (TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)
+                    ?? TiaOpenness.Shared.HostFailurePolicy.Unwrap(cause)).Message;
+            }
+            if (nativeReason != null)
+            {
+                node["nativeMessage"] = nativeReason;
+                node["phase"] = cause.Data["phase"] as string;
+            }
+            if (unchanged && cause.Data["verifiedAbsent"] is true) node["verifiedAbsent"] = true;
             if (condition != null) node["condition"] = condition;
             if (ambiguousDevice)
             {

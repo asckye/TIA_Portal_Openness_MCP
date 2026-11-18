@@ -44,7 +44,7 @@ namespace TiaMcp.Adapters
                     reply.Observation.Value = RenderEngineeringReflectionValue != null ? RenderEngineeringReflectionValue(reply.Observation.Value)
                         : LibraryValue(reply.Observation.Value);
                 bool invoked = reply.Observation.Meta.TryGetValue("invocationAttempted", out var attempted) && Equals(attempted, true);
-                reply.MayHaveChanged = request.AllowWrite && invoked;
+                reply.MayHaveChanged = request.AllowWrite && invoked && !MutationEvidence.ProvesNoMutation(reply.Observation.Meta);
                 reply.OutcomeUnknown = reply.MayHaveChanged && !Equals(reply.Observation.Meta["success"], true);
                 if (reply.OutcomeUnknown)
                 { reply.Observation.Meta["writeOutcomeUnknown"] = true; }
