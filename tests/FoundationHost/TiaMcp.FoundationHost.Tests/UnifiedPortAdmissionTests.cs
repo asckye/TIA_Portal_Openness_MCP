@@ -1114,7 +1114,37 @@ public sealed class UnifiedPortAdmissionTests
         Assert.Equal("System.IO.IOException", (string?)evidence["nativeExceptionType"]);
         Assert.Equal("candidate", (string?)evidence["candidateDirectoryRelativeToTemp"]);
         Assert.Null(evidence["error"]);
+        Assert.Equal(4, (int?)evidence["scriptCountAfterImport"]);
+        Assert.False((bool?)evidence["moduleExistsAfterImport"]);
+        Assert.Equal("<path>", (string?)evidence["candidateDirectory"]);
+        Assert.DoesNotContain("PRIVATE_FIXTURE", body.ToJsonString(), StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Returned_script_write_with_unknown_outcome_exposes_only_import_facts()
+    {
+        var response = ScriptReadbackFailure();
+        response.Meta["candidateDirectoryRelativeToTemp"] = response.Meta["candidateDirectory"];
+        var body = Host.HmiInspectionContract.Map("SetUnifiedGlobalScript", response, writes: true, current: true).StructuredContent!;
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
+        var evidence = body["error"]!["details"]!["evidence"]!;
+        Assert.True((bool?)evidence["importReturned"]);
+        Assert.Equal("exportAfter", (string?)evidence["phase"]);
+        Assert.Equal("<path>", (string?)evidence["candidateDirectoryRelativeToTemp"]);
+        Assert.DoesNotContain("PRIVATE_FIXTURE", body.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    private static HmiMessage ScriptReadbackFailure() => new() {
+        Message = "PRIVATE_FIXTURE worker summary",
+        Meta = new() {
+            ["importReturned"] = true, ["phase"] = "exportAfter", ["operationSuccess"] = false, ["mayHaveChanged"] = true,
+            ["writeOutcomeUnknown"] = true, ["scriptCountAfterImport"] = 4, ["moduleExistsAfterImport"] = false,
+            ["candidateDirectory"] = "C:/PRIVATE_FIXTURE/candidate", ["candidateDirectoryRelativeToTemp"] = "candidate",
+            ["nativeExceptionType"] = typeof(IOException).FullName, ["error"] = "PRIVATE_FIXTURE exception stack",
+            ["nativeMessage"] = "PRIVATE_FIXTURE native reason", ["workerMessage"] = "PRIVATE_FIXTURE worker reason",
+            ["readError"] = "PRIVATE_FIXTURE read error", ["failures"] = new[] { new { reason = "PRIVATE_FIXTURE nested reason" } }
+        }
+    };
 
     private sealed class ApprovalWorker(bool bound = false, bool failReadback = false) : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
@@ -1139,11 +1169,7 @@ public sealed class UnifiedPortAdmissionTests
                 if (failReadback)
                 {
                     // WorkerSessionRecovery sends the entire HmiReply as ChannelFailureException evidence.
-                    var meta = new Dictionary<string, object?> { ["importReturned"] = true, ["phase"] = "exportAfter",
-                        ["operationSuccess"] = false, ["mayHaveChanged"] = true, ["writeOutcomeUnknown"] = true,
-                        ["candidateDirectoryRelativeToTemp"] = "candidate", ["nativeExceptionType"] = typeof(IOException).FullName,
-                        ["error"] = "private exception stack" };
-                    var reply = new HmiReply { OutcomeUnknown = true, MayHaveChanged = true, Value = new HmiMessage { Meta = meta } };
+                    var reply = new HmiReply { OutcomeUnknown = true, MayHaveChanged = true, Value = ScriptReadbackFailure() };
                     throw new WorkerOperationException("The write outcome is unknown.", -32603, "unknown", JsonSerializer.Serialize(reply));
                 }
             }

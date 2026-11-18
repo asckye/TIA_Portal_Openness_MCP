@@ -112,8 +112,19 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         }
         var applied = tool.UpdateUnifiedGlobalScriptV4("HMI", "Fixture", "Status", code, false, "native-token", action,
             hash, "C:/Projects/original.ap21");
-        Assert.True((bool?)applied.StructuredContent?["ok"], applied.StructuredContent!.ToJsonString());
-        Assert.Equal(1, executions);
+        if (action == "create")
+        {
+            Assert.False((bool?)applied.StructuredContent?["ok"]);
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)applied.StructuredContent?["error"]?["code"]);
+            Assert.Equal("rejected-before-operation", (string?)applied.StructuredContent?["meta"]?["outcome"]);
+            Assert.Equal("not-started", (string?)applied.StructuredContent?["meta"]?["execution"]);
+            Assert.Equal(0, executions);
+        }
+        else
+        {
+            Assert.True((bool?)applied.StructuredContent?["ok"], applied.StructuredContent!.ToJsonString());
+            Assert.Equal(1, executions);
+        }
         Assert.Equal(1, previews);
         Assert.Equal(0, worker.Calls);
     }

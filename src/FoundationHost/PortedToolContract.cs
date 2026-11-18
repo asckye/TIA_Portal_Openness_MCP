@@ -586,10 +586,10 @@ internal sealed partial class FoundationTool
             workerFailure = error;
             var workerError = error as WorkerOperationException;
             var retained = workerError?.EvidenceJson is string json ? JsonNode.Parse(json) : null;
-            if (workerError?.Outcome == "unknown" && retained is JsonObject hmiReply
+            if (tool.Name == "SetUnifiedGlobalScript" && workerError?.Outcome == "unknown" && retained is JsonObject hmiReply
                 && hmiReply["Value"] is JsonObject value
                 && value["Meta"] is JsonObject hmiMeta)
-                error.Data["nativeResultEvidence"] = hmiMeta;
+                error.Data[nameof(HmiInspectionContract.ScriptImportEvidence)] = HmiInspectionContract.ScriptImportEvidence(hmiMeta);
             if (workerError?.Outcome == "rejected-before-operation" && retained is JsonObject deviceEvidence
                 && deviceEvidence["status"]?.ToString() == "Ambiguous" && deviceEvidence["target"] != null)
                 error.Data["nativeResultEvidence"] = deviceEvidence;
