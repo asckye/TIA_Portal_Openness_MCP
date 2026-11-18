@@ -82,7 +82,7 @@ namespace TiaMcp.BehaviorParity
         {
             if (scenario is "single-legacy-group-missing" or "single-type-group-missing" or "single-table-group-missing")
             {
-                string path = System.IO.Path.GetFullPath("bin-build/P6-68/parity-single.xml"); System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
+                string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "parity-single-" + Guid.NewGuid().ToString("N") + ".xml");
                 System.IO.File.WriteAllText(path, "<Document/>");
                 return new JsonObject { ["softwarePath"] = "PLC_1", [scenario=="single-table-group-missing" ? "folderPath" : "groupPath"] = "Missing", ["importPath"] = path };
             }

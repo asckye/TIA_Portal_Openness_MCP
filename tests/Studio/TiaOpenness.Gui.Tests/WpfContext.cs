@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
@@ -24,6 +26,7 @@ public sealed class WpfContext : IDisposable
 {
     private readonly Thread _thread;
     private Dispatcher? _dispatcher;
+    private static readonly ConditionalWeakTable<Window, WindowMouseState> WindowMouse = new();
 
     static WpfContext()
     {
@@ -33,6 +36,8 @@ public sealed class WpfContext : IDisposable
             {
                 if (ReferenceEquals(sender, args.OriginalSource)) KeepOffscreen((Window)sender);
             }));
+        EventManager.RegisterClassHandler(typeof(Window), Mouse.PreviewMouseDownEvent, new MouseButtonEventHandler(TrackMouse), true);
+        EventManager.RegisterClassHandler(typeof(Window), Mouse.PreviewMouseUpEvent, new MouseButtonEventHandler(TrackMouse), true);
     }
 
     public WpfContext()
@@ -41,6 +46,8 @@ public sealed class WpfContext : IDisposable
 
         _thread = new Thread(() =>
         {
+            // A new input queue can inherit a held desktop button. Seed only this test thread's injected input state.
+            SynchronizeMouse(MouseButtonState.Released);
             _dispatcher = Dispatcher.CurrentDispatcher;
 
             if (Application.Current is null)
@@ -124,8 +131,10 @@ public sealed class WpfContext : IDisposable
         button.AddHandler(ButtonBase.ClickEvent, onClick, true);
         try
         {
-            PressSpace(() => new SpaceMouseState(ReadLeftButton(), Mouse.Captured), () =>
+            PressSpace(ReadMouse, () =>
             {
+                // ButtonBase also reads the thread's native mouse state while processing Space under capture.
+                SynchronizeMouse(ReadLeftButton(button));
                 clicked = false;
                 RaiseKey(Keyboard.KeyDownEvent);
                 var down = ReadMouse();
@@ -142,20 +151,41 @@ public sealed class WpfContext : IDisposable
 
         void RaiseKey(RoutedEvent routedEvent) => button.RaiseEvent(new KeyEventArgs(
             Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Space) { RoutedEvent = routedEvent });
-        static SpaceMouseState ReadMouse() => new(Mouse.LeftButton, Mouse.Captured);
+        SpaceMouseState ReadMouse() => new(ReadLeftButton(button), Mouse.Captured);
         void ReleaseCapture()
         {
             if (button.IsMouseCaptured) button.ReleaseMouseCapture();
         }
     }
 
-    // WPF reports Released before its mouse device is active; use the same native read it makes under capture.
-    internal static MouseButtonState ReadLeftButton() =>
-        (GetKeyState(0x01 /* VK_LBUTTON */) & 0x8000) != 0 ? MouseButtonState.Pressed : MouseButtonState.Released;
+    // These are routed test-window events, independent of a physical button held on the interactive desktop.
+    internal static MouseButtonState ReadLeftButton(FrameworkElement element) =>
+        Window.GetWindow(element) is { } window && WindowMouse.TryGetValue(window, out var state)
+            ? state.LeftButton : MouseButtonState.Released;
 
-    [DllImport("user32.dll", ExactSpelling = true)]
+    private static void TrackMouse(object sender, MouseButtonEventArgs args)
+    {
+        if (args.ChangedButton == MouseButton.Left)
+            WindowMouse.GetValue((Window)sender, _ => new()).LeftButton = args.RoutedEvent == Mouse.PreviewMouseDownEvent
+                ? MouseButtonState.Pressed : MouseButtonState.Released;
+    }
+
+    private sealed class WindowMouseState
+    {
+        internal MouseButtonState LeftButton;
+    }
+
+    private static void SynchronizeMouse(MouseButtonState leftButton)
+    {
+        var keys = new byte[256];
+        if (leftButton == MouseButtonState.Pressed) keys[0x01 /* VK_LBUTTON */] = 0x80;
+        if (!SetKeyboardState(keys)) throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    private static extern short GetKeyState(int virtualKey);
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetKeyboardState(byte[] keys);
 
     // The input seam keeps contention tests deterministic; the real path above always raises both Space events.
     internal static void PressSpace(Func<SpaceMouseState> readMouse, Func<SpacePressResult> press,

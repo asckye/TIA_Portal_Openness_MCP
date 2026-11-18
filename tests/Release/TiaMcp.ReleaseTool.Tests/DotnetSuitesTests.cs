@@ -7,6 +7,65 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public class DotnetSuitesTests
 {
+    [Fact]
+    public async Task Dump_completion_waits_for_nonempty_content_and_the_writer_to_close()
+    {
+        using var tree = new StaticTree();
+        string path = tree.Write("in-progress.dmp", "");
+        using var deadline = new CancellationTokenSource(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
+        var context = new RecordingContext();
+        Task completed;
+        using (var writer = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
+        {
+            var previous = SynchronizationContext.Current;
+            try
+            {
+                SynchronizationContext.SetSynchronizationContext(context);
+                completed = SuiteHang.WaitForDump(path, deadline.Token);
+            }
+            finally { SynchronizationContext.SetSynchronizationContext(previous); }
+            Assert.False(completed.IsCompleted);
+            // A MINIDUMP_HEADER, one directory entry, and a MINIDUMP_SYSTEM_INFO stream.
+            var dump = new byte[100];
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(dump.AsSpan(0), 0x504d444d);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(dump.AsSpan(4), 0xa793);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(dump.AsSpan(8), 1);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(dump.AsSpan(12), 32);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(dump.AsSpan(32), 7);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(dump.AsSpan(36), 56);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(dump.AsSpan(40), 44);
+            writer.Write(dump);
+            writer.Flush();
+            Assert.False(completed.IsCompleted);
+        }
+        await completed.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
+        Assert.True(new FileInfo(path).Length > 0);
+        Assert.Equal(0, context.Posts);
+    }
+
+    private sealed class RecordingContext : SynchronizationContext
+    {
+        private int posts;
+        internal int Posts => Volatile.Read(ref posts);
+        public override void Post(SendOrPostCallback callback, object? state)
+        {
+            Interlocked.Increment(ref posts);
+            ThreadPool.QueueUserWorkItem(_ => callback(state));
+        }
+    }
+
+    [Fact]
+    public async Task Empty_dump_still_requires_content_and_honors_the_deadline()
+    {
+        using var tree = new StaticTree();
+        string path = tree.Write("empty.dmp", "");
+        using var deadline = new CancellationTokenSource(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
+        var completed = SuiteHang.WaitForDump(path, deadline.Token);
+        Assert.False(completed.IsCompleted);
+        deadline.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completed);
+    }
+
     public static IEnumerable<object[]> SelfTests() => DotnetSuiteSelfTests.Cases.Select((test, i) => new object[] { i, test.Name });
     [Theory]
     [MemberData(nameof(SelfTests))]

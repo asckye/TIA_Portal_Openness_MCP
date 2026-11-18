@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Xunit;
@@ -13,7 +14,7 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class WpfContextTests(WpfContext wpf)
 {
     [Fact]
-    public void Left_button_reader_matches_native_state_without_capture()
+    public void Window_left_button_stays_released_when_the_native_button_state_changes_without_capture()
     {
         wpf.Run(() =>
         {
@@ -25,12 +26,82 @@ public sealed class WpfContextTests(WpfContext wpf)
                 Assert.True(window.Left + window.ActualWidth < SystemParameters.VirtualScreenLeft);
                 Assert.True(window.Top + window.ActualHeight < SystemParameters.VirtualScreenTop);
                 Assert.Null(Mouse.Captured);
-                var expected = (GetKeyState(0x01 /* VK_LBUTTON */) & 0x8000) != 0
-                    ? MouseButtonState.Pressed : MouseButtonState.Released;
-                Assert.Equal(expected, WpfContext.ReadLeftButton());
+                var keys = new byte[256];
+                Assert.True(SetKeyboardState(keys));
+                Assert.Equal(MouseButtonState.Released, WpfContext.ReadLeftButton(window));
+                keys[0x01 /* VK_LBUTTON */] = 0x80;
+                Assert.True(SetKeyboardState(keys));
+                Assert.NotEqual(0, GetKeyState(0x01) & 0x8000);
+                Assert.Equal(MouseButtonState.Released, WpfContext.ReadLeftButton(window));
                 Assert.Null(Mouse.Captured);
             }
-            finally { window.Close(); }
+            finally { Assert.True(SetKeyboardState(new byte[256])); window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Left_button_is_released_for_popup_content_without_a_window()
+    {
+        wpf.Run(() =>
+        {
+            var button = new Button();
+            var popup = new Popup { Child = button, IsOpen = true };
+            try
+            {
+                Assert.Null(Window.GetWindow(button));
+                Assert.Equal(MouseButtonState.Released, WpfContext.ReadLeftButton(button));
+            }
+            finally { popup.IsOpen = false; }
+        });
+    }
+
+    [Fact]
+    public void Space_uses_window_input_even_when_the_native_queue_inherited_a_pressed_button()
+    {
+        wpf.Run(() =>
+        {
+            var button = new Button();
+            var window = new Window { Content = button, Width = 160, Height = 100 };
+            try
+            {
+                WpfContext.ShowWindow(window); window.Activate(); WpfContext.Drain(); button.Focus();
+                var keys = new byte[256];
+                keys[0x01] = 0x80;
+                Assert.True(SetKeyboardState(keys));
+                Assert.NotEqual(0, GetKeyState(0x01) & 0x8000);
+                Assert.Equal(MouseButtonState.Released, WpfContext.ReadLeftButton(button));
+                WpfContext.PressSpace(button);
+                Assert.Equal(0, GetKeyState(0x01) & 0x8000);
+                Assert.False(button.IsMouseCaptured);
+            }
+            finally { Assert.True(SetKeyboardState(new byte[256])); window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Space_waits_for_its_own_window_release_and_other_windows_keep_their_input_state()
+    {
+        wpf.Run(() =>
+        {
+            var button = new Button();
+            var window = new Window { Content = button, Width = 160, Height = 100 };
+            var other = new Window { Width = 160, Height = 100 };
+            try
+            {
+                WpfContext.ShowWindow(window); WpfContext.ShowWindow(other);
+                window.Activate(); WpfContext.Drain(); button.Focus();
+                foreach (var target in new[] { window, other })
+                    target.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                        { RoutedEvent = Mouse.PreviewMouseDownEvent });
+                Assert.Equal(MouseButtonState.Pressed, WpfContext.ReadLeftButton(button));
+                Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+                    window.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                        { RoutedEvent = Mouse.PreviewMouseUpEvent })));
+                WpfContext.PressSpace(button);
+                Assert.Equal(MouseButtonState.Released, WpfContext.ReadLeftButton(button));
+                Assert.Equal(MouseButtonState.Pressed, WpfContext.ReadLeftButton(other));
+            }
+            finally { window.Close(); other.Close(); }
         });
     }
 
@@ -251,6 +322,11 @@ public sealed class WpfContextTests(WpfContext wpf)
     [DllImport("user32.dll", ExactSpelling = true)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern short GetKeyState(int virtualKey);
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetKeyboardState(byte[] keys);
 
     private static WpfContext.SpaceMouseState Released => State(false);
     private static WpfContext.SpaceMouseState State(bool pressed) => new(pressed ? MouseButtonState.Pressed : MouseButtonState.Released, null);

@@ -80,7 +80,10 @@ public sealed class NoLockRunningTests
             ["text"] = "Choose an export option", ["detailText"] = "password=dialog-secret-7f3",
             ["choices"] = answer switch { "handled" => Array.Empty<string>(), "Ok" => new[] { "Ok" },
                 "No" => new[] { "Yes", "No" }, _ => new[] { "Yes" } }, ["answer"] = answer });
-        File.WriteAllText(Path.Combine(scope.DirectoryPath, "dialog"), line);
+        // Publish only the complete line: the worker can otherwise observe the newly created, still empty file.
+        string pending = Path.Combine(scope.DirectoryPath, "dialog.pending");
+        File.WriteAllText(pending, line);
+        File.Move(pending, Path.Combine(scope.DirectoryPath, "dialog"));
     }
 
     [Theory, MemberData(nameof(Releases))]
@@ -118,9 +121,10 @@ public sealed class NoLockRunningTests
         var tool = scope.Tool("SaveProject");
         using var session = scope.Session(tool);
         var first = await scope.Call(session, "SaveProject", scope.WriteArguments);
-        Dialog(scope, "unanswered");
         using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
-        while (scope.Worker.Running?["dialog"] == null) await Task.Delay(5, deadline.Token);
+        await scope.WaitDispatched(deadline.Token);
+        Dialog(scope, "unanswered");
+        await scope.WaitDialogRead(deadline.Token);
         var busy = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
             scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
         Assert.Equal("worker-call-running", busy.Condition);
@@ -859,10 +863,30 @@ public sealed class NoLockRunningTests
                 ProductionWorkerBudgets.Live(Worker)[family] = budget;
             File.WriteAllText(Path.Combine(gate, "release"), "");
         }
-        internal async Task WaitDispatched()
+        internal async Task WaitDispatched(CancellationToken token = default)
         {
-            using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
-            while (!File.Exists(Path.Combine(gate, "dispatched"))) await Task.Delay(5, deadline.Token);
+            string marker = Path.Combine(gate, "dispatched");
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+            deadline.CancelAfter(TestDeadlines.Hang);
+            var created = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var watcher = new FileSystemWatcher(gate, "dispatched");
+            watcher.Created += (_, _) => created.TrySetResult(true);
+            watcher.Error += (_, _) => created.TrySetResult(false);
+            watcher.EnableRaisingEvents = true;
+            if (File.Exists(marker) || await created.Task.WaitAsync(deadline.Token)) return;
+            // A watcher error can lose the create event. The worker leaves the marker in place.
+            while (!File.Exists(marker)) await Task.Delay(5, deadline.Token);
+        }
+        internal async Task WaitDialogRead(CancellationToken token)
+        {
+            // ReceiveDiagnostic completes this only after attaching the stderr dialog to the active/running call.
+            var field = typeof(Foundation.WorkerClient).GetField("dialogReported", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.True(field != null, "Expected WorkerClient to declare the dialogReported field.");
+            var reported = field.GetValue(Worker) as TaskCompletionSource<JsonObject>;
+            Assert.True(reported != null, "Expected WorkerClient.dialogReported to contain the active call's dialog completion source.");
+            await reported.Task.WaitAsync(token);
+            Assert.True(Worker.CallRunning);
+            Assert.NotNull(Worker.Running?["dialog"]);
         }
         internal async Task WaitCompleted(Foundation.HostSession session)
         {

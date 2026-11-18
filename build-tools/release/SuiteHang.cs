@@ -57,6 +57,13 @@ internal static class SuiteHang
             { errors.Add("Cannot read blame sequence " + path + ": " + ex.Message); }
         }
         var dumps = files.Where(path => path.EndsWith(".dmp", StringComparison.OrdinalIgnoreCase)).ToArray();
+        // A collector can publish the path while its writer still owns the file. Length alone can accept a partial dump.
+        using (var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(5)))
+            foreach (string dump in dumps)
+            {
+                try { WaitForDump(dump, deadline.Token).GetAwaiter().GetResult(); }
+                catch (OperationCanceledException) { errors.Add("Mini dump did not finish writing: " + dump); }
+            }
         if (tests.Count > 0 || dumps.Length > 0)
             errors.Add("VSTest hang/aborted test: " + (tests.Count == 0 ? "see blame log" : string.Join("; ", tests.Distinct()))
                 + "; mini dump: " + (dumps.Length == 0 ? "not produced (see collector log)" : string.Join("; ", dumps)));
@@ -66,6 +73,21 @@ internal static class SuiteHang
             ["errors"] = new JsonArray(errors.Select(e => (JsonNode?)JsonValue.Create(e)).ToArray()) };
         File.WriteAllText(Path.Combine(directory, name + ".hang.json"), report.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n");
         return errors.Count == 0 ? result : result with { ExitCode = 1, StandardError = result.StandardError + "\n" + string.Join("\n", errors) + "\n" };
+    }
+
+    internal static async Task WaitForDump(string path, CancellationToken token)
+    {
+        while (true)
+        {
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+                if (file.Length > 0) return;
+            }
+            catch (IOException) { }
+            await Task.Delay(10, token).ConfigureAwait(false);
+        }
     }
 
     internal static IEnumerable<string> Errors(string directory, string name)

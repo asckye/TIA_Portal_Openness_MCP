@@ -13,6 +13,20 @@ using TiaMcp.Engine.Tests.Shared;
 [Collection(WorkerDataDirectoryCollection.Name)]
 public sealed partial class EngineHttpSessionTestsPlc
 {
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Fixture_disposal_stops_the_attached_worker_without_explicit_session_end(string release)
+    {
+        using var host = await Fixture.Start(release);
+        using var session = new Session(host);
+        await session.Initialize();
+        await session.Tool("ConnectPortal", new() { ["processId"] = 336 });
+        int pid = (int)(await session.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
+        using var worker = Process.GetProcessById(pid);
+        Assert.False(worker.HasExited);
+        host.Dispose();
+        Assert.True(worker.WaitForExit(TestDeadlines.HangMilliseconds), "Session worker outlived fixture disposal.");
+    }
+
     [Theory, InlineData("startup"), InlineData("background")]
     public async Task Fixture_fault_exits_without_runtime_crash_handling(string mode)
     {
@@ -32,7 +46,7 @@ public sealed partial class EngineHttpSessionTestsPlc
         TestDeadlines.Report("http-session.startup", host.StartupElapsed.TotalMilliseconds, "ms");
         // Health must precede catalog construction. Release the catalog barrier, then prove initialize still builds usable tools.
         await host.ReleaseCatalog();
-        using var session = new Session(host.Url); await session.Initialize();
+        using var session = new Session(host); await session.Initialize();
         await session.Tool("GetSessionState"); await session.End();
     }
 
@@ -54,7 +68,7 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease(string release)
     {
         using var host = await Fixture.Start(release);
-        using var a = new Session(host.Url); await a.Initialize();
+        using var a = new Session(host); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 321 });
         var unknown = await a.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
         Assert.Equal("Fixture native outcome unknown.", (string?)unknown["error"]?["message"]);
@@ -68,7 +82,7 @@ public sealed partial class EngineHttpSessionTestsPlc
         Assert.Null(detached["data"]?["priorUnknownRequestId"]);
         Assert.False((bool?)detached["data"]?["savedProject"]); Assert.False((bool?)detached["data"]?["closedProject"]);
         Assert.Equal("RELEASED " + prior + "\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "321-1.lease")));
-        using var b = new Session(host.Url); await b.Initialize();
+        using var b = new Session(host); await b.Initialize();
         var connected = await b.Tool("ConnectPortal", new() { ["processId"] = 321 });
         Assert.Equal("RELEASED", (string?)connected["data"]?["previousOwner"]?["state"]);
         Assert.Equal(prior, (string?)connected["data"]?["previousOwner"]?["requests"]?[0]);
@@ -83,7 +97,7 @@ public sealed partial class EngineHttpSessionTestsPlc
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Http_session_end_without_disconnect_releases_its_attached_worker(string release)
     {
-        using var host = await Fixture.Start(release); using var session = new Session(host.Url); await session.Initialize();
+        using var host = await Fixture.Start(release); using var session = new Session(host); await session.Initialize();
         await session.Tool("ConnectPortal", new() { ["processId"] = 325 });
         await session.End();
         string lease = Path.Combine(host.DataDirectory, "leases", "325-1.lease");
@@ -99,7 +113,7 @@ public sealed partial class EngineHttpSessionTestsPlc
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Idle_attached_restart_detaches_before_starting_the_next_generation(string release)
     {
-        using var host = await Fixture.Start(release); using var a = new Session(host.Url); await a.Initialize();
+        using var host = await Fixture.Start(release); using var a = new Session(host); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 322 });
         var preview = await a.Tool("RestartOpennessWorker", new() { ["confirmRestart"] = false });
         Assert.Equal("Worker restart preview evaluated.", (string?)preview["data"]?["summary"]);
@@ -116,7 +130,7 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Busy_or_timed_out_disconnect_refuses_and_keeps_the_worker_running(string release, bool waitForTimeout)
     {
         using var host = await Fixture.Start(release, shortTimeout: waitForTimeout);
-        using var a = new Session(host.Url); await a.Initialize();
+        using var a = new Session(host); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 323 });
         int pid = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
@@ -160,7 +174,7 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Restart_after_a_timeout_refuses_until_the_call_finishes(string release)
     {
         using var host = await Fixture.Start(release, shortTimeout: true);
-        using var a = new Session(host.Url); await a.Initialize();
+        using var a = new Session(host); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 324 });
         await host.UseScaledBudgets(true);
         var running = await a.Tool(SessionFixtureTool.Name, new() { ["hang"] = true }, ok: false);
@@ -183,7 +197,7 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Http_session_end_defers_worker_disposal_until_its_call_finishes(string release)
     {
         using var host = await Fixture.Start(release, shortTimeout: true);
-        using var a = new Session(host.Url); await a.Initialize();
+        using var a = new Session(host); await a.Initialize();
         await a.Tool("ConnectPortal", new() { ["processId"] = 326 });
         int pid = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
@@ -201,8 +215,8 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Http_sessions_own_workers_disconnect_restart_and_teardown(string release)
     {
         using var host = await Fixture.Start(release);
-        using var a = new Session(host.Url);
-        using var b = new Session(host.Url);
+        using var a = new Session(host);
+        using var b = new Session(host);
         await a.Initialize(); await b.Initialize();
         Assert.NotEqual(a.Id, b.Id);
         int pidA = (int)(await a.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
@@ -229,14 +243,14 @@ public sealed partial class EngineHttpSessionTestsPlc
         await b.Tool("GetSessionState");
         await b.End();
         Assert.True(workerB.WaitForExit(TestDeadlines.HangMilliseconds));
-        using var c = new Session(host.Url); await c.Initialize(); await c.Tool("GetSessionState"); await c.End();
+        using var c = new Session(host); await c.Initialize(); await c.Tool("GetSessionState"); await c.End();
     }
 
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Session_fault_and_bridge_staging_owner_do_not_escape_the_session(string release)
     {
         using var host = await Fixture.Start(release);
-        using var a = new Session(host.Url); using var b = new Session(host.Url);
+        using var a = new Session(host); using var b = new Session(host);
         await a.Initialize(); await b.Initialize();
         await a.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
         Assert.Single((await a.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray());
@@ -258,7 +272,7 @@ public sealed partial class EngineHttpSessionTestsPlc
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Authored_lease_refusal_is_sanitised_and_internal_exception_text_is_hidden(string release)
     {
-        using var host = await Fixture.Start(release); using var session = new Session(host.Url); await session.Initialize();
+        using var host = await Fixture.Start(release); using var session = new Session(host); await session.Initialize();
         var authored = await session.Tool("ConnectPortal", new() { ["processId"] = 901 }, ok: false);
         Assert.Equal("PRECONDITION_FAILED", (string?)authored["error"]?["code"]);
         Assert.Contains(EngineSessionFixture.LeaseMessage, (string?)authored["error"]?["message"]);
@@ -289,7 +303,7 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Shutdown_drains_an_open_http_request_and_stops_its_session_worker(string release)
     {
         using var host = await Fixture.Start(release, gracefulShutdown: true);
-        using var session = new Session(host.Url); await session.Initialize();
+        using var session = new Session(host); await session.Initialize();
         int pid = (int)(await session.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
         using var worker = Process.GetProcessById(pid);
         // Hold a POST body open: shutdown must cancel transport reads as well as session workers.
@@ -306,15 +320,16 @@ public sealed partial class EngineHttpSessionTestsPlc
         Assert.True(await host.WaitForExit(TimeSpan.FromSeconds(40)), "HTTP shutdown did not drain within its bound.");
     }
 
-    private sealed class Session(string url) : IDisposable
+    private sealed class Session(Fixture host) : IDisposable
     {
-        private readonly HttpClient client = new(new HttpClientHandler { UseProxy = false }) { BaseAddress = new Uri(url), Timeout = TestDeadlines.Hang };
+        private readonly HttpClient client = host.CreateClient();
         private int sequence;
         internal string? Id;
         internal async Task<JsonNode> Call(string method, JsonObject input)
         {
             client.DefaultRequestHeaders.Authorization = new("Bearer", "fixture-key");
-            client.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/event-stream");
+            if (client.DefaultRequestHeaders.Accept.Count == 0)
+                client.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/event-stream");
             using var response = await client
                 .PostAsJsonAsync("/mcp", new JsonObject { ["jsonrpc"] = "2.0", ["id"] = ++sequence, ["method"] = method, ["params"] = input });
             response.EnsureSuccessStatusCode();
@@ -356,6 +371,10 @@ public sealed partial class EngineHttpSessionTestsPlc
         System.Threading.Channels.Channel<string> budgetReplies, Stopwatch startup) : IDisposable
     {
         private readonly Task exited = process.WaitForExitAsync();
+        private bool disposed;
+        // Sessions have independent headers, but reuse this fixture's connections, including its health probe connection.
+        private readonly HttpClientHandler handler = new() { UseProxy = false };
+        internal HttpClient CreateClient() => new(handler, disposeHandler: false) { BaseAddress = new Uri(Url), Timeout = TestDeadlines.Hang };
         internal TimeSpan StartupElapsed => startup.Elapsed;
         internal string StartupDiagnostics() => $"Fixture host startup after {startup.Elapsed.TotalMilliseconds:F0} ms (pid={process.Id}, url={Url}).\n"
             + (process.HasExited ? FixtureExit.Describe(process.ExitCode, LogTail(Path.Combine(directory, "host-error.log"))) + "\n" : "")
@@ -465,7 +484,8 @@ public sealed partial class EngineHttpSessionTestsPlc
             var fixture = new Fixture(process, url, directory, exe, budgetReplies, startup);
             try
             {
-                using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = TimeSpan.FromSeconds(1) };
+                using var client = fixture.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(1);
                 bool faultSent = false;
                 for (int attempt = 0; attempt < 200; attempt++)
                 {
@@ -474,9 +494,7 @@ public sealed partial class EngineHttpSessionTestsPlc
                     fixture.Url = await listening.Task;
                     try
                     {
-                        var health = client.GetAsync(fixture.Url + "/mcp/health");
-                        if (await Task.WhenAny(health, fixture.exited) == fixture.exited) await fixture.RequireRunning();
-                        using var response = await health;
+                        using var response = await client.GetAsync(fixture.Url + "/mcp/health");
                         if (response.IsSuccessStatusCode)
                         {
                             if (fault != "background") { startup.Stop(); return fixture; }
@@ -511,13 +529,31 @@ public sealed partial class EngineHttpSessionTestsPlc
         }
         public void Dispose()
         {
-            ReleaseRunning();
-            if (!process.HasExited)
+            if (disposed) return;
+            disposed = true;
+            try
             {
-                Assert.Equal(Path.GetFullPath(image), Path.GetFullPath(process.MainModule!.FileName), ignoreCase: true);
-                process.Kill(); Assert.True(process.WaitForExit(TestDeadlines.HangMilliseconds), "Owned fixture host did not exit.");
+                ReleaseRunning();
+                if (!process.HasExited)
+                {
+                    // Killing only the host bypassed its session/worker and listener disposal, leaving children after failures.
+                    Assert.Equal(Path.GetFullPath(image), Path.GetFullPath(process.MainModule!.FileName), ignoreCase: true);
+                    try
+                    {
+                        Stop();
+                        Assert.True(process.WaitForExit(TestDeadlines.HangMilliseconds), "Owned fixture host did not exit.");
+                    }
+                    finally
+                    {
+                        if (!process.HasExited)
+                        {
+                            Assert.Equal(Path.GetFullPath(image), Path.GetFullPath(process.MainModule!.FileName), ignoreCase: true);
+                            process.Kill();
+                        }
+                    }
+                }
             }
-            process.Dispose();
+            finally { handler.Dispose(); process.Dispose(); }
         }
     }
 }

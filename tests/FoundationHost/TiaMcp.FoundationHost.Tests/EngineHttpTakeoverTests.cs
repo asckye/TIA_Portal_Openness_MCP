@@ -12,8 +12,8 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Abandoned_session_gives_way_to_connect_portal_without_a_host_restart(string release)
     {
         using var host = await Fixture.Start(release);
-        using var holder = new Session(host.Url);
-        using var newcomer = new Session(host.Url);
+        using var holder = new Session(host);
+        using var newcomer = new Session(host);
         await holder.Initialize(); await newcomer.Initialize();
         await holder.Tool("ConnectPortal", new() { ["processId"] = 331 });
         int holderPid = (int)(await holder.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
@@ -37,8 +37,8 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Recently_active_session_requires_take_over_and_the_handover_is_audited(string release)
     {
         using var host = await Fixture.Start(release);
-        using var holder = new Session(host.Url);
-        using var newcomer = new Session(host.Url);
+        using var holder = new Session(host);
+        using var newcomer = new Session(host);
         await holder.Initialize(); await newcomer.Initialize();
         await holder.Tool("ConnectPortal", new() { ["processId"] = 332 });
         int holderPid = (int)(await holder.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;
@@ -63,8 +63,8 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Takeover_carries_unsettled_calls_to_the_new_session(string release)
     {
         using var host = await Fixture.Start(release);
-        using var holder = new Session(host.Url);
-        using var newcomer = new Session(host.Url);
+        using var holder = new Session(host);
+        using var newcomer = new Session(host);
         await holder.Initialize(); await newcomer.Initialize();
         await holder.Tool("ConnectPortal", new() { ["processId"] = 333 });
         var unknown = await holder.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
@@ -84,8 +84,8 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Running_call_protects_its_session_and_the_refusal_clears_when_it_returns(string release)
     {
         using var host = await Fixture.Start(release);
-        using var holder = new Session(host.Url);
-        using var newcomer = new Session(host.Url);
+        using var holder = new Session(host);
+        using var newcomer = new Session(host);
         await holder.Initialize(); await newcomer.Initialize();
         await holder.Tool("ConnectPortal", new() { ["processId"] = 334 });
         string gate = Path.Combine(host.DataDirectory, "running-gate");
@@ -117,8 +117,8 @@ public sealed partial class EngineHttpSessionTestsPlc
     public async Task Taken_over_disconnect_settles_locally_and_other_native_calls_stay_refused(string release)
     {
         using var host = await Fixture.Start(release);
-        using var holder = new Session(host.Url);
-        using var newcomer = new Session(host.Url);
+        using var holder = new Session(host);
+        using var newcomer = new Session(host);
         await holder.Initialize(); await newcomer.Initialize();
         await holder.Tool("ConnectPortal", new() { ["processId"] = 335 });
         int holderPid = (int)(await holder.Tool(SessionFixtureTool.Name))["data"]!["fixturePid"]!;

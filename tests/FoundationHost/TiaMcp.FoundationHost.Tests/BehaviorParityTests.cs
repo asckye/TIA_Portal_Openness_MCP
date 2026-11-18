@@ -15,6 +15,25 @@ using Xunit;
 
 public sealed class BehaviorParityTests
 {
+    [Fact]
+    public async Task Single_import_arguments_use_unique_complete_files_under_parallel_creation()
+    {
+        var paths = new System.Collections.Concurrent.ConcurrentBag<string>();
+        try
+        {
+            await Task.WhenAll(Enumerable.Range(0, 64).Select(_ => Task.Run(() =>
+            {
+                var arguments = BehaviorParityCases.Arguments("single-type-group-missing");
+                string path = (string)arguments["importPath"]!;
+                paths.Add(path);
+                Assert.True(Path.IsPathFullyQualified(path));
+                Assert.Equal("<Document/>", File.ReadAllText(path));
+            })));
+            Assert.Equal(64, paths.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        }
+        finally { foreach (string path in paths) File.Delete(path); }
+    }
+
     [Theory, InlineData(SessionBehavior.LeaseReserved)]
     public void Both_worker_clients_use_the_same_authored_lease_refusal_mapping(string message)
     {
