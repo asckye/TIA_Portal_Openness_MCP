@@ -47,11 +47,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     throw new ArgumentException("Supply an absolute exportDirectory or use an active session output directory.");
                 var run = PlcTestRunRecord.Read(runsDirectory(), runId);
                 string stem = Path.Combine(exportDirectory, "plc-test-" + run.RunId + "-" + format + "-" + Guid.NewGuid().ToString("N"));
-                string[] roots = new[] { DataLocations.Current.Root, DataLocations.Current.OutputRoot };
                 var paths = new JsonArray();
                 if (format == "junit")
                 {
-                    PublishReport(stem, new[] { (".xml", PlcTestReportBuilder.WriteJUnit(run, roots)) });
+                    PublishReport(stem, new[] { (".xml", PlcTestReportBuilder.WriteJUnit(run)) });
                     paths.Add(stem + ".xml");
                 }
                 else
@@ -64,7 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             documents[item.Id] = File.ReadAllText(Path.Combine(libraryDirectory(), "cases", item.Id + ".json"), Encoding.UTF8);
                         }
                     var audit = format == "repro" ? new JsonObject() : ReportAudit(run, DataLocations.Current.AuditReadRoots);
-                    var report = PlcTestReportBuilder.Build(run, format, audit, documents, CallJournalPayload.RedactArguments, roots);
+                    var report = PlcTestReportBuilder.Build(run, format, audit, documents, CallJournalPayload.RedactArguments);
                     PublishReport(stem, new[] { (".md", report.Markdown), (".json", PlcTestCaseDocument.Format(report.Document)) });
                     paths.Add(stem + ".md"); paths.Add(stem + ".json");
                 }

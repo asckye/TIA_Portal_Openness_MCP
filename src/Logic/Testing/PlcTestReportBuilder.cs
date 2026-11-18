@@ -7,7 +7,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 
 namespace TiaMcp.Logic.Testing
 {
@@ -22,17 +21,17 @@ namespace TiaMcp.Logic.Testing
     public static class PlcTestReportBuilder
     {
         public static PlcTestReport Build(PlcTestRunRecord run, string format, JsonObject audit,
-            IReadOnlyDictionary<string, string> documents, Func<JsonNode?, JsonNode?> redactArguments, IEnumerable<string>? pathRoots = null)
+            IReadOnlyDictionary<string, string> documents, Func<JsonNode?, JsonNode?> redactArguments)
         {
             if (format != "fat" && format != "sat" && format != "repro") throw new ArgumentException("Unknown report format.");
-            var privacy = new ReportPrivacy(pathRoots);
+            var privacy = new ReportPrivacy();
             run = privacy.Run(run);
             string title = format == "fat" ? "Factory Acceptance Test" : format == "sat" ? "Site Acceptance Test" : "PLC Test Reproduction Report";
             var first = run.Cases.FirstOrDefault(c => c.Kind == "plcsimScenario");
             var environment = new JsonObject {
                 ["releaseKey"] = run.ReleaseKey, ["hostVersion"] = run.HostVersion,
-                ["projectFile"] = FileName((string?)run.Project?["file"] ?? ""),
-                ["plcsimApi"] = first?.Evidence["api"]?.DeepClone()
+                ["projectFile"] = (string?)run.Project?["file"] ?? "",
+                ["plcsimApi"] = first?.Evidence["details"]?["api"]?.DeepClone()
             };
             var report = new JsonObject {
                 ["title"] = title, ["runId"] = run.RunId, ["status"] = run.Status,
@@ -140,7 +139,6 @@ namespace TiaMcp.Logic.Testing
             using var sha = SHA256.Create();
             return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(lines))).Replace("-", "").ToLowerInvariant();
         }
-        private static string FileName(string path) => path.Replace('\\', '/').Split('/').Last();
         private static string Cell(string value) => value.Replace("|", "\\|").Replace("\r", "").Replace("\n", "<br>");
         private static void Code(StringBuilder text, string value, string language)
         {
@@ -149,8 +147,8 @@ namespace TiaMcp.Logic.Testing
             text.Append(fence).Append(language).Append('\n').Append(value).Append(value.EndsWith("\n", StringComparison.Ordinal) ? "" : "\n")
                 .Append(fence).Append("\n\n");
         }
-        public static string WriteJUnit(PlcTestRunRecord run, IEnumerable<string>? pathRoots = null)
-            => PlcTestJUnitWriter.Write(new ReportPrivacy(pathRoots).Run(run));
+        public static string WriteJUnit(PlcTestRunRecord run)
+            => PlcTestJUnitWriter.Write(new ReportPrivacy().Run(run));
 
         // Replace changed JSON values by token offsets; all other source bytes, including spacing and notes, remain verbatim.
         private static string RedactDocument(string document, JsonNode? redacted)
@@ -203,19 +201,6 @@ namespace TiaMcp.Logic.Testing
 
         private sealed class ReportPrivacy
         {
-            private readonly Regex paths;
-            internal ReportPrivacy(IEnumerable<string>? roots)
-            {
-                const string tail = @"[^""'<>|\r\n]*";
-                var prefixes = (roots ?? Array.Empty<string>()).Where(root => !string.IsNullOrEmpty(root))
-                    .Select(root => string.Join(@"[\\/]", root.TrimEnd('/', '\\').Split(new[] { '/', '\\' }).Select(Regex.Escape)));
-                string known = string.Join("|", prefixes.Select(prefix => prefix + @"[\\/]" + tail));
-                string absolute = @"[A-Za-z]:[\\/]" + tail + @"|\\\\" + tail
-                    + @"|(?<![\w:/])/(?:[^/\s""'<>|]+/)+" + tail;
-                paths = new Regex(known.Length == 0 ? absolute : known + "|" + absolute,
-                    RegexOptions.CultureInvariant | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
-            }
-            private string Text(string value) => paths.Replace(value, match => FileName(match.Value.TrimEnd()));
             internal PlcTestRunRecord Run(PlcTestRunRecord run) => PlcTestRunRecord.Parse(Node(run.Document, omitIdentity: true)!.ToJsonString());
             internal JsonNode? Node(JsonNode? node, bool omitIdentity = false)
             {
@@ -228,7 +213,8 @@ namespace TiaMcp.Logic.Testing
                     return result;
                 }
                 if (node is JsonArray array) return new JsonArray(array.Select(item => Node(item, omitIdentity)).ToArray());
-                return node is JsonValue value && value.TryGetValue<string>(out string? text) ? JsonValue.Create(Text(text)) : node?.DeepClone();
+                return node is JsonValue value && value.TryGetValue<string>(out string? text)
+                    ? JsonValue.Create(PlcTestEvidence.ScrubPaths(text)) : node?.DeepClone();
             }
         }
     }

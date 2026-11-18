@@ -8,7 +8,7 @@ using Xunit;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Tools = toolpipeline::TiaMcpServer.ModelContextProtocol.PlcTestLibraryTools;
 
-// Hand-written run records; synthetic evidence uses the real adapter field names and nesting. No native execution.
+// Persisted records come from PlcTestLibraryRunner with synthetic native replies. No native execution.
 [Collection(BundleSelectionCollection.Name)]
 public sealed class PlcTestReportTests : IDisposable
 {
@@ -23,24 +23,39 @@ public sealed class PlcTestReportTests : IDisposable
         "testSuite":{"category":"application","kind":"case","names":["TC_Interlock"],"runAll":false}}
         """;
 
-    internal static PlcTestRunRecord Record(string verdict = "failed", string status = "completed") => new() {
-        RunId = "20261117-083000-1a2b3c4d", Status = status,
-        StartedUtc = DateTimeOffset.Parse("2026-11-17T08:30:00Z", System.Globalization.CultureInfo.InvariantCulture),
-        FinishedUtc = DateTimeOffset.Parse("2026-11-17T08:31:12.345Z", System.Globalization.CultureInfo.InvariantCulture),
-        ReleaseKey = "21", HostVersion = "4.0.0.0", Project = new JsonObject { ["file"] = @"D:\Users\private-user\Line1.ap21" },
-        PlanHash = "plan-hash", Audit = new JsonObject { ["requestId"] = "fixture-request" },
-        Cases = new() { new() {
-            Id = "start", Title = "Conveyor start", Requirement = "REQ-012", Kind = "plcsimScenario",
-            CaseSha256 = PlcTestCaseDocument.Parse(Scenario).Sha256, Verdict = verdict, DurationMs = 1830,
-            Message = @"assertion failed; source D:\Users\private-user\source.json",
-            Evidence = JsonNode.Parse("""
-                {"api":{"apiPath":"C:\\Program Files\\Siemens\\Automation\\PLCSIM Advanced\\API\\7.0\\Siemens.Simatic.Simulation.Runtime.Api.x64.dll",
-                "apiSource":"installed","apiVersion":"7.0","assemblyVersion":"7.0.0.0","networkMode":"TCPIP"},
-                "steps":[{"index":2,"kind":"assert","ok":false,"checks":[
-                {"name":"Running","type":"Bool","expected":true,"actual":false,"ok":false}]}]}
-                """)!.AsObject()
-        } }
-    };
+    internal static PlcTestRunRecord Record(string verdict = "failed", string status = "completed")
+    {
+        var reply = PlcTestRunTests.ScenarioReply(verdict);
+        reply["Data"]!["api"] = JsonNode.Parse("""
+            {"apiPath":"C:\\Program Files\\Siemens\\Automation\\PLCSIM Advanced\\API\\7.0\\Siemens.Simatic.Simulation.Runtime.Api.x64.dll",
+            "apiSource":"installed","apiVersion":"7.0","assemblyVersion":"7.0.0.0","networkMode":"TCPIP"}
+            """);
+        reply["Data"]!["steps"]![0]!["index"] = 2;
+        if (reply["Data"]!["steps"]![0]!["checks"] is JsonArray checks) checks[0]!["name"] = "Running";
+        if (verdict == "skipped")
+        {
+            reply["Meta"]!["status"] = "UNSUPPORTED_CAPABILITY";
+            reply["Data"]!["steps"] = new JsonArray();
+        }
+        var run = PlcTestRunTests.ReportRecord(PlcTestCaseDocument.Parse(Scenario), reply);
+        Assert.Equal(new[] { "code", "message", "details" }, run.Cases[0].Evidence.Select(pair => pair.Key));
+        Assert.NotNull(run.Cases[0].Evidence["details"]?["api"]);
+        Assert.Null(run.Cases[0].Evidence["api"]);
+        return PresentationTimes(run, status);
+    }
+
+    // Only display metadata is fixed for deterministic assertions; evidence is read unchanged from run.json.
+    private static PlcTestRunRecord PresentationTimes(PlcTestRunRecord run, string status = "completed")
+    {
+        run.RunId = "20261117-083000-1a2b3c4d"; run.Status = status;
+        run.StartedUtc = DateTimeOffset.Parse("2026-11-17T08:30:00Z", System.Globalization.CultureInfo.InvariantCulture);
+        run.FinishedUtc = DateTimeOffset.Parse("2026-11-17T08:31:12.345Z", System.Globalization.CultureInfo.InvariantCulture);
+        run.HostVersion = "4.0.0.0";
+        run.Project = new JsonObject { ["file"] = "Line1.ap21" };
+        run.Audit["requestId"] = "fixture-request";
+        run.Cases[0].DurationMs = 1830;
+        return run;
+    }
 
     private static Dictionary<string, string> Documents => new() { ["start"] = Scenario, ["interlock"] = Suite };
     private static PlcTestReport Build(PlcTestRunRecord run, string format, JsonObject? audit = null)
@@ -121,7 +136,8 @@ public sealed class PlcTestReportTests : IDisposable
     public void Repro_keeps_verbatim_case_redacts_call_and_omits_passed_cases_and_user_paths()
     {
         var run = Record();
-        run.Cases.Add(new() { Id = "passed-case", Title = "Must be omitted", Verdict = "passed" });
+        var passed = Record("passed").Cases[0]; passed.Id = "passed-case"; passed.Title = "Must be omitted";
+        run.Cases.Add(passed);
         var report = Build(run, "repro");
         string redactedDocument = Scenario.Replace("\"fixture-secret\"", JsonSerializer.Serialize(CallJournalPayload.Hidden));
         Assert.Contains(redactedDocument, report.Markdown);
@@ -149,14 +165,10 @@ public sealed class PlcTestReportTests : IDisposable
     [Fact]
     public void Test_suite_repro_has_exact_selection_and_warning_messages()
     {
-        var run = Record();
-        run.Cases.Clear();
-        run.Cases.Add(new() { Id = "interlock", Kind = "testSuite", Title = "Interlock", Verdict = "failed",
-            CaseSha256 = PlcTestCaseDocument.Parse(Suite).Sha256,
-            Evidence = JsonNode.Parse("""
-                {"result":{"state":"Warning","errorCount":0,"warningCount":1,"messages":[
-                {"path":"TC_Interlock","state":"Warning","description":"Open deviation","messages":[]}]}}
-                """)!.AsObject() });
+        var reply = PlcTestRunTests.SuiteReply("Warning");
+        reply["Meta"]!["result"]!["messages"]![0]!["path"] = "TC_Interlock";
+        reply["Meta"]!["result"]!["messages"]![0]!["description"] = "Open deviation";
+        var run = PresentationTimes(PlcTestRunTests.ReportRecord(PlcTestCaseDocument.Parse(Suite), reply));
         var report = Build(run, "repro");
         var args = report.Document["cases"]![0]!["call"]!["arguments"]!;
         Assert.Equal("application", (string?)args["category"]);
@@ -169,6 +181,26 @@ public sealed class PlcTestReportTests : IDisposable
         Assert.Equal("<expectedProjectFile from preview>", (string?)args["expectedProjectFile"]);
         Assert.True((bool)report.Document["cases"]![0]!["previewCall"]!["arguments"]!["dryRun"]!);
         Assert.Contains("TC_Interlock: Open deviation", report.Markdown);
+    }
+
+    [Fact]
+    public void Runner_record_preserves_multiline_assertions_and_nonsensitive_source_text_in_reports()
+    {
+        var document = PlcTestCaseDocument.Parse(Scenario).Document;
+        document["scenario"]!["steps"]![1]!["note"] = "first line\nsecond line";
+        var original = PlcTestCaseDocument.Parse(document.ToJsonString());
+        var reply = PlcTestRunTests.ScenarioReply("failed");
+        reply["Data"]!["steps"]![0]!["checks"]!.AsArray().Add(new JsonObject {
+            ["name"] = "Interlock", ["type"] = "Bool", ["expected"] = true, ["actual"] = false, ["ok"] = false });
+        var run = PlcTestRunTests.ReportRecord(original, reply);
+        Assert.Contains("\n", run.Cases[0].Message);
+        var report = PlcTestReportBuilder.Build(run, "repro", new(), new Dictionary<string, string> {
+            [original.Id] = original.CanonicalJson }, CallJournalPayload.RedactArguments);
+        Assert.Equal(run.Cases[0].Message, (string?)report.Document["cases"]?[0]?["message"]);
+        Assert.Contains("Interlock", (string?)report.Document["cases"]?[0]?["details"]);
+        string redacted = original.CanonicalJson.Replace("\"fixture-secret\"", JsonSerializer.Serialize(CallJournalPayload.Hidden));
+        Assert.Equal(redacted, (string?)report.Document["cases"]?[0]?["caseDocument"]);
+        Assert.Contains(redacted, report.Markdown);
     }
 
     [Fact]
@@ -201,7 +233,8 @@ public sealed class PlcTestReportTests : IDisposable
     [Fact]
     public void Library_hash_uses_sorted_id_hash_lines()
     {
-        var run = Record(); run.Cases.Add(new() { Id = "aaa", CaseSha256 = "1234" });
+        var run = Record(); var another = Record("passed").Cases[0]; another.Id = "aaa"; another.CaseSha256 = "1234";
+        run.Cases.Add(another);
         string expected = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
             Encoding.UTF8.GetBytes("aaa:1234\nstart:" + run.Cases[0].CaseSha256)));
         Assert.Equal(expected, PlcTestReportBuilder.LibraryHash(run));
@@ -222,7 +255,7 @@ public sealed class PlcTestReportTests : IDisposable
         run.Cases[0].Title = local;
         run.Cases[0].Requirement = unc;
         run.Cases[0].Message = "Source: " + local;
-        run.Cases[0].Evidence["steps"]![0]!["checks"]![0]!["actual"] = local;
+        run.Cases[0].Evidence["details"]!["steps"]![0]!["checks"]![0]!["actual"] = local;
         var audit = new JsonObject { ["reason"] = local };
         var report = Build(run, format, audit);
         string output = report.Markdown + report.Document.ToJsonString();
@@ -253,8 +286,7 @@ public sealed class PlcTestReportTests : IDisposable
         var run = Record();
         run.Cases[0].Title = "/known data root/with spaces/input.json";
         run.Cases[0].Message = "/known output root/with spaces/output.json";
-        var report = PlcTestReportBuilder.Build(run, "fat", new(), Documents, CallJournalPayload.RedactArguments,
-            new[] { "/known data root", "/known output root" });
+        var report = PlcTestReportBuilder.Build(run, "fat", new(), Documents, CallJournalPayload.RedactArguments);
         Assert.Equal("input.json", (string?)report.Document["cases"]?[0]?["title"]);
         Assert.Equal("output.json", (string?)report.Document["cases"]?[0]?["message"]);
         Assert.DoesNotContain("known data root", report.Markdown + report.Document.ToJsonString());
@@ -269,7 +301,7 @@ public sealed class PlcTestReportTests : IDisposable
         const string local = @"C:\Users\Max Mustermann\Documents\x.json";
         var run = Record();
         run.Cases[0].Title = local; run.Cases[0].Requirement = local; run.Cases[0].Message = local;
-        run.Cases[0].Evidence["steps"]![0]!["checks"]![0]!["actual"] = local;
+        run.Cases[0].Evidence["details"]!["steps"]![0]!["checks"]![0]!["actual"] = local;
         run.Save(Path.Combine(root, "runs"));
         var tool = new Tools(() => root, () => Path.Combine(root, "runs"));
         var result = tool.ExportPlcTestReport(format: "junit", exportDirectory: Path.Combine(root, "report"));

@@ -496,7 +496,27 @@ public sealed class PlcTestRunTests
         Assert.Equal(0, fixture.Calls); Assert.False(Directory.Exists(fixture.Runs));
     }
 
-    private static JsonObject ScenarioReply(string verdict)
+    // Reports consume a persisted record from the real runner, not an independently authored evidence format.
+    internal static PlcTestRunRecord ReportRecord(PlcTestCaseDocument document, JsonObject reply)
+    {
+        string root = Path.Combine(AppContext.BaseDirectory, "report-run-record-" + Guid.NewGuid().ToString("N"));
+        using var worker = new Worker(document.Kind == "testSuite");
+        var registry = LegacyHostToolRegistry.Create(worker, "21", false, hostPorts: false);
+        using var pipeline = new Engine.EngineHostPipeline("21", worker, registry);
+        using var scope = pipeline.EnterSession();
+        var runner = new toolpipeline::TiaMcpServer.ModelContextProtocol.PlcTestLibraryRunner(
+            new Simulator((_, _) => reply.DeepClone()), new Suite((_, _) => reply.DeepClone(), () => Fixture.Project));
+        try
+        {
+            runner.Execute(new[] { new toolpipeline::TiaMcpServer.ModelContextProtocol.PlcTestLibraryRunner.Entry {
+                Case = document, Hash = document.Sha256 } }, root, "21", "plan-hash", Fixture.Project,
+                new[] { document.Id }, Array.Empty<string>());
+            return PlcTestRunRecord.Read(root, "latest");
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); }
+    }
+
+    internal static JsonObject ScenarioReply(string verdict)
     {
         bool passed = verdict == "passed";
         var step = new JsonObject { ["index"] = 1, ["kind"] = verdict == "error" ? "wait" : verdict == "unknown" ? "write" : "assert",
@@ -513,7 +533,7 @@ public sealed class PlcTestRunTests
             ["Meta"] = new JsonObject { ["success"] = passed, ["operationSuccess"] = passed, ["outcomeUnknown"] = verdict == "unknown" } };
     }
 
-    private static JsonObject SuiteReply(string state) => new() { ["Message"] = "Synthetic TestResults",
+    internal static JsonObject SuiteReply(string state) => new() { ["Message"] = "Synthetic TestResults",
         ["Meta"] = new JsonObject { ["success"] = true, ["apiCallSuccess"] = true,
             ["testPassed"] = state is "Success" or "Information", ["operationSuccess"] = true,
             ["operationStarted"] = true, ["nativeResultReturned"] = true, ["nativeState"] = state,

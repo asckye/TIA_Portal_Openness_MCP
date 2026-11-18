@@ -543,6 +543,7 @@ public sealed class OutputRootApprovalTests
         ["ExportPlcWatchTable"] = new("exportFile", "exportPath"),
         ["ExportTechnologyObject"] = new("exportFile", "exportPath"),
         ["ExportProjectTexts"] = new("filePath"),
+        ["ExportPlcTestReport"] = new("exportDirectory"),
         ["ExportSafetyPrintout"] = new("filePath"),
         ["ExportScadaData"] = new("filePath"),
         ["GeneratePlcLoadableFile"] = new("filePath"),
@@ -637,7 +638,7 @@ public sealed class OutputRootApprovalTests
         var baselines = Directory.GetFiles(Path.Combine(repository, "manifest", "contracts", "v4", "baseline"), "*.json");
         Assert.Equal(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" },
             baselines.Select(Path.GetFileNameWithoutExtension).OrderBy(name => name, StringComparer.Ordinal));
-        Assert.Equal(58, ExpectedOutputs.Count);
+        Assert.Equal(59, ExpectedOutputs.Count);
         foreach (string file in baselines)
         {
             var catalog = JsonNode.Parse(File.ReadAllText(file))!;
@@ -681,7 +682,7 @@ public sealed class OutputRootApprovalTests
             }
         }
         Assert.Equal(ExpectedOutputs.Keys.OrderBy(name => name), schemaCovered.OrderBy(name => name));
-        Assert.Equal(58, covered.Count(name => ExpectedOutputs.ContainsKey(name)));
+        Assert.Equal(59, covered.Count(name => ExpectedOutputs.ContainsKey(name)));
         Assert.Contains("BuildDeviceAmlDocument", covered);
         Assert.Contains("RunOfflineReleaseValidationSuite", covered);
     }

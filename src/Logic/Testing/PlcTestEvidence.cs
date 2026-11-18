@@ -9,7 +9,10 @@ namespace TiaMcp.Logic.Testing
     public static class PlcTestEvidence
     {
         public static string Text(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
-        public static string Scrub(string? text)
+        public static string Scrub(string? text) => NativeFailureDiagnostics.Text(ScrubPaths(text)) ?? "";
+
+        // Reports preserve multiline messages and source text; native diagnostics additionally remove stack traces.
+        public static string ScrubPaths(string? text)
         {
             const string root = @"(?:[A-Za-z]:[\\/]|\\\\|(?<![\w:/])/)";
             string FileName(string path) => path.Replace('\\', '/').TrimEnd('/').Split('/').Last();
@@ -20,7 +23,7 @@ namespace TiaMcp.Logic.Testing
             const string file = @"(?:[^\\/\r\n""'<>|;:]*?[\\/])*?[^\s\\/""'<>|;,:]+\.[A-Za-z0-9]+(?=$|[\s""'<>|;,):])";
             safe = Regex.Replace(safe, root + file + "|" + root + @"[^\s""'<>|;,:]+",
                 match => FileName(match.Value), RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
-            return NativeFailureDiagnostics.Text(safe) ?? "";
+            return safe;
         }
 
         public static JsonObject Normalize(JsonObject outcome, string verdict, string? diagnostic = null)
