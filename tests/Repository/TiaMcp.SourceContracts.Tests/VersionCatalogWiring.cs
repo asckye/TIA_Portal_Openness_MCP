@@ -26,8 +26,10 @@ public sealed partial class VersionCatalogWiring
     {
         var wiring = Sources.Member("WrapTools");
         Assert.DoesNotContain("IsolatedWorkerHost", wiring, StringComparison.Ordinal);
-        Assert.Contains("WrapWithSerializedCalls(WrapWithResponseGuard(tools))", wiring, StringComparison.Ordinal);
+        Assert.Contains("WrapWithSerializedCalls(WrapWithResponseGuard(tools.Select(tool => (McpServerTool)new SecretVaultTool(tool)).ToList()))",
+            wiring, StringComparison.Ordinal);
         Assert.Contains("WrapWithVersionPolicy(Dispatch.OpennessReadinessGuard.Wrap(guarded))", wiring, StringComparison.Ordinal);
+        Assert.Contains("WrapWithAuditCalls(WrapWithVersionPolicy(Dispatch.OpennessReadinessGuard.Wrap(guarded)))", wiring, StringComparison.Ordinal);
         var wrapper = Sources.Member("InvokeAsync", owner: "VersionPolicyTool");
         Assert.True(Find(wrapper, "V4Admission") < Find(wrapper, "return inner.InvokeAsync"));
         Assert.DoesNotContain("VersionCallProblem", wrapper, StringComparison.Ordinal);

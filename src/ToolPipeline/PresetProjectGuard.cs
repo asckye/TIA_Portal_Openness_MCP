@@ -51,7 +51,8 @@ internal static class PresetProjectGuard
                 catch (System.Text.Json.JsonException) { /* swallow(parse-fallback): an invalid spec cannot establish the preset target. */ return Refuse(); }
                 if (spec == null) return Refuse();
                 try { target = GenerationProjectPath.CreationFile(EngineHostConfiguration.ReleaseKey,
-                    spec["directoryPath"] == null ? Path.GetTempPath() : StringValue(spec["directoryPath"]), StringValue(spec["projectName"])); }
+                    spec["directoryPath"] == null ? TiaOpenness.Shared.DataLocations.Current.SystemTempDirectory
+                        : StringValue(spec["directoryPath"]), StringValue(spec["projectName"])); }
                 catch (ArgumentException) { /* swallow(parse-fallback): an invalid creation path cannot match the preset. */ return Refuse(); }
                 break;
             case "CreateProject":

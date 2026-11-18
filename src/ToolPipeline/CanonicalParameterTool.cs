@@ -222,7 +222,18 @@ internal sealed class CanonicalParameterTool : McpServerTool
         if (original == null || inner is CanonicalParameterTool)
             return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
         var context = EngineHostConfiguration.CurrentOrNull;
-        var supplied = RequestArguments(request);
+        ToolArguments supplied;
+        try { supplied = RequestArguments(request); }
+        catch (InputRejectionException rejection)
+        {
+            // Preserve typed-family diagnostics before the whole-argument budget rejection, as in V4 admission.
+            var arguments = JsonSerializer.SerializeToElement(original.Arguments ?? new Dictionary<string, JsonElement>());
+            var rejectedDescriptor = context?.Catalog?.Find(original.Name);
+            var admission = rejectedDescriptor == null ? null
+                : context?.Invoker?.ValidateArguments(rejectedDescriptor, arguments, rejectedDescriptor.Tool.InputSchema, typedFamiliesOnly: true);
+            return Reject(EngineHostConfiguration.ReleaseKey, original.Name,
+                admission ?? rejection.ToError(rejection.IsLimit ? "arguments" : ""));
+        }
         var input = JsonNode.Parse(supplied.Json.GetRawText())!.AsObject();
         var reflectionError = ParameterPresets.UnpinnedReflectionTarget(original.Name, input, context?.Presets ?? ParameterPresets.Empty);
         if (reflectionError != null) return Reject(EngineHostConfiguration.ReleaseKey, original.Name, reflectionError);

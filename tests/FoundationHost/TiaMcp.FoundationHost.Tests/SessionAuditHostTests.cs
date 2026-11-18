@@ -35,7 +35,7 @@ public sealed class SessionAuditHostTests
         try
         {
             var arguments = new JsonObject { ["softwarePath"] = "PLC_1", ["targetIpAddress"] = "192.0.2.10",
-                ["pgPcInterface"] = "PLCSIM", ["password"] = "vault:plc1", ["dryRun"] = true };
+                ["pgPcInterface"] = "PLCSIM", ["confirmPhysicalTarget"] = true, ["password"] = "vault:plc1", ["dryRun"] = true };
             Task<ModelContextProtocol.Protocol.CallToolResult> Call() => fixture.Call(bridge ? "CallTool" : "DownloadPlc",
                 bridge ? new { name = "DownloadPlc", arguments } : (object)arguments);
             var preview = await Call();
