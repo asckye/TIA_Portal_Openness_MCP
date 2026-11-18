@@ -212,10 +212,17 @@ public sealed class UnifiedPortAdmissionTests
             Assert.True((bool?)sequence["profileMatches"]);
             Assert.Equal(new[] { "update", "create" }, tools["SetUnifiedGlobalScript"].ProtocolTool.InputSchema
                 .GetProperty("properties").GetProperty("action").GetProperty("enum").EnumerateArray().Select(v => v.GetString()));
-            var steps = sequence["steps"]!.AsArray();
+            var steps = sequence["steps"]!.AsArray().ToArray();
+            Assert.Equal(6, steps.Length);
             Assert.Equal("ListUnifiedGlobalScripts", (string?)steps[0]?["tool"]);
             Assert.Equal("create", (string?)steps[1]?["arguments"]?["action"]);
             Assert.True((bool?)steps[1]?["arguments"]?["dryRun"]);
+            // After manual creation the four steps read, preview the update, apply it and read back.
+            steps = steps[2..];
+            Assert.Equal("GetUnifiedGlobalScript", (string?)steps[0]?["tool"]);
+            Assert.Equal("update", (string?)steps[1]?["arguments"]?["action"]);
+            Assert.True((bool?)steps[1]?["arguments"]?["dryRun"]);
+            Assert.Equal("update", (string?)steps[2]?["arguments"]?["action"]);
             Assert.False((bool?)steps[2]?["arguments"]?["dryRun"]);
             Assert.Equal("GetUnifiedGlobalScript", (string?)steps[^1]?["tool"]);
         }
@@ -246,6 +253,18 @@ public sealed class UnifiedPortAdmissionTests
         Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent!.ToJsonString());
         Assert.NotEmpty((string)result.StructuredContent!["data"]!["planHash"]!);
         Assert.True(worker.Calls > 0);
+        int callsAfterPreview = worker.Calls;
+        arguments["dryRun"] = false;
+        arguments["expectedPlanHash"] = result.StructuredContent["data"]!["planHash"]!.DeepClone();
+        arguments["expectedProjectFile"] = "C:/fixture.ap21";
+        arguments["previewToken"] = "preview-token";
+        var refusal = (await tool.InvokeAsync(Request(name, arguments))).StructuredContent!;
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)refusal["error"]!["code"]);
+        Assert.Contains("Create the module in TIA", (string?)refusal["error"]!["message"]);
+        Assert.Contains("action=update", (string?)refusal["error"]!["message"]);
+        Assert.Equal("rejected-before-operation", (string?)refusal["meta"]!["outcome"]);
+        Assert.Equal("not-started", (string?)refusal["meta"]!["execution"]);
+        Assert.Equal(callsAfterPreview, worker.Calls);
         Assert.Equal(0, worker.Applies);
     }
 
@@ -278,6 +297,14 @@ public sealed class UnifiedPortAdmissionTests
         var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name);
         var arguments = Arguments(name); arguments["action"] = action; arguments["dryRun"] = preview;
         var result = await tool.InvokeAsync(Request(name, arguments));
+        if (action == "create")
+        {
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+            Assert.Equal(0, worker.Calls);
+            arguments["action"] = "update";
+            result = await tool.InvokeAsync(Request(name, arguments));
+        }
         Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
@@ -1060,7 +1087,36 @@ public sealed class UnifiedPortAdmissionTests
         }
     }
 
-    private sealed class ApprovalWorker(bool bound = false) : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
+    [Fact]
+    public async Task Exception_after_script_import_keeps_worker_meta_in_the_unknown_envelope()
+    {
+        const string name = "SetUnifiedGlobalScript";
+        using var worker = new ApprovalWorker(bound: true, failReadback: true);
+        using var release = new ReleaseState("21");
+        using var lifetime = new Host.ImportStagingHostLifetime();
+        var catalog = new ApprovalCatalog("21");
+        using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog,
+                Invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, worker, lifetime) });
+        var tool = PortedToolContract.Create(worker, "21").Single(t => t.ProtocolTool.Name == name);
+        var arguments = Arguments(name);
+        var preview = (await tool.InvokeAsync(Request(name, arguments))).StructuredContent!;
+        Assert.True((bool?)preview["ok"], preview.ToJsonString());
+        arguments["dryRun"] = false;
+        arguments["expectedPlanHash"] = preview["data"]!["planHash"]!.DeepClone();
+        arguments["expectedProjectFile"] = "C:/fixture.ap21";
+        var body = (await tool.InvokeAsync(Request(name, arguments))).StructuredContent!;
+        Assert.Equal(1, worker.Applies);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
+        var evidence = body["error"]!["details"]!["evidence"]!;
+        Assert.True((bool?)evidence["importReturned"]);
+        Assert.Equal("exportAfter", (string?)evidence["phase"]);
+        Assert.Equal("System.IO.IOException", (string?)evidence["nativeExceptionType"]);
+        Assert.Equal("candidate", (string?)evidence["candidateDirectoryRelativeToTemp"]);
+        Assert.Null(evidence["error"]);
+    }
+
+    private sealed class ApprovalWorker(bool bound = false, bool failReadback = false) : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal int Calls, Applies;
         public bool Faulted => false;
@@ -1077,7 +1133,20 @@ public sealed class UnifiedPortAdmissionTests
         {
             Calls++;
             if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject { ["ProjectFile"] = "C:/fixture.ap21", ["IsAttached"] = true });
-            if ((bool?)arguments["dryRun"] == false) Applies++;
+            if ((bool?)arguments["dryRun"] == false)
+            {
+                Applies++;
+                if (failReadback)
+                {
+                    // WorkerSessionRecovery sends the entire HmiReply as ChannelFailureException evidence.
+                    var meta = new Dictionary<string, object?> { ["importReturned"] = true, ["phase"] = "exportAfter",
+                        ["operationSuccess"] = false, ["mayHaveChanged"] = true, ["writeOutcomeUnknown"] = true,
+                        ["candidateDirectoryRelativeToTemp"] = "candidate", ["nativeExceptionType"] = typeof(IOException).FullName,
+                        ["error"] = "private exception stack" };
+                    var reply = new HmiReply { OutcomeUnknown = true, MayHaveChanged = true, Value = new HmiMessage { Meta = meta } };
+                    throw new WorkerOperationException("The write outcome is unknown.", -32603, "unknown", JsonSerializer.Serialize(reply));
+                }
+            }
             return Task.FromResult<JsonNode?>(new JsonObject { ["Value"] = new JsonObject { ["Message"] = "fixture", ["Meta"] = new JsonObject {
                 ["success"] = true, ["operationSuccess"] = true, ["apiCallSuccess"] = true,
                 ["dataComplete"] = true, ["verificationSuccess"] = true, ["mayHaveChanged"] = false } } });

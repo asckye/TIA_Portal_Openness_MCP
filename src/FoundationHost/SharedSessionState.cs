@@ -74,7 +74,7 @@ internal sealed class SharedSessionState
             ["releaseKey"] = release, ["isAttached"] = attached, ["processId"] = pid?.DeepClone(), ["projectFile"] = file?.DeepClone(),
             ["ownsProject"] = sameProject && (bool?)cached?["OwnsProject"] == true,
             ["isLocalSession"] = sameProject && (bool?)cached?["IsLocalSession"] == true,
-            ["identityStatus"] = "unverified-cached-pid", ["runtimeConnectionStatus"] = "not-probed",
+            ["identityStatus"] = attached ? "unverified-cached-pid" : "disconnected", ["runtimeConnectionStatus"] = "not-probed",
             ["canDetachOnUncertainShutdown"] = !attached || ((bool?)cached?["CanDetachOnUncertainShutdown"] ?? true),
             ["sessionState"] = state, ["outputRoot"] = DataLocations.Current.OutputRoot,
             ["presets"] = System.Text.Json.JsonSerializer.SerializeToNode(

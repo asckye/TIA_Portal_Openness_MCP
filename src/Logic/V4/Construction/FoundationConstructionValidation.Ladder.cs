@@ -164,6 +164,21 @@ namespace TiaMcp.Logic.V4.Construction
                     Outputs(rung.FanOut[i].Outputs, branch + "/outputs");
                 }
             InputGuard.Limit(parts, MaxRungParts);
+            if (rung.FanOut != null && rung.Outputs.Count + rung.FanOut.Count > 1)
+                for (int i = 0; i < rung.FanOut.Count; i++)
+                    CheckBranchInput(rung.FanOut[i].Series[0], pointer + "/fanOut/" + i.ToString(CultureInfo.InvariantCulture) + "/series/0");
+        }
+
+        // OR paths rejoin at O. The rejected split feeds independent output branches from the same wire.
+        private static void CheckBranchInput(LadCondition first, string pointer)
+        {
+            if (first.Paths != null)
+            {
+                for (int i = 0; i < first.Paths.Count; i++)
+                    CheckBranchInput(first.Paths[i][0], pointer + "/paths/" + i.ToString(CultureInfo.InvariantCulture) + "/0");
+            }
+            else if (first.Kind != "compare")
+                throw new InputRejectionException().At(pointer, first.Kind + " contact on a fanned-out input wire. Put this logic in its own network.");
         }
 
         private static bool SystemInstruction(string name)

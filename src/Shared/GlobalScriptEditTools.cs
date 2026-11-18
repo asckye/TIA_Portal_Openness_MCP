@@ -19,14 +19,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public GlobalScriptEditTools(GlobalScriptEditService service) => _globalScriptEdit = service;
 
         [McpServerTool(Name = "SetUnifiedGlobalScript"),
-                Description("[L2][HMI-Unified][WRITE]Update an existing global Scripts module (default action=update), or create one new module from " +
-                "complete scriptCode using official native JS/YAML import (action=create). Create refuses an existing name, including case variants. " +
-                "No Openness delete exists for script modules; remove an unwanted create manually in TIA. Default dryRun=true returns proposed text, " +
-                "hashes and " +
-                "previewToken; updates also retain the native backup and before text. Execution requires the SAME arguments, previewToken, expectedPlanHash " +
-                "and expectedProjectFile. Current content/absence is rechecked and exact full text is verified by export. No save/compile. Import false, " +
-                "exception or readback mismatch is NOT success; partial changes may exist. No automatic retry after connection failure. Native " +
-                "behaviorPolicy=current; V4 native acceptance is pending.")]
+                Description("[L2][HMI-Unified][WRITE]Update an existing global Scripts module with complete scriptCode. " +
+                "Create execution is unavailable pending real TIA verification. Create the module in TIA, then use action=update. " +
+                "Default dryRun=true previews proposed text and hashes. Updates retain the native backup and before text. " +
+                "Apply the same arguments with previewToken, expectedPlanHash and expectedProjectFile. Exact full text is verified by export. " +
+                "No save or compile. Inspect failed imports or readback mismatches before any further write. Native behaviorPolicy=current.")]
         public CallToolResult UpdateUnifiedGlobalScriptV4(
             [Description("Explicit HMI software path, as used by GetUnifiedGlobalScript.")] string softwarePath,
             [Description("Exact currently open project name; mismatch refuses the operation.")] string expectedProject,
@@ -35,7 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "MiB.")] string scriptCode,
             [Description("Preview and back up only by default. Set false only to apply the reviewed text.")] bool dryRun = true,
             [Description("Token from this tool's preview for the same project, HMI, module, original and proposed content.")] string previewToken = "",
-            [Description("update | create; default update.")] string action = "update",
+            [Description("Default update. Create supports preview only pending real TIA verification.")] string action = "update",
             [Description("planHash from this tool's preview for the same arguments and bound project; required for execution.")] string expectedPlanHash = "",
             [Description("Absolute bound project file from the preview target identity; required for execution.")] string expectedProjectFile = "")
             => McpServer.RunNativeWritePreview("SetUnifiedGlobalScript", dryRun,

@@ -265,6 +265,7 @@ public sealed class FoundationRecoveryTests
         FullState(afterDisconnect);
         Assert.False((bool?)afterDisconnect["data"]!["isAttached"]);
         Assert.Null(afterDisconnect["data"]!["processId"]);
+        Assert.Equal("disconnected", (string?)afterDisconnect["data"]!["identityStatus"]);
         Assert.Null(afterDisconnect["data"]!["projectFile"]);
         Assert.False((bool?)afterDisconnect["data"]!["ownsProject"]);
         Assert.False((bool?)afterDisconnect["data"]!["isLocalSession"]);

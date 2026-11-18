@@ -24918,18 +24918,8 @@
             "moduleName": "NewStatus",
             "scriptCode": "export function Status() {\n  return 1;\n}\n",
             "dryRun": true
-          }
-        },
-        "createExecute": {
-          "arguments": {
-            "action": "create",
-            "moduleName": "NewStatus",
-            "scriptCode": "export function Status() {\n  return 1;\n}\n",
-            "dryRun": false,
-            "previewToken": "<data.token from the matching SetUnifiedGlobalScript preview>",
-            "expectedPlanHash": "<data.planHash from the matching preview>",
-            "expectedProjectFile": "C:/Projects/Example/Example.ap{extension}"
-          }
+          },
+          "note": "Preview only. Create the module in TIA, then use action=update."
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -25944,42 +25934,42 @@
                           }
                         ]
                       }
-                    ],
-                    "fanOut": [
-                      {
-                        "series": [
-                          {
-                            "kind": "rising",
-                            "operand": {
-                              "global": [
-                                "DB_LadDemo",
-                                "Reset"
-                              ]
-                            },
-                            "memory": {
-                              "global": [
-                                "DB_LadDemo",
-                                "EdgeMem"
-                              ]
-                            }
-                          }
-                        ],
-                        "outputs": [
-                          {
-                            "kind": "reset",
-                            "operand": {
-                              "global": [
-                                "DB_LadDemo",
-                                "Active"
-                              ]
-                            }
-                          }
-                        ]
-                      }
                     ]
                   },
                   "titleZhCn": "条件与分支",
                   "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                },
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "rising",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Reset"
+                          ]
+                        },
+                        "memory": {
+                          "global": [
+                            "DB_LadDemo",
+                            "EdgeMem"
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "reset",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Active"
+                          ]
+                        }
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -41421,7 +41411,7 @@
           },
           "parameters": {
             "ladFcBlock": {
-              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; timer pt uses Time (T#/TIME#), never LT#/LTIME#. Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; calls do not resolve block identity. Literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs."
+              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; timer pt uses Time (T#/TIME#), never LT#/LTIME#. Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; calls do not resolve block identity. Literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs. Put a contact that would start a fanned-out output branch in its own network."
             },
             "outputReleaseKey": {
               "exampleValue": "21",
@@ -41569,42 +41559,42 @@
                               }
                             ]
                           }
-                        ],
-                        "fanOut": [
-                          {
-                            "series": [
-                              {
-                                "kind": "rising",
-                                "operand": {
-                                  "global": [
-                                    "DB_LadDemo",
-                                    "Reset"
-                                  ]
-                                },
-                                "memory": {
-                                  "global": [
-                                    "DB_LadDemo",
-                                    "EdgeMem"
-                                  ]
-                                }
-                              }
-                            ],
-                            "outputs": [
-                              {
-                                "kind": "reset",
-                                "operand": {
-                                  "global": [
-                                    "DB_LadDemo",
-                                    "Active"
-                                  ]
-                                }
-                              }
-                            ]
-                          }
                         ]
                       },
                       "titleZhCn": "条件与分支",
                       "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                    },
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "rising",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Reset"
+                              ]
+                            },
+                            "memory": {
+                              "global": [
+                                "DB_LadDemo",
+                                "EdgeMem"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "reset",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Active"
+                              ]
+                            }
+                          }
+                        ]
+                      }
                     }
                   ]
                 }
@@ -48361,25 +48351,15 @@
                 "moduleName": "NewStatus",
                 "scriptCode": "export function Status() {\n  return 1;\n}\n",
                 "dryRun": true
-              }
-            },
-            "createExecute": {
-              "arguments": {
-                "action": "create",
-                "moduleName": "NewStatus",
-                "scriptCode": "export function Status() {\n  return 1;\n}\n",
-                "dryRun": false,
-                "previewToken": "<data.token from the matching SetUnifiedGlobalScript preview>",
-                "expectedPlanHash": "<data.planHash from the matching preview>",
-                "expectedProjectFile": "C:/Projects/Example/Example.ap{extension}"
-              }
+              },
+              "note": "Preview only. Create the module in TIA, then use action=update."
             }
           },
-          "validation": "VM NOT RUN; schema checked for V19-V21. Create imports a minimal native JS/YAML pair; TIA acceptance is unverified.",
+          "validation": "V21 retest: module creation was not verified. V19–V21 refuse create execution.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "notes": [
             "V19 lacks TextGraphicList, HmiAlarmAuditClass and Expression/TagParameter dynamization. Unsupported actions are refused before native access.",
-            "Create refuses existing names including case variants. No Openness delete exists for script modules; remove manually in TIA if needed. Every execution requires previewToken, expectedPlanHash and expectedProjectFile from its preview."
+            "Create the module in TIA, then read its complete source and use update. Apply an update with previewToken, expectedPlanHash and expectedProjectFile from its matching preview."
           ],
           "execution": {
             "arguments": {
@@ -65728,24 +65708,14 @@
                 "moduleName": "NewStatus",
                 "scriptCode": "export function Status() {\n  return 1;\n}\n",
                 "dryRun": true
-              }
-            },
-            "createExecute": {
-              "arguments": {
-                "action": "create",
-                "moduleName": "NewStatus",
-                "scriptCode": "export function Status() {\n  return 1;\n}\n",
-                "dryRun": false,
-                "previewToken": "<data.token from the matching SetUnifiedGlobalScript preview>",
-                "expectedPlanHash": "<data.planHash from the matching preview>",
-                "expectedProjectFile": "C:/Projects/Example/Example.ap{extension}"
-              }
+              },
+              "note": "Preview only. Create the module in TIA, then use action=update."
             }
           },
-          "validation": "VM NOT RUN; schema checked for V19-V21. Create imports a minimal native JS/YAML pair; TIA acceptance is unverified.",
+          "validation": "V21 retest: module creation was not verified. V19–V21 refuse create execution.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "notes": [
-            "Create refuses existing names including case variants. No Openness delete exists for script modules; remove manually in TIA if needed. Every execution requires previewToken, expectedPlanHash and expectedProjectFile from its preview."
+            "Create the module in TIA, then read its complete source and use update. Apply an update with previewToken, expectedPlanHash and expectedProjectFile from its matching preview."
           ],
           "execution": {
             "arguments": {
@@ -66879,7 +66849,7 @@
           },
           "parameters": {
             "ladFcBlock": {
-              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; timer pt uses Time (T#/TIME#), never LT#/LTIME#. Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; calls do not resolve block identity. Literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs."
+              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; timer pt uses Time (T#/TIME#), never LT#/LTIME#. Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; calls do not resolve block identity. Literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs. Put a contact that would start a fanned-out output branch in its own network."
             },
             "outputReleaseKey": {
               "exampleValue": "21",
@@ -67026,42 +66996,42 @@
                               }
                             ]
                           }
-                        ],
-                        "fanOut": [
-                          {
-                            "series": [
-                              {
-                                "kind": "rising",
-                                "operand": {
-                                  "global": [
-                                    "DB_LadDemo",
-                                    "Reset"
-                                  ]
-                                },
-                                "memory": {
-                                  "global": [
-                                    "DB_LadDemo",
-                                    "EdgeMem"
-                                  ]
-                                }
-                              }
-                            ],
-                            "outputs": [
-                              {
-                                "kind": "reset",
-                                "operand": {
-                                  "global": [
-                                    "DB_LadDemo",
-                                    "Active"
-                                  ]
-                                }
-                              }
-                            ]
-                          }
                         ]
                       },
                       "titleZhCn": "条件与分支",
                       "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                    },
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "rising",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Reset"
+                              ]
+                            },
+                            "memory": {
+                              "global": [
+                                "DB_LadDemo",
+                                "EdgeMem"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "reset",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Active"
+                              ]
+                            }
+                          }
+                        ]
+                      }
                     }
                   ]
                 }
@@ -75258,9 +75228,9 @@
     {
       "id": "sequence/unified-script-module-create",
       "topic": "unified-script-module-create",
-      "purpose": "Create one Unified global script module from complete JavaScript source using a reviewed native import.",
-      "preconditions": "Bind the intended project and exact Unified software path; choose a new module name. Stop if the name or a case variant already exists.",
-      "notes": "No Openness delete exists for script modules; remove an unwanted create manually in TIA. Inspect failed or unknown imports in TIA before any further write; do not automatically retry. The tool does not save or compile.",
+      "purpose": "Preview a proposed module, create it in TIA, then update its complete source.",
+      "preconditions": "Bind the intended project and Unified software path. Choose an absent module name for the optional create preview.",
+      "notes": "Create execution is disabled pending real TIA verification. After manual creation, read the module and use the update preview and its matching tokens.",
       "releaseKeys": [
         "19",
         "20",
@@ -75288,7 +75258,16 @@
             "scriptCode": "export function Status() {\n  return 1;\n}\n",
             "dryRun": true
           },
-          "expect": "Review data.after.scriptCode, JS/YAML hashes, irreversible warning, data.token, data.planHash and targetIdentity."
+          "expect": "Review the proposed text. Create the module manually in TIA before continuing."
+        },
+        {
+          "tool": "GetUnifiedGlobalScript",
+          "arguments": {
+            "softwarePath": "HMI_RT_1",
+            "expectedProject": "Example",
+            "moduleName": "NewStatus"
+          },
+          "expect": "Read the complete source of the manually created module and prepare the intended edit."
         },
         {
           "tool": "SetUnifiedGlobalScript",
@@ -75296,8 +75275,20 @@
             "softwarePath": "HMI_RT_1",
             "expectedProject": "Example",
             "moduleName": "NewStatus",
-            "action": "create",
-            "scriptCode": "export function Status() {\n  return 1;\n}\n",
+            "action": "update",
+            "scriptCode": "<complete modified source from the read step>",
+            "dryRun": true
+          },
+          "expect": "Review before and after text and copy the update preview token, plan hash and target identity."
+        },
+        {
+          "tool": "SetUnifiedGlobalScript",
+          "arguments": {
+            "softwarePath": "HMI_RT_1",
+            "expectedProject": "Example",
+            "moduleName": "NewStatus",
+            "action": "update",
+            "scriptCode": "<complete modified source from the read step>",
             "dryRun": false,
             "previewToken": "<data.token from the matching SetUnifiedGlobalScript preview>",
             "expectedPlanHash": "<data.planHash from the matching preview>",
@@ -75312,7 +75303,7 @@
             "expectedProject": "Example",
             "moduleName": "NewStatus"
           },
-          "expect": "Read all pages and verify the created module text. Native TIA acceptance remains NOT RUN until a VM test."
+          "expect": "Read all pages and verify the updated module text."
         }
       ]
     },
@@ -76164,42 +76155,42 @@
                           }
                         ]
                       }
-                    ],
-                    "fanOut": [
-                      {
-                        "series": [
-                          {
-                            "kind": "rising",
-                            "operand": {
-                              "global": [
-                                "DB_LadDemo",
-                                "Reset"
-                              ]
-                            },
-                            "memory": {
-                              "global": [
-                                "DB_LadDemo",
-                                "EdgeMem"
-                              ]
-                            }
-                          }
-                        ],
-                        "outputs": [
-                          {
-                            "kind": "reset",
-                            "operand": {
-                              "global": [
-                                "DB_LadDemo",
-                                "Active"
-                              ]
-                            }
-                          }
-                        ]
-                      }
                     ]
                   },
                   "titleZhCn": "条件与分支",
                   "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                },
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "rising",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Reset"
+                          ]
+                        },
+                        "memory": {
+                          "global": [
+                            "DB_LadDemo",
+                            "EdgeMem"
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "reset",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Active"
+                          ]
+                        }
+                      }
+                    ]
+                  }
                 },
                 {
                   "rung": {

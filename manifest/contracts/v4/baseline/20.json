@@ -39046,13 +39046,13 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "311aa875cafc61b559cef7cb7088fd619abd5821eafced878923a827310b3d3f",
+      "descriptionSha256": "5efa48c11240767fbf39467c19ed9e0738e3dd7e910ecc64d96fc586bfdc6406",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "action": {
             "default": "update",
-            "description": "update | create; default update.",
+            "description": "Default update. Create supports preview only pending real TIA verification.",
             "enum": [
               "update",
               "create"

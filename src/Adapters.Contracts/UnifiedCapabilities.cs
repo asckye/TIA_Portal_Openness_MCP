@@ -29,6 +29,8 @@ namespace TiaMcp.Adapters.Contracts
         {
             if (release != "19" && release != "20" && release != "21")
                 return "WinCC Unified Openness requires V19 or later.";
+            if (request.Operation == "SetUnifiedGlobalScript" && request.Action == "create" && !request.DryRun)
+                return "Script module creation is not yet verified on real TIA Portal. Create the module in TIA, then use action=update.";
             bool list = request.Operation == "ExportUnifiedEngineeringList" || request.Operation == "ImportUnifiedEngineeringList"
                 || request.Operation == "ManageUnifiedListEntries" || request.Operation == "ListUnifiedEngineeringObjects"
                 || request.Operation == "ManageUnifiedEngineeringObject";

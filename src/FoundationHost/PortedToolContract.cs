@@ -493,7 +493,7 @@ internal sealed partial class FoundationTool
                 return McpServer.V4TargetReject(tool.Name, new Error(invalidSettings,
                     new InvalidArgumentDetails(tool.Name == "GetUnifiedRuntimeSettings" ? "/fields" : "/changes", Array.Empty<string>())), current: true);
             if (UnifiedCapabilities.Unsupported(portedRelease!, unified) is string unifiedReason)
-                return tool.Name is "ManageUnifiedEngineeringObject" or "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings"
+                return tool.Name is "SetUnifiedGlobalScript" or "ManageUnifiedEngineeringObject" or "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings"
                     || UnifiedCapabilities.WritesRuntimeSettings(unified)
                     ? McpServer.V4TargetReject(tool.Name,
                         new Error(unifiedReason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true)
@@ -584,13 +584,17 @@ internal sealed partial class FoundationTool
         void RecordFailure(Exception error)
         {
             workerFailure = error;
-            if (error is WorkerOperationException { Outcome: "rejected-before-operation" } deviceFailure
-                && JsonNode.Parse(deviceFailure.EvidenceJson ?? "null") is JsonObject { } deviceEvidence
+            var workerError = error as WorkerOperationException;
+            var retained = workerError?.EvidenceJson is string json ? JsonNode.Parse(json) : null;
+            if (workerError?.Outcome == "unknown" && retained is JsonObject hmiReply
+                && hmiReply["Value"] is JsonObject value
+                && value["Meta"] is JsonObject hmiMeta)
+                error.Data["nativeResultEvidence"] = hmiMeta;
+            if (workerError?.Outcome == "rejected-before-operation" && retained is JsonObject deviceEvidence
                 && deviceEvidence["status"]?.ToString() == "Ambiguous" && deviceEvidence["target"] != null)
                 error.Data["nativeResultEvidence"] = deviceEvidence;
-            nativeDiagnostics = error is WorkerOperationException workerError
-                ? FoundationV4Result.NativeDiagnostics(new JsonObject { ["Failure"] = new JsonObject {
-                    ["Message"] = workerError.Message, ["Evidence"] = JsonNode.Parse(workerError.EvidenceJson ?? "null") } }) : null;
+            nativeDiagnostics = workerError == null ? null : FoundationV4Result.NativeDiagnostics(new JsonObject { ["Failure"] = new JsonObject {
+                ["Message"] = workerError.Message, ["Evidence"] = retained } });
             priorMutation |= TiaOpenness.Shared.HostFailurePolicy.PriorMutation(error);
             error.Data["foundationStepKnownNoMutation"] = error is WorkerOperationException { KnownNoMutation: true }
                 || error.Data["foundationRequestSent"] is false;

@@ -37,6 +37,39 @@ public sealed class LadRungBuilderTests
         { ["blockName"] = "FC_Rung", ["blockNumber"] = 42, ["inputs"] = new JsonArray(new JsonObject { ["name"] = "Local", ["datatype"] = "Int" }),
             ["outputs"] = new JsonArray(), ["networks"] = new JsonArray(new JsonObject { ["rung"] = rung }) };
 
+    internal static string EmitRejectedGolden(JsonObject block, string release)
+    {
+        var spec = new LadFcBlockSpec(JsonSerializer.SerializeToElement(block));
+        var refusal = new ConstructionInput<LadFcBlockSpec>(ConstructionProfile.Foundation, null, release).Read(spec.Json, "ladFcBlock");
+        Assert.False(refusal.IsValid);
+        var details = Assert.IsType<InvalidArgumentDetails>(refusal.Error!.Details);
+        Assert.Equal("/ladFcBlock/networks/0/rung/fanOut/0/series/0", details.Parameter);
+        Assert.Contains("own network", details.Expected);
+        Assert.Throws<InputRejectionException>(() => ConstructionAdapter.BuildLadCandidateForRelease(spec, release, ConstructionProfile.Foundation));
+        string json = block.ToJsonString();
+        Assert.Throws<ArgumentException>(() => OfflineLadderBuilders.BuildForRelease("BuildPlcLadFcBlock", release, json));
+        Assert.Throws<ArgumentException>(() => PlcBuilderToolJson.ComposeLadFcBlockForRelease(json, release));
+
+        // Keep exercising the historical XML emitter and golden after this shape is refused at admission.
+        var network = Assert.Single(spec.Networks);
+        var inputs = (spec.Inputs ?? Array.Empty<Member>())
+            .Select(member => new PlcBlockMemberDefinition(member.Name, member.Datatype, member.EffectiveComment));
+        var flg = FlgNetRungXmlBuilder.Build(network.Rung!, FlgNetFormat.ForRelease(release), Array.Empty<string>());
+        var xml = PlcLadFcBlockXmlComposer.Compose(spec.BlockName, spec.BlockNumber, inputs, Array.Empty<PlcBlockMemberDefinition>(),
+            new[] { new PlcLadFcBlockXmlComposer.LadNetwork(flg, network.TitleZhCn ?? "", network.CommentZhCn ?? "") },
+            spec.CommentZhCn ?? "", spec.TitleZhCn ?? "", release);
+        return ConstructionAdapter.Entitize(xml);
+    }
+
+    internal static string? HistoricalFanOut(string element, JsonObject block, string release)
+    {
+        if (element != "fanout") return null;
+        string historical = EmitRejectedGolden(block, release);
+        // A compare can start this output branch. Exercise every entry point on the supported variant as well.
+        block["networks"]![0]!["rung"]!["fanOut"]![0]!["series"]![0] = Compare();
+        return historical;
+    }
+
     public static IEnumerable<object[]> Elements()
     {
         foreach (var box in LadRungBoxBuilderTests.Elements()) yield return box;
@@ -77,6 +110,7 @@ public sealed class LadRungBuilderTests
     public void GoldenDeterminismEntryPointsAndReaders(string element, string rungJson)
     {
         var block = Block(Parse(rungJson));
+        var historical = HistoricalFanOut(element, block, "21");
         var contract = new ConstructionInput<LadFcBlockSpec>(ConstructionProfile.Foundation);
         var input = contract.Read(block.ToJsonString(), "ladFcBlock");
         Assert.True(input.IsValid, V4Json.Serialize(input.Error));
@@ -85,6 +119,7 @@ public sealed class LadRungBuilderTests
         Assert.Equal(xml, OfflineLadderBuilders.Build("BuildPlcLadFcBlock", "21", block.ToJsonString())["Xml"]!.GetValue<string>());
         var engineXml = PlcBuilderToolJson.ComposeLadFcBlock(block.ToJsonString())["xml"]!.GetValue<string>();
         Assert.True(XNode.DeepEquals(XDocument.Parse(xml), XDocument.Parse(engineXml)));
+        xml = historical ?? xml;
         var flg = XDocument.Parse(xml).Descendants(Ns + "FlgNet").Single();
         string golden = Path.Combine(Root, "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/LadRung/21", element + ".xml");
         if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1")
@@ -192,7 +227,8 @@ public sealed class LadRungBuilderTests
     {
         var paths = new JsonArray(Enumerable.Range(0, count).Select(i => (JsonNode)new JsonArray(Contact("no", "Path" + i))).ToArray());
         var rung = Rung(new JsonArray(Contact(), new JsonObject { ["kind"] = "or", ["paths"] = paths }), new JsonArray(Coil(), Move()));
-        rung["fanOut"] = new JsonArray(new JsonObject { ["series"] = new JsonArray(Contact("no", "Tail")), ["outputs"] = new JsonArray(Coil("set")) });
+        rung["fanOut"] = new JsonArray(new JsonObject
+            { ["series"] = new JsonArray(Compare(), Contact("no", "Tail")), ["outputs"] = new JsonArray(Coil("set")) });
         var input = new ConstructionInput<LadFcBlockSpec>().Read(Block(rung).ToJsonString(), "ladFcBlock");
         Assert.True(input.IsValid);
         var xml = XDocument.Parse(ConstructionAdapter.BuildCandidate(input.Value!, "21", ConstructionProfile.Foundation).Xml);
@@ -262,6 +298,18 @@ public sealed class LadRungBuilderTests
         rung = Rung(); rung["fanOut"] = new JsonArray(new JsonObject
             { ["series"] = new JsonArray(Contact(), cmp), ["outputs"] = new JsonArray(Coil()) });
         yield return new object[] { rung.ToJsonString(), "/fanOut/0/series/1/left" };
+        foreach (var kind in new[] { "no", "nc", "rising", "falling" })
+        {
+            var head = Contact(kind);
+            if (kind is "rising" or "falling") head["memory"] = Symbol("Mem");
+            var branch = new JsonObject { ["series"] = new JsonArray(head), ["outputs"] = new JsonArray(Coil()) };
+            var split = Rung(new JsonArray(Compare()));
+            split["fanOut"] = new JsonArray(branch);
+            yield return new object[] { split.ToJsonString(), "/fanOut/0/series/0" };
+            split["outputs"] = new JsonArray();
+            split["fanOut"]!.AsArray().Insert(0, new JsonObject { ["series"] = new JsonArray(Compare()), ["outputs"] = new JsonArray(Coil()) });
+            yield return new object[] { split.ToJsonString(), "/fanOut/1/series/0" };
+        }
         foreach (string value in new[] { "", " ", "\t\r\n" })
         {
             move = Move(); move["in"]!["literal"]!["value"] = value;
@@ -325,6 +373,8 @@ public sealed class LadRungBuilderTests
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
         var pointers = body["error"]!["details"]!["parameters"]!.AsArray().Select(p => p!.GetValue<string>()).ToArray();
         Assert.Equal(new[] { "/ladFcBlock/networks/0/rung" + pointer }, pointers);
+        if (pointer.EndsWith("/series/0", StringComparison.Ordinal))
+            Assert.Contains("Put this logic in its own network", (string?)body["error"]!["details"]!["expected"]);
         Assert.DoesNotContain("SECRET_CANARY", body.ToJsonString());
         Assert.Equal(0, inner.Calls);
     }
@@ -377,7 +427,9 @@ public sealed class LadRungBuilderTests
         foreach (var output in outputs) output!["out"] = new JsonArray(Enumerable.Range(0, 8).Select(i => (JsonNode)Symbol("Q" + i)).ToArray());
         var series = new JsonArray(Enumerable.Range(0, 32).Select(_ => (JsonNode)Contact()).ToArray());
         var branchSeries = new JsonArray(Enumerable.Range(0, 15).Select(_ => (JsonNode)Contact()).ToArray());
-        if (count == 257) { branchSeries[0]!["kind"] = "rising"; branchSeries[0]!["memory"] = Symbol("Mem"); }
+        branchSeries[0] = Compare();
+        outputs[0]!["out"]!.AsArray().RemoveAt(7); // One extra compare operand, one fewer MOVE destination.
+        if (count == 257) { branchSeries[1]!["kind"] = "rising"; branchSeries[1]!["memory"] = Symbol("Mem"); }
         var rung = Rung(series, outputs);
         rung["fanOut"] = new JsonArray(new JsonObject { ["series"] = branchSeries, ["outputs"] = new JsonArray(Coil()) });
         var result = new ConstructionInput<LadFcBlockSpec>().Read(Block(rung).ToJsonString(), "ladFcBlock");
@@ -393,7 +445,7 @@ public sealed class LadRungBuilderTests
         var cmp = Compare();
         cmp["left"] = new JsonObject { ["global"] = new JsonArray("DB", new JsonObject { ["name"] = "A", ["index"] = new JsonArray(1) }) };
         var rung = Rung(); rung["fanOut"] = new JsonArray(new JsonObject { ["series"] = new JsonArray(new JsonObject { ["kind"] = "or",
-            ["paths"] = new JsonArray(new JsonArray(cmp), new JsonArray(Contact())) }), ["outputs"] = new JsonArray(Coil()) });
+            ["paths"] = new JsonArray(new JsonArray(cmp), new JsonArray(Compare())) }), ["outputs"] = new JsonArray(Coil()) });
         var result = new ConstructionInput<LadFcBlockSpec>().Read(Block(rung).ToJsonString(), "ladFcBlock");
         Assert.True(result.IsValid, V4Json.Serialize(result.Error));
     }

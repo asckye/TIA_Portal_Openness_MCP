@@ -3104,7 +3104,7 @@
       "path": "src/Shared/GlobalScriptEditTools.cs",
       "owner": "GlobalScriptEditTools",
       "domain": "HMI-Unified",
-      "signature": "public CallToolResult UpdateUnifiedGlobalScriptV4(\n            [Description(\"Explicit HMI software path, as used by GetUnifiedGlobalScript.\")] string softwarePath,\n            [Description(\"Exact currently open project name; mismatch refuses the operation.\")] string expectedProject,\n            [Description(\"Exact global module name, e.g. Navigation; create requires an absent name, including case variants.\")] string moduleName,\n            [Description(\"COMPLETE modified native .hmi.js source including imports, global definitions and functions; not a single function body. Maximum 1 MiB.\")] string scriptCode,\n            [Description(\"Preview and back up only by default. Set false only to apply the reviewed text.\")] bool dryRun = true,\n            [Description(\"Token from this tool's preview for the same project, HMI, module, original and proposed content.\")] string previewToken = \"\",\n            [Description(\"update | create; default update.\")] string action = \"update\",\n            [Description(\"planHash from this tool's preview for the same arguments and bound project; required for execution.\")] string expectedPlanHash = \"\",\n            [Description(\"Absolute bound project file from the preview target identity; required for execution.\")] string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult UpdateUnifiedGlobalScriptV4(\n            [Description(\"Explicit HMI software path, as used by GetUnifiedGlobalScript.\")] string softwarePath,\n            [Description(\"Exact currently open project name; mismatch refuses the operation.\")] string expectedProject,\n            [Description(\"Exact global module name, e.g. Navigation; create requires an absent name, including case variants.\")] string moduleName,\n            [Description(\"COMPLETE modified native .hmi.js source including imports, global definitions and functions; not a single function body. Maximum 1 MiB.\")] string scriptCode,\n            [Description(\"Preview and back up only by default. Set false only to apply the reviewed text.\")] bool dryRun = true,\n            [Description(\"Token from this tool's preview for the same project, HMI, module, original and proposed content.\")] string previewToken = \"\",\n            [Description(\"Default update. Create supports preview only pending real TIA verification.\")] string action = \"update\",\n            [Description(\"planHash from this tool's preview for the same arguments and bound project; required for execution.\")] string expectedPlanHash = \"\",\n            [Description(\"Absolute bound project file from the preview target identity; required for execution.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -3141,7 +3141,7 @@
         "action": {
           "type": "string",
           "default": "\"update\"",
-          "description": "update | create; default update.",
+          "description": "Default update. Create supports preview only pending real TIA verification.",
           "value": "update"
         },
         "expectedPlanHash": {

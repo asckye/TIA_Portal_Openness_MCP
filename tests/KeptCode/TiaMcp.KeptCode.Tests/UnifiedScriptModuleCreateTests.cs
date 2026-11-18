@@ -52,6 +52,29 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
         }
     }
 
+    [Theory]
+    [InlineData("19")]
+    [InlineData("20")]
+    [InlineData("21")]
+    public void Create_execution_refuses_before_the_importing_worker_is_called(string release)
+    {
+        using var scope = TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease(release);
+        var preview = Create(true);
+        string token = (string)preview["token"]!;
+        int dispatches = 0;
+        var service = new GlobalScriptEditService((_, _) => {
+            dispatches++;
+            return JsonSerializer.SerializeToNode(new HmiReply { Value = new HmiMessage { Meta = Create(false, token) } });
+        }, () => "C:/Fixture.ap" + release);
+        var error = Assert.Throws<TiaMcpServer.Siemens.PortalException>(() =>
+            service.UpdateUnifiedGlobalScript("HMI", "Fixture", "Status", Code, false, token, "create"));
+        Assert.Equal(TiaMcpServer.Siemens.PortalErrorCode.NotSupportedOnVersion, error.Code);
+        Assert.Contains("Create the module in TIA", error.Message);
+        Assert.Equal(0, dispatches);
+        Assert.Empty(software.Scripts.Effects);
+        Assert.Null(software.Scripts.ImportDirectory);
+    }
+
     private void AssertCandidateEvidence(HmiObject result, JsonNode reply)
     {
         string candidate = Assert.IsType<string>(software.Scripts.ImportDirectory);

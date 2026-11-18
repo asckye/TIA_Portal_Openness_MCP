@@ -53,6 +53,7 @@ public sealed class LadRungReleaseTests(ITestOutputHelper output)
     public void GoldenEntryPointsReadersAndOfficialSchemas(string release, string element, string rungJson)
     {
         var block = Block(rungJson);
+        var historical = LadRungBuilderTests.HistoricalFanOut(element, block, release);
         var input = new ConstructionInput<LadFcBlockSpec>(ConstructionProfile.Foundation, null, release)
             .Read(block.ToJsonString(), "ladFcBlock");
         Assert.True(input.IsValid, V4Json.Serialize(input.Error));
@@ -68,6 +69,7 @@ public sealed class LadRungReleaseTests(ITestOutputHelper output)
         Assert.False(candidate.ProgramSemanticsValidated);
         var engine = PlcBuilderToolJson.ComposeLadFcBlockForRelease(block.ToJsonString(), release);
         Assert.True(XNode.DeepEquals(XDocument.Parse(xml), XDocument.Parse(engine["xml"]!.GetValue<string>())));
+        xml = historical ?? xml;
         var document = XDocument.Parse(xml);
         var format = FlgNetFormat.ForRelease(release);
         var flg = document.Descendants(format.Namespace + "FlgNet").Single();

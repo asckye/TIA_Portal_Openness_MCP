@@ -100,7 +100,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 RequireAbsent(resolveHmi, moduleName, out _);
                 meta["apiCallSuccess"] = true;
                 meta["status"] = "Preview"; meta["operationSuccess"] = true;
-                return "Review the complete proposed text and irreversible create. No import performed; apply the SAME content with this previewToken.";
+                return "Preview only. Create the module in TIA, then use action=update.";
             }
             HmiExactAccess.RequireToken(expectedToken, token);
             var scripts = RequireAbsent(resolveHmi, moduleName, out int countBefore);

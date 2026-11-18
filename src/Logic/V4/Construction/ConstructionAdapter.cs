@@ -67,7 +67,7 @@ namespace TiaMcp.Logic.V4.Construction
                 ConstructionJson.Require(call.Parameters.All(p => p.EffectiveSource != CallSourceKind.Local),
                     "The current FlgNet builder has no local source implementation.");
             if (profile == ConstructionProfile.Foundation) FoundationConstructionValidation.Validate(spec!);
-            if (spec is LadFcBlockSpec && outputReleaseKey == "14sp1")
+            if (spec is LadFcBlockSpec)
                 FoundationConstructionValidation.Rungs(spec, outputReleaseKey: outputReleaseKey);
 
             string xml;

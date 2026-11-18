@@ -56,9 +56,21 @@ public sealed class LadCompositeRegressionTests
     [InlineData(0)][InlineData(1)][InlineData(2)][InlineData(3)][InlineData(4)][InlineData(5)]
     public void Composite_bisection_has_typed_array_indices_and_preserves_OR_compare_ENO_and_edge_wires(int stage)
     {
-        var input = new ConstructionInput<LadFcBlockSpec>(ConstructionProfile.Foundation).Read(Block(stage).ToJsonString(), "ladFcBlock");
+        var block = Block(stage);
+        string? historical = null;
+        if (stage == 5)
+        {
+            historical = LadRungBuilderTests.EmitRejectedGolden(block, "21");
+            var rung = block["networks"]![0]!["rung"]!.AsObject();
+            var reset = rung["fanOut"]![0]!.DeepClone();
+            rung.Remove("fanOut");
+            block["networks"]!.AsArray().Add(new JsonObject { ["rung"] = reset });
+        }
+        var input = new ConstructionInput<LadFcBlockSpec>(ConstructionProfile.Foundation).Read(block.ToJsonString(), "ladFcBlock");
         Assert.True(input.IsValid, V4Json.Serialize(input.Error));
         string xml = ConstructionAdapter.BuildCandidate(input.Value!, "21", ConstructionProfile.Foundation).Xml;
+        if (stage == 5) Assert.Equal(2, XDocument.Parse(xml).Descendants(Ns + "FlgNet").Count());
+        xml = historical ?? xml;
         var flg = XDocument.Parse(xml).Descendants(Ns + "FlgNet").Single();
         FlgNetRungXmlBuilder.Verify(flg);
         var indices = flg.Descendants(Ns + "Component").Where(component => (string?)component.Attribute("AccessModifier") == "Array").ToArray();
@@ -93,16 +105,22 @@ public sealed class LadCompositeRegressionTests
         string golden = Path.Combine(Root, "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/LadRung/21", "beta6-composite-" + stage + ".xml");
         if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1") File.WriteAllText(golden, xml, new UTF8Encoding(false));
         Assert.Equal(File.ReadAllBytes(golden), Encoding.UTF8.GetBytes(xml));
+        var issues = V21SchemaIssues(flg);
+        Assert.Empty(issues);
+    }
+
+    private static List<string> V21SchemaIssues(XElement flg)
+    {
+        var issues = new List<string>();
         var sdkRoot = Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT");
         if (!string.IsNullOrEmpty(sdkRoot))
         {
             var schemas = new XmlSchemaSet { XmlResolver = new XmlUrlResolver() };
             schemas.Add(Ns.NamespaceName, Path.Combine(sdkRoot, "TIA_V21_PublicAPI/V21/Schemas/SW.PlcBlocks.LADFBD_v5.xsd"));
             schemas.Compile();
-            var issues = new List<string>();
             new XDocument(new XElement(flg)).Validate(schemas, (_, e) => issues.Add(e.Message));
-            Assert.Empty(issues);
         }
+        return issues;
     }
 
     [Theory, InlineData("rung"), InlineData("rung-boxes")]
@@ -125,5 +143,13 @@ public sealed class LadCompositeRegressionTests
         var built = await tool.InvokeAsync(new RequestContext<CallToolRequestParams>(server) { Params = new() { Name = tool.ProtocolTool.Name,
             Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } });
         Assert.True((bool?)built.StructuredContent!["ok"], built.StructuredContent.ToJsonString());
+        var networks = XDocument.Parse((string)built.StructuredContent["data"]!["xml"]!).Descendants(Ns + "FlgNet").ToArray();
+        Assert.All(networks, network => Assert.Empty(V21SchemaIssues(network)));
+        if (operation == "rung")
+        {
+            Assert.Equal(2, networks.Length);
+            Assert.Equal(new[] { "PContact", "RCoil" }, networks[1].Descendants(Ns + "Part").Select(part => (string?)part.Attribute("Name")));
+            Assert.Single(networks[1].Descendants(Ns + "Powerrail"));
+        }
     }
 }

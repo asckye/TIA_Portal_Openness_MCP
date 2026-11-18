@@ -245,6 +245,21 @@ public sealed class LadRungBoxBuilderTests
         input = new ConstructionInput<LadFcBlockSpec>(contractProfile)
             .Read(step["arguments"]!["ladFcBlock"]!.ToJsonString(), "ladFcBlock");
         Assert.True(input.IsValid, V4Json.Serialize(input.Error));
+        var sequenceNetworks = XDocument.Parse(ConstructionAdapter.BuildCandidate(input.Value!, "21", contractProfile).Xml)
+            .Descendants(Ns + "FlgNet").ToArray();
+        Assert.Equal(5, sequenceNetworks.Length);
+        Assert.Equal(new[] { "PContact", "RCoil" }, sequenceNetworks[1].Descendants(Ns + "Part").Select(p => (string?)p.Attribute("Name")));
+        Assert.Single(sequenceNetworks[1].Descendants(Ns + "Powerrail"));
+        for (int i = 0; i < flg.Length; i++) Assert.True(XNode.DeepEquals(flg[i], sequenceNetworks[i + 2]));
+
+        // The main rung and three box networks still compose as the original four-network block.
+        var main = calls["profiles"]![profile]!["BuildPlcLadFcBlock"]!["operations"]!["rung"]!["arguments"]!["ladFcBlock"]!["networks"]![0]!;
+        var boxesWithMain = block.DeepClone();
+        boxesWithMain["networks"]!.AsArray().Insert(0, main.DeepClone());
+        var sequenceMain = step["arguments"]!["ladFcBlock"]!["networks"]![0]!;
+        Assert.True(JsonNode.DeepEquals(main["rung"], sequenceMain["rung"]));
+        input = new ConstructionInput<LadFcBlockSpec>(contractProfile).Read(boxesWithMain.ToJsonString(), "ladFcBlock");
+        Assert.True(input.IsValid, V4Json.Serialize(input.Error));
         Assert.Equal(4, XDocument.Parse(ConstructionAdapter.BuildCandidate(input.Value!, "21", contractProfile).Xml)
             .Descendants(Ns + "FlgNet").Count());
     }
