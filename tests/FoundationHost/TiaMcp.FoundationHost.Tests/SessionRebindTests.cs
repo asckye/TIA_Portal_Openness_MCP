@@ -12,6 +12,7 @@ public sealed class SessionRebindTests
 {
     public static IEnumerable<object[]> ReleasesAndSessions()
     {
+        // Keep explicit non-shared protocol coverage; the production session policy is shared on every release.
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
         foreach (bool shared in new[] { false, true })
             yield return new object[] { release, shared };

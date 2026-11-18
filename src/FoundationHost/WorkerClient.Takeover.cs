@@ -2,7 +2,9 @@
 extern alias foundationhost;
 extern alias toolpipeline;
 using HostSession = foundationhost::TiaMcp.FoundationHost.HostSession;
-using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
+using InvocationHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+#else
+using InvocationHost = TiaMcpServer.ModelContextProtocol.McpServer;
 #endif
 using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
@@ -107,7 +109,7 @@ internal sealed partial class WorkerClient
         lock (stateSync) handoverCaller = caller;
         try
         {
-            using var audit = AuditInvocation.Begin(true, ReleaseCatalogData.Releases[releaseKey].FoundationInvocationTag,
+            using var audit = AuditInvocation.Begin(true, InvocationHost.InvocationHostTag,
                 releaseKey, "ConnectPortal", FoundationWorkerRequest.CorrelationId);
             audit?.Start();
             bool canAcknowledge;

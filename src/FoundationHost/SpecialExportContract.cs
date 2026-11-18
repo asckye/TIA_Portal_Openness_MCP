@@ -25,10 +25,8 @@ internal static class SpecialExportContract
         if(Text("Scope")!=(kind=="watch-table"?SupplementaryReadContract.WatchScope:release is "19" or "20" or "21"?SupplementaryReadContract.TechnologyScope
                     :SupplementaryReadContract.TechnologyRootScope))
             throw new InvalidDataException("Unexpected special export read scope.");
-        bool documented=release is "16" or "17" or "18" or "19" or "20" || ((release=="15.1" || release=="21") && kind=="watch-table");
-        if(evidence!="static-sdk-signature-verified" || Text("SemanticsEvidence")!=(documented?"official-manual-source-candidate":"unverified") ||
-            (dryRun ? documented ? status is not ("planned" or "inconsistent") : status!="semantics-unverified" : !documented
-                    || status is not ("exported" or "failed"))
+        if(evidence!="static-sdk-signature-verified" || Text("SemanticsEvidence")!="official-manual-source-candidate" ||
+            (dryRun ? status is not ("planned" or "inconsistent") : status is not ("exported" or "failed"))
                 ||
             Flag("OutcomeUnknown")) throw new InvalidDataException("Special export status/evidence conflict.");
         var hash=Text("PlanHash");

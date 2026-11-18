@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TiaMcp.Versioning;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcpServer.Siemens
 {
@@ -9,6 +10,10 @@ namespace TiaMcpServer.Siemens
     // This table only removes known unavailable routes; it certifies no native call.
     internal static class ToolVersionPolicy
     {
+        private static readonly string[] V21Releases = ReleaseRange.Since("21");
+        // V17 Siemens.Engineering.xml: SafetyAdministration.LoginToSafetyOfflineProgram(SecureString).
+        private static readonly string[] SafetyPasswordReleases = ReleaseRange.Since("17");
+
         internal static readonly IReadOnlyDictionary<string, string> V21Only =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
@@ -31,13 +36,10 @@ namespace TiaMcpServer.Siemens
             TiaVersionDescriptor version;
             try { version = TiaVersionCatalog.Get(versionKey); }
             catch (ArgumentException) /* swallow(parse-fallback): an unknown release key returns the existing policy rejection */ { return "Unknown TIA release identity: " + versionKey + "."; }
-            if (version.EngineOutputDirectory == null) return version.DisplayName
-                + " uses the separate PLC foundation catalog; full-engine tools are unavailable.";
             if (string.IsNullOrWhiteSpace(name)) return "A registered tool name is required.";
-            if (version.Key == "20" && V21Only.TryGetValue(name, out var api))
-                return name + " requires the V21 " + api + " API; unavailable on V20.";
-            if (version.Key == "20" && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                && !TiaMcp.Adapters.Contracts.PortedFamilies.Available(version.Key, name))
+            if (!Contains(V21Releases, version.Key) && V21Only.TryGetValue(name, out var api))
+                return name + " requires the V21 " + api + " API; unavailable on " + version.DisplayName + ".";
+            if (PortedFamilies.Contains(name) && !PortedFamilies.Available(version.Key, name))
                 return name + " has no supported API action on " + version.DisplayName + ".";
             return "";
         }
@@ -46,13 +48,14 @@ namespace TiaMcpServer.Siemens
         {
             var problem = ToolProblem(versionKey, name);
             if (problem.Length != 0) return problem;
+            if (!Contains(SafetyPasswordReleases, versionKey) && name is "CompilePlcSoftware" or "CompilePlcDiagnostics"
+                && !string.IsNullOrEmpty(argument("password")))
+                return "Safety compilation with a password requires V17 or later.";
             if (name.Equals("ImportLibraryTypeDocuments", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.IsNullOrEmpty(argument("libraryName"))) return name + " supports only the project library (leave libraryName empty).";
                 var option = argument("importOptions") ?? "None";
                 if (!Contains(LibraryDeepLogic.ImportOptions, option)) return name + ": unknown importOptions '" + option + "'.";
-                if (versionKey == "20" && !option.Equals("None", StringComparison.OrdinalIgnoreCase))
-                    return name + ": V20 supports LibraryImportOptions.None only.";
             }
             // Full allowlists for these mixed-action tools prevent a future/new action
             // from accidentally inheriting availability. Matching the bridge's enum
@@ -84,7 +87,7 @@ namespace TiaMcpServer.Siemens
                 allowed = SivarcLogic.DefinitionActions; v21Actions = Array.Empty<string>();
                 var kind = argument("kind") ?? "";
                 if (!Contains(SivarcLogic.DefinitionKinds, kind)) return name + ": unknown kind '" + kind + "'.";
-                if (versionKey == "20" && !Contains(new[] { "tagDefinition", "textDefinition" }, kind))
+                if (!Contains(V21Releases, versionKey) && !Contains(new[] { "tagDefinition", "textDefinition" }, kind))
                     return name + ": kind '" + kind + "' requires the V21 TagMemberSetting / TagMember API.";
             }
             if (name.Equals("ManageDeviceServiceObjects", StringComparison.OrdinalIgnoreCase))
@@ -101,7 +104,8 @@ namespace TiaMcpServer.Siemens
             {
                 action = action ?? defaultAction;
                 if (!Contains(allowed, action)) return name + ": unknown action '" + action + "'. Allowed: " + string.Join(", ", allowed) + ".";
-                if (versionKey == "20" && Contains(v21Actions!, action)) return name + "." + action + " is unavailable on V20; requires V21.";
+                if (!Contains(V21Releases, versionKey) && Contains(v21Actions!, action))
+                    return name + "." + action + " is unavailable on " + TiaVersionCatalog.Get(versionKey).DisplayName + "; requires V21.";
             }
             return "";
         }

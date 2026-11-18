@@ -23,6 +23,18 @@ internal static class AuditLogTests
         string Fresh(string name) => Path.Combine(root, "audit-tests", name);
         var empty = new AuditLog(Fresh("empty"));
         Check(empty.Verify().Passed && empty.Verify().Count == 0, "empty chain has no broken retained link");
+        var legacyEngine = new AuditLog(Fresh("legacy-engine"));
+        legacyEngine.Append("request", "old-call", "engine", "21", "SaveProject");
+        legacyEngine.Append("start", "old-call", "engine", "21", "SaveProject");
+        legacyEngine.Append("end", "old-call", "engine", "21", "SaveProject", "succeeded");
+        var reopened = new AuditLog(Fresh("legacy-engine"));
+        Check(reopened.Verify().Passed && reopened.Verify().Count == 3 && reopened.Read().All(row => row.Host == "engine"),
+            "existing engine audit records still parse and verify without relabeling");
+        reopened.Append("request", "new-call", "foundation", "21", "SaveProject");
+        var mixed = new AuditLog(Fresh("legacy-engine"));
+        Check(mixed.Verify().Passed && mixed.Verify().Count == 4 && mixed.Read().Take(3).All(row => row.Host == "engine")
+            && mixed.Read().Last().Host == "foundation" && mixed.Read().Last().PreviousHash == AuditLog.Hash(mixed.Read()[2]),
+            "foundation append preserves and extends the legacy engine hash chain");
         var log = new AuditLog(Fresh("creation"));
         log.Append("request", "one", "fixture", "21", "WriteFixture");
         log.Append("start", "one", "fixture", "21", "WriteFixture");

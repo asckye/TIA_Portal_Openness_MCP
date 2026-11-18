@@ -108,6 +108,12 @@ internal sealed class CatalogData
         var historical = CatalogJson.Keys.ToDictionary(k => k, k => CatalogJson.Set(Archives[k].Select(p => p.Key)));
         foreach (var (name, row) in Additions)
             if (!HostOnly.ContainsKey(name)) foreach (var key in CatalogJson.Strings(row!["releases"])) historical[key].Add(name);
+        foreach (var (name, row) in EngineSource["registrations"]!.AsObject())
+            foreach (var key in CatalogJson.Strings(row!["additionalReleases"]))
+            {
+                CatalogJson.Require(historical.ContainsKey(key), "Unknown additional release: " + name + " " + key);
+                historical[key].Add(name);
+            }
         Mapping = Resolve(historical["21"], full, Renames, true);
         foreach (var key in new[] { "20", "21" }) Rosters[key] = CatalogJson.Set(historical[key].Select(n => Mapping[n]));
         var sources = Directory.GetFiles(Path.Combine(root, "src/FoundationHost"), "*.cs").Order(StringComparer.Ordinal).ToDictionary(p => Path.GetFileName(p)!, Repository.ReadSource);
@@ -122,7 +128,10 @@ internal sealed class CatalogData
         foreach (var key in CatalogJson.Keys.Take(6))
         {
             var major = key == "14sp1" ? 14 : int.Parse(key.Split('.')[0], System.Globalization.CultureInfo.InvariantCulture);
-            var accepted = Definitions.Where(p => !(p.Value is "HardwareCatalog" or "DeviceAdd" && major < 18) && !(p.Value == "SpecialExport" && major < (p.Key == "ExportPlcWatchTable" ? 15 : 16)) && !(p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport" && major < 20) && !(p.Key == "ListPlcWatchTables" && key == "14sp1")).Select(p => p.Key);
+            var accepted = Definitions.Where(p => !(p.Value is "HardwareCatalog" or "DeviceAdd" && major < 18)
+                && !(p.Value == "SpecialExport" && p.Key == "ExportPlcWatchTable" && key == "14sp1")
+                && !(p.Value is "DocumentExport" or "BatchDocumentExport" or "DocumentImport" or "BatchDocumentImport" && major < 20)
+                && !(p.Key == "ListPlcWatchTables" && key == "14sp1")).Select(p => p.Key);
             var registered = CatalogJson.Set(accepted.Concat(helpers).Concat(Reviewed[key]));
             var withheld = PortedFamilies.Withheld(Families, key);
             registered.ExceptWith(withheld);
@@ -138,6 +147,16 @@ internal sealed class CatalogData
         foreach (var roster in Rosters.Values) roster.UnionWith(HostOnly.Keys);
         foreach (var key in CatalogJson.Keys) Rosters[key].ExceptWith(PortedFamilies.Withheld(Families, key));
         foreach (var name in Rosters.Values.SelectMany(r => r).Distinct(StringComparer.Ordinal)) ValidateName(name);
+    }
+
+    internal Dictionary<string, JsonObject> CreateContractInputs()
+    {
+        var tools = Archives.ToDictionary(pair => pair.Key, pair => (JsonObject)pair.Value.DeepClone());
+        foreach (var (name, entry) in EngineSource["registrations"]!.AsObject())
+            foreach (var key in CatalogJson.Strings(entry!["additionalReleases"]))
+                // Added old-release rows use Foundation's V16 contract without changing frozen history/counts.
+                tools[key][name] = CatalogJson.Copy(Archives["16"][name]!);
+        return tools;
     }
 
     internal static void ValidateReviewedData(JsonObject additions, Dictionary<string, string> renames, HashSet<string> archived)

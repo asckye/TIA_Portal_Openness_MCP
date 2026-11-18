@@ -3,8 +3,9 @@ extern alias toolpipeline;
 using AuditCallTool = toolpipeline::TiaMcpServer.ModelContextProtocol.AuditCallTool;
 using VersionPolicyTool = toolpipeline::TiaMcpServer.ModelContextProtocol.VersionPolicyTool;
 using BatchPlanStore = TiaMcpServer.ModelContextProtocol.BatchPlanStore;
-using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
+using InvocationHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 #else
+using InvocationHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using AuditCallTool = TiaMcpServer.ModelContextProtocol.AuditCallTool;
 using VersionPolicyTool = TiaMcpServer.ModelContextProtocol.VersionPolicyTool;
 using BatchPlanStore = TiaMcpServer.ModelContextProtocol.BatchPlanStore;
@@ -91,9 +92,9 @@ internal static class CanonicalBatchTools
                                 new PlanStaleDetails(null, "batch-plan", (string?)args["expectedPlanHash"])));
                 var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
                 var approvalArguments = args.DeepClone().AsObject(); approvalArguments["batchPlan"] = plan.DeepClone();
-                var pending = PendingApproval.Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,
+                var pending = PendingApproval.Create(InvocationHost.InvocationHostTag, release, tool.Name,
                     approvalArguments.ToJsonString(), BatchPlanStore.Stable(binding), settings.TimeoutSeconds, id);
-                using var audit = AuditInvocation.Begin(true, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name, id);
+                using var audit = AuditInvocation.Begin(true, InvocationHost.InvocationHostTag, release, tool.Name, id);
                 audit?.RecordRequest(pending.PlanHash);
                 var approved = await Approve(pending, settings, cancellationToken);
                 if (approved.Reason != null)

@@ -82,8 +82,6 @@ namespace TiaMcpServer.Siemens.Services
         }
         private ResponseImportBatch SeedHmiImport(string kind, string path, string folder, string directory)
         {
-            if (HardwareContract.ReleaseKey != "20" && HardwareContract.ReleaseKey != "21")
-                throw new NotSupportedException("Seed HMI imports depend on the B7 engine worker port in this release.");
             var reply =
                 call("plc-software.SeedReferenceHmi", new JsonObject {
                     ["request"] = JsonSerializer

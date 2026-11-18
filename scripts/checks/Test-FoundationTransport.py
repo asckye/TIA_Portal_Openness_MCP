@@ -574,8 +574,8 @@ def plc_transports(args, temp, counts):
             assert re.fullmatch('[0-9a-f]{64}', worker_args[3]), worker_args
             assert Path(worker_args[2]).samefile(temp), worker_args
             calls = [r for r in records if r['stage'] == 'call']
-            assert [r['operation'] for r in calls] == ['Attach', 'ReadProjectTree', 'Disconnect']
-            assert [r['Id'] for r in calls] == [1, 2, 3], calls
+            assert [r['operation'] for r in calls] == ['Attach', 'HostObserve', 'ReadProjectTree', 'HostObserve', 'Disconnect']
+            assert [r['Id'] for r in calls] == [1, 2, 3, 4, 5], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
         if args.stdio_only:
             return
@@ -726,9 +726,9 @@ def main():
             # Windows can expand a runner's short TEMP name in Path.GetFullPath.
             # Verify the directory identity while keeping the release/argument checks exact.
             assert Path(worker_args[2]).samefile(temp), worker_args
-            assert [r['operation'] for r in records if r['stage'] == 'call'] == ['Attach', 'ReadProjectTree', 'Disconnect']
+            assert [r['operation'] for r in records if r['stage'] == 'call'] == ['Attach', 'HostObserve', 'ReadProjectTree', 'HostObserve', 'Disconnect']
             calls = [r for r in records if r['stage'] == 'call']
-            assert [r['Id'] for r in calls] == [1, 2, 3], calls
+            assert [r['Id'] for r in calls] == [1, 2, 3, 4, 5], calls
             assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
         def check_http(key):
             number = resources.allocate_http_port()

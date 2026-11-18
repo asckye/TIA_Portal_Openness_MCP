@@ -348,6 +348,9 @@ internal static class LegacyHostToolRegistry
             var all = FoundationHostPorts.Create(worker, releaseKey, tools.AsReadOnly(), readiness, apiDirectory);
             tools.Clear(); tools.AddRange(all);
         }
+        foreach (var tool in tools)
+            tool.ProtocolTool.Description = TiaMcp.Logic.V4.BehaviorCapabilities.Describe(releaseKey,
+                tool.ProtocolTool.Name, tool.ProtocolTool.Description);
         return tools.AsReadOnly();
     }
 }

@@ -93,7 +93,7 @@ public sealed class AdapterFacetTests
         var expected = AdapterCapabilities.PortalSession | AdapterCapabilities.PlcProgram | AdapterCapabilities.PlcData;
         if(key != "14sp1") expected |= AdapterCapabilities.SourceGenerationResults | AdapterCapabilities.RedundantPlc | AdapterCapabilities.WatchTableRead;
         if(key != "14sp1" && key != "15.1") expected |= AdapterCapabilities.WatchTableExport;
-        if(new[] { "16", "17", "18", "19", "20" }.Contains(key)) expected |= AdapterCapabilities.TechnologyObjectExport;
+        expected |= AdapterCapabilities.TechnologyObjectExport;
         if(new[] { "17", "18", "19", "20", "21" }.Contains(key)) expected |= AdapterCapabilities.Safety;
         if(new[] { "19", "20", "21" }.Contains(key)) expected |= AdapterCapabilities.TechnologyObjectGroups | AdapterCapabilities.HardwareCatalog;
         if(key == "20" || key == "21") expected |= AdapterCapabilities.PlcDocuments;

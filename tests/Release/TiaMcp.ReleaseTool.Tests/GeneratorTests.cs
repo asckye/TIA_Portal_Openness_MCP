@@ -54,6 +54,70 @@ public sealed class GeneratorTests
     }
 
     [Fact]
+    public void Behavior_catalog_covers_all_eight_releases_and_registered_fallback_entries()
+    {
+        var resource = CatalogGenerator.Generate(Root)[CatalogGenerator.Resource];
+        var catalog = JsonNode.Parse(System.Xml.Linq.XDocument.Parse(resource).Root!
+            .Elements("data").Single(row => (string?)row.Attribute("name") == "Catalog").Element("value")!.Value)!;
+        foreach (string key in Keys)
+        {
+            var policies = catalog["behaviorPolicies"]!.AsArray().Where(row => Text(row!["releaseKey"]) == key).ToArray();
+            Assert.Contains(policies, row => Text(row!["family"]) == "F19" && Text(row["l5"]) == "NOT RUN");
+            Assert.Contains(policies, row => Text(row!["family"]) == "FOUNDATION" && Text(row["state"]) == "current"
+                && Text(row["l5"]) == "NOT RUN");
+            var entries = catalog["behaviorEntries"]!.AsArray().Where(row => Text(row!["releaseKey"]) == key).ToArray();
+            Assert.Contains(entries, row => Text(row!["family"]) == "F19" && Text(row["entry"]) == "GetDeviceAddressing");
+            Assert.Contains(entries, row => Text(row!["family"]) == "P6-FALLBACK" && Text(row["entry"]) == "CompilePlcSoftware");
+            Assert.Contains(entries, row => Text(row!["family"]) == "FOUNDATION" && Text(row["entry"]) == "GetSoftwareInfo");
+            Assert.Contains(entries, row => Text(row!["family"]) == "FOUNDATION" && Text(row["entry"]) == "AnalyzePlcCrossReferences");
+            Assert.DoesNotContain(entries, row => Text(row!["entry"]) is "StageImportFiles" or "RenderPlcBlock" or "BuildPlcTagTable");
+            Assert.All(entries, entry => Assert.IsType<JsonObject>(entry!["example"]));
+            Assert.Equal(policies.Length, policies.Select(row => Text(row!["family"])).Distinct(StringComparer.Ordinal).Count());
+        }
+    }
+
+    [Fact]
+    public void Technology_export_additions_preserve_the_foundation_confirmation_contract()
+    {
+        var source = Read(Root, "manifest/history/contracts-v3/baseline/16.json")["tools"]!.AsArray()
+            .Single(row => Text(row!["name"]) == "ExportTechnologyObject")!;
+        var data = new CatalogData(Root);
+        var inputs = data.CreateContractInputs();
+        foreach (string release in new[] { "14sp1", "15.1" })
+        {
+            Assert.False(data.Archives[release].ContainsKey("ExportTechnologyObject"));
+            var contract = inputs[release]["ExportTechnologyObject"]!;
+            Assert.True(JsonNode.DeepEquals(source, contract), release);
+            var schema = contract["inputSchema"]!;
+            Assert.False(schema["additionalProperties"]!.GetValue<bool>());
+            Assert.Equal(new[] { "softwarePath", "toName", "exportPath" }, Strings(schema["required"]));
+            foreach (string argument in new[] { "confirm", "expectedProjectFile", "expectedPlanHash" })
+                Assert.NotNull(schema["properties"]![argument]);
+            Assert.False(schema["properties"]!["confirm"]!["default"]!.GetValue<bool>());
+            Assert.Equal("", Text(schema["properties"]!["expectedProjectFile"]!["default"]));
+            Assert.Equal("", Text(schema["properties"]!["expectedPlanHash"]!["default"]));
+        }
+    }
+
+    [Fact]
+    public void Technology_export_additional_releases_have_exact_rosters_and_maintained_examples()
+    {
+        var data = new CatalogData(Root);
+        Assert.Equal(new[] { "14sp1", "15.1" }, Strings(data.EngineSource["registrations"]!["ExportTechnologyObject"]!["additionalReleases"]));
+        var outputs = CatalogGenerator.Generate(Root);
+        var catalog = JsonNode.Parse(System.Xml.Linq.XDocument.Parse(outputs[CatalogGenerator.Resource]).Descendants("data")
+            .Single(element => (string?)element.Attribute("name") == "Catalog").Element("value")!.Value)!;
+        foreach (string release in Keys)
+        {
+            Assert.Contains("ExportTechnologyObject", data.Rosters[release]);
+            var row = Assert.Single(catalog["releases"]![release]!.AsArray(), entry => (string?)entry!["currentName"] == "ExportTechnologyObject");
+            Assert.NotNull(row!["arguments"]!["softwarePath"]);
+            Assert.NotNull(row["arguments"]!["toName"]);
+            Assert.Equal(release != "14sp1", data.Rosters[release].Contains("ExportPlcWatchTable"));
+        }
+    }
+
+    [Fact]
     public void Catalog_rows_take_the_maintained_parameter_set()
     {
         string frozenPath = Path.Combine(Root, "reference/tool-catalog/EngineSourceExamples.json");

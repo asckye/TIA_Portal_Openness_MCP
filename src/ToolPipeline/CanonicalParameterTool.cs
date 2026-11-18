@@ -70,7 +70,7 @@ internal sealed class CanonicalParameterTool : McpServerTool
             .Select(group => string.Join(" and ", new[] { group.Key }.Concat(group.Select(alias => alias.Canonical)))
                 + " are mutually exclusive parameter alternatives."));
         description ??= "";
-        return suffix.Length == 0 || description.EndsWith(suffix, StringComparison.Ordinal) ? description : description + " " + suffix;
+        return suffix.Length == 0 || description.Contains(suffix, StringComparison.Ordinal) ? description : description + " " + suffix;
     }
 
     internal static ToolDescriptor Describe(ToolDescriptor source)

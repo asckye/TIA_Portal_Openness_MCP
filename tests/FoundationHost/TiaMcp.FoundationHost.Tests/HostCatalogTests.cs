@@ -15,6 +15,55 @@ namespace TiaMcp.FoundationHost.Tests;
 
 public sealed class HostCatalogTests
 {
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"),
+        InlineData("20"), InlineData("21")]
+    public void Whole_roster_runtime_disclosure_and_description_agree_in_both_directions(string release)
+    {
+        var (host, _, _) = Build(release);
+        foreach (var descriptor in host.All.Values)
+        foreach (bool suppliedCurrent in new[] { false, true })
+        {
+            var result = FoundationV4Result.Reject(release, descriptor.Name, "roster-disclosure",
+                FoundationV4Result.Invalid("fixture"), suppliedCurrent);
+            bool current = (string?)result.StructuredContent?["meta"]?["behaviorPolicy"] == "current";
+            Assert.Equal(descriptor.Tool.Description!.Contains(TiaMcp.Logic.V4.BehaviorCapabilities.CurrentDisclosure, StringComparison.Ordinal), current);
+            Assert.Equal(current, result.StructuredContent!["meta"]!["warnings"]!.AsArray()
+                .Any(warning => (string?)warning?["code"] == "UNVERIFIED_BEHAVIOR"));
+        }
+        using var worker = new MetadataWorker();
+        var raw = FoundationTools.Create(worker, release).Concat(PortedToolContract.Create(worker, release))
+            .Append(PlcCrossReferenceAnalysis.Create(worker, release));
+        foreach (var foundation in raw.Cast<FoundationTool>().Where(tool => host.Find(tool.ProtocolTool.Name) != null))
+        {
+            var policy = TiaMcp.Logic.V4.BehaviorCapabilities.EntryPolicy(typeof(HostCatalogTests).Assembly, release,
+                foundation.ProtocolTool.Name, TiaMcp.Logic.V4.BehaviorPolicy.NotApplicable);
+            Assert.Equal(foundation.IsNative, policy == TiaMcp.Logic.V4.BehaviorPolicy.Current);
+        }
+        foreach (var offline in OfflineXmlTools.Create().Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create())
+            .Concat(OfflineLadderTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Where(tool => host.Find(tool.ProtocolTool.Name) != null))
+            Assert.Equal(TiaMcp.Logic.V4.BehaviorPolicy.NotApplicable,
+                TiaMcp.Logic.V4.BehaviorCapabilities.EntryPolicy(typeof(HostCatalogTests).Assembly, release,
+                    offline.ProtocolTool.Name, TiaMcp.Logic.V4.BehaviorPolicy.NotApplicable));
+    }
+
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"),
+        InlineData("20"), InlineData("21")]
+    public void Shared_roster_and_catalog_both_publish_the_ledger_disclosure_suffix(string release)
+    {
+        var (host, shared, _) = Build(release);
+        int current = 0;
+        foreach (var tool in shared.Select(implementation => implementation.ProtocolTool).Concat(host.All.Values.Select(row => row.Tool)))
+        {
+            var policy = TiaMcp.Logic.V4.BehaviorCapabilities.EntryPolicy(typeof(HostCatalogTests).Assembly,
+                release, tool.Name, TiaMcp.Logic.V4.BehaviorPolicy.NotApplicable);
+            if (policy != TiaMcp.Logic.V4.BehaviorPolicy.Current) continue;
+            current++;
+            Assert.EndsWith(TiaMcp.Logic.V4.BehaviorCapabilities.CurrentDisclosure, tool.Description, StringComparison.Ordinal);
+            Assert.Equal(tool.Description, TiaMcp.Logic.V4.BehaviorCapabilities.Describe(release, tool.Name, tool.Description));
+        }
+        Assert.True(current > 0);
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void Hardware_catalog_declares_its_limit_bounds_where_registered(string release)
     {
@@ -26,6 +75,17 @@ public sealed class HostCatalogTests
         Assert.Equal(50, limit.GetProperty("default").GetInt32());
         Assert.Equal(1, limit.GetProperty("minimum").GetInt32());
         Assert.Equal(100, limit.GetProperty("maximum").GetInt32());
+    }
+
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Technology_export_is_registered_on_every_release_and_watch_export_keeps_its_api_range(string release)
+    {
+        var (host, _, _) = Build(release);
+        Assert.NotNull(host.Find("ExportTechnologyObject"));
+        Assert.Equal(release != "14sp1", host.Find("ExportPlcWatchTable") != null);
+        Assert.NotNull(host.Find("SeedProjectFromReference"));
+        Assert.DoesNotContain("preview only", host.Find("ExportTechnologyObject")!.Tool.Description!, StringComparison.Ordinal);
     }
 
     [Fact]

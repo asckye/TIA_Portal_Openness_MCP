@@ -499,7 +499,7 @@ public sealed class NoLockTests
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(Path.GetDirectoryName(exe)!, "TiaMcp.Adapter." + release + ".dll"),
             "offline fixture identity");
         using var worker = new WorkerClient(release, exe, Path.GetDirectoryName(exe)!, true) { Bundled = false };
-        await worker.Call("FixtureFailNextStatus", new(), CancellationToken.None);
+        await worker.Call("FixtureFailNextStatus", new() { ["successfulStatusReadsBeforeFailure"] = worker.SharedSession ? 1 : 0 }, CancellationToken.None);
         var error = await Assert.ThrowsAsync<WorkerOperationException>(() => worker.Observe("status", new(), CancellationToken.None));
         Assert.Equal("read-failed", error.Outcome);
         Assert.False(worker.Faulted);

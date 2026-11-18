@@ -21,6 +21,7 @@ public sealed class NoLockRecoveryTests
         => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(release => new object[] { release });
 
     public static IEnumerable<object[]> ReleasesAndFlags()
+        // Explicit false rows exercise recovery without the shared status protocol, independently of the serving release policy.
         => Releases().SelectMany(row => new[] { new object[] { row[0], false }, new object[] { row[0], true } });
 
     public static IEnumerable<object[]> Faults()
@@ -42,7 +43,7 @@ public sealed class NoLockRecoveryTests
         internal string TracePath => Path.Combine(root, "trace.jsonl");
         internal Process Child => (Process)typeof(WorkerClient).GetField("process", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Worker)!;
         internal JsonObject[] Trace => File.ReadAllLines(TracePath).Select(line => JsonNode.Parse(line)!.AsObject()).ToArray();
-        internal Scope(string mode = "crash", bool shared = false, string? timeoutConfig = null, string release = "19")
+        internal Scope(string mode = "crash", bool shared = true, string? timeoutConfig = null, string release = "19")
         {
             this.release = release;
             Directory.CreateDirectory(root);
@@ -141,12 +142,18 @@ public sealed class NoLockRecoveryTests
         Assert.Single(trace, row => (string?)row["method"] == "adapter.SaveProject");
         int restartedPid = scope.Child.Id;
         var replay = trace.Where(row => (int?)row["pid"] == restartedPid).ToArray();
-        Assert.Equal(new[] { "adapter.HostObserve", "adapter.Attach", "adapter.BindProject", "adapter.ReadBlocks" },
+        Assert.Equal(new[] { "adapter.HostObserve", "adapter.HostObserve", "adapter.Attach", "adapter.HostObserve",
+            "adapter.BindProject", "adapter.HostObserve", "adapter.ReadBlocks", "adapter.HostObserve" },
             replay.Select(row => (string?)row["method"]));
         Assert.True(IsProcessRead(replay[0]));
-        Assert.Equal(Environment.ProcessId, (int?)replay[1]["arguments"]?["processId"]);
-        Assert.Equal("fixture", (string?)replay[2]["arguments"]?["projectName"]);
-        Assert.Equal(scope.ProjectFile, (string?)replay[2]["arguments"]?["expectedProjectFile"]);
+        foreach (int index in new[] { 1, 3, 5, 7 })
+        {
+            Assert.Equal("status", (string?)replay[index]["arguments"]?["operation"]);
+            Assert.Empty(replay[index]["arguments"]!["arguments"]!.AsObject());
+        }
+        Assert.Equal(Environment.ProcessId, (int?)replay[2]["arguments"]?["processId"]);
+        Assert.Equal("fixture", (string?)replay[4]["arguments"]?["projectName"]);
+        Assert.Equal(scope.ProjectFile, (string?)replay[4]["arguments"]?["expectedProjectFile"]);
     }
 
     [Theory, MemberData(nameof(Releases))]
@@ -392,6 +399,8 @@ public sealed class NoLockRecoveryTests
         using var production = new ProductionWorkerBudgets(scope.Worker);
         await scope.Bind();
         var channel = (ChannelClient)typeof(WorkerClient).GetField("channel", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scope.Worker)!;
+        // Inject a native deadline, rather than a timeout of the shared status probe that just completed.
+        typeof(WorkerClient).GetField("unansweredHostProbe", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(scope.Worker, false);
         channel.Invalidate(new TimeoutException("Synthetic native deadline fault."));
         typeof(ChannelClient).GetField("unknown", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(channel, true);
         try
@@ -630,6 +639,9 @@ public sealed class NoLockRecoveryTests
     {
         using var scope = new Scope(release: release);
         using var production = new ProductionWorkerBudgets(scope.Worker);
+        var services = FoundationHostPorts.CreateServices(scope.Worker, release, () => new JsonObject { ["ready"] = true }, null);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
         await scope.Bind();
         int approvals = 0;
         var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "SaveProject"), scope.Worker), release,

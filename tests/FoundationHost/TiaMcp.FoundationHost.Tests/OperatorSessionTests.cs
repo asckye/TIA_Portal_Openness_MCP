@@ -107,12 +107,9 @@ public sealed class OperatorSessionTestsPlc
         Assert.True(JsonNode.DeepEquals(disconnected, (await ai.Tool("GetSessionState"))["data"]!["sessionState"]));
         await attached.State(s => (string?)s["endedBy"] == "mcp");
         await ai.State(s => (string?)s["endedBy"] == "mcp");
-        if (fixture.Options.ReleaseKey is not ("20" or "21"))
-        {
-            await Task.Run(foundationhost::TiaMcp.FoundationHost.WorkerShutdown.StopAll).WaitAsync(Peer.RequestBudget);
-            session.Dispose();
-            Assert.Equal("disconnected", (string?)session.Snapshot()["worker"]?["state"]);
-        }
+        await Task.Run(foundationhost::TiaMcp.FoundationHost.WorkerShutdown.StopAll).WaitAsync(Peer.RequestBudget);
+        session.Dispose();
+        Assert.Equal("disconnected", (string?)session.Snapshot()["worker"]?["state"]);
     }
 
     [Theory, InlineData("20"), InlineData("21")]
@@ -272,8 +269,8 @@ public sealed class OperatorSessionTestsPlc
         // BundleLayout.Initialize selects the bundle process-wide (AppDomain data and TIA_MCP_BUNDLE_ROOT); restore both.
         private readonly object? previousBundle = AppDomain.CurrentDomain.GetData("TiaOpenness.Shared.BundleLayout.v4");
         private readonly string? previousRootVariable = Environment.GetEnvironmentVariable("TIA_MCP_BUNDLE_ROOT");
-        internal async Task<Session> Create(bool owned = false, CancellationToken token = default) => Options.ReleaseKey is not ("20" or "21")
-            ? Session.Legacy(Options, "fixture", owned) : await EngineHost.CreateHostSessionForTest(Options, owned, source => source, token,
+        internal async Task<Session> Create(bool owned = false, CancellationToken token = default)
+            => await EngineHost.CreateHostSessionForTest(Options, owned, source => source, token,
                 (worker, tools) => { sessionWorker = worker; return SessionFixtureTool.PlcTools(worker, tools); }).WaitAsync(Peer.RequestBudget, token);
         internal void UseScaledBudget() => ProductionWorkerBudgets.Live(sessionWorker!)["default"] = TimeSpan.FromSeconds(0.2);
         internal void ReleaseRunning()

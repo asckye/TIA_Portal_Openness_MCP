@@ -25,7 +25,7 @@ internal static class CatalogGenerator
     internal const string Resource = "src/Logic/ModelContextProtocol/ToolProfiles.resx";
     internal static Dictionary<string, string> Generate(string root, bool legacyNames = false, Action<Dictionary<string, string>>? prepareSources = null)
     {
-        var data = new CatalogData(root); var tools = data.Archives.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone());
+        var data = new CatalogData(root); var tools = data.CreateContractInputs();
         foreach (var (name, entry) in data.Additions)
             if (!data.HostOnly.ContainsKey(name)) foreach (var key in Strings(entry!["releases"])) tools[key][name] = new JsonObject { ["name"] = name, ["inputSchema"] = new JsonObject { ["type"] = "object", ["additionalProperties"] = false, ["required"] = new JsonArray("inputPath", "outputPath"), ["properties"] = new JsonObject { ["inputPath"] = new JsonObject { ["type"] = "string" }, ["outputPath"] = new JsonObject { ["type"] = "string" } } } };
         // Host-only additions are emitted from their current declarations below; they have no frozen 3.x source row.
@@ -145,12 +145,16 @@ internal static class CatalogGenerator
         var behaviorExamples = Read(root, "reference/tool-catalog/behavior-examples.json");
         JsonNode Example(string key, string entry, string family) => Copy(behaviorExamples[key]![entry + "/" + family] ?? throw new ReleaseException("Missing reviewed candidate example: " + entry + "/" + family));
         foreach (var key in Keys) foreach (var candidate in candidates)
-            if (tools[key].Any(p => data.Renames[p.Key] == candidate.Entry) && (candidate.Family != "P6-FALLBACK" || key is "20" or "21")) entries.Add(new JsonObject { ["releaseKey"] = key, ["entry"] = candidate.Entry, ["family"] = candidate.Family, ["example"] = Example(key, candidate.Entry, candidate.Family) });
-        foreach (var key in Keys.Take(6)) foreach (var (family, record) in data.Families)
+            if (tools[key].Any(p => data.Renames[p.Key] == candidate.Entry))
+                entries.Add(new JsonObject { ["releaseKey"] = key, ["entry"] = candidate.Entry, ["family"] = candidate.Family,
+                    ["example"] = Example(key, candidate.Entry, candidate.Family) });
+        foreach (var key in Keys) foreach (var (family, record) in data.Families)
         {
             if (!record.Releases.Contains(key)) continue;
             policies.Add(new JsonObject { ["releaseKey"] = key, ["family"] = family, ["state"] = "current", ["l5"] = "NOT RUN" });
-            foreach (var name in record.Tools.Where(data.Reviewed[key].Contains)) entries.Add(new JsonObject { ["releaseKey"] = key, ["entry"] = name, ["family"] = family, ["example"] = Copy(calls["plc-foundation"]![name]!["arguments"]!) });
+            foreach (var name in record.Tools.Where(data.Reviewed[key].Contains))
+                entries.Add(new JsonObject { ["releaseKey"] = key, ["entry"] = name, ["family"] = family,
+                    ["example"] = Copy(calls["plc-foundation"]?[name]?["arguments"] ?? calls["full-engine"]![name]!["arguments"]!) });
         }
         var releases = new JsonObject(); var engineReleases = new JsonObject();
         foreach (var key in Keys.Skip(6).Concat(Keys.Take(6)))
@@ -223,6 +227,21 @@ internal static class CatalogGenerator
         foreach (var (key, rows) in engineReleases)
             servedEngineReleases[key] = new JsonArray(rows!.AsArray().Select(row => { var copy = row!.DeepClone(); var name = Text(copy["currentName"]);
                 copy["arguments"] = CurrentArguments(name, copy["arguments"]!.AsObject(), calls["full-engine"]?[name]?["arguments"] as JsonObject, sourceKeys: true); return (JsonNode?)copy; }).ToArray());
+        var offlineFoundation = Set(data.Definitions.Where(pair => pair.Value is "PlcRender" or "ImportStaging").Select(pair => pair.Key));
+        foreach (var path in Directory.GetFiles(Path.Combine(root, "src/FoundationHost"), "Offline*Tools.cs"))
+            offlineFoundation.UnionWith(Matches(Repository.ReadSource(path), "new Offline\\w+Tool\\(\"([^\"]+)\"")
+                .Concat(Matches(Repository.ReadSource(path), "\\bName\\s*=\\s*\"([^\"]+)\"")));
+        for (int index = entries.Count - 1; index >= 0; index--)
+            if (offlineFoundation.Contains(Text(entries[index]!["entry"]))) entries.RemoveAt(index);
+        var nativeFoundation = Set(data.Definitions.Keys.Except(offlineFoundation));
+        nativeFoundation.Add(Matches(Source(root, "src/FoundationHost/PlcCrossReferenceAnalysis.cs"), "new\\(\"([^\"]+)\"").Single());
+        foreach (var key in Keys)
+        {
+            policies.Add(new JsonObject { ["releaseKey"] = key, ["family"] = "FOUNDATION", ["state"] = "current", ["l5"] = "NOT RUN" });
+            foreach (var row in releases[key]!.AsArray().Where(row => nativeFoundation.Contains(Text(row!["currentName"]))))
+                entries.Add(new JsonObject { ["releaseKey"] = key, ["entry"] = Copy(row!["currentName"]!), ["family"] = "FOUNDATION",
+                    ["example"] = Copy(row["arguments"]!) });
+        }
         var runtime = new JsonObject { ["schemaVersion"] = 1, ["contractVersion"] = 4, ["foundationLite"] = true, ["behaviorPolicies"] = policies, ["behaviorEntries"] = entries, ["releases"] = releases, ["engineSourceReleases"] = servedEngineReleases };
         foreach (var key in Keys.Skip(6))
         {

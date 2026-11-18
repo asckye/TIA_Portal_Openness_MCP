@@ -105,7 +105,7 @@ namespace TiaMcp.Adapters {
                 return new WorkerSessionIdentity(pid,ticks,identity.ProjectPath,name,identity.Generation,
                     System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,object?>>(identity.ToJson().ToJsonString())!,identity.Verify);
             }, value => System.Text.Json.JsonSerializer.Deserialize<PlcSeedHmiReply>(System.Text.Json.JsonSerializer.Serialize(value))!);
-            if (ReleaseKey == "20" || ReleaseKey == "21") SeedReferenceHmiImport = ImportProjectLifecycleSeedHmi;
+            SeedReferenceHmiImport = ImportProjectLifecycleSeedHmi;
         }
         public Siemens.Engineering.Project NewProject(string name) => new() { Name = name, Path = new FileInfo("C:/fixture/P.ap" + PlcLifecyclePolicy.FileSuffix(ReleaseKey)) };
         public void ReplaceProjectHandle(Siemens.Engineering.Project replacement) { project = replacement; }

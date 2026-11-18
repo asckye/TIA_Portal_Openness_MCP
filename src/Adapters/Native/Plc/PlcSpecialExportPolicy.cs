@@ -8,8 +8,6 @@ namespace TiaMcp.Adapters
 {
     internal static class PlcSpecialExportPolicy
     {
-        internal static bool Documented(string release,string kind) => release=="16" || release=="17" || release=="18" || release=="19" || release=="20"
-            || ((release=="15.1" || release=="21") && kind=="watch-table");
         internal static string Hash(params string[] fields)
         {
             // Length-prefix every field, avoiding delimiter ambiguity in project/object names.
@@ -79,8 +77,8 @@ namespace TiaMcp.Adapters
             var result=new PlcSpecialExportResult {
                 Executed=!dryRun,ProjectFile=project,SoftwarePath=software,ObjectPath=path,OutputFile=destination.FullName,ReleaseKey=release,Kind=kind,
                 Scope=kind=="watch-table"?PlcSupplementaryReadPolicy.WatchScope:PlcSupplementaryReadPolicy.TechnologyReadScope(release),
-                MethodEvidence="static-sdk-signature-verified",SemanticsEvidence=Documented(release,kind)?"official-manual-source-candidate":"unverified",
-                Status=!Documented(release,kind)?"semantics-unverified":!consistent?"inconsistent":"planned" };
+                MethodEvidence="static-sdk-signature-verified",SemanticsEvidence="official-manual-source-candidate",
+                Status=!consistent?"inconsistent":"planned" };
             result.PlanHash=
                 Hash(kind,release,project,software,path,destination.FullName,result.Scope,result.ExportOptions,result.MethodEvidence,result.SemanticsEvidence,
                     result.Status);

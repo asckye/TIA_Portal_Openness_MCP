@@ -17,36 +17,46 @@ public sealed class B6TransactionRoutingTests
     [Fact]
     public async Task Ported_PLC_hardware_and_engine_Unified_children_reuse_the_transaction_worker_lane()
     {
-        using var worker = new Worker();
-        using var lifetime = new Host.ImportStagingHostLifetime();
-        var catalog = new Catalog();
-        // This test isolates routing inside an admitted transaction; approval and portal
-        // admission are exercised separately by PortedPortalAdmissionTests.
-        var tools = Host.PortedToolDeclarations.Methods("21").Where(m => new[] { "CreatePlcTypeGroup", "ManageDeviceUserGroup" }.Contains(m.GetCustomAttribute<McpServerToolAttribute>()!.Name))
-            .Select(m => new FoundationTool(worker, "21", m, m.GetCustomAttribute<McpServerToolAttribute>()!.Name!).ValidatedTool()).ToArray();
-        var invoker = new Engine.WorkerToolInvoker(catalog, worker, lifetime, tools);
-        using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
-        using var release = Host.HardwareContract.UseRelease("21");
-        using var progress = Host.McpServer.UseProgressRequest(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
-            Params = new() { Name = "RunToolTransaction", Arguments = new Dictionary<string, JsonElement>() } }, CancellationToken.None);
-        using var lane = await toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("RunToolTransaction", CancellationToken.None);
-        toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(lane);
-        var service = new Services.EngineeringServicesPortService((op, args) => worker.Call(op, args, CancellationToken.None).GetAwaiter().GetResult(), () => "fixture.ap21");
-        var calls = new[] {
-            ("CreatePlcTypeGroup", "{\"softwarePath\":\"PLC\",\"groupPath\":\"Types\",\"dryRun\":false}"),
-            ("ManageDeviceUserGroup", "{\"action\":\"create\",\"groupPath\":\"Devices\",\"dryRun\":false}"),
-            ("ManageUnifiedHmiGroup", "{\"softwarePath\":\"HMI\",\"dryRun\":false}") };
-        var meta = new JsonObject();
-        Assert.True(Host.TransactionExecution.Run(calls.Length, () => service.BeginTransaction("Batch"), i => {
-            Assert.Contains(calls[i].Item1, Host.TransactionExecution.SupportedTools);
-            var result = invoker.Invoke(calls[i].Item1, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(calls[i].Item2)), false).Result;
-            Assert.True((bool)result.StructuredContent!["ok"]!, result.StructuredContent.ToJsonString() + " Operations: " + string.Join(",", worker.Operations));
-            return true;
-        }, meta));
-        Assert.Equal(1, worker.Acquires);
-        Assert.Equal(new[] { "ManagePlcUserGroup", "ManageDeviceUserGroup", "ManageUnifiedHmiGroup" }, worker.Children);
-        Assert.Equal(new[] { "foundation", "foundation", "worker" }, calls.Select(c => catalog.All[c.Item1].Execution));
-        Assert.True(worker.DisposedTransaction);
+        string previousRelease = Engine.EngineHostConfiguration.ReleaseKey;
+        try
+        {
+            Engine.EngineHostConfiguration.ReleaseKey = "21";
+            using var worker = new Worker();
+            using var lifetime = new Host.ImportStagingHostLifetime();
+            var catalog = new Catalog();
+            // This test isolates routing inside an admitted transaction; approval and portal
+            // admission are exercised separately by PortedPortalAdmissionTests.
+            var tools = Host.PortedToolDeclarations.Methods("21")
+                .Where(m => new[] { "CreatePlcTypeGroup", "ManageDeviceUserGroup" }.Contains(m.GetCustomAttribute<McpServerToolAttribute>()!.Name))
+                .Select(m => new FoundationTool(worker, "21", m, m.GetCustomAttribute<McpServerToolAttribute>()!.Name!).ValidatedTool()).ToArray();
+            var invoker = new Engine.WorkerToolInvoker(catalog, worker, lifetime, tools);
+            using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
+            using var release = Host.HardwareContract.UseRelease("21");
+            using var progress = Host.McpServer.UseProgressRequest(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+                Params = new() { Name = "RunToolTransaction", Arguments = new Dictionary<string, JsonElement>() } }, CancellationToken.None);
+            using var lane = await toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Acquire("RunToolTransaction", CancellationToken.None);
+            toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.Activate(lane);
+            var service = new Services
+                .EngineeringServicesPortService((op, args) => worker.Call(op, args, CancellationToken.None).GetAwaiter().GetResult(), () => "fixture.ap21");
+            var calls = new[] {
+                ("CreatePlcTypeGroup", "{\"softwarePath\":\"PLC\",\"groupPath\":\"Types\",\"dryRun\":false}"),
+                ("ManageDeviceUserGroup", "{\"action\":\"create\",\"groupPath\":\"Devices\",\"dryRun\":false}"),
+                ("ManageUnifiedHmiGroup", "{\"softwarePath\":\"HMI\",\"dryRun\":false}") };
+            var meta = new JsonObject();
+            Assert.True(Host.TransactionExecution.Run(calls.Length, () => service.BeginTransaction("Batch"), i => {
+                Assert.Contains(calls[i].Item1, Host.TransactionExecution.SupportedTools);
+                var result = invoker.Invoke(calls[i].Item1, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(calls[i].Item2)), false).Result;
+                Assert
+                    .True((bool)result.StructuredContent!["ok"]!, result.StructuredContent.ToJsonString() + " Operations: " + string
+                        .Join(",", worker.Operations));
+                return true;
+            }, meta));
+            Assert.Equal(1, worker.Acquires);
+            Assert.Equal(new[] { "ManagePlcUserGroup", "ManageDeviceUserGroup", "ManageUnifiedHmiGroup" }, worker.Children);
+            Assert.Equal(new[] { "foundation", "foundation", "worker" }, calls.Select(c => catalog.All[c.Item1].Execution));
+            Assert.True(worker.DisposedTransaction);
+        }
+        finally { Engine.EngineHostConfiguration.ReleaseKey = previousRelease; }
     }
 
     [Fact]
@@ -83,8 +93,12 @@ public sealed class B6TransactionRoutingTests
                 Host.DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException(), out var d);
                 all[name] = new(d.Name, d.RawDescription, d.Tool, d.Classification, d.Signature, d.Parameters, d.DryRun, d.CandidateFamily, "foundation");
             }
-            Host.DeclaredToolMetadata.Create("ManageUnifiedHmiGroup", typeof(UnifiedFixture).GetMethod(nameof(UnifiedFixture.Edit))!, _ => throw new InvalidOperationException(), out var unified);
-            all[unified.Name] = new(unified.Name, unified.RawDescription, unified.Tool, unified.Classification, unified.Signature, unified.Parameters, unified.DryRun, unified.CandidateFamily, "worker");
+            Host.DeclaredToolMetadata
+                .Create("ManageUnifiedHmiGroup", typeof(UnifiedFixture).GetMethod(nameof(UnifiedFixture.Edit))!, _ => throw new InvalidOperationException(),
+                    out var unified);
+            all[unified.Name] =
+                new(unified.Name, unified.RawDescription, unified.Tool, unified.Classification, unified.Signature, unified.Parameters, unified.DryRun, unified
+                    .CandidateFamily, "worker");
             All = all;
         }
     }
@@ -107,13 +121,16 @@ public sealed class B6TransactionRoutingTests
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
         {
             Assert.True(Active); Operations.Add(operation);
-            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject { ["IsAttached"] = true, ["ProcessId"] = 123, ["ProjectFile"] = "fixture.ap21" });
+            if (operation == "ReadState") return Task.FromResult<JsonNode
+                ?>(new JsonObject { ["IsAttached"] = true, ["ProcessId"] = 123, ["ProjectFile"] = "fixture.ap21" });
             if (operation.EndsWith("BeginEngineeringTransaction")) return Task.FromResult<JsonNode?>(JsonValue.Create("token"));
-            if (operation.EndsWith("ReadEngineeringTransaction")) return Task.FromResult<JsonNode?>(JsonValue.Create((string?)args["member"] switch { "CanCommit" => true, "CommitRequested" => Requested, _ => false }));
+            if (operation.EndsWith("ReadEngineeringTransaction")) return Task.FromResult<JsonNode
+                ?>(JsonValue.Create((string?)args["member"] switch { "CanCommit" => true, "CommitRequested" => Requested, _ => false }));
             if (operation.EndsWith("CommitEngineeringTransaction")) { Requested = true; return Task.FromResult<JsonNode?>(null); }
             if (operation.EndsWith("DisposeEngineeringTransaction")) { DisposedTransaction = true; return Task.FromResult<JsonNode?>(null); }
             Children.Add((string?)args["request"]?["Operation"] ?? "ManageDeviceUserGroup");
-            var meta = new JsonObject { ["success"] = true, ["operationSuccess"] = true, ["apiCallSuccess"] = true, ["mayHaveChanged"] = true, ["after"] = new JsonObject() };
+            var meta = new JsonObject {
+                ["success"] = true, ["operationSuccess"] = true, ["apiCallSuccess"] = true, ["mayHaveChanged"] = true, ["after"] = new JsonObject() };
             var step = new JsonObject { ["Message"] = "Fixture edit", ["Meta"] = meta };
             return Task.FromResult<JsonNode?>(operation.EndsWith("ExecutePlcOrganisation") && (string?)args["request"]?["Operation"] != "ManagePlcUserGroup"
                 ? new JsonObject { ["Data"] = meta.DeepClone() } : step);
@@ -122,7 +139,10 @@ public sealed class B6TransactionRoutingTests
         {
             Assert.True(Active); Assert.False(preview); Assert.False((bool)args["dryRun"]!);
             Children.Add(name);
-            var result = Host.SessionToolContract.Map(name, new Host.ResponseMessage { Message = "Fixture edit", Meta = new JsonObject { ["success"] = true, ["operationSuccess"] = true, ["mayHaveChanged"] = true } }, true, false);
+            var result = Host.SessionToolContract
+                .Map(name, new Host.ResponseMessage {
+                    Message = "Fixture edit", Meta = new JsonObject { ["success"] = true, ["operationSuccess"] = true, ["mayHaveChanged"] = true } }, true,
+                    false);
             return Task.FromResult(new Engine.EngineReply(result, true, Binding, null, null));
         }
         public void Dispose() { }

@@ -227,7 +227,11 @@ public sealed class B3HostPortsTests
                 var refusal = await Invoke(bridge, new { name, arguments = new { } });
                 Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)refusal["error"]?["code"]);
                 Assert.Equal(name, (string?)refusal["error"]?["details"]?["capability"]);
-                Assert.Equal("Tool is not registered in this release.", (string?)refusal["error"]?["message"]);
+                string display = release == "14sp1" ? "V14 SP1" : "V" + release;
+                string expectedProblem = name is "ListCommunicationConnections" or "ManageCommunicationConnection"
+                    ? name + " requires the V21 HW.CommunicationConnections API; unavailable on " + display + "."
+                    : name + " has no supported API action on " + display + ".";
+                Assert.Equal(expectedProblem, (string?)refusal["error"]?["message"]);
                 Assert.Equal("not-started", (string?)refusal["meta"]?["execution"]);
             }
             foreach (string batch in new[] { "RunReadOnlyToolBatch", "PreviewToolBatch" })
@@ -582,14 +586,25 @@ public sealed class B3HostPortsTests
     [Theory]
     [InlineData("14sp1")]
     [InlineData("19")]
-    public void Seed_HMI_dependency_refuses_before_any_PLC_import(string release)
+    public void Seed_HMI_uses_the_shared_worker_route_on_old_releases(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
         string root = Path.Combine(Path.GetTempPath(), "b3-refuse-" + Guid.NewGuid().ToString("N"));
         try {
             Directory.CreateDirectory(Path.Combine(root, "hmi/screens")); File.WriteAllText(Path.Combine(root, "hmi/screens/fixture.xml"), "<Document />");
-            var service = new Service((_, _) => throw new Exception("A refused seed must issue no worker operation."), () => true, () => "fixture");
-            Assert.Throws<NotSupportedException>(() => service.SeedProjectFromReference("PLC", "HMI", root));
+            var calls = new List<string>();
+            var service = new Service((operation, args) => {
+                calls.Add(operation);
+                Assert.Equal("screens", (string?)args["request"]?["Kind"]);
+                Assert.False((bool?)args["dryRun"]);
+                Assert.True((bool?)args["confirm"]);
+                Assert.Equal("fixture", (string?)args["expectedProjectFile"]);
+                return new JsonObject { ["Imported"] = new JsonArray("fixture"), ["Failed"] = new JsonArray() };
+            }, () => true, () => "fixture");
+            var result = service.SeedProjectFromReference("PLC", "HMI", root);
+            Assert.Equal(new[] { "plc-software.SeedReferenceHmi" }, calls);
+            Assert.Equal(new[] { "hmi:screen:fixture" }, result.Imported);
+            Assert.Empty(result.Failed!);
         }
         finally { Directory.Delete(root, true); }
     }

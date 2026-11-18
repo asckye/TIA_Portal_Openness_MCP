@@ -161,7 +161,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => tool.Parameters.Select(p => new PreflightLogic.ParameterSpec(p.Name, p.FriendlyType, p.Required,
                 p.DefaultJson, p.Description, p.Synthesized, p.AllowedValues)).ToList();
         internal static string ToolDescription(ToolDescriptor tool)
-            => TiaOpenness.Shared.ToolUsageCatalog.WithHint(tool.Name, tool.RawDescription);
+            => BehaviorCapabilities.Describe(ReleaseKey, tool.Name, TiaOpenness.Shared.ToolUsageCatalog.WithHint(tool.Name, tool.RawDescription));
         private static ToolDescriptorClassification? ClassificationOf(ToolDescriptor tool) => tool.Classification;
         private static bool IsWrite(ToolDescriptorClassification? classification)
             => classification?.Operation is "WRITE" or "ONLINE-WRITE";

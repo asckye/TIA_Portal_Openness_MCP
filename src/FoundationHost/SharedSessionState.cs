@@ -27,7 +27,7 @@ internal sealed class SharedSessionState
     {
         get
         {
-            var binding = worker is WorkerClient { SharedSession: false } legacy ? legacy.HostSnapshot()["binding"]
+            var binding = worker is WorkerClient legacy && (!legacy.SharedSession || legacy.SharedStatus == null) ? legacy.HostSnapshot()["binding"]
                 : JsonNode.Parse((worker as IFoundationSessionWorker)?.ApprovalIdentity ?? "{}");
             var value = binding?["identity"] ?? binding?[nameof(Identity)] ?? binding;
             if (value is not JsonObject source || source.Count == 0) return null;

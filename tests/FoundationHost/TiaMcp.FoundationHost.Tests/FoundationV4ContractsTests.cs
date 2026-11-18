@@ -305,7 +305,8 @@ public sealed class FoundationV4ContractsTests
     // TIA-BATCH-2 adds ExportPlcTagTables on every release.
     // TIA-BATCH-3 adds ConvertEngineeringTable on every release.
     // TIA-TEST-2 adds the host-owned RunPlcTestLibrary; TIA-TEST-3 adds ExportPlcTestReport on every release.
-    [InlineData("14sp1", 285)] [InlineData("15.1", 326)] [InlineData("16", 355)]
+    // UNIFY-1D1 adds ExportTechnologyObject on V14 SP1 and V15.1.
+    [InlineData("14sp1", 286)] [InlineData("15.1", 327)] [InlineData("16", 355)]
     [InlineData("17", 378)] [InlineData("18", 404)] [InlineData("19", 480)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {

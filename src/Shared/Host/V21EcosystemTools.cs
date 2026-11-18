@@ -53,8 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Absolute local PublicAPI Schemas directory for the selected release (V14 SP1 through V21); <=128 XSD files, no reparse " +
                 "paths.")] string schemaDirectory)
             => OfflineContracts
-                .Run("ValidatePlcDocumentSchemas", () => ValidatePlcXmlSchemas(filePath, schemaDirectory), writes: false, current: HardwareContract
-                    .ReleaseKey is not ("20" or "21"));
+                .Run("ValidatePlcDocumentSchemas", () => ValidatePlcXmlSchemas(filePath, schemaDirectory), writes: false);
 
         public ResponseMessage ValidatePlcXmlSchemas([Description("Absolute existing XML export <=16 MiB.")] string filePath,
                 [Description("Absolute local PublicAPI Schemas directory for the selected release (V14 SP1 through V21); <=128 XSD files, no reparse " +
@@ -75,7 +74,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("packageFingerprint from the matching inspect/preview.")] string expectedPackageHash = "")
             => OfflineContracts
                 .Run("ManageUnifiedCwcPackage", () => ManageUnifiedCwcPackage(directory, action, outputPath, dryRun, expectedPackageHash), writes
-                    : action == "build" && !dryRun, current: HardwareContract.ReleaseKey is "17" or "18");
+                    : action == "build" && !dryRun);
 
         public ResponseMessage ManageUnifiedCwcPackage([Description("Absolute CWC source folder containing manifest.json and control files; <=1024 files /64 " +
             "MiB.")] string directory,

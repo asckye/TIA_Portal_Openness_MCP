@@ -248,12 +248,11 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = new List<Warning>();
             var empty = new Dictionary<string, JsonElement>();
-            if (ReleaseKey != "20" && ReleaseKey != "21" && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)) current = true;
             var policy = current ? BehaviorCapabilities.EntryPolicy(typeof(HardwareContract).Assembly, ReleaseKey, tool, BehaviorPolicy.Current)
                 : BehaviorPolicy.NotApplicable;
             if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
             if (policy == BehaviorPolicy.Current) warnings
-                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", empty));
+                .Add(new Warning(WarningCode.UnverifiedBehavior, BehaviorCapabilities.CurrentDisclosure, empty));
             if (incomplete) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The returned observation is incomplete; consult the retained evidence.", empty));
             if (candidate) warnings
@@ -263,7 +262,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var meta =
                 new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution, policy, completeness
                     ?? (outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.None), paging, warnings);
-            var result = McpResult.From(Envelope.Create(data, error, meta));
+            var result = McpResult.From(BehaviorCapabilities.Disclose(Envelope.Create(data, error, meta)));
             return new CallToolResult { IsError = result.IsError, StructuredContent = JsonNode.Parse(result.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
         }

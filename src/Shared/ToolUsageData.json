@@ -16241,7 +16241,7 @@
         "itemPath": [
           "<exact device item from GetProjectTree>"
         ],
-        "family": "webApplications",
+        "family": "certificateServices",
         "confirmChange": false,
         "dryRun": true,
         "action": "read"
@@ -16273,8 +16273,12 @@
         "setDefault": {
           "arguments": {
             "action": "setDefault",
-            "name": "Example_1"
-          }
+            "name": "Example_1",
+            "family": "webApplications"
+          },
+          "releaseKeys": [
+            "21"
+          ]
         },
         "update": {
           "arguments": {
@@ -16288,22 +16292,36 @@
         "delete": {
           "arguments": {
             "action": "delete",
-            "name": "Example_1"
-          }
+            "name": "Example_1",
+            "family": "telecontrolDataPoints"
+          },
+          "releaseKeys": [
+            "21"
+          ]
         },
         "export": {
           "arguments": {
             "action": "export",
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "name": "Example_1"
-          }
+            "name": "Example_1",
+            "family": "telecontrolDataPoints"
+          },
+          "releaseKeys": [
+            "20",
+            "21"
+          ]
         },
         "import": {
           "arguments": {
             "action": "import",
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "name": "Example_1"
-          }
+            "name": "Example_1",
+            "family": "telecontrolDataPoints"
+          },
+          "releaseKeys": [
+            "20",
+            "21"
+          ]
         },
         "setServiceGroupName": {
           "arguments": {
@@ -32477,7 +32495,7 @@
             "itemPath": [
               "<exact device item from GetProjectTree>"
             ],
-            "family": "webApplications",
+            "family": "certificateServices",
             "confirmChange": false,
             "dryRun": true,
             "action": "read"
@@ -32509,8 +32527,12 @@
             "setDefault": {
               "arguments": {
                 "action": "setDefault",
-                "name": "Example_1"
-              }
+                "name": "Example_1",
+                "family": "webApplications"
+              },
+              "releaseKeys": [
+                "21"
+              ]
             },
             "update": {
               "arguments": {
@@ -32524,22 +32546,36 @@
             "delete": {
               "arguments": {
                 "action": "delete",
-                "name": "Example_1"
-              }
+                "name": "Example_1",
+                "family": "telecontrolDataPoints"
+              },
+              "releaseKeys": [
+                "21"
+              ]
             },
             "export": {
               "arguments": {
                 "action": "export",
                 "filePath": "C:\\Examples\\exports\\Main.xml",
-                "name": "Example_1"
-              }
+                "name": "Example_1",
+                "family": "telecontrolDataPoints"
+              },
+              "releaseKeys": [
+                "20",
+                "21"
+              ]
             },
             "import": {
               "arguments": {
                 "action": "import",
                 "filePath": "C:\\Examples\\exports\\Main.xml",
-                "name": "Example_1"
-              }
+                "name": "Example_1",
+                "family": "telecontrolDataPoints"
+              },
+              "releaseKeys": [
+                "20",
+                "21"
+              ]
             },
             "setServiceGroupName": {
               "arguments": {
@@ -55438,7 +55474,7 @@
             "itemPath": [
               "<exact device item from GetProjectTree>"
             ],
-            "family": "webApplications",
+            "family": "certificateServices",
             "confirmChange": false,
             "dryRun": true,
             "action": "read"
@@ -55470,8 +55506,12 @@
             "setDefault": {
               "arguments": {
                 "action": "setDefault",
-                "name": "Example_1"
-              }
+                "name": "Example_1",
+                "family": "webApplications"
+              },
+              "releaseKeys": [
+                "21"
+              ]
             },
             "update": {
               "arguments": {
@@ -55485,22 +55525,36 @@
             "delete": {
               "arguments": {
                 "action": "delete",
-                "name": "Example_1"
-              }
+                "name": "Example_1",
+                "family": "telecontrolDataPoints"
+              },
+              "releaseKeys": [
+                "21"
+              ]
             },
             "export": {
               "arguments": {
                 "action": "export",
                 "filePath": "C:\\Examples\\exports\\Main.xml",
-                "name": "Example_1"
-              }
+                "name": "Example_1",
+                "family": "telecontrolDataPoints"
+              },
+              "releaseKeys": [
+                "20",
+                "21"
+              ]
             },
             "import": {
               "arguments": {
                 "action": "import",
                 "filePath": "C:\\Examples\\exports\\Main.xml",
-                "name": "Example_1"
-              }
+                "name": "Example_1",
+                "family": "telecontrolDataPoints"
+              },
+              "releaseKeys": [
+                "20",
+                "21"
+              ]
             },
             "setServiceGroupName": {
               "arguments": {

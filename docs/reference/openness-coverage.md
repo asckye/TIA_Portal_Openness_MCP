@@ -90,6 +90,9 @@ does not redistribute the SDKs. The table covers 29 workflows/families, not all
 possible Siemens actions. A broad family can be partial even when it already has
 many working tool implementations.
 
+The technology-object XML export row was refreshed on 2026-11-17 after UNIFY-1D1;
+its SDK evidence retains the original inspection date and hashes.
+
 All **N** cells were also checked against assembly metadata with reflection-only
 loading of the original V14 SP1 through V18 `Siemens.Engineering.dll`: the relevant
 type, property or collection import method is absent. The JSON records these DLL
@@ -117,7 +120,7 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 | Read ordinary technology-object metadata | I | I | I | I | I | I | I | I |
 | Import technology-object XML | N | N | B | B | B | B | I | I |
 | Traverse technology-object user groups | N | N | N | N | N | I | I | I |
-| Export technology-object XML | B | B | I | I | I | I | I | I |
+| Export technology-object XML | I | I | I | I | I | I | I | I |
 | Watch-table listing and XML exchange | N | P | P | P | P | P | I | I |
 | Hardware catalog search / exact catalog device creation | N | N | N | N | P | I | I | I |
 | Create a device with its initial item | B | B | B | B | B | I | I | I |
@@ -139,7 +142,7 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 
 `BuildPlcSymbolManifestFromPath` is an offline bounded extractor for native PLC tag-table and GlobalDB XML snapshots. Empty tag tables produce a valid file result with zero symbols; tag comments are ignored; user constants retain their raw value; system constants are omitted with an explicit warning. It does not certify the complete XML schema, import behavior, or program semantics.
 
-The ported catalog follows the 2026-10-09 maintainer decision: at least one implemented action must run on the selected API. PLC protection/instance DB creation start at V15.1; system block groups start at V14 SP1 with system type groups unavailable until V15.1, program updates/cross-references at V18, network domains at V16, transfer areas at V15.1, system diagnostics exchange at V17, and catalog device creation/certificate service objects at V18. Communication connections remain V21 only. Absent whole-tool API means no registration; partial tools keep their action refusals before any native call. `ManageDeviceUserGroup`, module insertion, older attribute-write overloads, Classic HMI compile and PLC-only reference seeding keep usable old-release paths. Foundation catalog search and exact device creation start at V18. Single watch-table export starts at V15.1. Schema fragment validation uses each selected release's local schemas; V14 SP1 validates Interface fragments and reports unsuffixed network fragments as skipped. Classic screen building starts at V18, CWC ZIP packaging at V17 (V16 remains uncertain and closed), and the HMI/PLC synchronization precheck suite at V19. ImportMasterCopyFromGlobalLibrary remains registered from V19 but refuses screen-item instantiation: the official API exposes no Unified ScreenItems.CreateFrom(MasterCopy). Use the documented screen XML/document import workflow instead. The six V21-only PLC builders are withheld from V14 SP1–V19; their V20/V21 registrations are unchanged. See the [per-pair recheck and VM acceptance list](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/archive/development/phase8-port-plan.md).
+The ported catalog follows the 2026-10-09 maintainer decision: at least one implemented action must run on the selected API. PLC protection/instance DB creation start at V15.1; system block groups start at V14 SP1 with system type groups unavailable until V15.1, program updates/cross-references at V18, network domains at V16, transfer areas at V15.1, system diagnostics exchange at V17, and catalog device creation/certificate service objects at V18. Communication connections remain V21 only. Absent whole-tool API means no registration; partial tools keep their action refusals before any native call. `ManageDeviceUserGroup`, module insertion, older attribute-write overloads and Classic HMI compile keep usable old-release paths. Reference seeding imports PLC types/blocks and HMI tag tables/screens on all eight releases through the shared worker route; native acceptance remains NOT RUN. Foundation catalog search and exact device creation start at V18. Single watch-table export starts at V15.1. Schema fragment validation uses each selected release's local schemas; V14 SP1 validates Interface fragments and reports unsuffixed network fragments as skipped. Classic screen building starts at V18, CWC ZIP packaging at V17 (V16 remains uncertain and closed), and the HMI/PLC synchronization precheck suite at V19. ImportMasterCopyFromGlobalLibrary remains registered from V19 but refuses screen-item instantiation: the official API exposes no Unified ScreenItems.CreateFrom(MasterCopy). Use the documented screen XML/document import workflow instead. The six V21-only PLC builders are withheld from V14 SP1–V19; their V20/V21 registrations are unchanged. See the [per-pair recheck and VM acceptance list](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/archive/development/phase8-port-plan.md).
 
 All eight-release native acceptance entries remain **NOT RUN**. The compiled
 adapters and functional/transport tests are separate evidence. Neither a build nor

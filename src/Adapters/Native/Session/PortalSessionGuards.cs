@@ -227,8 +227,8 @@ namespace TiaMcp.Adapters
         // (Terminating-the-connection topic).
         private void ShutdownPortal()
         {
-            bool started = ownsPortal == true && workerStartedPortal && !sharedPortal;
-            disconnect.Execute(lifecycle.ProcessId, ownsPortal, () => { ReleasePortalEvents(); portal!.Dispose(); }, sharedPortal, workerStartedPortal, false);
+            bool started = ownsPortal == true && workerStartedPortal;
+            disconnect.Execute(lifecycle.ProcessId, ownsPortal, () => { ReleasePortalEvents(); portal!.Dispose(); }, false, workerStartedPortal, false);
             _resetWorkerFamilyState?.Invoke();
             portal = null; project = null; lifecycle.Detached();
 #if PROJECT_MULTIUSER

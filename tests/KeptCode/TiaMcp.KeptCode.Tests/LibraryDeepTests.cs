@@ -23,8 +23,25 @@ namespace TiaMcp.Engine.Tests
             }
             foreach (string option in new[] { "SkipInactiveCultures", "ActivateInactiveCultures" })
             {
-                check(Fails<NotSupportedException>(() => LibraryDeepLogic.ValidateDocumentImportScope(20, true, option, false, true)), "V20 rejects library option " + option);
+                check(!Fails<NotSupportedException>(() => LibraryDeepLogic.ValidateDocumentImportScope(20, true, option, false, true)),
+                    "V20 admits documented library option " + option);
                 LibraryDeepLogic.ValidateDocumentImportScope(21, true, option, false, true);
+            }
+            foreach (int major in new[] { 20, 21 })
+            {
+                foreach (string option in LibraryDeepLogic.ImportOptions)
+                {
+                    TiaMcp.Adapters.Libraries.LibraryPolicy.ValidateDocumentImportScope(major, true, option, false, true);
+                    check(true, "adapter admits documented library option V" + major + "/" + option);
+                    check(Fails<NotSupportedException>(() => TiaMcp.Adapters.Libraries.LibraryPolicy
+                        .ValidateDocumentImportScope(major, false, option, false, true)), "adapter retains project-only scope V" + major + "/" + option);
+                    check(Fails<ArgumentException>(() => TiaMcp.Adapters.Libraries.LibraryPolicy
+                        .ValidateDocumentImportScope(major, true, option, true, true)), "adapter retains basename refusal V" + major + "/" + option);
+                }
+                check(Fails<ArgumentException>(() => LibraryDeepLogic.ValidateDocumentImportScope(major, true, "futureOption", false, true)),
+                    "logic rejects unknown library option V" + major);
+                check(Fails<ArgumentException>(() => TiaMcp.Adapters.Libraries.LibraryPolicy
+                    .ValidateDocumentImportScope(major, true, "futureOption", false, true)), "adapter rejects unknown library option V" + major);
             }
             // Selection JSON.
             var sel = LibraryDeepLogic.ParseSelection("[{\"folder\":\"\"}]");

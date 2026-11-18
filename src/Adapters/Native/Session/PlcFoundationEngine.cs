@@ -41,7 +41,6 @@ namespace TiaMcp.Adapters
         private bool disposed;
         private readonly PlcDisconnectState disconnect = new PlcDisconnectState();
         private bool? ownsPortal;
-        private bool sharedPortal;
         public string ReleaseKey { get; }
 
         public PlcFoundationEngine(string releaseKey, string selectedPublicApiDirectory)
@@ -74,34 +73,6 @@ namespace TiaMcp.Adapters
             if (disposed) throw new ObjectDisposedException(nameof(PlcFoundationEngine));
             if (!allowDisconnected) disconnect.RequireActive();
             PlcLifecyclePolicy.RequireOwner(ReleaseKey, ownerThread);
-        }
-        // Managed adoption only: the borrowing engine never attaches, opens or disposes these objects.
-        public void BorrowSharedSession(Action<TiaPortal?, EngineeringProject?, object?, PlcRuntimeState> adopt)
-        {
-            Check(true);
-            adopt(portal, project,
-#if PROJECT_MULTIUSER
-                localSession,
-#else
-                null,
-#endif
-                new PlcRuntimeState { ReleaseKey=ReleaseKey,IsAttached=lifecycle.ProcessId.HasValue,
-                    ProcessId=lifecycle.ProcessId,ProjectFile=lifecycle.ProjectFile,OwnsProject=lifecycle.OwnsProject,
-                    IsLocalSession=lifecycle.IsLocalSession });
-        }
-        public void AdoptSharedSession(TiaPortal? connection, EngineeringProject? boundProject, object? session,
-            PlcRuntimeState state, bool ownedPortal, long processStartTicks)
-        {
-            Check();
-            if (ReleaseKey != "20" && ReleaseKey != "21") throw new InvalidOperationException("Shared engine sessions require V20/V21.");
-            if ((connection!=null)!=state.ProcessId.HasValue || (boundProject!=null)!=(state.ProjectFile!=null)
-                || (session!=null)!=state.IsLocalSession)
-                throw new InvalidOperationException("Shared session handles and cached identity differ.");
-            lifecycle.Adopt(state);
-            portal=connection; project=boundProject; ownsPortal=ownedPortal; sharedPortal=true;
-#if PROJECT_MULTIUSER
-            localSession=session as Siemens.Engineering.Multiuser.LocalSession;
-#endif
         }
         public bool CanDetachOnUncertainShutdown => portal == null || ownsPortal == false && !workerStartedPortal;
         private bool uncertainShutdown;
@@ -184,8 +155,8 @@ namespace TiaMcp.Adapters
         public PlcDisconnectResult Disconnect()
         {
             Check(true);
-            bool started = ownsPortal==true && workerStartedPortal && !sharedPortal && lifecycle.ProcessId.HasValue && disconnect.Result==null;
-            var result=disconnect.Execute(lifecycle.ProcessId,ownsPortal,()=>{ ReleasePortalEvents(); portal!.Dispose(); },sharedPortal,workerStartedPortal,
+            bool started = ownsPortal==true && workerStartedPortal && lifecycle.ProcessId.HasValue && disconnect.Result==null;
+            var result=disconnect.Execute(lifecycle.ProcessId,ownsPortal,()=>{ ReleasePortalEvents(); portal!.Dispose(); },false,workerStartedPortal,
                 started && OwnedPortalHasOpenProjects());
             _resetWorkerFamilyState?.Invoke();
             portal=null; project=null; lifecycle.Detached();

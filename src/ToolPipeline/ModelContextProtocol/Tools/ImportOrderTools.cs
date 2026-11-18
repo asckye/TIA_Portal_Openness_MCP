@@ -226,7 +226,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = new List<Warning>();
             if (current) warnings
-                .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
+                .Add(new Warning(WarningCode.UnverifiedBehavior, BehaviorCapabilities.CurrentDisclosure,
                         new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The retained result is incomplete; inspect the per-item evidence.", new Dictionary<string,
@@ -241,7 +241,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var meta =
                 new Meta(DateTimeOffset.UtcNow, McpServer.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution, current
                     ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
-            var mapped = McpResult.From(Envelope.Create(data, error, meta));
+            var mapped = McpResult.From(BehaviorCapabilities.Disclose(Envelope.Create(data, error, meta)));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
         }

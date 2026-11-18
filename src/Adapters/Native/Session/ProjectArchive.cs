@@ -11,8 +11,6 @@ namespace TiaMcp.Adapters.Native.Session
 {
     internal static class ProjectArchive
     {
-        internal static HmiObject Create(object project, string archivePath, Action<Exception> recordFailure, bool dryRun = true)
-            => Create(project, archivePath, archivePath.EndsWith(".zap20", StringComparison.OrdinalIgnoreCase) ? "20" : "21", recordFailure, dryRun);
         internal static HmiObject Create(object project,string archivePath,string release,Action<Exception> recordFailure,bool dryRun=true)
         {
             var method=project.GetType().GetMethods().SingleOrDefault(m=>m.Name=="Archive"&&m.GetParameters().Length==3&&

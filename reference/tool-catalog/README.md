@@ -22,3 +22,7 @@ Port batches update PortedFamilies' per-tool release table, add reviewed data ro
 `generate-release-migration` reads the frozen rename data and eight current contract baselines. Its output is frozen after the 4.0 release. `docs/archive/development/phase6-review.md` is an archive; its marker blocks are not generated or checked.
 
 DES-PORT-B synchronizes the 27 write-preview declarations with the served `dryRun`, `expectedPlanHash`, and `expectedProjectFile` parameters.
+
+`engine-source.json` 的注册项可用 `additionalReleases` 显式登记历史目录之外新增的发布键；生成器仍逐项验证注册映射。UNIFY-1D1 将 `ExportTechnologyObject` 扩展至 `14sp1` 和 `15.1`，依据八版 SDK 的 `TechnologicalInstanceDB.Export(FileInfo, ExportOptions)`。
+
+旧版 `additionalReleases` 条目的归档契约由 `CatalogData` 从 V16 Foundation 行复制，保留确认、项目和计划哈希字段；不使用 V21 的历史引擎契约，也不改写归档文件。

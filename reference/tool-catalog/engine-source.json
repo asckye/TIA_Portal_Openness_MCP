@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "sourceCommit": "f2049d94296656198cb8c2c5c9d8544215602c92",
   "scope": "Reviewed source registrations, full signatures and evaluated defaults frozen for Q1; source paths are provenance, not generator inputs. Behavior candidates include Engine and Shared declarations.",
+  "behaviorDisclosure": {
+    "rule": "On every release, registered behavior entries whose ledger family/release is not PASSED disclose behaviorPolicy=current, UNVERIFIED_BEHAVIOR and the description suffix.",
+    "descriptionSuffix": "Native behaviorPolicy=current; V4 native acceptance is pending.",
+    "source": "src/Logic/V4/BehaviorCapabilities.cs",
+    "foundationFamily": "FOUNDATION: registered native Foundation definitions and cross-reference analysis are current / NOT RUN; pure offline Foundation entries are excluded."
+  },
   "registrations": {
     "GetProjectTree": {
       "method": "GetProjectTreeV4",
@@ -902,6 +908,8 @@
       }
     },
     "ExportTechnologyObject": {
+      "additionalReleases": ["14sp1", "15.1"],
+      "description": "[special-export-candidate] Exact canonical TO path; root-only before V19, user groups from V19. Preview first; apply requires exact project, confirmation and expectedPlanHash, consistent supported TO and scoped offline target. Native XML unchanged, ExportOptions.None, no snapshots. V14 SP1–V21 official API-backed method source; native acceptance NOT RUN.",
       "method": "ExportTechnologyObjectV4",
       "path": "src/Engine/ModelContextProtocol/Tools/TechnologyObjectsTools.cs",
       "owner": "TechnologyObjectsTools",

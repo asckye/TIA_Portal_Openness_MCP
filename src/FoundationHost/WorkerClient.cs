@@ -109,7 +109,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
 {
     internal string? NativeCrossReferenceSessionFile { get; set; }
     internal string? NativeCrossReferenceSessionSecret { get; set; }
-    internal bool SharedSession { get; init; }
+    internal bool SharedSession { get; init; } = true;
     internal Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession>? StagingProvider { get; set; }
     internal bool WorkerFaulted => Faulted;
     internal Func<JsonObject>? SupervisorReadiness { get; set; }
@@ -271,7 +271,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     bool IFoundationSessionWorker.SharedSession => SharedSession;
     TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? IFoundationSessionWorker.StagingOwner => StagingProvider?.Invoke();
     IDisposable? IFoundationSessionWorker.EnterRequest(ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams> request)
-        => SharedSession ? ImportStagingTools.UseSession(request) : null;
+        => SharedSession && StagingProvider != null ? ImportStagingTools.UseSession(request) : null;
     private async Task<JsonNode?> CallCore(string operation, JsonObject arguments, bool managed, bool settling, CancellationToken token)
     {
         if (operation == "Disconnect")
@@ -420,6 +420,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             }
             if (token.IsCancellationRequested) TiaMcpServer.ModelContextProtocol.InvocationJournal
                 .Write(activeRequestId!, operation, "RETURNED_AFTER_CANCELLATION");
+            unansweredHostProbe = false;
             return result;
         }
         catch(Exception ex)

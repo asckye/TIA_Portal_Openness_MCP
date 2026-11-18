@@ -18,6 +18,24 @@ using SessionTests = OperatorSessionTestsPlc;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class SessionStateTests
 {
+    [Theory] [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")] [InlineData("17")]
+    [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
+    public void Standalone_worker_does_not_borrow_another_hosts_HTTP_staging_state(string release)
+    {
+        bool previous = toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools.HttpTransport;
+        using var worker = new WorkerClient(release, "unused-worker", "unused-api", false) { SharedSession = true };
+        try
+        {
+            toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools.HttpTransport = true;
+            var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, WorkerRobustnessTests.ServerProxy>()) {
+                Params = new() { Name = "ConnectPortal" } };
+            using var scope = ((IFoundationSessionWorker)worker).EnterRequest(request);
+            Assert.Null(scope);
+            Assert.Null(((IFoundationSessionWorker)worker).StagingOwner);
+        }
+        finally { toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools.HttpTransport = previous; }
+    }
+
     [Fact]
     public async Task Host_tool_call_publishes_registration_once_and_ends_idle()
     {

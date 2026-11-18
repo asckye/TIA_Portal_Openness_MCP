@@ -81,7 +81,7 @@ internal static class PassiveHostDiagnosticsTests
                         && row["objectSchemaContractValid"]!.GetValue<bool>(), "ported diagnostics disclose real module, preview and fallback wiring");
                 }
                 var family = result["behaviorCapabilities"]!.AsArray().SingleOrDefault(row => (string?)row!["family"] == "F19");
-                check(release.Key is "20" or "21" ? family == null : family != null
+                check(family != null
                     && (string?)family["state"] == "current" && (string?)family["l5"] == "NOT RUN"
                     && family["entries"]!.AsArray().Select(entry => (string)entry!).Order().SequenceEqual(expectedPortedOperations.Keys.Order()),
                     "passive capabilities disclose the released ledger, including the old-release ported family without native acceptance claims");

@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Adapters;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.Generation.Planning.Tests;
 using TiaMcp.Logic.Generation;
@@ -131,7 +132,7 @@ public sealed class StagedGenerationTests
             this.plcPreset = plcPreset;
             Release = release; Project = Path.Combine(Root, "project", "Fixture.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release)).Replace('\\', '/');
             NewProject = newProject;
-            if (release is "20" or "21") BindingGeneration = "ee1d86cbdfd1483c9d772d68c251728a";
+            BindingGeneration = "ee1d86cbdfd1483c9d772d68c251728a";
             if (newProject) Project = GenerationProjectPath.CreationFile(release, Path.Combine(Root, "project"), "Fixture");
             Directory.CreateDirectory(Path.GetDirectoryName(Project)!);
             Planner = new PlanningFixture(release); Planner.Machine.Target.Project.ProjectIdentity = Project;
@@ -180,7 +181,7 @@ public sealed class StagedGenerationTests
             Worker = new Worker(this);
             foreach (var source in previous.Sources) Worker.Sources.Add(source.Key, source.Value);
             Worker.Objects.AddRange(previous.Objects);
-            BindingGeneration = Release is "20" or "21" ? Guid.NewGuid().ToString("N") : (int.Parse(BindingGeneration) + 1).ToString();
+            BindingGeneration = Guid.NewGuid().ToString("N");
             ConfigureWorker();
         }
         internal JsonObject Plan(string[]? adopt = null)
@@ -264,7 +265,7 @@ public sealed class StagedGenerationTests
                 if (TransitionFault == "rejected") return Host.V4Reject(name, new TiaMcp.Logic.V4.Error("Injected creation refusal.", new TiaMcp.Logic.V4.PreconditionFailedDetails("fixture", null)));
                 Created = true;
                 if (TransitionFault != "epoch")
-                    BindingGeneration = Release is "20" or "21" ? "c6474692c3e740658035993a02ea915e" : "2";
+                    BindingGeneration = "c6474692c3e740658035993a02ea915e";
             }
             if (name == "MovePlcBlockToGroup")
             {
@@ -276,20 +277,18 @@ public sealed class StagedGenerationTests
         }
         internal JsonObject? Identity()
         {
-            bool shared = Release is "20" or "21";
             bool noProject = NewProject && !Created || Unbound || Created && TransitionFault == "unbound";
-            if (!Connected || shared && noProject) return null;
+            if (!Connected || noProject) return null;
             // Shared workers have no pre-create identity; inject their identity drift between the two post-create reads.
-            bool fault = Created && (!shared || createdStateReads <= 1);
-            string generation = shared && Created && TransitionFault == "epoch" && createdStateReads > 1
+            bool fault = Created && createdStateReads <= 1;
+            string generation = Created && TransitionFault == "epoch" && createdStateReads > 1
                 ? "c6474692c3e740658035993a02ea915e" : BindingGeneration;
             return new JsonObject {
                 ["projectPath"] = noProject ? null : Created && TransitionFault == "path" ? "C:/Wrong/Wrong.ap21"
                     : Created && TransitionFault == "normalized" ? Project.ToLowerInvariant().Replace('\\', '/') : Project,
                 ["processId"] = fault && TransitionFault == "process" ? 124 : 123,
                 ["processStartUtc"] = fault && TransitionFault == "start" ? "2026-10-10T01:00:00Z" : "2026-10-10T00:00:00Z",
-                ["generation"] = shared ? JsonValue.Create(generation)
-                    : JsonValue.Create(long.Parse(generation, System.Globalization.CultureInfo.InvariantCulture)) };
+                ["generation"] = JsonValue.Create(generation) };
         }
         private Descriptor? Ordinary(string name)
         {
@@ -780,12 +779,87 @@ public sealed class StagedGenerationTests
         Assert.Equal(backup != null, result["data"]!.AsObject().ContainsKey("backupPath"));
         Assert.Equal(backup != null, JsonNode.Parse(File.ReadAllText(GenerationRecordFile.DefaultPath(f.Project)))!["runs"]![0]!.AsObject().ContainsKey("backupPath"));
         Assert.All(record.Objects, o => { Assert.Equal("owned", o.State); Assert.NotNull(o.Witness); });
-        Assert.All(record.Objects.Where(o => o.Key.Contains("/block/")), o => Assert.Equal(release is "20" or "21" ? "plc-object-fingerprints" : "modified-date", o.Witness!.Kind));
+        Assert.All(record.Objects.Where(o => o.Key.Contains("/block/")),
+            o => Assert.Equal(release != "14sp1" ? "plc-object-fingerprints" : "modified-date", o.Witness!.Kind));
         var second = f.Plan(); Assert.Empty(second["steps"]!.AsArray());
         Assert.Contains(second["skipped"]!.AsArray(), s => (string?)s!["reason"] == "owned-unchanged");
         Assert.NotEqual((string?)first["planId"], (string?)second["planId"]); Assert.Equal(second.ToJsonString(), f.Plan().ToJsonString());
         Assert.Equal(1, f.Approvals);
     }
+    [Theory]
+    [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Witness_selection_follows_fingerprint_availability_and_verifies_stored_modified_dates(string release)
+    {
+        using var f = new Fixture(release);
+        Assert.True((bool?)f.Apply()["ok"]);
+        string path = GenerationRecordFile.DefaultPath(f.Project);
+        var record = GenerationRecord.Parse(File.ReadAllText(path));
+        var objects = record.Objects.Where(o => o.Key.Contains("/block/", StringComparison.Ordinal)
+            || o.Key.Contains("/type/", StringComparison.Ordinal)).ToArray();
+        Assert.NotEmpty(objects);
+        Assert.All(objects, o => Assert.Equal(release == "14sp1" ? "modified-date" : "plc-object-fingerprints", o.Witness!.Kind));
+        foreach (var item in objects)
+        {
+            var native = f.Worker.Objects.Single(o => o.Path == item.Path);
+            item.Witness = new GenerationWitness { Kind = "modified-date", Tool = native.Kind == "block" ? "GetPlcBlockInfo" : "GetPlcTypeInfo",
+                Values = new Dictionary<string, JsonElement> {
+                    ["path"] = JsonSerializer.SerializeToElement(item.Path),
+                    ["modifiedDate"] = JsonSerializer.SerializeToElement(native.ModifiedDate.ToString("O")) } };
+        }
+        record.RecordHash = GenerationRecord.Hash(record);
+        File.WriteAllText(path, GenerationDocuments.Canonical(record));
+        Assert.Empty(f.Plan()["steps"]!.AsArray());
+        foreach (var item in objects) f.Worker.Objects.Single(o => o.Path == item.Path).ModifiedDate += TimeSpan.FromMinutes(1);
+        var conflicts = f.Plan()["conflicts"]!.AsArray();
+        Assert.All(objects, item => Assert.Contains(conflicts, c => (string?)c!["key"] == item.Key
+            && (string?)c["reason"] == "modified-after-generation"));
+    }
+
+    [Theory]
+    [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Seed_hmi_import_preserves_xml_order_identity_and_failures_on_every_release(string release)
+    {
+        using var f = new Fixture(release);
+        string reference = Path.Combine(f.Root, "reference");
+        foreach (string folder in new[] { "tags", "screens" })
+        {
+            string directory = Path.Combine(reference, "hmi", folder);
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "seed.xml"), "<Document><Name>{{NAME}}</Name></Document>");
+        }
+        File.WriteAllText(Path.Combine(reference, "manifest.json"),
+            "{\"hmiScreenFolderPath\":\"Screens\",\"hmiTagTableFolderPath\":\"Tags\"}");
+        var requests = new List<SeedHmiRequest>();
+        string? stagedRoot = null;
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) => {
+            Assert.Equal("plc-software.SeedReferenceHmi", operation);
+            Assert.False((bool)arguments["dryRun"]!);
+            Assert.True((bool)arguments["confirm"]!);
+            Assert.Equal(f.Project, (string?)arguments["expectedProjectFile"]);
+            var request = arguments["request"]!.Deserialize<SeedHmiRequest>()!;
+            requests.Add(request);
+            stagedRoot = Directory.GetParent(Directory.GetParent(request.Directory)!.FullName)!.FullName;
+            Assert.Equal("HMI", request.SoftwarePath);
+            Assert.Equal(request.Kind == "tagTables" ? "Tags" : "Screens", request.FolderPath);
+            Assert.Equal("<Document><Name>Fixture</Name></Document>", File.ReadAllText(Path.Combine(request.Directory, "seed.xml")));
+            return new JsonObject { ["Imported"] = new JsonArray("seed.xml"),
+                ["Failed"] = new JsonArray(new JsonObject { ["Path"] = "refused.xml", ["Error"] = "fixture refusal" }) };
+        }, () => true, () => f.Project);
+        try
+        {
+            var result = service.SeedProjectFromReference("PLC", "HMI", reference, new JsonObject { ["NAME"] = "Fixture" });
+            Assert.Equal(new[] { "tagTables", "screens" }, requests.Select(r => r.Kind));
+            Assert.Equal(new[] { "hmi:tagtable:seed.xml", "hmi:screen:seed.xml" }, result.Imported);
+            Assert.Equal(new[] { "hmi:tagtable:fixture refusal", "hmi:screen:fixture refusal" }, result.Failed!.Select(r => r.Error));
+        }
+        finally
+        {
+            if (stagedRoot != null) Directory.Delete(stagedRoot, true);
+        }
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void NewProjectRunAndRecordOmitBackupPath(string release)
     {

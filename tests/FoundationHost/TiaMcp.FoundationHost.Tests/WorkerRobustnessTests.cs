@@ -144,7 +144,7 @@ public sealed class WorkerRobustnessTests
             shared = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(spillRead, Worker),
                 release, () => new(false, 1), readinessForTest: () => new JsonObject { ["ready"] = true });
             // V14-V16 use the existing unpaged block-read fixture for the export response.
-            engine = ports.SingleOrDefault(tool => tool.ProtocolTool.Name == SessionFixtureTool.Name)
+            engine = ports.SingleOrDefault(tool => tool.ProtocolTool.Name == "ListTestSuiteCases")
                 ?? shared;
 
             // The first generation starts and reports its status under the production budgets; the scaled budgets above apply
@@ -158,7 +158,7 @@ public sealed class WorkerRobustnessTests
         internal Task<CallToolResult> Call(bool foundation, string? payload = null, CancellationToken token = default)
         {
             var tool = foundation ? shared : engine;
-            var args = tool.ProtocolTool.Name == SessionFixtureTool.Name ? new JsonObject { ["category"] = "application", ["name"] = payload ?? "" }
+            var args = tool.ProtocolTool.Name == "ListTestSuiteCases" ? new JsonObject { ["category"] = "application", ["name"] = payload ?? "" }
                 : new JsonObject { ["softwarePath"] = "PLC" };
             if (ReferenceEquals(tool, shared)) args["regexName"] = payload ?? "";
             var server = DispatchProxy.Create<IMcpServer, ServerProxy>();

@@ -10,7 +10,7 @@ namespace TiaMcp.FoundationHost;
 
 // Presentation is selected here; FoundationCatalog never branches on a release key.
 internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, bool RetainUnavailable,
-    bool UseDeclaredDiscovery, string DeclarationDisclosure, IReadOnlyList<string> PreferredOrder,
+    bool UseDeclaredDiscovery, IReadOnlyList<string> PreferredOrder,
     IReadOnlyList<string> LiteNames, IReadOnlyList<string> ManifestSupplementaryReleases, StringComparer NameComparer,
     string DefaultExampleProfile, IReadOnlyDictionary<string, string> ExampleProfiles,
     IReadOnlyDictionary<string, string> ManifestReturnTypes)
@@ -19,21 +19,16 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
     internal bool RegisterDiscoveryHandlers { get; init; }
     internal bool CatalogCallDiscipline { get; init; }
     internal bool HasManifestCatalog { get; init; }
-    internal bool SharedSession { get; init; }
+    internal bool SharedSession { get; init; } = true;
     internal bool MergeWorkerReadiness { get; init; }
-    internal bool RevealSessionEndedDiagnostic { get; init; }
     internal bool WrapPortedTools { get; init; }
-    internal string FoundationInvocationTag { get; init; } = "foundation";
-    internal string HostInvocationTag { get; init; } = "engine";
-    internal bool DisclosePortedBehavior { get; init; } = true;
-    internal bool ExtendedWorkerStatus { get; init; }
+    internal bool ExtendedWorkerStatus { get; init; } = true;
     internal bool StartSupervisorOnRead { get; init; }
-    internal bool StatusOutcomeIsFault { get; init; } = true;
-    internal bool NativeObservations { get; init; }
-    internal IReadOnlyList<string> ObservationToolNames { get; init; } = Array.Empty<string>();
+    internal bool NativeObservations { get; init; } = true;
     internal IReadOnlyList<string> ObservationSet { get; init; } = new[] {
         "environment", "group", "group.fix", "assemblies", "tool-names", "reflection", "reflection-deny",
-        "session.GetState", "session.ListPortalProcessProjects", "session.GetProjectTree", "session.ConnectPortal" };
+        "session.GetState", "session.ListPortalProcessProjects", "session.GetProjectTree", "session.ConnectPortal",
+        "session.ValidateAutomationContext" };
     internal bool FoundationReadinessBoundary { get; init; } = true;
     private const string DiscoveryInstructions = ToolUsageCatalog.Instructions +
         " FindTools searches the complete release catalog, including tools omitted by the lite profile; CallTool invokes a discovered tool. " +
@@ -56,7 +51,7 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
             ["21"] = Declared("21")
         };
 
-    private static ReleaseCatalogData Presentation(string release) => new(DiscoveryInstructions, true, true, true, "",
+    private static ReleaseCatalogData Presentation(string release) => new(DiscoveryInstructions, true, true, true,
         ToolUsageCatalog.ProfileEntries(release).Select(row => (string)row!["currentName"]!)
             .Append("GetCallResult").Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray(),
         ToolUsageCatalog.ProfileEntries(release).Where(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"))
@@ -73,21 +68,10 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
             ["GetEnvironmentDiagnostics"] = "CallToolResult"
         }) { RegisterDiscoveryHandlers = true, CatalogCallDiscipline = true, HasManifestCatalog = true };
 
-    // Invocation/disclosure policy is deliberately unchanged until P8-04n2.
-    private static ReleaseCatalogData Foundation(string release) => Presentation(release) with
-        { DeclarationDisclosure = " Native behaviorPolicy=current; V4 native acceptance is pending." };
+    private static ReleaseCatalogData Foundation(string release) => Presentation(release);
 
     private static ReleaseCatalogData Declared(string release) => Presentation(release) with
-        { SharedSession = true, MergeWorkerReadiness = true, RevealSessionEndedDiagnostic = true, WrapPortedTools = true, DisclosePortedBehavior = false,
-            ExtendedWorkerStatus = true, StartSupervisorOnRead = true, StatusOutcomeIsFault = false, NativeObservations = true, FoundationReadinessBoundary =
-                false,
-            ObservationToolNames = ToolUsageCatalog.ProfileEntries(release, engineSource: true).Select(row => (string)row!["currentName"]!)
-                .OrderBy(name => name, StringComparer.Ordinal)
-                .Concat(TiaMcp.Adapters.Contracts.PortedFamilies.All.Where(f => f.Available(release)).SelectMany(f => f.Tools))
-                .Distinct(StringComparer.Ordinal).ToArray(),
-            ObservationSet = new[] { "environment", "group", "group.fix", "assemblies", "tool-names", "reflection", "reflection-deny",
-                "session.GetState", "session.ListPortalProcessProjects", "session.GetProjectTree", "session.ConnectPortal", "session.ValidateAutomationContext"
-                } };
+        { MergeWorkerReadiness = true, WrapPortedTools = true, FoundationReadinessBoundary = false };
 
     internal string ExampleProfile(string name) => ExampleProfiles.GetValueOrDefault(name, DefaultExampleProfile);
 

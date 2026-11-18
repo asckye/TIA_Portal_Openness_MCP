@@ -19,9 +19,6 @@ namespace TiaMcp.Adapters.Libraries
         {
             if (!projectLibrary) throw new NotSupportedException("Library document import is supported only in the project library.");
             RequireOneOf(importOptions, ImportOptions, "importOptions");
-            if (major == 20 && importOptions != "None")
-                throw new NotSupportedException("V20 library document import supports LibraryImportOptions.None only; inactive-culture options are " +
-                    "unsupported.");
             if (xmlExists && sdExists)
                 throw new ArgumentException("Both .xml and .s7dcl exist with the same basename; use a directory with one unambiguous document set.");
         }

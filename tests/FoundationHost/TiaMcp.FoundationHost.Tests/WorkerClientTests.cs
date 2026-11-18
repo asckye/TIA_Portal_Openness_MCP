@@ -98,7 +98,7 @@ public sealed class WorkerDispatchTests
     [Xunit.InlineData("21")]
     public void Foundation_result_parking_retains_the_complete_response_and_small_results(string release)
     {
-        using var worker = new WorkerClient(release, "unused", "unused", false);
+        using var worker = new WorkerClient(release, "unused", "unused", false) { SharedSession = false };
         using var sessionWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var context = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker);
         using var exports = context.Exports;

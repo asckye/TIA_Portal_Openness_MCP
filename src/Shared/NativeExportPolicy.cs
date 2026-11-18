@@ -195,7 +195,7 @@ namespace TiaOpenness.Shared
 
         internal static string? BlockedReason(string status) => status == "inconsistent"
             ? "Compile the inconsistent object before export."
-            : status == "semantics-unverified" ? "Export method evidence is insufficient for apply." : null;
+            : null;
 
         internal static void RequireApply(string status)
         {

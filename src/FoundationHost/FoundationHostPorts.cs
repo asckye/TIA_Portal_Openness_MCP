@@ -142,9 +142,7 @@ internal static class FoundationHostPorts
                 throw new NotSupportedException("This observation is unavailable on release " + release + ": " + operation);
             if (operation == "tool-names")
             {
-                var roster = Roster();
-                return new JsonArray((roster.Count > 0 ? roster.Select(t => t.ProtocolTool.Name) : profile.ObservationToolNames)
-                    .Select(name => (JsonNode?)JsonValue.Create(name)).ToArray());
+                return new JsonArray(Roster().Select(t => (JsonNode?)JsonValue.Create(t.ProtocolTool.Name)).ToArray());
             }
             async Task<JsonNode?> ReadFacts()
             {

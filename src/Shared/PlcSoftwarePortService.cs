@@ -253,11 +253,6 @@ namespace TiaMcpServer.Siemens.Services
                 if (manifest?["hmiScreensDir"] != null) hmiScreensDir = Path.Combine(referenceDir, manifest["hmiScreensDir"]!.ToString());
                 if (manifest?["hmiTagTablesDir"] != null) hmiTagsDir = Path.Combine(referenceDir, manifest["hmiTagTablesDir"]!.ToString());
 
-                if (HardwareContract.ReleaseKey != "20" && HardwareContract.ReleaseKey != "21" &&
-                    new[] { hmiScreensDir, hmiTagsDir }
-                        .Any(dir => Directory.Exists(dir) && Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly).Any()))
-                    throw new NotSupportedException("Seed HMI imports depend on the B7 engine worker port in this release.");
-
                 var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-seed-" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
 

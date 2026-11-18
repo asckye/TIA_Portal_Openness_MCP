@@ -218,7 +218,10 @@ namespace TiaMcpServer.ModelContextProtocol
             string witnessKind, tool;
             if (kind is "block" or "type")
             {
-                if (McpServer.ReleaseKey is "20" or "21")
+                bool useFingerprints = present != null && item.Witness != null
+                    ? item.Witness.Kind == "plc-object-fingerprints"
+                    : TiaMcp.Adapters.Contracts.PortedFamilies.ToolReleases["GetPlcObjectFingerprints"].Contains(McpServer.ReleaseKey, StringComparer.Ordinal);
+                if (useFingerprints)
                 {
                     tool = "GetPlcObjectFingerprints"; witnessKind = "plc-object-fingerprints";
                     var data = Read(tool, new JsonObject { ["softwarePath"] = software, ["objectKind"] = kind, ["objectPath"] = present?.Path ?? item.Path });

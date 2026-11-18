@@ -89,13 +89,12 @@ public sealed class SharedHostSessionTests
     {
         const string message = "Disconnect is ending this session; a new host session is required.";
         var error = new TiaMcp.Adapters.Contracts.AdapterPreconditionException(message, isArgument: false);
-        error.Data["foundationSuppressAdmissionDiagnostic"] = !Profile.Releases[release].RevealSessionEndedDiagnostic;
         error.Data["foundationSessionEnded"] = true;
         error.Data["foundationRequestSent"] = false;
         Assert.IsType<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(error);
         var result = TiaMcp.FoundationHost.FoundationV4Result.Failure(release, "GetSessionState", "disconnect-test", false, false, null, error).StructuredContent!;
         Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
-        Assert.Equal(Profile.Releases[release].RevealSessionEndedDiagnostic ? message : "The request precondition failed before operation.", (string?)result["error"]?["message"]);
+        Assert.Equal(message, (string?)result["error"]?["message"]);
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
     }
 
@@ -160,8 +159,9 @@ public sealed class SharedHostSessionTests
         Assert.Null(detached?["PriorUnknownRequestId"]);
     }
 
-    [Theory] [InlineData("20")] [InlineData("21")]
-    public void An_explicit_supervisor_read_starts_the_full_profile_lazily(string release)
+    [Theory] [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")] [InlineData("17")]
+    [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
+    public void An_explicit_supervisor_read_keeps_the_full_profile_worker_cold(string release)
     {
         using var fixture = new SessionWorkerFixture(release, false);
         var worker = fixture.Worker;
@@ -172,8 +172,8 @@ public sealed class SharedHostSessionTests
         using var context = pipeline.EnterSession();
         Assert.Null(worker.OperatorSnapshot()["pid"]);
         var status = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ReadOpennessWorkerStatus();
-        Assert.Equal("Ready", (string?)status.Meta?["worker"]?["state"]);
-        Assert.NotNull(worker.OperatorSnapshot()["pid"]);
+        Assert.Equal("NotStarted", (string?)status.Meta?["worker"]?["state"]);
+        Assert.Null(worker.OperatorSnapshot()["pid"]);
         Assert.Null(status.Meta?["worker"]?["sessionLocked"]);
     }
 

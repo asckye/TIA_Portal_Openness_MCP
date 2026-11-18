@@ -459,6 +459,8 @@ internal static class FoundationV4Result
     private static Envelope EnvelopeFor(string release, string name, string id, JsonObject? data, Outcome outcome,
         Execution execution, Completeness completeness, Error? error, bool current, bool candidate = false, Paging? paging = null)
     {
+        var policy = BehaviorCapabilities.EntryPolicy(typeof(FoundationV4Result).Assembly, release, name, BehaviorPolicy.NotApplicable);
+        current = policy == BehaviorPolicy.Current;
         if (outcome == Outcome.Unknown) data?.Remove("recovery");
         var warnings = new List<Warning>();
         if (name == "ConnectPortal" && (string?)data?["previousOwner"]?["state"] is "BUSY" or "UNCERTAIN" or "ACTIVE")
@@ -471,7 +473,7 @@ internal static class FoundationV4Result
             warnings.AddRange(NativeResultState.Warnings(new JsonObject { ["nativeState"] = "Warning",
                 ["nativeStateType"] = TiaMcp.Adapters.Contracts.NativeResultStates.Compiler }));
         if (current) warnings
-            .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.", Empty));
+            .Add(new Warning(WarningCode.UnverifiedBehavior, BehaviorCapabilities.CurrentDisclosure, Empty));
         if (candidate) warnings
             .Add(new Warning(WarningCode.CandidateOnly, "Candidate output only; target schema, import and program semantics remain unverified.", Empty));
         if (HostBehavior.BackupSkipped(data) is Warning backup) warnings.Add(backup);
@@ -480,7 +482,7 @@ internal static class FoundationV4Result
         if (completeness == Completeness.Partial) warnings
             .Add(new Warning(WarningCode.IncompleteData, "The observation is incomplete; retain the declared scope and unprobed fields.", Empty));
         return BehaviorCapabilities.Disclose(Envelope.Create(data, error, new Meta(DateTimeOffset.UtcNow, release, name, id, outcome, execution,
-            current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings)));
+            policy, completeness, paging, warnings)));
     }
     internal static CallToolResult Composite(string release, string name, string id, JsonObject data, Outcome outcome,
         Execution execution, Error? error = null)

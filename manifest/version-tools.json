@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 285,
+      "toolCount": 286,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -87,6 +87,7 @@
         "ExportPlcType",
         "ExportPlcTypes",
         "ExportProjectTexts",
+        "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExtractPlcBlockMetrics",
         "FindTools",
@@ -296,7 +297,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 326,
+      "toolCount": 327,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -387,6 +388,7 @@
         "ExportPlcWatchTable",
         "ExportPlcWatchTablesToDirectory",
         "ExportProjectTexts",
+        "ExportTechnologyObject",
         "ExportTechnologyObjectsToDirectory",
         "ExtractPlcBlockMetrics",
         "FindTools",
@@ -3302,8 +3304,8 @@
     }
   },
   "groupCounts": {
-    "all-releases": 284,
-    "shared-subset": 219,
+    "all-releases": 285,
+    "shared-subset": 218,
     "release-only": 20
   },
   "tools": [
@@ -5251,6 +5253,8 @@
     {
       "name": "ExportTechnologyObject",
       "releases": [
+        "14sp1",
+        "15.1",
         "16",
         "17",
         "18",
@@ -5258,7 +5262,7 @@
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

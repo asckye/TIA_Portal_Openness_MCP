@@ -57,12 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
             BridgeLiteToolNames = liteToolNames ?? throw new ArgumentNullException(nameof(liteToolNames));
         }
 
-        internal static string InvocationHostTag
-#if TIA_ENGINE_HOST
-            => TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].HostInvocationTag;
-#else
-            => "engine";
-#endif
+        internal const string InvocationHostTag = "foundation";
 
         private static bool UseDeclaredReleasePolicy
             => UsesDeclaredReleasePolicy(ReleaseKey);
@@ -78,30 +73,21 @@ namespace TiaMcpServer.ModelContextProtocol
             => VersionToolProblem(ReleaseKey, name);
 
         internal static string VersionToolProblem(string release, string name)
-            => UsesDeclaredReleasePolicy(release)
-                ? Siemens.ToolVersionPolicy.ToolProblem(release, name)
-                : SessionCatalog() is { } catalog && catalog.Find(name) == null ? "Tool is not registered in this release." : "";
+            => SessionCatalog() is { } catalog && catalog.Find(name, includeUnavailable: true) == null ? "Tool is not registered in this release."
+                : Siemens.ToolVersionPolicy.ToolProblem(release, name);
 
-        // Old-release registration is a per-session catalog fact. Building a registry happens before any MCP session
+        // Registration is a per-session catalog fact. Building a registry happens before any MCP session
         // exists; only calls inside a session can be refused as unregistered.
 #if TIA_ENGINE_HOST
         private static IToolCatalogView? SessionCatalog() => TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull?.Catalog;
 #else
-        private static IToolCatalogView? SessionCatalog() => CatalogView;
+        private static IToolCatalogView? SessionCatalog() => null;
 #endif
 
         internal static string VersionCallProblem(string name, Func<string, string?> argument)
         {
-            if (UseDeclaredReleasePolicy)
-                return Siemens.ToolVersionPolicy.CallProblem(ReleaseKey, name, argument);
             if (VersionToolProblem(name) is { Length: > 0 } problem) return problem;
-            if (name is "RenderPlcBlockDocument" or "ComparePlcBlockDocuments"
-                && new[] { "blockPath", "leftBlockPath", "rightBlockPath" }.Any(p => !string.IsNullOrWhiteSpace(argument(p))))
-                return "Native block-document analysis is not enabled on this release; provide exported file paths.";
-            if (ReleaseKey is "14sp1" or "15.1" or "16" && name is "CompilePlcSoftware" or "CompilePlcDiagnostics"
-                && !string.IsNullOrEmpty(argument("password")))
-                return "Safety compilation with a password requires V17 or later.";
-            return "";
+            return Siemens.ToolVersionPolicy.CallProblem(ReleaseKey, name, argument);
         }
 
         private static string DuplicateArgumentProblem(JsonObject arguments)
@@ -587,12 +573,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult V4Result(string tool, JsonObject? data, Error? error,
             Outcome outcome, Execution execution, Completeness completeness, Paging? paging = null, bool current = false)
         {
-#if TIA_ENGINE_HOST
-            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[ReleaseKey].DisclosePortedBehavior && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool))
-                current = true;
-#endif
             var warnings = current ? new[] { new Warning(WarningCode.UnverifiedBehavior,
-                "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()) } : Array
+                BehaviorCapabilities.CurrentDisclosure, new Dictionary<string, JsonElement>()) } : Array
                     .Empty<Warning>();
             var policy = current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable;
             if (ToolBehaviorPolicy(tool, policy) == BehaviorPolicy.SafeV4)

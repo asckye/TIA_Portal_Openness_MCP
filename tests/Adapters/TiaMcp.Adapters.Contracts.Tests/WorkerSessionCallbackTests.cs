@@ -136,6 +136,18 @@ public sealed class WorkerSessionCallbackTests
     }
 
     [Theory]
+    [InlineData("14sp1", "tagTables", "ImportHmiTagTablesFromDirectory")]
+    [InlineData("14sp1", "screens", "ImportHmiScreensFromDirectory")]
+    [InlineData("15.1", "tagTables", "ImportHmiTagTablesFromDirectory")]
+    [InlineData("15.1", "screens", "ImportHmiScreensFromDirectory")]
+    [InlineData("16", "tagTables", "ImportHmiTagTablesFromDirectory")]
+    [InlineData("16", "screens", "ImportHmiScreensFromDirectory")]
+    [InlineData("17", "tagTables", "ImportHmiTagTablesFromDirectory")]
+    [InlineData("17", "screens", "ImportHmiScreensFromDirectory")]
+    [InlineData("18", "tagTables", "ImportHmiTagTablesFromDirectory")]
+    [InlineData("18", "screens", "ImportHmiScreensFromDirectory")]
+    [InlineData("19", "tagTables", "ImportHmiTagTablesFromDirectory")]
+    [InlineData("19", "screens", "ImportHmiScreensFromDirectory")]
     [InlineData("20", "tagTables", "ImportHmiTagTablesFromDirectory")]
     [InlineData("21", "tagTables", "ImportHmiTagTablesFromDirectory")]
     [InlineData("20", "screens", "ImportHmiScreensFromDirectory")]
@@ -235,10 +247,10 @@ public sealed class WorkerSessionCallbackTests
 
     [Theory]
     [InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
-    public void Old_release_seed_registration_stays_unavailable(string release)
+    public void Old_release_seed_registration_is_available_without_importing(string release)
     {
         var engine = Bound(release);
-        Assert.Null(engine.SeedReferenceHmiImport);
+        Assert.NotNull(engine.SeedReferenceHmiImport);
         Assert.Null(engine.LastHmiRequest);
     }
 

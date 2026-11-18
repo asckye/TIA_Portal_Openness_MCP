@@ -8,9 +8,9 @@
     <DefineConstants Condition="$([System.String]::Copy('|14sp1|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|14sp1|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PROJECT_SCAFFOLD</DefineConstants>
   </PropertyGroup>
-  <!-- Seed registration stays on the evidenced engine-port formats; older releases still refuse it. -->
+  <!-- Seed HMI import uses the shared project-lifecycle route on every supported release. -->
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Worker'">
-    <DefineConstants Condition="'$(TiaReleaseKey)' == '20' Or '$(TiaReleaseKey)' == '21'">$(DefineConstants);WORKER_SEED_HMI_IMPORT</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|14sp1|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);WORKER_SEED_HMI_IMPORT</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Worker'">
     <DefineConstants>$(DefineConstants);WORKER_PROPERTY_ADMISSION</DefineConstants>
@@ -110,7 +110,7 @@
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_RH</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_WATCH_READ</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_WATCH_ENTRIES</DefineConstants>
-    <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_SPECIAL_EXPORT</DefineConstants>
+    <DefineConstants Condition="$([System.String]::Copy('|14sp1|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_SPECIAL_EXPORT</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|15.1|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_WATCH_EXPORT</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_SAFETY</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_TECH_GROUP_READ</DefineConstants>

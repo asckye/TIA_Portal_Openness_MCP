@@ -34,7 +34,11 @@ public sealed class B1OldReleaseBridgeTests
             bool unknown = name == "NoSuchB1Tool";
             Assert.Equal(unknown ? "TOOL_NOT_FOUND" : "UNSUPPORTED_CAPABILITY", (string?)rejected["error"]?["code"]);
             Assert.Equal(name, (string?)rejected["error"]?["details"]?[unknown ? "tool" : "capability"]);
-            Assert.Equal("Tool is not registered in this release.", (string?)rejected["error"]?["message"]);
+            var expectedMessage = name == "ListCommunicationConnections"
+                ? name + " requires the V21 HW.CommunicationConnections API; unavailable on V" + (release == "14sp1" ? "14 SP1" : release) + "."
+                : name == "DecodePlcSimaticMl" ? name + " has no supported API action on V" + (release == "14sp1" ? "14 SP1" : release) + "."
+                    : "Tool is not registered in this release.";
+            Assert.Equal(expectedMessage, (string?)rejected["error"]?["message"]);
             Assert.Equal("not-started", (string?)rejected["meta"]?["execution"]);
         }
         var missing = await Invoke(tools, "CallTool", new { name = "AnalyzePlcReferences", arguments = new { } });
@@ -46,9 +50,9 @@ public sealed class B1OldReleaseBridgeTests
         Assert.False((bool)preview["data"]!["ok"]!);
         Assert.Contains("directory", preview["data"]!["missing"]!.ToJsonString());
         Assert.Equal(2, preview["data"]!["validationErrors"]!.AsArray().Count);
-        var gated = await Invoke(tools, "CallTool", new { name = "RenderPlcBlockDocument", arguments = new { softwarePath = "PLC_1", blockPath = "Main" } });
-        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)gated["error"]?["code"]);
-        Assert.Equal("not-started", (string?)gated["meta"]?["execution"]);
+        var rendered = await RenderBlockDocument(release);
+        Assert.True((bool)rendered["ok"]!, rendered.ToJsonString());
+        Assert.Equal("block", (string?)rendered["data"]?["source"]?["mode"]);
         if (release is "14sp1" or "15.1" or "16")
         {
             var password = await Invoke(tools, "CallTool", new { name = "CompilePlcSoftware", arguments = new { softwarePath = "PLC_1", password = "fixture" } });
@@ -57,6 +61,81 @@ public sealed class B1OldReleaseBridgeTests
         var categories = await Invoke(tools, "ListToolCategories", new { });
         Assert.Equal(names.Count, (int)categories["data"]!["toolCount"]!);
         Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
+    [InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+    public async Task NativeBlockDocumentModePassesBridgePolicyAndReachesWorkerOnEveryRelease(string release)
+    {
+        var rendered = await RenderBlockDocument(release);
+        Assert.True((bool)rendered["ok"]!, rendered.ToJsonString());
+        Assert.Equal("block", (string?)rendered["data"]?["source"]?["mode"]);
+    }
+
+    private static async Task<JsonObject> RenderBlockDocument(string release)
+    {
+        using var worker = new BlockDocumentWorker();
+        using var pipeline = new Pipeline(release, worker, Array.Empty<McpServerTool>());
+        using (pipeline.EnterSession())
+        {
+            Assert.NotNull(Host.McpServer.CatalogView.Find("RenderPlcBlockDocument"));
+            Assert.Equal("", Host.McpServer.VersionCallProblem("RenderPlcBlockDocument", key => key == "blockPath" ? "Main" : null));
+            Assert.Equal("", Host.McpServer.VersionCallProblem("ComparePlcBlockDocuments",
+                key => key is "leftBlockPath" or "rightBlockPath" ? "Main" : null));
+        }
+        var rendered = await Invoke(pipeline.AllTools, "CallTool",
+            new { name = "RenderPlcBlockDocument", arguments = new { softwarePath = "PLC_1", blockPath = "Main" } });
+        Assert.True((bool)rendered["ok"]!, rendered.ToJsonString());
+        Assert.Contains("Main", (string?)rendered["data"]?["markdown"]);
+        var compared = await Invoke(pipeline.AllTools, "CallTool", new { name = "ComparePlcBlockDocuments",
+            arguments = new { softwarePath = "PLC_1", leftBlockPath = "Main", rightBlockPath = "Main" } });
+        Assert.True((bool)compared["ok"]!, compared.ToJsonString());
+        Assert.Equal("block", (string?)compared["data"]?["leftSource"]?["mode"]);
+        Assert.Equal("block", (string?)compared["data"]?["rightSource"]?["mode"]);
+        Assert.Equal(Enumerable.Repeat(("plc-analysis.ExportBlockDocument", "PLC_1", "Main"), 3), worker.Exports);
+        Assert.Empty(Directory.GetDirectories(worker.Root));
+        return rendered;
+    }
+
+    [Theory]
+    [InlineData("19")][InlineData("20")][InlineData("21")]
+    public async Task SessionCatalogPreservesExactVersionRefusalsAcrossBothBridges(string release)
+    {
+        using var pipeline = new Pipeline(release, new BoundWorker(), Array.Empty<McpServerTool>());
+        foreach (var target in new[] { ("ManageDriveSafetyAcceptanceTest", "SafetyAcceptanceTestProvider"),
+            ("ListSafetyActivationTests", "SafetyValidationAssistant"), ("ManageSivarcScreenLayout", "SiVArc LayoutData") })
+        {
+            var expected = release == "21" ? "" : target.Item1 + " requires the V21 " + target.Item2 + " API; unavailable on V" + release + ".";
+            using (pipeline.EnterSession())
+            {
+                Assert.NotNull(Host.McpServer.CatalogView.Find(target.Item1, includeUnavailable: true));
+                Assert.Equal(release == "21", Host.McpServer.CatalogView.Find(target.Item1) != null);
+                Assert.Equal(expected, Host.McpServer.VersionToolProblem(target.Item1));
+            }
+            foreach (string bridge in new[] { "PreviewToolCall", "CallTool" })
+            {
+                var reply = await Invoke(pipeline.AllTools, bridge, new { name = target.Item1, arguments = new { fixtureUnknown = true } });
+                if (release != "21")
+                {
+                    Assert.False((bool)reply["ok"]!);
+                    Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)reply["error"]?["code"]);
+                    Assert.Equal(expected, (string?)reply["error"]?["message"]);
+                    Assert.Equal("not-started", (string?)reply["meta"]?["execution"]);
+                }
+                else if (bridge == "PreviewToolCall")
+                {
+                    Assert.True((bool)reply["ok"]!, reply.ToJsonString());
+                    Assert.False((bool)reply["data"]!["ok"]!);
+                    Assert.Null(reply["error"]);
+                }
+                else
+                {
+                    Assert.Equal("INVALID_ARGUMENT", (string?)reply["error"]?["code"]);
+                    Assert.DoesNotContain("requires the V21", (string?)reply["error"]?["message"] ?? "");
+                }
+            }
+        }
     }
     [Theory]
     [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")]
@@ -188,7 +267,7 @@ public sealed class B1OldReleaseBridgeTests
     [Theory, MemberData(nameof(Releases))]
     public void LegacyCachedStateNeedsTheSameObservedProcessForCompleteBatchIdentity(string release)
     {
-        using var worker = new WorkerClient(release, "unused.exe", "unused-api", false);
+        using var worker = new WorkerClient(release, "unused.exe", "unused-api", false) { SharedSession = false };
         using var current = System.Diagnostics.Process.GetCurrentProcess();
         var observedStart = current.StartTime.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture);
         SetWorkerField(worker, "attachedProcessId", current.Id);
@@ -208,7 +287,7 @@ public sealed class B1OldReleaseBridgeTests
     [Theory, MemberData(nameof(Releases))]
     public async Task IdleDisconnectInvalidatesHostSessionAndCachedBatchIdentity(string release)
     {
-        using var worker = new WorkerClient(release, "unused.exe", "unused-api", false);
+        using var worker = new WorkerClient(release, "unused.exe", "unused-api", false) { SharedSession = false };
         SetWorkerField(worker, "attachedProcessId", Environment.ProcessId);
         SetWorkerField(worker, "hostState", new JsonObject { ["IsAttached"] = true, ["ProjectFile"] = "C:/Fixture.ap14" });
         object session = worker.HostSessionKey;
@@ -218,6 +297,54 @@ public sealed class B1OldReleaseBridgeTests
         Assert.False((bool)snapshot["session"]!["isConnected"]!);
         Assert.Null(snapshot["binding"]?["identity"]?["projectPath"]);
         Assert.Throws<InvalidOperationException>(() => TiaMcpServer.ModelContextProtocol.BatchPlanStore.BindingState(snapshot["binding"]!.AsObject()));
+    }
+    private sealed class BlockDocumentWorker : toolpipeline::TiaMcp.FoundationHost.IEngineWorker, Host.IHostToolServices
+    {
+        private readonly BoundWorker state = new();
+        internal string Root { get; } = Path.Combine(AppContext.BaseDirectory, "block-documents-" + Guid.NewGuid().ToString("N"));
+        internal List<(string Operation, string Software, string Block)> Exports { get; } = new();
+        public object SessionKey => state.SessionKey;
+        public bool Faulted => false;
+        public JsonNode? Binding => state.Binding;
+        public JsonObject Snapshot() => state.Snapshot();
+        public Task<JsonObject> Status(CancellationToken token) => state.Status(token);
+        public Task<JsonObject> Restart(bool confirmed, CancellationToken token) => throw new InvalidOperationException("No restart expected.");
+        public Task<IDisposable> Acquire(CancellationToken token) => throw new InvalidOperationException("No worker lane expected.");
+        public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
+            => throw new InvalidOperationException("No engine route expected.");
+        public Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)
+            => throw new InvalidOperationException("No observation expected: " + operation);
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            Assert.Equal("plc-analysis.ExportBlockDocument", operation);
+            Exports.Add((operation, (string)arguments["softwarePath"]!, (string)arguments["blockPath"]!));
+            string directory = Path.Combine(Root, Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, "Main.xml");
+            File.WriteAllText(path, """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Document>
+                  <Engineering version="V21" />
+                  <SW.Blocks.FC ID="0">
+                    <AttributeList>
+                      <Interface>
+                        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+                          <Section Name="Input" />
+                        </Sections>
+                      </Interface>
+                      <Name>Main</Name><Number>1</Number><ProgrammingLanguage>SCL</ProgrammingLanguage>
+                    </AttributeList>
+                    <ObjectList />
+                  </SW.Blocks.FC>
+                </Document>
+                """);
+            return Task.FromResult<JsonNode?>(new JsonObject { ["TempDir"] = directory, ["XmlPath"] = path });
+        }
+        public void Dispose()
+        {
+            state.Dispose();
+            if (Directory.Exists(Root)) Directory.Delete(Root, true);
+        }
     }
     private sealed class ForbiddenWorker : IFoundationWorker
     {

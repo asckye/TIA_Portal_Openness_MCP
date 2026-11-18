@@ -34,11 +34,16 @@ internal static class SpecialExportTests
             Refuse(()=>Run(false,preview.PlanHash,release:"18"),"Special export hash binds exact release");
             foreach(var release in new[]{"14sp1","15.1","21"})
             {
-                var unknown=Run(true,kind:"technology-object",release:release);
-                check(unknown.Status=="semantics-unverified" && unknown.MethodEvidence=="static-sdk-signature-verified",
-                        "Unverified TO semantics stay read-only despite verified signature for "+release);
-                SpecialExportContract.Validate(Wire(unknown),true);
-                Refuse(()=>Run(false,unknown.PlanHash,kind:"technology-object",release:release),"Unverified export semantics never invoked for "+release);
+                var technology=Run(true,kind:"technology-object",release:release);
+                check(technology.Status=="planned" && technology.MethodEvidence=="static-sdk-signature-verified"
+                        && technology.SemanticsEvidence=="official-manual-source-candidate",
+                        "Documented TO export plans on "+release);
+                SpecialExportContract.Validate(Wire(technology),true);
+                Refuse(()=>Run(false,"wrong",kind:"technology-object",release:release),"TO apply requires fresh plan hash on "+release);
+                var applied=Run(false,technology.PlanHash,kind:"technology-object",release:release,publisher:(_,_)=>null);
+                SpecialExportContract.Validate(Wire(applied),false);
+                check(applied.Status=="exported" && offline==1 && exports==0,"TO apply uses the offline publication gate on "+release);
+                offline=0;
             }
             foreach(var release in new[]{"15.1","16","17","18","19","20","21"})
             {

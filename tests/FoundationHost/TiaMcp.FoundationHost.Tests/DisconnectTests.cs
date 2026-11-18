@@ -212,7 +212,7 @@ public sealed class FoundationRecoveryTests
         TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory,
             "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
         using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) {
-            Bundled = false, SharedSession = release is "20" or "21" };
+            Bundled = false, SharedSession = true };
         var services = FoundationHostPorts.CreateServices(worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
         using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
         using var engineSession = pipeline.EnterSession();
@@ -300,7 +300,7 @@ public sealed class FoundationRecoveryTests
             TiaMcp.Engine.Tests.Shared.TestPaths.WriteFixtureFile(Path.Combine(AppContext.BaseDirectory,
                 "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             using var worker = new WorkerClient(release, exe, AppContext.BaseDirectory, true) {
-                Bundled = false, SharedSession = release is "20" or "21" };
+                Bundled = false, SharedSession = true };
             var services = FoundationHostPorts.CreateServices(worker, release, () => new() { ["ready"] = true }, AppContext.BaseDirectory);
             using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
             using var engineSession = pipeline.EnterSession();
@@ -427,14 +427,10 @@ public sealed class FoundationRecoveryTests
         Check(await worker.Call("Disconnect", new(), CancellationToken.None));
         Check(await worker.RestartHostWorker(true, CancellationToken.None));
         var snapshot = worker.SupervisorSnapshot(new());
-        if (release is "20" or "21")
-        {
-            var generations = Assert.IsType<JsonArray>(snapshot["previousGenerations"]);
-            Assert.Equal(3, generations.Count);
-            foreach (var item in generations)
-                Assert.Equal(new[] { "generation", "endedUtc", "reason" }, item!.AsObject().Select(pair => pair.Key));
-        }
-        else Assert.False(snapshot.ContainsKey("previousGenerations"));
+        var generations = Assert.IsType<JsonArray>(snapshot["previousGenerations"]);
+        Assert.Equal(3, generations.Count);
+        foreach (var item in generations)
+            Assert.Equal(new[] { "generation", "endedUtc", "reason" }, item!.AsObject().Select(pair => pair.Key));
     }
 
     [Theory, InlineData("14sp1"), InlineData("19"), InlineData("21")]

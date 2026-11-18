@@ -1364,10 +1364,10 @@
     {
       "id": "technology-export",
       "title": "Export technology-object XML",
-      "scope": "Export API exists in all supplied releases, but foundation catalog excludes V14 SP1/V15.1 while their export semantics remain unreviewed.",
+      "scope": "Single-object and bounded batch technology-object XML export are implemented on all eight releases through the shared preview, project/plan confirmation and offline checks. Root objects only before V19; user groups from V19. ExportOptions.None, no overwrite; native acceptance remains NOT RUN.",
       "implementation": {
-        "14sp1": "pending",
-        "15.1": "pending",
+        "14sp1": "implemented",
+        "15.1": "implemented",
         "16": "implemented",
         "17": "implemented",
         "18": "implemented",
@@ -1386,7 +1386,7 @@
         "src/FoundationHost/FoundationTools.cs",
         "src/Adapters/Native/Plc/PlcSpecialExportPolicy.cs"
       ],
-      "nextStep": "Review old-release export semantics and test root-object roundtrip independently of the unavailable collection import API.",
+      "nextStep": "Run separate real-machine regression on V14 SP1, V15.1 and V21: verify fresh preview/project/plan confirmation, offline/protection/consistency refusals and unchanged native XML. Check root-object export independently of the unavailable old-release collection import API; native acceptance remains NOT RUN.",
       "sdkEvidence": {
         "14sp1": {
           "present": [
@@ -1438,19 +1438,29 @@
         }
       },
       "advertisedTools": {
-        "14sp1": [],
-        "15.1": [],
+        "14sp1": [
+          "ExportTechnologyObject",
+          "ExportTechnologyObjectsToDirectory"
+        ],
+        "15.1": [
+          "ExportTechnologyObject",
+          "ExportTechnologyObjectsToDirectory"
+        ],
         "16": [
-          "ExportTechnologyObject"
+          "ExportTechnologyObject",
+          "ExportTechnologyObjectsToDirectory"
         ],
         "17": [
-          "ExportTechnologyObject"
+          "ExportTechnologyObject",
+          "ExportTechnologyObjectsToDirectory"
         ],
         "18": [
-          "ExportTechnologyObject"
+          "ExportTechnologyObject",
+          "ExportTechnologyObjectsToDirectory"
         ],
         "19": [
-          "ExportTechnologyObject"
+          "ExportTechnologyObject",
+          "ExportTechnologyObjectsToDirectory"
         ],
         "20": [
           "ExportTechnologyObject",
@@ -3364,7 +3374,9 @@
         "family": "P6-FALLBACK",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CompilePlcSoftware"
+        ]
       },
       {
         "family": "F04",
@@ -3772,6 +3784,60 @@
           "SetDeviceAddress",
           "SetDeviceItemIoAddress"
         ]
+      },
+      {
+        "family": "FOUNDATION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcCrossReferences",
+          "AttachOpenProject",
+          "CloseProject",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware",
+          "ConnectPortal",
+          "CreatePlcTag",
+          "CreatePlcTagTable",
+          "CreatePlcUserConstant",
+          "CreateProject",
+          "DeletePlcExternalSource",
+          "DisconnectPortal",
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcTagTables",
+          "ExportPlcType",
+          "ExportPlcTypes",
+          "ExportTechnologyObject",
+          "GenerateBlocksFromExternalSource",
+          "GetPlcBlockHierarchy",
+          "GetPlcBlockInfo",
+          "GetPlcTypeInfo",
+          "GetPortalConnectionReadiness",
+          "GetProjectInfo",
+          "GetProjectTree",
+          "GetSessionState",
+          "GetSoftwareInfo",
+          "GetSoftwareTree",
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcExternalSource",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType",
+          "ListPlcBlocks",
+          "ListPlcExternalSources",
+          "ListPlcSystemConstants",
+          "ListPlcTagTables",
+          "ListPlcTags",
+          "ListPlcTypes",
+          "ListPlcUserConstants",
+          "ListPortalProcessProjects",
+          "ListTechnologyObjects",
+          "OpenProject",
+          "PlanPlcExternalSourceImport",
+          "SaveProject"
+        ]
       }
     ],
     "15.1": [
@@ -3859,7 +3925,10 @@
         "family": "P6-FALLBACK",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CompilePlcSoftware",
+          "DownloadPlc"
+        ]
       },
       {
         "family": "F04",
@@ -4324,6 +4393,62 @@
           "SetDeviceAddress",
           "SetDeviceItemIoAddress"
         ]
+      },
+      {
+        "family": "FOUNDATION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcCrossReferences",
+          "AttachOpenProject",
+          "CloseProject",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware",
+          "ConnectPortal",
+          "CreatePlcTag",
+          "CreatePlcTagTable",
+          "CreatePlcUserConstant",
+          "CreateProject",
+          "DeletePlcExternalSource",
+          "DisconnectPortal",
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcTagTables",
+          "ExportPlcType",
+          "ExportPlcTypes",
+          "ExportPlcWatchTable",
+          "ExportTechnologyObject",
+          "GenerateBlocksFromExternalSource",
+          "GetPlcBlockHierarchy",
+          "GetPlcBlockInfo",
+          "GetPlcTypeInfo",
+          "GetPortalConnectionReadiness",
+          "GetProjectInfo",
+          "GetProjectTree",
+          "GetSessionState",
+          "GetSoftwareInfo",
+          "GetSoftwareTree",
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcExternalSource",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType",
+          "ListPlcBlocks",
+          "ListPlcExternalSources",
+          "ListPlcSystemConstants",
+          "ListPlcTagTables",
+          "ListPlcTags",
+          "ListPlcTypes",
+          "ListPlcUserConstants",
+          "ListPlcWatchTables",
+          "ListPortalProcessProjects",
+          "ListTechnologyObjects",
+          "OpenProject",
+          "PlanPlcExternalSourceImport",
+          "SaveProject"
+        ]
       }
     ],
     "16": [
@@ -4411,7 +4536,15 @@
         "family": "P6-FALLBACK",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CompilePlcSoftware",
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "DownloadPlc",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "SynchronizeVersionControlWorkspace"
+        ]
       },
       {
         "family": "F04",
@@ -4912,6 +5045,62 @@
           "SetDeviceAddress",
           "SetDeviceItemIoAddress"
         ]
+      },
+      {
+        "family": "FOUNDATION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcCrossReferences",
+          "AttachOpenProject",
+          "CloseProject",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware",
+          "ConnectPortal",
+          "CreatePlcTag",
+          "CreatePlcTagTable",
+          "CreatePlcUserConstant",
+          "CreateProject",
+          "DeletePlcExternalSource",
+          "DisconnectPortal",
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcTagTables",
+          "ExportPlcType",
+          "ExportPlcTypes",
+          "ExportPlcWatchTable",
+          "ExportTechnologyObject",
+          "GenerateBlocksFromExternalSource",
+          "GetPlcBlockHierarchy",
+          "GetPlcBlockInfo",
+          "GetPlcTypeInfo",
+          "GetPortalConnectionReadiness",
+          "GetProjectInfo",
+          "GetProjectTree",
+          "GetSessionState",
+          "GetSoftwareInfo",
+          "GetSoftwareTree",
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcExternalSource",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType",
+          "ListPlcBlocks",
+          "ListPlcExternalSources",
+          "ListPlcSystemConstants",
+          "ListPlcTagTables",
+          "ListPlcTags",
+          "ListPlcTypes",
+          "ListPlcUserConstants",
+          "ListPlcWatchTables",
+          "ListPortalProcessProjects",
+          "ListTechnologyObjects",
+          "OpenProject",
+          "PlanPlcExternalSourceImport",
+          "SaveProject"
+        ]
       }
     ],
     "17": [
@@ -4999,7 +5188,15 @@
         "family": "P6-FALLBACK",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CompilePlcSoftware",
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "DownloadPlc",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "SynchronizeVersionControlWorkspace"
+        ]
       },
       {
         "family": "F04",
@@ -5523,6 +5720,62 @@
           "SetDeviceAddress",
           "SetDeviceItemIoAddress"
         ]
+      },
+      {
+        "family": "FOUNDATION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcCrossReferences",
+          "AttachOpenProject",
+          "CloseProject",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware",
+          "ConnectPortal",
+          "CreatePlcTag",
+          "CreatePlcTagTable",
+          "CreatePlcUserConstant",
+          "CreateProject",
+          "DeletePlcExternalSource",
+          "DisconnectPortal",
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcTagTables",
+          "ExportPlcType",
+          "ExportPlcTypes",
+          "ExportPlcWatchTable",
+          "ExportTechnologyObject",
+          "GenerateBlocksFromExternalSource",
+          "GetPlcBlockHierarchy",
+          "GetPlcBlockInfo",
+          "GetPlcTypeInfo",
+          "GetPortalConnectionReadiness",
+          "GetProjectInfo",
+          "GetProjectTree",
+          "GetSessionState",
+          "GetSoftwareInfo",
+          "GetSoftwareTree",
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcExternalSource",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType",
+          "ListPlcBlocks",
+          "ListPlcExternalSources",
+          "ListPlcSystemConstants",
+          "ListPlcTagTables",
+          "ListPlcTags",
+          "ListPlcTypes",
+          "ListPlcUserConstants",
+          "ListPlcWatchTables",
+          "ListPortalProcessProjects",
+          "ListTechnologyObjects",
+          "OpenProject",
+          "PlanPlcExternalSourceImport",
+          "SaveProject"
+        ]
       }
     ],
     "18": [
@@ -5613,7 +5866,15 @@
         "family": "P6-FALLBACK",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CompilePlcSoftware",
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "DownloadPlc",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "SynchronizeVersionControlWorkspace"
+        ]
       },
       {
         "family": "F04",
@@ -6170,6 +6431,64 @@
           "SetDeviceAddress",
           "SetDeviceItemIoAddress"
         ]
+      },
+      {
+        "family": "FOUNDATION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcCrossReferences",
+          "AttachOpenProject",
+          "CloseProject",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware",
+          "ConnectPortal",
+          "CreateHardwareDevice",
+          "CreatePlcTag",
+          "CreatePlcTagTable",
+          "CreatePlcUserConstant",
+          "CreateProject",
+          "DeletePlcExternalSource",
+          "DisconnectPortal",
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcTagTables",
+          "ExportPlcType",
+          "ExportPlcTypes",
+          "ExportPlcWatchTable",
+          "ExportTechnologyObject",
+          "GenerateBlocksFromExternalSource",
+          "GetPlcBlockHierarchy",
+          "GetPlcBlockInfo",
+          "GetPlcTypeInfo",
+          "GetPortalConnectionReadiness",
+          "GetProjectInfo",
+          "GetProjectTree",
+          "GetSessionState",
+          "GetSoftwareInfo",
+          "GetSoftwareTree",
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcExternalSource",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType",
+          "ListPlcBlocks",
+          "ListPlcExternalSources",
+          "ListPlcSystemConstants",
+          "ListPlcTagTables",
+          "ListPlcTags",
+          "ListPlcTypes",
+          "ListPlcUserConstants",
+          "ListPlcWatchTables",
+          "ListPortalProcessProjects",
+          "ListTechnologyObjects",
+          "OpenProject",
+          "PlanPlcExternalSourceImport",
+          "SaveProject",
+          "SearchHardwareCatalog"
+        ]
       }
     ],
     "19": [
@@ -6260,7 +6579,16 @@
         "family": "P6-FALLBACK",
         "state": "current",
         "l5": "NOT RUN",
-        "entries": []
+        "entries": [
+          "CompilePlcSoftware",
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "DownloadPlc",
+          "DownloadPlcToFolder",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "SynchronizeVersionControlWorkspace"
+        ]
       },
       {
         "family": "F04",
@@ -6914,6 +7242,64 @@
           "SetDeviceAddress",
           "SetDeviceItemIoAddress"
         ]
+      },
+      {
+        "family": "FOUNDATION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcCrossReferences",
+          "AttachOpenProject",
+          "CloseProject",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware",
+          "ConnectPortal",
+          "CreateHardwareDevice",
+          "CreatePlcTag",
+          "CreatePlcTagTable",
+          "CreatePlcUserConstant",
+          "CreateProject",
+          "DeletePlcExternalSource",
+          "DisconnectPortal",
+          "ExportPlcBlock",
+          "ExportPlcBlocks",
+          "ExportPlcTagTable",
+          "ExportPlcTagTables",
+          "ExportPlcType",
+          "ExportPlcTypes",
+          "ExportPlcWatchTable",
+          "ExportTechnologyObject",
+          "GenerateBlocksFromExternalSource",
+          "GetPlcBlockHierarchy",
+          "GetPlcBlockInfo",
+          "GetPlcTypeInfo",
+          "GetPortalConnectionReadiness",
+          "GetProjectInfo",
+          "GetProjectTree",
+          "GetSessionState",
+          "GetSoftwareInfo",
+          "GetSoftwareTree",
+          "ImportPlcBlock",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcExternalSource",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType",
+          "ListPlcBlocks",
+          "ListPlcExternalSources",
+          "ListPlcSystemConstants",
+          "ListPlcTagTables",
+          "ListPlcTags",
+          "ListPlcTypes",
+          "ListPlcUserConstants",
+          "ListPlcWatchTables",
+          "ListPortalProcessProjects",
+          "ListTechnologyObjects",
+          "OpenProject",
+          "PlanPlcExternalSourceImport",
+          "SaveProject",
+          "SearchHardwareCatalog"
+        ]
       }
     ],
     "20": [
@@ -7020,6 +7406,741 @@
           "ListVersionControlWorkspaces",
           "SynchronizeVersionControlWorkspace"
         ]
+      },
+      {
+        "family": "F04",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcLiveValuesOpcUa",
+          "GetPlcLiveValuesS7",
+          "GetPlcRunStateS7",
+          "GetPlcSimAdvancedTags",
+          "GetPlcWebDiagnostics",
+          "GetPlcWebVars",
+          "GetUnifiedRuntimeAlarms",
+          "GetUnifiedRuntimeTags",
+          "InvokeUnifiedOpenPipe",
+          "ListPlcSimAdvancedInstances",
+          "ManagePlcSimAdvancedInstance",
+          "ProbeS7CpuIdentity",
+          "RunPlcCompanionTool",
+          "RunPlcSimAdvancedTestScenario",
+          "SamplePlcLiveValuesS7",
+          "SetPlcWebOperatingMode",
+          "WritePlcSimAdvancedTags",
+          "WritePlcWebVars",
+          "WriteUnifiedRuntimeTags"
+        ]
+      },
+      {
+        "family": "F22",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckDownloadReadiness",
+          "CompareSoftwareToOnline",
+          "ConnectOnlinePlc",
+          "DisconnectOnlinePlc",
+          "DisconnectOnlinePlcs",
+          "DownloadPlc",
+          "DownloadPlcToFolder",
+          "GeneratePlcLoadableFile",
+          "GetOnlineState",
+          "GetPlcBlockFingerprints",
+          "ListTransferRoutes",
+          "ManagePlcDataBlockSnapshot",
+          "ScanAccessibleDevices",
+          "UploadStationFromPlc"
+        ]
+      },
+      {
+        "family": "F29",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GenerateSivarc",
+          "GetSivarcRuleTree",
+          "ListSivarcBlockDefinitions",
+          "ListSivarcRules",
+          "ManageSivarcBlockDefinition",
+          "ManageSivarcRule",
+          "ManageSivarcRuleContainer",
+          "ManageSivarcTableRule",
+          "ResolveSivarcExpression",
+          "UpgradeSivarcDefinitions"
+        ]
+      },
+      {
+        "family": "F31",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDccObject",
+          "GetDriveParameters",
+          "GetOnlineDriveParameters",
+          "ListDccCharts",
+          "ListDriveObjects",
+          "ManageDcbLibraries",
+          "ManageDccBlock",
+          "ManageDccChart",
+          "ManageDccChartInterface",
+          "ManageDccChartPartition",
+          "ManageDccPin",
+          "ManageDriveFunctions",
+          "ManageDriveHardwareModule",
+          "ManageDriveSecurity",
+          "ManageDriveTelegrams",
+          "ManageOnlineDriveFunctions",
+          "ManageStartdriveParameter",
+          "ManageTechnologyExtensions"
+        ]
+      },
+      {
+        "family": "F30",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportSafetyPrintout",
+          "GetSafetyBlockSignatures",
+          "ManagePlcSafety",
+          "ManageSafetyGlobalSettings"
+        ]
+      },
+      {
+        "family": "F00",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateHardwareDevice",
+          "ExportPlcWatchTable",
+          "SearchHardwareCatalog"
+        ]
+      },
+      {
+        "family": "F32",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeCfcCharts",
+          "ManageCfcChartProtection"
+        ]
+      },
+      {
+        "family": "F34",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeTestSuiteCase",
+          "ExportScadaData",
+          "ImportSinumerikAlarmTexts",
+          "InitializeSimotionScripting",
+          "ListTestSuiteCases",
+          "ManageSinumerikArchive",
+          "ManageSinumerikSafetyMode",
+          "ManageTestSuiteCase",
+          "RunTestSuiteCase"
+        ]
+      },
+      {
+        "family": "F05",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ArchiveSavedProject",
+          "BuildProjectScaffold",
+          "ConnectIsolatedPortal",
+          "EnsureOpennessUserGroup",
+          "GetPortalInfo",
+          "ManageMultiuserSession",
+          "RetrieveProjectArchive",
+          "SaveProjectCopy",
+          "ValidateAutomationContext"
+        ]
+      },
+      {
+        "family": "F07",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcPutGetAccess",
+          "GetProjectProtection",
+          "GetProjectUserManagement",
+          "ManageDeviceUsers",
+          "ManagePasswordPolicy",
+          "ManagePlcCertificate",
+          "ManagePlcProtection",
+          "ManageProjectUserManagement",
+          "ManageSyslogServers",
+          "ManageUmcUsers",
+          "ManageWatchForceTableWebAccess",
+          "SetPlcPutGetAccess"
+        ]
+      },
+      {
+        "family": "F33",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "ManagePlcGitRepository",
+          "ManageTeamcenterConnection",
+          "ManageTeamcenterDataset",
+          "ManageTeamcenterWorkflow",
+          "SynchronizeVersionControlWorkspace"
+        ]
+      },
+      {
+        "family": "F01",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyToolBatch",
+          "BuildReleaseDiagnosticReport",
+          "BuildReleaseHandoffArtifacts",
+          "BuildReleaseManifest",
+          "BuildReleaseRunbook",
+          "CallTool",
+          "CheckProductUpdate",
+          "ClearExportHandles",
+          "DeleteExportHandle",
+          "ExportPlcTestReport",
+          "FindTools",
+          "GenerateAcceptanceReport",
+          "GenerateErrorReport",
+          "GetEnvironmentDiagnostics",
+          "GetExportContent",
+          "GetNativeInvocationLog",
+          "GetOpennessCompatibility",
+          "GetOpennessGuidance",
+          "GetOpennessWorkerStatus",
+          "GetV21EcosystemCatalog",
+          "ListExportHandles",
+          "ListToolCategories",
+          "ManagePlcTestLibrary",
+          "PreviewToolBatch",
+          "PreviewToolCall",
+          "RestartOpennessWorker",
+          "RunOfflineReleaseValidationSuite",
+          "RunOnlineMonitoringSafetySelfTest",
+          "RunPlcTestLibrary",
+          "RunReadOnlyToolBatch",
+          "SaveExportContent"
+        ]
+      },
+      {
+        "family": "F02",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcReferences",
+          "AnalyzePlcSclSource",
+          "AuditEngineeringExports",
+          "ComparePlcBlockDocuments",
+          "ConvertEngineeringTable",
+          "DecodePlcSimaticMl",
+          "ExtractPlcBlockMetrics",
+          "GeneratePlcDocumentation",
+          "InspectSimaticSdCompatibility",
+          "InstantiatePlcTemplates",
+          "PatchPlcBlockDocument",
+          "RenderPlcBlockDocument",
+          "RenderPlcVisualDiff",
+          "ScanPlcSourceAnnotations",
+          "ValidatePlcDocumentSchemas",
+          "WritePlcSclSourceFile"
+        ]
+      },
+      {
+        "family": "F03",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzeGlobalLibraryPackage",
+          "AnalyzeHmiTemplateReference",
+          "AnalyzeUnifiedHmiTemplateLayout",
+          "BuildClassicHmiScreen",
+          "BuildUnifiedHmiButtonActionScript",
+          "BuildUnifiedHmiLayoutDesign",
+          "BuildUnifiedHmiTemplateApplyDesign",
+          "BuildUnifiedHmiTemplateApplyDesignManifest",
+          "BuildUnifiedHmiThemeDesign",
+          "ManageUnifiedCwcPackage",
+          "PlanGlobalLibraryTemplateReuse",
+          "RunClassicHmiOfflineValidationSuite",
+          "RunClassicHmiTemporaryImportPreflight",
+          "RunHmiActionScriptRecipeSafetySelfTest",
+          "RunHmiTemplatePlcSyncPrecheckSuite",
+          "ValidateClassicHmiMinimalPackageFiles",
+          "ValidateClassicHmiMinimalPackagePlcSync",
+          "WriteClassicHmiMinimalPackageFiles"
+        ]
+      },
+      {
+        "family": "F06",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareLibraries",
+          "CompareProjects",
+          "ExportProjectTexts",
+          "GetObjectIdentifier",
+          "GetProjectSettings",
+          "ImportProjectTexts",
+          "ManageProjectCompilationSettings",
+          "ManageProjectLanguage",
+          "RunToolTransaction",
+          "ShowObjectInEditor"
+        ]
+      },
+      {
+        "family": "F23",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckLibraryUpdates",
+          "CompareLibraryObjects",
+          "CreateLibraryMasterCopy",
+          "GetLibraryOverview",
+          "GetLibraryType",
+          "ImportLibraryTypeDocuments",
+          "ImportMasterCopyFromGlobalLibrary",
+          "ManageGlobalLibrary",
+          "ManageLibraryFolder",
+          "ManageLibraryMasterCopy",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ProbeGlobalLibrary",
+          "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F24",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeleteHmiTag",
+          "DescribeHmiScreen",
+          "DescribeHmiScreenItem",
+          "DescribeHmiSoftware",
+          "DescribeHmiTag",
+          "DescribeHmiTagTable",
+          "ExportHmiConnection",
+          "ExportHmiProgram",
+          "ExportHmiScreen",
+          "ExportHmiTagTable",
+          "GetHmiProgramInfo",
+          "GetHmiScreenSnapshot",
+          "ImportHmiConnection",
+          "ImportHmiScreen",
+          "ImportHmiScreensFromDirectory",
+          "ImportHmiTagTable",
+          "ImportHmiTagTablesFromDirectory",
+          "ListHmiConnections",
+          "ListHmiScreenPaths",
+          "ListHmiScreens",
+          "ListHmiTagTables",
+          "ListHmiTags"
+        ]
+      },
+      {
+        "family": "F26",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyUnifiedHmiLayout",
+          "ApplyUnifiedHmiScreenDesign",
+          "ApplyUnifiedHmiTheme",
+          "BindUnifiedHmiTagDynamization",
+          "DeleteEmptyUnifiedHmiScreenGroup",
+          "DeleteUnifiedHmiButtonEvent",
+          "DeleteUnifiedHmiDynamization",
+          "DescribeUnifiedHmiButtonEventScript",
+          "DescribeUnifiedScreenItemType",
+          "EnsureUnifiedHmiButtonAction",
+          "EnsureUnifiedHmiButtonEventHandler",
+          "EnsureUnifiedHmiConnection",
+          "EnsureUnifiedHmiDynamization",
+          "EnsureUnifiedHmiScreen",
+          "EnsureUnifiedHmiScreenItem",
+          "EnsureUnifiedHmiTag",
+          "EnsureUnifiedHmiTagTable",
+          "GetUnifiedHmiButtonEvent",
+          "GetUnifiedHmiDynamization",
+          "GetUnifiedHmiTexts",
+          "ListUnifiedHmiApiTypes",
+          "ManageUnifiedHmiGroup",
+          "ManageUnifiedScreenItem",
+          "SetUnifiedHmiButtonEventScriptCode",
+          "SetUnifiedHmiRuntimeState"
+        ]
+      },
+      {
+        "family": "F27",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportUnifiedEngineeringList",
+          "GetUnifiedAlarmCommon",
+          "GetUnifiedAuditSettings",
+          "GetUnifiedCrossReferences",
+          "GetUnifiedObjectEvents",
+          "GetUnifiedObjectProperties",
+          "GetUnifiedPlantObject",
+          "ImportUnifiedEngineeringList",
+          "ListUnifiedEngineeringObjects",
+          "ManageUnifiedDynamization",
+          "ManageUnifiedEngineeringObject",
+          "ManageUnifiedEvent",
+          "ManageUnifiedListEntries",
+          "ManageUnifiedLoggingTag",
+          "ManageUnifiedObjectParts",
+          "ManageUnifiedOpcUaAlarmType",
+          "ManageUnifiedPlantNode",
+          "ManageUnifiedScreenLayout",
+          "SetUnifiedLogDuration",
+          "SetUnifiedMultilingualProperty",
+          "SetUnifiedObjectProperties",
+          "SetUnifiedPlantObject",
+          "ValidateUnifiedObject"
+        ]
+      },
+      {
+        "family": "F28",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareUnifiedGraphicSelections",
+          "ExchangeUnifiedScriptModules",
+          "ExchangeUnifiedTags",
+          "GetUnifiedFaceplateInstance",
+          "GetUnifiedGlobalScript",
+          "GetUnifiedGraphicSelection",
+          "GetUnifiedLibraryType",
+          "GetUnifiedRuntimeSettings",
+          "GetUnifiedScreenBranch",
+          "ImportUnifiedOpcUaAlarms",
+          "ListUnifiedGlobalScripts",
+          "ListUnifiedLibraryFolderEntries",
+          "ListUnifiedTagDefinitions",
+          "ReleaseUnifiedReadCursor",
+          "SetUnifiedGlobalScript",
+          "SetUnifiedRuntimeSettings"
+        ]
+      },
+      {
+        "family": "F25",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetClassicHmiGlobalization",
+          "GetClassicHmiScreenTree",
+          "ListClassicHmiFaceplates",
+          "ListClassicHmiScripts",
+          "ManageClassicHmiCycle",
+          "ManageClassicHmiFolder",
+          "ManageClassicHmiGraphic",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ManageClassicHmiTextGraphicList"
+        ]
+      },
+      {
+        "family": "F35",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DescribeObject",
+          "DescribeObjectProperty",
+          "DescribeService",
+          "GetObjectProperty",
+          "InvokeObject",
+          "InvokeService",
+          "ListObjectChildren"
+        ]
+      },
+      {
+        "family": "F08",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreatePlcBlockGroup",
+          "CreatePlcTypeGroup",
+          "DeleteEmptyPlcBlockGroup",
+          "DeletePlcBlock",
+          "DeletePlcTagTable",
+          "DeletePlcType",
+          "ListPlcSystemGroups",
+          "ManagePlcBlockProtection",
+          "ManagePlcUserGroup",
+          "MovePlcBlockToGroup"
+        ]
+      },
+      {
+        "family": "F09",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildAndImportPlcArtifact",
+          "CreatePlcInstanceDb",
+          "DescribePlcBlockLogic",
+          "GetPlcBlockEditCapabilities",
+          "GetPlcTagTableConstants",
+          "ImportPlcBlockVerified",
+          "ImportPlcTagTablesFromDirectory",
+          "ManagePlcTagDefinition",
+          "RepairAndReimportPlcBlock",
+          "SeedProjectFromReference",
+          "SetPlcProgram"
+        ]
+      },
+      {
+        "family": "F11",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GeneratePlcSourceFromBlocks",
+          "GetPlcCrossReferences",
+          "ManagePlcExternalSources"
+        ]
+      },
+      {
+        "family": "F12",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTablesToDirectory",
+          "GetPlcWatchTableCurrentValuesReadOnly",
+          "ImportPlcWatchTableOffline",
+          "ListPlcForceTables",
+          "ManagePlcTableEntries",
+          "MonitorPlcWatchTableS7",
+          "PlanOnlineReadOnlyDataProvider",
+          "PlanOnlineReadOnlyMonitoring",
+          "ProbePlcMonitorOnlineCapabilities",
+          "SetPlcWatchTableModifyValue",
+          "TraceTagCause",
+          "TraceTagCauseLive"
+        ]
+      },
+      {
+        "family": "F13",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConfigureMotionHardwareConnection",
+          "ExchangeMotionCamData",
+          "ExportTechnologyObjectsToDirectory",
+          "GetMotionAxisConfiguration",
+          "GetTechnologyObjectTree",
+          "ImportTechnologyObject",
+          "ImportTechnologyObjectsFromDirectory",
+          "ManageMotionAxis",
+          "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F10",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlockDocuments",
+          "ExportPlcBlocksDocuments",
+          "GetPlcBlockScopes",
+          "ImportPlcBlockDocuments",
+          "ImportPlcBlocksDocuments",
+          "ManagePlcBlockDocuments",
+          "ManagePlcDocuments"
+        ]
+      },
+      {
+        "family": "F14",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangePlcAlarmTextLists",
+          "ExchangePlcSupervisions",
+          "ExportAlarmClasses",
+          "ExportAlarmInstanceTexts",
+          "ExportAlarmTextLists",
+          "ExportPlcProDiagInfo",
+          "ImportAlarmClasses",
+          "ImportAlarmTextLists",
+          "ImportPlcAlarmInstanceTexts",
+          "ManagePlcAlarmTextList",
+          "ManagePlcSupervision"
+        ]
+      },
+      {
+        "family": "F15",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportOpcUaInterface",
+          "GenerateOpcUaModelledInterface",
+          "GetPlcOpcUaConfiguration",
+          "ImportOpcUaInterface",
+          "ManageOpcUaInterface",
+          "SetOpcUaInterfaceEnabled"
+        ]
+      },
+      {
+        "family": "F16",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcChecksums",
+          "GetPlcObjectFingerprints",
+          "ListPlcSoftwareUnits",
+          "ManagePlcSoftwareUnit",
+          "SetPlcUnitObjectAccess"
+        ]
+      },
+      {
+        "family": "F17",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompileDevice",
+          "CompileHmiDiagnostics"
+        ]
+      },
+      {
+        "family": "F18",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "ExchangeSystemDiagnosticsSettings",
+          "GetDeviceAttributes",
+          "GetDeviceInfo",
+          "GetDeviceItemInfo",
+          "GetDeviceItemTree",
+          "GetDevicePlugLocations",
+          "GetHardwareFeatures",
+          "ListDevices",
+          "ManageDeviceServiceObjects",
+          "ManageDeviceUserGroup",
+          "ManageHardwareObject",
+          "ManageHardwareUtilities",
+          "PlugDeviceItem",
+          "SearchInstalledGsdDevices",
+          "SetDeviceItemAttribute",
+          "SetPlcCpuSettings"
+        ]
+      },
+      {
+        "family": "F20",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachDeviceNodeToSubnet",
+          "ConnectDeviceNodesToProfinetSubnet",
+          "EnsureSubnet",
+          "GetDeviceItemNetworkInfo",
+          "GetProjectTopology",
+          "ListDeviceItemChannels",
+          "ListIoSystems",
+          "ListNetworkDomains",
+          "ListTransferAreas",
+          "ManageIoSystem",
+          "ManageNetworkDomain",
+          "ManagePortInterconnection",
+          "ManageTransferArea",
+          "PlanHardwareNetworkConfiguration",
+          "ProbeHardwareHmiConnectionOwnerCandidates",
+          "ProbeHardwareHmiConnectionWhitelistedServices",
+          "SetDeviceItemChannel"
+        ]
+      },
+      {
+        "family": "F21",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildDeviceAmlDocument",
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ]
+      },
+      {
+        "family": "F19",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDeviceAddressing",
+          "GetDeviceIpAddress",
+          "GetDeviceItemIoAddresses",
+          "SetDeviceAddress",
+          "SetDeviceItemIoAddress"
+        ]
+      },
+      {
+        "family": "FOUNDATION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcCrossReferences",
+          "AttachOpenProject",
+          "CloseProject",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware",
+          "ConnectPortal",
+          "CreateHardwareDevice",
+          "CreatePlcTag",
+          "CreatePlcTagTable",
+          "CreatePlcUserConstant",
+          "CreateProject",
+          "DeletePlcExternalSource",
+          "DisconnectPortal",
+          "ExportPlcBlock",
+          "ExportPlcBlockDocuments",
+          "ExportPlcBlocks",
+          "ExportPlcBlocksDocuments",
+          "ExportPlcTagTable",
+          "ExportPlcTagTables",
+          "ExportPlcType",
+          "ExportPlcTypes",
+          "ExportPlcWatchTable",
+          "ExportTechnologyObject",
+          "GenerateBlocksFromExternalSource",
+          "GetPlcBlockHierarchy",
+          "GetPlcBlockInfo",
+          "GetPlcTypeInfo",
+          "GetPortalConnectionReadiness",
+          "GetProjectInfo",
+          "GetProjectTree",
+          "GetSessionState",
+          "GetSoftwareInfo",
+          "GetSoftwareTree",
+          "ImportPlcBlock",
+          "ImportPlcBlockDocuments",
+          "ImportPlcBlocksDocuments",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcExternalSource",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType",
+          "ListPlcBlocks",
+          "ListPlcExternalSources",
+          "ListPlcSystemConstants",
+          "ListPlcTagTables",
+          "ListPlcTags",
+          "ListPlcTypes",
+          "ListPlcUserConstants",
+          "ListPlcWatchTables",
+          "ListPortalProcessProjects",
+          "ListTechnologyObjects",
+          "OpenProject",
+          "PlanPlcExternalSourceImport",
+          "SaveProject",
+          "SearchHardwareCatalog"
+        ]
       }
     ],
     "21": [
@@ -7125,6 +8246,753 @@
           "ImportPlcBlockDocuments",
           "ListVersionControlWorkspaces",
           "SynchronizeVersionControlWorkspace"
+        ]
+      },
+      {
+        "family": "F04",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcLiveValuesOpcUa",
+          "GetPlcLiveValuesS7",
+          "GetPlcRunStateS7",
+          "GetPlcSimAdvancedTags",
+          "GetPlcWebDiagnostics",
+          "GetPlcWebVars",
+          "GetUnifiedRuntimeAlarms",
+          "GetUnifiedRuntimeTags",
+          "InvokeUnifiedOpenPipe",
+          "ListPlcSimAdvancedInstances",
+          "ManagePlcSimAdvancedInstance",
+          "ProbeS7CpuIdentity",
+          "RunPlcCompanionTool",
+          "RunPlcSimAdvancedTestScenario",
+          "SamplePlcLiveValuesS7",
+          "SetPlcWebOperatingMode",
+          "WritePlcSimAdvancedTags",
+          "WritePlcWebVars",
+          "WriteUnifiedRuntimeTags"
+        ]
+      },
+      {
+        "family": "F22",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckDownloadReadiness",
+          "CompareSoftwareToOnline",
+          "ConnectOnlinePlc",
+          "DisconnectOnlinePlc",
+          "DisconnectOnlinePlcs",
+          "DownloadPlc",
+          "DownloadPlcToFolder",
+          "GeneratePlcLoadableFile",
+          "GetOnlineState",
+          "GetPlcBlockFingerprints",
+          "ListTransferRoutes",
+          "ManagePlcDataBlockSnapshot",
+          "ScanAccessibleDevices",
+          "UploadDeviceParameters",
+          "UploadStationFromPlc"
+        ]
+      },
+      {
+        "family": "F29",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GenerateSivarc",
+          "GetSivarcRuleTree",
+          "ListSivarcBlockDefinitions",
+          "ListSivarcRules",
+          "ManageSivarcBlockDefinition",
+          "ManageSivarcRule",
+          "ManageSivarcRuleContainer",
+          "ManageSivarcScreenLayout",
+          "ManageSivarcTableRule",
+          "ResolveSivarcExpression",
+          "UpgradeSivarcDefinitions"
+        ]
+      },
+      {
+        "family": "F31",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDccObject",
+          "GetDriveParameters",
+          "GetOnlineDriveParameters",
+          "ListDccCharts",
+          "ListDriveObjects",
+          "ManageDcbLibraries",
+          "ManageDccBlock",
+          "ManageDccChart",
+          "ManageDccChartInterface",
+          "ManageDccChartPartition",
+          "ManageDccPin",
+          "ManageDriveFunctions",
+          "ManageDriveHardwareModule",
+          "ManageDriveSafetyAcceptanceTest",
+          "ManageDriveSecurity",
+          "ManageDriveTelegrams",
+          "ManageOnlineDriveFunctions",
+          "ManageStartdriveParameter",
+          "ManageTechnologyExtensions"
+        ]
+      },
+      {
+        "family": "F30",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportSafetyPrintout",
+          "GetSafetyBlockSignatures",
+          "ListSafetyActivationTests",
+          "ManagePlcSafety",
+          "ManageSafetyActivationTest",
+          "ManageSafetyActivationTestGroup",
+          "ManageSafetyFunction",
+          "ManageSafetyFunctionCondition",
+          "ManageSafetyGlobalSettings"
+        ]
+      },
+      {
+        "family": "F00",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateHardwareDevice",
+          "ExportPlcWatchTable",
+          "SearchHardwareCatalog"
+        ]
+      },
+      {
+        "family": "F32",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeCfcCharts",
+          "ManageCfcChartProtection"
+        ]
+      },
+      {
+        "family": "F34",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangeTestSuiteCase",
+          "ListTestSuiteCases",
+          "ManageTestSuiteCase",
+          "RunTestSuiteCase"
+        ]
+      },
+      {
+        "family": "F05",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ArchiveSavedProject",
+          "BuildProjectScaffold",
+          "ConnectIsolatedPortal",
+          "EnsureOpennessUserGroup",
+          "GetPortalInfo",
+          "ManageMultiuserSession",
+          "RetrieveProjectArchive",
+          "SaveProjectCopy",
+          "ValidateAutomationContext"
+        ]
+      },
+      {
+        "family": "F07",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcPutGetAccess",
+          "GetProjectProtection",
+          "GetProjectUserManagement",
+          "ManageDeviceUsers",
+          "ManagePasswordPolicy",
+          "ManagePlcCertificate",
+          "ManagePlcProtection",
+          "ManageProjectUserManagement",
+          "ManageSyslogServers",
+          "ManageUmcUsers",
+          "ManageWatchForceTableWebAccess",
+          "SetPlcPutGetAccess"
+        ]
+      },
+      {
+        "family": "F33",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConnectProjectToWorkspace",
+          "CreateVersionControlWorkspace",
+          "GetVersionControlStatus",
+          "ListVersionControlWorkspaces",
+          "ManagePlcGitRepository",
+          "ManageTeamcenterConnection",
+          "ManageTeamcenterDataset",
+          "ManageTeamcenterWorkflow",
+          "SynchronizeVersionControlWorkspace"
+        ]
+      },
+      {
+        "family": "F01",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyToolBatch",
+          "BuildReleaseDiagnosticReport",
+          "BuildReleaseHandoffArtifacts",
+          "BuildReleaseManifest",
+          "BuildReleaseRunbook",
+          "CallTool",
+          "CheckProductUpdate",
+          "ClearExportHandles",
+          "DeleteExportHandle",
+          "ExportPlcTestReport",
+          "FindTools",
+          "GenerateAcceptanceReport",
+          "GenerateErrorReport",
+          "GetEnvironmentDiagnostics",
+          "GetExportContent",
+          "GetNativeInvocationLog",
+          "GetOpennessCompatibility",
+          "GetOpennessGuidance",
+          "GetOpennessWorkerStatus",
+          "GetV21EcosystemCatalog",
+          "ListExportHandles",
+          "ListToolCategories",
+          "ManagePlcTestLibrary",
+          "PreviewToolBatch",
+          "PreviewToolCall",
+          "RestartOpennessWorker",
+          "RunOfflineReleaseValidationSuite",
+          "RunOnlineMonitoringSafetySelfTest",
+          "RunPlcTestLibrary",
+          "RunReadOnlyToolBatch",
+          "SaveExportContent"
+        ]
+      },
+      {
+        "family": "F02",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcReferences",
+          "AnalyzePlcSclSource",
+          "AuditEngineeringExports",
+          "BuildPlcAliasAlarmLad",
+          "ComparePlcBlockDocuments",
+          "ConvertEngineeringTable",
+          "DecodePlcSimaticMl",
+          "ExtractPlcBlockMetrics",
+          "GeneratePlcDocumentation",
+          "InspectSimaticSdCompatibility",
+          "InstantiatePlcTemplates",
+          "PatchPlcBlockDocument",
+          "RenderPlcBlockDocument",
+          "RenderPlcVisualDiff",
+          "ScanPlcSourceAnnotations",
+          "ValidatePlcDocumentSchemas",
+          "WritePlcSclSourceFile"
+        ]
+      },
+      {
+        "family": "F03",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzeGlobalLibraryPackage",
+          "AnalyzeHmiTemplateReference",
+          "AnalyzeUnifiedHmiTemplateLayout",
+          "BuildClassicHmiMinimalPackage",
+          "BuildClassicHmiScreen",
+          "BuildClassicHmiTagTable",
+          "BuildUnifiedHmiButtonActionScript",
+          "BuildUnifiedHmiLayoutDesign",
+          "BuildUnifiedHmiTemplateApplyDesign",
+          "BuildUnifiedHmiTemplateApplyDesignManifest",
+          "BuildUnifiedHmiThemeDesign",
+          "ManageUnifiedCwcPackage",
+          "PlanGlobalLibraryTemplateReuse",
+          "RunClassicHmiOfflineValidationSuite",
+          "RunClassicHmiTemporaryImportPreflight",
+          "RunHmiActionScriptRecipeSafetySelfTest",
+          "RunHmiTemplatePlcSyncPrecheckSuite",
+          "ValidateClassicHmiMinimalPackageFiles",
+          "ValidateClassicHmiMinimalPackagePlcSync",
+          "WriteClassicHmiMinimalPackageFiles"
+        ]
+      },
+      {
+        "family": "F06",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareLibraries",
+          "CompareProjects",
+          "ExportProjectTexts",
+          "GetObjectIdentifier",
+          "GetProjectSettings",
+          "ImportProjectTexts",
+          "ManageProjectCompilationSettings",
+          "ManageProjectLanguage",
+          "RunToolTransaction",
+          "ShowObjectInEditor"
+        ]
+      },
+      {
+        "family": "F23",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CheckLibraryUpdates",
+          "CompareLibraryObjects",
+          "CreateLibraryMasterCopy",
+          "GetLibraryOverview",
+          "GetLibraryType",
+          "ImportLibraryTypeDocuments",
+          "ImportMasterCopyFromGlobalLibrary",
+          "ManageGlobalLibrary",
+          "ManageLibraryFolder",
+          "ManageLibraryMasterCopy",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ProbeGlobalLibrary",
+          "SynchronizeLibrary"
+        ]
+      },
+      {
+        "family": "F24",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DeleteHmiTag",
+          "DescribeHmiScreen",
+          "DescribeHmiScreenItem",
+          "DescribeHmiSoftware",
+          "DescribeHmiTag",
+          "DescribeHmiTagTable",
+          "ExportHmiConnection",
+          "ExportHmiProgram",
+          "ExportHmiScreen",
+          "ExportHmiTagTable",
+          "GetHmiProgramInfo",
+          "GetHmiScreenSnapshot",
+          "ImportHmiConnection",
+          "ImportHmiScreen",
+          "ImportHmiScreensFromDirectory",
+          "ImportHmiTagTable",
+          "ImportHmiTagTablesFromDirectory",
+          "ListHmiConnections",
+          "ListHmiScreenPaths",
+          "ListHmiScreens",
+          "ListHmiTagTables",
+          "ListHmiTags"
+        ]
+      },
+      {
+        "family": "F26",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ApplyUnifiedHmiLayout",
+          "ApplyUnifiedHmiScreenDesign",
+          "ApplyUnifiedHmiTheme",
+          "BindUnifiedHmiButtonPressedTag",
+          "BindUnifiedHmiTagDynamization",
+          "DeleteEmptyUnifiedHmiScreenGroup",
+          "DeleteUnifiedHmiButtonEvent",
+          "DeleteUnifiedHmiDynamization",
+          "DescribeUnifiedHmiButtonEventScript",
+          "DescribeUnifiedScreenItemType",
+          "EnsureUnifiedHmiButtonAction",
+          "EnsureUnifiedHmiButtonEventHandler",
+          "EnsureUnifiedHmiConnection",
+          "EnsureUnifiedHmiDynamization",
+          "EnsureUnifiedHmiScreen",
+          "EnsureUnifiedHmiScreenItem",
+          "EnsureUnifiedHmiTag",
+          "EnsureUnifiedHmiTagTable",
+          "GetUnifiedHmiButtonEvent",
+          "GetUnifiedHmiDynamization",
+          "GetUnifiedHmiTexts",
+          "ListUnifiedHmiApiTypes",
+          "ManageUnifiedHmiGroup",
+          "ManageUnifiedScreenItem",
+          "SetUnifiedHmiButtonEventScriptCode",
+          "SetUnifiedHmiRuntimeState"
+        ]
+      },
+      {
+        "family": "F27",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportUnifiedEngineeringList",
+          "GetUnifiedAlarmCommon",
+          "GetUnifiedAuditSettings",
+          "GetUnifiedCrossReferences",
+          "GetUnifiedObjectEvents",
+          "GetUnifiedObjectProperties",
+          "GetUnifiedPlantObject",
+          "ImportUnifiedEngineeringList",
+          "ListUnifiedEngineeringObjects",
+          "ManageUnifiedDynamization",
+          "ManageUnifiedEngineeringObject",
+          "ManageUnifiedEvent",
+          "ManageUnifiedListEntries",
+          "ManageUnifiedLoggingTag",
+          "ManageUnifiedObjectParts",
+          "ManageUnifiedOpcUaAlarmType",
+          "ManageUnifiedPlantNode",
+          "ManageUnifiedScreenLayout",
+          "SetUnifiedLogDuration",
+          "SetUnifiedMultilingualProperty",
+          "SetUnifiedObjectProperties",
+          "SetUnifiedPlantObject",
+          "ValidateUnifiedObject"
+        ]
+      },
+      {
+        "family": "F28",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompareUnifiedGraphicSelections",
+          "ExchangeUnifiedScriptModules",
+          "ExchangeUnifiedTags",
+          "GetUnifiedFaceplateInstance",
+          "GetUnifiedGlobalScript",
+          "GetUnifiedGraphicSelection",
+          "GetUnifiedLibraryType",
+          "GetUnifiedRuntimeSettings",
+          "GetUnifiedScreenBranch",
+          "ImportUnifiedOpcUaAlarms",
+          "ListUnifiedGlobalScripts",
+          "ListUnifiedLibraryFolderEntries",
+          "ListUnifiedTagDefinitions",
+          "ReleaseUnifiedReadCursor",
+          "SetUnifiedGlobalScript",
+          "SetUnifiedRuntimeSettings"
+        ]
+      },
+      {
+        "family": "F25",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetClassicHmiGlobalization",
+          "GetClassicHmiScreenTree",
+          "ListClassicHmiFaceplates",
+          "ListClassicHmiScripts",
+          "ManageClassicHmiCycle",
+          "ManageClassicHmiFolder",
+          "ManageClassicHmiGraphic",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ManageClassicHmiTextGraphicList"
+        ]
+      },
+      {
+        "family": "F35",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "DescribeObject",
+          "DescribeObjectProperty",
+          "DescribeService",
+          "GetObjectProperty",
+          "InvokeObject",
+          "InvokeService",
+          "ListObjectChildren"
+        ]
+      },
+      {
+        "family": "F08",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreatePlcBlockGroup",
+          "CreatePlcTypeGroup",
+          "DeleteEmptyPlcBlockGroup",
+          "DeletePlcBlock",
+          "DeletePlcTagTable",
+          "DeletePlcType",
+          "ListPlcSystemGroups",
+          "ManagePlcBlockProtection",
+          "ManagePlcUserGroup",
+          "MovePlcBlockToGroup"
+        ]
+      },
+      {
+        "family": "F09",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildAndImportPlcArtifact",
+          "CreatePlcInstanceDb",
+          "DescribePlcBlockLogic",
+          "GetPlcBlockEditCapabilities",
+          "GetPlcTagTableConstants",
+          "ImportPlcBlockVerified",
+          "ImportPlcTagTablesFromDirectory",
+          "ManagePlcTagDefinition",
+          "RepairAndReimportPlcBlock",
+          "SeedProjectFromReference",
+          "SetPlcProgram"
+        ]
+      },
+      {
+        "family": "F11",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GeneratePlcSourceFromBlocks",
+          "GetPlcCrossReferences",
+          "ManagePlcExternalSources"
+        ]
+      },
+      {
+        "family": "F12",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcWatchTablesToDirectory",
+          "GetPlcWatchTableCurrentValuesReadOnly",
+          "ImportPlcWatchTableOffline",
+          "ListPlcForceTables",
+          "ManagePlcTableEntries",
+          "MonitorPlcWatchTableS7",
+          "PlanOnlineReadOnlyDataProvider",
+          "PlanOnlineReadOnlyMonitoring",
+          "ProbePlcMonitorOnlineCapabilities",
+          "SetPlcWatchTableModifyValue",
+          "TraceTagCause",
+          "TraceTagCauseLive"
+        ]
+      },
+      {
+        "family": "F13",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ConfigureMotionHardwareConnection",
+          "ExchangeMotionCamData",
+          "ExportTechnologyObjectsToDirectory",
+          "GetMotionAxisConfiguration",
+          "GetTechnologyObjectTree",
+          "ImportTechnologyObject",
+          "ImportTechnologyObjectsFromDirectory",
+          "ManageMotionAxis",
+          "ManageTechnologyObject"
+        ]
+      },
+      {
+        "family": "F10",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportPlcBlockDocuments",
+          "ExportPlcBlocksDocuments",
+          "GetPlcBlockScopes",
+          "ImportPlcBlockDocuments",
+          "ImportPlcBlocksDocuments",
+          "ManagePlcBlockDocuments",
+          "ManagePlcDocuments"
+        ]
+      },
+      {
+        "family": "F14",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExchangePlcAlarmTextLists",
+          "ExchangePlcSupervisions",
+          "ExportAlarmClasses",
+          "ExportAlarmInstanceTexts",
+          "ExportAlarmTextLists",
+          "ExportPlcProDiagInfo",
+          "ImportAlarmClasses",
+          "ImportAlarmTextLists",
+          "ImportPlcAlarmInstanceTexts",
+          "ManagePlcAlarmTextList",
+          "ManagePlcSupervision"
+        ]
+      },
+      {
+        "family": "F15",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "ExportOpcUaInterface",
+          "GenerateOpcUaModelledInterface",
+          "GetOpcUaAccessControl",
+          "GetPlcOpcUaConfiguration",
+          "ImportOpcUaInterface",
+          "ManageOpcUaAccessControl",
+          "ManageOpcUaInterface",
+          "SetOpcUaInterfaceEnabled"
+        ]
+      },
+      {
+        "family": "F16",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetPlcChecksums",
+          "GetPlcObjectFingerprints",
+          "ListPlcSoftwareUnits",
+          "ManagePlcBlockWriteProtection",
+          "ManagePlcSoftwareUnit",
+          "SetPlcUnitObjectAccess"
+        ]
+      },
+      {
+        "family": "F17",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CompileDevice",
+          "CompileHmiDiagnostics"
+        ]
+      },
+      {
+        "family": "F18",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "CreateDevice",
+          "CreateGsdDevice",
+          "CreateHardwareCatalogDevice",
+          "ExchangeSystemDiagnosticsSettings",
+          "GetDeviceAttributes",
+          "GetDeviceInfo",
+          "GetDeviceItemInfo",
+          "GetDeviceItemTree",
+          "GetDevicePlugLocations",
+          "GetHardwareFeatures",
+          "ListDevices",
+          "ManageDeviceServiceObjects",
+          "ManageDeviceUserGroup",
+          "ManageHardwareObject",
+          "ManageHardwareUtilities",
+          "PlugDeviceItem",
+          "SearchInstalledGsdDevices",
+          "SetDeviceItemAttribute",
+          "SetPlcCpuSettings"
+        ]
+      },
+      {
+        "family": "F20",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AttachDeviceNodeToSubnet",
+          "ConnectDeviceNodesToProfinetSubnet",
+          "EnsureSubnet",
+          "GetDeviceItemNetworkInfo",
+          "GetProjectTopology",
+          "ListCommunicationConnections",
+          "ListDeviceItemChannels",
+          "ListIoSystems",
+          "ListNetworkDomains",
+          "ListTransferAreas",
+          "ManageCommunicationConnection",
+          "ManageIoSystem",
+          "ManageNetworkDomain",
+          "ManagePortInterconnection",
+          "ManageTransferArea",
+          "PlanHardwareNetworkConfiguration",
+          "ProbeHardwareHmiConnectionOwnerCandidates",
+          "ProbeHardwareHmiConnectionWhitelistedServices",
+          "SetDeviceItemChannel"
+        ]
+      },
+      {
+        "family": "F21",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "BuildDeviceAmlDocument",
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ]
+      },
+      {
+        "family": "F19",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "GetDeviceAddressing",
+          "GetDeviceIpAddress",
+          "GetDeviceItemIoAddresses",
+          "SetDeviceAddress",
+          "SetDeviceItemIoAddress"
+        ]
+      },
+      {
+        "family": "FOUNDATION",
+        "state": "current",
+        "l5": "NOT RUN",
+        "entries": [
+          "AnalyzePlcCrossReferences",
+          "AttachOpenProject",
+          "CloseProject",
+          "CompilePlcDiagnostics",
+          "CompilePlcSoftware",
+          "ConnectPortal",
+          "CreateHardwareDevice",
+          "CreatePlcTag",
+          "CreatePlcTagTable",
+          "CreatePlcUserConstant",
+          "CreateProject",
+          "DeletePlcExternalSource",
+          "DisconnectPortal",
+          "ExportPlcBlock",
+          "ExportPlcBlockDocuments",
+          "ExportPlcBlocks",
+          "ExportPlcBlocksDocuments",
+          "ExportPlcTagTable",
+          "ExportPlcTagTables",
+          "ExportPlcType",
+          "ExportPlcTypes",
+          "ExportPlcWatchTable",
+          "ExportTechnologyObject",
+          "GenerateBlocksFromExternalSource",
+          "GetPlcBlockHierarchy",
+          "GetPlcBlockInfo",
+          "GetPlcTypeInfo",
+          "GetPortalConnectionReadiness",
+          "GetProjectInfo",
+          "GetProjectTree",
+          "GetSessionState",
+          "GetSoftwareInfo",
+          "GetSoftwareTree",
+          "ImportPlcBlock",
+          "ImportPlcBlockDocuments",
+          "ImportPlcBlocksDocuments",
+          "ImportPlcBlocksFromDirectory",
+          "ImportPlcExternalSource",
+          "ImportPlcProgramFromDirectory",
+          "ImportPlcTagTable",
+          "ImportPlcType",
+          "ListPlcBlocks",
+          "ListPlcExternalSources",
+          "ListPlcSystemConstants",
+          "ListPlcTagTables",
+          "ListPlcTags",
+          "ListPlcTypes",
+          "ListPlcUserConstants",
+          "ListPlcWatchTables",
+          "ListPortalProcessProjects",
+          "ListTechnologyObjects",
+          "OpenProject",
+          "PlanPlcExternalSourceImport",
+          "SaveProject",
+          "SearchHardwareCatalog"
         ]
       }
     ]

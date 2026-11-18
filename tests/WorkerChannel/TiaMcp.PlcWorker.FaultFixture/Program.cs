@@ -32,6 +32,7 @@ internal static class Program
             System.Diagnostics.Process.GetCurrentProcess().Id, options.Nonce);
         bool bound = false, projectClosed = false, ownsPortal = false;
         bool failNextStatus = false;
+        int successfulStatusReadsBeforeFailure = 0;
         int attachedPid = 123;
         int writes = 0;
         long epoch = 0;
@@ -82,10 +83,14 @@ internal static class Program
                 return ChannelResponse.Success("[\"SettledTable\"]");
             }
             if (request.Method == "adapter.FixtureFailNextStatus")
-            { failNextStatus = true; return ChannelResponse.Success("{}"); }
+            {
+                failNextStatus = true;
+                successfulStatusReadsBeforeFailure = (int?)JsonNode.Parse(request.ArgumentsJson)?["successfulStatusReadsBeforeFailure"] ?? 0;
+                return ChannelResponse.Success("{}");
+            }
             if (request.Method == "adapter.HostObserve")
             {
-                if (failNextStatus)
+                if (failNextStatus && successfulStatusReadsBeforeFailure-- == 0)
                 {
                     failNextStatus = false;
                     return ChannelResponse.Error(new ChannelFailureException("Synthetic answered status error.", -32603, ChannelOutcome.ReadFailed));

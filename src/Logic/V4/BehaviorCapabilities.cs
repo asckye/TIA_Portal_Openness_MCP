@@ -19,6 +19,13 @@ namespace TiaMcp.Logic.V4
 
         public const string CurrentDisclosure = "Native behaviorPolicy=current; V4 native acceptance is pending.";
 
+        public static string Describe(string release, string entry, string? description)
+        {
+            var text = description ?? "";
+            if (EntryPolicy(typeof(BehaviorCapabilities).Assembly, release, entry, BehaviorPolicy.NotApplicable) != BehaviorPolicy.Current) return text;
+            return text.Replace(" " + CurrentDisclosure, "").Replace(CurrentDisclosure, "").TrimEnd() + " " + CurrentDisclosure;
+        }
+
         // Discovery and envelope disclosure consume the same ledger-derived resource as selection.
         public static JsonArray Table(Assembly product, string release)
         {
@@ -44,17 +51,24 @@ namespace TiaMcp.Logic.V4
 
         private static Meta Disclose(Meta meta, bool currentTarget)
         {
-            if (meta.ReleaseKey == null || meta.BehaviorPolicy == BehaviorPolicy.SafeV4
-                || !currentTarget && !Catalog.Value["behaviorEntries"]!.AsArray().Any(e => (string?)e!["releaseKey"] == meta.ReleaseKey
-                    && (string?)e["entry"] == meta.Tool)) return meta;
+            if (meta.ReleaseKey == null) return meta;
             // SafeV4 results already declare their policy. Shared admission/failure paths
             // still need disclosure even when they reject before reaching a tool body.
-            var policy = currentTarget ? BehaviorPolicy.Current
-                : EntryPolicy(typeof(BehaviorCapabilities).Assembly, meta.ReleaseKey, meta.Tool, BehaviorPolicy.NotApplicable);
-            var warnings = meta.Warnings.ToList();
-            if (policy == meta.BehaviorPolicy && (policy != BehaviorPolicy.Current || warnings.Any(w => w.Code == WarningCode.UnverifiedBehavior))) return meta;
-            if (policy == BehaviorPolicy.Current && !warnings.Any(w => w.Code == WarningCode.UnverifiedBehavior))
-                warnings.Add(new Warning(WarningCode.UnverifiedBehavior, CurrentDisclosure, new Dictionary<string, JsonElement>()));
+            var policy = currentTarget && meta.BehaviorPolicy != BehaviorPolicy.SafeV4 ? BehaviorPolicy.Current
+                : EntryPolicy(typeof(BehaviorCapabilities).Assembly, meta.ReleaseKey, meta.Tool, meta.BehaviorPolicy);
+            var existing = meta.Warnings.Where(w => w.Code == WarningCode.UnverifiedBehavior).ToArray();
+            var warnings = meta.Warnings.Where(w => w.Code != WarningCode.UnverifiedBehavior).ToList();
+            if (policy == BehaviorPolicy.Current)
+            {
+                var messages = existing.Select(w => w.Message).Where(message => message != CurrentDisclosure).Distinct(StringComparer.Ordinal).ToArray();
+                var warning = existing.Length == 1 ? existing[0] : new Warning(WarningCode.UnverifiedBehavior,
+                    messages.Length == 0 ? CurrentDisclosure : string.Join(" ", messages),
+                    existing.SelectMany(w => w.Details).GroupBy(pair => pair.Key, StringComparer.Ordinal)
+                        .ToDictionary(group => group.Key, group => group.First().Value, StringComparer.Ordinal));
+                int index = meta.Warnings.TakeWhile(w => w.Code != WarningCode.UnverifiedBehavior).Count();
+                warnings.Insert(Math.Min(index, warnings.Count), warning);
+            }
+            if (policy == meta.BehaviorPolicy && warnings.SequenceEqual(meta.Warnings)) return meta;
             return new Meta(meta.Timestamp, meta.ReleaseKey, meta.Tool, meta.RequestId, meta.Outcome, meta.Execution, policy, meta.Completeness, meta.Paging,
                     warnings);
         }

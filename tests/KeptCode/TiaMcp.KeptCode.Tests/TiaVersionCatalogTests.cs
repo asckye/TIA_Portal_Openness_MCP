@@ -85,7 +85,8 @@ namespace TiaMcp.Engine.Tests
                 check(ToolVersionPolicy.CallProblem(version, "ImportLibraryTypeDocuments", key => key == "libraryName" ? "Global" : null).Length > 0, "library scope refusal before dispatch " + version);
             foreach (string option in new[] { "SkipInactiveCultures", "ActivateInactiveCultures" })
             {
-                check(ToolVersionPolicy.CallProblem("20", "ImportLibraryTypeDocuments", key => key == "importOptions" ? option : null).Length > 0, "V20 library option refused before dispatch " + option);
+                check(ToolVersionPolicy.CallProblem("20", "ImportLibraryTypeDocuments", key => key == "importOptions" ? option : null).Length == 0,
+                    "V20 library option retains native validation " + option);
                 check(ToolVersionPolicy.CallProblem("21", "ImportLibraryTypeDocuments", key => key == "importOptions" ? option : null).Length == 0, "V21 library option retains native validation " + option);
             }
             TiaMcpServer.ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls = 0;
@@ -106,8 +107,10 @@ namespace TiaMcp.Engine.Tests
                 "preflight refuses case-duplicate selectors");
             var safety = TiaMcpServer.ModelContextProtocol.McpServer.CallTool("ListSafetyActivationTests", new ToolArguments(JsonSerializer.Deserialize<JsonElement>("{}")));
             check((safety.IsError != true) != isV20, "whole-tool gate also applies to bridge");
-            foreach (var key in new[] { "14", "14sp1", "15", "15.1", "16", "17", "18", "19", "22", "" })
+            foreach (var key in new[] { "14", "15", "22", "" })
                 check(ToolVersionPolicy.ToolProblem(key, "Connect").Length > 0, key + " tool routing has no implicit adapter");
+            foreach (var key in TiaMcp.Adapters.Contracts.ReleaseRange.All)
+                check(ToolVersionPolicy.ToolProblem(key, "Connect").Length == 0, key + " shares admission independently of the engine output directory");
             foreach (var tool in ToolVersionPolicy.V21Only.Keys)
             {
                 check(ToolVersionPolicy.ToolProblem("20", tool).Length > 0, tool + " hidden/denied on V20");

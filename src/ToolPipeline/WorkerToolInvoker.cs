@@ -74,6 +74,11 @@ namespace TiaMcp.FoundationHost
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var property in arguments.Json.EnumerateObject())
                 if (!seen.Add(property.Name)) return McpServer.InvalidInput("", "object with unique fields");
+            var publicArguments = CanonicalParameterTool.PublicArguments(tool, arguments).Json;
+            var properties = tool.Tool.InputSchema.GetProperty("properties");
+            if (catalog.All.ContainsKey(name) && publicArguments.EnumerateObject().Any(property => !properties.TryGetProperty(property.Name, out _))
+                && new InputSchema(tool.Tool.InputSchema).Validate(publicArguments, "arguments") is { } malformed)
+                return malformed;
             string problem = ReleaseCatalogData.Releases[McpServer.ReleaseKey].WrapPortedTools && tool.Execution == "foundation"
                 && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.Available(McpServer.ReleaseKey, name)) ? "" : McpServer
@@ -81,7 +86,7 @@ namespace TiaMcp.FoundationHost
                 : tool.Parameters.FirstOrDefault(p => p.Name == key)?.DefaultText);
             if (problem.Length == 0 && !catalog.All.ContainsKey(name)) problem = "Tool is not available in this release.";
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
-            var error = ValidateArguments(tool, CanonicalParameterTool.PublicArguments(tool, arguments).Json, tool.Tool.InputSchema);
+            var error = ValidateArguments(tool, publicArguments, tool.Tool.InputSchema);
             if (error == null && name == "RunPlcCompanionTool"
                 && TiaOpenness.Shared.OnlineTargetSettings.CompanionRefusal(
                     arguments.Json.TryGetProperty("mode", out var mode) ? mode.GetString() ?? "catalog" : "catalog") is { } companionRefusal)

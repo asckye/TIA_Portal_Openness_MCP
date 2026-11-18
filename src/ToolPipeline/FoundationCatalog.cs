@@ -27,7 +27,6 @@ internal sealed class FoundationCatalog : IToolCatalogView
         {
             DeclaredToolMetadata.Create(ReleaseCatalogData.Name(method), method,
                 _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
-            descriptor.Tool.Description += data.DeclarationDisclosure;
             return descriptor;
         }, StringComparer.Ordinal);
         All = declared.Where(pair => !data.RetainUnavailable || !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(pair.Key)
@@ -50,6 +49,8 @@ internal sealed class FoundationCatalog : IToolCatalogView
                 .ToDictionary(pair => pair.Key,
                     pair => All.TryGetValue(pair.Key, out var available) ? available : CanonicalParameterTool.Describe(pair.Value), data.NameComparer)
             : All;
+        foreach (var descriptor in IncludingUnavailable.Values)
+            descriptor.Tool.Description = TiaMcp.Logic.V4.BehaviorCapabilities.Describe(release, descriptor.Name, descriptor.Tool.Description);
         Lite = data.HasLite ? All.Values.Where(tool => essentials?.Contains(tool.Name) == true
             || SharedToolPolicy.Bridge.Contains(tool.Name, StringComparer.Ordinal)).ToArray() : Array.Empty<ToolDescriptor>();
     }

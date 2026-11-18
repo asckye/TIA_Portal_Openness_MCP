@@ -29,7 +29,10 @@ namespace TiaMcp.Adapters
             | AdapterCapabilities.WatchTableRead
 #endif
 #if PLC_SPECIAL_EXPORT
-            | AdapterCapabilities.WatchTableExport | AdapterCapabilities.TechnologyObjectExport
+            | AdapterCapabilities.TechnologyObjectExport
+#if PLC_WATCH_READ
+            | AdapterCapabilities.WatchTableExport
+#endif
 #endif
 #if PLC_WATCH_EXPORT
             | AdapterCapabilities.WatchTableExport

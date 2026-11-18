@@ -65,6 +65,7 @@ public sealed class SharedWorkerRegressionTests
         Assert.Equal(copied, (string?)Assert.Single(observed!.AsArray())!["location"]);
         var response = new toolpipeline::TiaMcpServer.ModelContextProtocol.EngineeringDiagnosticsTools().GetOpennessCompatibilityV4();
         Assert.False(response.IsError == true, response.StructuredContent?.ToJsonString());
+        Assert.DoesNotContain("v20OptionWrappersCompiled", response.StructuredContent!.ToJsonString(), StringComparison.Ordinal);
     }
 
     public static IEnumerable<object[]> DisconnectCases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
@@ -87,10 +88,19 @@ public sealed class SharedWorkerRegressionTests
             await fixture.WaitBusy();
         }
         else { WorkerShutdown.KillOwned(child); Assert.True(child.WaitForExit(TestDeadlines.HangMilliseconds)); }
+        if (pending != null)
+        {
+            var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                worker.Call("Disconnect", new(), CancellationToken.None));
+            Assert.Equal("worker-call-running", refusal.Condition);
+            Assert.False(child.HasExited);
+            Assert.Equal("{}", await pending);
+            WorkerShutdown.KillOwned(child);
+            Assert.True(child.WaitForExit(TestDeadlines.HangMilliseconds));
+        }
         var ack = await worker.Call("Disconnect", new(), CancellationToken.None);
         Assert.Null(ack?["RequiresTiaRestart"]);
         Assert.False((bool?)ack?["WorkerAcknowledged"]);
-        if (pending != null) await Assert.ThrowsAnyAsync<Exception>(() => pending);
         var services = FoundationHostPorts.CreateServices(worker, release, () => new JsonObject { ["ready"] = true }, AppContext.BaseDirectory);
         using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
         using var context = pipeline.EnterSession();
@@ -101,51 +111,56 @@ public sealed class SharedWorkerRegressionTests
             .InvokeAsync(Request("GetProjectInfo"));
         Assert.Null(worker.OperatorSnapshot()["sessionLocked"]);
 
-        if (release is "20" or "21")
+        Assert.False((bool?)next.StructuredContent?["ok"], next.StructuredContent?.ToJsonString());
+        Assert.Equal("PRECONDITION_FAILED", (string?)next.StructuredContent?["error"]?["code"]);
+        Assert.Equal("NotStarted", (string?)services.Snapshot()["state"]);
+        Assert.Equal(1, (long?)worker.OperatorSnapshot()["generation"]);
+        Assert.DoesNotContain(next.StructuredContent!["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "WORKER_RESTARTED");
+        Assert.False(services.Faulted);
+        using var production = fixture.ProductionWorker();
+        await production.Status(CancellationToken.None);
+        var productionChild = Field<Process>(production.Client, "process");
+        var productionChannel = Field<ChannelClient>(production.Client, "channel");
+        Task<string>? productionPending = null;
+        if (busy)
         {
-            Assert.Equal("PRECONDITION_FAILED", (string?)next.StructuredContent?["error"]?["code"]);
-            using var production = fixture.ProductionWorker();
-            await production.Status(CancellationToken.None);
-            var productionChild = Field<Process>(production.Client, "process");
-            var productionChannel = Field<ChannelClient>(production.Client, "channel");
-            Task<string>? productionPending = null;
-            if (busy)
-            {
-                fixture.ClearBusy();
-                productionPending = productionChannel
-                    .CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
-                await fixture.WaitBusy();
-            }
-            else { WorkerShutdown.KillOwned(productionChild); Assert.True(productionChild.WaitForExit(TestDeadlines.HangMilliseconds)); }
-            await production.Call("Disconnect", new(), CancellationToken.None);
-            if (productionPending != null) await Assert.ThrowsAnyAsync<Exception>(() => productionPending);
-            var error = await Assert.ThrowsAnyAsync<Exception>(() => production.Call("ReadState", new(), CancellationToken.None));
-            var expected = FoundationV4Result.Failure(release, "GetSessionState", "compare", false, false, null, error).StructuredContent!;
-            Assert.True(JsonNode.DeepEquals(expected["error"], next.StructuredContent?["error"]));
-            Assert.Equal((string?)production.Snapshot()["state"], (string?)services.Snapshot()["state"]);
-            Assert
-                .Equal(((foundationhost::TiaMcp.FoundationHost.IFoundationWorkerSupervisor)production.Client).OperatorSnapshot().ToJsonString(), worker
-                    .OperatorSnapshot().ToJsonString());
-            Assert.Null(services.Snapshot()["fault"]);
-            using var stopped = new Fixture(release);
-            await stopped.Worker.Observe("status", new(), CancellationToken.None);
-            WorkerShutdown.KillOwned(Field<Process>(stopped.Worker, "process"));
-            var managed = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
-                stopped.Worker.Observe("status", new(), CancellationToken.None));
-            Assert.Equal("worker-faulted", managed.Condition);
-            Assert.Equal("The worker stopped. The next native call will attempt recovery.", managed.Message);
+            fixture.ClearBusy();
+            productionPending = productionChannel
+                .CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
+            await fixture.WaitBusy();
         }
-        else
+        else { WorkerShutdown.KillOwned(productionChild); Assert.True(productionChild.WaitForExit(TestDeadlines.HangMilliseconds)); }
+        if (productionPending != null)
         {
-            Assert.True((bool?)next.StructuredContent?["ok"], next.StructuredContent?.ToJsonString());
-            Assert.Equal("Running", (string?)worker.HostSnapshot()["state"]);
-            Assert.Equal(2, (long?)worker.OperatorSnapshot()["generation"]);
-            Assert.Contains(next.StructuredContent!["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "WORKER_RESTARTED");
-            Assert.False(services.Faulted);
+            var refusal = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+                production.Call("Disconnect", new(), CancellationToken.None));
+            Assert.Equal("worker-call-running", refusal.Condition);
+            Assert.False(productionChild.HasExited);
+            Assert.Equal("{}", await productionPending);
+            WorkerShutdown.KillOwned(productionChild);
+            Assert.True(productionChild.WaitForExit(TestDeadlines.HangMilliseconds));
         }
+        await production.Call("Disconnect", new(), CancellationToken.None);
+        var error = await Assert.ThrowsAnyAsync<Exception>(() => production.Call("ReadState", new(), CancellationToken.None));
+        var expected = FoundationV4Result.Failure(release, "GetSessionState", "compare", false, false, null, error).StructuredContent!;
+        Assert.True(JsonNode.DeepEquals(expected["error"], next.StructuredContent?["error"]));
+        Assert.Equal((string?)production.Snapshot()["state"], (string?)services.Snapshot()["state"]);
+        Assert
+            .Equal(((foundationhost::TiaMcp.FoundationHost.IFoundationWorkerSupervisor)production.Client).OperatorSnapshot().ToJsonString(), worker
+                .OperatorSnapshot().ToJsonString());
+        Assert.Null(services.Snapshot()["fault"]);
+        using var stopped = new Fixture(release);
+        await stopped.Worker.Observe("status", new(), CancellationToken.None);
+        WorkerShutdown.KillOwned(Field<Process>(stopped.Worker, "process"));
+        var managed = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+            stopped.Worker.Observe("status", new(), CancellationToken.None));
+        Assert.Equal("worker-faulted", managed.Condition);
+        Assert.Equal("The worker stopped. The next native call will attempt recovery.", managed.Message);
     }
 
     [Theory, InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
+    [InlineData("14sp1", false), InlineData("15.1", false), InlineData("16", false), InlineData("17", false), InlineData("18", false), InlineData("19", false)]
+    [InlineData("14sp1", true), InlineData("15.1", true), InlineData("16", true), InlineData("17", true), InlineData("18", true), InlineData("19", true)]
     public async Task Shared_status_reads_are_cached_when_cold_or_the_lane_is_held(string release, bool warm)
     {
         using var fixture = new Fixture(release);
@@ -171,7 +186,7 @@ public sealed class SharedWorkerRegressionTests
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Non_shared_readiness_does_not_add_a_managed_worker_operation(string release)
     {
-        using var worker = new WorkerClient(release, "missing-worker", "missing-api", true) { Bundled = false };
+        using var worker = new WorkerClient(release, "missing-worker", "missing-api", true) { Bundled = false, SharedSession = false };
         await worker.PrepareReadiness(CancellationToken.None);
         Assert.Null(worker.OperatorSnapshot()["pid"]);
         Assert.False(worker.WorkerFaulted);
@@ -215,6 +230,8 @@ public sealed class SharedWorkerRegressionTests
     }
 
     [Theory, InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
+    [InlineData("14sp1", false), InlineData("15.1", false), InlineData("16", false), InlineData("17", false), InlineData("18", false), InlineData("19", false)]
+    [InlineData("14sp1", true), InlineData("15.1", true), InlineData("16", true), InlineData("17", true), InlineData("18", true), InlineData("19", true)]
     public async Task Available_worker_passive_observations_keep_the_worker_reply(string release, bool ready)
     {
         using var fixture = new Fixture(release);
@@ -230,7 +247,9 @@ public sealed class SharedWorkerRegressionTests
     }
 
     [Theory, InlineData("20", false), InlineData("21", false), InlineData("20", true), InlineData("21", true)]
-    public async Task Explicit_supervisor_reads_start_only_when_the_cold_lane_is_free(string release, bool restartPreview)
+    [InlineData("14sp1", false), InlineData("15.1", false), InlineData("16", false), InlineData("17", false), InlineData("18", false), InlineData("19", false)]
+    [InlineData("14sp1", true), InlineData("15.1", true), InlineData("16", true), InlineData("17", true), InlineData("18", true), InlineData("19", true)]
+    public async Task Explicit_supervisor_reads_keep_the_worker_cold_with_a_free_or_held_lane(string release, bool restartPreview)
     {
         using var fixture = new Fixture(release);
         var worker = fixture.Worker;
@@ -250,8 +269,8 @@ public sealed class SharedWorkerRegressionTests
             Assert.False(services.Faulted);
         }
         finally { gate.Release(); if (read != null) await read; }
-        Assert.Equal("Ready", (string?)Read()["state"]);
-        Assert.NotNull(worker.OperatorSnapshot()["pid"]);
+        Assert.Equal("NotStarted", (string?)Read()["state"]);
+        Assert.Null(worker.OperatorSnapshot()["pid"]);
         Assert.False(services.Faulted);
     }
 
@@ -511,6 +530,15 @@ public sealed class SharedWorkerRegressionTests
         var channel = Field<ChannelClient>(worker, "channel");
         var pending = channel.CallAsync("adapter.FixtureHang", "{}", BindingChange.None, true, TimeSpan.FromSeconds(20), CancellationToken.None);
         await fixture.WaitBusy();
+        var deferred = await worker.RestartHostWorker(true, CancellationToken.None);
+        Assert.Null(deferred["restarted"]);
+        Assert.True(channel.InFlight);
+        Assert.Same(child, Field<Process>(worker, "process"));
+        Assert.False(child.HasExited);
+        Assert.Equal("{}", await pending);
+        string shutdownMarker = Path.Combine(fixture.Root, "identity-refusal-shutdown");
+        await worker.Call("FixtureSlowShutdown", new() { ["marker"] = shutdownMarker }, CancellationToken.None);
+        channel.Invalidate(new IOException("Synthetic idle transport fault."));
         string expected = child.StartInfo.FileName;
         child.StartInfo.FileName = Path.Combine(AppContext.BaseDirectory, "other-worker.exe");
         try
@@ -530,8 +558,11 @@ public sealed class SharedWorkerRegressionTests
             Assert.Same(child, Field<Process>(worker, "process"));
             Assert.False(child.HasExited);
         }
-        finally { child.StartInfo.FileName = expected; }
-        await Assert.ThrowsAnyAsync<Exception>(() => pending);
+        finally
+        {
+            child.StartInfo.FileName = expected;
+            File.WriteAllText(shutdownMarker + ".release", "");
+        }
     }
 
     private static T Field<T>(object value, string name) => (T)value.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(value)!;
@@ -555,7 +586,7 @@ public sealed class SharedWorkerRegressionTests
             TiaMcp.Engine.Tests.Shared.TestPaths
                 .WriteFixtureFile(Path.Combine(AppContext.BaseDirectory, "TiaMcp.Adapter." + release + ".dll"), "offline session fixture");
             Worker = new(release, Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe"), AppContext.BaseDirectory, true)
-                { Bundled = false, SharedSession = release is "20" or "21" };
+                { Bundled = false, SharedSession = true };
         }
         internal WorkerBackendFixture ProductionWorker()
         {

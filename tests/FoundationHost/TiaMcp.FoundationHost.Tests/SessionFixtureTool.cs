@@ -13,7 +13,7 @@ internal static class SessionFixtureTool
 {
     // Retain a registered name for generated V4 annotations; only the test seam
     // replaces its descriptor/schema/owner.
-    internal const string Name = "ListTestSuiteCases";
+    internal const string Name = "ListPlcBlocks";
     internal static IReadOnlyList<global::ModelContextProtocol.Server.McpServerTool> PlcTools(
         foundationhost::TiaMcp.FoundationHost.IFoundationSessionWorker worker,
         IReadOnlyList<global::ModelContextProtocol.Server.McpServerTool> tools)

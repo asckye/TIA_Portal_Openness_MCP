@@ -200,7 +200,7 @@ public sealed class EngineWorkerClientTests
         internal bool Faulted => foundation.Faulted;
         internal ClientBridge(string release, string exe)
         {
-            foundation = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { SharedSession = release is "20" or "21" };
+            foundation = new WorkerClient(release, exe, AppContext.BaseDirectory, true) { SharedSession = true };
         }
         public Task<JsonNode?> Call(string name, JsonObject args, CancellationToken token) => foundation.Call(name, args, token);
         public void Dispose() => foundation.Dispose();
