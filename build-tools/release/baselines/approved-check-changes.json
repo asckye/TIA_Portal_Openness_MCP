@@ -5437,6 +5437,23 @@
           "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/DraftBetaNotesCarryTheCurrentGeneratedSection( ):10022781bdca48815fa2706cb56323b20c4e2ee44a35d5644c8aa16d373df84b:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-12D",
+      "maintainerDate": "2026-11-18",
+      "reason": "A1 approve ProtectionEnablePutGetCommunication (maintainer decision D1, 2026-11-17); D4 missing runtime service reported as PRECONDITION_FAILED service-not-provided (maintainer decision D4, 2026-11-17)",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/SecurityAuditRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.SecurityAuditRegressionTests/Unverified_security_attribute_lists_refuse_all_candidate_names( ):e440c72bb551f819a1abf01042d9c5b5ec70db39e3a0758b875612414e9a4c35:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/PlcServiceLookupSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.PlcServiceLookupSources/LoadableProviderUsesSharedResolver( ):b039a94ab140cfae9a6696718a97e662c456f120d0a309d952e31518503c99eb:1"
+        }
+      ]
     }
   ]
 }
