@@ -378,8 +378,18 @@ def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
             return extract_v4_body(reply)
 
         status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
-        if status.get("enabled") is not True or status.get("state") != "Ready":
+        if status.get("enabled") is not True or status.get("state") != "NotStarted" or status["fault"] is not None:
             raise CheckFailure(f"V{key} {transport} {mode}: unexpected worker default/state: {status}")
+        # With the SDK present, native admission starts the worker to probe readiness, then refuses the session read.
+        diagnostic = call("GetSessionState")
+        if (diagnostic.get("error", {}).get("code") != "PRECONDITION_FAILED"
+                or diagnostic.get("error", {}).get("details", {}).get("condition") != "native-admission"
+                or diagnostic.get("meta", {}).get("execution") != "not-started"):
+            raise CheckFailure(f"V{key} {transport} {mode}: session diagnostic did not report the readiness refusal: {diagnostic}")
+        status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
+        if status.get("state") != "Ready" or status["fault"] is not None:
+            raise CheckFailure(f"V{key} {transport} {mode}: readiness probe did not start a healthy worker: {status}")
+
         bootstrap = call("InitializeEnvironment")
         reason = bootstrap.get("data", {}).get("recommendedReason") or ""
         if bootstrap.get("data", {}).get("ready") is not False or not reason:
@@ -390,12 +400,6 @@ def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
             raise CheckFailure(f"V{key} {transport} {mode}: environment doctor omitted the Openness cause/fix: {doctor}")
         if not any(check.get("fix") for check in doctor_checks if isinstance(check, dict)):
             raise CheckFailure(f"V{key} {transport} {mode}: environment doctor omitted repair steps: {doctor}")
-        # P7: engine reads stop at native admission without a ready TIA environment.
-        diagnostic = call("GetSessionState")
-        if (diagnostic.get("error", {}).get("code") != "PRECONDITION_FAILED"
-                or diagnostic.get("error", {}).get("details", {}).get("condition") != "native-admission"
-                or diagnostic.get("meta", {}).get("execution") != "not-started"):
-            raise CheckFailure(f"V{key} {transport} {mode}: session diagnostic did not report the readiness refusal: {diagnostic}")
 
         refusal = call("SaveProject")
         if (refusal.get("error", {}).get("code") != "RESOURCE_UNAVAILABLE"
