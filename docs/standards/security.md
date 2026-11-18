@@ -118,6 +118,7 @@
 
 - 键名含 password、passwd、secret、token、credential、authorization，或以 key、keys 结尾（`releaseKey` 除外），或等于 `pwd`、`sk` 的参数值被替换为占位符；同级 `name`/`key` 为敏感名时，`value` 也被替换。自由文本中的 Bearer/Basic 令牌、`name=value` 形式的密钥、URL 用户信息和 PEM 私钥被清除。
 - 审批摘要和审计记录使用上述去敏规则。写入预览的计划哈希沿用同一敏感值识别规则，但将敏感值替换为 HMAC-SHA-256，密钥随机生成并仅保存在宿主进程内存中；应用须使用预览时相同的密码，宿主重启后须重新预览。计划还绑定输入文件的 SHA-256，以及输入目录中按相对名称排序的全部文件摘要；内容变化后须重新预览。
+- 已声明凭据参数中的完整 `vault:<name>` 引用保留可读，审批摘要、计划、审计和调用日志只接触引用。宿主在审批前检查引用，审批后紧邻工具执行时解析副本；解析值加入当前调用的原生诊断去敏范围，响应中的回显也被替换。计划哈希绑定引用名，同一引用在预览和执行时一致，更换引用须重新预览；保管库中的值不会进入计划哈希。明文敏感值继续按原规则去敏。
 - V4 信封的 `details` 和 `data` 不含堆栈与凭据：`Clean()` 删除键名含 `stack` 或等于 `password` 的字段，把多行堆栈文本替换为固定占位；`HostBehavior.SafeDiagnostic` 把盘符和 UNC 路径替换为 `<path>`。
 - 限制：替换按参数名匹配。UMAC、PLC 保护和 Web 服务器凭据只有在参数名符合上述规则时才被替换，没有单独的名单。
 - 实现：`src/Shared/CallJournalPayload.cs`、`src/Shared/ApprovalProtocol.cs`、`src/Shared/PlcToolContract.cs`、`src/Logic/V4/HostBehavior.cs`。
@@ -184,6 +185,17 @@
 - PLCSIM Advanced 与 Unified Open Pipe 没有 PLC 地址参数，不读取此列表。此限制不改变通道的认证、TLS、写入确认、审批或原生调用顺序。
 - OPC UA 使用 Workstation.UaClient 3.2.3 的字符串 URL 构造入口；该入口保留请求的完整 URL，只从 discovery 回复复制安全与身份元数据。离线 UA TCP 协议夹具返回不同主机、端口和路径的 EndpointUrl，核对库入口及实际工具的两次 HEL 仍连接原地址，替代监听器没有收到连接；`OpcUaEndpointAuthorityTests` 守住此依赖行为。
 - 实现：`src/Adapters.Contracts/OnlineTargetPolicy.cs`、`src/Shared/OnlineTargetSettings.cs`、`src/ToolPipeline/WorkerToolInvoker.cs`、`src/FoundationHost/PortedToolContract.cs`。测试：`RuntimeOnlineTargetPolicyTests`、`RuntimeOnlineTargetAdmissionTests`；注入 S7、Web API、OPC UA 客户端工厂，拒绝路径不创建客户端或打开套接字。实机验收仍为 **NOT RUN**，见[真机台账](../reference/real-machine-ledger.md)。
+### SEC-16 机密保管库
+
+- 文件位于数据根的 `config/secrets.vault`，UTF-8 JSON 格式为 `{"version":1,"secrets":{"<name>":"<base64 DPAPI CurrentUser>"}}`。值由当前 Windows 用户的 DPAPI 加密；复制到其他用户下不能解密。名称区分大小写，长度 1–64，只允许 ASCII 字母、数字、下划线、点和连字符，首字符必须是字母或数字。
+- 只有显式允许列表中的精确工具名和顶层凭据参数名可使用完整的 `vault:<name>`；嵌套字段、调用者自定映射键和其他参数中的引用一律在审批前带指针拒绝。明文密码仍兼容；实际密码以 `vault:` 开头时须先存入保管库，再通过名称引用。
+- 任意会解析保管库引用的执行都必须经过工作台审批，含只读在线工具、`CallTool` 和只读批次子项，普通审批开关不能关闭此要求。审批卡显示凭据目的地；UMC 目的地取自项目配置，无法识别或审批后变化则拒绝。预览和内部预检不替换引用；Web API 预览跳过登录，并报告 `preview did not log in (vault credential)`。
+- 解析还要求当前调用持有已经成功完成的工作台审批结果，工具名和参数摘要必须匹配；调用结束或抛错后清除作用域，缺少审批目录项时也不能解析。Web 和使用保管库引用的 Teamcenter 目的地拒绝 userinfo、非 ASCII 主机及 URI 解析改变主机/端口的文本；Uri.Host 必须与 Uri.IdnHost 一致，审批卡使用 Uri.IdnHost/Uri.Port。Teamcenter 的非保管库调用沿用原有 hostUrl 规则。
+- UMC checkConsistency 的保管库预览和审批预检不调用一致性检查、不登录，并明确报告跳过；实际执行先解析获批引用，再进行原检查。UMAC 的卡片以目标 path/archivePath 为准；Global 用户还须绑定该目标项目的 UMC 服务器，未知或属于其他项目时拒绝。
+- 文件缺失视为空保管库。未知名称、格式错误、读不到文件或当前用户无法解密时，在审批和 worker 派发前返回带参数 JSON pointer 的 `INVALID_ARGUMENT`；不可读状态以 `secret-vault-unreadable` 标识在消息和 `details.expected` 中。不跨调用缓存保管库。
+- MCP 不能读取或写入保管库文件，通用文件工具的人工设置保护同样覆盖它。内部 `Set`/`Remove` 供工作台编辑器使用，原子替换文件，审计只记名称及 set/remove 动作，不记值；工作台编辑入口在后续 Part 4 提供。
+- 实现：`src/Shared/SecretVault.cs`、`src/Shared/CurrentUserProtection.cs`、`src/ToolPipeline/ModelContextProtocol/Tools/McpServer.SecretVault.cs`、`src/FoundationHost/FoundationV4Tool.cs`。
+- 测试：`SecretVaultTests`、`SecretVaultFoundationBoundaryTests`、`SessionAuditHostTests`、`OnlinePortAdmissionTests` 和 `PipelineTests`。在线认证提示的原生验收见[真机台账](../reference/real-machine-ledger.md)，当前为 **NOT RUN**。
 
 ## 6 已知缺口与已决定未实现的事项
 

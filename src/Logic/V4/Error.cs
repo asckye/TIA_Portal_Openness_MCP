@@ -57,6 +57,30 @@ namespace TiaMcp.Logic.V4
         private static readonly AsyncLocal<Scope?> Current = new AsyncLocal<Scope?>();
         public static string? RequestId => Current.Value?.RequestId;
         public static IDisposable Begin(string requestId, JsonElement arguments) => new Scope(requestId, arguments);
+        public static void IncludeArguments(JsonElement arguments, bool resolved = false)
+        {
+            if (Current.Value is { } scope) Collect(arguments, scope.Secrets, false, resolved);
+        }
+        public static string RedactSecrets(string text) => ReplaceSecrets(text, Current.Value?.Secrets ?? Enumerable.Empty<string>());
+        public static IDisposable UseVaultArguments(JsonElement original, JsonElement resolved, IReadOnlyList<string> positions)
+        {
+#if TIA_APPROVAL_PRIVATE_JOURNAL
+            return TiaOpenness.Shared.ApprovalJournalPayload.UseVaultArguments(JsonNode.Parse(original.GetRawText())!,
+                JsonNode.Parse(resolved.GetRawText())!, positions);
+#else
+            return TiaOpenness.Shared.CallJournalPayload.UseVaultArguments(JsonNode.Parse(original.GetRawText())!,
+                JsonNode.Parse(resolved.GetRawText())!, positions);
+#endif
+        }
+        internal static bool VaultReference(string text)
+        {
+            if (Current.Value?.Secrets.Contains(text) == true) return false;
+#if TIA_APPROVAL_PRIVATE_JOURNAL
+            return TiaOpenness.Shared.ApprovalJournalPayload.ReadableVaultReference(text);
+#else
+            return TiaOpenness.Shared.CallJournalPayload.ReadableVaultReference(text);
+#endif
+        }
 
         public static Error FromException(Error error, Exception exception, string? nativeMessage = null)
         {
@@ -92,7 +116,7 @@ namespace TiaMcp.Logic.V4
                 || name.Contains("credential") || name.Contains("authorization") || name == "pwd" || name == "sk");
         }
 
-        private static void Collect(JsonElement value, HashSet<string> secrets, bool credential)
+        private static void Collect(JsonElement value, HashSet<string> secrets, bool credential, bool resolved = false)
         {
             if (value.ValueKind == JsonValueKind.Object)
             {
@@ -103,25 +127,27 @@ namespace TiaMcp.Logic.V4
                 {
                     if (!credential && !named && PolicyScalar(pair.Name, pair.Value.GetRawText())) continue;
                     Collect(pair.Value, secrets,
-                        credential || Credential(pair.Name) || named && pair.Name.Equals("value", StringComparison.OrdinalIgnoreCase));
+                        credential || Credential(pair.Name) || named && pair.Name.Equals("value", StringComparison.OrdinalIgnoreCase),
+                        resolved || named && pair.Name.Equals("value", StringComparison.OrdinalIgnoreCase));
                 }
             }
             else if (value.ValueKind == JsonValueKind.Array)
-                foreach (var item in value.EnumerateArray()) Collect(item, secrets, credential);
+                foreach (var item in value.EnumerateArray()) Collect(item, secrets, credential, resolved);
             else if (credential && value.ValueKind is JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False)
                 secrets.Add(value.GetRawText());
             else if (value.ValueKind == JsonValueKind.String && value.GetString() is { } text)
             {
                 if (credential)
                 {
-                    if (Replaceable(text)) secrets.Add(text);
+                    bool reference = VaultReference(text);
+                    if (Replaceable(text) && (resolved || !reference)) secrets.Add(text);
                 }
                 else if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
                 {
                     try
                     {
                         using var document = JsonDocument.Parse(text);
-                        Collect(document.RootElement, secrets, false);
+                        Collect(document.RootElement, secrets, false, resolved);
                     }
                     catch (JsonException) /* swallow(parse-fallback): ordinary argument text has no embedded credential fields */ { }
                 }
@@ -295,7 +321,11 @@ namespace TiaMcp.Logic.V4
                 {
                     if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0) obj.Remove(pair.Key);
                     else if (Credential(pair.Key) || named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase))
-                        obj[pair.Key] = "••••";
+                    {
+                        if (named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase)
+                            || !(pair.Value is JsonValue reference && reference.TryGetValue<string>(out var referenceText) && VaultReference(referenceText)))
+                            obj[pair.Key] = "••••";
+                    }
                     else if (pair.Value is JsonValue scalar && scalar.TryGetValue<string>(out var text))
                         obj[pair.Key] = Text(text, depth, secrets);
                     else if (depth >= 16) obj[pair.Key] = "••••";

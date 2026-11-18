@@ -161,11 +161,8 @@ namespace TiaMcpServer.ModelContextProtocol
             using var stagingSession = ImportStagingTools.UseSession(request);
             if (string.Equals(ProtocolTool.Name, "CallTool", StringComparison.OrdinalIgnoreCase))
             {
-                bool callToolDisabled = McpServer.ApprovalResultWrite(ProtocolTool.Name,
-                    System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()))
-                    && !McpServer.EffectiveApprovalSettings(ProtocolTool.Name,
-                        System.Text.Json.JsonSerializer
-                            .Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())).Enabled;
+                bool callToolDisabled = McpServer.ApprovalDisabled(ProtocolTool.Name,
+                    System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
                 string? targetName = request?.Params?.Arguments != null && request.Params.Arguments.TryGetValue("name", out var target)
                     && target.ValueKind == System.Text.Json.JsonValueKind.String ? target.GetString() : null;
                 using var bridgeNativeCalls = InvocationJournal.BeginNativeCallScope();
@@ -180,9 +177,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             bool write = McpServer.ApprovalResultWrite(ProtocolTool.Name,
                 System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
-            bool disabled = write && !McpServer.EffectiveApprovalSettings(ProtocolTool.Name,
-                        System.Text.Json.JsonSerializer
-                            .Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())).Enabled;
+            bool disabled = McpServer.ApprovalDisabled(ProtocolTool.Name,
+                System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
             string? correlation = null;
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write,
                 McpServer.InvocationHostTag, McpServer.ReleaseKey, ProtocolTool.Name, correlation);
@@ -310,6 +306,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (sessionPrelude) await McpServer.ValidateRuntimeToolAsync(ProtocolTool.Name, ProtocolTool.Description).ConfigureAwait(false);
                     TiaOpenness.Shared.AuditInvocation.StartCurrent();
                 }
+                using var vaultApproval = SecretVaultArguments.Approved(ProtocolTool.Name,
+                    System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(arguments), approval);
                 issued = true;
                 McpServer.ValidateCallerInputFiles(ProtocolTool.Name, arguments);
                 var result = McpServer

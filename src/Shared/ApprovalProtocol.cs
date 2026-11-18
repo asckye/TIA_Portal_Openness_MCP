@@ -78,6 +78,8 @@ namespace TiaOpenness.Shared
                 || p.Key.EndsWith("Directory", StringComparison.Ordinal) || p.Key.EndsWith("Dir", StringComparison.Ordinal)
                 || p.Key == "dir" || p.Key == "directory" || p.Key == "plc" || p.Key == "target")
                 .Select(p => p.Key + "=" + p.Value?.ToJsonString()).ToArray();
+            if (target["vaultDestination"] is JsonValue destination)
+                objects = objects.Concat(new[] { "vaultDestination=" + destination.ToJsonString() }).ToArray();
             string risk = ClassifyRisk(tool, original);
             return new PendingApproval { RequestId = requestId ?? Guid.NewGuid().ToString("N"), Host = host, ReleaseKey = release,
                 Tool = tool, Risk = risk, RiskAction = risk == "write" ? "execute" : Deletes(tool, original) ? "delete" : "online",
@@ -94,7 +96,8 @@ namespace TiaOpenness.Shared
                 Operations = outputs.Length == 0
                     ? new[] { new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool, Target = string.Join(" · ", objects) } }
                     : outputs.Select(output => new ApprovalAction { Tool = tool, Action = display["action"]?.ToString() ?? tool,
-                        Target = output.Value }).ToArray() };
+                        Target = output.Value + (target["vaultDestination"] is JsonValue vaultTarget
+                            ? " · vaultDestination=" + vaultTarget.ToJsonString() : "") }).ToArray() };
         }
         // This is host policy, independent of MCP destructiveHint (which also covers ordinary overwrites).
         internal static string ClassifyRisk(string tool, JsonObject arguments)

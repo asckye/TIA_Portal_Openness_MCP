@@ -49,7 +49,7 @@ namespace TiaOpenness.Shared
     {
         internal const string Genesis = "0000000000000000000000000000000000000000000000000000000000000000";
         private static readonly string[] Events = { "request", "start", "end", "approval-granted", "approval-denied", "approval-timeout", "approval-switch",
-            "online-targets-change" };
+            "online-targets-change", "secret-vault-change" };
         private readonly string directory;
         private readonly long maxBytes;
         private static readonly ConcurrentDictionary<string, TailState> Tails = new ConcurrentDictionary<string, TailState>(StringComparer.Ordinal);

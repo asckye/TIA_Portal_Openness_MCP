@@ -17,6 +17,16 @@ namespace TiaMcp.Engine.Tests
         public void Existing_request_rules_pass() => Run((passed, message) => Assert.True(passed, message));
 
         [Theory]
+        [InlineData("tccs://TC/instance")] [InlineData("plc.example.net")]
+        [InlineData("https://рlc.example.net/")]
+        public void Non_vault_connection_hosts_keep_the_master_validation(string host)
+        {
+            var request = TeamcenterLogic.ValidateConnectionRequest("connect", "fixture", "plain-fixture-password", "", "", host,
+                "TC", "", "", false);
+            Assert.True(request.Writes);
+        }
+
+        [Theory]
         [InlineData("plc-foundation", "checkout")]
         [InlineData("plc-foundation", "checkin")]
         [InlineData("plc-foundation", "cancelCheckout")]

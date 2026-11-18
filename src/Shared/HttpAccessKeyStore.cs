@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -20,54 +19,14 @@ namespace TiaOpenness.Shared
         internal static string Protect(string key)
         {
             Validate(key);
-            return Convert.ToBase64String(Transform(Encoding.UTF8.GetBytes(key), true));
+            return Convert.ToBase64String(CurrentUserProtection.Transform(Encoding.UTF8.GetBytes(key), true));
         }
 
         internal static string Unprotect(string value)
         {
-            byte[] bytes = Transform(Convert.FromBase64String(value), false);
+            byte[] bytes = CurrentUserProtection.Transform(Convert.FromBase64String(value), false);
             try { var key = Encoding.UTF8.GetString(bytes); Validate(key); return key; }
             finally { Array.Clear(bytes, 0, bytes.Length); }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct Blob { internal int Size; internal IntPtr Data; }
-        [DllImport("crypt32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool CryptProtectData(ref Blob input, IntPtr description, IntPtr entropy, IntPtr reserved, IntPtr prompt, int flags,
-                out Blob output);
-        [DllImport("crypt32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool CryptUnprotectData(ref Blob input, IntPtr description, IntPtr entropy, IntPtr reserved, IntPtr prompt, int flags,
-                out Blob output);
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr LocalFree(IntPtr memory);
-
-        // DPAPI without a WindowsDesktop dependency in the cross-platform host. No machine-wide scope or optional entropy.
-        private static byte[] Transform(byte[] bytes, bool protect)
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                throw new PlatformNotSupportedException("HTTP access keys require Windows DPAPI for the current user.");
-            var input = new Blob { Size = bytes.Length, Data = Marshal.AllocHGlobal(bytes.Length) };
-            Blob output = default;
-            try
-            {
-                Marshal.Copy(bytes, 0, input.Data, bytes.Length);
-                bool ok = protect ? CryptProtectData(ref input, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, 1, out output)
-                    : CryptUnprotectData(ref input, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, 1, out output);
-                if (!ok) throw new CryptographicException("The current Windows user could not access the protected HTTP key.");
-                var result = new byte[output.Size]; Marshal.Copy(output.Data, result, 0, result.Length); return result;
-            }
-            finally
-            {
-                Array.Clear(bytes, 0, bytes.Length);
-                Marshal.Copy(bytes, 0, input.Data, bytes.Length); Marshal.FreeHGlobal(input.Data);
-                if (output.Data != IntPtr.Zero)
-                {
-                    Marshal.Copy(new byte[output.Size], 0, output.Data, output.Size);
-                    LocalFree(output.Data);
-                }
-            }
         }
 
         internal static Uri Endpoint(string value)

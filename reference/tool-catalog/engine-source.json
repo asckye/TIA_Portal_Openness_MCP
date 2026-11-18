@@ -722,7 +722,7 @@
       "path": "src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs",
       "owner": "ProjectSessionTools",
       "domain": "Project",
-      "signature": "public CallToolResult OpenProjectV4(\n            [Description(\"path: defines the path where to the project/session\")] string path,\n            [Description(\"closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.\")] bool closeForeignProject = false,\n            [Description(\"umacUserName: optional user for a UMAC-protected project (Projects.OpenWithUpgrade(file, UmacDelegate)); give it together with umacPassword.\")] string umacUserName = \"\",\n            [Description(\"umacPassword: password of umacUserName; converted to SecureString, never logged or echoed.\")] string umacPassword = \"\",\n            [Description(\"umacUserType: Project (default) or Global (UMC user).\")] string umacUserType = \"\")",
+      "signature": "public CallToolResult OpenProjectV4(\n            [Description(\"path: defines the path where to the project/session\")] string path,\n            [Description(\"closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.\")] bool closeForeignProject = false,\n            [Description(\"umacUserName: optional user for a UMAC-protected project (Projects.OpenWithUpgrade(file, UmacDelegate)); give it together with umacPassword.\")] string umacUserName = \"\",\n            [Description(\"umacPassword: password of umacUserName; converted to SecureString, never logged or echoed. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.\")] string umacPassword = \"\",\n            [Description(\"umacUserType: Project (default) or Global (UMC user).\")] string umacUserType = \"\")",
       "parameters": {
         "path": {
           "type": "string",
@@ -744,7 +744,7 @@
         "umacPassword": {
           "type": "string",
           "default": "\"\"",
-          "description": "umacPassword: password of umacUserName; converted to SecureString, never logged or echoed.",
+          "description": "umacPassword: password of umacUserName; converted to SecureString, never logged or echoed. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.",
           "value": ""
         },
         "umacUserType": {
@@ -11276,7 +11276,7 @@
       "path": "src/Shared/ProjectLifecycleExchangeTools.cs",
       "owner": "ProjectLifecycleExchangeTools",
       "domain": "Project",
-      "signature": "public CallToolResult RetrieveProjectArchiveV4(\n            [Description(\"archivePath: full path of the project archive (.zap2x) on the TIA machine.\")] string archivePath,\n            [Description(\"destinationDirectory: absolute path of a new directory on the TIA machine; existing directories are refused (no merge or overwrite).\")] string destinationDirectory,\n            [Description(\"upgrade: true opens with an upgrade to the current TIA version when the file is older.\")] bool upgrade=false,\n            [Description(\"dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.\")] bool dryRun=true,\n            [Description(\"umacUserName: UMAC user of a protected archive; give it together with umacPassword. Empty for an unprotected archive.\")] string umacUserName=\"\",\n            [Description(\"umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.\")] string umacPassword=\"\",\n            [Description(\"umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.\")] string umacUserType=\"\")",
+      "signature": "public CallToolResult RetrieveProjectArchiveV4(\n            [Description(\"archivePath: full path of the project archive (.zap2x) on the TIA machine.\")] string archivePath,\n            [Description(\"destinationDirectory: absolute path of a new directory on the TIA machine; existing directories are refused (no merge or overwrite).\")] string destinationDirectory,\n            [Description(\"upgrade: true opens with an upgrade to the current TIA version when the file is older.\")] bool upgrade=false,\n            [Description(\"dryRun: true validates the archive and destination without retrieving, creating files or opening a project; false retrieves and binds the returned project.\")] bool dryRun=true,\n            [Description(\"umacUserName: UMAC user of a protected archive; give it together with umacPassword. Empty for an unprotected archive.\")] string umacUserName=\"\",\n            [Description(\"umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.\")] string umacPassword=\"\",\n            [Description(\"umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.\")] string umacUserType=\"\")",
       "parameters": {
         "archivePath": {
           "type": "string",
@@ -11309,7 +11309,7 @@
         "umacPassword": {
           "type": "string",
           "default": "\"\"",
-          "description": "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.",
+          "description": "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.",
           "value": ""
         },
         "umacUserType": {

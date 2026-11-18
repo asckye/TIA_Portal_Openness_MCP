@@ -59,6 +59,7 @@
 ## [4.0.0-beta.5] - 2026-11-16
 
 ### Added
+- Explicitly declared credential parameters accept `vault:<name>` references backed by a DPAPI CurrentUser secret vault. Every resolving call requires Workbench approval naming its destination. Previews keep references and Web previews skip login; execution resolves credentials at dispatch and scrubs native echoes. The Workbench editor follows in TIA-SAFE Part 4.
 - `PatchPlcBlockDocument` adds `setMemberComment` for DB, FB/FC interface and UDT members across all eight releases. UDT member comments are imported without verification.
 
 ### Changed

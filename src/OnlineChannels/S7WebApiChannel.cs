@@ -409,7 +409,7 @@ namespace TiaMcpServer.Runtime
             var transport = new TlsObservationHandler(handler) { OnResponse = tlsEstablished };
             var http = new HttpClient(transport)
             {
-                BaseAddress = new Uri("https://" + host + "/"),
+                BaseAddress = RuntimeChannelsLogic.S7WebEndpoint(host),
                 Timeout = TimeSpan.FromMilliseconds(budget)
             };
             var requestHandler = new ApiHttpClientRequestHandler(

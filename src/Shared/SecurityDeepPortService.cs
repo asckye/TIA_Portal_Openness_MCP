@@ -39,6 +39,13 @@ internal sealed class SecurityDeepPortService
             return new ResponseMessage { Message = "Project-global syslog requires V20 or later.", Meta = new JsonObject {
                 ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false, ["status"] = "NotSupportedOnVersion" } };
         if (!hasProject()) return JsonSerializer.Deserialize<ResponseMessage>(HardwarePortPreconditions.NoProject(request.Operation).ToJsonString())!;
+        if (request.Operation == "ManageUmcUsers" && request.Kind == "server" && request.Action == "checkConsistency"
+            && request.Faults.Count == 0 && TiaOpenness.Shared.CallJournalPayload.ReadableVaultReference(request.ServerPassword)
+            && (request.DryRun || McpServer.IsReadOnlyApprovalPreview || TiaOpenness.Shared.AuditInvocation.IsReadOnlyPreview))
+            return new ResponseMessage { Message = "preview did not log in (vault credential)", Meta = new JsonObject {
+                ["operationSuccess"] = true, ["dryRun"] = true, ["dataComplete"] = false, ["status"] = "Preview",
+                ["loggedIn"] = false, ["contactedServer"] = false, ["checkConsistencySkipped"] = true,
+                ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false } };
         bool writing = !request.DryRun && request.Action != "read" && request.Action != "checkConsistency";
         var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
         if (writing) { arguments["confirm"] = true; arguments["expectedProjectFile"] = identity(); }

@@ -89,6 +89,14 @@ HTTP 服务在鉴权之前检查所有请求的 Host 和 Origin（包括健康�
 
 本机连接记录默认位于可写交付包的 `data\config`；可用绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定数据根。无法定位交付包或其 `data` 不可写时，沿用 `%LOCALAPPDATA%\TiaPortalMcp`。首次使用新目录只复制缺失的旧记录，保留旧文件且不覆盖已有文件；HTTP 服务配置按所选版本保存为 `http-v<版本>.json`，客户端记录为 `client.json`，按端点索引的受保护密钥为 `remote-<端点摘要>.json`。这些本机记录使用当前 Windows 用户的加密保护；新客户端配置仅保存中继命令，旧配置和备份不要公开。
 
+### 密码保管库引用
+
+已声明的顶层凭据参数可以传入完整的 `vault:<name>`，例如 `ConnectOnlinePlc` 的 `password: "vault:plc1"`。名称区分大小写，长度 1–64，允许 ASCII 字母、数字、下划线、点和连字符，首字符必须是字母或数字。允许项按工具名和参数名精确匹配；嵌套 `users`、调用者自定映射键和其他参数中的 `vault:` 值会被拒绝，并返回参数指针。
+
+记录保存在数据根的 `config/secrets.vault`，密码由保存记录的 Windows 用户通过 DPAPI 加密。服务须以同一用户运行；不要向模型发送真实密码，也不要要求 MCP 读写此文件。审批摘要、计划和日志保留 `vault:plc1` 这样的引用；任何解析引用的执行都必须经过工作台审批，包括只读在线工具和批次子项，且不受普通审批开关影响。审批卡显示目标 PLC、主机或服务器；UMC 服务器从项目读取，无法确认时拒绝执行。服务通过审批后才把解析副本交给工具执行，响应和原生错误中的密码回显会被隐藏。未知名称或不可解密的保管库在审批和 worker 派发前拒绝，并指出对应参数。预览和内部预检只向工具传递引用；Web API 预览跳过登录，并报告 `preview did not log in (vault credential)`。
+
+本阶段提供存储和解析能力，工作台编辑器在 TIA-SAFE Part 4 提供；目前没有可用的工作台录入入口。现有明文密码参数仍兼容。若实际密码以 `vault:` 开头，须先把它保存为保管库条目，再使用该条目的引用。实现与验证边界见[SEC-16](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md#sec-16-机密保管库)。
+
 ### MCP 会话与 worker
 
 八个版本都由 FoundationHost 提供 MCP，每个 MCP 会话使用一个 PLC worker（`runtime/v<发布键>/worker/TiaMcp.PlcWorker.<发布键>.exe`）；交付包不再包含 V20/V21 引擎。隔离开关 `--isolate-openness` 和 `--no-isolate-openness` 已删除。使用工作台生成的宿主命令，无需选择隔离模式。
@@ -119,6 +127,8 @@ worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，
 Foundation 的单项软件工具接受工程树中的精确 `softwarePath`，也接受唯一的 PLC/device 别名；`plc` 参数使用同一规则。`table` 可传 `ListPlcTagTables` 返回的精确转义路径，或唯一的单段原始 `Name`（包含中文名称）。批量块/类型导出和目录导入保留精确软件路径及组路径要求。`ExportPlcBlock`、`ExportPlcBlocks` 与 `ExportPlcTypes` 接受已有目标目录；`ExportPlcBlock` 的实际输出文件从 `data.outputFile` 读取。变量表等单项 XML 导出的路径类型不同，按当前版本的 `GetToolUsage` 核对。
 
 ## V4 结果、审批与审计
+
+UMC 类型（`umacUserType: "Global"`）的 UMAC 凭据仅在能从已绑定目标项目读取 UMC 服务器时支持保管库引用。`OpenProject` 和 `RetrieveProjectArchive` 在操作前无法从已绑定目标项目读取服务器，所以它们的 Global 用户 `umacPassword: "vault:<name>"` 始终在审批前拒绝；此限制不影响 Project 用户的保管库引用或原有明文凭据参数。
 
 每个工具结果都是 V4 信封：检查 `ok`、`data`、`error` 和 `meta`，重点读取 `meta.outcome`、`meta.execution`、`meta.completeness` 与分页字段。遇到 `OUTCOME_UNKNOWN` 时先检查工程实际状态，按要求重置会话，不要自动重放写操作。D1 原生行为目前仍为 `current`、L5 为 `NOT RUN`；离线测试不会改变真机验收状态。
 

@@ -8,11 +8,13 @@ using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
 using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
 using WriteDigest = toolpipeline::TiaMcp.FoundationHost.WriteDigest;
 using UnifiedInputAdmission = toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService;
+using VaultArguments = toolpipeline::TiaMcpServer.ModelContextProtocol.SecretVaultArguments;
 #else
 using DeclaredHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
 using UnifiedInputAdmission = TiaMcpServer.Siemens.Services.UnifiedPortService;
+using VaultArguments = TiaMcpServer.ModelContextProtocol.SecretVaultArguments;
 #endif
 using SchemaHintsLogic = TiaMcpServer.ModelContextProtocol.SchemaHintsLogic;
 using System.Text.Json;
@@ -164,7 +166,9 @@ internal sealed class FoundationV4Tool : McpServerTool
         var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
         bool write = IsApprovalWrite(arguments);
         var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
+        bool vaultApproval = VaultArguments.RequiresApproval(tool.Name, JsonSerializer.SerializeToElement(arguments), tool.InputSchema);
         settings = settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool.Name, arguments));
+        settings = VaultArguments.ApprovalSettingsFor(vaultApproval, settings);
         TiaOpenness.Shared.ApprovalOutcome? approval = null;
         string id = Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId
             ?? (sharedSession
@@ -211,6 +215,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             .Observe(id, tool.Name, ReleaseCatalogData.Releases[release].FoundationInvocationTag, release,
             inner is FoundationTool { JournalIsWrite: true }, () => JsonSerializer.Serialize(args));
         using var workerRequest = FoundationWorkerRequest.Use(id, tool.Name);
+        bool vaultResolved = false;
         JsonArray? unsettledBeforeSave = null;
         CallToolResult? ReplayRefusal()
         {
@@ -234,6 +239,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         }
         async ValueTask<CallToolResult> Recorded(CallToolResult result)
         {
+            if (vaultResolved) result = VaultArguments.Scrub(result);
             result = FoundationV4Result.RestrictArguments(result, tool.InputSchema, JsonSerializer.SerializeToElement(args));
             if (inner is FoundationTool artifactProducer)
                 artifactProducer.ControlSession
@@ -254,9 +260,12 @@ internal sealed class FoundationV4Tool : McpServerTool
             return result;
         }
         IDisposable? lane = null;
+        IDisposable? vaultScope = null;
         try
         {
             var argumentsInput = JsonSerializer.SerializeToElement(args);
+            if (VaultArguments.Validate(tool.Name, argumentsInput) is { } vaultError)
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, vaultError));
             if (tool.Name == "GetNativeInvocationLog" && TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.PagingError(argumentsInput) is { } paging)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, paging));
             if (UnifiedInputAdmission.ValidateNavigation(tool.Name, tool.InputSchema, argumentsInput) is { } navigationError)
@@ -326,15 +335,21 @@ internal sealed class FoundationV4Tool : McpServerTool
             {
                 using var recoveryLane = await recoveryTool.AcquireLane(cancellationToken);
             }
+            bool vaultApproval = !internalPrecheck && VaultArguments.RequiresApproval(tool.Name, argumentsInput, tool.InputSchema);
+            async Task<string?> ApprovalIdentity()
+                => VaultArguments.ApprovalIdentity(tool.Name, argumentsInput, (inner as FoundationTool)?.ApprovalIdentity,
+                    vaultApproval && VaultArguments.NeedsUmcDestination(tool.Name, argumentsInput) && inner is FoundationTool umcTool
+                        ? await umcTool.ReadUmcVaultDestination(cancellationToken, VaultArguments.TargetProject(tool.Name, argumentsInput))
+                            .ConfigureAwait(false) : null);
             TiaOpenness.Shared.PendingApproval? pending = null;
             TiaOpenness.Shared.ApprovalOutcome? approval = null;
-            if (write && inner is not GenerationTool { OwnsApproval: true })
+            if ((write || vaultApproval) && inner is not GenerationTool { OwnsApproval: true })
             {
                 pending = TiaOpenness.Shared.PendingApproval
                     .Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name, JsonSerializer.Serialize(args),
-                    (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds, id);
+                    await ApprovalIdentity(), settings.TimeoutSeconds, id);
                 audit?.RecordRequest(pending.PlanHash);
-                if (HostBehavior.NeedsPrecheck(internalPrecheck, write, settings.Enabled, true))
+                if (HostBehavior.NeedsPrecheck(internalPrecheck, write || vaultApproval, settings.Enabled, true))
                 {
                     var precheckArguments = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
                     bool hasPreview = tool.InputSchema.GetProperty("properties").TryGetProperty("dryRun", out _);
@@ -408,13 +423,20 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, queuedExpiry, true));
             if (approval != null && !approval.Disabled && pending!.ArgumentDigest != TiaOpenness.Shared.PendingApproval
                     .Create(ReleaseCatalogData.Releases[release].FoundationInvocationTag, release, tool.Name,
-                    JsonSerializer.Serialize(args), (inner as FoundationTool)?.ApprovalIdentity, settings.TimeoutSeconds).ArgumentDigest)
+                    JsonSerializer.Serialize(args), await ApprovalIdentity(), settings.TimeoutSeconds).ArgumentDigest)
             {
                 await TiaOpenness.Shared.ApprovalClient.Complete(approval, "rejected-before-operation");
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     new Error("Target changed while awaiting confirmation.", new ConfirmationRequiredDetails("denied", pending.PlanHash, id))));
             }
+            using var vaultApprovalScope = VaultArguments.Approved(tool.Name, JsonSerializer.SerializeToElement(args), approval);
             var adapted = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
+            var vaultFailure = VaultArguments.Prepare(tool.Name, JsonSerializer.SerializeToElement(args),
+                !VaultArguments.IsPreview(JsonSerializer.SerializeToElement(args), tool.InputSchema, internalPrecheck),
+                out var resolved, out vaultResolved);
+            if (vaultFailure != null) return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, vaultFailure));
+            vaultScope = vaultResolved ? VaultArguments.Begin(JsonSerializer.SerializeToElement(args), resolved) : null;
+            if (vaultResolved) adapted = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(resolved.ToJsonString())!;
             if (parameter != null)
             {
                 var input = convert!(args[parameter]);
@@ -451,6 +473,9 @@ internal sealed class FoundationV4Tool : McpServerTool
                         new Error(sharedSession ? "Request cancelled before dispatch." : "Request cancelled before completion.",
                             new CancelledDetails(sharedSession ? "tool-queue" : "host"))));
         }
+        catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex) when (ex.Condition == "vault-destination-unavailable")
+        { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
+            new Error(ex.Message, new PreconditionFailedDetails(ex.Condition, null)))); }
         catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
         { return await Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (WorkerOperationException ex) when (ex.Condition == "worker-call-running")
@@ -462,7 +487,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             FoundationV4Result.Invalid((ex as ArgumentException)?.ParamName ?? ""))); }
         catch (Exception) /* swallow(privacy): return a value-free V4 failure; implementation details are not protocol data */
         { return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
-        finally { lane?.Dispose(); }
+        finally { vaultScope?.Dispose(); lane?.Dispose(); }
     }
 
     internal static Error? SoftwareUnitCapabilityError(string release, string tool, IReadOnlyDictionary<string, JsonElement> args)

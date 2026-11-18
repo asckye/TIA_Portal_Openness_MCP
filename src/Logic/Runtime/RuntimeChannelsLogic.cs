@@ -222,23 +222,50 @@ namespace TiaMcpServer.Runtime
         // always uses https), as is any path. Returns the normalised "host[:port]".
         public static string NormalizeS7WebHost(string? host)
         {
+            if (host != null && host.Any(character => character > 127))
+                throw new ArgumentException("host must contain only ASCII characters.");
             string h = (host ?? "").Trim();
             if (h.Length == 0) throw new ArgumentException("host is empty; give the CPU web server address, e.g. '192.168.0.1' or 'plc.local:443'.");
             if (h.Contains("://"))
                 throw new ArgumentException("host must not contain a scheme; the S7 Web API is always https. Give '192.168.0.1' or 'host:port'.");
             if (h.Contains("/") || h.Contains("\\") || h.Contains(" ") || h.Contains("?") || h.Contains("#"))
                 throw new ArgumentException("host must be a bare host name or IP with optional :port (no path, no spaces).");
-            int colon = h.LastIndexOf(':');
-            if (colon > 0 && !h.StartsWith("[", StringComparison.Ordinal))
-            {
-                if (!int
-                        .TryParse(h.Substring(colon + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
-                            out int port)
-                        || port < 1 || port > 65535)
-                    throw new ArgumentException("host port must be 1..65535.");
-            }
+            _ = CheckedCredentialEndpoint("https://" + h + "/");
             return h;
         }
+
+        public static Uri S7WebEndpoint(string host)
+            => CheckedCredentialEndpoint("https://" + NormalizeS7WebHost(host) + "/");
+
+        // Check the authority as text before accepting Uri's canonical host and port.
+        public static Uri CheckedCredentialEndpoint(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url) || url.IndexOf('@') >= 0 || url.IndexOf('\\') >= 0
+                || url.Any(character => char.IsWhiteSpace(character) || char.IsControl(character))
+                || !Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != "https" && uri.Scheme != "http"
+                || uri.UserInfo.Length != 0 || uri.Host.Length == 0)
+                throw new ArgumentException("Credential destination must be an unambiguous HTTP(S) endpoint without userinfo.");
+            int start = url.IndexOf("://", StringComparison.Ordinal) + 3;
+            int end = url.IndexOfAny(new[] { '/', '?', '#' }, start);
+            string authority = end < 0 ? url.Substring(start) : url.Substring(start, end - start);
+            string host = authority;
+            int port = uri.Scheme == "https" ? 443 : 80;
+            int separator = authority.StartsWith("[", StringComparison.Ordinal) ? authority.IndexOf(']') + 1 : authority.LastIndexOf(':');
+            if (separator > 0 && separator < authority.Length)
+            {
+                if (authority[separator] != ':' || !int.TryParse(authority.Substring(separator + 1), NumberStyles.None,
+                    CultureInfo.InvariantCulture, out port) || port < 1 || port > 65535)
+                    throw new ArgumentException("Credential destination port must be 1..65535.");
+                host = authority.Substring(0, separator);
+            }
+            if (host.Any(character => character > 127) || !string.Equals(uri.Host, uri.IdnHost, StringComparison.Ordinal)
+                || !string.Equals(host, uri.Host, StringComparison.OrdinalIgnoreCase) || port != uri.Port)
+                throw new ArgumentException("Parsed credential destination differs from the checked host or port.");
+            return uri;
+        }
+
+        public static string CredentialAuthority(Uri endpoint)
+            => endpoint.IdnHost + ":" + endpoint.Port.ToString(CultureInfo.InvariantCulture);
 
         public static string S7WebSessionKey(string host, string username, bool ignoreCertificateErrors)
             => host.ToLowerInvariant() + "|" + username + "|" + (ignoreCertificateErrors ? "insecure" : "verified");

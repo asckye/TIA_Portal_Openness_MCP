@@ -245,7 +245,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (node is JsonObject obj)
                 foreach (var pair in obj.ToArray())
                 {
-                    if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase))
+                    if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0
+                        || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)
+                            && !(pair.Value is JsonValue reference && reference.TryGetValue<string>(out var referenceText)
+                                && TiaOpenness.Shared.CallJournalPayload.ReadableVaultReference(referenceText)))
                         obj.Remove(pair.Key);
                     else Clean(pair.Value);
                 }

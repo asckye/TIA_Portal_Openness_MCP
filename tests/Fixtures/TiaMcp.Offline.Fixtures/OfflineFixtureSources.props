@@ -9,6 +9,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/ToolPipeline/ModelContextProtocol/ToolExamples.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/ToolPipeline/ModelContextProtocol/Tools/ImportStagingTools.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/ToolPipeline/ModelContextProtocol/Tools/McpServer.Approval.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../src/ToolPipeline/ModelContextProtocol/Tools/McpServer.SecretVault.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/ToolPipeline/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/ToolPipeline/ModelContextProtocol/Tools/McpServer.VersionPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../src/ToolPipeline/ModelContextProtocol/Tools/ToolDescriptor.cs" />

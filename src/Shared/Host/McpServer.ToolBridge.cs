@@ -160,6 +160,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static async Task<CallToolResult> CallToolCoreAsync(string name, ToolArguments? arguments, Func<Task<CallToolResult?>>? beforeDispatch = null)
         {
+            var vaultAdmission = SecretVaultArguments.Validate(name, (arguments ?? EmptyArguments()).Json);
+            if (vaultAdmission != null) return V4Reject(name, vaultAdmission);
 #if TIA_ENGINE_HOST
             arguments = TiaMcp.FoundationHost.CanonicalParameterTool.ApplyDefaults(name, arguments ?? EmptyArguments(), out var defaultError);
             if (defaultError != null) return V4Reject(name, defaultError);
@@ -192,8 +194,7 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
             bool write = AllToolDescriptors(includeUnavailable: true).TryGetValue(name ?? "", out _)
                 && ApprovalWrite(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
-            bool disabled = write && McpApprovalContext.Value
-                && !EffectiveApprovalSettings(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText()).Enabled;
+            bool disabled = McpApprovalContext.Value && ApprovalDisabled(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText());
             string requestId = Meta.Correlate(InvocationJournal.CorrelationId);
             using var audit = TiaOpenness.Shared.AuditInvocation.Begin(write, McpServer.InvocationHostTag, ReleaseKey, name ?? "", requestId);
             var fenced = write ? GenerationFenceRefusal(name ?? "", (arguments ?? EmptyArguments()).Json.GetRawText()) : null;
@@ -218,7 +219,33 @@ namespace TiaMcpServer.ModelContextProtocol
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
             bool issued = false;
             try { return AuditBridgeResult(audit, await BridgeWait.On(ApprovedBridgeCallAsync(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
-                async () => { issued = true; return (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result; },
+                async () =>
+                {
+                    // Foundation implementations own their innermost approval/body boundary.
+                    if (SecretVaultArguments.ForwardsArguments(name) || CatalogView.Find(name)?.Execution == "foundation")
+                    { issued = true; return (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result; }
+                    var original = (arguments ?? EmptyArguments()).Json;
+                    var vaultError = SecretVaultArguments.Prepare(name, original,
+                        !SecretVaultArguments.IsPreview(original, CatalogView.Find(name)!.Tool.InputSchema), out var resolved, out bool changed);
+                    if (vaultError != null) return V4Reject(name, vaultError);
+                    using var vaultScope = changed ? SecretVaultArguments.Begin(original, resolved) : null;
+                    try
+                    {
+                        if (changed)
+                        {
+                            var bindingError = ToolInvoker.Bind(name, new ToolArguments(JsonSerializer.SerializeToElement(resolved)), out call);
+                            if (bindingError != null) return SecretVaultArguments.Scrub(V4Reject(name, bindingError));
+                        }
+                        issued = true;
+                        var result = (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result;
+                        return changed ? SecretVaultArguments.Scrub(result) : result;
+                    }
+                    catch (Exception failure)
+                    {
+                        var result = TargetFailure(name, failure, issued);
+                        return changed ? SecretVaultArguments.Scrub(result) : result;
+                    }
+                },
                     beforeDispatch)).ConfigureAwait(false), disabled); }
             catch (OperationCanceledException) when (!issued) /* swallow(privacy): typed cancellation before dispatch does not expose exception text */
             { return AuditBridgeResult(audit, V4TargetReject(name, new Error("The request was cancelled before dispatch.",

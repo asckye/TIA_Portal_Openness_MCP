@@ -176,6 +176,8 @@ namespace TiaMcpServer.ModelContextProtocol
             // Otherwise keep the order: typed families, the argument budget,
             // then BindV4Call (duplicates, release, typed contract, binding).
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
+            if (SecretVaultArguments.Validate(name, arguments) is { } vaultError)
+            { result = V4Reject(name, vaultError); return; }
             var error = name is "GetOpcUaAccessControl" or "ManageOpcUaAccessControl" && VersionToolProblem(name) is { Length: > 0 } unavailable
                 ? new Error(unavailable, new UnsupportedCapabilityDetails(ReleaseKey, name, null))
                 : ToolInvoker.ValidateArguments(method, arguments, method.Tool.InputSchema, typedFamiliesOnly: true);

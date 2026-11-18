@@ -418,7 +418,7 @@ public sealed partial class PipelineTests
         public IReadOnlyList<ToolDescriptor> Lite => All.Values.ToArray();
         public JsonArray BehaviorCapabilities { get; }
         public ToolDescriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var value) ? value : null;
-        internal Catalog(string release, bool all, string? workerTool = null)
+        internal Catalog(string release, bool all, string? workerTool = null, string? batchReadTool = null)
         {
             var root = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", release + ".json")))!;
             var names = new[] { "SaveProject", "GetSessionState", "GetCallResult", "ListExportHandles", "CallTool", "GetOpennessWorkerStatus",
@@ -426,16 +426,19 @@ public sealed partial class PipelineTests
             var declared = root["tools"]!.AsArray().Where(t => all || names.Contains((string)t!["name"]!)).Select(t => {
                 string name = (string)t!["name"]!;
                 var schema = JsonSerializer.SerializeToElement(t["inputSchema"]);
-                var parameters = schema.GetProperty("properties").EnumerateObject().Select(p => new ToolParameterDescriptor(p.Name, "integer",
-                    p.Name is "offset" or "limit" or "take" ? "System.Int32" : p.Name is "confirmRestart" or "dryRun" ? "System.Boolean"
-                    : p.Name == "arguments"
-                        ? typeof(ToolArguments).FullName! : "System.String",
+                var parameters = schema.GetProperty("properties").EnumerateObject().Select(p => new ToolParameterDescriptor(p.Name,
+                    p.Value.TryGetProperty("type", out var kind) ? kind.GetString()! : "object",
+                    p.Name == "arguments" ? typeof(ToolArguments).FullName! : p.Name == "operations" ? typeof(ToolCall[]).FullName!
+                    : p.Value.TryGetProperty("type", out var type) ? type.GetString() switch {
+                        "integer" => "System.Int32", "boolean" => "System.Boolean", "number" => "System.Double",
+                        "array" or "object" => typeof(JsonElement).FullName!, _ => "System.String" } : typeof(JsonElement).FullName!,
                     false, null, null, "", false, Array.Empty<string>())).ToArray();
                 var classification = ToolMetadata.Find(name)!;
                 return new ToolDescriptor(name, "", new Tool { Name = name, InputSchema = schema },
                     new ToolDescriptorClassification(classification.Layer, classification.Domain,
-                            name == workerTool ? "READ" : classification.Operation, classification.BatchRead, classification.BatchWrite),
-                    name + "()", parameters, new ToolDryRunDescriptor(false, true), null,
+                            name == workerTool ? "READ" : classification.Operation, classification.BatchRead || name == batchReadTool, classification
+                                .BatchWrite),
+                    name + "()", parameters, new ToolDryRunDescriptor(schema.GetProperty("properties").TryGetProperty("dryRun", out _), true), null,
                     name == workerTool ? "worker" : ToolExecution.Table[name]);
             }).ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
             DeclaredToolMetadata.Create("GetCallResult", typeof(McpServer).GetMethod(nameof(McpServer.GetCallResult))!,
@@ -455,12 +458,12 @@ public sealed partial class PipelineTests
         internal Worker Worker { get; } = new();
         internal Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>> Wait =
             (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null));
-        internal Fixture(string release = "21", bool all = false, string? workerTool = null)
+        internal Fixture(string release = "21", bool all = false, string? workerTool = null, string? runtimeRelease = null, string? batchReadTool = null)
         {
             Environment.SetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY", Path.Combine(AppContext.BaseDirectory, "fixture-data"));
             previous = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
-            EngineHostConfiguration.ReleaseKey = release; EngineHostConfiguration.Worker = Worker;
-            Catalog = new Catalog(release, all, workerTool);
+            EngineHostConfiguration.ReleaseKey = runtimeRelease ?? release; EngineHostConfiguration.Worker = Worker;
+            Catalog = new Catalog(release, all, workerTool, batchReadTool);
             McpServer.ConfigureToolBridge(Catalog, new WorkerToolInvoker(Catalog, Worker, lifetime), () => true, new HashSet<string>(Catalog.All.Keys));
             InvocationJournal.BindingSnapshot = () => Worker.Binding as JsonObject;
             InvocationJournal.ConfigureOutput(_ => { });
@@ -483,13 +486,25 @@ public sealed partial class PipelineTests
             : method.ReturnType == typeof(IServiceProvider) ? new EmptyServices() : null;
         private sealed class EmptyServices : IServiceProvider { public object? GetService(Type type) => null; }
     }
-    private sealed class Worker : IEngineWorker
+    private sealed class Worker : IEngineWorker, IHostToolServices
     {
         internal bool Unknown, Native, Limited;
+        internal string? UmcDestination;
+        internal readonly List<JsonObject> DestinationReads = new();
+        public Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)
+            => throw new InvalidOperationException("No host observation expected.");
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            Assert.Equal("project-security.ExecuteSecurityDeep", operation);
+            DestinationReads.Add(arguments.DeepClone().AsObject());
+            return Task.FromResult<JsonNode?>(new JsonObject { ["Meta"] = new JsonObject { ["vaultDestination"] = UmcDestination } });
+        }
         internal bool NativeFailure;
         internal string? NativeFailureMessage;
         internal JsonObject? BatchStatus;
         internal string? Payload;
+        internal Func<Exception>? ThrowAfterResolution;
+        internal readonly List<(string Name, JsonObject Arguments, bool Preview, bool ReadOnlyScope)> Dispatches = new();
         internal bool Yield;
         internal Action<string>? Event;
         internal bool Ready = true;
@@ -523,6 +538,8 @@ public sealed partial class PipelineTests
             Event?.Invoke("invoke");
             if (Yield) await Task.Yield();
             Calls.Add(name); Started.TrySetResult();
+            Dispatches.Add((name, arguments.DeepClone().AsObject(), preview, McpServer.IsReadOnlyApprovalPreview || AuditInvocation.IsReadOnlyPreview));
+            if (!preview && ThrowAfterResolution != null) throw ThrowAfterResolution();
             if (Hold != null) await Hold.Task;
             bool nativeFailure = NativeFailure && !preview;
             if (nativeFailure && NativeFailureMessage != null)

@@ -36,7 +36,9 @@ internal sealed class ProjectLifecycleExchangeTools
                 "archive.")] string umacUserName=
                 "",
             [Description("umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the " +
-                "approval card.")] string umacPassword=
+                "approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot " +
+                    "be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the " +
+                    "server can be read from the bound project.")] string umacPassword=
                 "",
             [Description("umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and " +
                 "umacPassword.")] string umacUserType=
