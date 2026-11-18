@@ -3004,63 +3004,6 @@
     },
     {
       "rule": "CA5392",
-      "path": "src/Shared/HttpAccessKeyStore.cs",
-      "line": 37,
-      "column": 36,
-      "endLine": 37,
-      "endColumn": 52,
-      "message": "The method CryptProtectData didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
-      "member": "TiaOpenness . Shared/HttpAccessKeyStore/CryptProtectData( ref Blob input , IntPtr description , IntPtr entropy , IntPtr reserved , IntPtr prompt , int flags , out Blob output )",
-      "anchor": "CryptProtectData ",
-      "fingerprint": "8e02ba9b56ad8a7c22875e71fa35e0c585249b3e2a586d6caab7d3fe6ca91c00",
-      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
-      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
-      "contexts": [
-        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
-        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
-        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
-      ]
-    },
-    {
-      "rule": "CA5392",
-      "path": "src/Shared/HttpAccessKeyStore.cs",
-      "line": 41,
-      "column": 36,
-      "endLine": 41,
-      "endColumn": 54,
-      "message": "The method CryptUnprotectData didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
-      "member": "TiaOpenness . Shared/HttpAccessKeyStore/CryptUnprotectData( ref Blob input , IntPtr description , IntPtr entropy , IntPtr reserved , IntPtr prompt , int flags , out Blob output )",
-      "anchor": "CryptUnprotectData ",
-      "fingerprint": "ac1e7e8be63d3108b3f7aff7ddcb52c5727f6fe94ef7dddc8739c0e11eb7f877",
-      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
-      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
-      "contexts": [
-        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
-        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
-        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
-      ]
-    },
-    {
-      "rule": "CA5392",
-      "path": "src/Shared/HttpAccessKeyStore.cs",
-      "line": 44,
-      "column": 38,
-      "endLine": 44,
-      "endColumn": 47,
-      "message": "The method LocalFree didn\u0027t use DefaultDllImportSearchPaths attribute for P/Invokes.",
-      "member": "TiaOpenness . Shared/HttpAccessKeyStore/LocalFree( IntPtr memory )",
-      "anchor": "LocalFree ",
-      "fingerprint": "17998858104769b39c41f158f436323510acc7bf3c2e17b8cd3db8891940825e",
-      "reason": "existing P/Invoke: declared before this rule was enabled; recorded once under maintainer decision D1",
-      "retirement": "after beta.4: add DefaultDllImportSearchPaths to each declaration",
-      "contexts": [
-        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
-        "ordinary|src/Studio/Gui/TiaOpenness.Gui.csproj|net10.0-windows|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE,WINDOWS,WINDOWS7_0,WINDOWS7_0_OR_GREATER",
-        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
-      ]
-    },
-    {
-      "rule": "CA5392",
       "path": "src/Shared/JournalFileLock.cs",
       "line": 54,
       "column": 36,
