@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V15.1" />
+  <DocumentInfo><Created>2026-05-12T00:00:00.0000000Z</Created><ExportSetting>None</ExportSetting><InstalledProducts /></DocumentInfo>
+  <SW.Blocks.GlobalDB ID="0">
+    <AttributeList>
+      <Interface>
+        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v3">
+          <Section Name="Static">
+            <Member Name="Enabled" Datatype="Bool"><StartValue>false</StartValue></Member>
+            <Member Name="DefaultInt" Datatype="Int" />
+            <Member Name="电机/运行%2F" Datatype="Bool"><StartValue>true</StartValue></Member>
+            <Member Name="Motor" Datatype="Struct">
+              <Member Name="Config" Datatype="Struct">
+                <Member Name="Speed" Datatype="Real"><StartValue>1.5</StartValue></Member>
+              </Member>
+            </Member>
+            <Member Name="Samples" Datatype="Array[0..1] of Int"><Subelement Path="0"><StartValue>3</StartValue></Subelement></Member>
+            <Member Name="Locked" Datatype="Int" Informative="true"><StartValue>7</StartValue></Member>
+            <Member Name="Inherited" Datatype="Struct" Informative="true"><Member Name="Value" Datatype="Int" /></Member>
+            <Member Name="LockedValue" Datatype="Int"><StartValue Informative="true">9</StartValue></Member>
+            <Member Name="Typed" Datatype="&quot;MotorType&quot;" />
+            <Member Name="Clock" Datatype="DTL" />
+          </Section>
+        </Sections>
+      </Interface>
+      <MemoryLayout>Standard</MemoryLayout>
+      <Name>DB_HMI_Interface</Name>
+      <Namespace />
+      <Number>200</Number>
+      <ProgrammingLanguage>DB</ProgrammingLanguage>
+    </AttributeList>
+  </SW.Blocks.GlobalDB>
+</Document>

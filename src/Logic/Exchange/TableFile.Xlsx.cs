@@ -144,6 +144,7 @@ namespace TiaMcp.Logic.Exchange
                 var sheetData = Load(Target(relation)).Root!.Element(SheetNs + "sheetData")
                     ?? throw Error(file, 1, 1, "Missing worksheet data.");
                 var rows = new List<string[]>(); int previousRow = 0, width = 0, pendingEmptyRows = 0;
+                var sourceRows = new List<int>();
                 long logicalCharacters = 0;
                 foreach (var row in sheetData.Elements(SheetNs + "row"))
                 {
@@ -194,14 +195,18 @@ namespace TiaMcp.Logic.Exchange
                         var extra = cells.FirstOrDefault(cell => cell.Key > width && cell.Value.Length != 0);
                         if (extra.Key != 0) throw Error(file, r, extra.Key, "Row width exceeds header.");
                         if ((long)rows.Count + pendingEmptyRows > MaximumRows) throw Error(file, r, 1, "More than 10000 data rows.");
-                        while (pendingEmptyRows > 0) { rows.Add(Enumerable.Repeat("", width).ToArray()); pendingEmptyRows--; }
+                        while (pendingEmptyRows > 0)
+                        {
+                            sourceRows.Add(r - pendingEmptyRows); rows.Add(Enumerable.Repeat("", width).ToArray()); pendingEmptyRows--;
+                        }
                         rows.Add(Enumerable.Range(1, width).Select(c => cells.TryGetValue(c, out var value) ? value : "").ToArray());
+                        sourceRows.Add(r);
                         if (rows.Count > MaximumRows + 1) throw Error(file, r, 1, "More than 10000 data rows.");
                     }
                     else if (rows.Count != 0 && emptyRows == EmptyTableRows.TrimTrailing) pendingEmptyRows++;
                     previousRow = r;
                 }
-                var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1));
+                var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1), sourceRows.Skip(1), sourceRows.FirstOrDefault());
                 Validate(table, file, 32767); return table;
             }
             catch (Exception ex) when (ex is InvalidDataException || ex is XmlException || ex is InvalidOperationException

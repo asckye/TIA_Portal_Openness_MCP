@@ -106,40 +106,57 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "ConvertEngineeringTable"),
-            Description("[L2][PLC-Builders][FILE] Offline conversion: kind plcTagTable or rows; direction toTable or fromTable. " +
+            Description("[L2][PLC-Builders][FILE] Offline conversion: kind plcTagTable, dataBlockStartValues or rows; direction toTable or fromTable. " +
                 "plcTagTable uses one exported SimaticML table; fromTable requires its templatePath. Fixed columns Kind, Name, DataType, Address, " +
                 "Value, then template scalar attributes in first-seen order and Comment[culture] ordered by culture. Culture syntax " +
                 "^[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}$. Kind is Tag, Constant or read-only SystemConstant; (Kind,Name) is an exact key, " +
                 "never renamed. Merge updates/adds rows; omitted rows are kept, empty editable cells remove attributes/comments to TIA defaults. " +
                 "Unknown columns, case-insensitive name collisions and Kind changes refuse. Constants never emit ExternalAccessible. " +
-                "Header, DocumentInfo and unrelated XML are preserved. Delete explicitly through " +
+                "dataBlockStartValues accepts one non-library global DB: columns Section, MemberPath, DataType, StartValue; exact section/path keys, " +
+                "encoded path segments (split then decode), unchanged DataType, no new members. Elementary scalar members are listed; " +
+                "arrays, structs, UDT/FB types and read-only/informative members are excluded and counted in notEditable. " +
+                "References (ConstantName) and bulk (IsBulkValue) are excluded; notEditableReasons lists each excluded member and reason. " +
+                "Existing plain literals also allow HW_IO, HW_ANY, HW_DEVICE, HW_MODULE, HW_SUBMODULE, DB_ANY and String/WString[constant]; " +
+                "these types require an existing value. DB edits validate and normalize typed literals before planning: Bool true/false, " +
+                "range-checked decimal integers (radix only when evidenced by that member's export), invariant Real/LReal, prefixed time/date " +
+                "literals, and quoted Char/String. Precision loss refuses with a suggested value. Empty DB cells cannot reset to the default; " +
+                "new type-default values refuse because TIA omits them on export; existing explicit defaults may remain unchanged. Missing StartValue " +
+                "may be added for elementary scalars; omitted rows remain unchanged. The file route allows 10000 rows, including over 100 edits; " +
+                "PatchPlcBlockDocument retains its 100-change/existing-StartValue rule. Header, DocumentInfo and unrelated XML are preserved. " +
+                "Delete explicitly through " +
                 "ManagePlcTagDefinition/ApplyToolBatch. rows toTable accepts 1..1000 flat scalar objects and optional column order; " +
                 "fromTable returns strings with offset/limit 1..200 (default 50), columns, total and V4 paging; writes no file. " +
                 "CSV is UTF-8 BOM, comma, all cells quoted with doubled quotes and LF; accepts no BOM and CR/LF/CRLF; rejects NUL, broken quotes, " +
-                "uneven nonempty rows and empty/duplicate headers. plcTagTable ignores every empty row; rows trims only trailing empty rows. " +
+                "uneven nonempty rows and empty/duplicate headers. XML kinds ignore every empty row; rows trims only trailing empty rows. " +
                 "Trailing empty styled XLSX cells are ignored. CSV export adds one apostrophe before = + - @, tab or CR, including when preceded " +
                 "by leading apostrophes; import removes exactly one such prefix. XLSX preserves apostrophes unchanged without a formula guard. " +
                 "Use XLSX when Excel's locale uses semicolon separators. " +
-                "XLSX uses one sheet PlcTagTable/Rows, all inline text cells; reads that sheet or the only sheet, shared/inline strings, raw numbers, " +
+                "XLSX uses one sheet PlcTagTable/DataBlockStartValues/Rows, all inline text cells; reads that sheet or the only sheet, shared/inline " +
+                    "strings, raw numbers, "
+                    +
                 "booleans and formula cached values; refuses formulas without cache, errors, ambiguous sheets, .xls/.xlsm and encrypted files. " +
+                "Errors retain original CSV physical line/XLSX row numbers, including skipped empty rows. " +
                 "Limits: 16 MiB uncompressed, 10000 data rows, 1024 columns, 65536 CSV/32767 XLSX characters per cell, 64 Mi logical XLSX characters. " +
                 "Default dryRun=true validates and previews columns/counts, changes (first 50 old/new rows) and planned exportFile without writing. " +
                 "false creates a new file, never overwrites; returns path, bytes and SHA-256. Omitted exportFile uses the session output directory, " +
-                "with stable name ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. " +
+                "with stable name ConvertEngineeringTable.<encoded source table/block name>.<ext> (Rows for rows), identical in preview and execution. " +
                 "If it exists, pass exportFile with a new file path; no automatic suffix or overwrite. " +
-                "Output extension must match format (xlsx default/csv), or xml for plcTagTable fromTable. Import the XML with ImportPlcTagTable " +
+                "Output extension must match format (xlsx default/csv), or xml for XML fromTable. For dataBlockStartValues use ImportPlcBlockVerified " +
+                    "preview with evidenceDirectory, then execute with its "
+                    +
+                "previewToken; GetPlcBlockEditCapabilities readback and compile. For plcTagTable import the XML with ImportPlcTagTable " +
                 "overwrite=true after preview/approval, binding folderPath to the original table folder; then ListPlcTags readback and compile " +
                 "affected blocks. No TIA calls, imports or compilation.")]
         public CallToolResult ConvertEngineeringTableV4(
-            [Description("plcTagTable | rows.")] string kind,
+            [Description("plcTagTable | dataBlockStartValues | rows.")] string kind,
             [Description("toTable | fromTable.")] string direction,
-            [Description("Absolute input XML for plcTagTable toTable, or .csv/.xlsx for fromTable.")] string inputPath = "",
-            [Description("Original exported tag table XML; required for plcTagTable fromTable.")] string templatePath = "",
+            [Description("Absolute input XML for plcTagTable/dataBlockStartValues toTable, or .csv/.xlsx for fromTable.")] string inputPath = "",
+            [Description("Original exported tag table/global DB XML; required for XML fromTable.")] string templatePath = "",
             [Description("1..1000 flat scalar objects for rows toTable; numbers use invariant text, booleans true/false, null empty.")]
                 JsonElement[]? rows = null,
             [Description("Optional unique column order for rows toTable; must include every supplied property.")] string[]? columns = null,
             [Description("xlsx | csv for toTable; default xlsx, text cells preserve addresses and leading zeros.")] string format = "xlsx",
-            [Description("New absolute .xlsx/.csv output, or .xml for plcTagTable fromTable; omitted uses the session directory and stable encoded table name. "
+            [Description("New absolute .xlsx/.csv output, or .xml for XML fromTable; omitted uses the session directory and stable encoded table name. "
                         +
                 "Pass a new exportFile if the default exists.")]
                 string exportFile = "",
@@ -157,7 +174,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun = true)
             => OfflineToolExecution.RunOfflineAnalysisTool("ConvertEngineeringTable", meta => {
                 meta["mayHaveChanged"] = false;
-                if (kind != "plcTagTable" && kind != "rows") throw new ArgumentException("Expected plcTagTable or rows.", nameof(kind));
+                if (kind != "plcTagTable" && kind != "dataBlockStartValues" && kind != "rows")
+                    throw new ArgumentException("Expected plcTagTable, dataBlockStartValues or rows.", nameof(kind));
                 if (direction != "toTable" && direction != "fromTable") throw new ArgumentException("Expected toTable or fromTable.", nameof(direction));
                 T Checked<T>(string file, string parameter, Func<T> action)
                 {
@@ -185,8 +203,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     return File.ReadAllBytes(path);
                 }
                 System.Xml.Linq.XDocument Xml(string path, string parameter)
-                    => PlcTagTableExchange.Parse(Encoding.UTF8.GetString(Read(path, parameter)).TrimStart('\ufeff'));
-                string sheet = kind == "plcTagTable" ? "PlcTagTable" : "Rows";
+                    => kind == "dataBlockStartValues"
+                        ? DataBlockStartValueExchange.Parse(Encoding.UTF8.GetString(Read(path, parameter)).TrimStart('\ufeff'))
+                        : PlcTagTableExchange.Parse(Encoding.UTF8.GetString(Read(path, parameter)).TrimStart('\ufeff'));
+                string sheet = kind == "plcTagTable" ? "PlcTagTable" : kind == "dataBlockStartValues" ? "DataBlockStartValues" : "Rows";
                 TableData table;
                 byte[]? outputBytes = null;
                 var data = new JsonObject { ["kind"] = kind, ["direction"] = direction, ["dryRun"] = dryRun };
@@ -194,9 +214,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (direction == "toTable")
                 {
                     if (format != "xlsx" && format != "csv") throw new ArgumentException("Expected xlsx or csv.", nameof(format));
-                    table = kind == "plcTagTable"
-                        ? Checked(inputPath, nameof(inputPath), () => PlcTagTableExchange.ToTable(Xml(inputPath, nameof(inputPath))))
-                        : Checked(exportFile, nameof(rows), () => ScalarTable(rows, columns));
+                    if (kind == "rows") table = Checked(exportFile, nameof(rows), () => ScalarTable(rows, columns));
+                    else table = Checked(inputPath, nameof(inputPath), () => {
+                        var document = Xml(inputPath, nameof(inputPath));
+                        if (kind == "plcTagTable") return PlcTagTableExchange.ToTable(document);
+                        var reasons = DataBlockStartValueExchange.NotEditableReasons(document);
+                        data["notEditable"] = reasons.Count; data["notEditableReasons"] = reasons;
+                        return DataBlockStartValueExchange.ToTable(document);
+                    });
                     outputBytes = Checked(exportFile, nameof(exportFile), () => format == "csv"
                         ? TableFile.WriteCsv(table, exportFile) : TableFile.WriteXlsx(table, sheet, exportFile));
                 }
@@ -221,14 +246,25 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         var template = Checked(templatePath, nameof(templatePath), () => {
                             var document = Xml(templatePath, nameof(templatePath));
-                            PlcTagTableExchange.ToTable(document); return document;
+                            if (kind == "plcTagTable") PlcTagTableExchange.ToTable(document);
+                            else DataBlockStartValueExchange.ToTable(document);
+                            return document;
                         });
-                        var edited = Checked(inputPath, nameof(inputPath), () => PlcTagTableExchange.FromTable(template, table));
-                        data["changes"] = edited.Summary;
+                        var document = Checked(inputPath, nameof(inputPath), () => {
+                            if (kind == "plcTagTable")
+                            {
+                                var edited = PlcTagTableExchange.FromTable(template, table); data["changes"] = edited.Summary;
+                                return edited.Document;
+                            }
+                            var db = DataBlockStartValueExchange.FromTable(template, table); data["changes"] = db.Summary;
+                            data["notEditable"] = db.Summary["notEditable"]!.DeepClone();
+                            data["notEditableReasons"] = db.Summary["notEditableReasons"]!.DeepClone();
+                            return db.Document;
+                        });
                         outputBytes = Checked(exportFile, nameof(exportFile), () => {
                             using var buffer = new MemoryStream();
                             using (var writer = System.Xml.XmlWriter.Create(buffer, new System.Xml.XmlWriterSettings {
-                                Encoding = new UTF8Encoding(false), NewLineHandling = System.Xml.NewLineHandling.Entitize })) edited.Document.Save(writer);
+                                Encoding = new UTF8Encoding(false), NewLineHandling = System.Xml.NewLineHandling.Entitize })) document.Save(writer);
                             return buffer.ToArray();
                         });
                         if (outputBytes.Length > TableFile.MaximumBytes) throw new ArgumentException("Merged XML exceeds 16 MiB.");
@@ -253,6 +289,11 @@ namespace TiaMcpServer.ModelContextProtocol
                         ["arguments"] = new JsonObject { ["softwarePath"] = "<original PLC software path>",
                             ["folderPath"] = "<original table folder>", ["importPath"] = output.FullName,
                             ["overwrite"] = true, ["dryRun"] = true } };
+                    if (kind == "dataBlockStartValues" && direction == "fromTable") data["nextStep"] = new JsonObject {
+                        ["tool"] = "ImportPlcBlockVerified", ["requiresBinding"] = true,
+                        ["arguments"] = new JsonObject { ["softwarePath"] = "<original PLC software path>", ["blockPath"] = "<original block path>",
+                            ["importPath"] = output.FullName, ["evidenceDirectory"] = "<existing evidence directory>", ["dryRun"] = true },
+                        ["execution"] = "Review the import preview, then execute with its previewToken and the same bound arguments." };
                     if (!dryRun)
                     {
                         meta["mayHaveChanged"] = true;

@@ -5781,5 +5781,147 @@
         "expect": "After successful import, compile and readback, show the exact block to the engineer. Omit this UI-only step when TIA has no UI; never show after a refused or unknown write."
       }
     ]
+  },
+  {
+    "id": "sequence/db-start-values-excel",
+    "topic": "db-start-values-excel",
+    "purpose": "Edit global DB start values in Excel and import through the existing verified block workflow.",
+    "preconditions": "Bind softwarePath and blockPath to the same non-library global DB. Use the exact single-block ExportPlcBlock file returned by the export, new output files and an existing evidenceDirectory. Review Excel edits before conversion.",
+    "notes": "Conversion is offline and preserves omitted members. Arrays, structs, UDT/FB types and read-only/informative members are excluded. Elementary scalar defaults may acquire StartValue; 10000-row file limit permits more than 100 edits. No interface changes. Review import preview and approve execution; use its exact previewToken. No automatic retry or save. Native acceptance NOT RUN. StartValue ConstantName/IsBulkValue members are excluded with reasons. Only validated, lossless typed literals are planned; empty cells and new type-default values refuse. Existing explicit defaults may remain unchanged.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Schema and official-layout offline fixtures; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "blockPath": "DB_HMI_Interface",
+          "exportDirectory": "C:/Examples/exports",
+          "dryRun": true,
+          "confirm": false
+        },
+        "expect": "Review the exact block and planned outputFile in the existing export directory; this preview does not export."
+      },
+      {
+        "tool": "ExportPlcBlock",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "blockPath": "DB_HMI_Interface",
+          "exportDirectory": "C:/Examples/exports",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<exact projectPath from the selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>"
+        },
+        "expect": "Execute the approved export. Retain data.outputFile; for this root block it is C:/Examples/exports/DB_HMI_Interface.xml. Bind every subsequent inputPath/templatePath to that exact result. ExportPlcBlock has no expectedPlanHash parameter."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "dataBlockStartValues",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+          "dryRun": true
+        },
+        "expect": "Review columns, notEditable counts and changed rows; Excel edits only StartValue. Preview writes no file; execution creates a new file."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "dataBlockStartValues",
+          "direction": "toTable",
+          "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+          "format": "xlsx",
+          "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+          "dryRun": false
+        },
+        "expect": "Review columns, notEditable counts and changed rows; Excel edits only StartValue. Preview writes no file; execution creates a new file."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "dataBlockStartValues",
+          "direction": "fromTable",
+          "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+          "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml",
+          "exportFile": "C:/Examples/generated/DB-edited.xml",
+          "dryRun": true
+        },
+        "expect": "Review columns, notEditable counts and changed rows; Excel edits only StartValue. Preview writes no file; execution creates a new file."
+      },
+      {
+        "tool": "ConvertEngineeringTable",
+        "arguments": {
+          "kind": "dataBlockStartValues",
+          "direction": "fromTable",
+          "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+          "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml",
+          "exportFile": "C:/Examples/generated/DB-edited.xml",
+          "dryRun": false
+        },
+        "expect": "Review columns, notEditable counts and changed rows; Excel edits only StartValue. Preview writes no file; execution creates a new file."
+      },
+      {
+        "tool": "ImportPlcBlockVerified",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "blockPath": "DB_HMI_Interface",
+          "importPath": "C:/Examples/generated/DB-edited.xml",
+          "evidenceDirectory": "C:/Examples/evidence",
+          "dryRun": true
+        },
+        "expect": "Review retained backup, planned.xml and returned previewToken; no project write."
+      },
+      {
+        "tool": "ImportPlcBlockVerified",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "blockPath": "DB_HMI_Interface",
+          "importPath": "C:/Examples/generated/DB-edited.xml",
+          "evidenceDirectory": "C:/Examples/evidence",
+          "dryRun": false,
+          "previewToken": "<previewToken from matching preview>"
+        },
+        "expect": "Approve exact import; strict readback must verify the complete block. Inspect failures without replay."
+      },
+      {
+        "tool": "GetPlcBlockEditCapabilities",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "blockPath": "DB_HMI_Interface"
+        },
+        "expect": "Read back default and non-default start values and unchanged members."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "dryRun": true
+        },
+        "expect": "Review compilation scope and bound target."
+      },
+      {
+        "tool": "CompilePlcSoftware",
+        "arguments": {
+          "softwarePath": "devices/PLC_1",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "C:/Projects/Example.ap{projectExtension}"
+        },
+        "expect": "Compile explicitly and inspect diagnostics; no automatic save."
+      }
+    ]
   }
 ]

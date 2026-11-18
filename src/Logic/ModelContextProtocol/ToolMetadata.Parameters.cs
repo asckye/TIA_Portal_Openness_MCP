@@ -1560,7 +1560,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["OpenProject.umacUserName"] = new ParameterHint("\"\\u003CumacUserName\\u003E\""),
             ["OpenProject.umacPassword"] = new ParameterHint("\"\\u003CumacPassword\\u003E\""),
             ["OpenProject.umacUserType"] = new ParameterHint("\"\\u003CumacUserType\\u003E\""),
-            ["ConvertEngineeringTable.kind"] = new ParameterHint("\"plcTagTable\"", "plcTagTable", "rows"),
+            ["ConvertEngineeringTable.kind"] = new ParameterHint("\"plcTagTable\"", "plcTagTable", "dataBlockStartValues", "rows"),
             ["ConvertEngineeringTable.direction"] = new ParameterHint("\"toTable\"", "toTable", "fromTable"),
             ["ConvertEngineeringTable.inputPath"] = new ParameterHint("\"C:/Exports/Tags.xml\""),
             ["ConvertEngineeringTable.templatePath"] = new ParameterHint("\"C:/Exports/Tags.xml\""),

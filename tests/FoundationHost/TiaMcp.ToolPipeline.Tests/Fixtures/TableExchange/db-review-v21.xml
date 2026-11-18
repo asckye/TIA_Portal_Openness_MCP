@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V21" />
+  <DocumentInfo><Created>2026-05-12T00:00:00.0000000Z</Created><ExportSetting>None</ExportSetting><InstalledProducts /></DocumentInfo>
+  <SW.Blocks.GlobalDB ID="0">
+    <AttributeList>
+      <Interface>
+        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+          <Section Name="Static">
+            <Member Name="Enabled" Datatype="Bool"><StartValue>false</StartValue></Member>
+            <Member Name="DefaultInt" Datatype="Int" Remanence="Retain">
+              <AttributeList><BooleanAttribute Name="ExternalAccessible">true</BooleanAttribute></AttributeList>
+              <Comment><MultiLanguageText Lang="en-US">Retained setpoint</MultiLanguageText><MultiLanguageText Lang="zh-CN">保持设定值</MultiLanguageText></Comment>
+            </Member>
+            <Member Name="电机/运行%2F" Datatype="Bool"><StartValue>true</StartValue></Member>
+            <Member Name="Motor" Datatype="Struct">
+              <Member Name="Config" Datatype="Struct">
+                <Member Name="Speed" Datatype="Real"><StartValue>1.5</StartValue></Member>
+              </Member>
+            </Member>
+            <Member Name="Samples" Datatype="Array[0..1] of Int"><Subelement Path="0"><StartValue>3</StartValue></Subelement></Member>
+            <Member Name="Locked" Datatype="Int" Informative="true"><StartValue>7</StartValue></Member>
+            <Member Name="Inherited" Datatype="Struct" Informative="true"><Member Name="Value" Datatype="Int" /></Member>
+            <Member Name="LockedValue" Datatype="Int"><StartValue Informative="true">9</StartValue></Member>
+            <Member Name="Typed" Datatype="&quot;MotorType&quot;"><Member Name="NestedValue" Datatype="Int"><StartValue>5</StartValue></Member></Member>
+            <Member Name="Clock" Datatype="DTL" />
+            <Member Name="ConstantLiteral" Datatype="Int"><StartValue ConstantName="Limit">42</StartValue></Member>
+            <Member Name="BulkValue" Datatype="Int"><StartValue IsBulkValue="true">2(4)</StartValue></Member>
+            <Member Name="Hardware" Datatype="HW_IO"><StartValue>64</StartValue></Member>
+            <Member Name="AnyDb" Datatype="DB_ANY"><StartValue>42</StartValue></Member>
+            <Member Name="SymbolicText" Datatype="String[MaxText]"><StartValue>'alpha'</StartValue></Member>
+            <Member Name="HardwareExpression" Datatype="HW_IO"><StartValue>ModuleName</StartValue></Member>
+            <Member Name="DefaultHardware" Datatype="HW_IO" />
+          </Section>
+        </Sections>
+      </Interface>
+      <MemoryLayout>Standard</MemoryLayout>
+      <Name>DB_HMI_Interface</Name>
+      <Namespace />
+      <Number>200</Number>
+      <ProgrammingLanguage>DB</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Title"><ObjectList><MultilingualTextItem ID="2" CompositionName="Items"><AttributeList><Culture>en-US</Culture><Text>DB title</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>
+      <MultilingualText ID="3" CompositionName="Comment"><ObjectList><MultilingualTextItem ID="4" CompositionName="Items"><AttributeList><Culture>zh-CN</Culture><Text>保持注释</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>
+    </ObjectList>
+  </SW.Blocks.GlobalDB>
+</Document>

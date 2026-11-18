@@ -108,9 +108,11 @@ namespace TiaMcp.Logic.Exchange
             TableFile.Validate(table);
             var original = ToTable(template);
             foreach (string column in FixedColumns)
-                if (!table.Columns.Contains(column)) throw new ArgumentException("Missing column: " + column);
+                if (!table.Columns.Contains(column))
+                    throw TableFile.Located(new ArgumentException("Missing column: " + column), table.HeaderRowNumber, 1);
             foreach (string column in table.Columns)
-                if (!original.Columns.Contains(column)) throw new ArgumentException("Unknown template column: " + column);
+                if (!original.Columns.Contains(column)) throw TableFile.Located(new ArgumentException("Unknown template column: " + column),
+                    table.HeaderRowNumber, Array.IndexOf(table.Columns, column) + 1);
             var document = new XDocument(template);
             var items = Items(document);
             var byKey = items.ToDictionary(item => Key(Kind(item), Cell(item, "Name")), StringComparer.Ordinal);
@@ -124,13 +126,16 @@ namespace TiaMcp.Logic.Exchange
             for (int r = 0; r < table.Rows.Count; r++)
             {
                 var row = table.Rows[r]; string kind = row[kindIndex], name = row[nameIndex];
-                if (!Kinds.Contains(kind) || string.IsNullOrWhiteSpace(name)) throw TableFile.Error("table", r + 2, 1, "Invalid Kind/Name key.");
-                if (rows.ContainsKey(Key(kind, name))) throw TableFile.Error("table", r + 2, nameIndex + 1, "Duplicate row key.");
-                if (!rowNames.Add(name)) throw new ArgumentException("Name collision (case-insensitive): " + name + ".");
+                if (!Kinds.Contains(kind) || string.IsNullOrWhiteSpace(name)) throw TableFile.Error("table", table.RowNumber(r), 1, "Invalid Kind/Name key.");
+                if (rows.ContainsKey(Key(kind, name))) throw TableFile.Error("table", table.RowNumber(r), nameIndex + 1, "Duplicate row key.");
+                if (!rowNames.Add(name)) throw TableFile.Located(new ArgumentException("Name collision (case-insensitive): " + name + "."),
+                    table.RowNumber(r), nameIndex + 1);
                 if (byName.TryGetValue(name, out var named))
                 {
-                    if (Kind(named) != kind) throw new ArgumentException("Kind change refused for existing name: " + name + ".");
-                    if (Cell(named, "Name") != name) throw new ArgumentException("Name collision (case-insensitive): " + name + ".");
+                    if (Kind(named) != kind) throw TableFile.Located(new ArgumentException("Kind change refused for existing name: " + name + "."),
+                        table.RowNumber(r), kindIndex + 1);
+                    if (Cell(named, "Name") != name) throw TableFile.Located(new ArgumentException("Name collision (case-insensitive): " + name + "."),
+                        table.RowNumber(r), nameIndex + 1);
                 }
                 rows.Add(Key(kind, name), row);
             }
@@ -140,7 +145,8 @@ namespace TiaMcp.Logic.Exchange
                 .Select(item => string.Join("\0", comparedColumns.Select(c => Cell(item, c.name)))), StringComparer.Ordinal);
             foreach (var pair in rows.Where(p => !byKey.ContainsKey(p.Key)))
                 if (omittedSignatures.Contains(string.Join("\0", comparedColumns.Select(c => pair.Value[c.index]))))
-                    throw new ArgumentException("Renamed row key refused; keep the original Name and add new rows separately.");
+                    throw TableFile.Located(new ArgumentException("Renamed row key refused; keep the original Name and add new rows separately."),
+                        table.RowNumber(table.Rows.IndexOf(pair.Value)), nameIndex + 1);
             var ids = TemplateIds(document);
             ulong next = 0;
             string NewId()
@@ -158,7 +164,8 @@ namespace TiaMcp.Logic.Exchange
                 bool existing = byKey.TryGetValue(pair.Key, out var item);
                 var before = existing ? table.Columns.Select(c => Cell(item!, c)).ToArray() : null;
                 bool same = before != null && before.SequenceEqual(row, StringComparer.Ordinal);
-                if (kind == "SystemConstant" && !same) throw new ArgumentException("SystemConstant rows are read-only.");
+                if (kind == "SystemConstant" && !same) throw TableFile.Located(new ArgumentException("SystemConstant rows are read-only."),
+                    table.RowNumber(table.Rows.IndexOf(row)), before == null ? 1 : Enumerable.Range(0, row.Length).First(i => before[i] != row[i]) + 1);
                 if (same) { unchanged++; continue; }
                 if (existing) updated++;
                 else
@@ -183,10 +190,12 @@ namespace TiaMcp.Logic.Exchange
                     if (before != null && before[column.index] == value) continue;
                     if (CommentColumn(column.name)) { SetComment(item!, Language(column.name), value, NewId); continue; }
                     if ((column.name == "Address" && kind != "Tag" || column.name == "Value" && kind == "Tag") && value.Length != 0)
-                        throw new ArgumentException("Address is for tags; Value is for constants.");
+                        throw TableFile.Located(new ArgumentException("Address is for tags; Value is for constants."),
+                            table.RowNumber(table.Rows.IndexOf(row)), column.index + 1);
                     string field = Field(column.name);
                     var element = Child(attrs, field);
-                    if (element?.HasElements == true) throw new ArgumentException("Only scalar attributes can be edited: " + field);
+                    if (element?.HasElements == true) throw TableFile.Located(new ArgumentException("Only scalar attributes can be edited: " + field),
+                        table.RowNumber(table.Rows.IndexOf(row)), column.index + 1);
                     if (value.Length == 0) element?.Remove();
                     else if (element != null) element.Value = value;
                     else

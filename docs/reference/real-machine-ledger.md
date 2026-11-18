@@ -10,6 +10,8 @@
 
 ## 未发布改动的验收边界
 
+TIA-BATCH-4：**NOT RUN**。在 V15.1 与 V21 工程副本上：导出含结构、数组、默认与非默认起始值的全局 DB，转 xlsx，修改 5 个起始值（含 1 个原为默认值的 Int 成员），转回 XML，ImportPlcBlockVerified 预览并执行，读回并编译；确认 TIA 接受新增的非默认 StartValue，并核对各基础类型字面量的导出规范形式；表格拒绝常量引用、批量值、清空单元格和新默认值。
+
 TIA-BATCH-2：**NOT RUN**。在 V14 SP1、V18、V21 工程副本上，用 ExportPlcTagTables 分别从 PLC 根组和一个精确用户组执行 recursive=false 与 recursive=true 两种预览和导出，覆盖根组非递归、根组递归、用户组非递归、用户组递归四种组合；工程包含用户组、子组及中文名、带 / 名称的变量表。核对非递归仅包含选定组本级的变量表，递归包含选定组及其全部子组的变量表，逐次核对文件数与 objectPath，并把其中一个文件用 ImportPlcTagTable 导回原组（overwrite=true）。
 TIA-BATCH-3：**NOT RUN**。在 V14 SP1 或 V15.1 与 V21 工程副本上：导出含中英文注释、常量与外部访问标志的变量表，ConvertEngineeringTable 转 xlsx 与 csv，用 Excel 打开核对无乱码，修改注释与地址并新增 2 个变量和 1 个常量，转回 XML，ImportPlcTagTable overwrite=true 预览、审批、执行，ListPlcTags 读回；核对未改动的变量保持原样。
 

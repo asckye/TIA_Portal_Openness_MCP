@@ -137,7 +137,7 @@ namespace TiaMcp.Logic.V4
                 if (NeedsDefault(tool, input, required))
                 {
                     string name = "Rows";
-                    if ((string?)input["kind"] == "plcTagTable")
+                    if ((string?)input["kind"] is "plcTagTable" or "dataBlockStartValues")
                     {
                         string parameter = (string?)input["direction"] == "fromTable" ? "templatePath" : "inputPath";
                         string path = (string?)input[parameter] ?? "";
@@ -146,7 +146,10 @@ namespace TiaMcp.Logic.V4
                             var file = new FileInfo(path);
                             if (!Path.IsPathRooted(path) || !file.Exists || file.Length > Exchange.TableFile.MaximumBytes)
                                 throw Exchange.TableFile.Error(path, 1, 1, "Absolute XML input at most 16 MiB required.");
-                            name = Exchange.PlcTagTableExchange.Name(Exchange.PlcTagTableExchange.Parse(File.ReadAllText(path)));
+                            string xml = File.ReadAllText(path);
+                            name = (string?)input["kind"] == "dataBlockStartValues"
+                                ? TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.Name(Exchange.DataBlockStartValueExchange.Parse(xml))
+                                : Exchange.PlcTagTableExchange.Name(Exchange.PlcTagTableExchange.Parse(xml));
                         }
                         catch (Exception error) when (error is ArgumentException || error is InvalidOperationException || error is System.Xml.XmlException)
                         { throw new ArgumentException(Exchange.TableFile.Error(Path.GetFileName(path), 1, 1,

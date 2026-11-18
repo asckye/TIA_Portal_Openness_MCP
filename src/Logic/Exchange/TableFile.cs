@@ -13,7 +13,13 @@ namespace TiaMcp.Logic.Exchange
     {
         public string[] Columns { get; }
         public List<string[]> Rows { get; }
-        public TableData(string[] columns, IEnumerable<string[]> rows) { Columns = columns; Rows = rows.ToList(); }
+        private readonly int[]? sourceRows;
+        public int HeaderRowNumber { get; }
+        public int RowNumber(int index) => sourceRows != null && index < sourceRows.Length ? sourceRows[index] : index + 2;
+        public TableData(string[] columns, IEnumerable<string[]> rows, IEnumerable<int>? sourceRows = null, int headerRowNumber = 1)
+        {
+            Columns = columns; Rows = rows.ToList(); this.sourceRows = sourceRows?.ToArray(); HeaderRowNumber = headerRowNumber;
+        }
     }
 
     public static partial class TableFile
@@ -27,6 +33,10 @@ namespace TiaMcp.Logic.Exchange
             error.Data["tableReason"] = message;
             error.Data["tableRow"] = row; error.Data["tableColumn"] = column;
             return error;
+        }
+        internal static ArgumentException Located(ArgumentException error, int row, int column)
+        {
+            error.Data["tableRow"] = row; error.Data["tableColumn"] = column; return error;
         }
 
         private static bool FormulaStart(char value) => value == '=' || value == '+' || value == '-' || value == '@' || value == '\t' || value == '\r';
@@ -45,20 +55,21 @@ namespace TiaMcp.Logic.Exchange
             var names = new HashSet<string>(StringComparer.Ordinal);
             for (int c = 0; c < table.Columns.Length; c++)
                 if (string.IsNullOrEmpty(table.Columns[c]) || !names.Add(table.Columns[c]))
-                    throw Error(file, 1, c + 1, "Headers must be nonempty and unique.");
+                    throw Error(file, table.HeaderRowNumber, c + 1, "Headers must be nonempty and unique.");
             if (table.Rows.Count > MaximumRows) throw Error(file, MaximumRows + 2, 1, "More than 10000 data rows.");
             int r = 0;
             foreach (var row in new[] { table.Columns }.Concat(table.Rows))
             {
                 r++;
-                if (row.Length != table.Columns.Length) throw Error(file, r, row.Length + 1, "Row width differs from header.");
+                int sourceRow = r == 1 ? table.HeaderRowNumber : table.RowNumber(r - 2);
+                if (row.Length != table.Columns.Length) throw Error(file, sourceRow, row.Length + 1, "Row width differs from header.");
                 for (int c = 0; c < row.Length; c++)
                 {
                     if (row[c] == null || row[c].IndexOf('\0') >= 0 || row[c].IndexOf('\ufeff') >= 0)
-                        throw Error(file, r, c + 1, "Invalid CSV character.");
-                    if (row[c].Length > maximumCell) throw Error(file, r, c + 1, "Cell exceeds " + maximumCell + " characters.");
+                        throw Error(file, sourceRow, c + 1, "Invalid CSV character.");
+                    if (row[c].Length > maximumCell) throw Error(file, sourceRow, c + 1, "Cell exceeds " + maximumCell + " characters.");
                     try { if (xmlCharacters) XmlConvert.VerifyXmlChars(row[c]); }
-                    catch (XmlException) { throw Error(file, r, c + 1, "XML-invalid character."); }
+                    catch (XmlException) { throw Error(file, sourceRow, c + 1, "XML-invalid character."); }
                 }
             }
         }
@@ -93,7 +104,8 @@ namespace TiaMcp.Logic.Exchange
             try { text = Utf8.GetString(bytes, offset, bytes.Length - offset); }
             catch (DecoderFallbackException) { throw Error(file, 1, 1, "Invalid UTF-8."); }
             var rows = new List<string[]>(); var row = new List<string>(); var cell = new StringBuilder();
-            bool quoted = false, closed = false; int sourceRow = 1, pendingEmptyRows = 0;
+            var sourceRows = new List<int>(); var pendingSourceRows = new List<int>();
+            bool quoted = false, closed = false; int sourceRow = 1, recordRow = 1, pendingEmptyRows = 0;
             ArgumentException Invalid(string message) => Error(file, sourceRow, row.Count + 1, message);
             void AddRow()
             {
@@ -102,11 +114,21 @@ namespace TiaMcp.Logic.Exchange
                 {
                     if (rows.Count != 0 && row.Count != rows[0].Length) throw Invalid("Row width differs from header.");
                     if ((long)rows.Count + pendingEmptyRows > MaximumRows) throw Invalid("CSV row/cell limit exceeded.");
-                    while (pendingEmptyRows > 0) { rows.Add(Enumerable.Repeat("", rows[0].Length).ToArray()); pendingEmptyRows--; }
+                    while (pendingEmptyRows > 0)
+                    {
+                        sourceRows.Add(pendingSourceRows[pendingSourceRows.Count - pendingEmptyRows]);
+                        rows.Add(Enumerable.Repeat("", rows[0].Length).ToArray()); pendingEmptyRows--;
+                    }
+                    pendingSourceRows.Clear();
                     rows.Add(formulaGuard ? row.Select(ImportCell).ToArray() : row.ToArray());
+                    sourceRows.Add(recordRow);
                 }
-                else if (rows.Count != 0 && emptyRows == EmptyTableRows.TrimTrailing) pendingEmptyRows++;
-                row.Clear(); sourceRow++;
+                else if (rows.Count != 0 && emptyRows == EmptyTableRows.TrimTrailing)
+                {
+                    pendingEmptyRows++;
+                    if (pendingSourceRows.Count <= MaximumRows) pendingSourceRows.Add(recordRow);
+                }
+                row.Clear(); sourceRow++; recordRow = sourceRow;
             }
             for (int i = 0; i < text.Length; i++)
             {
@@ -119,7 +141,11 @@ namespace TiaMcp.Logic.Exchange
                         if (i + 1 < text.Length && text[i + 1] == '"') { cell.Append('"'); i++; }
                         else { quoted = false; closed = true; }
                     }
-                    else cell.Append(c);
+                    else
+                    {
+                        cell.Append(c);
+                        if (c == '\r' || c == '\n' && (i == 0 || text[i - 1] != '\r')) sourceRow++;
+                    }
                 }
                 else if (c == '"')
                 {
@@ -142,7 +168,7 @@ namespace TiaMcp.Logic.Exchange
             }
             if (quoted) throw Invalid("Unterminated CSV quote.");
             if (cell.Length > 0 || row.Count > 0 || closed) { row.Add(cell.ToString()); AddRow(); }
-            var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1));
+            var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1), sourceRows.Skip(1), sourceRows.FirstOrDefault());
             Validate(table, file, xmlCharacters: xmlCharacters);
             return table;
         }

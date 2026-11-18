@@ -188,10 +188,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 if (action == "setMemberStartValue")
                 {
-                    var current = FindMember(d, Get("section"), Get("memberPath"));
+                    var section = Get("section"); var path = Get("memberPath").Split('/');
+                    var current = FindMember(d, section, path);
                     if (current.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections"))
                         throw new ArgumentException("Select a scalar member.");
                     target = Child(current, "StartValue"); // Do not invent missing/default/array value shapes.
+                    if (!used.Add((target, ""))) throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
+                    SetMemberStartValue(d, section, path, Get("expectedValue"), Get("value"));
+                    continue;
                 }
                 else
                 {
@@ -219,18 +223,44 @@ namespace TiaMcpServer.ModelContextProtocol
             return d.ToString();
         }
         private static XElement FindMember(XDocument d, string section, string memberPath)
+            => FindMember(d, section, memberPath.Split('/'));
+        private static XElement FindMember(XDocument d, string section, string[] path)
         {
             var sections = Child(Child(Block(d), "AttributeList"), "Interface").Descendants()
                 .Where(e => e.Name.LocalName == "Section" && (string?)e.Attribute("Name") == section).ToArray();
             if (sections.Length != 1) throw new ArgumentException("Section is absent or ambiguous.");
             var current = sections[0];
-            foreach (var segment in memberPath.Split('/'))
+            foreach (var segment in path)
                 current = current.Elements().Single(e => e.Name.LocalName == "Member" && (string?)e.Attribute("Name") == segment);
             if (current.AncestorsAndSelf().Any(e => e.Attributes()
                     .Any(a => (a.Name.LocalName == "ReadOnly" || a.Name.LocalName == "Informative")
                         && a.Value.Equals("true", StringComparison.OrdinalIgnoreCase))))
                 throw new ArgumentException("Read-only/informative member cannot be edited.");
             return current;
+        }
+        public static bool ElementaryMember(XElement member)
+        {
+            string type = (string?)member.Attribute("Datatype") ?? "";
+            if (Regex.IsMatch(type, @"\A(?:W?String)\[\d+\]\z", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)) return true;
+            return new[] { "Bool", "Byte", "Word", "DWord", "LWord", "SInt", "Int", "DInt", "LInt", "USInt", "UInt", "UDInt", "ULInt",
+                "Real", "LReal", "Char", "WChar", "String", "WString", "Time", "LTime", "S5Time", "Date", "Time_Of_Day", "LTime_Of_Day",
+                "Date_And_Time", "LDT" }.Contains(type, StringComparer.OrdinalIgnoreCase);
+        }
+        public static void SetMemberStartValue(XDocument document, string section, string[] path, string expected, string value)
+        {
+            var member = FindMember(document, section, path);
+            if (member.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections"))
+                throw new ArgumentException("Select a scalar member.");
+            var target = member.Elements().SingleOrDefault(e => e.Name.LocalName == "StartValue");
+            if (target?.HasElements == true || (target?.Value ?? "") != expected)
+                throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
+            if (target == null)
+            {
+                if (!ElementaryMember(member)) throw new ArgumentException("Missing StartValue requires an elementary scalar member.");
+                target = new XElement(member.Name.Namespace + "StartValue");
+                member.Add(target);
+            }
+            target.Value = value;
         }
         private static void SetMemberComment(XElement member, string culture, string expectedValue, string value)
         {

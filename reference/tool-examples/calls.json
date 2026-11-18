@@ -19963,11 +19963,11 @@
           },
           "templatePath": {
             "requiresBinding": true,
-            "meaning": "Use the original exported XML for plcTagTable fromTable."
+            "meaning": "Use the original exported XML for plcTagTable/dataBlockStartValues fromTable."
           },
           "exportFile": {
             "requiresBinding": true,
-            "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for plcTagTable fromTable; omit for session output."
+            "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for XML fromTable; omit for session output."
           }
         },
         "operations": {
@@ -20036,6 +20036,50 @@
               "dryRun": true
             },
             "argumentsMode": "complete"
+          },
+          "dbToTable": {
+            "arguments": {
+              "kind": "dataBlockStartValues",
+              "direction": "toTable",
+              "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+              "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+              "dryRun": true,
+              "format": "xlsx"
+            },
+            "argumentsMode": "complete"
+          },
+          "dbToTableExecute": {
+            "arguments": {
+              "kind": "dataBlockStartValues",
+              "direction": "toTable",
+              "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+              "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+              "dryRun": false,
+              "format": "xlsx"
+            },
+            "argumentsMode": "complete"
+          },
+          "dbFromTable": {
+            "arguments": {
+              "kind": "dataBlockStartValues",
+              "direction": "fromTable",
+              "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+              "exportFile": "C:/Examples/generated/DB-edited.xml",
+              "dryRun": true,
+              "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml"
+            },
+            "argumentsMode": "complete"
+          },
+          "dbFromTableExecute": {
+            "arguments": {
+              "kind": "dataBlockStartValues",
+              "direction": "fromTable",
+              "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+              "exportFile": "C:/Examples/generated/DB-edited.xml",
+              "dryRun": false,
+              "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml"
+            },
+            "argumentsMode": "complete"
           }
         },
         "validation": "Offline managed fixtures; native import and Excel-saved workbook acceptance NOT RUN. Bind paths to supplied files.",
@@ -20047,7 +20091,9 @@
           "rows toTable accepts 1..1000 flat scalar objects and optional columns; scalars become invariant strings, null empty. fromTable returns string objects, columns, total and meta.paging (offset, limit 1..200, default 50, nextOffset). It writes no file, including dryRun=false.",
           "For XML fromTable, templatePath is the original export. Review changes, execute conversion, then preview/approve ImportPlcTagTable with overwrite=true and importPath=exportFile. Bind softwarePath and folderPath to the original export target; XML alone does not encode its folder. ListPlcTags readback and compile affected blocks. Delete tags explicitly with ManagePlcTagDefinition through ApplyToolBatch.",
           "rows example: ConvertEngineeringTable({\"kind\":\"rows\",\"direction\":\"toTable\",\"rows\":[{\"Name\":\"Motor\",\"Address\":\"%M0.0\",\"Enabled\":true}],\"columns\":[\"Name\",\"Address\",\"Enabled\"],\"format\":\"xlsx\",\"exportFile\":\"C:/Examples/generated/Rows.xlsx\",\"dryRun\":false}). Read it with kind=rows,direction=fromTable,inputPath=that file,offset=0,limit=50.",
-          "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_."
+          "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_.",
+          "dataBlockStartValues: one non-library global DB; columns Section, MemberPath, DataType, StartValue. MemberPath segments use MIN-ESCAPE (split before decoding). Only elementary scalars are listed; arrays, structs, UDT/FB types and read-only/informative members are excluded and counted in notEditable. Exact keys and DataType must match; omitted members stay unchanged, new members refuse. Missing StartValue may be added for elementary types only. File limit 10000 rows/16 MiB permits more than 100 changes; PatchPlcBlockDocument still requires existing StartValue and 1..100 changes. Review up to 50 old/new values, execute to a new XML, then ImportPlcBlockVerified preview with evidenceDirectory and execution with the returned previewToken; read back with GetPlcBlockEditCapabilities and compile. Native acceptance NOT RUN.",
+          "DB start-value edits validate typed literals before planning: Bool true/false; bounded decimal integers (radix only if evidenced by the same member export); invariant Real/LReal with a decimal point, refusing precision loss with a suggested value; typed Time/LTime/S5Time/Date/TOD/DT/LDT and quoted Char/String literals. Empty cells cannot reset values to the default. New type-default values refuse because ExportOptions.None omits them, so verified import would mismatch; existing explicit defaults stay unchanged. ConstantName and IsBulkValue are excluded with notEditableReasons. Existing plain scalar values additionally allow HW_IO, HW_ANY, HW_DEVICE, HW_MODULE, HW_SUBMODULE, DB_ANY and String/WString[constant]. Errors retain original CSV physical line/XLSX row numbers, including dropped empty rows. Native export normalization still requires real-machine acceptance."
         ],
         "execution": {
           "arguments": {
@@ -40926,11 +40972,11 @@
           },
           "templatePath": {
             "requiresBinding": true,
-            "meaning": "Use the original exported XML for plcTagTable fromTable."
+            "meaning": "Use the original exported XML for plcTagTable/dataBlockStartValues fromTable."
           },
           "exportFile": {
             "requiresBinding": true,
-            "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for plcTagTable fromTable; omit for session output."
+            "meaning": "Use a new absolute filename matching xlsx/csv for toTable or xml for XML fromTable; omit for session output."
           }
         },
         "operations": {
@@ -40999,6 +41045,50 @@
               "dryRun": true
             },
             "argumentsMode": "complete"
+          },
+          "dbToTable": {
+            "arguments": {
+              "kind": "dataBlockStartValues",
+              "direction": "toTable",
+              "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+              "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+              "dryRun": true,
+              "format": "xlsx"
+            },
+            "argumentsMode": "complete"
+          },
+          "dbToTableExecute": {
+            "arguments": {
+              "kind": "dataBlockStartValues",
+              "direction": "toTable",
+              "inputPath": "C:/Examples/exports/DB_HMI_Interface.xml",
+              "exportFile": "C:/Examples/generated/DB-start-values.xlsx",
+              "dryRun": false,
+              "format": "xlsx"
+            },
+            "argumentsMode": "complete"
+          },
+          "dbFromTable": {
+            "arguments": {
+              "kind": "dataBlockStartValues",
+              "direction": "fromTable",
+              "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+              "exportFile": "C:/Examples/generated/DB-edited.xml",
+              "dryRun": true,
+              "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml"
+            },
+            "argumentsMode": "complete"
+          },
+          "dbFromTableExecute": {
+            "arguments": {
+              "kind": "dataBlockStartValues",
+              "direction": "fromTable",
+              "inputPath": "C:/Examples/generated/DB-start-values.xlsx",
+              "exportFile": "C:/Examples/generated/DB-edited.xml",
+              "dryRun": false,
+              "templatePath": "C:/Examples/exports/DB_HMI_Interface.xml"
+            },
+            "argumentsMode": "complete"
           }
         },
         "validation": "Offline managed fixtures; native import and Excel-saved workbook acceptance NOT RUN. Bind paths to supplied files.",
@@ -41010,7 +41100,9 @@
           "rows toTable accepts 1..1000 flat scalar objects and optional columns; scalars become invariant strings, null empty. fromTable returns string objects, columns, total and meta.paging (offset, limit 1..200, default 50, nextOffset). It writes no file, including dryRun=false.",
           "For XML fromTable, templatePath is the original export. Review changes, execute conversion, then preview/approve ImportPlcTagTable with overwrite=true and importPath=exportFile. Bind softwarePath and folderPath to the original export target; XML alone does not encode its folder. ListPlcTags readback and compile affected blocks. Delete tags explicitly with ManagePlcTagDefinition through ApplyToolBatch.",
           "rows example: ConvertEngineeringTable({\"kind\":\"rows\",\"direction\":\"toTable\",\"rows\":[{\"Name\":\"Motor\",\"Address\":\"%M0.0\",\"Enabled\":true}],\"columns\":[\"Name\",\"Address\",\"Enabled\"],\"format\":\"xlsx\",\"exportFile\":\"C:/Examples/generated/Rows.xlsx\",\"dryRun\":false}). Read it with kind=rows,direction=fromTable,inputPath=that file,offset=0,limit=50.",
-          "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_."
+          "plcTagTable ignores every all-empty row; rows trims only trailing all-empty rows and retains leading/interior data rows. Trailing empty styled XLSX cells are ignored. XLSX reads cap total logical characters at 64 Mi. Default exportFile is stable: ConvertEngineeringTable.<encoded source table name>.<ext> (Rows for rows), identical in preview and execution. If it exists, pass exportFile with a new file path; no automatic suffix. Name collisions are case-insensitive, Kind changes of existing names refuse, and constants never emit ExternalAccessible. XLSX strings decode OOXML _xHHHH_ once; literal escapes are protected with _x005F_.",
+          "dataBlockStartValues: one non-library global DB; columns Section, MemberPath, DataType, StartValue. MemberPath segments use MIN-ESCAPE (split before decoding). Only elementary scalars are listed; arrays, structs, UDT/FB types and read-only/informative members are excluded and counted in notEditable. Exact keys and DataType must match; omitted members stay unchanged, new members refuse. Missing StartValue may be added for elementary types only. File limit 10000 rows/16 MiB permits more than 100 changes; PatchPlcBlockDocument still requires existing StartValue and 1..100 changes. Review up to 50 old/new values, execute to a new XML, then ImportPlcBlockVerified preview with evidenceDirectory and execution with the returned previewToken; read back with GetPlcBlockEditCapabilities and compile. Native acceptance NOT RUN.",
+          "DB start-value edits validate typed literals before planning: Bool true/false; bounded decimal integers (radix only if evidenced by the same member export); invariant Real/LReal with a decimal point, refusing precision loss with a suggested value; typed Time/LTime/S5Time/Date/TOD/DT/LDT and quoted Char/String literals. Empty cells cannot reset values to the default. New type-default values refuse because ExportOptions.None omits them, so verified import would mismatch; existing explicit defaults stay unchanged. ConstantName and IsBulkValue are excluded with notEditableReasons. Existing plain scalar values additionally allow HW_IO, HW_ANY, HW_DEVICE, HW_MODULE, HW_SUBMODULE, DB_ANY and String/WString[constant]. Errors retain original CSV physical line/XLSX row numbers, including dropped empty rows. Native export normalization still requires real-machine acceptance."
         ],
         "execution": {
           "arguments": {
