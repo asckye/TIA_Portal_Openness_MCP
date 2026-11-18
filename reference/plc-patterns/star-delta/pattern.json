@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "star-delta",
+  "title": "Star start followed by a timed delta changeover",
+  "summary": "Supervise star/delta contactor feedback through star, an open changeover interval and delta; latch feedback faults and stop outputs.",
+  "notesZhCn": [
+    "模式仅用于教学；原生导入、块生成和软件编译证据以 evidence.json 为准，PLC 运行行为为 NOT RUN。",
+    "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
+    "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
+    "适用范围为 S7-1200 和 S7-1500；不覆盖 S7-1200 G2。",
+    "IO 为 UDT 输入输出接口；调用方只写 Start、Stop、Fault，MainOn、StarOn、DeltaOn 由 FB 写入。",
+    "Enable 许可下 Start 上升沿启动；停止、故障、撤销许可或非正定时值立即撤销输出，恢复后需要新的 Start 上升沿。",
+    "星形时间结束先撤销 StarOn；经过 ChangeoverTime 且 StarFeedback、DeltaFeedback 均为 FALSE 才进入三角步骤，间隔中 MainOn 保持 TRUE。",
+    "StarFeedback、DeltaFeedback 是 FB 输入，接接触器辅助触点（吸合为 TRUE）；启动前须都断开，StarOn 与 DeltaOn 还分别受对侧反馈的即时互锁。",
+    "StarOn/StarFeedback、DeltaOn/DeltaFeedback 各用独立 TON 检查持续不一致；超过 FeedbackLimit（默认 500 ms，须按设备吸合/释放时间设置）即锁存 FeedbackFault，同扫描撤销 MainOn、StarOn、DeltaOn 并返回待机。",
+    "反馈故障不会自行清除；Reset=TRUE、Stop=TRUE、Start=FALSE 且两个辅助触点均断开时才可复位，恢复运行需要新的 Start 上升沿。FeedbackLimit 必须大于零。",
+    "辅助触点与普通软件反馈不是安全功能；实际设备仍需机械/电气互锁、合适的切换间隔与独立保护。"
+  ],
+  "variants": [
+    {
+      "id": "scl",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/star-delta/PatStarDelta.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "UDT",
+          "name": "UDT_PatStarDelta"
+        },
+        {
+          "kind": "FB",
+          "name": "FB_PatStarDelta"
+        },
+        {
+          "kind": "DB",
+          "name": "DB_PatStarDelta",
+          "instanceOf": "FB_PatStarDelta"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "TON_TIME",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4b, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        }
+      ],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    }
+  ]
+}

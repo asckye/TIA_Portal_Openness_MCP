@@ -1,0 +1,115 @@
+TYPE "UDT_PatStationState"
+VERSION : 0.1
+    STRUCT
+        Step : Int;
+        Busy : Bool;
+        Done : Bool;
+        Fault : Bool;
+    END_STRUCT;
+END_TYPE
+
+FUNCTION_BLOCK "FB_PatSequenceStation"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Enable : Bool;
+    Start : Bool;
+    Stop : Bool;
+    Reset : Bool;
+    Extended : Bool;
+    Home : Bool;
+    WorkComplete : Bool;
+    StepLimit : Time := T#5s;
+END_VAR
+VAR_OUTPUT
+    Extend : Bool;
+    Work : Bool;
+    Retract : Bool;
+    State : "UDT_PatStationState";
+END_VAR
+VAR
+    PreviousStart : Bool;
+    LastTimedStep : Int;
+    StepClock : TON_TIME;
+END_VAR
+VAR_TEMP
+    StartEdge : Bool;
+    EntryStep : Int;
+    ActiveStep : Bool;
+END_VAR
+BEGIN
+    #StartEdge := #Start AND NOT #PreviousStart;
+    #PreviousStart := #Start;
+    IF #Reset AND NOT #Start THEN
+        #State.Step := 0;
+        #State.Done := FALSE;
+        #State.Fault := FALSE;
+    END_IF;
+    IF NOT #Enable OR #Stop THEN
+        #State.Step := 0;
+        #State.Done := FALSE;
+    END_IF;
+    IF (#Extended AND #Home) OR (#StepLimit <= T#0ms) THEN
+        #State.Fault := TRUE;
+    END_IF;
+
+    #EntryStep := #State.Step;
+    #ActiveStep := (#EntryStep = 10) OR (#EntryStep = 20) OR (#EntryStep = 30);
+    // A changed step gets one scan with IN false to reset the shared timer.
+    #StepClock(IN := #ActiveStep AND (#EntryStep = #LastTimedStep), PT := #StepLimit);
+    #LastTimedStep := #EntryStep;
+    IF #StepClock.Q THEN
+        #State.Fault := TRUE;
+    END_IF;
+    IF #State.Fault THEN
+        #State.Step := 900;
+        #State.Done := FALSE;
+    END_IF;
+
+    CASE #State.Step OF
+        0:
+            IF #Enable AND NOT #Stop AND #StartEdge AND #Home THEN
+                #State.Done := FALSE;
+                #State.Step := 10;
+            END_IF;
+        10:
+            IF #Extended THEN
+                #State.Step := 20;
+            END_IF;
+        20:
+            IF NOT #Extended THEN
+                #State.Fault := TRUE;
+                #State.Step := 900;
+                #State.Done := FALSE;
+            ELSIF #WorkComplete THEN
+                #State.Step := 30;
+            END_IF;
+        30:
+            IF #Home THEN
+                #State.Step := 40;
+                #State.Done := TRUE;
+            END_IF;
+        40:
+            IF #StartEdge AND #Home THEN
+                #State.Done := FALSE;
+                #State.Step := 10;
+            END_IF;
+        900:
+            ;
+        ELSE
+            #State.Step := 900;
+            #State.Fault := TRUE;
+            #State.Done := FALSE;
+    END_CASE;
+    #Extend := (#State.Step = 10) OR (#State.Step = 20);
+    #Work := (#State.Step = 20);
+    #Retract := (#State.Step = 30);
+    #State.Busy := #Extend OR #Work OR #Retract;
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatSequenceStation"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatSequenceStation"
+BEGIN
+END_DATA_BLOCK

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "cylinder-timeout",
+  "title": "Cylinder travel with latched timeout",
+  "summary": "Supervise extend and retract travel separately, stop at the end sensor and latch a fault on timeout or conflict.",
+  "notesZhCn": [
+    "模式仅用于教学；原生导入、块生成和软件编译证据以 evidence.json 为准，PLC 运行行为为 NOT RUN。",
+    "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
+    "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
+    "适用范围为 S7-1200 和 S7-1500；不覆盖 S7-1200 G2。",
+    "ExtendRequest、RetractRequest 为保持请求；到达对应端位后撤销该方向输出，撤销 Enable 会停止驱动并清除计时。",
+    "双向请求、双端位同时有效或非正超时值会锁存 Fault；任一行程超时同时锁存 TimedOut 并在本扫描撤销双向输出。",
+    "复位须撤销两个方向请求并消除端位冲突；重新请求才开始下一次行程，不自动重试。",
+    "适用于失电时停止驱动的教学模型；实际阀型、保持力、换向间隔与失电后气缸运动须独立设计。"
+  ],
+  "variants": [
+    {
+      "id": "scl",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/cylinder-timeout/PatCylinderTimeout.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "FB",
+          "name": "FB_PatCylinderTimeout"
+        },
+        {
+          "kind": "DB",
+          "name": "DB_PatCylinderTimeout",
+          "instanceOf": "FB_PatCylinderTimeout"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "TON_TIME",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4b, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        }
+      ],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    }
+  ]
+}

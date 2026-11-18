@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "id": "modbus-rtu-master",
+  "title": "Family-specific Modbus RTU holding-register read",
+  "summary": "Initialize one serial master and issue one explicit request to read ten holding registers; errors require reinitialization.",
+  "notesZhCn": [
+    "模式仅用于教学；原生导入、块生成和软件编译证据以 evidence.json 为准，PLC 运行行为为 NOT RUN。",
+    "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
+    "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
+    "两个独立变体：scl-s7-1200 使用任务指定的 MB_COMM_LOAD/MB_MASTER（CM/CB 1241），scl-s7-1500 使用 Modbus_Comm_Load/Modbus_Master（CM PtP）；不覆盖 S7-1200 G2。",
+    "当前名称、指令版本和调用签名均未从离线官方手册核实，两个变体都不提供；官方网址仅为入口，不是已核实的手册页。",
+    "两个变体的 Port 输入按审查决定统一为 PORT 数据类型（串口硬件标识符），不再分别使用 UInt/HW_SUBMODULE；逐版官方手册与原生编译尚未核实，仍为 unverified，同时须核实 MB_DB := #Master.MB_DB 链接及多重实例支持。",
+    "同时核实 MODE=0、40001 起始保持寄存器地址约定、DATA_LEN=10、DATA_PTR 数组与优化访问限制；不据此推断实际设备的地址映射。",
+    "调用方提供串口配置、从站地址、起始寄存器和十字 Word 缓冲区；初始化与传输期间保持输入配置和缓冲区稳定，并独占串口。",
+    "Initialize 上升沿发起装载；Ready 后 Request 上升沿发起一次读取，忙碌或未就绪时的请求不排队。Done 为完成脉冲，Busy 为 master 状态。",
+    "装载或读取出错后锁存 Error、Status 并撤销 Ready；新的 Initialize 上升沿成功后才可再次请求，不自动重发。",
+    "每扫描调用 FB；Load 与 Master 每扫描各调用一次。编译不能证明串口通信成功，实际通信和 PLC 运行行为为 NOT RUN。"
+  ],
+  "variants": [
+    {
+      "id": "scl-s7-1200",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1200"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/modbus-rtu-master/PatModbusRtu1200.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "FB",
+          "name": "FB_PatModbusRtu1200"
+        },
+        {
+          "kind": "DB",
+          "name": "DB_PatModbusRtu1200",
+          "instanceOf": "FB_PatModbusRtu1200"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "MB_COMM_LOAD",
+          "cpuFamilies": [
+            "S7-1200"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4b, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification. The PORT type, MB_DB link, parameter signatures and instruction-version availability also remain unverified. Both family variants use PORT (hardware identifier) per the review decision; the exact per-release manual and native compilation checks are still NOT RUN."
+        },
+        {
+          "name": "MB_MASTER",
+          "cpuFamilies": [
+            "S7-1200"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4b, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification. The PORT type, MB_DB link, parameter signatures and instruction-version availability also remain unverified. Both family variants use PORT (hardware identifier) per the review decision; the exact per-release manual and native compilation checks are still NOT RUN."
+        }
+      ],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    },
+    {
+      "id": "scl-s7-1500",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/modbus-rtu-master/PatModbusRtu1500.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "FB",
+          "name": "FB_PatModbusRtu1500"
+        },
+        {
+          "kind": "DB",
+          "name": "DB_PatModbusRtu1500",
+          "instanceOf": "FB_PatModbusRtu1500"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "Modbus_Comm_Load",
+          "cpuFamilies": [
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4b, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification. The PORT type, MB_DB link, parameter signatures and instruction-version availability also remain unverified. Both family variants use PORT (hardware identifier) per the review decision; the exact per-release manual and native compilation checks are still NOT RUN."
+        },
+        {
+          "name": "Modbus_Master",
+          "cpuFamilies": [
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4b, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification. The PORT type, MB_DB link, parameter signatures and instruction-version availability also remain unverified. Both family variants use PORT (hardware identifier) per the review decision; the exact per-release manual and native compilation checks are still NOT RUN."
+        }
+      ],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    }
+  ]
+}

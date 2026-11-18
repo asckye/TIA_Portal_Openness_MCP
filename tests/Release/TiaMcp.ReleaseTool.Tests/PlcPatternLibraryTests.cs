@@ -15,9 +15,11 @@ public sealed class PlcPatternLibraryTests
     public void Real_library_has_six_sources_and_one_not_run_row_per_required_cell()
     {
         var library = PlcPatternLibrary.Load(Root);
-        Assert.Equal(new[] { "alarm-latch", "analog-scaling", "counters-ctu-ctd-ctud", "motor-fwd-rev", "start-stop", "timers-ton-tof-tp" },
+        Assert.Equal(new[] { "alarm-latch", "analog-scaling", "counters-ctu-ctd-ctud", "cylinder-timeout", "mc-power-axis",
+            "modbus-rtu-master", "motor-fwd-rev", "sequence-station", "star-delta", "start-stop", "timers-ton-tof-tp" },
             library.Patterns.Select(p => Text(p!["id"])));
-        Assert.Equal(96, library.Evidence.Count);
+        Assert.Equal(12, library.Patterns.SelectMany(p => p!["variants"]!.AsArray()).Sum(v => v!["files"]!.AsArray().Count));
+        Assert.Equal(168, library.Evidence.Count);
         Assert.All(library.Evidence, row => { Assert.Equal("NOT RUN", Text(row!["status"])); Assert.Equal(5, row.AsObject().Count); });
         var expected = library.Patterns.SelectMany(p => p!["variants"]!.AsArray().SelectMany(v => Keys.SelectMany(k =>
             Strings(v!["cpuFamilies"]).Order(StringComparer.Ordinal).Select(f => $"{Text(p["id"])}/{Text(v["id"])}/{k}/{f}"))));
@@ -25,6 +27,66 @@ public sealed class PlcPatternLibraryTests
         Assert.Empty(PlcPatternLibrary.Served(Root));
         Assert.All(library.Patterns.SelectMany(p => p!["variants"]!.AsArray()).SelectMany(v => v!["instructions"]!.AsArray()),
             i => { Assert.Equal("unverified", Text(i!["verification"])); Assert.Equal("unverified", Text(i["version"])); });
+    }
+
+    [Fact]
+    public void Modbus_variants_keep_family_specific_instructions_and_motion_covers_only_s7_1500()
+    {
+        var patterns = PlcPatternLibrary.Load(Root).Patterns;
+        var modbus = Assert.Single(patterns, p => Text(p!["id"]) == "modbus-rtu-master")!;
+        var variants = modbus["variants"]!.AsArray();
+        Assert.Equal(2, variants.Count);
+        var small = Assert.Single(variants, v => Text(v!["id"]) == "scl-s7-1200")!;
+        var large = Assert.Single(variants, v => Text(v!["id"]) == "scl-s7-1500")!;
+        Assert.Equal(new[] { "S7-1200" }, Strings(small["cpuFamilies"]));
+        Assert.Equal(new[] { "S7-1500" }, Strings(large["cpuFamilies"]));
+        Assert.Equal(new[] { "MB_COMM_LOAD", "MB_MASTER" }, small["instructions"]!.AsArray().Select(i => Text(i!["name"])));
+        Assert.Equal(new[] { "Modbus_Comm_Load", "Modbus_Master" }, large["instructions"]!.AsArray().Select(i => Text(i!["name"])));
+        var motion = Assert.Single(patterns, p => Text(p!["id"]) == "mc-power-axis")!;
+        Assert.Equal(new[] { "S7-1500" }, Strings(Assert.Single(motion["variants"]!.AsArray())!["cpuFamilies"]));
+    }
+
+    [Theory]
+    [InlineData("star-delta", "scl", "pattern/star-delta")]
+    [InlineData("cylinder-timeout", "scl", "pattern/cylinder-timeout")]
+    [InlineData("sequence-station", "scl", "pattern/sequence-station")]
+    [InlineData("modbus-rtu-master", "scl-s7-1200", "pattern/modbus-rtu-master/scl-s7-1200")]
+    [InlineData("modbus-rtu-master", "scl-s7-1500", "pattern/modbus-rtu-master/scl-s7-1500")]
+    [InlineData("mc-power-axis", "scl", "pattern/mc-power-axis")]
+    public void Added_variants_require_manual_verification_and_every_declared_cell(string id, string variantId, string exampleId)
+    {
+        using var fixture = new Fixture();
+        var evidence = fixture.Evidence();
+        var cells = evidence["rows"]!.AsArray().Where(r => Text(r!["pattern"]) == id && Text(r["variant"]) == variantId).ToArray();
+        foreach (var row in cells) Fixture.Verify(row!.AsObject());
+        fixture.SaveEvidence(evidence);
+        Assert.Empty(PlcPatternLibrary.Served(fixture.Root));
+
+        string path = Path.Combine(fixture.Root, "reference/plc-patterns/" + id + "/pattern.json");
+        var pattern = JsonNode.Parse(File.ReadAllText(path))!;
+        var variant = Assert.Single(pattern["variants"]!.AsArray(), v => Text(v!["id"]) == variantId)!;
+        foreach (var instruction in variant["instructions"]!.AsArray())
+        {
+            instruction!["verification"] = "verified"; instruction["version"] = "1.0";
+            instruction["sourceUrl"] = "https://docs.tia.siemens.cloud/fixture/instruction";
+        }
+        File.WriteAllText(path, Encode(pattern), new UTF8Encoding(false));
+        var example = Assert.Single(PlcPatternLibrary.Served(fixture.Root))!;
+        Assert.Equal(exampleId, Text(example["id"]));
+        Assert.Equal(Keys, Strings(example["releaseKeys"]));
+        Assert.Equal(Strings(variant["cpuFamilies"]), Strings(example["cpuFamilies"]));
+        Assert.Equal(Keys.Count * Strings(variant["cpuFamilies"]).Count(), cells.Length);
+        var embedded = Assert.Single(ToolUsageGenerator.Generate(Root, new JsonArray(example.DeepClone()))["examples"]!.AsArray(),
+            e => Text(e!["id"]) == exampleId)!;
+        var file = Assert.Single(embedded["files"]!.AsArray())!;
+        Assert.Equal(Hash(Encoding.UTF8.GetBytes(Text(file["content"]))), Text(file["contentSha256"]));
+
+        foreach (var row in cells)
+        {
+            row!["status"] = "NOT RUN"; fixture.SaveEvidence(evidence);
+            Assert.Empty(PlcPatternLibrary.Served(fixture.Root));
+            row["status"] = "verified";
+        }
     }
 
     [Fact]
@@ -54,6 +116,74 @@ public sealed class PlcPatternLibraryTests
         int scale = source.IndexOf("#FC_PatAnalogScaling := SCALE_X", StringComparison.Ordinal);
         Assert.True(substitute >= 0 && substitute < guard && guard < normalize && normalize < scale);
         Assert.EndsWith("    END_IF;\nEND_FUNCTION\n", source);
+    }
+
+    [Fact]
+    public void Sequence_station_holds_extension_during_work_and_prioritizes_loss_of_position()
+    {
+        string source = Source(Root, "reference/plc-patterns/sequence-station/PatSequenceStation.scl");
+        Assert.Contains("#Extend := (#State.Step = 10) OR (#State.Step = 20);", source);
+        Assert.Contains("#Work := (#State.Step = 20);", source);
+        Assert.Contains("#Retract := (#State.Step = 30);", source);
+        Assert.Contains("        20:\n"
+            + "            IF NOT #Extended THEN\n"
+            + "                #State.Fault := TRUE;\n"
+            + "                #State.Step := 900;\n"
+            + "                #State.Done := FALSE;\n"
+            + "            ELSIF #WorkComplete THEN\n"
+            + "                #State.Step := 30;\n"
+            + "            END_IF;", source);
+        Assert.True(source.IndexOf("IF NOT #Extended THEN", StringComparison.Ordinal)
+            < source.IndexOf("#Extend :=", StringComparison.Ordinal));
+        var pattern = Read(Root, "reference/plc-patterns/sequence-station/pattern.json");
+        Assert.Contains(Strings(pattern["notesZhCn"]), n => n.Contains("单稳态阀", StringComparison.Ordinal)
+            && n.Contains("双稳态阀", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Star_delta_requires_released_feedback_and_latches_timed_mismatches_before_stopping_outputs()
+    {
+        string source = Source(Root, "reference/plc-patterns/star-delta/PatStarDelta.scl");
+        Assert.Contains("StarFeedback : Bool;", source);
+        Assert.Contains("DeltaFeedback : Bool;", source);
+        Assert.Contains("FeedbackLimit : Time := T#500ms;", source);
+        Assert.Contains("AND (#FeedbackLimit > T#0ms)", source);
+        Assert.Contains("ELSIF (#Step = 0) AND #StartEdge AND NOT #StarFeedback AND NOT #DeltaFeedback THEN", source);
+        Assert.Contains("IF #GapClock.Q AND NOT #StarFeedback AND NOT #DeltaFeedback THEN\n                #Step := 30;", source);
+        Assert.Contains("#IO.StarOn := (#Step = 10) AND NOT #DeltaFeedback;", source);
+        Assert.Contains("#IO.DeltaOn := (#Step = 30) AND NOT #StarFeedback;", source);
+        Assert.Contains("#StarFeedbackClock(IN := (#IO.StarOn <> #StarFeedback), PT := #FeedbackLimit);", source);
+        Assert.Contains("#DeltaFeedbackClock(IN := (#IO.DeltaOn <> #DeltaFeedback), PT := #FeedbackLimit);", source);
+        Assert.Contains("IF #StarFeedbackClock.Q OR #DeltaFeedbackClock.Q THEN\n"
+            + "        #FeedbackFault := TRUE;\n"
+            + "        #Step := 0;\n"
+            + "        #IO.MainOn := FALSE;\n"
+            + "        #IO.StarOn := FALSE;\n"
+            + "        #IO.DeltaOn := FALSE;\n"
+            + "    END_IF;", source);
+        Assert.Contains("OR #FeedbackFault THEN\n        #Step := 0;", source);
+        Assert.Contains("IF #Reset AND #IO.Stop AND NOT #IO.Start AND NOT #StarFeedback AND NOT #DeltaFeedback THEN\n"
+            + "        #FeedbackFault := FALSE;\n    END_IF;", source);
+        Assert.Equal(1, source.Split("#FeedbackFault := FALSE;", StringSplitOptions.None).Length - 1);
+        Assert.True(source.IndexOf("#IO.DeltaOn := (#Step = 30)", StringComparison.Ordinal)
+            < source.IndexOf("IF #StarFeedbackClock.Q", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Modbus_ports_use_the_same_hardware_identifier_type_and_remain_unverified()
+    {
+        var pattern = Read(Root, "reference/plc-patterns/modbus-rtu-master/pattern.json");
+        foreach (var variant in pattern["variants"]!.AsArray())
+        {
+            string source = Source(Root, Text(Assert.Single(variant!["files"]!.AsArray())!["path"]));
+            Assert.Contains("    Port : PORT;", source);
+            Assert.Contains("PORT := #Port,", source);
+            Assert.All(variant["instructions"]!.AsArray(), i => {
+                Assert.Equal("unverified", Text(i!["verification"]));
+                Assert.Equal("unverified", Text(i["version"]));
+                Assert.Contains("PORT (hardware identifier)", Text(i["verificationNote"]));
+            });
+        }
     }
 
     [Fact]

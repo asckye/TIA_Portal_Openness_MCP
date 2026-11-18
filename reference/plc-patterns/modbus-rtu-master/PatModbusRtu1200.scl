@@ -1,0 +1,99 @@
+FUNCTION_BLOCK "FB_PatModbusRtu1200"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Initialize : Bool;
+    Request : Bool;
+    Port : PORT;
+    Baud : UDInt := 9600;
+    Parity : UInt := 0;
+    SlaveAddress : UInt := 1;
+    FirstRegister : UDInt := 40001;
+END_VAR
+VAR_IN_OUT
+    Registers : Array[0..9] of Word;
+END_VAR
+VAR_OUTPUT
+    Ready : Bool;
+    Busy : Bool;
+    Done : Bool;
+    Error : Bool;
+    Status : Word;
+END_VAR
+VAR
+    Load : MB_COMM_LOAD;
+    Master : MB_MASTER;
+    PreviousInitialize : Bool;
+    PreviousRequest : Bool;
+    Loading : Bool;
+    LoadDone : Bool;
+    LoadError : Bool;
+    LoadStatus : Word;
+    MasterDone : Bool;
+    MasterError : Bool;
+    MasterStatus : Word;
+END_VAR
+VAR_TEMP
+    LoadRequest : Bool;
+    ReadRequest : Bool;
+END_VAR
+BEGIN
+    #LoadRequest := #Initialize AND NOT #PreviousInitialize AND NOT #Loading AND NOT #Busy;
+    #ReadRequest := #Request AND NOT #PreviousRequest AND #Ready AND NOT #Busy AND NOT #LoadRequest;
+    #PreviousInitialize := #Initialize;
+    #PreviousRequest := #Request;
+    #Done := FALSE;
+    IF #LoadRequest THEN
+        #Loading := TRUE;
+        #Ready := FALSE;
+        #Error := FALSE;
+        #Status := W#16#0000;
+    END_IF;
+
+    // PORT is a hardware identifier; its per-release signature remains unverified.
+    #Load(REQ := #LoadRequest,
+          PORT := #Port,
+          BAUD := #Baud,
+          PARITY := #Parity,
+          MB_DB := #Master.MB_DB,
+          DONE => #LoadDone,
+          ERROR => #LoadError,
+          STATUS => #LoadStatus);
+    #Master(REQ := #ReadRequest,
+            MB_ADDR := #SlaveAddress,
+            MODE := 0,
+            DATA_ADDR := #FirstRegister,
+            DATA_LEN := 10,
+            DATA_PTR := #Registers,
+            DONE => #MasterDone,
+            BUSY => #Busy,
+            ERROR => #MasterError,
+            STATUS => #MasterStatus);
+
+    IF #Loading THEN
+        IF #LoadError THEN
+            #Loading := FALSE;
+            #Error := TRUE;
+            #Status := #LoadStatus;
+        ELSIF #LoadDone THEN
+            #Loading := FALSE;
+            #Ready := TRUE;
+        END_IF;
+    ELSIF #Ready THEN
+        IF #MasterError THEN
+            #Ready := FALSE;
+            #Error := TRUE;
+            #Status := #MasterStatus;
+        ELSIF #MasterDone THEN
+            #Done := TRUE;
+            #Status := #MasterStatus;
+        END_IF;
+    END_IF;
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatModbusRtu1200"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatModbusRtu1200"
+BEGIN
+END_DATA_BLOCK

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "id": "sequence-station",
+  "title": "Station sequence with per-step supervision",
+  "summary": "Advance from home through extend, work and retract, with a fresh timeout for each active step.",
+  "notesZhCn": [
+    "模式仅用于教学；原生导入、块生成和软件编译证据以 evidence.json 为准，PLC 运行行为为 NOT RUN。",
+    "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
+    "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
+    "适用范围为 S7-1200 和 S7-1500；不覆盖 S7-1200 G2。",
+    "State.Step：0 待机、10 伸出、20 工作、30 缩回、40 完成、900 故障；UDT 状态由 FB 输出。",
+    "Start 上升沿且 Home 有效才启动；完成后 Done 保持到下次启动、停止或复位。",
+    "共享 TON 在步号变化后用一个扫描的 IN=FALSE 复位；每个活动步骤重新计时，超时优先于同扫描的到位或完成信号。",
+    "停止或撤销 Enable 回到待机并撤销输出；故障锁存，Reset 仅在 Start=FALSE 时清除，重新启动前须由外部流程恢复 Home。",
+    "WorkComplete 在工作步骤按电平采样；调用方须保证它属于本次加工周期。输出不表示工件或执行机构已经安全。",
+    "步骤 10 和 20 持续置 Extend，步骤 30 才置 Retract；工作步骤中 Extended 丢失优先于 WorkComplete，立即锁存 Fault、进入 900 并撤销全部输出，Reset 条件沿用其他故障。",
+    "阀模型允许伸出线圈持续通电，适用单稳态阀（工作中保持伸出线圈）和双稳态阀（线圈须允许连续通电）；单稳态阀的缩回由撤销 Extend 实现，Retract 为缩回请求信号，实际接线须按阀型映射。",
+    "故障时撤销逻辑输出不保证气缸物理停止；单稳态阀可能缩回，双稳态阀可能保持阀位，实际停止与保压措施须独立设计。"
+  ],
+  "variants": [
+    {
+      "id": "scl",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/sequence-station/PatSequenceStation.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "UDT",
+          "name": "UDT_PatStationState"
+        },
+        {
+          "kind": "FB",
+          "name": "FB_PatSequenceStation"
+        },
+        {
+          "kind": "DB",
+          "name": "DB_PatSequenceStation",
+          "instanceOf": "FB_PatSequenceStation"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "TON_TIME",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4b, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        }
+      ],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    }
+  ]
+}

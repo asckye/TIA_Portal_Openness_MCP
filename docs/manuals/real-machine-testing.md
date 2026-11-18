@@ -123,6 +123,12 @@ NO-LOCK Part 4 的真机核对当前为 NOT RUN。获准连接测试环境后，
 指令版本与导出哈希，再重新生成工具用法。离线无法核实的指令在 `pattern.json` 中标为 `unverified`，
 网址仅保留官方文档入口；提供前必须换成确切手册页并核实名称、版本。模式的 PLC 运行行为仍为 NOT RUN。
 
+SCL 候选包含星三角、气缸超时、工位步序、Modbus RTU 与轴使能。Modbus 的 S7-1200（CM/CB 1241）和
+S7-1500（CM PtP）分别验证：除指令名称与版本，还须核对 `PORT` 类型、`MB_DB` 多重实例链接、数据缓冲区
+和寄存器地址约定，不能用一个家族的编译结果替代另一个。轴使能仅覆盖 S7-1500 的 `TO_SpeedAxis`，
+不覆盖 S7-1200 运动类型或 G2；逐版记录技术版本和有无技术对象时的编译结果。全部证据保持 NOT RUN，
+直至负责人完成对应的原生导入与编译记录。
+
 工具参数、调用序列、结果解释和官方出处只在 `reference/tool-examples` 维护（`calls.json` 的 `plc-foundation`、`full-engine` 是按工具与 schema 选择的示例来源，八版对外 profile 均为 `plc-foundation`，另有 `sequences.json`、`metadata.json`、`languages/catalog.json` 及其源文件），由 `GetToolUsage` 按发布键返回；发现和错误中的内联示例、兼容入口读同一数据。规则见[设计规范](../standards/design.md)第 6.6 节。
 
 | `GetToolUsage` 参数 | 返回 |

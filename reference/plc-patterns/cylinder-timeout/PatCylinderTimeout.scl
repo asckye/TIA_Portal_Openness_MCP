@@ -1,0 +1,56 @@
+FUNCTION_BLOCK "FB_PatCylinderTimeout"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Enable : Bool;
+    ExtendRequest : Bool;
+    RetractRequest : Bool;
+    Extended : Bool;
+    Retracted : Bool;
+    Reset : Bool;
+    ExtendLimit : Time := T#3s;
+    RetractLimit : Time := T#3s;
+END_VAR
+VAR_OUTPUT
+    Extend : Bool;
+    Retract : Bool;
+    Fault : Bool;
+    TimedOut : Bool;
+END_VAR
+VAR
+    ExtendClock : TON_TIME;
+    RetractClock : TON_TIME;
+END_VAR
+VAR_TEMP
+    Conflict : Bool;
+END_VAR
+BEGIN
+    #Conflict := (#ExtendRequest AND #RetractRequest) OR (#Extended AND #Retracted);
+    IF #Reset AND NOT #ExtendRequest AND NOT #RetractRequest AND NOT #Conflict THEN
+        #Fault := FALSE;
+        #TimedOut := FALSE;
+    END_IF;
+    IF #Conflict OR (#ExtendLimit <= T#0ms) OR (#RetractLimit <= T#0ms) THEN
+        #Fault := TRUE;
+    END_IF;
+
+    #Extend := #Enable AND NOT #Fault AND #ExtendRequest AND NOT #Extended;
+    #Retract := #Enable AND NOT #Fault AND #RetractRequest AND NOT #Retracted;
+    #ExtendClock(IN := #Extend, PT := #ExtendLimit);
+    #RetractClock(IN := #Retract, PT := #RetractLimit);
+    IF #ExtendClock.Q OR #RetractClock.Q THEN
+        #TimedOut := TRUE;
+        #Fault := TRUE;
+    END_IF;
+    IF #Fault THEN
+        #Extend := FALSE;
+        #Retract := FALSE;
+    END_IF;
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatCylinderTimeout"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatCylinderTimeout"
+BEGIN
+END_DATA_BLOCK

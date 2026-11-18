@@ -1,0 +1,34 @@
+FUNCTION_BLOCK "FB_PatMcPowerAxis"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Enable : Bool;
+    Permit : Bool;
+END_VAR
+VAR_IN_OUT
+    Axis : TO_SpeedAxis;
+END_VAR
+VAR_OUTPUT
+    Powered : Bool;
+    Busy : Bool;
+    Error : Bool;
+    ErrorId : Word;
+END_VAR
+VAR
+    Power : MC_POWER;
+END_VAR
+BEGIN
+    #Power(Axis := #Axis,
+           Enable := #Enable AND #Permit,
+           Status => #Powered,
+           Busy => #Busy,
+           Error => #Error,
+           ErrorID => #ErrorId);
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatMcPowerAxis"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatMcPowerAxis"
+BEGIN
+END_DATA_BLOCK

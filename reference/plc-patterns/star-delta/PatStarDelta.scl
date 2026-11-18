@@ -1,0 +1,93 @@
+TYPE "UDT_PatStarDelta"
+VERSION : 0.1
+    STRUCT
+        Start : Bool;
+        Stop : Bool;
+        Fault : Bool;
+        MainOn : Bool;
+        StarOn : Bool;
+        DeltaOn : Bool;
+    END_STRUCT;
+END_TYPE
+
+FUNCTION_BLOCK "FB_PatStarDelta"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Enable : Bool;
+    Reset : Bool;
+    StarFeedback : Bool;
+    DeltaFeedback : Bool;
+    StarDuration : Time := T#5s;
+    ChangeoverTime : Time := T#500ms;
+    FeedbackLimit : Time := T#500ms;
+END_VAR
+VAR_IN_OUT
+    IO : "UDT_PatStarDelta";
+END_VAR
+VAR_OUTPUT
+    ConfigurationValid : Bool;
+    FeedbackFault : Bool;
+END_VAR
+VAR
+    Step : Int;
+    PreviousStart : Bool;
+    StarClock : TON_TIME;
+    GapClock : TON_TIME;
+    StarFeedbackClock : TON_TIME;
+    DeltaFeedbackClock : TON_TIME;
+END_VAR
+VAR_TEMP
+    StartEdge : Bool;
+END_VAR
+BEGIN
+    #StartEdge := #IO.Start AND NOT #PreviousStart;
+    #PreviousStart := #IO.Start;
+    #ConfigurationValid := (#StarDuration > T#0ms) AND (#ChangeoverTime > T#0ms) AND (#FeedbackLimit > T#0ms);
+    IF #Reset AND #IO.Stop AND NOT #IO.Start AND NOT #StarFeedback AND NOT #DeltaFeedback THEN
+        #FeedbackFault := FALSE;
+    END_IF;
+    IF NOT #Enable OR #IO.Stop OR #IO.Fault OR NOT #ConfigurationValid OR #FeedbackFault THEN
+        #Step := 0;
+    ELSIF (#Step = 0) AND #StartEdge AND NOT #StarFeedback AND NOT #DeltaFeedback THEN
+        #Step := 10;
+    END_IF;
+
+    #StarClock(IN := (#Step = 10), PT := #StarDuration);
+    #GapClock(IN := (#Step = 20), PT := #ChangeoverTime);
+    CASE #Step OF
+        0:
+            ;
+        10:
+            IF #StarClock.Q THEN
+                #Step := 20;
+            END_IF;
+        20:
+            IF #GapClock.Q AND NOT #StarFeedback AND NOT #DeltaFeedback THEN
+                #Step := 30;
+            END_IF;
+        30:
+            ;
+        ELSE
+            #Step := 0;
+    END_CASE;
+    #IO.MainOn := (#Step = 10) OR (#Step = 20) OR (#Step = 30);
+    #IO.StarOn := (#Step = 10) AND NOT #DeltaFeedback;
+    #IO.DeltaOn := (#Step = 30) AND NOT #StarFeedback;
+    #StarFeedbackClock(IN := (#IO.StarOn <> #StarFeedback), PT := #FeedbackLimit);
+    #DeltaFeedbackClock(IN := (#IO.DeltaOn <> #DeltaFeedback), PT := #FeedbackLimit);
+    IF #StarFeedbackClock.Q OR #DeltaFeedbackClock.Q THEN
+        #FeedbackFault := TRUE;
+        #Step := 0;
+        #IO.MainOn := FALSE;
+        #IO.StarOn := FALSE;
+        #IO.DeltaOn := FALSE;
+    END_IF;
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatStarDelta"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatStarDelta"
+BEGIN
+END_DATA_BLOCK
