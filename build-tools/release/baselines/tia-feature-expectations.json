@@ -842,6 +842,7 @@
       "PLC_SAFETY_UNITS",
       "PLC_UNITS",
       "PROJECT_EXCHANGE",
+      "PROJECT_UMAC",
       "RELEASE",
       "SECURITY_DEVICE_SYSLOG",
       "TRACE",
