@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "start-stop",
+  "title": "Stop-priority seal-in",
+  "summary": "A maintained run request with stop priority and a fault interlock.",
+  "notesZhCn": [
+    "模式仅用于教学；原生导入、块生成和软件编译证据以 evidence.json 为准，PLC 运行行为为 NOT RUN。",
+    "适用范围为 S7-1200 和 S7-1500；不覆盖 S7-1200 G2。",
+    "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
+    "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
+    "Start 为电平请求；Stop 或 Fault 解除时若 Start 仍为 TRUE，将再次启动。现场重启策略由调用方实现。"
+  ],
+  "variants": [
+    {
+      "id": "scl",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/start-stop/PatStartStop.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "FB",
+          "name": "FB_PatStartStop"
+        },
+        {
+          "kind": "DB",
+          "name": "DB_PatStartStop",
+          "instanceOf": "FB_PatStartStop"
+        }
+      ],
+      "instructions": [],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    }
+  ]
+}

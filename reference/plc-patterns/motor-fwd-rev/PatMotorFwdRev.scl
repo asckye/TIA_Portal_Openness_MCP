@@ -1,0 +1,56 @@
+FUNCTION_BLOCK "FB_PatMotorFwdRev"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Enable : Bool;
+    Fault : Bool;
+    ForwardRequest : Bool;
+    ReverseRequest : Bool;
+    DeadTime : Time := T#2s;
+END_VAR
+VAR_OUTPUT
+    Forward : Bool;
+    Reverse : Bool;
+    RequestConflict : Bool;
+END_VAR
+VAR
+    Direction : Int;
+    LastDirection : Int;
+    OffClock : TON_TIME;
+END_VAR
+VAR_TEMP
+    Wanted : Int;
+END_VAR
+BEGIN
+    #Wanted := 0;
+    #RequestConflict := #ForwardRequest AND #ReverseRequest;
+    IF #Enable AND NOT #Fault AND NOT #RequestConflict THEN
+        IF #ForwardRequest THEN
+            #Wanted := 1;
+        ELSIF #ReverseRequest THEN
+            #Wanted := -1;
+        END_IF;
+    END_IF;
+
+    IF #Direction <> #Wanted THEN
+        #Direction := 0;
+    END_IF;
+    #OffClock(IN := (#Direction = 0), PT := #DeadTime);
+    IF (#Direction = 0) AND (#Wanted <> 0) THEN
+        IF (#LastDirection = 0) OR (#LastDirection = #Wanted) OR #OffClock.Q THEN
+            #Direction := #Wanted;
+        END_IF;
+    END_IF;
+    IF #Direction <> 0 THEN
+        #LastDirection := #Direction;
+    END_IF;
+    #Forward := (#Direction = 1);
+    #Reverse := (#Direction = -1);
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatMotorFwdRev"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatMotorFwdRev"
+BEGIN
+END_DATA_BLOCK

@@ -9,7 +9,9 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class ToolUsageGenerator
 {
-    internal static JsonObject Generate(string root)
+    internal static JsonObject Generate(string root) => Generate(root, PlcPatternLibrary.Served(root));
+
+    internal static JsonObject Generate(string root, JsonArray patterns)
     {
         var data = new CatalogData(root);
         var sources = new JsonArray(); var documents = new JsonArray();
@@ -89,6 +91,13 @@ internal static class ToolUsageGenerator
         Require(mappings.All(p => Strings(p.Value!["documents"]).All(ids.Contains)), "Unknown source document mapping");
         var library = Read(root, "reference/tool-examples/languages/catalog.json");
         var examplesList = library["examples"]!.AsArray();
+        foreach (var pattern in patterns) examplesList.Add(Copy(pattern!));
+        if (patterns.Count > 0)
+            library["languages"]!.AsArray().Add(new JsonObject {
+                ["id"] = "plc-pattern", ["title"] = "Classic PLC patterns (VM-verified import and compile)",
+                ["aliases"] = new JsonArray("pattern", "patterns", "classic-patterns"),
+                ["tools"] = new JsonArray(Sorted(patterns.SelectMany(p => Strings(p!["tools"])).Distinct(StringComparer.Ordinal))
+                    .Select(t => (JsonNode?)JsonValue.Create(t)).ToArray()) });
         Require(examplesList.Select(e => Text(e!["id"])).Distinct().Count() == examplesList.Count, "Duplicate programming example id");
         foreach (var example in examplesList)
         {

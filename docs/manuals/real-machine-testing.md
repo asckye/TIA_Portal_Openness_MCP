@@ -115,6 +115,14 @@ NO-LOCK Part 4 的真机核对当前为 NOT RUN。获准连接测试环境后，
 
 ## 工具示例库
 
+经典 PLC 模式的源文件和元数据维护在 `reference/plc-patterns`，证据集中在
+[`evidence.json`](../../reference/plc-patterns/evidence.json)。每个 SCL 变体必须覆盖全部八版与声明的每个 CPU 家族：
+每格为 `verified`（外部源导入、块生成、软件编译零错误），或为附原生消息与 Siemens 官方网址的 `absent`；
+至少一格必须实测通过。任一格为 `NOT RUN` 或 `failed` 时整个变体不提供。LAD 变体后续单独以 V21 验证，
+未注册 builder 不算指令缺失。负责人从 VM 记录填写 TIA 更新、CPU 订货号与固件、包或提交、日期、运行编号、
+指令版本与导出哈希，再重新生成工具用法。离线无法核实的指令在 `pattern.json` 中标为 `unverified`，
+网址仅保留官方文档入口；提供前必须换成确切手册页并核实名称、版本。模式的 PLC 运行行为仍为 NOT RUN。
+
 工具参数、调用序列、结果解释和官方出处只在 `reference/tool-examples` 维护（`calls.json` 的 `plc-foundation`、`full-engine` 是按工具与 schema 选择的示例来源，八版对外 profile 均为 `plc-foundation`，另有 `sequences.json`、`metadata.json`、`languages/catalog.json` 及其源文件），由 `GetToolUsage` 按发布键返回；发现和错误中的内联示例、兼容入口读同一数据。规则见[设计规范](../standards/design.md)第 6.6 节。
 
 | `GetToolUsage` 参数 | 返回 |

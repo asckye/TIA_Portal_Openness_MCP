@@ -1,0 +1,36 @@
+FUNCTION "FC_PatAnalogScaling" : Real
+VERSION : 0.1
+VAR_INPUT
+    Raw : Real;
+    RawLow : Real := 0.0;
+    RawHigh : Real := 27648.0;
+    EngineeringLow : Real := 0.0;
+    EngineeringHigh : Real := 100.0;
+    WireBreakBelow : Real := -100.0;
+    OverflowAtOrAbove : Real := 32767.0;
+    SubstituteValue : Real := 0.0;
+END_VAR
+VAR_OUTPUT
+    ConfigurationValid : Bool;
+    InRange : Bool;
+    Fault : Bool;
+END_VAR
+VAR_TEMP
+    Fraction : Real;
+END_VAR
+BEGIN
+    #ConfigurationValid := (#RawHigh > #RawLow) AND (#EngineeringHigh > #EngineeringLow)
+        AND (#WireBreakBelow < #RawLow) AND (#OverflowAtOrAbove > #RawHigh);
+    #Fault := (#Raw < #WireBreakBelow) OR (#Raw >= #OverflowAtOrAbove);
+    #InRange := #ConfigurationValid AND NOT #Fault AND (#Raw >= #RawLow) AND (#Raw <= #RawHigh);
+    #FC_PatAnalogScaling := #SubstituteValue;
+    IF #ConfigurationValid AND NOT #Fault THEN
+        #Fraction := NORM_X(MIN := #RawLow, VALUE := #Raw, MAX := #RawHigh);
+        IF #Fraction < 0.0 THEN
+            #Fraction := 0.0;
+        ELSIF #Fraction > 1.0 THEN
+            #Fraction := 1.0;
+        END_IF;
+        #FC_PatAnalogScaling := SCALE_X(MIN := #EngineeringLow, VALUE := #Fraction, MAX := #EngineeringHigh);
+    END_IF;
+END_FUNCTION

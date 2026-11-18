@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "id": "counters-ctu-ctd-ctud",
+  "title": "Independent up, down and bidirectional counters",
+  "summary": "Count request edges with reset and load inputs using persistent counter instances.",
+  "notesZhCn": [
+    "模式仅用于教学；原生导入、块生成和软件编译证据以 evidence.json 为准，PLC 运行行为为 NOT RUN。",
+    "适用范围为 S7-1200 和 S7-1500；不覆盖 S7-1200 G2。",
+    "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
+    "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
+    "DownCount 先用 Load 装入预置值；Reset 仅复位上计数器和双向计数器。",
+    "INT 范围、复位与装载的优先级及同扫描双沿行为需按所选 CPU 指令版本核对。"
+  ],
+  "variants": [
+    {
+      "id": "scl",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/counters-ctu-ctd-ctud/PatCounters.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "FB",
+          "name": "FB_PatCounters"
+        },
+        {
+          "kind": "DB",
+          "name": "DB_PatCounters",
+          "instanceOf": "FB_PatCounters"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "CTU_INT",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4a, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        },
+        {
+          "name": "CTD_INT",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4a, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        },
+        {
+          "name": "CTUD_INT",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4a, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        },
+        {
+          "name": "R_TRIG",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4a, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        }
+      ],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    }
+  ]
+}

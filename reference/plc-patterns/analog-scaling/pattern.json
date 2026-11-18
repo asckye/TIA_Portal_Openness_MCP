@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "analog-scaling",
+  "title": "Bounded analog conversion",
+  "summary": "Scale a REAL sample; Raw below WireBreakBelow (default -100.0) or at/above OverflowAtOrAbove (default 32767.0) sets Fault and returns SubstituteValue (default 0.0) with InRange false.",
+  "notesZhCn": [
+    "模式仅用于教学；原生导入、块生成和软件编译证据以 evidence.json 为准，PLC 运行行为为 NOT RUN。",
+    "适用范围为 S7-1200 和 S7-1500；不覆盖 S7-1200 G2。",
+    "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
+    "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
+    "输入为已转换的有限 REAL；Raw < WireBreakBelow（默认 -100.0）或 Raw >= OverflowAtOrAbove（默认 32767.0）时 Fault 为 TRUE，InRange 为 FALSE，返回 SubstituteValue（默认 0.0），不转换为满量程。",
+    "上下故障阈值须按具体模块、量程和诊断配置核对；32767（7FFFh）的线断或溢出诊断值按上限故障处理。WireBreakBelow 必须小于 RawLow，OverflowAtOrAbove 必须大于 RawHigh。",
+    "未达到故障阈值的量程越限仍夹紧到工程值上下限；配置无效时返回 SubstituteValue 且 ConfigurationValid 为 FALSE。调用方必须检查诊断输出，并按设备要求配置替代值。"
+  ],
+  "variants": [
+    {
+      "id": "scl",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/analog-scaling/PatAnalogScaling.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "FC",
+          "name": "FC_PatAnalogScaling"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "NORM_X",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4a, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        },
+        {
+          "name": "SCALE_X",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4a, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        }
+      ],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    }
+  ]
+}

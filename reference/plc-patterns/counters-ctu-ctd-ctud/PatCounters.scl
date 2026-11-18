@@ -1,0 +1,41 @@
+FUNCTION_BLOCK "FB_PatCounters"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    UpRequest : Bool;
+    DownRequest : Bool;
+    Reset : Bool;
+    Load : Bool;
+    Preset : Int := 10;
+END_VAR
+VAR_OUTPUT
+    UpValue : Int;
+    DownValue : Int;
+    BothValue : Int;
+    UpReached : Bool;
+    DownEmpty : Bool;
+    BothHigh : Bool;
+    BothLow : Bool;
+END_VAR
+VAR
+    UpEdge : R_TRIG;
+    DownEdge : R_TRIG;
+    UpCount : CTU_INT;
+    DownCount : CTD_INT;
+    BothCount : CTUD_INT;
+END_VAR
+BEGIN
+    #UpEdge(CLK := #UpRequest);
+    #DownEdge(CLK := #DownRequest);
+    #UpCount(CU := #UpEdge.Q, R := #Reset, PV := #Preset, Q => #UpReached, CV => #UpValue);
+    #DownCount(CD := #DownEdge.Q, LD := #Load, PV := #Preset, Q => #DownEmpty, CV => #DownValue);
+    #BothCount(CU := #UpEdge.Q, CD := #DownEdge.Q, R := #Reset, LD := #Load,
+        PV := #Preset, QU => #BothHigh, QD => #BothLow, CV => #BothValue);
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatCounters"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatCounters"
+BEGIN
+END_DATA_BLOCK

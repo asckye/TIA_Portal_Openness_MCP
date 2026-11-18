@@ -252,6 +252,10 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
             assert len(detail) == 1 and detail[0]['id'] == summary['id']
             example = detail[0]
             assert example.get('files') or example.get('steps'), summary['id']
+            if example.get('language') == 'plc-pattern':
+                assert example['validation'].startswith('Real-machine verified'), example['id']
+                assert not example['releaseMatches'] or str(release) in example['availability'], example['id']
+                assert all(file['content'].isascii() for file in example.get('files', [])), example['id']
             for file in example.get('files', []):
                 assert hashlib.sha256(file['content'].encode()).hexdigest() == file['contentSha256']
             for step in example.get('steps', []):

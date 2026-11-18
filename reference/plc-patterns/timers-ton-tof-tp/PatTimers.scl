@@ -1,0 +1,35 @@
+FUNCTION_BLOCK "FB_PatTimers"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Signal : Bool;
+    OnTime : Time := T#1s;
+    OffTime : Time := T#1s;
+    PulseTime : Time := T#1s;
+END_VAR
+VAR_OUTPUT
+    OnDone : Bool;
+    OffActive : Bool;
+    PulseActive : Bool;
+    OnElapsed : Time;
+    OffElapsed : Time;
+    PulseElapsed : Time;
+END_VAR
+VAR
+    OnClock : TON_TIME;
+    OffClock : TOF_TIME;
+    PulseClock : TP_TIME;
+END_VAR
+BEGIN
+    // Call every instance on every scan; do not store instances in TEMP.
+    #OnClock(IN := #Signal, PT := #OnTime, Q => #OnDone, ET => #OnElapsed);
+    #OffClock(IN := #Signal, PT := #OffTime, Q => #OffActive, ET => #OffElapsed);
+    #PulseClock(IN := #Signal, PT := #PulseTime, Q => #PulseActive, ET => #PulseElapsed);
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatTimers"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatTimers"
+BEGIN
+END_DATA_BLOCK

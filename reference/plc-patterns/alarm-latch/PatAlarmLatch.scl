@@ -1,0 +1,45 @@
+TYPE "UDT_PatAlarmState"
+VERSION : 0.1
+    STRUCT
+        Present : Bool;
+        Latched : Bool;
+        Acknowledged : Bool;
+    END_STRUCT;
+END_TYPE
+
+FUNCTION_BLOCK "FB_PatAlarmLatch"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Condition : Bool;
+    Acknowledge : Bool;
+END_VAR
+VAR_OUTPUT
+    State : "UDT_PatAlarmState";
+END_VAR
+VAR
+    AckEdge : R_TRIG;
+END_VAR
+BEGIN
+    #AckEdge(CLK := #Acknowledge);
+    #State.Present := #Condition;
+    IF #Condition THEN
+        IF NOT #State.Latched THEN
+            #State.Acknowledged := FALSE;
+        END_IF;
+        #State.Latched := TRUE;
+    END_IF;
+    IF #AckEdge.Q THEN
+        #State.Acknowledged := TRUE;
+        IF NOT #Condition THEN
+            #State.Latched := FALSE;
+        END_IF;
+    END_IF;
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatAlarmLatch"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatAlarmLatch"
+BEGIN
+END_DATA_BLOCK

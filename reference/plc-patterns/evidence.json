@@ -1,0 +1,677 @@
+{
+  "schemaVersion": 1,
+  "rows": [
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "alarm-latch",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "analog-scaling",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "counters-ctu-ctd-ctud",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "motor-fwd-rev",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "start-stop",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "14sp1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "15.1",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "16",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "17",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "18",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "19",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "20",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1200",
+      "status": "NOT RUN"
+    },
+    {
+      "pattern": "timers-ton-tof-tp",
+      "variant": "scl",
+      "releaseKey": "21",
+      "cpuFamily": "S7-1500",
+      "status": "NOT RUN"
+    }
+  ]
+}

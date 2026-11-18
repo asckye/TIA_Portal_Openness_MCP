@@ -1,0 +1,22 @@
+FUNCTION_BLOCK "FB_PatStartStop"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Start : Bool;
+    Stop : Bool;
+    Fault : Bool;
+END_VAR
+VAR_OUTPUT
+    Run : Bool;
+END_VAR
+BEGIN
+    // Stop and fault remove the seal-in in the current scan.
+    #Run := (#Run OR #Start) AND NOT #Stop AND NOT #Fault;
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "DB_PatStartStop"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+"FB_PatStartStop"
+BEGIN
+END_DATA_BLOCK

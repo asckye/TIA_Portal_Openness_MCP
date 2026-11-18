@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "id": "alarm-latch",
+  "title": "Alarm memory with edge acknowledgement",
+  "summary": "Keep an alarm latched until its cause is gone and an acknowledgement edge arrives.",
+  "notesZhCn": [
+    "模式仅用于教学；原生导入、块生成和软件编译证据以 evidence.json 为准，PLC 运行行为为 NOT RUN。",
+    "适用范围为 S7-1200 和 S7-1500；不覆盖 S7-1200 G2。",
+    "导入前检查 Pat 前缀同名对象；外部源生成可能覆盖同名块，先使用一次性工程副本。",
+    "输入输出通过块接口连接；本模式不承担急停、安全互锁或设备保护。",
+    "报警仍存在时确认仅设置已确认标志；原因消失后需新的确认上升沿才清除锁存。",
+    "使用单个实例保存一项报警状态；上电保持与历史记录策略由工程配置。"
+  ],
+  "variants": [
+    {
+      "id": "scl",
+      "kind": "scl-external-source",
+      "cpuFamilies": [
+        "S7-1200",
+        "S7-1500"
+      ],
+      "files": [
+        {
+          "path": "reference/plc-patterns/alarm-latch/PatAlarmLatch.scl",
+          "encoding": "ASCII"
+        }
+      ],
+      "contains": [
+        {
+          "kind": "UDT",
+          "name": "UDT_PatAlarmState"
+        },
+        {
+          "kind": "FB",
+          "name": "FB_PatAlarmLatch"
+        },
+        {
+          "kind": "DB",
+          "name": "DB_PatAlarmLatch",
+          "instanceOf": "FB_PatAlarmLatch"
+        }
+      ],
+      "instructions": [
+        {
+          "name": "R_TRIG",
+          "cpuFamilies": [
+            "S7-1200",
+            "S7-1500"
+          ],
+          "sourceUrl": "https://docs.tia.siemens.cloud/",
+          "verification": "unverified",
+          "version": "unverified",
+          "verificationNote": "Name is prescribed by ECO-S4a, not verified against an offline official manual. URL is the official documentation entry point only; replace with the exact manual page and record instruction versions during VM verification."
+        }
+      ],
+      "importSequence": "sequence/stage-scl-function-plc-foundation",
+      "tools": [
+        "StageImportFiles",
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompilePlcDiagnostics"
+      ]
+    }
+  ]
+}

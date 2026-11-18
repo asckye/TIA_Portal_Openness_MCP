@@ -248,6 +248,7 @@ T-IA（TIA-TEST/SAFE/BATCH/GAPS）、P8-95、S4 与后续零散任务仍需编�
 
 | 编号 | 事项 |
 |---|---|
+| D-ECO-S4 | 是否将 S4 真机证据门禁应用于现有语言示例 `scl-library-fb_basiclatch`、`scl-library-fb_stepsequencedemo`、`scl-library-fb_timercounterdemo`、`scl-library-fc_basicscalelimit`、`scl-state-timer`；S4 保持这些示例原样 |
 | S7（4.0 前） | 决定如何处理旧公开标签和 3.x 资产中的 Siemens DLL；当前树与 4.0 包未携带它们，不代表历史分发问题已解决 |
 | 正式版发布（4.0 前） | 定义并实现 `publish-prepared` 的正式版规则；当前只接受预发布，需决定 latest 与 3.3 更新器的关系 |
 | D-P8 | `docs/reference/capabilities.md` 是否为预发布增加条目（旧发布流程曾打印 WARNING，新流程需另行决定） |
