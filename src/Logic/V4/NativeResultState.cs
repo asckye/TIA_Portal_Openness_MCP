@@ -190,7 +190,8 @@ namespace TiaMcp.Logic.V4
                 return false;
             string? state = evidence["nativeState"]?.ToString();
             string? type = EnumType(evidence, tool);
-            bool? testVerdict = type == NativeResultStates.TestSuite ? NativeResultStates.TestSuiteVerdict(completed, state) : null;
+            bool? testVerdict = tool == "RunTestSuiteCase" && type == NativeResultStates.TestSuite
+                ? NativeResultStates.TestSuiteVerdict(completed, state) : null;
             if (testVerdict != false && (type != null
                 ? NativeResultStates.Classify(type, state) != NativeStateKind.Failure
                 : state != "Error" && state != "Failure" && state != "Failed" && state != "ErrorRollback")) return false;

@@ -132,7 +132,7 @@ public sealed class StaticPolicyTests
         var cli = new JsonObject();
         CatalogGenerator.WriteHostCli(cli);
         Assert.Equal("runtime/v21/TiaMcp.FoundationHost.exe", (string?)cli["exe"]);
-        Assert.Equal(new[] { "doctor", "audit verify", "schema", "version", "config", "install-plc-tools", "help" },
+        Assert.Equal(new[] { "doctor", "audit verify", "test report", "schema", "version", "config", "install-plc-tools", "help" },
             cli["verbs"]!.AsArray().Select(v => (string)v!));
         Assert.Equal(new[] { "0", "2", "3", "4", "5", "64", "70" }, cli["exitCodes"]!.AsObject().Select(p => p.Key));
         Assert.Equal("rejected, doctor not ready or no successful config writes", (string?)cli["exitCodes"]?["2"]);

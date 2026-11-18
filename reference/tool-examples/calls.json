@@ -19788,6 +19788,7 @@
           "dryRun": true
         },
         "parameters": {},
+        "operations": {},
         "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
       }
     },
@@ -40470,6 +40471,7 @@
           "dryRun": true
         },
         "parameters": {},
+        "operations": {},
         "note": "Not yet verified on a real PLCSIM Advanced / Test Suite installation."
       }
     }
