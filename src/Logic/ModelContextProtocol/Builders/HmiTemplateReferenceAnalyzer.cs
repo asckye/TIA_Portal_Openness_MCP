@@ -34,7 +34,7 @@ namespace TiaMcpServer.ModelContextProtocol
             root["referenceHints"] = referenceHints;
             root["readiness"] = BuildReadiness(templates, referenceHints);
             root["recommendations"] = BuildRecommendations(templates, referenceHints);
-            root["ok"] = Directory.Exists(templateDirectory) && templates.Count > 0;
+            root["ok"] = templates.OfType<JsonObject>().Any(t => t["templatesFound"]?.GetValue<bool>() == true);
             return root;
         }
 
@@ -136,22 +136,27 @@ namespace TiaMcpServer.ModelContextProtocol
                     var json = JsonNode.Parse(File.ReadAllText(file, Encoding.UTF8)) as JsonObject;
                     if (json == null) continue;
 
-                    var requiredTags = json["RequiredTags"] as JsonArray ?? new JsonArray();
-                    var items = json["Items"] as JsonArray ?? new JsonArray();
+                    var screen = HmiTemplateJson.Screen(json);
+                    var items = HmiTemplateJson.Items(json);
+                    if (screen == null && items == null) continue;
+                    items ??= new JsonArray();
+                    var requiredTags = HmiTemplateJson.Get(json, "RequiredTags") as JsonArray ?? new JsonArray();
                     var dyn = new JsonArray();
                     var actions = new JsonArray();
 
                     foreach (var itemNode in items)
                     {
                         if (itemNode is not JsonObject item) continue;
-                        CollectDynamizations(item, item["Name"]?.ToString() ?? "", dyn);
-                        if (item["Actions"] is JsonArray actionArray)
+                        var itemName = HmiTemplateJson.Name(item);
+                        CollectDynamizations(item, itemName, dyn);
+                        foreach (var binding in HmiTemplateJson.Bindings(item))
+                            dyn.Add(new JsonObject { ["item"] = itemName, ["property"] = "binding", ["tag"] = binding.Tag, ["readOnly"] = binding.ReadOnly });
+                        if (HmiTemplateJson.Get(item, "Actions") is JsonArray actionArray)
                         {
                             foreach (var actionNode in actionArray)
                             {
                                 if (actionNode is JsonObject action)
                                 {
-                                    var itemName = item["Name"]?.ToString() ?? "";
                                     var eventName = action["Event"]?.ToString() ?? "";
                                     var script = action["Script"]?.ToString() ?? "";
                                     var actionJson = new JsonObject
@@ -168,7 +173,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         }
                     }
 
-                    if (json["Events"] is JsonArray eventArray)
+                    if (HmiTemplateJson.Get(json, "Events") is JsonArray eventArray)
                     {
                         foreach (var eventNode in eventArray)
                         {
@@ -191,7 +196,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                     var tagNames = requiredTags
                         .OfType<JsonObject>()
-                        .Select(x => x["Name"]?.ToString() ?? "")
+                        .Select(HmiTemplateJson.Name)
                         .Where(x => !string.IsNullOrWhiteSpace(x))
                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
                     var templateObjectNames = BuildTemplateObjectNameSet(json, items);
@@ -207,10 +212,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     result.Add(new JsonObject
                     {
                         ["file"] = file,
-                        ["templateName"] = json["TemplateName"]?.ToString() ?? Path.GetFileNameWithoutExtension(file),
-                        ["format"] = json["Format"]?.ToString() ?? "",
-                        ["purpose"] = json["Purpose"]?.ToString() ?? "",
-                        ["screenName"] = json["Screen"]?["Name"]?.ToString() ?? "",
+                        ["templateName"] = HmiTemplateJson.Get(json, "TemplateName")?.ToString() ?? Path.GetFileNameWithoutExtension(file),
+                        ["format"] = HmiTemplateJson.Get(json, "Format")?.ToString() ?? "",
+                        ["purpose"] = HmiTemplateJson.Get(json, "Purpose")?.ToString() ?? "",
+                        ["screenName"] = HmiTemplateJson.Name(screen),
+                        ["templatesFound"] = items.Count > 0,
                         ["requiredTagCount"] = requiredTags.Count,
                         ["itemCount"] = items.Count,
                         ["dynamizationCount"] = dyn.Count,

@@ -264,8 +264,15 @@ namespace TiaMcp.Logic.V4
             if (evidence["status"]?.ToString() != "PreconditionFailed"
                 || evidence["mayHaveChanged"] is JsonValue value && value.TryGetValue<bool>(out var changed) && changed
                 || string.IsNullOrWhiteSpace(evidence["precondition"]?.ToString())) return null;
+            return DocumentedRefusalError(evidence);
+        }
+
+        internal static Error DocumentedRefusalError(JsonObject evidence)
+        {
+            string? condition = evidence["precondition"]?.ToString();
+            string? parameter = evidence["parameter"]?.ToString();
             return new Error(SafeDiagnostic(evidence["refusal"]?.ToString()) ?? "TIA Portal refused the operation.",
-                new PreconditionFailedDetails(evidence["precondition"]!.ToString(), null, evidence["parameter"]?.ToString()));
+                new PreconditionFailedDetails(condition, null, parameter));
         }
 
         internal static Error UnchangedNativeError(JsonObject evidence, string? fallback = null)

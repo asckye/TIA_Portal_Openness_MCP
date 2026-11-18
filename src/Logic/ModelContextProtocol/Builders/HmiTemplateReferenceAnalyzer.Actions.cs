@@ -188,17 +188,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!string.IsNullOrWhiteSpace(value)) names.Add(value);
             }
 
-            Add(template["Screen"]?["Name"]?.ToString() ?? "");
+            Add(HmiTemplateJson.Name(HmiTemplateJson.Screen(template)));
             foreach (var item in items.OfType<JsonObject>())
             {
-                Add(item["Name"]?.ToString() ?? "");
+                Add(HmiTemplateJson.Name(item));
             }
 
             foreach (var component in template["Components"] as JsonArray ?? new JsonArray())
             {
                 if (component is JsonObject obj)
                 {
-                    Add(obj["Name"]?.ToString() ?? "");
+                    Add(HmiTemplateJson.Name(obj));
                 }
             }
 
@@ -276,8 +276,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             {
                                 ["item"] = itemName,
                                 ["property"] = dyn.Key,
-                                ["tag"] = dyn.Value?["Tag"]?.ToString() ?? "",
-                                ["readOnly"] = dyn.Value?["ReadOnly"]?.ToString() ?? ""
+                                ["tag"] = HmiTemplateJson.Get(dyn.Value as JsonObject, "Tag")?.ToString() ?? "",
+                                ["readOnly"] = HmiTemplateJson.Get(dyn.Value as JsonObject, "ReadOnly")?.ToString() ?? ""
                             });
                         }
                     }

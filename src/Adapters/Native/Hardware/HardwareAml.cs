@@ -48,7 +48,7 @@ namespace TiaMcp.Adapters
 #else
             // V14 SP1-V18 expose the bool overload with a native log file.
             // Keep its bool evidence distinct from the later TransferResult enum.
-            var log = HardwareAmlPolicy.Plan(filePath + "." + Guid.NewGuid().ToString("N") + ".log");
+            var log = HardwareAmlPolicy.Plan(filePath + "." + Guid.NewGuid().ToString("N") + ".log", "exportPath");
             bool ok = cax.Export(device, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)), log);
             return new HardwareAmlExportReply { DeviceName = device.Name ?? devicePath, FilePath = filePath,
                 Success = ok, State = ok.ToString(), NativeBooleanResult = ok,
@@ -83,7 +83,7 @@ namespace TiaMcp.Adapters
                 var option = HardwareAmlPolicy.ImportOption(importOption);
                 HardwareAmlPolicy.RequireConfirmation(confirmImport, dryRun);
                 var source = HardwareAmlPolicy.InputFile(filePath);
-                var log = HardwareAmlPolicy.Plan(logFilePath);
+                var log = HardwareAmlPolicy.Plan(logFilePath, nameof(logFilePath));
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false;
                 using var exclusive = !dryRun && ReleaseKey != "21" ? HardwareEditAccess() : null;
                 if (!dryRun && ReleaseKey == "21") HardwareWriteAdmission();

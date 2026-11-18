@@ -39,7 +39,7 @@ namespace TiaMcpServer.Siemens
                 throw new ArgumentException("interfaceName must contain 1..128 characters.");
             if (!Uri.TryCreate(namespaceUri, UriKind.Absolute, out _)) throw new ArgumentException("namespaceUri must be absolute, e.g. urn:company:machine.");
             if (!outputPath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("outputPath must end in .xml.");
-            var output = NativeFileOutput.Plan(outputPath);
+            var output = NativeFileOutput.Plan(outputPath, nameof(outputPath));
             var access = JsonNode.Parse(accessLevelsJson) as JsonObject ?? throw new ArgumentException("accessLevelsJson must be an object.");
             var allowed =
                 new HashSet<string>(new[] {

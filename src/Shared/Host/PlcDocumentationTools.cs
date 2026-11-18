@@ -38,7 +38,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("RenderPlcBlockDocument", meta =>
             {
                 if (maxChars < 1000 || maxChars > 2000000) throw new ArgumentException("maxChars must be between 1000 and 2000000.");
-                var output = string.IsNullOrWhiteSpace(outputPath) ? null : NativeFileOutput.Plan(outputPath);
+                var output = string.IsNullOrWhiteSpace(outputPath) ? null : NativeFileOutput.Plan(outputPath, nameof(outputPath));
                 string? temp = null;
                 try
                 {
@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("mermaidDirection: direction of the generated Mermaid diagram - TB or LR.")] string mermaidDirection = "LR")
             => OfflineToolExecution.RunOfflineAnalysisTool("GeneratePlcDocumentation", meta =>
             {
-                var output = NativeFileOutput.Plan(outputPath);
+                var output = NativeFileOutput.Plan(outputPath, nameof(outputPath));
                 var extensions = OfflineAnalysisLogic.ParseExtensions(extensionsJson);
                 var hb = PlcDocumentationLogic.RenderHandbook(directory, recursive, extensions, title ?? "", mermaidDirection ?? "LR");
                 File.WriteAllText(output.FullName, hb.Markdown, new UTF8Encoding(false));

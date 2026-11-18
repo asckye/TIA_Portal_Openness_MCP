@@ -60,7 +60,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("RenderPlcVisualDiff", meta =>
             {
                 if (!outputPath.EndsWith(".html", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("outputPath must end in .html.");
-                var output = NativeFileOutput.Plan(outputPath);
+                var output = NativeFileOutput.Plan(outputPath, nameof(outputPath));
                 var result = PlcVisualComparison.Compare(leftFilePath, rightFilePath, out var html);
                 foreach (var item in result) meta[item.Key] = item.Value?.DeepClone();
                 using (var stream = new FileStream(output.FullName, FileMode.CreateNew, FileAccess.Write))

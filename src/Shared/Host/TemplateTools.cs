@@ -69,7 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     throw new AdapterPreconditionException("Supply an existing absolute outputDirectory.", "outputDirectory");
                 var documents = PlcTemplateExpansion.Expand(templatePath, rowsJson);
                 System.Collections.Generic.List<FileInfo> outputs;
-                try { outputs = documents.Select(d => NativeFileOutput.Plan(Path.Combine(outputDirectory, d.Name))).ToList(); }
+                try { outputs = documents.Select(d => NativeFileOutput.Plan(Path.Combine(outputDirectory, d.Name), nameof(outputDirectory))).ToList(); }
                 catch (Exception ex) when (ex is ArgumentException || ex is IOException)
                 {
                     throw new AdapterPreconditionException("Supply an existing outputDirectory with no existing output files or directories for the row file " +

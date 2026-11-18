@@ -8,6 +8,10 @@
 
 - V21 `ManageSivarcScreenLayout` previews both actions by default. Export preview leaves the output path untouched. Import preview lists the current screen items that the layout file would replace. Apply requires `allowRemoveScreenItems: true` when the screen contains items or its inventory cannot be read. The result reports item counts, removals and additions when both inventories are readable.
 - `CallTool` journal records now use the target operation and its preview arguments to report whether the call requested a write.
+- `GetPlcPutGetAccess` and `SetPlcPutGetAccess` recognize the documented Boolean attribute on CPU device items that expose it (V15.1–V21).
+- `GetPlcBlockFingerprints` and `GeneratePlcLoadableFile` report `PRECONDITION_FAILED` with condition `service-not-provided` when the CPU does not supply the registered service. The result identifies the CPU and the owners searched. Loadable-file previews check the service before the output path.
+- A missing output parent directory now returns `PRECONDITION_FAILED` with the path parameter. A technology-object create rejected for an unavailable type/version reports `technology-type-version-unavailable` after verified rollback.
+- `AnalyzeHmiTemplateReference` reads the items and PLC bindings in the shipped HMI screens, identifies empty screens and excludes alarm-class files from screen counts.
 
 ## [4.0.0-beta.6] - 2026-11-18
 

@@ -187,6 +187,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Reflection/ReflectionScreenTraversal.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationWorker.Paths.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationWorker.Services.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcObjectPath.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/IPlcOrganisationSession.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSoftwareValues.cs" />

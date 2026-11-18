@@ -16,8 +16,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public static bool ExecutionJsonBuilds(string templateFile)
         {
             var templateRoot = JsonNode.Parse(File.ReadAllText(templateFile)) as JsonObject;
-            var expectedItems = (templateRoot?["Items"] as JsonArray ?? templateRoot?["items"] as JsonArray ?? new JsonArray()).Count;
-            var screen = templateRoot?["Screen"] as JsonObject ?? templateRoot?["screen"] as JsonObject ?? new JsonObject();
+            var expectedItems = HmiTemplateJson.Items(templateRoot)?.Count ?? 0;
+            var screen = HmiTemplateJson.Screen(templateRoot) ?? new JsonObject();
             // 回退宽高与 Program.ReportBuilders 的 TemplateExecutionJsonBuilds 保持一致，避免同一模板两处判定不同。
             var width = GetJsonInt(screen["Width"] ?? screen["width"], 800);
             var height = GetJsonInt(screen["Height"] ?? screen["height"], 480);
@@ -27,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static (int Width, int Height) ScreenSize(JsonObject root, string templateFile, int fallbackWidth, int fallbackHeight)
         {
-            var screen = root["Screen"] as JsonObject ?? root["screen"] as JsonObject ?? new JsonObject();
+            var screen = HmiTemplateJson.Screen(root) ?? new JsonObject();
             var size = Regex.Match(Path.GetFileNameWithoutExtension(templateFile), @"_(\d{3,5})x(\d{3,5})$");
             var namedWidth = size.Success ? int.Parse(size.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : fallbackWidth;
             var namedHeight = size.Success ? int.Parse(size.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture) : fallbackHeight;
@@ -125,7 +125,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     .Add("missing-design-system-field: Layout.Grid should be a positive number.");
             }
 
-            var screen = root["Screen"] as JsonObject ?? root["screen"] as JsonObject;
+            var screen = HmiTemplateJson.Screen(root);
             if (screen == null)
             {
                 errors.Add("missing-screen: Screen object is required.");
@@ -141,7 +141,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 errors.Add("invalid-size: screen must be at least 320x240.");
             }
 
-            var items = (root["Items"] as JsonArray ?? root["items"] as JsonArray ?? new JsonArray()).OfType<JsonObject>().ToArray();
+            var items = (HmiTemplateJson.Items(root) ?? new JsonArray()).OfType<JsonObject>().ToArray();
             row["itemCount"] = items.Length;
             if (items.Length == 0)
             {
@@ -152,8 +152,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in items)
             {
-                var name = item["Name"]?.ToString() ?? item["name"]?.ToString() ?? "";
-                var type = NormalizeUnifiedHmiItemType(item["Type"]?.ToString() ?? item["type"]?.ToString() ?? "");
+                var name = HmiTemplateJson.Name(item);
+                var type = NormalizeUnifiedHmiItemType(HmiTemplateJson.Type(item));
                 var left = GetJsonInt(item["Left"] ?? item["left"], 0);
                 var top = GetJsonInt(item["Top"] ?? item["top"], 0);
                 var width = GetJsonInt(item["Width"] ?? item["width"], 0);

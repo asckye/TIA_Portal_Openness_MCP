@@ -40,9 +40,33 @@ public sealed class PlcServiceLookupSources
         string source = Read("src/Adapters/Native/Online/OnlineDataAdapter.cs");
         Assert.Contains("_session.ResolvePlcService<LoadableProvider>(softwarePath, plc)", source);
         Assert.Contains("_session.ResolvePlcService<FingerprintDataProvider>(softwarePath, plc)", source);
+        string session = Read("src/Adapters/Native/Online/OnlineSession.cs");
+        Assert.Contains("required: _request.Operation is \"GetPlcBlockFingerprints\" or \"GeneratePlcLoadableFile\"", session);
+        string worker = Read("src/Adapters/Native/Plc/PlcOrganisationWorker.cs");
+        Assert.Contains("PlcServiceLookup.Missing(typeof(T).Name, selected.ExactPath, cpu?.TypeIdentifier, searched, orderNumber, firmware)", worker);
         foreach (string provider in new[] { "LoadableProvider", "FingerprintDataProvider" })
-            Assert.Contains("new PlcSoftwareException(\"NotSupportedOnVersion\", \"" + provider +
-                " is not exposed for this CPU on this release.\")", source);
+        {
+            var owners = new[] { "PlcSoftware PLC_1", "DeviceItem CPU", "Device Station" };
+            var error = TiaMcp.Adapters.Contracts.PlcServiceLookup.Missing(provider, "PLC_1", "OrderNumber:CPU/V3.1", owners);
+            Assert.False(error.IsArgument);
+            Assert.Equal("service-not-provided", error.Condition);
+            Assert.Contains(provider, error.Message);
+            Assert.Contains("OrderNumber:CPU/V3.1", error.Message);
+            Assert.All(owners, name => Assert.Contains(name, error.Message));
+            var evidence = Assert.IsType<Dictionary<string, object?>>(error.Data["nativeResultEvidence"]);
+            Assert.Equal(provider, evidence["service"]);
+            Assert.Equal(owners, evidence["searched"]);
+            Assert.Equal("OrderNumber:CPU/V3.1", evidence["typeIdentifier"]);
+            Assert.Equal("CPU", evidence["orderNumber"]);
+            Assert.Equal("V3.1", evidence["firmware"]);
+            var meta = new Dictionary<string, object?> { ["mayHaveChanged"] = false };
+            TiaMcp.Adapters.Contracts.StepFailureStatus.RecordTarget(error, meta);
+            Assert.Equal("PreconditionFailed", meta["status"]);
+            Assert.Equal("service-not-provided", meta["precondition"]);
+        }
+        Assert.True(source.IndexOf("_session.ResolvePlcService<LoadableProvider>", StringComparison.Ordinal)
+            < source.IndexOf("PlcSourceFileOutput.Plan(filePath)", source.IndexOf("public HmiMessage GeneratePlcLoadableFile", StringComparison.Ordinal),
+                StringComparison.Ordinal));
         Assert.DoesNotContain("plc.GetService<LoadableProvider>()", source);
     }
 

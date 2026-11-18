@@ -240,8 +240,8 @@ namespace TiaMcp.Logic.V4
             {
                 if (!ExportObservation.Absent(path)) throw new TiaMcp.Adapters.Contracts
                     .AdapterPreconditionException("Output already exists or cannot be inspected; overwrite refused.", parameter);
-                if (!Directory.Exists(Path.GetDirectoryName(path))) throw new TiaMcp.Adapters.Contracts
-                    .AdapterPreconditionException("Output parent must already exist.", parameter);
+                if (!Directory.Exists(Path.GetDirectoryName(path))) throw TiaMcp.Adapters.Contracts
+                    .AdapterPreconditionException.OutputParentMissing(parameter);
                 RequireWritable(Path.GetDirectoryName(path)!, parameter);
             }
         }

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Globalization;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -15,6 +16,42 @@ public sealed class HmiTemplateOfflineQaTests : IDisposable
     private static string RepositoryRoot => TestPaths.RepositoryRoot(AppContext.BaseDirectory);
 
     public HmiTemplateOfflineQaTests() => Directory.CreateDirectory(directory);
+
+    [Fact]
+    public void Reference_analysis_counts_shipped_screens_and_plc_bindings()
+    {
+        var folder = Path.Combine(RepositoryRoot, "templates/standards/tiamcp.basic/sources/hmi");
+        var result = HmiTemplateReferenceAnalyzer.Analyze(folder, "", "");
+        var screens = result["templates"]!.AsArray().Select(t => t!.AsObject()).ToDictionary(t => Path.GetFileNameWithoutExtension((string)t["file"]!));
+        Assert.Equal(12, screens.Count);
+        Assert.DoesNotContain("unified-alarm-classes", screens.Keys);
+        Assert.All(screens.Values, t => Assert.True((int)t["itemCount"]! > 0 && (bool)t["templatesFound"]!));
+        Assert.Equal(29, screens.Values.Sum(t => (int)t["dynamizationCount"]!));
+        void CheckScreen(string key, int items, int bindings, string screen)
+        {
+            Assert.Equal(items, (int)screens[key]["itemCount"]!);
+            Assert.Equal(bindings, (int)screens[key]["dynamizationCount"]!);
+            Assert.Equal(screen, (string?)screens[key]["screenName"]);
+        }
+        CheckScreen("analog.in", 7, 5, "{{device.hmi.screen}}");
+        CheckScreen("unit", 12, 10, "{{device.hmi.screen}}");
+        CheckScreen("unified_overview_1280x800", 48, 0, "Basic_overview_1280x800");
+        Assert.Contains(screens["analog.in"]["dynamizations"]!.AsArray(), row =>
+            (string?)row!["tag"] == "{{naming.idb(device)}}.Hmi.Status.Basic.Active" && (bool)row["readOnly"]!);
+        Assert.Contains(screens.Values.SelectMany(t => t["dynamizations"]!.AsArray()), row => !(bool)row!["readOnly"]!);
+    }
+
+    [Fact]
+    public void Reference_analysis_reports_an_empty_screen_and_excludes_non_screen_json()
+    {
+        Write("empty.json", """{"Screen":{"Name":"Empty"},"Items":[]}""");
+        Write("alarms.json", """{"alarmClasses":[]}""");
+        var report = HmiTemplateReferenceAnalyzer.Analyze(directory, "", "");
+        var empty = Assert.Single(report["templates"]!.AsArray())!;
+        Assert.Equal("Empty", (string?)empty["screenName"]);
+        Assert.False((bool)empty["templatesFound"]!);
+        Assert.False((bool)report["ok"]!);
+    }
 
     [Theory]
     [InlineData("templates/hmi")]

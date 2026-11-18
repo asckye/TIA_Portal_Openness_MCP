@@ -1,4 +1,5 @@
 using System;
+using TiaMcp.Adapters.Contracts;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
@@ -28,12 +29,12 @@ namespace TiaMcp.Adapters
             return file;
         }
 
-        internal static FileInfo Plan(string path)
+        internal static FileInfo Plan(string path, string parameter = "filePath")
         {
             if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) throw new ArgumentException("Absolute output file path required.");
             var file = new FileInfo(path);
             if (file.Exists || Directory.Exists(file.FullName)) throw new IOException("Output already exists; overwrite refused.");
-            if (file.Directory?.Exists != true) throw new DirectoryNotFoundException("Output parent must already exist.");
+            if (file.Directory?.Exists != true) throw AdapterPreconditionException.OutputParentMissing(parameter);
             return file;
         }
 
@@ -41,7 +42,7 @@ namespace TiaMcp.Adapters
         {
             if (!Path.GetExtension(path).Equals(".aml", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("exportPath must end with .aml.", "exportPath");
-            Plan(path);
+            Plan(path, "exportPath");
         }
 
         internal static Dictionary<string, object?> Verify(FileInfo file)

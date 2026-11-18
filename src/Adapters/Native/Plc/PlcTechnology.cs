@@ -23,7 +23,9 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         public HardwareAddressingReply ManageTechnologyObject(string softwarePath, string objectPath, string action, string typeIdentifier,
             string version, string parameter, HardwareScalar value, string valueError, bool dryRun = true)
-            => _session.RunHmiStepTool("ManageTechnologyObject", meta => {
+        {
+            bool creating = false;
+            var result = _session.RunHmiStepTool("ManageTechnologyObject", meta => {
                 meta["mayHaveChanged"] = false;
                 if (!new[] { "read", "create", "delete", "setParameter" }.Contains(action))
                     throw new ArgumentException("action must be read/create/delete/setParameter.");
@@ -51,9 +53,11 @@ namespace TiaMcp.Adapters.Native.Plc
                         // Typed TechnologicalInstanceDBComposition.Create(name, typeIdentifier, version) with Find readback.
                         EngineeringWriteJournal.Creating(() => PlcGroupOperations.Find(collection, parts.Last()),
                             softwarePath + "/TechnologicalObjects/" + objectPath);
+                        creating = true;
                         if (collection is TechnologicalInstanceDBComposition typedCollection)
                         {
                             TechnologicalInstanceDB created = WatchNative.Create(typedCollection, parts.Last(), typeIdentifier, apiVersion);
+                            creating = false;
                             if (WatchNative.Find(typedCollection, parts.Last()) == null)
                                 throw new InvalidOperationException("Technology object not found by readback after Create.");
                             target = created; meta["after"] = TechnologyObjectRow(created);
@@ -63,6 +67,7 @@ namespace TiaMcp.Adapters.Native.Plc
                             target = PlcGroupOperations
                                 .Call(collection, "Create", new[] { typeof(string), typeof(string), typeof(Version) }, parts.Last(), typeIdentifier,
                                     apiVersion);
+                            creating = false;
                             meta["after"] = HardwareScalarEvidence.Read(target);
                         }
                     }
@@ -122,6 +127,10 @@ namespace TiaMcp.Adapters.Native.Plc
                         ? "Create preview; no changes. TIA checks the type and version against this CPU only when the object is created."
                     : "Technology object read/preview completed; no changes.";
             });
+            if (creating && PlcTechnologyRefusal.Record(result, typeIdentifier, version))
+                MutationStarted = false;
+            return result;
+        }
 
         // ---- ReadTechnologyObjectTree ---------------------------------------------------------------------------------------------------
         private Dictionary<string, object?> TechnologyGroupRow(TechnologicalInstanceDBGroup group, bool includeParameters, int depth, int maxDepth)

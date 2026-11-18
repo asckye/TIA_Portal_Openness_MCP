@@ -32,7 +32,7 @@ namespace TiaMcp.Adapters.Native.Plc
         public List<(string Path, bool? Consistent)> ReadPlcConsistency(string path);
         public PlcSoftware? ResolvePlc(string softwarePath, bool write);
         public object? ResolvePlcTagTableGroup(PlcSoftware plc);
-        public T? ResolvePlcService<T>(string path, PlcSoftware plc) where T : class, IEngineeringService;
+        public T? ResolvePlcService<T>(string path, PlcSoftware plc, bool required = false) where T : class, IEngineeringService;
         public PlcSoftware ExactPlcForEngineering(string softwarePath, bool write);
         public object ExactMasterCopyPlcSource(string softwarePath, string objectPath, bool block);
         public Siemens.Engineering.Library.MasterCopies.MasterCopy ExactMasterCopy(string libraryName, string path);

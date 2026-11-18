@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("AuditEngineeringExports", meta =>
             {
                 FileInfo? output;
-                try { output = string.IsNullOrEmpty(reportPath) ? null : NativeFileOutput.Plan(reportPath); }
+                try { output = string.IsNullOrEmpty(reportPath) ? null : NativeFileOutput.Plan(reportPath, nameof(reportPath)); }
                 catch (Exception ex) when (ex is ArgumentException || ex is IOException)
                 {
                     throw new AdapterPreconditionException("Supply a new absolute reportPath in an existing directory; existing outputs cannot be overwritten.",

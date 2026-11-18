@@ -11,6 +11,8 @@ namespace TiaMcp.Adapters.Contracts
             if (!meta.TryGetValue("mayHaveChanged", out var changed) || changed is not false
                 || meta.TryGetValue("mayHaveWrittenFiles", out var written) && written is true) return;
             var cause = error.GetBaseException();
+            if (cause is AdapterPreconditionException { Condition: "output-parent-missing" or "service-not-provided" })
+                EngineeringCredentialRules.TryRecordRefusal(cause, meta);
             if (cause.Data["target"] is not string target) return;
             meta["target"] = target;
             meta["candidates"] = cause.Data["candidates"];

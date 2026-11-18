@@ -1,4 +1,5 @@
 using System;
+using TiaMcp.Adapters.Contracts;
 using System.IO;
 using System.Security.Cryptography;
 using TiaMcp.Adapters.Native.Hmi;
@@ -12,7 +13,7 @@ internal static class SafetyFileOutput
         if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) throw new ArgumentException("Absolute output file path required.");
         var file = new FileInfo(path);
         if (file.Exists || Directory.Exists(file.FullName)) throw new IOException("Output already exists; overwrite refused.");
-        if (file.Directory?.Exists != true) throw new DirectoryNotFoundException("Output parent must already exist.");
+        if (file.Directory?.Exists != true) throw AdapterPreconditionException.OutputParentMissing("filePath");
         return file;
     }
 

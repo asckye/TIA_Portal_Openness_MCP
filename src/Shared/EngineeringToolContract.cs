@@ -79,8 +79,9 @@ namespace TiaMcpServer.ModelContextProtocol
             try { CallerInputFiles.ValidateNativeFile(tool, arguments); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {
-                return Result(tool, null, new Error(error.Message, new InvalidArgumentDetails("exportPath", Array.Empty<string>())), Outcome
-                        .RejectedBeforeOperation, Completeness.None);
+                ErrorDetails details = error.IsArgument ? new InvalidArgumentDetails("exportPath", Array.Empty<string>())
+                    : new PreconditionFailedDetails(error.Condition, null, error.ParamName);
+                return Result(tool, null, new Error(error.Message, details), Outcome.RejectedBeforeOperation, Completeness.None);
             }
             using var export = CallerInputFiles.ObserveExport(tool, arguments);
             var result = Run(tool, true, operation);
@@ -168,7 +169,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 && (evidence["total"] ?? evidence["totalCount"]) is JsonValue total && total.TryGetValue<int>(out var count)
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
             Clean(data);
-            if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)) {
+            bool technologyCreateRefused = tool == "ManageTechnologyObject" && Flag(evidence, "nothingCreated") == true
+                && error?.Details is PreconditionFailedDetails { Condition: "technology-type-version-unavailable" };
+            if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)
+                && !(technologyCreateRefused && nativeOutcome == Outcome.Failed)) {
                 outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
                     ? Completeness.Partial : Completeness.Complete;
             }

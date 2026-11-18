@@ -127,9 +127,7 @@ internal sealed partial class OnlineDownloadAdapter
             => _session.RunHmiStepTool("GetPlcBlockFingerprints", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset>=0, limit 1..500 required.");
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
-                var provider = _session.ResolvePlcService<FingerprintDataProvider>(softwarePath, plc)
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion",
-                        "FingerprintDataProvider is not exposed for this CPU on this release.");
+                var provider = _session.ResolvePlcService<FingerprintDataProvider>(softwarePath, plc)!;
                 var configuration = OnlinePrimitives.Configuration(provider)
                     ?? throw new PortalException(PortalErrorCode.InvalidState, "No connection configuration; configure the CPU network interface first.");
                 var candidates = new List<OnlineDataPolicy.RouteCandidate>();
@@ -220,14 +218,14 @@ internal sealed partial class OnlineDownloadAdapter
             => _session.RunHmiStepTool("GeneratePlcLoadableFile", meta => {
                 if (objectKind == "block" || objectKind == "unit") objectKind += "s";
                 if (objectKind != "blocks" && objectKind != "units") throw new ArgumentException("objectKind must be blocks/units.");
-                var names = _request.ObjectPaths; var file = PlcSourceFileOutput.Plan(filePath);
+                var names = _request.ObjectPaths;
                 var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 if (!Enum.GetNames(typeof(TargetOption)).Contains(targetOption))
                     throw new ArgumentException("targetOption must be one of: " + string.Join("/", Enum.GetNames(typeof(TargetOption)))
                         + " (Siemens.Engineering.SW.Loader.TargetOption).");
                 var option = (TargetOption)Enum.Parse(typeof(TargetOption), targetOption)!;
-                var service = _session.ResolvePlcService<LoadableProvider>(softwarePath, plc)
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "LoadableProvider is not exposed for this CPU on this release.");
+                var service = _session.ResolvePlcService<LoadableProvider>(softwarePath, plc)!;
+                var file = PlcSourceFileOutput.Plan(filePath);
                 var blocks = objectKind == "blocks" ? names.Select(n => (PlcBlock)_session.ExactMasterCopyPlcSource(softwarePath, n, true)).ToArray() : Array
                     .Empty<PlcBlock>();
 #if PLC_UNITS

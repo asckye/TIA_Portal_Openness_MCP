@@ -29,7 +29,7 @@ internal sealed class OnlineSession
     internal PlcSoftware? GetPlcSoftware(string path) => _session.GetPlcSoftware(path);
     internal PlcSoftware? ResolvePlc(string path, bool write) => _session.ResolvePlc(path, write);
     internal T? ResolvePlcService<T>(string path, PlcSoftware plc) where T : class, IEngineeringService
-        => _session.ResolvePlcService<T>(path, plc);
+        => _session.ResolvePlcService<T>(path, plc, required: _request.Operation is "GetPlcBlockFingerprints" or "GeneratePlcLoadableFile");
     internal PlcSoftware ExactPlcForEngineering(string path, bool write) => _session.ExactPlcForEngineering(path, write);
     internal object ExactMasterCopyPlcSource(string path, string block, bool isBlock) => _session.ExactMasterCopyPlcSource(path, block, isBlock);
     internal Siemens.Engineering.HW.HardwareObject ExactEngineeringHardware(string devicePath, string itemPath)

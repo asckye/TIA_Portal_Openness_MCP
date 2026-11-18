@@ -70,7 +70,8 @@ namespace Siemens.Engineering.HW
         public DeviceItem PlugCopy(DeviceItem item, int position) => throw new NotSupportedException();
         public T? GetService<T>() where T : class, IEngineeringService => ServiceFailures.TryGetValue(typeof(T), out var failure) ? throw failure
             : Services.TryGetValue(typeof(T), out var value) ? (T)value : null;
-        public virtual IEnumerable<EngineeringAttributeInfo> GetAttributeInfos() => Array.Empty<EngineeringAttributeInfo>();
+        public List<EngineeringAttributeInfo> AttributeInfos { get; } = new();
+        public virtual IEnumerable<EngineeringAttributeInfo> GetAttributeInfos() => AttributeInfos;
         public virtual object GetAttribute(string name) { Calls.Add("get:" + name); return false; }
         public virtual void SetAttribute(string name, object? value) { Calls.Add("set:" + name); if (AttributeFailure != null) throw AttributeFailure; }
     }
@@ -271,10 +272,26 @@ namespace TiaMcp.Adapters
         private IEnumerable<(object Node, string Path)> FindNetworkNodes(Siemens.Engineering.HW.DeviceItem item) => Array.Empty<(object, string)>();
         private object? TryGetPropertyValue(object value, string name) => null;
         private string? TryGetName(object? value) => null;
+        private static object? TryGetEngineeringAttribute(object owner, string attributeName)
+            => ((Siemens.Engineering.HW.DeviceItem)owner).AttributeReader?.Invoke(attributeName);
         private string? ReadNodeAddress(object value) => null;
         private bool IsIndustrialEthernetNode(object value) => ReferenceEquals(value, RollbackNode);
         private Siemens.Engineering.SW.PlcSoftware? ResolvePlc(string name) => null;
-        private (Siemens.Engineering.SW.PlcSoftware Value, string Path) ReadSelection(string name) => (FamilyPlc, name);
+        internal Siemens.Engineering.HW.Device ServiceDevice { get; } = new() { Name = "Station" };
+        internal Siemens.Engineering.HW.DeviceItem ServiceCpu { get; } = new() { Name = "PLC_1" };
+        private (Siemens.Engineering.SW.PlcSoftware Value, string ExactPath, string Device, object Context, object DeviceContext) ReadSelection(string name)
+            => (FamilyPlc, name, ServiceDevice.Name, ServiceCpu, ServiceDevice);
+
+        internal T? ResolveRequiredService<T>(string path) where T : class, Siemens.Engineering.IEngineeringService
+            => new OrganisationSession(this).ResolvePlcService<T>(path, FamilyPlc, required: true);
+        internal Siemens.Engineering.HW.Device? SecurityLegacyDevice(string path) => null;
+        internal static IEnumerable<(Siemens.Engineering.HW.DeviceItem, string)> HardwareTraverseDeviceItems(
+            Siemens.Engineering.HW.DeviceItem item, string path)
+        {
+            yield return (item, path);
+            foreach (var child in item.DeviceItems)
+                foreach (var nested in HardwareTraverseDeviceItems(child, path + "/" + child.Name)) yield return nested;
+        }
         internal Siemens.Engineering.Project? SecurityProject => project;
         internal IDisposable SecurityEditAccess() => HardwareEditAccess();
         internal T SecurityHardwareService<T>(Siemens.Engineering.HW.HardwareObject owner, string parameter) where T : class,
@@ -301,14 +318,7 @@ namespace TiaMcp.Adapters.Native.Security
     {
         internal static object? FindOrdinal(object collection, string name, string kind) => null;
     }
-    internal sealed class PutGetAccess
-    {
-        internal PutGetAccess(TiaMcp.Adapters.PlcFoundationEngine engine) { }
-        internal Siemens.Engineering.HW.Device? GetDevice(string path) => null;
-        internal static (Siemens.Engineering.HW.DeviceItem?, string?) FindPutGetAttribute(Siemens.Engineering.HW.Device device) => (null, null);
-        internal static bool AttrValueIsEnabled(object? value) => false;
-        internal TiaMcp.Adapters.Native.Hmi.HmiObject GetPutGetAccess(string path) => new();
-    }
+
 }
 
 // Managed native-boundary stand-ins: the production mutation and readback code is linked above.

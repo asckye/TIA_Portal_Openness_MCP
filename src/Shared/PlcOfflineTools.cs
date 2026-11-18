@@ -96,7 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["nativeImportValidated"] = false;
                 if (!dryRun) {
                     if (string.IsNullOrWhiteSpace(outputPath)) throw new ArgumentException("New absolute outputPath required.");
-                    var output = Siemens.NativeFileOutput.Plan(outputPath);
+                    var output = Siemens.NativeFileOutput.Plan(outputPath, nameof(outputPath));
                     using (var stream = new FileStream(output.FullName, FileMode.CreateNew, FileAccess.Write))
                     using (var writer = new StreamWriter(stream, new UTF8Encoding(true))) writer.Write(edited);
                     meta["output"] = Siemens.NativeFileOutput.Verify(output);
@@ -282,7 +282,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         const string conflict = "Output already exists; overwrite refused. Pass exportFile with a new file path.";
                         meta["nativeMessage"] = conflict; throw new IOException(conflict);
                     }
-                    var output = Siemens.NativeFileOutput.Plan(exportFile);
+                    var output = Siemens.NativeFileOutput.Plan(exportFile, nameof(exportFile));
                     data["exportFile"] = output.FullName;
                     if (kind == "plcTagTable" && direction == "fromTable") data["nextStep"] = new JsonObject {
                         ["tool"] = "ImportPlcTagTable", ["requiresBinding"] = true,

@@ -251,8 +251,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // A documented Openness refusal (P8-81c F4) carries an explicit condition and never poisons the session.
             if ((string?)data["status"] == "PreconditionFailed" && data["precondition"] is JsonValue && success != true)
             {
-                var refused = new Error(HostBehavior.SafeDiagnostic((string?)data["refusal"]) ?? "TIA Portal refused the operation.",
-                    new PreconditionFailedDetails((string?)data["precondition"], null));
+                var refused = HostBehavior.DocumentedRefusalError(data);
                 return changed ? Result(tool, data, refused, Outcome.Failed, Execution.Completed, Completeness.None, current: current, writes: write)
                     : Reject(tool, refused, data, current, write);
             }

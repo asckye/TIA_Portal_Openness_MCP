@@ -17,6 +17,53 @@ public sealed class OnlinePortTests
         ["ScanAccessibleDevices"] = 5, ["UploadDeviceParameters"] = 7
     };
 
+    private sealed class FingerprintDataProvider : Siemens.Engineering.IEngineeringService { }
+    private sealed class LoadableProvider : Siemens.Engineering.IEngineeringService { }
+
+    [Theory]
+    [InlineData("FingerprintDataProvider")]
+    [InlineData("LoadableProvider")]
+    public void Absent_required_service_reports_each_actual_owner_and_the_cpu(string service)
+    {
+        var engine = new PlcFoundationEngine("21");
+        engine.ServiceCpu.Parent = new Siemens.Engineering.HW.DeviceItem { Name = "Rack" };
+        engine.ServiceCpu.TypeIdentifier = "OrderNumber:CPU/V3.1";
+        var result = engine.RunHmiStep(service, _ =>
+        {
+            if (service == "LoadableProvider") engine.ResolveRequiredService<LoadableProvider>("PLC_1");
+            else engine.ResolveRequiredService<FingerprintDataProvider>("PLC_1");
+            return "unexpected";
+        }, requiresProject: false);
+        Assert.False(result.OutcomeUnknown);
+        Assert.False(result.MayHaveChanged);
+        Assert.Equal("PreconditionFailed", result.Meta["status"]);
+        Assert.Equal("service-not-provided", result.Meta["precondition"]);
+        Assert.Equal(service, result.Meta["service"]);
+        Assert.Equal(new[] { "PlcSoftware PLC_1", "DeviceItem PLC_1", "DeviceItem Rack", "Device Station" },
+            Assert.IsAssignableFrom<IEnumerable<string>>(result.Meta["searched"]));
+        Assert.Equal("OrderNumber:CPU/V3.1", result.Meta["typeIdentifier"]);
+        Assert.Equal("V3.1", result.Meta["firmware"]);
+        Assert.Contains("official " + service + " API exists on this release", (string?)result.Meta["refusal"]);
+        var provided = new LoadableProvider();
+        engine.ServiceDevice.Services[typeof(LoadableProvider)] = provided;
+        Assert.Same(provided, engine.ResolveRequiredService<LoadableProvider>("PLC_1"));
+    }
+
+    [Fact]
+    public void Service_diagnostics_use_the_cpu_attributes_when_the_identifier_has_no_version()
+    {
+        var engine = new PlcFoundationEngine("21");
+        engine.ServiceCpu.TypeIdentifier = "System:Device";
+        engine.ServiceCpu.AttributeReader = name => name == "FirmwareVersion" ? "V3.1" : "6ES7 513-1AL02-0AB0";
+        var error = Assert.Throws<AdapterPreconditionException>(() => engine.ResolveRequiredService<LoadableProvider>("PLC_1"));
+        var evidence = Assert.IsType<Dictionary<string, object?>>(error.Data["nativeResultEvidence"]);
+        Assert.Equal("System:Device", evidence["typeIdentifier"]);
+        Assert.Equal("6ES7 513-1AL02-0AB0", evidence["orderNumber"]);
+        Assert.Equal("V3.1", evidence["firmware"]);
+        Assert.Contains("6ES7 513-1AL02-0AB0", error.Message);
+        Assert.Contains("firmware V3.1", error.Message);
+    }
+
     public static IEnumerable<object[]> RegistrationCases()
     {
         foreach (var entry in FirstRelease)

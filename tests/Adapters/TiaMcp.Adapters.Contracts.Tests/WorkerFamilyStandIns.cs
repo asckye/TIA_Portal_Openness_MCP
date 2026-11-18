@@ -51,6 +51,7 @@ namespace Siemens.Engineering.HW
 {
     public sealed class DeviceItem : HardwareObject
     {
+        public string TypeIdentifier { get; set; } = "";
         public List<Address> Addresses { get; } = new();
         public ChannelComposition Channels { get; } = new();
         internal int ChangeTypeCalls;
@@ -149,9 +150,10 @@ namespace TiaMcp.Adapters
             public object Software { get; }
             public SoftwareContainer(object software) => Software = software;
         }
-        private sealed class OrganisationSession
+        private sealed partial class OrganisationSession
         {
             private readonly PlcFoundationEngine _engine;
+            private PlcFoundationEngine engine => _engine;
             public OrganisationSession(PlcFoundationEngine engine) => _engine = engine;
             public object GetBlock(string software, string block)
             { _engine.FamilyCalls.Add("block:" + software + ":" + block); return _engine.FamilyObject; }

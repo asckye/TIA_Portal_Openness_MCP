@@ -12,6 +12,9 @@ namespace TiaMcp.Adapters.Contracts
         // Explicit precondition code (for example openness-access-denied) reported as PRECONDITION_FAILED details.condition.
         public string? Condition { get; private set; }
 
+        public static AdapterPreconditionException OutputParentMissing(string parameter)
+            => new AdapterPreconditionException("Output parent must already exist.", parameter, false) { Condition = "output-parent-missing" };
+
         public static AdapterPreconditionException NotFound(string message, string? parameter = null)
             => new AdapterPreconditionException(message, parameter, false) { Condition = "not-found" };
 

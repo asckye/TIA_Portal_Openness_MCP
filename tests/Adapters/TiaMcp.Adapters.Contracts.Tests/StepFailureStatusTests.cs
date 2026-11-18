@@ -52,6 +52,46 @@ public sealed class StepFailureStatusTests
         Assert.Null(StepFailureStatus.Parameter(new PlcSoftwareException("AlreadyExists", "No parameter.")));
     }
 
+    [Theory]
+    [InlineData("plc", "filePath")]
+    [InlineData("engineering", "filePath")]
+    [InlineData("safety", "filePath")]
+    [InlineData("optional", "filePath")]
+    [InlineData("aml", "logFilePath")]
+    [InlineData("aml-export", "exportPath")]
+    [InlineData("offline", "reportPath")]
+    public void Missing_output_parent_is_a_precondition_with_the_caller_parameter(string helper, string parameter)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        string path = Path.Combine(directory, "new.aml");
+        var engine = new PlcFoundationEngine("21");
+        var result = engine.RunHmiStep("Export", _ =>
+        {
+            if (helper == "aml-export") HardwareAmlPolicy.RequireExportTarget(path);
+            else
+            {
+                FileInfo file = helper switch
+                {
+                    "plc" => Native.Plc.PlcSourceFileOutput.Plan(path),
+                    "engineering" => Engineering.EngineeringFileOutput.Plan(path),
+                    "safety" => Native.Safety.SafetyFileOutput.Plan(path),
+                    "optional" => Native.Options.OptionalProductFiles.Plan(path),
+                    "aml" => HardwareAmlPolicy.Plan(path, parameter),
+                    "offline" => TiaMcpServer.Siemens.NativeFileOutput.Plan(path, parameter),
+                    _ => throw new ArgumentOutOfRangeException(nameof(helper))
+                };
+                return file.FullName;
+            }
+            return "unexpected";
+        }, requiresProject: false);
+        Assert.False(Directory.Exists(directory));
+        Assert.False(result.OutcomeUnknown);
+        Assert.False(result.MayHaveChanged);
+        Assert.Equal("PreconditionFailed", result.Meta["status"]);
+        Assert.Equal("output-parent-missing", result.Meta["precondition"]);
+        Assert.Equal(parameter, result.Meta["parameter"]);
+    }
+
     [Fact]
     public void Not_found_precondition_is_not_an_argument()
     {

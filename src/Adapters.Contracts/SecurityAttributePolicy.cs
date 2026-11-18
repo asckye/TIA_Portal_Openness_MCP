@@ -6,8 +6,8 @@ namespace TiaMcp.Adapters.Contracts;
 
 public static class SecurityAttributePolicy
 {
-    // No exact names have documented or VM-verified owner/type/write semantics yet.
-    public static IReadOnlyList<string> PutGetNames { get; } = Array.AsReadOnly(Array.Empty<string>());
+    // S7-1500 CPU DeviceItem Boolean, documented in sdk/TIA_V15.1_PublicAPI/V15.1/HW Parameter description/Openness_hardware_parameter_description.pdf.
+    public static IReadOnlyList<string> PutGetNames { get; } = Array.AsReadOnly(new[] { "ProtectionEnablePutGetCommunication" });
     public static IReadOnlyList<string> CertificateNames { get; } = Array.AsReadOnly(Array.Empty<string>());
     public static IReadOnlyList<string> SyslogNames { get; } = Array.AsReadOnly(Array.Empty<string>());
     public const string Unverified =

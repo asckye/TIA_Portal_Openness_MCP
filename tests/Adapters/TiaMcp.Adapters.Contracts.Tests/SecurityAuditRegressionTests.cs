@@ -9,12 +9,29 @@ namespace TiaMcp.Adapters.Contracts.Tests
         [Fact]
         public void Unverified_security_attribute_lists_refuse_all_candidate_names()
         {
-            Assert.Empty(SecurityAttributePolicy.PutGetNames);
+            Assert.Equal(new[] { "ProtectionEnablePutGetCommunication" }, SecurityAttributePolicy.PutGetNames);
             Assert.Empty(SecurityAttributePolicy.CertificateNames);
             Assert.Empty(SecurityAttributePolicy.SyslogNames);
             Assert.Throws<NotSupportedException>(() => SecurityAttributePolicy.SelectExact(new[] { "PermitPutGet" }, SecurityAttributePolicy.PutGetNames));
             Assert.Throws<NotSupportedException>(() => SecurityAttributePolicy.RequireApproved("WebserverCertificate", SecurityAttributePolicy.CertificateNames));
             Assert.Throws<NotSupportedException>(() => SecurityAttributePolicy.RequireApproved("SysLogTrustedCertificateIds", SecurityAttributePolicy.SyslogNames));
+        }
+
+        [Fact]
+        public void Put_get_selection_uses_the_exact_attribute_and_its_device_item()
+        {
+            var device = new Siemens.Engineering.HW.Device();
+            var rack = new Siemens.Engineering.HW.DeviceItem { Name = "Rack" };
+            var cpu = new Siemens.Engineering.HW.DeviceItem { Name = "PLC_1" };
+            device.DeviceItems.Add(rack);
+            rack.DeviceItems.Add(cpu);
+            rack.AttributeInfos.Add(new Siemens.Engineering.EngineeringAttributeInfo { Name = "PermitPutGet" });
+            var missing = Assert.Throws<NotSupportedException>(() => Native.Security.PutGetAccess.FindPutGetAttribute(device));
+            Assert.Contains("No approved dynamic attribute is exposed by this device", missing.Message);
+            cpu.AttributeInfos.Add(new Siemens.Engineering.EngineeringAttributeInfo { Name = "ProtectionEnablePutGetCommunication" });
+            var selected = Native.Security.PutGetAccess.FindPutGetAttribute(device);
+            Assert.Same(cpu, selected.item);
+            Assert.Equal("ProtectionEnablePutGetCommunication", selected.attrName);
         }
 
         [Fact]
