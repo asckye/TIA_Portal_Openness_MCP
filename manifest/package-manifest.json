@@ -84,6 +84,7 @@
     "verbs": [
       "doctor",
       "audit verify",
+      "test report",
       "schema",
       "version",
       "config",
@@ -105,11 +106,11 @@
     }
   },
   "capabilities": {
-    "mcpToolCount": 521,
+    "mcpToolCount": 523,
     "mcpToolLayers": {
-      "L2": 429,
+      "L2": 430,
       "L1": 74,
-      "L0": 18
+      "L0": 19
     },
     "hmiTemplateJsonCount": 8,
     "plcTemplateJsonCount": 9,
