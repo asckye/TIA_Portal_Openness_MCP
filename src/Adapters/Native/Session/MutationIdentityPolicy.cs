@@ -17,12 +17,13 @@ namespace TiaMcp.Adapters
                 throw new ArgumentException("The project does not match expectedProjectFile; no mutation was started.");
         }
         public static void ValidateTarget(bool dryRun,bool confirm,string expected,string operation,string releaseKey,string file,string directory,string name,
-                Action<string> requireBound)
+                Action<string> requireBound, string secondaryProjectFile = "")
         {
             if(dryRun) return;
             if(!confirm) throw new ArgumentException("Execution requires confirm=true.");
             expected=AbsoluteFile(expected);
-            if(operation=="OpenProject") RequireSameProject(expected,file);
+            if (operation == "CloseProject" && secondaryProjectFile.Length > 0) RequireSameProject(expected, secondaryProjectFile);
+            else if(operation=="OpenProject") RequireSameProject(expected,file);
             else if(operation=="CreateProject")
             {
                 if(releaseKey!="14sp1" && releaseKey!="15.1" && releaseKey!="16" && releaseKey!="17" && releaseKey!="18" && releaseKey!="19"

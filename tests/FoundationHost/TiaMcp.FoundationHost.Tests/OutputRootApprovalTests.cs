@@ -353,6 +353,16 @@ public sealed class OutputRootApprovalTests
     }
 
     [Theory]
+    [InlineData("", true)]
+    [InlineData("C:/Projects/Reference.ap21", false)]
+    public void Secondary_close_keeps_session_classification_without_a_write_approval(string secondaryProjectFile, bool approval)
+    {
+        var args = new JsonObject { ["dryRun"] = false, ["secondaryProjectFile"] = secondaryProjectFile };
+        Assert.Equal(approval, HostBehavior.ApprovalWrite("CloseProject", args, false, true, true));
+        Assert.False(HostBehavior.ApprovalWrite("OpenProject", new JsonObject { ["dryRun"] = false, ["openMode"] = "secondary" }, false, true, true));
+    }
+
+    [Theory]
     [InlineData("outputDirectory")]
     [InlineData("exportDir")]
     [InlineData("dir")]

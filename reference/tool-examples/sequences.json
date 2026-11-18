@@ -5085,5 +5085,157 @@
         "expect": "Confirm the requested value is 5; saving/deployment is separate."
       }
     ]
+  },
+  {
+    "id": "sequence/secondary-project-compare",
+    "topic": "secondary-project-compare",
+    "purpose": "Open a read-only reference project, compare it with the bound primary, then explicitly close only the reference.",
+    "preconditions": "V15.1–V21; connect-project done and a primary project is bound. Resolve a different closed project file of this exact release and the target PLC device/item paths.",
+    "notes": "Replace every example target with the intended project. Preserve the primary binding throughout; no upgrade, save, online access or write approval. confirm and exact expectedProjectFile still guard execution. Native acceptance is separate from schema validation. DisconnectPortal refuses while the recorded secondary holder is alive. After worker recovery retain secondaryProjectFile with its holding TIA PID and process start time. Close on another TIA refuses and keeps the record. Only an absent exact path on that same holder clears it with data.secondaryProjectGone=true and Executed=false, including preview. A confirmed exited or replaced holder clears the record during recovery or disconnect without starting TIA. Under --preset-project-file, secondary open/close retains the preset primary binding; expectedProjectFile identifies the secondary file for these operations. CompareProjects observes the reference only; every later write still requires the preset primary binding. Vault credentials retain their own approval and target-project destination checks.",
+    "releaseKeys": [
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "VM NOT RUN",
+    "steps": [
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Confirm the primary binding; no worker-owned secondaryProjectFile is already present."
+      },
+      {
+        "tool": "OpenProject",
+        "arguments": {
+          "path": "C:/Examples/Reference.ap{extension}",
+          "openMode": "secondary",
+          "dryRun": true
+        },
+        "expect": "Resolve only; the primary binding is unchanged and no reference is opened."
+      },
+      {
+        "tool": "OpenProject",
+        "arguments": {
+          "path": "C:/Examples/Reference.ap{extension}",
+          "openMode": "secondary",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "C:/Examples/Reference.ap{extension}"
+        },
+        "expect": "Open the reference read-only with ProjectOpenMode.Secondary; preserve the primary binding."
+      },
+      {
+        "tool": "GetProjectInfo",
+        "arguments": {},
+        "expect": "Confirm the reference project name and meta.isPrimary=false; retain the primary project identity."
+      },
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "Confirm secondaryProjectFile and the unchanged primary binding."
+      },
+      {
+        "tool": "CompareProjects",
+        "arguments": {
+          "kind": "software",
+          "softwarePath": "<primary PLC softwarePath from GetProjectTree>",
+          "targetProjectName": "<exact secondaryProjectFile from GetSessionState>",
+          "targetDevicePath": [
+            "<exact secondary device name>"
+          ],
+          "targetItemPath": [
+            "<exact secondary CPU DeviceItem name>"
+          ]
+        },
+        "expect": "Resolve the secondary by its exact full path, including same-name primary/reference copies; inspect paging and completeness."
+      },
+      {
+        "tool": "CloseProject",
+        "arguments": {
+          "secondaryProjectFile": "C:/Examples/Reference.ap{extension}",
+          "dryRun": true
+        },
+        "expect": "Validate that this worker owns that exact secondary; never save."
+      },
+      {
+        "tool": "CloseProject",
+        "arguments": {
+          "secondaryProjectFile": "C:/Examples/Reference.ap{extension}",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "C:/Examples/Reference.ap{extension}"
+        },
+        "expect": "Close only the reference; keep the primary binding and do not save."
+      },
+      {
+        "tool": "GetSessionState",
+        "arguments": {},
+        "expect": "The primary binding is unchanged and secondaryProjectFile is absent."
+      }
+    ]
+  },
+  {
+    "id": "sequence/project-overview",
+    "topic": "project-overview",
+    "purpose": "Read project identity, device/software paths and PLC blocks/tag tables plus HMI screens in a maintained read-only sequence.",
+    "preconditions": "connect-project done; an explicit project is bound.",
+    "notes": "After GetProjectTree, repeat the batch entries for each discovered PLC/HMI softwarePath and omit entries for software kinds absent from this project. Resolve paths from the returned tree; sample bindings are not target names. Each batch result keeps its own envelope, paging and completeness; these reads do not prove all project content was observed.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "VM NOT RUN",
+    "steps": [
+      {
+        "tool": "GetProjectInfo",
+        "arguments": {},
+        "expect": "Review the exact bound project identity and listed projects."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Discover all device and PLC/HMI software paths, including grouped and ungrouped devices."
+      },
+      {
+        "tool": "RunReadOnlyToolBatch",
+        "arguments": {
+          "operations": [
+            {
+              "name": "ListPlcBlocks",
+              "arguments": {
+                "softwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            {
+              "name": "ListPlcTagTables",
+              "arguments": {
+                "softwarePath": "<exact PLC softwarePath from GetProjectTree>"
+              }
+            },
+            {
+              "name": "ListHmiScreens",
+              "arguments": {
+                "softwarePath": "<exact HMI softwarePath from GetProjectTree>"
+              }
+            }
+          ]
+        },
+        "expect": "Inspect ordered block, tag-table and screen results; repeat per actual software path and follow each paging cursor."
+      }
+    ]
   }
 ]

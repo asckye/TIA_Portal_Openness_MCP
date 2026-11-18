@@ -173,9 +173,12 @@ internal static class ApiMetadataTests
             }
             foreach(var pair in new Dictionary<string,string[]> {
                 ["ReadBlockInfo"]=new[]{"softwarePath","blockPath"},["ReadTypeInfo"]=new[]{"softwarePath","typePath"},
-                ["Attach"]=new[]{"processId"},["ListProjects"]=Array.Empty<string>(),
-                ["BindProject"]=new[]{"projectName","expectedProjectFile"},["OpenProject"]=new[]{"path","dryRun","umacUserName","umacPassword","umacUserType"},
-                ["CreateProject"]=new[]{"directoryPath","projectName","dryRun"},["SaveProject"]=new[]{"dryRun"},["CloseProject"]=new[]{"dryRun"},["ReadProjectTree"]=Array.Empty<string>()})
+                ["Attach"]=new[]{"processId"},
+                ["AttachScoped"]=new[]{"processId","recordedSecondaryProjectFile","recordedSecondaryProcessId","recordedSecondaryProcessStartTicks"},["ListProjects"]=Array.Empty<string>(),
+                ["BindProject"]=new[]{"projectName","expectedProjectFile","recordedSecondaryProjectFile","recordedSecondaryProcessId","recordedSecondaryProcessStartTicks"},
+                ["OpenProject"]=new[]{"path","dryRun","umacUserName","umacPassword","umacUserType","openMode"},
+                ["CreateProject"]=new[]{"directoryPath","projectName","dryRun"},["SaveProject"]=new[]{"dryRun"},
+                ["CloseProject"]=new[]{"dryRun","secondaryProjectFile"},["ReadProjectTree"]=Array.Empty<string>()})
             {
                 var method=type.GetMethods().Select(md.GetMethodDefinition).Single(m=>md.GetString(m.Name)==pair.Key);
                 var names=method.GetParameters().Select(md.GetParameter).Where(p=>p.SequenceNumber>0).Select(p=>md.GetString(p.Name));

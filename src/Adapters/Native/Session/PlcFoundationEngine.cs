@@ -127,17 +127,15 @@ namespace TiaMcp.Adapters
             ownsPortal=false; workerStartedPortal=false;
             return new PlcConnectionResult { AttemptedPids=new[]{processId} };
         }
-        public PlcProjectDetails[] ListProjects()
+        public PlcConnectionResult AttachScoped(int processId, string recordedSecondaryProjectFile = "", int recordedSecondaryProcessId = 0,
+            long recordedSecondaryProcessStartTicks = 0)
         {
-            var portal=Portal();
-            var result=portal.Projects.Select(p=>ProjectDetails(p,false)).ToList();
-#if PROJECT_MULTIUSER
-            result.AddRange(portal.LocalSessions.Select(s=>ProjectDetails(s.Project,true)));
-#endif
-            return result.ToArray();
+            Check();
+            string? reference = ValidateSecondaryRecovery(recordedSecondaryProjectFile, recordedSecondaryProcessId, recordedSecondaryProcessStartTicks);
+            var result = Attach(processId);
+            RestoreSecondaryRecord(reference, recordedSecondaryProcessId, recordedSecondaryProcessStartTicks);
+            return result;
         }
-        private static PlcProjectDetails ProjectDetails(EngineeringProject p,bool session) => new PlcProjectDetails {
-            Name=p.Name,Attributes=ReadAttributes(p),Meta=new Dictionary<string,object> { ["projectFile"]=p.Path.FullName,["isLocalSession"]=session } };
         public void RequireProjectIdentity(string expectedProjectFile)
         {
             var current=Project();
@@ -152,9 +150,11 @@ namespace TiaMcp.Adapters
 
         // A portal this worker started is disposed (closing a headless TIA Portal) only when no project is open in it;
         // an attached portal is only detached. The refusal comes before any native call and keeps the session usable.
-        public PlcDisconnectResult Disconnect()
+        public PlcDisconnectResult Disconnect() => DisconnectCore(true);
+        private PlcDisconnectResult DisconnectCore(bool userRequested)
         {
             Check(true);
+            if (userRequested) RequireSecondaryClosed("DisconnectPortal");
             bool started = ownsPortal==true && workerStartedPortal && lifecycle.ProcessId.HasValue && disconnect.Result==null;
             var result=disconnect.Execute(lifecycle.ProcessId,ownsPortal,()=>{ ReleasePortalEvents(); portal!.Dispose(); },false,workerStartedPortal,
                 started && OwnedPortalHasOpenProjects());
@@ -175,7 +175,7 @@ namespace TiaMcp.Adapters
             {
                 PlcLifecyclePolicy.RequireOwner(ReleaseKey, ownerThread);
                 if (uncertainShutdown) return;
-                try { if (!disconnect.Attempted) Disconnect(); }
+                try { if (!disconnect.Attempted) DisconnectCore(false); }
                 // Shutdown with a project still open in a worker-started portal: dispose it once anyway.
                 catch (AdapterPreconditionException refused) when (!disconnect.Attempted)
                 {

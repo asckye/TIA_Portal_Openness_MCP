@@ -34,6 +34,56 @@ public sealed class SessionRebindTests
         => Assert.Equal(rebind ? BindingChange.MayAdvance : BindingChange.None,
             WorkerClient.BindingChangeFor(operation, JsonNode.Parse(json)!.AsObject()));
 
+    [Theory]
+    [InlineData("OpenProject", "{\"dryRun\":false,\"openMode\":\"secondary\"}", false)]
+    [InlineData("OpenProject", "{\"dryRun\":true,\"openMode\":\"secondary\"}", false)]
+    [InlineData("CloseProject", "{\"dryRun\":false,\"secondaryProjectFile\":\"C:/Reference.ap21\"}", false)]
+    [InlineData("CloseProject", "{\"dryRun\":true,\"secondaryProjectFile\":\"C:/Reference.ap21\"}", false)]
+    [InlineData("OpenProject", "{\"dryRun\":false,\"openMode\":\"primary\"}", true)]
+    [InlineData("OpenProject", "{\"dryRun\":false}", true)]
+    [InlineData("CloseProject", "{\"dryRun\":false,\"secondaryProjectFile\":\"\"}", true)]
+    public void Secondary_operations_preserve_the_primary_binding_epoch(string operation, string json, bool advances)
+        => Assert.Equal(advances ? BindingChange.Advance : BindingChange.None,
+            WorkerClient.BindingChangeFor(operation, JsonNode.Parse(json)!.AsObject()));
+
+    public static IEnumerable<object[]> SecondaryReleasesAndSessions()
+        => ReleasesAndSessions().Where(row => (string)row[0] != "14sp1");
+
+    [Theory, MemberData(nameof(SecondaryReleasesAndSessions))]
+    public async Task Secondary_round_trip_preserves_host_identity_and_publishes_only_the_reference_file(string release, bool shared)
+    {
+        using var worker = Worker(release, shared: shared);
+        await worker.Call("Attach", new() { ["processId"] = Environment.ProcessId }, CancellationToken.None);
+        string suffix = TiaMcp.Adapters.PlcLifecyclePolicy.FileSuffix(release);
+        string primary = Path.Combine(AppContext.BaseDirectory, "Primary.ap" + suffix);
+        await worker.Call("BindProject", new() { ["projectName"] = "Primary", ["expectedProjectFile"] = primary }, CancellationToken.None);
+        string identity = worker.ApprovalIdentity;
+        string reference = Path.Combine(AppContext.BaseDirectory, "Reference.ap" + suffix);
+        var open = new JsonObject { ["path"] = reference, ["openMode"] = "secondary", ["dryRun"] = true };
+        await worker.Call("OpenProject", open, CancellationToken.None);
+        Assert.False(SharedSessionState.For(worker).Snapshot(release).ContainsKey("secondaryProjectFile"));
+        open["dryRun"] = false; open["confirm"] = true; open["expectedProjectFile"] = reference;
+        await worker.Call("OpenProject", open, CancellationToken.None);
+        Assert.Equal(identity, worker.ApprovalIdentity);
+        var state = SharedSessionState.For(worker).Snapshot(release);
+        Assert.Equal(reference, (string?)state["secondaryProjectFile"]);
+        Assert.Equal(primary, (string?)state["binding"]?["identity"]?["projectPath"]);
+        string savedPrimary = Path.Combine(AppContext.BaseDirectory, "SavedPrimary.ap" + suffix);
+        await worker.Call("project-lifecycle.ArchiveSaveProjectCopy", new() { ["path"] = savedPrimary, ["dryRun"] = false }, CancellationToken.None);
+        state = SharedSessionState.For(worker).Snapshot(release);
+        Assert.Equal(savedPrimary, (string?)state["binding"]?["identity"]?["projectPath"]);
+        Assert.Equal(reference, (string?)state["secondaryProjectFile"]);
+        identity = worker.ApprovalIdentity;
+        var close = new JsonObject { ["secondaryProjectFile"] = reference, ["dryRun"] = true };
+        await worker.Call("CloseProject", close, CancellationToken.None);
+        Assert.Equal(reference, (string?)SharedSessionState.For(worker).Snapshot(release)["secondaryProjectFile"]);
+        close["dryRun"] = false; close["confirm"] = true; close["expectedProjectFile"] = reference;
+        await worker.Call("CloseProject", close, CancellationToken.None);
+        Assert.Equal(identity, worker.ApprovalIdentity);
+        Assert.False(SharedSessionState.For(worker).Snapshot(release).ContainsKey("secondaryProjectFile"));
+        Assert.False(worker.Faulted);
+    }
+
     [Theory, MemberData(nameof(ReleasesAndSessions))]
     public async Task Retrieve_project_archive_execute_rebinds_and_reports_succeeded(string release, bool shared)
     {

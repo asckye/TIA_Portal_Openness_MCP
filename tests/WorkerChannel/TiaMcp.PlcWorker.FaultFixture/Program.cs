@@ -37,6 +37,8 @@ internal static class Program
         int writes = 0;
         long epoch = 0;
         string? faultMethod = null, faultTool = null, faultCorrelation = null, savedAs = null;
+        string? secondaryProject = null;
+        string? secondaryStatePath = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SECONDARY_STATE");
         string Spill(string raw, string? mode)
         {
             if (mode == "oversized-delayed") Thread.Sleep(1200);
@@ -241,6 +243,29 @@ internal static class Program
                 savedAs = (string?)args["expectedProjectFile"] ?? "C:/fixture.ap" + options.ReleaseKey;
                 projectClosed = false; epoch++;
                 return ChannelResponse.Success(new JsonObject { ["Executed"] = true, ["ProjectFile"] = savedAs }.ToJsonString());
+            }
+            if (request.Method is "adapter.OpenProject" or "adapter.CloseProject")
+            {
+                var projectArgs = JsonNode.Parse(request.ArgumentsJson)!;
+                bool secondaryOpen = request.Method == "adapter.OpenProject" && (string?)projectArgs["openMode"] == "secondary";
+                string? secondaryFile = (string?)projectArgs["secondaryProjectFile"];
+                if (secondaryOpen || !string.IsNullOrEmpty(secondaryFile))
+                {
+                    if (secondaryStatePath != null && File.Exists(secondaryStatePath))
+                        secondaryProject = (string?)JsonNode.Parse(File.ReadAllText(secondaryStatePath))?["file"];
+                    string secondaryTarget = secondaryOpen ? (string)projectArgs["path"]! : secondaryFile!;
+                    bool execute = (bool?)projectArgs["dryRun"] == false;
+                    if (!bound || projectClosed || secondaryOpen && secondaryProject != null)
+                        return ChannelResponse.Error(new ChannelFailureException("Fixture secondary ownership precondition.", -32603,
+                            ChannelOutcome.RejectedBeforeNative, "{\"exceptionType\":\"AdapterPreconditionException\"}"));
+                    bool gone = !secondaryOpen && secondaryProject != secondaryTarget;
+                    if (execute) secondaryProject = secondaryOpen ? secondaryTarget : null;
+                    if (secondaryStatePath != null)
+                        File.WriteAllText(secondaryStatePath, new JsonObject { ["file"] = secondaryProject }.ToJsonString());
+                    var projectReply = new JsonObject { ["Executed"] = execute && !gone, ["ProjectFile"] = secondaryTarget };
+                    if (!secondaryOpen) projectReply["SecondaryProjectGone"] = gone;
+                    return ChannelResponse.Success(projectReply.ToJsonString());
+                }
             }
             if (request.Method == "adapter.Disconnect")
             {

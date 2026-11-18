@@ -6,6 +6,7 @@
     <!-- Exercise both current-release callback registrations against managed Siemens stand-ins. -->
     <DefineConstants>$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
     <DefineConstants>$(DefineConstants);PLC_HARDWARE_CHANGE_TYPE</DefineConstants>
+    <DefineConstants>$(DefineConstants);PROJECT_UMAC</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />
@@ -62,6 +63,9 @@
     <Compile Include="../../../src/Shared/shared-native/SessionProcessIdentity.cs" Link="Session/SessionProcessIdentity.cs" />
     <Compile Include="../../../src/Shared/shared-native/WorkerSessionCallbacks.cs" Link="Session/WorkerSessionCallbacks.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/ProjectLifecycleWorker.cs" Link="Session/ProjectLifecycleWorker.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcSecondaryProjects.cs" Link="Session/PlcSecondaryProjects.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.ProjectSelection.cs" Link="Session/PlcFoundationEngine.ProjectSelection.cs" />
+    <Compile Include="../../../src/Adapters/Native/Studio/OpennessSession.ProjectSelection.cs" Link="Studio/OpennessSession.ProjectSelection.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/ProjectArchive.cs" Link="Session/ProjectArchive.cs" />
     <Compile Include="../../../src/Adapters/Policy/PlcLifecyclePolicy.cs" Link="Session/PlcLifecyclePolicy.cs" />
     <Compile Include="../../../src/Logic/Siemens/ProjectBindingIdentity.cs" Link="Session/ProjectBindingIdentity.cs" />

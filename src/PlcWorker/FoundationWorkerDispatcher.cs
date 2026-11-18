@@ -155,7 +155,9 @@ namespace TiaMcp.PlcWorker
                                 WorkerJson.IsString(WorkerJson.Get(values,"path")) ? WorkerJson.Get(values,"path").GetString()! : "",
                                 WorkerJson.IsString(WorkerJson.Get(values,"directoryPath")) ? WorkerJson.Get(values,"directoryPath").GetString()! : "",
                                 WorkerJson.IsString(WorkerJson.Get(values,"projectName")) ? WorkerJson.Get(values,"projectName").GetString()! : "",
-                                WorkerOperations.MutationIdentity(name,engine.RequireProjectIdentity,engine.SharedFamilyMutationIdentity)));
+                                WorkerOperations.MutationIdentity(name,engine.RequireProjectIdentity,engine.SharedFamilyMutationIdentity),
+                                WorkerJson.IsString(WorkerJson.Get(values, "secondaryProjectFile"))
+                                    ? WorkerJson.Get(values, "secondaryProjectFile").GetString()! : ""));
                     }
                     catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
                 }

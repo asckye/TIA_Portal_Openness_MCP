@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("TiaMcp.Adapter.20")]
 [assembly: InternalsVisibleTo("TiaMcp.Adapter.21")]
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost.Tests")]
+[assembly: InternalsVisibleTo("TiaMcp.Adapters.Contracts.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.Offline.Fixtures")]
 [assembly: InternalsVisibleTo("TiaMcp.KeptCode.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost.DeviceAdd.Tests")]

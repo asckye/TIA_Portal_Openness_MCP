@@ -28923,8 +28923,8 @@
           },
           "parameters": {
             "expectedProjectFile": {
-              "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
-              "meaning": "For every real call copy projectPath exactly from the selected discovery row; after AttachOpenProject verify it equals GetSessionState data.projectFile. Do not invent a path from a project name or extension.",
+              "exampleValue": "<exact bound primary file, or the same exact secondaryProjectFile>",
+              "meaning": "For a primary close use the bound primary path; for a secondary close use the same exact file as secondaryProjectFile.",
               "requiresBinding": true,
               "tools": [
                 "ListPortalProcessProjects",
@@ -28952,12 +28952,36 @@
             "Read ok, error and meta.outcome/execution/completeness first. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
             "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
             "P6-35 behavior family P6-CLOSE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
-            "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED.",
+            "Workbench approval is required before primary close dispatch even though the tool remains classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
-            "Borrowed projects or borrowed local sessions are never closed. An AttachOpenProject binding to a UI-opened project is borrowed; expect refusal and keep the project open. Approval denial also leaves it open."
+            "Borrowed projects or borrowed local sessions are never closed. An AttachOpenProject binding to a UI-opened project is borrowed; expect refusal and keep the project open. Approval denial also leaves it open.",
+            "Secondary close preserves the primary binding and never saves. Primary-close ownership, modified-project refusal and approval remain in force."
           ],
-          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Borrowed projects or borrowed local sessions are never closed. An AttachOpenProject binding to a UI-opened project is borrowed; expect refusal and keep the project open. Approval denial also leaves it open."
+          "note": "Empty secondaryProjectFile keeps primary-close rules and write approval. V15.1–V21: specify the exact secondaryProjectFile this worker opened to close only that reference, with no save, write approval or plan hash; execution still requires confirm=true and expectedProjectFile equal to secondaryProjectFile. Primary close is refused until that secondary is explicitly closed. Secondary VM NOT RUN.",
+          "secondary": {
+            "releaseKeys": [
+              "15.1",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21"
+            ],
+            "arguments": {
+              "secondaryProjectFile": "C:/Examples/Reference.ap{extension}",
+              "dryRun": true
+            },
+            "execution": {
+              "arguments": {
+                "dryRun": false,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Reference.ap{extension}"
+              }
+            },
+            "validation": "VM NOT RUN"
+          }
         },
         "CompilePlcDiagnostics": {
           "arguments": {
@@ -31107,13 +31131,13 @@
           },
           "parameters": {
             "path": {
-              "meaning": "Choose a project file that is not already open, after ConnectPortal with no AttachOpenProject binding.",
+              "meaning": "Primary (default): choose an exact-version closed project with an unbound empty Portal. Secondary (V15.1–V21): choose a different closed .ap file while bound to the primary project.",
               "requiresBinding": true,
               "exampleValue": "<exact caller-selected closed project file for this release>"
             },
             "expectedProjectFile": {
-              "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
-              "meaning": "For a real open copy the intended closed target file exactly from path; the connected session must be unbound.",
+              "exampleValue": "<same exact target file as path>",
+              "meaning": "For real primary or secondary open copy the intended closed target file exactly from path.",
               "requiresBinding": true,
               "tools": [
                 "ListPortalProcessProjects",
@@ -31143,9 +31167,33 @@
             "P6-35 behavior family P6-SESSION is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
-            "OpenProject requires a connected but unbound session: ConnectPortal without AttachOpenProject. A project already open must be attached explicitly and is refused here. For a real open the mutation identity parameter names the intended target file; it is not obtained from a bound session that cannot exist yet."
+            "Primary open requires a connected unbound empty Portal. Secondary open requires a bound primary project and preserves its binding. For either execution expectedProjectFile is the same exact target file as path. GetProjectInfo reports isPrimary in each project meta on V15.1–V21."
           ],
-          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. OpenProject requires a connected but unbound session: ConnectPortal without AttachOpenProject. A project already open must be attached explicitly and is refused here. For a real open the mutation identity parameter names the intended target file; it is not obtained from a bound session that cannot exist yet."
+          "note": "Primary is the default and keeps its existing empty-Portal rules. V15.1–V21 secondary mode opens one read-only reference project without changing the primary binding; GetSessionState reports secondaryProjectFile after execution. Preview first, then confirm=true with expectedProjectFile equal to path. SESSION calls do not queue write approval or require a plan hash. Secondary VM NOT RUN.",
+          "secondary": {
+            "releaseKeys": [
+              "15.1",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21"
+            ],
+            "arguments": {
+              "path": "C:/Examples/Reference.ap{extension}",
+              "openMode": "secondary",
+              "dryRun": true
+            },
+            "execution": {
+              "arguments": {
+                "dryRun": false,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Reference.ap{extension}"
+              }
+            },
+            "validation": "VM NOT RUN"
+          }
         },
         "PlanArtifactImportOrder": {
           "arguments": {
@@ -49224,8 +49272,8 @@
           },
           "parameters": {
             "expectedProjectFile": {
-              "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
-              "meaning": "For every real call copy projectPath exactly from the selected discovery row; after AttachOpenProject verify it equals GetSessionState data.projectFile. Do not invent a path from a project name or extension.",
+              "exampleValue": "<exact bound primary file, or the same exact secondaryProjectFile>",
+              "meaning": "For a primary close use the bound primary path; for a secondary close use the same exact file as secondaryProjectFile.",
               "requiresBinding": true,
               "tools": [
                 "ListPortalProcessProjects",
@@ -49253,12 +49301,36 @@
             "Read ok, error and meta.outcome/execution/completeness first. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
             "Retain data.evidence, data.executed and per-item result envelopes. Native behaviorPolicy=current carries UNVERIFIED_BEHAVIOR until acceptance.",
             "P6-35 behavior family P6-CLOSE is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
-            "Workbench approval is required before save or close dispatch even though these tools remain classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED.",
+            "Workbench approval is required before primary close dispatch even though the tool remains classified as SESSION; if approval is disabled, inspect meta.warnings for APPROVAL_DISABLED.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
-            "Borrowed projects or borrowed local sessions are never closed. An AttachOpenProject binding to a UI-opened project is borrowed; expect refusal and keep the project open. Approval denial also leaves it open."
+            "Borrowed projects or borrowed local sessions are never closed. An AttachOpenProject binding to a UI-opened project is borrowed; expect refusal and keep the project open. Approval denial also leaves it open.",
+            "Secondary close preserves the primary binding and never saves. Primary-close ownership, modified-project refusal and approval remain in force."
           ],
-          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Borrowed projects or borrowed local sessions are never closed. An AttachOpenProject binding to a UI-opened project is borrowed; expect refusal and keep the project open. Approval denial also leaves it open."
+          "note": "Empty secondaryProjectFile keeps primary-close rules and write approval. V15.1–V21: specify the exact secondaryProjectFile this worker opened to close only that reference, with no save, write approval or plan hash; execution still requires confirm=true and expectedProjectFile equal to secondaryProjectFile. Primary close is refused until that secondary is explicitly closed. Secondary VM NOT RUN.",
+          "secondary": {
+            "releaseKeys": [
+              "15.1",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21"
+            ],
+            "arguments": {
+              "secondaryProjectFile": "C:/Examples/Reference.ap{extension}",
+              "dryRun": true
+            },
+            "execution": {
+              "arguments": {
+                "dryRun": false,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Reference.ap{extension}"
+              }
+            },
+            "validation": "VM NOT RUN"
+          }
         },
         "CompareLibraries": {
           "arguments": {
@@ -61500,13 +61572,13 @@
           },
           "parameters": {
             "path": {
-              "meaning": "Choose a project file that is not already open, after ConnectPortal with no AttachOpenProject binding.",
+              "meaning": "Primary (default): choose an exact-version closed project with an unbound empty Portal. Secondary (V15.1–V21): choose a different closed .ap file while bound to the primary project.",
               "requiresBinding": true,
               "exampleValue": "<exact caller-selected closed project file for this release>"
             },
             "expectedProjectFile": {
-              "exampleValue": "<exact projectPath from selected ListPortalProcessProjects row; verify GetSessionState data.projectFile>",
-              "meaning": "For a real open copy the intended closed target file exactly from path; the connected session must be unbound.",
+              "exampleValue": "<same exact target file as path>",
+              "meaning": "For real primary or secondary open copy the intended closed target file exactly from path.",
               "requiresBinding": true,
               "tools": [
                 "ListPortalProcessProjects",
@@ -61536,9 +61608,33 @@
             "P6-35 behavior family P6-SESSION is current for release key(s) 14sp1, 15.1, 16, 17, 18, 19; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance.",
             "On a project-authored precondition refusal, read error.message and error.details.parameter for the exact reason and argument. Native or unknown exceptions retain generic privacy-safe messages; inspect the structured evidence without inferring unreported native details.",
             "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs.",
-            "OpenProject requires a connected but unbound session: ConnectPortal without AttachOpenProject. A project already open must be attached explicitly and is refused here. For a real open the mutation identity parameter names the intended target file; it is not obtained from a bound session that cannot exist yet."
+            "Primary open requires a connected unbound empty Portal. Secondary open requires a bound primary project and preserves its binding. For either execution expectedProjectFile is the same exact target file as path. GetProjectInfo reports isPrimary in each project meta on V15.1–V21."
           ],
-          "note": "Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. OpenProject requires a connected but unbound session: ConnectPortal without AttachOpenProject. A project already open must be attached explicitly and is refused here. For a real open the mutation identity parameter names the intended target file; it is not obtained from a bound session that cannot exist yet."
+          "note": "Primary is the default and keeps its existing empty-Portal rules. V15.1–V21 secondary mode opens one read-only reference project without changing the primary binding; GetSessionState reports secondaryProjectFile after execution. Preview first, then confirm=true with expectedProjectFile equal to path. SESSION calls do not queue write approval or require a plan hash. Secondary VM NOT RUN.",
+          "secondary": {
+            "releaseKeys": [
+              "15.1",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21"
+            ],
+            "arguments": {
+              "path": "C:/Examples/Reference.ap{extension}",
+              "openMode": "secondary",
+              "dryRun": true
+            },
+            "execution": {
+              "arguments": {
+                "dryRun": false,
+                "confirm": true,
+                "expectedProjectFile": "C:/Examples/Reference.ap{extension}"
+              }
+            },
+            "validation": "VM NOT RUN"
+          }
         },
         "PatchPlcBlockDocument": {
           "arguments": {
@@ -74250,9 +74346,174 @@
           "expect": "Confirm the requested value is 5; saving/deployment is separate."
         }
       ]
+    },
+    {
+      "id": "sequence/secondary-project-compare",
+      "topic": "secondary-project-compare",
+      "purpose": "Open a read-only reference project, compare it with the bound primary, then explicitly close only the reference.",
+      "preconditions": "V15.1–V21; connect-project done and a primary project is bound. Resolve a different closed project file of this exact release and the target PLC device/item paths.",
+      "notes": "Replace every example target with the intended project. Preserve the primary binding throughout; no upgrade, save, online access or write approval. confirm and exact expectedProjectFile still guard execution. Native acceptance is separate from schema validation. DisconnectPortal refuses while the recorded secondary holder is alive. After worker recovery retain secondaryProjectFile with its holding TIA PID and process start time. Close on another TIA refuses and keeps the record. Only an absent exact path on that same holder clears it with data.secondaryProjectGone=true and Executed=false, including preview. A confirmed exited or replaced holder clears the record during recovery or disconnect without starting TIA. Under --preset-project-file, secondary open/close retains the preset primary binding; expectedProjectFile identifies the secondary file for these operations. CompareProjects observes the reference only; every later write still requires the preset primary binding. Vault credentials retain their own approval and target-project destination checks.",
+      "releaseKeys": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "VM NOT RUN",
+      "steps": [
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "Confirm the primary binding; no worker-owned secondaryProjectFile is already present."
+        },
+        {
+          "tool": "OpenProject",
+          "arguments": {
+            "path": "C:/Examples/Reference.ap{extension}",
+            "openMode": "secondary",
+            "dryRun": true
+          },
+          "expect": "Resolve only; the primary binding is unchanged and no reference is opened."
+        },
+        {
+          "tool": "OpenProject",
+          "arguments": {
+            "path": "C:/Examples/Reference.ap{extension}",
+            "openMode": "secondary",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "C:/Examples/Reference.ap{extension}"
+          },
+          "expect": "Open the reference read-only with ProjectOpenMode.Secondary; preserve the primary binding."
+        },
+        {
+          "tool": "GetProjectInfo",
+          "arguments": {},
+          "expect": "Confirm the reference project name and meta.isPrimary=false; retain the primary project identity."
+        },
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "Confirm secondaryProjectFile and the unchanged primary binding."
+        },
+        {
+          "tool": "CompareProjects",
+          "arguments": {
+            "kind": "software",
+            "softwarePath": "<primary PLC softwarePath from GetProjectTree>",
+            "targetProjectName": "<exact secondaryProjectFile from GetSessionState>",
+            "targetDevicePath": [
+              "<exact secondary device name>"
+            ],
+            "targetItemPath": [
+              "<exact secondary CPU DeviceItem name>"
+            ]
+          },
+          "expect": "Resolve the secondary by its exact full path, including same-name primary/reference copies; inspect paging and completeness."
+        },
+        {
+          "tool": "CloseProject",
+          "arguments": {
+            "secondaryProjectFile": "C:/Examples/Reference.ap{extension}",
+            "dryRun": true
+          },
+          "expect": "Validate that this worker owns that exact secondary; never save."
+        },
+        {
+          "tool": "CloseProject",
+          "arguments": {
+            "secondaryProjectFile": "C:/Examples/Reference.ap{extension}",
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "C:/Examples/Reference.ap{extension}"
+          },
+          "expect": "Close only the reference; keep the primary binding and do not save."
+        },
+        {
+          "tool": "GetSessionState",
+          "arguments": {},
+          "expect": "The primary binding is unchanged and secondaryProjectFile is absent."
+        }
+      ]
+    },
+    {
+      "id": "sequence/project-overview",
+      "topic": "project-overview",
+      "purpose": "Read project identity, device/software paths and PLC blocks/tag tables plus HMI screens in a maintained read-only sequence.",
+      "preconditions": "connect-project done; an explicit project is bound.",
+      "notes": "After GetProjectTree, repeat the batch entries for each discovered PLC/HMI softwarePath and omit entries for software kinds absent from this project. Resolve paths from the returned tree; sample bindings are not target names. Each batch result keeps its own envelope, paging and completeness; these reads do not prove all project content was observed.",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "profile": "plc-foundation",
+      "kind": "call-sequence",
+      "validation": "VM NOT RUN",
+      "steps": [
+        {
+          "tool": "GetProjectInfo",
+          "arguments": {},
+          "expect": "Review the exact bound project identity and listed projects."
+        },
+        {
+          "tool": "GetProjectTree",
+          "arguments": {},
+          "expect": "Discover all device and PLC/HMI software paths, including grouped and ungrouped devices."
+        },
+        {
+          "tool": "RunReadOnlyToolBatch",
+          "arguments": {
+            "operations": [
+              {
+                "name": "ListPlcBlocks",
+                "arguments": {
+                  "softwarePath": "<exact PLC softwarePath from GetProjectTree>"
+                }
+              },
+              {
+                "name": "ListPlcTagTables",
+                "arguments": {
+                  "softwarePath": "<exact PLC softwarePath from GetProjectTree>"
+                }
+              },
+              {
+                "name": "ListHmiScreens",
+                "arguments": {
+                  "softwarePath": "<exact HMI softwarePath from GetProjectTree>"
+                }
+              }
+            ]
+          },
+          "expect": "Inspect ordered block, tag-table and screen results; repeat per actual software path and follow each paging cursor."
+        }
+      ]
     }
   ],
   "parameterSources": {
+    "openMode": {
+      "meaning": "Caller choice: primary (default) or secondary. Secondary requires an already bound primary project and preserves that binding; V15.1–V21 only. GetSessionState reports state but does not choose this mode.",
+      "exampleValue": "secondary",
+      "requiresBinding": false
+    },
+    "secondaryProjectFile": {
+      "meaning": "Exact session-recorded secondaryProjectFile from GetSessionState, retained across worker recovery. Close resolves only this full path and refuses IsPrimary=true; confirmed absence clears the record. Empty selects the bound primary project. V15.1–V21 only.",
+      "exampleValue": "<secondaryProjectFile from GetSessionState>",
+      "tools": [
+        "GetSessionState"
+      ],
+      "requiresBinding": true
+    },
     "softwarePath": {
       "tools": [
         "GetProjectTree",

@@ -724,42 +724,67 @@
       "parameters": {}
     },
     "OpenProject": {
-      "method": "OpenProjectV4",
-      "path": "src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs",
-      "owner": "ProjectSessionTools",
+      "method": "OpenProject",
+      "path": "src/FoundationHost/FoundationTools.cs",
+      "owner": "FoundationTools",
       "domain": "Project",
-      "signature": "public CallToolResult OpenProjectV4(\n            [Description(\"path: defines the path where to the project/session\")] string path,\n            [Description(\"closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.\")] bool closeForeignProject = false,\n            [Description(\"umacUserName: optional user for a UMAC-protected project (Projects.OpenWithUpgrade(file, UmacDelegate)); give it together with umacPassword.\")] string umacUserName = \"\",\n            [Description(\"umacPassword: password of umacUserName; converted to SecureString, never logged or echoed. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.\")] string umacPassword = \"\",\n            [Description(\"umacUserType: Project (default) or Global (UMC user).\")] string umacUserType = \"\")",
+      "signature": "public CallToolResult OpenProject(string path, bool dryRun = true, string umacUserName = \"\", string umacPassword = \"\", string umacUserType = \"\", string openMode = \"primary\", bool confirm = false, string expectedProjectFile = \"\")",
       "parameters": {
         "path": {
           "type": "string",
           "default": null,
-          "description": "path: defines the path where to the project/session"
+          "description": "Exact-version closed project file; secondary mode requires a bound primary project."
+        },
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "Preview only by default.",
+          "value": true
+        },
+        "umacUserName": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "UMAC user, together with umacPassword.",
+          "value": ""
+        },
+        "umacPassword": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "umacPassword: UMAC password or vault:<name> reference for umacUserName; the host resolves vault references only after its vault approval and destination checks. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.",
+          "value": ""
+        },
+        "umacUserType": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Project or Global; only with UMAC credentials.",
+          "value": ""
+        },
+        "openMode": {
+          "type": "string",
+          "default": "\"primary\"",
+          "description": "primary (default) or secondary; secondary requires a bound primary project and preserves its binding.",
+          "value": "primary"
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "description": "Execution requires confirm=true.",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Exact target project file for execution; for secondary open/close use the secondary file.",
+          "value": ""
         },
         "closeForeignProject": {
           "type": "bool",
           "default": "false",
           "description": "closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.",
           "value": false
-        },
-        "umacUserName": {
-          "type": "string",
-          "default": "\"\"",
-          "description": "umacUserName: optional user for a UMAC-protected project (Projects.OpenWithUpgrade(file, UmacDelegate)); give it together with umacPassword.",
-          "value": ""
-        },
-        "umacPassword": {
-          "type": "string",
-          "default": "\"\"",
-          "description": "umacPassword: password of umacUserName; converted to SecureString, never logged or echoed. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.",
-          "value": ""
-        },
-        "umacUserType": {
-          "type": "string",
-          "default": "\"\"",
-          "description": "umacUserType: Project (default) or Global (UMC user).",
-          "value": ""
         }
-      }
+      },
+      "description": "Open an exact-version project; primary requires an empty unbound Portal, secondary opens a read-only reference on V15.1–V21 and preserves the primary binding."
     },
     "AttachOpenProject": {
       "method": "AttachOpenProjectV4",
@@ -773,7 +798,8 @@
           "default": null,
           "description": "projectName: exact name shown in TIA (e.g. 'Project1')"
         }
-      }
+      },
+      "description": "Bind an exact primary project/session by name and expectedProjectFile; V15.1–V21 refuses IsPrimary=false secondary references as the active binding."
     },
     "CreateProject": {
       "method": "CreateProjectV4",
@@ -809,12 +835,38 @@
       "parameters": {}
     },
     "CloseProject": {
-      "method": "CloseProjectV4",
-      "path": "src/Engine/ModelContextProtocol/Tools/ProjectSessionTools.cs",
-      "owner": "ProjectSessionTools",
+      "method": "CloseProject",
+      "path": "src/FoundationHost/FoundationTools.cs",
+      "owner": "FoundationTools",
       "domain": "Project",
-      "signature": "public CallToolResult CloseProjectV4()",
-      "parameters": {}
+      "signature": "public CallToolResult CloseProject(bool dryRun = true, string secondaryProjectFile = \"\", bool confirm = false, string expectedProjectFile = \"\")",
+      "parameters": {
+        "dryRun": {
+          "type": "bool",
+          "default": "true",
+          "description": "Preview only by default.",
+          "value": true
+        },
+        "secondaryProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Exact session-recorded secondary project file on its holding TIA process; empty selects the bound primary project.",
+          "value": ""
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "description": "Execution requires confirm=true.",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Exact target project file for execution; for secondary open/close use the secondary file.",
+          "value": ""
+        }
+      },
+      "description": "Close a worker-owned primary or the session-recorded exact secondary path on its holding TIA PID and process start time. Another attached TIA refuses and keeps the record. On the same holder require IsPrimary=false; confirmed absence clears the record with data.secondaryProjectGone=true and Executed=false, including preview. An exited or replaced holder clears the record. No save."
     },
     "InitializeEnvironment": {
       "method": "InitializeEnvironmentV4",
@@ -859,7 +911,8 @@
       "owner": "SessionTools",
       "domain": "Portal",
       "signature": "public CallToolResult DisconnectPortalV4()",
-      "parameters": {}
+      "parameters": {},
+      "description": "Disconnect refuses while the session records a secondary held by a live TIA process; use CloseProject secondaryProjectFile first. The path, holder PID and process start time survive worker recovery. A confirmed exited or replaced holder clears the record without starting TIA."
     },
     "GetSessionState": {
       "method": "GetSessionStateV4",
@@ -2880,7 +2933,7 @@
       "path": "src/Shared/EngineeringServicesTools.cs",
       "owner": "EngineeringServicesTools",
       "domain": "Project",
-      "signature": "public CallToolResult CompareProjects(\n            string kind,\n            string softwarePath=\"\",\n            string[] devicePath=null!,\n            string[] itemPath=null!,\n            [Description(\"targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).\")] string targetProjectName=\"\",\n            string targetSoftwarePath=\"\",\n            [Description(\"targetDevicePath: JSON array naming the target station.\")] string[] targetDevicePath=null!,\n            [Description(\"targetItemPath: array of device-item names on the target.\")] string[] targetItemPath=null!,\n            string targetLibraryName=\"\",\n            bool includeIdentical=false,\n            int maxDepth=8,\n            int offset=0,\n            int limit=100)",
+      "signature": "public CallToolResult CompareProjects(\n            string kind,\n            string softwarePath=\"\",\n            string[] devicePath=null!,\n            string[] itemPath=null!,\n            [Description(\"targetProjectName: exact full file path or name of another open project; use the recorded secondaryProjectFile after secondary open or recovery.\")] string targetProjectName=\"\",\n            string targetSoftwarePath=\"\",\n            [Description(\"targetDevicePath: JSON array naming the target station.\")] string[] targetDevicePath=null!,\n            [Description(\"targetItemPath: array of device-item names on the target.\")] string[] targetItemPath=null!,\n            string targetLibraryName=\"\",\n            bool includeIdentical=false,\n            int maxDepth=8,\n            int offset=0,\n            int limit=100)",
       "parameters": {
         "kind": {
           "type": "string",
@@ -2904,7 +2957,7 @@
         "targetProjectName": {
           "type": "string",
           "default": "\"\"",
-          "description": "targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the MCP).",
+          "description": "targetProjectName: exact full file path or name of another open project; use the recorded secondaryProjectFile after secondary open or recovery.",
           "value": ""
         },
         "targetSoftwarePath": {
@@ -2949,7 +3002,8 @@
           "default": "100",
           "value": 100
         }
-      }
+      },
+      "description": "Offline comparison against an exact target project full file path or name. A held secondary is resolved by its full path even for same-name copies; other name-only lookups preserve ambiguity refusal."
     },
     "GetProjectSettings": {
       "method": "GetProjectSettings",
@@ -19346,7 +19400,7 @@
     "AttachOpenProject": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
     "BuildAndImportPlcArtifact": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "CheckDownloadReadiness": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
-    "CloseProject": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
+    "CloseProject": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused. Read-only secondary open/close (where available) keeps the preset primary binding; expectedProjectFile identifies the secondary file.",
     "ComparePlcBlockDocuments": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "CompareProjects": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "CompareSoftwareToOnline": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
@@ -19500,7 +19554,7 @@
     "ManageWatchForceTableWebAccess": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "MonitorPlcWatchTableS7": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "MovePlcBlockToGroup": "Preset by the server: expectedProjectFile, softwarePath. Equal normalized values are accepted; different values are refused.",
-    "OpenProject": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
+    "OpenProject": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused. Read-only secondary open/close (where available) keeps the preset primary binding; expectedProjectFile identifies the secondary file.",
     "PlanOnlineReadOnlyMonitoring": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "PlanPlcExternalSourceImport": "Preset by the server: expectedProjectFile, softwarePath. Equal normalized values are accepted; different values are refused.",
     "ProbePlcMonitorOnlineCapabilities": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",

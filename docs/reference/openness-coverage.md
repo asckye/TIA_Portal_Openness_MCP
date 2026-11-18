@@ -251,10 +251,26 @@ Used since P8-81c, with the releases where the SDK has each member:
 | `TiaPortal.GetProcess(int, TimeSpan)` | all eight | Targeted attach lookup with a 30-second timeout inside the host's attach budget. |
 | `EngineeringSecurityException`, `LicenseNotFoundException` (17-21), `MissingProductsException` (18-21), `Multiuser.MultiuserException` (17-21) | as listed | Explicit, non-poisoning `PRECONDITION_FAILED` conditions `openness-access-denied`, `license-not-found`, `missing-products`, `multiuser-refused` with guidance. |
 | Openness firewall AllowList (`HKLM\SOFTWARE\Siemens\Automation\Openness\AllowList`) | all eight | Read only by the Workbench check "Openness AllowList" (path, UTC modification date, Base64 SHA-256 per worker executable). Nothing writes the registry. |
+| `ProjectComposition.Open(FileInfo, UmacDelegate, ProjectOpenMode.Secondary)`, `Project.IsPrimary` / `ProjectBase.IsPrimary`, `Project.Close()` | V15.1–V21 | `OpenProject(openMode: "secondary")` opens a read-only reference beside a bound primary. `CloseProject(secondaryProjectFile: ...)` closes only the exact reference this worker opened, never saves, and must run explicitly before primary close. |
+
+Secondary open/close preserves the primary binding. `GetProjectInfo` reports each project's `isPrimary`, and
+`GetSessionState` reports `secondaryProjectFile`. `CompareProjects(targetProjectName: ...)` can select that reference.
+The comparison selector accepts the exact full project file path; a held secondary's name resolves through its recorded
+path, so same-name primary/reference copies remain distinct. Name-only lookup otherwise retains its ambiguity error.
+Binding refuses a secondary as the active project. Disconnect refuses until the recorded secondary is explicitly closed.
+After worker recovery the session retains that path with the holding TIA PID and process start time.
+Close on another TIA refuses and keeps the record. Close on the same holder requires `IsPrimary=false`;
+if that exact path is absent, it clears the record with `data.secondaryProjectGone=true` and `Executed=false`, including preview.
+Recovery and disconnect clear a confirmed exited or replaced holder without starting TIA.
+With `--preset-project-file`, read-only secondary open/close and comparison keep the preset primary write binding.
+For secondary lifecycle calls, `expectedProjectFile` identifies the reference file; every other write still checks the current preset primary.
+Comparison operands and secondary file paths never select a write binding.
+V14 SP1 exposes neither new parameter. `GetToolUsage` provides `sequence/secondary-project-compare` and the all-release
+`sequence/project-overview`. Native acceptance is **NOT RUN**.
 
 Official APIs in this family that no 4.0 tool uses:
 
-- Secondary (reference) projects: `ProjectOpenMode.Secondary` with `ProjectComposition.Open(FileInfo, UmacDelegate, ProjectOpenMode)` and the `Retrieve` overload with `ProjectOpenMode` (15.1-21). `CompareProjects` with `targetProjectName` therefore needs a second project opened outside the MCP.
+- `ProjectComposition.Retrieve` with `ProjectOpenMode` (V15.1–V21).
 - `LocalSessionComposition.OpenServerProject` and `ProjectServer.CreateLocalSession`, `AddProjectToServer`, `DeleteLocalSessionFromServer`, `SetHostName`, `SetPort`, `SetProtocol` (17-21). `ManageMultiuserSession` does not claim them.
 - `ProjectBase.ExportProjectTexts(FileInfo, Language, IEnumerable<Language>, IEnumerable<TextCategory>, IEnumerable<IEngineeringObject>)` (21 only). `ExportProjectTexts` uses the culture-pair overload that exists on all eight releases.
 - The Workbench Studio session (`TiaOpenness.Bridge`) has no process picker: with several running TIA Portal processes it refuses and lists them instead of attaching to the first one.

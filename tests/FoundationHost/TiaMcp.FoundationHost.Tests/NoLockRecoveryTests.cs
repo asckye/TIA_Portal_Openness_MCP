@@ -41,6 +41,7 @@ public sealed class NoLockRecoveryTests
         internal string FactsPath => Path.Combine(root, "processes.json");
         internal string Gate => root;
         internal string TracePath => Path.Combine(root, "trace.jsonl");
+        internal string SecondaryStatePath => Path.Combine(root, "secondary.json");
         internal Process Child => (Process)typeof(WorkerClient).GetField("process", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Worker)!;
         internal JsonObject[] Trace => File.ReadAllLines(TracePath).Select(line => JsonNode.Parse(line)!.AsObject()).ToArray();
         internal Scope(string mode = "crash", bool shared = true, string? timeoutConfig = null, string release = "19")
@@ -56,6 +57,7 @@ public sealed class NoLockRecoveryTests
             Set("TIA_MCP_FIXTURE_RECOVERY_PROCESSES", FactsPath);
             Set("TIA_MCP_FIXTURE_RECOVERY_TRACE", TracePath);
             Set("TIA_MCP_FIXTURE_SLOW_GATE", root);
+            Set("TIA_MCP_FIXTURE_SECONDARY_STATE", SecondaryStatePath);
         }
         private void Set(string name, string value)
         { environment[name] = Environment.GetEnvironmentVariable(name); Environment.SetEnvironmentVariable(name, value); }
@@ -88,6 +90,150 @@ public sealed class NoLockRecoveryTests
             Worker.Dispose();
             foreach (var variable in environment) Environment.SetEnvironmentVariable(variable.Key, variable.Value);
         }
+    }
+
+    public static IEnumerable<object[]> SecondaryRecoveryCases()
+        => ReleasesAndFlags().Where(row => (string)row[0] != "14sp1")
+            .SelectMany(row => new[] { false, true }.Select(gone => new object[] { row[0], row[1], gone }));
+
+    [Theory, MemberData(nameof(SecondaryRecoveryCases))]
+    public async Task Secondary_record_survives_worker_loss_until_exact_path_close_or_confirmed_absence(string release, bool shared, bool gone)
+    {
+        using var scope = new Scope(shared: shared, release: release);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        await scope.Bind();
+        string file = @"C:\Reference\Line1.ap" + TiaMcp.Adapters.PlcLifecyclePolicy.FileSuffix(release);
+        await scope.Worker.Call("OpenProject", new() { ["path"] = file, ["openMode"] = "secondary", ["dryRun"] = false,
+            ["confirm"] = true, ["expectedProjectFile"] = file }, CancellationToken.None);
+        var refusal = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("Disconnect", new(), CancellationToken.None));
+        Assert.Contains("CloseProject secondaryProjectFile", refusal.Message);
+        Assert.Equal(file, (string?)SharedSessionState.For(scope.Worker).Snapshot(release)["secondaryProjectFile"]);
+        scope.StopOwnedChild();
+        Assert.Equal(file, (string?)SharedSessionState.For(scope.Worker).Snapshot(release)["secondaryProjectFile"]);
+        if (gone) File.WriteAllText(scope.SecondaryStatePath, "{\"file\":null}");
+        await scope.Worker.RecoverLostWorker(true, CancellationToken.None);
+        Assert.Equal(file, (string?)SharedSessionState.For(scope.Worker).Snapshot(release)["secondaryProjectFile"]);
+        var rebound = scope.Trace.Last(row => (string?)row["method"] == "adapter.BindProject");
+        Assert.Equal(file, (string?)rebound["arguments"]?["recordedSecondaryProjectFile"]);
+        Assert.Equal(Environment.ProcessId, (int?)rebound["arguments"]?["recordedSecondaryProcessId"]);
+        using var holder = Process.GetCurrentProcess();
+        Assert.Equal(holder.StartTime.ToUniversalTime().Ticks, (long?)rebound["arguments"]?["recordedSecondaryProcessStartTicks"]);
+        Assert.Equal(scope.ProjectFile, (string?)SharedSessionState.For(scope.Worker).Identity?["projectPath"]);
+        var preview = await scope.Worker.Call("CloseProject", new() { ["secondaryProjectFile"] = file, ["dryRun"] = true }, CancellationToken.None);
+        Assert.Equal(gone, (bool?)preview?["SecondaryProjectGone"]);
+        Assert.False((bool?)preview?["Executed"]);
+        if (!gone)
+        {
+            Assert.Equal(file, (string?)SharedSessionState.For(scope.Worker).Snapshot(release)["secondaryProjectFile"]);
+            await scope.Worker.Call("CloseProject", new() { ["secondaryProjectFile"] = file, ["dryRun"] = false,
+                ["confirm"] = true, ["expectedProjectFile"] = file }, CancellationToken.None);
+        }
+        Assert.False(SharedSessionState.For(scope.Worker).Snapshot(release).ContainsKey("secondaryProjectFile"));
+        Assert.Null(JsonNode.Parse(File.ReadAllText(scope.SecondaryStatePath))?["file"]);
+        Assert.Equal(scope.ProjectFile, (string?)SharedSessionState.For(scope.Worker).Identity?["projectPath"]);
+        Assert.False(scope.Worker.Faulted);
+    }
+
+    public static IEnumerable<object[]> SecondaryHolderCases()
+        => ReleasesAndFlags().Where(row => (string)row[0] != "14sp1");
+
+    private static async Task<string> OpenReference(Scope scope, string release)
+    {
+        await scope.Bind();
+        string file = @"C:\Reference\Line1.ap" + TiaMcp.Adapters.PlcLifecyclePolicy.FileSuffix(release);
+        await scope.Worker.Call("OpenProject", new() { ["path"] = file, ["openMode"] = "secondary", ["dryRun"] = false,
+            ["confirm"] = true, ["expectedProjectFile"] = file }, CancellationToken.None);
+        return file;
+    }
+
+    [Theory, MemberData(nameof(SecondaryHolderCases))]
+    public async Task Selecting_another_Tia_after_worker_loss_cannot_confirm_secondary_absence(string release, bool shared)
+    {
+        using var scope = new Scope(shared: shared, release: release);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        string file = await OpenReference(scope, release);
+        scope.StopOwnedChild();
+        await scope.Worker.Call("Attach", new() { ["processId"] = Environment.ProcessId + 100000 }, CancellationToken.None);
+        var refused = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("CloseProject",
+            new() { ["secondaryProjectFile"] = file, ["dryRun"] = true }, CancellationToken.None));
+        Assert.Contains("TIA PID " + Environment.ProcessId, refused.Message);
+        using var holder = Process.GetCurrentProcess();
+        Assert.Contains(holder.StartTime.ToUniversalTime().ToString("O"), refused.Message);
+        Assert.Equal(file, (string?)SharedSessionState.For(scope.Worker).Snapshot(release)["secondaryProjectFile"]);
+        Assert.Equal(file, (string?)JsonNode.Parse(File.ReadAllText(scope.SecondaryStatePath))?["file"]);
+        Assert.DoesNotContain(scope.Trace, row => (string?)row["method"] == "adapter.CloseProject");
+        var disconnect = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("Disconnect", new(), CancellationToken.None));
+        Assert.Contains("CloseProject secondaryProjectFile", disconnect.Message);
+    }
+
+    [Theory, MemberData(nameof(SecondaryHolderCases))]
+    public async Task Reconnecting_the_same_holder_without_binding_can_confirm_secondary_absence(string release, bool shared)
+    {
+        using var scope = new Scope(shared: shared, release: release);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        string file = await OpenReference(scope, release);
+        scope.StopOwnedChild();
+        File.WriteAllText(scope.SecondaryStatePath, "{\"file\":null}");
+        int binds = scope.Trace.Count(row => (string?)row["method"] == "adapter.BindProject");
+        await scope.Worker.Call("Attach", new() { ["processId"] = Environment.ProcessId }, CancellationToken.None);
+        var attached = scope.Trace.Last(row => (string?)row["method"] == "adapter.Attach");
+        Assert.Equal(file, (string?)attached["arguments"]?["recordedSecondaryProjectFile"]);
+        Assert.Equal(Environment.ProcessId, (int?)attached["arguments"]?["recordedSecondaryProcessId"]);
+        using var holder = Process.GetCurrentProcess();
+        Assert.Equal(holder.StartTime.ToUniversalTime().Ticks, (long?)attached["arguments"]?["recordedSecondaryProcessStartTicks"]);
+        var gone = await scope.Worker.Call("CloseProject", new() { ["secondaryProjectFile"] = file, ["dryRun"] = false,
+            ["confirm"] = true, ["expectedProjectFile"] = file }, CancellationToken.None);
+        Assert.True((bool?)gone?["SecondaryProjectGone"]);
+        Assert.False((bool?)gone?["Executed"]);
+        Assert.False(SharedSessionState.For(scope.Worker).Snapshot(release).ContainsKey("secondaryProjectFile"));
+        Assert.Equal(binds, scope.Trace.Count(row => (string?)row["method"] == "adapter.BindProject"));
+    }
+
+    public static IEnumerable<object[]> SecondaryHolderGoneCases()
+        => SecondaryHolderCases().SelectMany(row => new[] { false, true }.SelectMany(recovery => new[] { false, true }
+            .Select(reused => new object[] { row[0], row[1], recovery, reused })));
+
+    [Theory, MemberData(nameof(SecondaryHolderGoneCases))]
+    public async Task Gone_holder_reconciles_during_recovery_or_disconnect_without_starting_Tia(string release, bool shared, bool recovery, bool reused)
+    {
+        using var scope = new Scope(shared: shared, release: release);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        await OpenReference(scope, release);
+        scope.StopOwnedChild();
+        int calls = scope.Trace.Length;
+        scope.Worker.SecondaryProcessObservation = pid => {
+            Assert.Equal(Environment.ProcessId, pid);
+            return reused ? (false, DateTime.UnixEpoch.ToString("O")) : (true, null);
+        };
+        if (recovery)
+        {
+            await scope.Worker.RecoverLostWorker(false, CancellationToken.None);
+            Assert.Null(typeof(WorkerClient).GetField("process", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scope.Worker));
+        }
+        var result = await scope.Worker.Call("Disconnect", new(), CancellationToken.None);
+        Assert.False((bool?)result?["ClosedProject"]);
+        Assert.False(SharedSessionState.For(scope.Worker).Snapshot(release).ContainsKey("secondaryProjectFile"));
+        Assert.Null(scope.Worker.OperatorSnapshot()["secondaryProjectFile"]);
+        Assert.Equal(calls, scope.Trace.Length);
+    }
+
+    [Theory, MemberData(nameof(SecondaryRecoveryCases))]
+    public async Task Live_or_unknown_holder_still_refuses_disconnect_without_restarting_a_worker(string release, bool shared, bool unknown)
+    {
+        using var scope = new Scope(shared: shared, release: release);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        string file = await OpenReference(scope, release);
+        scope.StopOwnedChild();
+        using var holder = Process.GetCurrentProcess();
+        scope.Worker.SecondaryProcessObservation = _ => (false, unknown ? null : holder.StartTime.ToUniversalTime().ToString("O"));
+        await scope.Worker.RecoverLostWorker(false, CancellationToken.None);
+        int calls = scope.Trace.Length;
+        var refusal = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("Disconnect", new(), CancellationToken.None));
+        Assert.Contains("TIA PID " + Environment.ProcessId, refusal.Message);
+        Assert.Contains("CloseProject secondaryProjectFile", refusal.Message);
+        Assert.Equal(file, (string?)SharedSessionState.For(scope.Worker).Snapshot(release)["secondaryProjectFile"]);
+        Assert.Null(typeof(WorkerClient).GetField("process", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scope.Worker));
+        Assert.Equal(calls, scope.Trace.Length);
     }
 
     [Theory, MemberData(nameof(ReleasesAndFlags))]

@@ -83,6 +83,11 @@ internal static class WorkerProtocol
             or "ExportBlock" or "ExportType" or "ExportTagTable" or "ImportBlocks" or "ImportTypes" or "ImportTagTables"
             or "CreateTagTable" or "CreateTag" or "CreateUserConstant"))
             return;
+        if (operation == "CloseProject" && SecondaryProjectAbsence.Reported(result))
+        {
+            SecondaryProjectAbsence.ValidateRequest(arguments, result);
+            return;
+        }
         var dryRun=arguments["dryRun"]?.GetValue<bool>() ?? operation!="BindProject";
         if(result is not JsonObject data || data["Executed"] is not JsonValue flag || !flag.TryGetValue<bool>(out var executed) || executed==dryRun)
             throw new IOException("Exchange worker returned a conflicting or missing execution outcome; session stopped.");

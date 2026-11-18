@@ -56,7 +56,7 @@ internal static class CatalogGenerator
                 "V20 admission policy differs");
         Require(Set(Strings(Read(root, "manifest/history/contracts-v3/baseline/20.json")["liteTools"]))
                 .SetEquals(Strings(Read(root, "manifest/history/contracts-v3/baseline/21.json")["liteTools"])), "Frozen engine lite rosters differ");
-        Require(Source(root, "src/Shared/ToolUsageCatalog.cs").Contains("GuideSelection(string topic)", StringComparison.Ordinal)
+        Require(Source(root, "src/Shared/ToolUsageCatalog.cs").Contains("JsonObject Examples(", StringComparison.Ordinal)
                 && Source(root, "src/Logic/ModelContextProtocol/ToolRecipes.cs").Contains("ToolUsageCatalog.Sequences(", StringComparison.Ordinal)
                 && Source(root, "src/ToolPipeline/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("ToolUsageCatalog.Examples(", StringComparison.Ordinal)
                 && Source(root, "src/ToolPipeline/ModelContextProtocol/Tools/ToolUsageTools.cs").Contains("exampleId", StringComparison.Ordinal),

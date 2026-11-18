@@ -298,6 +298,15 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         bool statusProbe = managed && (string?)arguments["operation"] == "status";
         try
         {
+            ForgetSecondaryIfHolderGone();
+            if (operation is "Attach" or "BindProject" && secondaryProjectFile != null)
+            {
+                arguments = (JsonObject)arguments.DeepClone();
+                arguments["recordedSecondaryProjectFile"] = secondaryProjectFile;
+                arguments["recordedSecondaryProcessId"] = secondaryProcessId;
+                arguments["recordedSecondaryProcessStartTicks"] = DateTimeOffset.Parse(secondaryProcessStartUtc!,
+                    System.Globalization.CultureInfo.InvariantCulture).UtcTicks;
+            }
             ChannelLimits.CheckRequest("adapter." + operation, arguments.ToJsonString(), FoundationWorkerRequest.CorrelationId,
                 FoundationWorkerRequest.ToolName, UnsettledRequestIds());
             if (CallRunning && (acquired || !settlementDrain.IsCompleted)) throw Busy();
@@ -307,7 +316,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             if (!managed && operation != "Attach") RequireCurrentOwner();
             if (!managed && operation == "Attach" && arguments["processId"] is JsonValue selected && selected.TryGetValue<int>(out int selectedPid))
             {
-                // takeOver is host admission metadata. The native Attach arguments remain processId only.
+                // takeOver is host admission metadata; the worker also receives the retained secondary context.
                 bool takeOver = (bool?)arguments["takeOver"] ?? false;
                 arguments = (JsonObject)arguments.DeepClone();
                 arguments.Remove("takeOver");
@@ -336,6 +345,23 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             token.ThrowIfCancellationRequested();
             if (disconnecting) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
                 TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
+            if (operation == "CloseProject" && IsSecondaryProjectOperation(operation, arguments))
+            {
+                string file = (string)arguments["secondaryProjectFile"]!;
+                if (secondaryProjectFile == null)
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("This session has no recorded secondary project to close.",
+                        "secondaryProjectFile", false);
+                TiaMcp.Adapters.MutationIdentityPolicy.RequireSameProject(file, secondaryProjectFile);
+                RequireSecondaryHolder();
+            }
+            else if (operation == "OpenProject" && IsSecondaryProjectOperation(operation, arguments)
+                && (attachedProcessId == null || hostProcessStartUtc == null))
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Cannot identify the holding TIA PID and process start time.",
+                    "openMode", false);
+            else if (secondaryProjectFile != null && operation is "CloseProject" or "OpenProject")
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                    "CloseProject secondaryProjectFile must explicitly close this session's recorded secondary project first.",
+                    "secondaryProjectFile", false);
             activeRequestId = FoundationWorkerRequest.CorrelationId;
             if (operation == "Attach") lock (stateSync) attachingProcessId = hostAttachPid;
             var dialog = settling ? null : BeginDialogCall(activeRequestId, operation, hostAttachPid ?? attachedProcessId);
@@ -376,6 +402,27 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             var result=JsonNode.Parse(response);
             WorkerProtocol.ValidateExchangeResult(operation, arguments, result);
             if (operation == "Disconnect") { lock (stateSync) approvalIdentity = new JsonObject(); }
+            else if (IsSecondaryProjectOperation(operation, arguments))
+            {
+                lock (stateSync)
+                {
+                    if (operation == "OpenProject" && (bool?)result?["Executed"] == true)
+                    {
+                        secondaryProjectFile = (string?)result?["ProjectFile"];
+                        secondaryProcessId = attachedProcessId;
+                        secondaryProcessStartUtc = hostProcessStartUtc;
+                    }
+                    else if (operation == "CloseProject" && ((bool?)result?["Executed"] == true
+                        || (bool?)result?["SecondaryProjectGone"] == true))
+                    {
+                        if (!ForgetSecondaryIfHolderGone())
+                        {
+                            RequireSecondaryHolder();
+                            ClearSecondaryRecord();
+                        }
+                    }
+                }
+            }
             else if (result is JsonObject values)
             {
                 UpdateApprovalIdentity(values, operation == "Attach" ? arguments["processId"]!.GetValue<int>() : null);

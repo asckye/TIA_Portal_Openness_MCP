@@ -337,6 +337,41 @@ public sealed class EnforcedParameterPresetTests
         Assert.Equal(new[] { "CloseProject" }, fixture.Worker.Dispatched);
     }
 
+    public static IEnumerable<object[]> SecondaryPresetCases()
+        => new[] { "15.1", "16", "17", "18", "19", "20", "21" }
+            .SelectMany(release => new[] { false, true }.Select(bridge => new object[] { release, bridge }));
+
+    [Theory, MemberData(nameof(SecondaryPresetCases))]
+    public async Task Secondary_reference_lifecycle_preserves_the_preset_binding_and_cannot_become_a_write_target(string release, bool bridge)
+    {
+        using var fixture = new ProjectFixture(release);
+        string reference = "C:/Reference/Line1.ap" + (release == "15.1" ? "15_1" : release);
+        foreach (bool preview in new[] { true, false })
+        {
+            var opened = await fixture.Call("OpenProject", new JsonObject { ["path"] = reference, ["openMode"] = "secondary",
+                ["dryRun"] = preview, ["confirm"] = !preview, ["expectedProjectFile"] = reference }, bridge);
+            Assert.False(opened.IsError, opened.StructuredContent?.ToJsonString());
+            Assert.Equal(fixture.Project, fixture.Worker.Project);
+            Assert.Equal(reference, (string?)fixture.Worker.Last!["expectedProjectFile"]);
+            Assert.Equal("secondary", (string?)fixture.Worker.Last!["openMode"]);
+            var closed = await fixture.Call("CloseProject", new JsonObject { ["secondaryProjectFile"] = reference,
+                ["dryRun"] = preview, ["confirm"] = !preview, ["expectedProjectFile"] = reference }, bridge);
+            Assert.False(closed.IsError, closed.StructuredContent?.ToJsonString());
+            Assert.Equal(fixture.Project, fixture.Worker.Project);
+            Assert.Equal(reference, (string?)fixture.Worker.Last!["expectedProjectFile"]);
+        }
+        int dispatches = fixture.Worker.Dispatched.Count;
+        Refused(await fixture.Call("SaveProject", new JsonObject { ["expectedProjectFile"] = reference }, bridge), "/expectedProjectFile");
+        Assert.Equal(dispatches, fixture.Worker.Dispatched.Count);
+        fixture.Worker.Project = reference;
+        ProjectRefused(await fixture.Call(fixture.WriteTool, new JsonObject(), bridge));
+        ProjectRefused(await fixture.Call("OpenProject", new JsonObject { ["path"] = reference, ["openMode"] = "secondary" }, bridge));
+        ProjectRefused(await fixture.Call("CloseProject", new JsonObject { ["secondaryProjectFile"] = reference }, bridge));
+        fixture.Worker.Project = null;
+        ProjectRefused(await fixture.Call("OpenProject", new JsonObject { ["path"] = reference, ["openMode"] = "secondary" }, bridge));
+        Assert.Equal(dispatches, fixture.Worker.Dispatched.Count);
+    }
+
     [Fact]
     public void Automatic_binding_checks_the_same_canonical_project_before_assigning_it()
     {
@@ -635,6 +670,7 @@ public sealed class EnforcedParameterPresetTests
     {
         internal string? Project;
         internal readonly List<string> Dispatched = new();
+        internal JsonObject? Last;
         public bool Faulted => false;
         public object SessionKey { get; } = new();
         public JsonNode? Binding => Project == null ? null : new JsonObject { ["identity"] = new JsonObject { ["projectPath"] = Project } };
@@ -656,7 +692,8 @@ public sealed class EnforcedParameterPresetTests
         public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
         {
             worker.Dispatched.Add(name);
-            if (name == "CloseProject") worker.Project = null;
+            worker.Last = JsonSerializer.SerializeToNode(request.Params!.Arguments)!.AsObject();
+            if (name == "CloseProject" && string.IsNullOrEmpty((string?)worker.Last["secondaryProjectFile"])) worker.Project = null;
             var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { value = true }, null,
                 new Meta(DateTimeOffset.UtcNow, release, name, "preset-project", Outcome.Succeeded, Execution.Completed,
                     BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>()))))!;
@@ -683,7 +720,7 @@ public sealed class EnforcedParameterPresetTests
             var presets = new Dictionary<string, string> { ["expectedProjectFile"] = Project, ["softwarePath"] = "PLC_1" };
             var tools = LegacyHostToolRegistry.Create(Worker, release, false, hostPorts: false).ToList();
             foreach (string name in new[] { "CloseProject", "RetrieveProjectArchive", "SaveProjectCopy", "BuildProjectScaffold",
-                "OpenProject", "AttachOpenProject", WriteTool })
+                "OpenProject", "AttachOpenProject", "SaveProject", WriteTool })
             {
                 int index = tools.FindIndex(tool => tool.ProtocolTool.Name == name);
                 if (index < 0)

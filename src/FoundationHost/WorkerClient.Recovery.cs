@@ -66,7 +66,7 @@ internal sealed partial class WorkerClient
     {
         lock (stateSync)
         {
-            if (operation == "CloseProject" && (bool?)arguments["dryRun"] == false)
+            if (operation == "CloseProject" && !IsSecondaryProjectOperation(operation, arguments) && (bool?)arguments["dryRun"] == false)
             { rebindTarget = null; return; }
             if (operation == "Attach") ownsPortal = (bool?)result?["OwnsPortal"] == true;
             if (operation == "ReadState" && result is JsonObject state)
@@ -91,6 +91,7 @@ internal sealed partial class WorkerClient
         bool lostOwnedPortal;
         lock (stateSync)
         {
+            ForgetSecondaryIfHolderGone();
             if (takenOverBy != null) return;
             if (recovering || !Faulted && portalLostReason == null && !rebindPending) return;
             if (CallRunning || UnansweredRequest) throw Busy();

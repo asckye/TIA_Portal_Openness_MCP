@@ -16,7 +16,7 @@ namespace Siemens.Engineering
         public IEnumerable<EngineeringServiceInfo> GetServiceInfos() => Array.Empty<EngineeringServiceInfo>();
     }
     public enum ArchiveMode { Compressed }
-    public sealed class FakeProjects : List<Project>
+    public sealed partial class FakeProjects : List<Project>
     {
         public Project Retrieve(System.IO.FileInfo file, System.IO.DirectoryInfo directory, object? login = null) =>
             throw new NotSupportedException("Archive retrieval is not configured in this fixture.");

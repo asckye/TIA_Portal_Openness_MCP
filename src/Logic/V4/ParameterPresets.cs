@@ -10,6 +10,8 @@ namespace TiaMcp.Logic.V4
     public static class ParameterPresets
     {
         public const string ConditionalSchemaComment = "Server preset applies to PLC software targets.";
+        public const string ConditionalProjectSchemaComment = "Server preset pins the write binding; "
+            + "read-only secondary lifecycle uses its exact secondary file.";
         public static IReadOnlyDictionary<string, string> Empty { get; } =
             new System.Collections.ObjectModel.ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
 
@@ -308,11 +310,14 @@ namespace TiaMcp.Logic.V4
                 && !kind.StartsWith("HMI", StringComparison.Ordinal);
 
         public static bool Conditional(string tool, string parameter)
-            => SoftwareParameters.TryGetValue(tool + "." + parameter, out var kind) && kind != "PLC"
+            => parameter == "expectedProjectFile" && tool is "OpenProject" or "CloseProject"
+                || SoftwareParameters.TryGetValue(tool + "." + parameter, out var kind) && kind != "PLC"
                 && !kind.StartsWith("HMI", StringComparison.Ordinal);
 
         public static bool PlcTarget(string tool, string parameter, JsonObject input)
         {
+            if (parameter == "expectedProjectFile" && tool is "OpenProject" or "CloseProject")
+                return !ReadOnlySecondary(tool, input);
             if (!Conditional(tool, parameter)) return true;
             string Text(string name) => input[name] is JsonValue scalar && scalar.TryGetValue<string>(out var value) ? value : "";
             switch (SoftwareParameters[tool + "." + parameter])
@@ -330,12 +335,21 @@ namespace TiaMcp.Logic.V4
             }
         }
 
+        public static bool ReadOnlySecondary(string tool, JsonObject input)
+            => tool == "OpenProject" && input["openMode"] is JsonValue mode && mode.TryGetValue<string>(out var openMode) && openMode == "secondary"
+                || tool == "CloseProject" && input["secondaryProjectFile"] is JsonValue file
+                    && file.TryGetValue<string>(out var path) && path.Length > 0;
+
         public static string Value(IReadOnlyDictionary<string, string> presets, string parameter)
             => presets[parameter == "expectedProjectFile" ? parameter : "softwarePath"];
 
         public static string Description(string tool, IEnumerable<string> names)
             => "Preset by the server: " + string.Join(", ", names) + ". Equal normalized values are accepted; different values are refused."
-                + (names.Any(name => Conditional(tool, name)) ? " PLC software presets on mixed tools follow the target selector." : "")
+                + (names.Any(name => name != "expectedProjectFile" && Conditional(tool, name))
+                    ? " PLC software presets on mixed tools follow the target selector." : "")
+                + (names.Contains("expectedProjectFile") && tool is "OpenProject" or "CloseProject"
+                    ? " Read-only secondary open/close (where available) keeps the preset primary binding; "
+                        + "expectedProjectFile identifies the secondary file." : "")
                 + (names.Contains("softwarePath") && tool is "InvokeObject" or "InvokeService"
                     ? " With a PLC preset, Software (including PLC software aliases), Device and DeviceItem reflection targets are refused." : "");
 
@@ -349,16 +363,18 @@ namespace TiaMcp.Logic.V4
             var names = Names(tool, schema, presets);
             if (names.Length == 0) return schema;
             var result = JsonNode.Parse(schema.GetRawText())!.AsObject();
-            foreach (string name in names.Where(name => !Conditional(tool, name)))
+            bool secondaryLifecycle = result["properties"]!["openMode"] != null || result["properties"]!["secondaryProjectFile"] != null;
+            foreach (string name in names.Where(name => !Conditional(tool, name) || name == "expectedProjectFile" && !secondaryLifecycle))
             {
                 result["properties"]!.AsObject().Remove(name);
                 if (result["required"] is JsonArray required)
                     foreach (var field in required.Where(field => (string?)field == name).ToArray()) required.Remove(field);
             }
-            foreach (string name in names.Where(name => Conditional(tool, name)))
+            foreach (string name in names.Where(name => Conditional(tool, name) && result["properties"]![name] != null))
             {
                 var property = result["properties"]![name]!;
-                property["$comment"] = ((string?)property["$comment"] + " " + ConditionalSchemaComment).Trim();
+                property["$comment"] = ((string?)property["$comment"] + " " + (name == "expectedProjectFile"
+                    ? ConditionalProjectSchemaComment : ConditionalSchemaComment)).Trim();
             }
             return JsonSerializer.SerializeToElement(result);
         }

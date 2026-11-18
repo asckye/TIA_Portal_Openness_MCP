@@ -68,7 +68,7 @@ internal sealed class SharedSessionState
             || worker is not IFoundationWorkerSupervisor && identity?["processId"] != null);
         var switches = Switches(release);
         if (ended) switches["nativeCrossReferences"]!["allowed"] = false;
-        return new JsonObject { ["binding"] = identity == null ? null : new JsonObject { ["identity"] = identity },
+        var result = new JsonObject { ["binding"] = identity == null ? null : new JsonObject { ["identity"] = identity },
             ["connected"] = !ended && connected,
             ["workerGeneration"] = transport["generation"]?.DeepClone(),
             ["unsettled"] = Unsettled.ToJson(),
@@ -78,6 +78,8 @@ internal sealed class SharedSessionState
             ["workerFault"] = transport["workerFault"]?.DeepClone(),
             ["workerRecovery"] = transport["workerRecovery"]?.DeepClone(),
             ["disconnected"] = ended, ["switches"] = switches };
+        if (!ended && transport["secondaryProjectFile"] is { } secondary) result["secondaryProjectFile"] = secondary.DeepClone();
+        return result;
     }
     internal JsonObject OperatorSnapshot(string release)
     {

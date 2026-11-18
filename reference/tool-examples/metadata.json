@@ -1,6 +1,19 @@
 {
   "schemaVersion": 1,
   "parameterSources": {
+    "openMode": {
+      "meaning": "Caller choice: primary (default) or secondary. Secondary requires an already bound primary project and preserves that binding; V15.1–V21 only. GetSessionState reports state but does not choose this mode.",
+      "exampleValue": "secondary",
+      "requiresBinding": false
+    },
+    "secondaryProjectFile": {
+      "meaning": "Exact session-recorded secondaryProjectFile from GetSessionState, retained across worker recovery. Close resolves only this full path and refuses IsPrimary=true; confirmed absence clears the record. Empty selects the bound primary project. V15.1–V21 only.",
+      "exampleValue": "<secondaryProjectFile from GetSessionState>",
+      "tools": [
+        "GetSessionState"
+      ],
+      "requiresBinding": true
+    },
     "softwarePath": {
       "tools": [
         "GetProjectTree",

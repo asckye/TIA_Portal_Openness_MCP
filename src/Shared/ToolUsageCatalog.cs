@@ -58,18 +58,6 @@ namespace TiaOpenness.Shared
         public static string RegisteredName(string sourceName, string release)
             => (string?)ProfileEntry(sourceName, release)?["currentName"] ?? sourceName;
 
-        public static JsonObject GuideSelection(string topic)
-        {
-            switch (topic.Trim().ToLowerInvariant())
-            {
-                case "workflow": return new JsonObject { ["exampleId"] = "sequence/connect-project" };
-                case "openness-workflow": return new JsonObject { ["query"] = "openness-base" };
-                case "startdrive-bico": return new JsonObject { ["toolName"] = "ManageStartdriveParameter", ["operation"] = "read" };
-                case "hmi": return new JsonObject { ["language"] = "hmi-javascript" };
-                case "errors": return new JsonObject();
-                default: return new JsonObject { ["language"] = topic };
-            }
-        }
         public static string Hint(string name) => " Examples: GetToolUsage(toolName: \"" + name + "\"), optionally operation or language.";
         public static string WithHint(string name, string? description)
             => (description ?? "").Contains(Hint(name).Trim()) ? description! : (description ?? "") + Hint(name);
@@ -418,7 +406,8 @@ namespace TiaOpenness.Shared
             if (schemaFor(name)?["properties"] is JsonObject properties)
                 foreach (string key in arguments.Select(pair => pair.Key).Where(key =>
                     TiaMcp.Logic.V4.ParameterPresets.Applies(name, key) && (!properties.ContainsKey(key)
-                        || ((string?)properties[key]?["$comment"])?.Contains(TiaMcp.Logic.V4.ParameterPresets.ConditionalSchemaComment) == true
+                        || (((string?)properties[key]?["$comment"])?.Contains(TiaMcp.Logic.V4.ParameterPresets.ConditionalSchemaComment) == true
+                            || ((string?)properties[key]?["$comment"])?.Contains(TiaMcp.Logic.V4.ParameterPresets.ConditionalProjectSchemaComment) == true)
                             && TiaMcp.Logic.V4.ParameterPresets.PlcTarget(name, key, arguments))).ToArray()) arguments.Remove(key);
             if (name is "CallTool" or "PreviewToolCall" && arguments["name"] is JsonValue target && arguments["arguments"] is JsonObject nested)
                 OmitPresetArguments(target.GetValue<string>(), nested, schemaFor);

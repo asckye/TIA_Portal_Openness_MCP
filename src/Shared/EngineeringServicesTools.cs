@@ -156,15 +156,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or " +
                 "vs the CPU at targetDevicePath/targetItemPath in another open project targetProjectName), softwareToLibrary (softwarePath vs project " +
                 "library or exact targetLibraryName), hardware (devicePath/itemPath vs target device, same or other open project). The cross-project mode " +
-                "(targetProjectName) needs a second project that was opened outside the MCP; no MCP tool opens a secondary project in 4.0. Flattened result " +
+                "accepts targetProjectName as an exact full project file path or a project name. A held secondary is selected by its exact path even when " +
+                "its name equals the primary; other name-only lookups retain ambiguity errors. OpenProject openMode=secondary is available on V15.1–V21. Flattened result " +
                 "tree, summary of all states, non-identical records paginated. No online access; nothing modified.")]
         public CallToolResult CompareProjects(
             string kind,
             string softwarePath="",
             string[] devicePath=null!,
             string[] itemPath=null!,
-            [Description("targetProjectName: exact name of another project already open in the same TIA Portal instance (opened outside the " +
-                "MCP).")] string targetProjectName=
+            [Description("targetProjectName: exact full file path or name of another project open in this TIA Portal instance. Use the recorded " +
+                "secondaryProjectFile after secondary open or recovery; a held secondary's name resolves through that exact path.")] string targetProjectName=
                 "",
             string targetSoftwarePath="",
             [Description("targetDevicePath: JSON array naming the target station.")] string[] targetDevicePath=null!,

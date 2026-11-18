@@ -222,17 +222,6 @@ namespace TiaOpenness.Openness
             }
         }
 
-        private static Project PrimaryProject(TiaPortal portal)
-        {
-            var projects = portal.Projects.SafeEnumerate().ToList();
-#if PROJECT_IS_PRIMARY
-            var primary = projects.Where(p => p.IsPrimary).ToList();
-            return primary.Count == 1 ? primary[0] : null;
-#else
-            return projects.Count == 1 ? projects[0] : null;
-#endif
-        }
-
         public void Disconnect()
         {
             // F11: a TIA Portal this session started closes with Dispose when it has no UI; never discard its project's changes.
@@ -288,7 +277,7 @@ namespace TiaOpenness.Openness
             var already = _portal.Projects.SafeEnumerate().FirstOrDefault(p =>
                 string.Equals(p.Path?.FullName, file.FullName, StringComparison.OrdinalIgnoreCase));
 
-            _project = already ?? _portal.Projects.Open(file);
+            _project = RequirePrimaryProject(already ?? _portal.Projects.Open(file));
             IndexProject();
             return Describe(_project);
         }

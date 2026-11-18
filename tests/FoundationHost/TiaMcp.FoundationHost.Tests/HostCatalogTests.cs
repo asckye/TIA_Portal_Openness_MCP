@@ -64,6 +64,70 @@ public sealed class HostCatalogTests
         Assert.True(current > 0);
     }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public void Secondary_absence_is_exposed_in_v4_data(bool gone)
+    {
+        var definition = FoundationTools.ForRelease(FoundationTools.Definitions.Single(d => d.Name == "CloseProject"), "21");
+        var raw = new JsonObject { ["Executed"] = false, ["ProjectFile"] = @"C:\Reference\Line1.ap21", ["SecondaryProjectGone"] = gone };
+        var validated = V17ProjectEnvelope.Wrap("CloseProject", "ProjectMutation", raw, true);
+        var body = FoundationV4Result.Worker("21", definition, "secondary-preview", new JsonObject { ["dryRun"] = true }, raw, validated)
+            .StructuredContent!;
+        Assert.True((bool?)body["ok"]);
+        Assert.Equal(gone, (bool?)body["data"]?["secondaryProjectGone"]);
+    }
+
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"),
+        InlineData("21")]
+    public void Secondary_project_parameters_follow_the_release_api(string release)
+    {
+        var (host, _, _) = Build(release);
+        var open = host.Find("OpenProject")!.Tool.InputSchema.GetProperty("properties");
+        var close = host.Find("CloseProject")!.Tool.InputSchema.GetProperty("properties");
+        Assert.False(open.TryGetProperty("closeForeignProject", out _));
+        Assert.False(host.Find("AttachOpenProject")!.Tool.InputSchema.GetProperty("properties")
+            .TryGetProperty("recordedSecondaryProjectFile", out _));
+        Assert.False(host.Find("AttachOpenProject")!.Tool.InputSchema.GetProperty("properties")
+            .TryGetProperty("recordedSecondaryProcessId", out _));
+        Assert.False(host.Find("AttachOpenProject")!.Tool.InputSchema.GetProperty("properties")
+            .TryGetProperty("recordedSecondaryProcessStartTicks", out _));
+        var connect = host.Find("ConnectPortal")!.Tool.InputSchema.GetProperty("properties");
+        Assert.False(connect.TryGetProperty("recordedSecondaryProjectFile", out _));
+        Assert.False(connect.TryGetProperty("recordedSecondaryProcessId", out _));
+        Assert.False(connect.TryGetProperty("recordedSecondaryProcessStartTicks", out _));
+        Assert.Equal(release != "14sp1", open.TryGetProperty("openMode", out var mode));
+        Assert.Equal(release != "14sp1", close.TryGetProperty("secondaryProjectFile", out var file));
+        if (release == "14sp1") return;
+        string passwordDescription = open.GetProperty("umacPassword").GetProperty("description").GetString()!;
+        Assert.Contains("vault:", passwordDescription);
+        Assert.Contains("SecureString", passwordDescription);
+        Assert.Contains("Global (UMC)", passwordDescription);
+        Assert.Equal("primary", mode.GetProperty("default").GetString());
+        Assert.Equal(new[] { "primary", "secondary" }, mode.GetProperty("enum").EnumerateArray().Select(value => value.GetString()));
+        Assert.Equal("", file.GetProperty("default").GetString());
+        var descriptor = host.Find("OpenProject")!.Tool;
+        var usage = ToolUsageCatalog.Describe("OpenProject", release, "plc-foundation", descriptor.Description!,
+            JsonNode.Parse(descriptor.InputSchema.GetRawText())!.AsObject());
+        Assert.False((bool?)usage["parameterSources"]?["openMode"]?["requiresBinding"]);
+        Assert.Null(usage["parameterSources"]?["openMode"]?["tools"]);
+    }
+
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"),
+        InlineData("21")]
+    public void Project_sequences_validate_against_the_served_release_schemas(string release)
+    {
+        var (host, _, _) = Build(release);
+        JsonObject? Schema(string name) => host.Find(name) is { } descriptor
+            ? JsonNode.Parse(descriptor.Tool.InputSchema.GetRawText())!.AsObject() : null;
+        foreach (string id in new[] { "sequence/project-overview", "sequence/secondary-project-compare" })
+        {
+            var examples = ToolUsageCatalog.Examples(release, "plc-foundation", host.All.Keys, exampleId: id, schemaFor: Schema);
+            var sequence = Assert.Single(examples["examples"]!.AsArray())!;
+            Assert.Equal(id != "sequence/secondary-project-compare" || release != "14sp1", (bool?)sequence["releaseMatches"]);
+            Assert.Equal(id != "sequence/secondary-project-compare" || release != "14sp1", (bool?)sequence["profileMatches"]);
+            Assert.Equal(id != "sequence/secondary-project-compare" || release != "14sp1", (bool?)sequence["available"]);
+        }
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void Hardware_catalog_declares_its_limit_bounds_where_registered(string release)
     {

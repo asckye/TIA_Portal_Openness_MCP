@@ -31,42 +31,12 @@ namespace TiaMcp.Adapters
     /// </summary>
     public sealed partial class PlcFoundationEngine : IDisposable
     {
-        public PlcMutationResult BindProject(string projectName,string expectedProjectFile)
-        {
-            Portal(); lifecycle.RequireUnbound("AttachOpenProject");
-            string full;
-            try { full=Path.GetFullPath(expectedProjectFile); }
-            catch(ArgumentException ex) {
-                throw new AdapterPreconditionException("An absolute expected project file is required.","expectedProjectFile",true,ex); }
-            try { MutationIdentityPolicy.RequireSameProject(expectedProjectFile,full); }
-            catch(ArgumentException ex) { throw new AdapterPreconditionException(ex.Message,"expectedProjectFile",true,ex); }
-            bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,full);
-#if PROJECT_MULTIUSER
-            if(session)
-            {
-                localSession=portal!.LocalSessions
-                    .SingleOrDefault(s=>s.Project.Name==projectName && string.Equals(s.Project.Path.FullName,full,StringComparison.OrdinalIgnoreCase))
-                    ?? throw new AdapterPreconditionException("The exact named local session is not open.","expectedProjectFile");
-                project=localSession.Project;
-            }
-            else
-#endif
-            {
-                project=portal!.Projects.SingleOrDefault(p=>p.Name==projectName && string.Equals(p.Path.FullName,full,StringComparison.OrdinalIgnoreCase));
-                if(project==null) {
-                    RequireVisibleProject(full); throw new AdapterPreconditionException("The exact named project is not open.","expectedProjectFile"); }
-            }
-            lifecycle.Bound(full,false,session);
-            if (_resetWorkerFamilyState != null) _resetWorkerFamilyState();
-            else { hmiReadFault = null; _hmiTokenGeneration = Guid.NewGuid().ToString("N"); }
-#if HMI_UNIFIED
-            unifiedPages?.Dispose(); unifiedPages = null;
-#endif
-            return Mutation("BindProject",false);
-        }
         // UMAC credentials (V15.1+) are optional; the password is converted to SecureString here and never logged or echoed.
-        public PlcMutationResult OpenProject(string path, bool dryRun = true, string umacUserName = "", string umacPassword = "", string umacUserType = "")
+        public PlcMutationResult OpenProject(string path, bool dryRun = true, string umacUserName = "", string umacPassword = "", string umacUserType = "",
+            string openMode = "primary")
         {
+            if (openMode == "secondary") return OpenSecondaryProject(path, dryRun, umacUserName, umacPassword, umacUserType);
+            if (openMode != "primary") throw new AdapterPreconditionException("openMode must be primary or secondary.", "openMode");
             var p = Portal();
             lifecycle.RequireUnbound("OpenProject");
             bool session=PlcLifecyclePolicy.IsSessionFile(ReleaseKey,path);
@@ -141,8 +111,10 @@ namespace TiaMcp.Adapters
             }
             return Mutation("SaveProject", dryRun);
         }
-        public PlcMutationResult CloseProject(bool dryRun = true)
+        public PlcMutationResult CloseProject(bool dryRun = true, string secondaryProjectFile = "")
         {
+            if (secondaryProjectFile.Length > 0) return CloseSecondaryProject(secondaryProjectFile, dryRun);
+            RequireSecondaryClosed("CloseProject");
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,dryRun);
             var p = Project();
             lifecycle.RequireClose(p.IsModified);

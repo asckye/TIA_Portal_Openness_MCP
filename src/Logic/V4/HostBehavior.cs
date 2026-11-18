@@ -39,6 +39,8 @@ namespace TiaMcp.Logic.V4
             if (tool == "ManageTestSuiteCase" && args["action"] is JsonValue editorAction
                 && editorAction.TryGetValue<string>(out var editorOperation) && editorOperation == "showInEditor") return false;
             if (hasDryRun && IsPreview(args, defaultPreview)) return false;
+            if (tool == "CloseProject" && args["secondaryProjectFile"] is JsonValue secondary
+                && secondary.TryGetValue<string>(out var secondaryFile) && !string.IsNullOrWhiteSpace(secondaryFile)) return false;
             if (tool is "ExchangeSystemDiagnosticsSettings" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules")
                 if (args["action"] is JsonValue action && action.TryGetValue<string>(out var operation) && operation == "import") return true;
             if (tool == "ManagePlcGitRepository" && ActorScope.Actor == ActorScope.Mcp

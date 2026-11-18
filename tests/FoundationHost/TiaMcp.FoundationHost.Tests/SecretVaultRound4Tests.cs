@@ -121,6 +121,21 @@ public sealed class SecretVaultRound4Tests
         Assert.Contains("umc.target.example", card.Operations.Single().Target);
     }
 
+    [Fact]
+    public void Secondary_UMAC_vault_card_names_the_reference_and_keeps_Global_destination_refusal()
+    {
+        var args = new JsonObject { ["path"] = "C:/Reference/Line1.ap21", ["openMode"] = "secondary",
+            ["umacPassword"] = "vault:plc1", ["umacUserType"] = "Project" };
+        var identity = VaultArguments.ApprovalIdentity("OpenProject", JsonSerializer.SerializeToElement(args),
+            "{\"projectPath\":\"C:/Preset/Main.ap21\"}")!;
+        var card = PendingApproval.Create("test", "21", "OpenProject", args.ToJsonString(), identity, 1);
+        Assert.Contains("C:/Reference/Line1.ap21", card.Operations.Single().Target);
+        Assert.DoesNotContain("C:/Preset/Main.ap21", card.Operations.Single().Target);
+        args["umacUserType"] = "Global";
+        Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
+            VaultArguments.ApprovalIdentity("OpenProject", JsonSerializer.SerializeToElement(args), identity));
+    }
+
     [Theory]
     [InlineData(true)] [InlineData(false)]
     public async Task UMAC_server_metadata_must_belong_to_the_target_project(bool matching)

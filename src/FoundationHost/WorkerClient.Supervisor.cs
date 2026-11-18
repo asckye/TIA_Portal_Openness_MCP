@@ -170,6 +170,7 @@ internal sealed partial class WorkerClient
             ["disconnected"] = disconnecting, ["stopping"] = stopping,
             ["connected"] = SharedSession ? sharedStatus?["session"]?["isConnected"]?.DeepClone()
                 : JsonValue.Create((bool?)hostState?["IsAttached"] ?? attachedProcessId.HasValue),
+            ["secondaryProjectFile"] = secondaryProjectFile,
             ["workerFault"] = faultEvidence?.DeepClone(),
             ["workerRecovery"] = workerRecovery?.DeepClone(),
             ["running"] = LateResults.Running ?? Running,

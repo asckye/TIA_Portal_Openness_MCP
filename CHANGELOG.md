@@ -13,6 +13,11 @@
 - `ManagePlcTestLibrary` stores validated PLC scenario and Test Suite selections and reads run history on all eight releases; execution of Test Suite entries requires V17+, system tests V18+, and application test sets V20+.
 - `RunPlcTestLibrary` adds one approved sequential batch run with plan binding, persistent history, JUnit and stable exit codes on all eight releases; Test Suite entries require V17+, system tests V18+, and application test sets V20+. Native acceptance is NOT RUN.
 
+- Secondary project records retain the holding TIA PID and process start time across worker recovery. Disconnect requires closing the reference while that holder is alive; an exited or replaced holder clears the record without starting TIA. Closing on another TIA refuses and keeps the record; exact-path absence on the same holder clears it without reporting a close. Secondary projects cannot become the active binding, and offline comparison accepts full project paths to distinguish same-name copies.
+
+- `OpenProject(openMode: "secondary")` and `CloseProject(secondaryProjectFile: ...)` open and close one worker-owned read-only reference project on V15.1–V21 while preserving the primary binding. Close the reference explicitly before closing the primary; no implicit save. `GetProjectInfo` reports `isPrimary`, and `GetSessionState` reports the open reference file. Native acceptance is NOT RUN.
+- `GetToolUsage` adds `sequence/secondary-project-compare` on V15.1–V21 and `sequence/project-overview` on all eight releases, covering project identity, the device/software tree and read-only batches of PLC blocks, tag tables and HMI screens.
+
 ### Changed
 - All eight releases share tool and action admission by API availability, including unknown-action refusal. Block-document rendering and comparison accept native block paths on all eight releases; safety compilation passwords require V17+. V20 library document import admits the documented inactive-culture options, retaining project-library and basename checks. Native acceptance is NOT RUN.
 - All eight releases use shared worker sessions, extended supervisor status and native host observations. Reading worker status or previewing a restart keeps a cold worker stopped; observation tool names come from the session's actual roster.

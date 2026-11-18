@@ -18,6 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/EngineeringExtensions.cs" Link="EngineeringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/HmiNavigator.cs" Link="HmiNavigator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessSession.cs" Link="OpennessSession.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessSession.ProjectSelection.cs" Link="OpennessSession.ProjectSelection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessSession.Blocks.cs" Link="OpennessSession.Blocks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessSession.Software.cs" Link="OpennessSession.Software.cs" />
     <Compile Include="../OpennessSessionFactory.cs" />

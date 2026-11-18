@@ -33,7 +33,7 @@ internal static class FoundationTools
     private static Argument S(string name) => new(name);
     private static Argument Dry() => new("dryRun", "boolean", false, true);
     private const string UmacUser = "umacUserName: UMAC user of a protected project; give it together with umacPassword. Empty for an unprotected project.";
-    private const string UmacPassword = "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.";
+    private const string UmacPassword = "umacPassword: UMAC password or vault:<name> reference for umacUserName; the host resolves vault references only after its vault approval and destination checks. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.";
     private const string UmacType = "umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.";
     private static readonly Definition[] RenderDefinitions = {
         new("RenderPlcBlock", "RenderPlcBlock", "[L2][PLC-Software][FILE] Render one existing SimaticML block export as self-contained static HTML. Offline local files only; writes a new absolute .html path, never overwrites. No Siemens calls.", new[]{S("inputPath"),S("outputPath")}, "PlcRender"),
@@ -119,9 +119,29 @@ internal static class FoundationTools
     {
         var arguments = definition.Arguments.Where(a => TiaMcp.Logic.V4.PlcSoftwareUnitSchema.Available(releaseKey, definition.Name, a.Name)).ToArray();
         if (arguments.Length != definition.Arguments.Length) definition = definition with { Arguments = arguments };
+        if (releaseKey != "14sp1" && definition.Name == "AttachOpenProject")
+            return definition with { Description = definition.Description + " V15.1–V21: a secondary reference (IsPrimary=false) cannot be bound as the " +
+                "active project; select the primary project." };
+        if (releaseKey != "14sp1" && definition.Name == "DisconnectPortal")
+            return definition with { Description = definition.Description + " CloseProject secondaryProjectFile must close this session's recorded " +
+                "secondary first while its holding TIA process is alive. The path, holder PID and start time survive worker recovery. " +
+                "A confirmed exited or replaced holder clears the record without starting TIA." };
+        if (definition.Name == "CloseProject" && releaseKey != "14sp1")
+            return definition with { Description = definition.Description + " Close secondaryProjectFile only when this session records that exact secondary " +
+                "project (V15.1–V21); never saves it. Recovery retains its path, holding TIA PID and process start time. Close on another TIA refuses and " +
+                "keeps the record. On the same holding process, require IsPrimary=false; an absent exact path clears the record with " +
+                "data.secondaryProjectGone=true, including previews, and Executed=false. A confirmed exited or replaced holder clears the record. " +
+                "Close it explicitly before primary close or disconnect while the holder is alive.",
+                Arguments = definition.Arguments.Concat(new[] { new Argument("secondaryProjectFile", "string", false, "",
+                    "Exact session-recorded secondary project file on its holding TIA process; empty selects the bound primary project.") }).ToArray() };
         if (definition.Name != "OpenProject") return definition;
         return TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion >= 15
-            ? definition with { Description = definition.Description + " Protected (UMAC) projects: pass umacUserName and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing credentials." }
+            ? definition with { Description = definition.Description + " This refusal applies to openMode=primary (default). openMode=secondary (V15.1–V21) " +
+                "requires a bound primary project and opens another exact-version .ap file read-only without changing the binding. " +
+                "CloseProject secondaryProjectFile closes only the secondary project this worker opened. Protected (UMAC) projects: pass umacUserName " +
+                "and umacPassword (umacUserType Project or Global); without them a protected project is refused as PRECONDITION_FAILED naming the missing " +
+                "credentials.", Arguments = definition.Arguments.Concat(new[] { new Argument("openMode", "string", false, "primary",
+                    "primary (default) or secondary; secondary requires a bound primary project and preserves its binding.") }).ToArray() }
             : definition with { Arguments = definition.Arguments.Where(a => !a.Name.StartsWith("umac", StringComparison.Ordinal)).ToArray() };
     }
     internal static IList<McpServerTool> Create(IFoundationWorker worker) => Definitions.Concat(RenderDefinitions).Select(d => (McpServerTool)new FoundationTool(d,worker)).ToArray();
@@ -183,6 +203,8 @@ internal sealed partial class FoundationTool : McpServerTool
         var properties=new JsonObject();
         foreach(var p in definition.Arguments) { var schema=new JsonObject { ["type"]=p.Type, ["description"]=p.Description ?? "Exact foundation argument: "+p.Name }; if(p.Minimum is int minimum) schema["minimum"]=minimum; if(p.Maximum is int maximum) schema["maximum"]=maximum; if(p.Type=="array") schema["items"]=new JsonObject { ["type"]="string" }; if(!p.Required) schema["default"]=JsonSerializer.SerializeToNode(p.Default); properties[p.Name]=schema; }
         if (definition.ResponseMember == "Compile") properties["scope"]!["enum"] = new JsonArray("software", "block", "group", "unit");
+        if (definition.Name == "OpenProject" && properties.ContainsKey("openMode"))
+            properties["openMode"]!["enum"] = new JsonArray("primary", "secondary");
         if (definition.Name == "StageImportFiles") properties["files"] = TiaMcp.Logic.ModelContextProtocol.ImportStagingSchema.Files();
         var schemaRoot=new JsonObject { ["type"]="object", ["properties"]=properties, ["additionalProperties"]=false, ["required"]=new JsonArray(definition.Arguments.Where(p=>p.Required).Select(p=>(JsonNode?)JsonValue.Create(p.Name)).ToArray()) };
         tool=new Tool { Name=definition.Name, Description=(IsNative ? "[PLC foundation; native unverified] " : "")+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
@@ -248,6 +270,7 @@ internal sealed partial class FoundationTool : McpServerTool
             if(string.IsNullOrWhiteSpace(values["expectedProjectFile"]?.GetValue<string>())) throw new ArgumentException("Execution requires the exact expectedProjectFile.","expectedProjectFile");
         }
         if(definition.Name=="GetPortalConnectionReadiness" && values["processId"]!.GetValue<int>()<=0) throw new ArgumentException("Select an explicit positive processId.","processId");
+        if (definition.Name == "OpenProject" && values["openMode"] is JsonValue mode) ValidateOpenMode(mode.GetValue<string>());
         if (definition.ResponseMember == "Compile")
         {
             string scope = values["scope"]!.GetValue<string>();
@@ -284,6 +307,10 @@ internal sealed partial class FoundationTool : McpServerTool
         if(definition.ResponseMember=="ExternalSourceDelete" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Delete requires a reviewed expectedPlanHash.","expectedPlanHash");
         if(definition.ResponseMember=="ExternalSourcePlan" && !values["dryRun"]!.GetValue<bool>()) throw new ArgumentException("External-source native apply is blocked; this route is planning only.","dryRun");
         if(definition.ResponseMember=="ExternalSourceWorkflow" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("External-source execution requires expectedPlanHash from this tool's preview.","expectedPlanHash");
+    }
+    private static void ValidateOpenMode(string openMode)
+    {
+        if (openMode is not ("primary" or "secondary")) throw new ArgumentException("openMode must be primary or secondary.", nameof(openMode));
     }
     private async ValueTask<CallToolResult> InvokeCoreAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken, string? release = null, string? id = null)
     {

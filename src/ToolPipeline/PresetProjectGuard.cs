@@ -39,7 +39,10 @@ internal static class PresetProjectGuard
             case "SaveProjectCopy":
                 if (string.IsNullOrEmpty(boundProject) || !PresetProjectPath.Same(preset, boundProject)) return Refuse();
                 target = Path.Combine(Text("newProjectPath"), Path.GetFileName(boundProject)); break;
-            case "OpenProject": target = Text("path"); break;
+            case "OpenProject":
+                if (ParameterPresets.ReadOnlySecondary(tool, arguments))
+                    return boundProject != null && PresetProjectPath.Same(preset, boundProject) ? null : Refuse();
+                target = Text("path"); break;
             case "AttachOpenProject": target = Text("expectedProjectFile"); break;
             case "ConnectPortal":
                 return boundProject != null && !PresetProjectPath.Same(preset, boundProject) ? Refuse() : null;

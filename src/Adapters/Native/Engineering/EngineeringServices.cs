@@ -312,17 +312,6 @@ namespace TiaMcp.Adapters
                 return PublishCompareResult(InvokeNativeCompare(left, "CompareToLibrary", right), includeIdentical, maxDepth, offset, limit, meta);
             }, requiresProject: false);
 
-        private EngineeringProject ExactOpenProject(string projectName)
-        {
-            var candidates = portal!.Projects.Cast<EngineeringProject>()
-#if PROJECT_MULTIUSER
-                .Concat(portal.LocalSessions.Select(s => (EngineeringProject)s.Project))
-#endif
-                .Where(p => p != null && string.Equals(p.Name, projectName, StringComparison.Ordinal)).Take(2).ToArray();
-            if (candidates.Length > 1) throw new InvalidOperationException("Ambiguous open project name: " + projectName);
-            return candidates.SingleOrDefault()
-                ?? throw new PlcSoftwareException("NotFound", "Exact open project not found in this Portal instance: " + projectName);
-        }
         private HardwareObject ExactHardwareInProject(EngineeringProject project, string[] devicePath, string[] itemPath)
         {
             HardwareAddressingPolicy.ValidatePath(devicePath, true);

@@ -35,6 +35,32 @@ public sealed class WorkerOperationModuleTests
         Assert.False(methods.ContainsKey("CompileSoftwareScoped"));
     }
 
+    private sealed class AttachFacade
+    {
+        public string Attach(int processId) => "legacy";
+        public string AttachScoped(int processId, string recordedSecondaryProjectFile = "", int recordedSecondaryProcessId = 0,
+            long recordedSecondaryProcessStartTicks = 0)
+            => processId + ":" + recordedSecondaryProjectFile + ":" + recordedSecondaryProcessId + ":" + recordedSecondaryProcessStartTicks;
+    }
+
+    [Fact]
+    public void Attach_wire_name_restores_secondary_context_with_legacy_pid_signature_intact()
+    {
+        var methods = new WorkerOperationModule("", typeof(AttachFacade), new[] { "Attach" }).Methods;
+        var method = Assert.Single(methods).Value;
+        Assert.Equal("AttachScoped", method.Name);
+        Assert.Equal(new[] { "processId", "recordedSecondaryProjectFile", "recordedSecondaryProcessId", "recordedSecondaryProcessStartTicks" },
+            method.GetParameters().Select(p => p.Name));
+        Assert.Equal(new object[] { "", 0, 0L }, method.GetParameters().Skip(1).Select(p => p.DefaultValue));
+        using var json = System.Text.Json.JsonDocument.Parse("{\"processId\":42,\"recordedSecondaryProjectFile\":\"C:/Reference.ap21\","
+            + "\"recordedSecondaryProcessId\":7,\"recordedSecondaryProcessStartTicks\":639306233400000000}");
+        var values = json.RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+        Assert.Equal("42:C:/Reference.ap21:7:639306233400000000",
+            method.Invoke(new AttachFacade(), WorkerJson.FacadeArguments(method.GetParameters(), values)));
+        Assert.Single(typeof(AttachFacade).GetMethod("Attach")!.GetParameters());
+        Assert.False(methods.ContainsKey("AttachScoped"));
+    }
+
     [Fact]
     public void LegacyAndFamilyModulesKeepExactWireNames()
     {
