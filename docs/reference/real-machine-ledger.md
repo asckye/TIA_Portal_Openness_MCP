@@ -38,6 +38,7 @@ VMFIX-2（已合并，2026-11-02 复验清单）：**NOT RUN**。在 V21 工程�
 
 | 改动 | 发布前的真机验收 |
 |---|---|
+| TIA-GAPS A3b LAD 定时器、计数器与命名引脚调用（V21） | **NOT RUN**。在 V21 工程副本先准备 IEC_TIMER/IEC_COUNTER 全局实例、被调用的用户 FC/FB 及 FB 全局实例 DB，再导入覆盖 TON/TOF/TP、CTU/CTD/CTUD、FC/FB 命名 Input/Output/InOut 引脚与 CALL ENO 的生成 FC。经 `StageImportFiles` → `ImportPlcProgramFromDirectory` 预览与绑定计划执行 → `CompilePlcSoftware` 块编译 → `ExportPlcBlock` → `RenderPlcBlock`，逐网络核对辅助 reset/load/down 电源轨、Q/QU/QD/ET/CV 与未使用输出的 `OpenCon`，确认 `Part Version="1.0"`、全局 Instance/UId 及类型模板被接受。记录 TIA 补丁、CPU、导入/编译消息、带来源的导出 XML 及哈希；原生验收前保持候选标记和 V21 注册范围。 |
 | TIA-GAPS A3 LAD 梯形图网络 JSON 生成（V21；A3a） | **NOT RUN**。在 V21 工程副本先导入数据块（沿存储位、操作数）并定义全局常量，再导入 `BuildPlcLadFcBlock` 生成的 FC，覆盖常开、常闭、上升沿、下降沿、六种比较、OR 组、共用前段分支、普通/置位/复位线圈、MOVE 与 ENO 串接、全局常量及数组下标路径。经 `StageImportFiles` → `ImportPlcProgramFromDirectory` 预览与绑定计划执行 → `CompilePlcSoftware` 块编译无错误 → `ExportPlcBlock` 导出 → `RenderPlcBlock` 读回，逐网络核对，记录 TIA 补丁、原生消息、导出 XML 及其哈希；将导出 XML 作为第一份带来源的真实夹具提交。核对 ENO 未连接时 `DisabledENO`、数组索引无 `ConstantType` 的写法。A3b 的定时器/计数器/命名引脚调用与 A3c 的其他输出格式另行验收；V14 SP1–V20 保持未注册，只有对应版本的 VM 导入编译记录获确认后才开放。 |
 | TIA-GAPS A1 Unified 脚本模块新建（V19–V21） | **NOT RUN**。在 V19、V20、V21 工程副本上：预览、执行新建，确认 `Import` 接受只有 `ScriptModules/<名称>/ScriptFile` 的 `.hmi.yml`、模块出现在 TIA、导出读回文本一致；同名（含大小写不同）拒绝；导入返回 false 时工程状态。Openness 没有删除脚本模块的接口，测试后在 TIA 中手工删除。 |
 | TIA-GAPS A2 Unified 嵌套运行设置（V19–V21） | **NOT RUN**。各版工程副本上读取全部嵌套字段；写入 OPC UA 端口与会话数、登录锁定次数、报表存储、V20+ 遥测/UPSS/变量设置、V21 独占操作变量，确认读回、失败时恢复、整数越界与枚举名拒绝；确认嵌套对象本身没有被替换。核对整个工具的预览令牌、计划哈希和工程文件绑定，以及通用工具对 RuntimeSettings 子树写入的拒绝。 |

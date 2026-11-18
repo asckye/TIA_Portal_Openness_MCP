@@ -5360,7 +5360,7 @@
     "id": "sequence/plc-lad-rung-build-import",
     "topic": "plc-lad-rung",
     "purpose": "Build a V21 LAD FC from compact rung JSON, import its DB first, compile and inspect native readback.",
-    "preconditions": "A V21 project copy, exact PLC paths, absent demo DB/FC and a project-defined Int constant LAD_LIMIT. No timer/counter/rung CALL emitters until A3b.",
+    "preconditions": "A V21 project copy, exact PLC paths, absent demo DB/FC and a project-defined Int constant LAD_LIMIT. User FB_LadWorker (Command Input Bool, Ready Output Bool, State InOut Int) and its global instance DB_LadWorker already imported and compiled. Resolve them from GetProjectTree before generating the calling FC.",
     "notes": "Candidate-only offline generation; native acceptance NOT RUN. Never rewrite release markers. Import, compile and export are separate reviewed steps. No automatic save or download. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #.",
     "releaseKeys": [
       "21"
@@ -5377,7 +5377,7 @@
       {
         "tool": "GetProjectTree",
         "arguments": {},
-        "expect": "Resolve the exact PLC softwarePath and existing destination groups."
+        "expect": "Resolve the exact PLC softwarePath and existing destination groups. Verify FB_LadWorker and DB_LadWorker exist with the declared pin types before importing FC_LadDemo."
       },
       {
         "tool": "BuildPlcGlobalDb",
@@ -5438,11 +5438,27 @@
               {
                 "name": "ElapsedTime",
                 "datatype": "Time"
+              },
+              {
+                "name": "Timed",
+                "datatype": "Bool"
+              },
+              {
+                "name": "CountReached",
+                "datatype": "Bool"
+              },
+              {
+                "name": "WorkerReady",
+                "datatype": "Bool"
+              },
+              {
+                "name": "CallDone",
+                "datatype": "Bool"
               }
             ]
           }
         },
-        "expect": "Retain data.xml. T1/C1 reserve global instances for later timer/counter examples. Create the global Int constant LAD_LIMIT in the project before import; this builder does not define constants."
+        "expect": "Retain data.xml. T1/C1 are the global timer/counter instances for the calling FC. Create the global Int constant LAD_LIMIT in the project before import; this builder does not define constants."
       },
       {
         "tool": "BuildPlcLadFcBlock",
@@ -5621,6 +5637,184 @@
                 },
                 "titleZhCn": "条件与分支",
                 "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+              },
+              {
+                "rung": {
+                  "series": [
+                    {
+                      "kind": "no",
+                      "operand": {
+                        "global": [
+                          "DB_LadDemo",
+                          "Start"
+                        ]
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "kind": "timer",
+                      "type": "TON",
+                      "instance": {
+                        "global": [
+                          "DB_LadDemo",
+                          "T1"
+                        ]
+                      },
+                      "pt": {
+                        "typed": "T#500ms"
+                      },
+                      "q": [
+                        {
+                          "kind": "coil",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Timed"
+                            ]
+                          }
+                        }
+                      ],
+                      "et": {
+                        "global": [
+                          "DB_LadDemo",
+                          "ElapsedTime"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "rung": {
+                  "series": [
+                    {
+                      "kind": "no",
+                      "operand": {
+                        "global": [
+                          "DB_LadDemo",
+                          "Start"
+                        ]
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "kind": "counter",
+                      "type": "CTU",
+                      "instance": {
+                        "global": [
+                          "DB_LadDemo",
+                          "C1"
+                        ]
+                      },
+                      "valueType": "Int",
+                      "pv": {
+                        "literal": {
+                          "type": "Int",
+                          "value": "10"
+                        }
+                      },
+                      "reset": [
+                        {
+                          "kind": "no",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Reset"
+                            ]
+                          }
+                        }
+                      ],
+                      "cv": {
+                        "global": [
+                          "DB_LadDemo",
+                          "Count"
+                        ]
+                      },
+                      "q": [
+                        {
+                          "kind": "coil",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "CountReached"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "rung": {
+                  "series": [
+                    {
+                      "kind": "no",
+                      "operand": {
+                        "global": [
+                          "DB_LadDemo",
+                          "Timed"
+                        ]
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "kind": "call",
+                      "block": "FB_LadWorker",
+                      "blockType": "FB",
+                      "instance": "DB_LadWorker",
+                      "pins": [
+                        {
+                          "name": "Command",
+                          "section": "Input",
+                          "type": "Bool",
+                          "value": {
+                            "global": [
+                              "DB_LadDemo",
+                              "Start"
+                            ]
+                          }
+                        },
+                        {
+                          "name": "Ready",
+                          "section": "Output",
+                          "type": "Bool",
+                          "value": {
+                            "global": [
+                              "DB_LadDemo",
+                              "WorkerReady"
+                            ]
+                          }
+                        },
+                        {
+                          "name": "State",
+                          "section": "InOut",
+                          "type": "Int",
+                          "value": {
+                            "global": [
+                              "DB_LadDemo",
+                              "LastValue"
+                            ]
+                          }
+                        }
+                      ],
+                      "then": [
+                        {
+                          "kind": "coil",
+                          "operand": {
+                            "global": [
+                              "DB_LadDemo",
+                              "CallDone"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
               }
             ]
           }
@@ -5752,7 +5946,7 @@
           "inputPath": "<data.outputFile from completed ExportPlcBlock>",
           "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html"
         },
-        "expect": "Render the export and compare each network, indexed path, edge memory and ENO connection against the generated candidate."
+        "expect": "Render the export and compare each network, indexed path, edge memory and ENO connection against the generated candidate. Check timer Q/ET, counter reset/Q/CV, FB instance/named pins and call ENO; retain a provenance-tagged native export."
       },
       {
         "tool": "CleanupStagedImportFiles",

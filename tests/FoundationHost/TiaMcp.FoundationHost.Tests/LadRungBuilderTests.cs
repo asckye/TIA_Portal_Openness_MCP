@@ -39,6 +39,7 @@ public sealed class LadRungBuilderTests
 
     public static IEnumerable<object[]> Elements()
     {
+        foreach (var box in LadRungBoxBuilderTests.Elements()) yield return box;
         foreach (string kind in new[] { "no", "nc", "rising", "falling" })
         {
             var contact = Contact(kind);
@@ -154,7 +155,8 @@ public sealed class LadRungBuilderTests
     private static string Canonical(XElement flg)
     {
         var copy = new XElement(flg);
-        var parts = copy.Element(Ns + "Parts")!.Elements().ToArray();
+        var parts = copy.Element(Ns + "Parts")!.Descendants().Where(p => p.Attribute("UId") != null)
+            .Concat(copy.Descendants(Ns + "OpenCon")).ToArray();
         var ids = parts.Select((p, i) => (Id: p.Attribute("UId")!.Value, Index: i.ToString(CultureInfo.InvariantCulture)))
             .ToDictionary(p => p.Id, p => p.Index);
         foreach (var element in copy.Descendants().Where(e => e.Attribute("UId") != null))
@@ -166,6 +168,22 @@ public sealed class LadRungBuilderTests
         foreach (var wire in wires.Elements().ToArray()) wire.ReplaceNodes(wire.Elements().OrderBy(e => e.ToString(SaveOptions.DisableFormatting)).ToArray());
         wires.ReplaceNodes(wires.Elements().OrderBy(w => w.ToString(SaveOptions.DisableFormatting)).ToArray());
         return copy.ToString(SaveOptions.DisableFormatting);
+    }
+
+    [Fact]
+    public void TimerMatchesCookbookTopologyWithGlobalInstanceForAnFc()
+    {
+        var expected = XDocument.Load(Path.Combine(Root, "templates/mcp-full-e2e-verify/plc/blocks/MCPVerify_FB_LAD_v3.xml"))
+            .Descendants(Ns + "FlgNet").Single(f => f.Descendants(Ns + "Part").Any(p => (string?)p.Attribute("Name") == "TON"));
+        // The cookbook is an FB with a static timer; the generated FC requires a global instance.
+        expected.Descendants(Ns + "Instance").Single().SetAttributeValue("Scope", "GlobalVariable");
+        var contact = Contact(); contact["operand"] = Symbol("Trig", "local");
+        var coil = Coil(); coil["operand"] = Symbol("OutTonQ", "local");
+        var timer = new JsonObject { ["kind"] = "timer", ["type"] = "TON", ["instance"] = Symbol("tonInst"),
+            ["pt"] = new JsonObject { ["typed"] = "T#500ms" }, ["q"] = new JsonArray(coil) };
+        var locals = new[] { "Trig", "OutTonQ" };
+        var rung = ConstructionJson.Deserialize<LadRung>(Rung(new JsonArray(contact), new JsonArray(timer)).ToJsonString(), locals);
+        Assert.Equal(Canonical(expected), Canonical(FlgNetRungXmlBuilder.Build(rung, new FlgNetFormat(), locals)));
     }
 
     [Theory]
@@ -196,6 +214,7 @@ public sealed class LadRungBuilderTests
 
     public static IEnumerable<object[]> InvalidRungs()
     {
+        foreach (var invalid in LadRungBoxBuilderTests.InvalidRungs()) yield return invalid;
         yield return new object[] { """{"series":[],"outputs":[]}""", "/outputs" };
         yield return new object[] {
             """{"series":[{"kind":"no","operand":{"constant":"SECRET_CANARY"}}],"outputs":[{"kind":"coil","operand":{"global":["Q"]}}]}""",

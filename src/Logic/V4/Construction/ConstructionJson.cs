@@ -139,6 +139,7 @@ namespace TiaMcp.Logic.V4.Construction
             if (type == typeof(LadBranch)) return new LadBranch(json);
             if (type == typeof(LadCondition)) return new LadCondition(json);
             if (type == typeof(LadOutput)) return new LadOutput(json);
+            if (type == typeof(LadCallPin)) return new LadCallPin(json);
             if (type == typeof(LadOperand)) return new LadOperand(json);
             if (type == typeof(LadComponent)) return new LadComponent(json);
             if (type == typeof(LadFcBlockSpec)) return new LadFcBlockSpec(json);

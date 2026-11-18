@@ -33,9 +33,9 @@ namespace TiaMcp.Logic.V4.Construction
                 if (!InputGuard.Identifier(name) || !(char.IsLetter(name[0]) || name[0] == '_'))
                     throw new InputRejectionException().At(at, "simple PLC identifier");
             }
-            void Operand(LadOperand operand, string at)
+            void Operand(LadOperand operand, string at, bool access = true)
             {
-                parts++;
+                if (access) parts++;
                 if (operand.Components != null)
                 {
                     for (int i = 0; i < operand.Components.Count; i++)
@@ -47,6 +47,56 @@ namespace TiaMcp.Logic.V4.Construction
                         throw new InputRejectionException().At(at, "symbol rooted in a declared input or output");
                 }
                 else if (operand.Kind == "constant") Id(operand.Value!, at + "/constant");
+            }
+            void Required(bool valid, string at, string expected)
+            {
+                if (!valid) throw new InputRejectionException().At(at, expected);
+            }
+            void Symbol(LadOperand operand, string at)
+            {
+                Required(operand.Components != null, at, "symbol operand");
+                Operand(operand, at);
+            }
+            void Counter(LadOutput output, string here)
+            {
+                Operand(output.Instance!, here + "/instance", false);
+                Operand(output.Pv!, here + "/pv");
+                Required(output.Pv!.Kind != "literal" || output.Pv.DataType == output.ValueType,
+                    here + "/pv/literal/type", "literal type matching valueType");
+                Required(output.DataType == "CTD" || output.Reset != null, here + "/reset", "explicit reset series");
+                Required(output.DataType == "CTU" || output.Load != null, here + "/load", "explicit load series");
+                Required(output.DataType != "CTUD" || output.Down != null, here + "/down", "explicit down series");
+                Required(output.DataType != "CTD" || output.Reset == null, here + "/reset", "reset only on CTU/CTUD");
+                Required(output.DataType != "CTU" || output.Load == null, here + "/load", "load only on CTD/CTUD");
+                Required(output.DataType == "CTUD" || output.Down == null, here + "/down", "down only on CTUD");
+                Required(output.DataType == "CTUD" || output.Qd == null, here + "/qd", "qd only on CTUD");
+                if (output.Reset != null) Conditions(output.Reset, here + "/reset");
+                if (output.Load != null) Conditions(output.Load, here + "/load");
+                if (output.Down != null) Conditions(output.Down, here + "/down");
+                if (output.Cv != null) Symbol(output.Cv, here + "/cv");
+                if (output.Q != null) Outputs(output.Q, here + "/q");
+                if (output.Qd != null) Outputs(output.Qd, here + "/qd");
+            }
+            void Call(LadOutput output, string here)
+            {
+                Id(output.Block!, here + "/block");
+                Required(!SystemInstruction(output.Block!), here + "/block", "user FC/FB, not a system or library instruction");
+                Required(output.BlockType != "FB" || output.InstanceDb != null, here + "/instance", "global instance DB for FB");
+                Required(output.BlockType != "FC" || output.InstanceDb == null, here + "/instance", "no instance on FC");
+                if (output.InstanceDb != null) Id(output.InstanceDb, here + "/instance");
+                var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (int j = 0; j < output.Pins!.Count; j++)
+                {
+                    var pin = output.Pins[j];
+                    string at = here + "/pins/" + j.ToString(CultureInfo.InvariantCulture);
+                    Id(pin.Name, at + "/name");
+                    Required(!pin.Name.Equals("en", StringComparison.OrdinalIgnoreCase)
+                        && !pin.Name.Equals("eno", StringComparison.OrdinalIgnoreCase) && names.Add(pin.Name),
+                        at + "/name", "unique pin name other than en/eno");
+                    if (pin.Section == "Output") Symbol(pin.Value, at + "/value");
+                    else Operand(pin.Value, at + "/value");
+                }
+                if (output.Then != null) Outputs(output.Then, here + "/then");
             }
             void Conditions(IReadOnlyList<LadCondition> series, string at)
             {
@@ -86,6 +136,15 @@ namespace TiaMcp.Logic.V4.Construction
                             Operand(output.Out[j], here + "/out/" + j.ToString(CultureInfo.InvariantCulture));
                         if (output.Then != null) Outputs(output.Then, here + "/then");
                     }
+                    else if (output.Kind == "timer")
+                    {
+                        Operand(output.Instance!, here + "/instance", false);
+                        Operand(output.Pt!, here + "/pt");
+                        if (output.Et != null) Symbol(output.Et, here + "/et");
+                        if (output.Q != null) Outputs(output.Q, here + "/q");
+                    }
+                    else if (output.Kind == "counter") Counter(output, here);
+                    else if (output.Kind == "call") Call(output, here);
                     else Operand(output.Operand!, here + "/operand");
                 }
             }
@@ -101,6 +160,19 @@ namespace TiaMcp.Logic.V4.Construction
                     Outputs(rung.FanOut[i].Outputs, branch + "/outputs");
                 }
             InputGuard.Limit(parts, MaxRungParts);
+        }
+
+        private static bool SystemInstruction(string name)
+        {
+            if (name.StartsWith("MC_", StringComparison.OrdinalIgnoreCase)) return true;
+            switch (name.ToUpperInvariant())
+            {
+                case "TON": case "TOF": case "TP": case "TONR":
+                case "CTU": case "CTD": case "CTUD": case "R_TRIG": case "F_TRIG":
+                case "MOVE": case "ADD": case "SUB": case "MUL": case "DIV": case "MOD":
+                    return true;
+                default: return false;
+            }
         }
     }
 }

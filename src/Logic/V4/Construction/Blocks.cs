@@ -171,6 +171,22 @@ namespace TiaMcp.Logic.V4.Construction
     }
 
     [JsonConverter(typeof(ConstructionJsonConverter))]
+    public sealed class LadCallPin : ConstructionNode
+    {
+        public string Name { get; }
+        public string Section { get; }
+        public string DataType { get; }
+        public LadOperand Value { get; }
+        internal LadCallPin(JsonElement json) : base(json)
+        {
+            Name = json.GetProperty("name").GetString()!;
+            Section = json.GetProperty("section").GetString()!;
+            DataType = json.GetProperty("type").GetString()!;
+            Value = new LadOperand(json.GetProperty("value"));
+        }
+    }
+
+    [JsonConverter(typeof(ConstructionJsonConverter))]
     public sealed class LadOutput : ConstructionNode
     {
         public string Kind { get; }
@@ -178,6 +194,22 @@ namespace TiaMcp.Logic.V4.Construction
         public LadOperand? In { get; }
         public IReadOnlyList<LadOperand>? Out { get; }
         public IReadOnlyList<LadOutput>? Then { get; }
+        public string? DataType { get; }
+        public LadOperand? Instance { get; }
+        public LadOperand? Pt { get; }
+        public LadOperand? Et { get; }
+        public string? ValueType { get; }
+        public LadOperand? Pv { get; }
+        public LadOperand? Cv { get; }
+        public IReadOnlyList<LadCondition>? Reset { get; }
+        public IReadOnlyList<LadCondition>? Load { get; }
+        public IReadOnlyList<LadCondition>? Down { get; }
+        public IReadOnlyList<LadOutput>? Q { get; }
+        public IReadOnlyList<LadOutput>? Qd { get; }
+        public string? Block { get; }
+        public string? BlockType { get; }
+        public string? InstanceDb { get; }
+        public IReadOnlyList<LadCallPin>? Pins { get; }
         internal LadOutput(JsonElement json) : base(json)
         {
             Kind = json.GetProperty("kind").GetString()!;
@@ -185,6 +217,25 @@ namespace TiaMcp.Logic.V4.Construction
             In = json.TryGetProperty("in", out var input) ? new LadOperand(input) : null;
             Out = ConstructionJson.Rows(json, "out", x => new LadOperand(x));
             Then = ConstructionJson.Rows(json, "then", x => new LadOutput(x));
+            DataType = json.TryGetProperty("type", out var type) ? type.GetString() : null;
+            if (json.TryGetProperty("instance", out var instance))
+            {
+                if (Kind == "call") InstanceDb = instance.GetString();
+                else Instance = new LadOperand(instance);
+            }
+            Pt = json.TryGetProperty("pt", out var pt) ? new LadOperand(pt) : null;
+            Et = json.TryGetProperty("et", out var et) ? new LadOperand(et) : null;
+            ValueType = json.TryGetProperty("valueType", out var valueType) ? valueType.GetString() : null;
+            Pv = json.TryGetProperty("pv", out var pv) ? new LadOperand(pv) : null;
+            Cv = json.TryGetProperty("cv", out var cv) ? new LadOperand(cv) : null;
+            Reset = ConstructionJson.Rows(json, "reset", x => new LadCondition(x));
+            Load = ConstructionJson.Rows(json, "load", x => new LadCondition(x));
+            Down = ConstructionJson.Rows(json, "down", x => new LadCondition(x));
+            Q = ConstructionJson.Rows(json, "q", x => new LadOutput(x));
+            Qd = ConstructionJson.Rows(json, "qd", x => new LadOutput(x));
+            Block = json.TryGetProperty("block", out var block) ? block.GetString() : null;
+            BlockType = json.TryGetProperty("blockType", out var blockType) ? blockType.GetString() : null;
+            Pins = ConstructionJson.Rows(json, "pins", x => new LadCallPin(x));
         }
     }
 

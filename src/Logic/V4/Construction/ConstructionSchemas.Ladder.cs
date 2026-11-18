@@ -66,10 +66,26 @@ namespace TiaMcp.Logic.V4.Construction
                 ["then"] = Obj(new[] { "kind", "paths" }, ("kind", Kind("or")), ("paths", Arr(Arr(Ref("simpleCondition"), 1, 16), 2, 8))),
                 ["else"] = Ref("simpleCondition")
             };
-            definitions["output"] = Union(
+            var basicOutput = Union(
                 Obj(new[] { "kind", "operand" }, ("kind", Enum("coil", "set", "reset")), ("operand", Ref("symbol"))),
                 Obj(new[] { "kind", "in", "out" }, ("kind", Kind("move")), ("in", Ref("operand")),
                     ("out", Arr(Ref("symbol"), 1, 8)), ("then", Arr(Ref("output"), 1, 8))));
+            var timer = Obj(new[] { "kind", "type", "instance", "pt" }, ("kind", Kind("timer")),
+                ("type", Enum("TON", "TOF", "TP")), ("instance", Ref("global")), ("pt", Ref("operand")),
+                ("q", Arr(Ref("output"), 1, 8)), ("et", Ref("symbol")));
+            var counter = Obj(new[] { "kind", "type", "instance", "valueType", "pv" }, ("kind", Kind("counter")),
+                ("type", Enum("CTU", "CTD", "CTUD")), ("instance", Ref("global")),
+                ("valueType", Enum("SInt", "Int", "DInt", "USInt", "UInt", "UDInt", "LInt", "ULInt")),
+                ("pv", Ref("operand")), ("reset", Arr(Ref("condition"), 1, 16)),
+                ("load", Arr(Ref("condition"), 1, 16)), ("down", Arr(Ref("condition"), 1, 16)),
+                ("cv", Ref("symbol")), ("q", Arr(Ref("output"), 1, 8)), ("qd", Arr(Ref("output"), 1, 8)));
+            definitions["pin"] = Obj(new[] { "name", "section", "type", "value" }, ("name", S(Nonblank)),
+                ("section", Enum("Input", "Output", "InOut")), ("type", element.DeepClone()), ("value", Ref("operand")));
+            var userCall = Obj(new[] { "kind", "block", "blockType", "pins" }, ("kind", Kind("call")),
+                ("block", S(Nonblank)), ("blockType", Enum("FC", "FB")), ("instance", S(Nonblank)),
+                ("pins", Arr(Ref("pin"), 0, 64)), ("then", Arr(Ref("output"), 1, 8)));
+            definitions["output"] = Choose(new[] { "timer" }, timer,
+                Choose(new[] { "counter" }, counter, Choose(new[] { "call" }, userCall, basicOutput)));
             definitions["branch"] = Obj(new[] { "series", "outputs" },
                 ("series", Arr(Ref("condition"), 1, 32)), ("outputs", Arr(Ref("output"), 1, 16)));
             definitions["rung"] = Obj(new[] { "series", "outputs" }, ("series", Arr(Ref("condition"), 0, 32)),
@@ -90,6 +106,7 @@ namespace TiaMcp.Logic.V4.Construction
             Add(typeof(LadOperand), Ref("operand"));
             Add(typeof(LadCondition), Ref("condition"));
             Add(typeof(LadOutput), Ref("output"));
+            Add(typeof(LadCallPin), Ref("pin"));
             Add(typeof(LadBranch), Ref("branch"));
             Add(typeof(LadRung), Ref("rung"));
             Add(typeof(LadNetwork), Ref("network"));

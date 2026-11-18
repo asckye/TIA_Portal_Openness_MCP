@@ -25985,7 +25985,197 @@
             }
           },
           "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
-          "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. Timer, counter and rung CALL forms are not part of A3a. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+          "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. For timers, counters and user FC/FB calls, see operation rung-boxes. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+        },
+        "rung-boxes": {
+          "arguments": {
+            "ladFcBlock": {
+              "blockName": "FC_LadBoxes",
+              "blockNumber": 43,
+              "networks": [
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "no",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Start"
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "timer",
+                        "type": "TON",
+                        "instance": {
+                          "global": [
+                            "DB_LadDemo",
+                            "T1"
+                          ]
+                        },
+                        "pt": {
+                          "typed": "T#500ms"
+                        },
+                        "q": [
+                          {
+                            "kind": "coil",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Timed"
+                              ]
+                            }
+                          }
+                        ],
+                        "et": {
+                          "global": [
+                            "DB_LadDemo",
+                            "ElapsedTime"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "no",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Start"
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "counter",
+                        "type": "CTU",
+                        "instance": {
+                          "global": [
+                            "DB_LadDemo",
+                            "C1"
+                          ]
+                        },
+                        "valueType": "Int",
+                        "pv": {
+                          "literal": {
+                            "type": "Int",
+                            "value": "10"
+                          }
+                        },
+                        "reset": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Reset"
+                              ]
+                            }
+                          }
+                        ],
+                        "cv": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Count"
+                          ]
+                        },
+                        "q": [
+                          {
+                            "kind": "coil",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "CountReached"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "no",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Timed"
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "call",
+                        "block": "FB_LadWorker",
+                        "blockType": "FB",
+                        "instance": "DB_LadWorker",
+                        "pins": [
+                          {
+                            "name": "Command",
+                            "section": "Input",
+                            "type": "Bool",
+                            "value": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Start"
+                              ]
+                            }
+                          },
+                          {
+                            "name": "Ready",
+                            "section": "Output",
+                            "type": "Bool",
+                            "value": {
+                              "global": [
+                                "DB_LadDemo",
+                                "WorkerReady"
+                              ]
+                            }
+                          },
+                          {
+                            "name": "State",
+                            "section": "InOut",
+                            "type": "Int",
+                            "value": {
+                              "global": [
+                                "DB_LadDemo",
+                                "LastValue"
+                              ]
+                            }
+                          }
+                        ],
+                        "then": [
+                          {
+                            "kind": "coil",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "CallDone"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
+          "note": "Prepare DB_LadDemo with T1 IEC_TIMER, C1 IEC_COUNTER, Start/Reset/Timed/CountReached/WorkerReady/CallDone Bool, Count/LastValue Int and ElapsedTime Time. Prepare the user FB_LadWorker (Command Input Bool, Ready Output Bool, State InOut Int) and its global instance DB_LadWorker before importing the generated FC. Global instances only; no library/system instruction calls. CTU needs reset, CTD load, CTUD down/reset/load; auxiliary series start on the powerrail. q/qd drive output lists; et/cv take symbols. Named pins are unique ignoring case and cannot be en/eno. Only move/call accept then (ENO). No symbol/type resolution; compile is the authority."
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -41231,11 +41421,11 @@
           },
           "parameters": {
             "ladFcBlock": {
-              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; literal values must be non-blank."
+              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs."
             },
             "outputReleaseKey": {
               "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+              "meaning": "Explicit V21 candidate SimaticML output, independent of the host selection. Only 21 is admitted for this tool; candidate generation does not establish native import or compile acceptance."
             }
           },
           "operations": {
@@ -41420,12 +41610,203 @@
                 }
               },
               "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
-              "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. Timer, counter and rung CALL forms are not part of A3a. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+              "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. For timers, counters and user FC/FB calls, see operation rung-boxes. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+            },
+            "rung-boxes": {
+              "arguments": {
+                "outputReleaseKey": "21",
+                "ladFcBlock": {
+                  "blockName": "FC_LadBoxes",
+                  "blockNumber": 43,
+                  "networks": [
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Start"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "timer",
+                            "type": "TON",
+                            "instance": {
+                              "global": [
+                                "DB_LadDemo",
+                                "T1"
+                              ]
+                            },
+                            "pt": {
+                              "typed": "T#500ms"
+                            },
+                            "q": [
+                              {
+                                "kind": "coil",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Timed"
+                                  ]
+                                }
+                              }
+                            ],
+                            "et": {
+                              "global": [
+                                "DB_LadDemo",
+                                "ElapsedTime"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Start"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "counter",
+                            "type": "CTU",
+                            "instance": {
+                              "global": [
+                                "DB_LadDemo",
+                                "C1"
+                              ]
+                            },
+                            "valueType": "Int",
+                            "pv": {
+                              "literal": {
+                                "type": "Int",
+                                "value": "10"
+                              }
+                            },
+                            "reset": [
+                              {
+                                "kind": "no",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Reset"
+                                  ]
+                                }
+                              }
+                            ],
+                            "cv": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Count"
+                              ]
+                            },
+                            "q": [
+                              {
+                                "kind": "coil",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "CountReached"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Timed"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "call",
+                            "block": "FB_LadWorker",
+                            "blockType": "FB",
+                            "instance": "DB_LadWorker",
+                            "pins": [
+                              {
+                                "name": "Command",
+                                "section": "Input",
+                                "type": "Bool",
+                                "value": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Start"
+                                  ]
+                                }
+                              },
+                              {
+                                "name": "Ready",
+                                "section": "Output",
+                                "type": "Bool",
+                                "value": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "WorkerReady"
+                                  ]
+                                }
+                              },
+                              {
+                                "name": "State",
+                                "section": "InOut",
+                                "type": "Int",
+                                "value": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "LastValue"
+                                  ]
+                                }
+                              }
+                            ],
+                            "then": [
+                              {
+                                "kind": "coil",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "CallDone"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
+              "note": "Prepare DB_LadDemo with T1 IEC_TIMER, C1 IEC_COUNTER, Start/Reset/Timed/CountReached/WorkerReady/CallDone Bool, Count/LastValue Int and ElapsedTime Time. Prepare the user FB_LadWorker (Command Input Bool, Ready Output Bool, State InOut Int) and its global instance DB_LadWorker before importing the generated FC. Global instances only; no library/system instruction calls. CTU needs reset, CTD load, CTUD down/reset/load; auxiliary series start on the powerrail. q/qd drive output lists; et/cv take symbols. Named pins are unique ignoring case and cannot be en/eno. Only move/call accept then (ENO). No symbol/type resolution; compile is the authority."
             }
           },
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
           "executionTest": "offline-in-memory",
-          "note": "Available on V20/V21 only; withheld on V14 SP1–V19 because this builder emits V21 documents. The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "note": "Available on V21 only; emits V21 candidate SimaticML. Native import and compile acceptance of rung networks remain NOT RUN. Historical offline builder execution does not establish native acceptance. Use operation rung for contacts/branches/MOVE and rung-boxes for timers/counters/user FC/FB calls. Prepare all referenced globals, instances and user blocks before import; compile is the authority.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -66498,11 +66879,11 @@
           },
           "parameters": {
             "ladFcBlock": {
-              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; literal values must be non-blank."
+              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs."
             },
             "outputReleaseKey": {
               "exampleValue": "21",
-              "meaning": "Explicit V21 candidate SimaticML output, independent of the selected Foundation host. The VM-tested builder calls use 21; this example does not produce importable V14-V19 XML."
+              "meaning": "Explicit V21 candidate SimaticML output, independent of the host selection. Only 21 is admitted for this tool; candidate generation does not establish native import or compile acceptance."
             }
           },
           "operations": {
@@ -66686,12 +67067,202 @@
                 }
               },
               "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
-              "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. Timer, counter and rung CALL forms are not part of A3a. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+              "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. For timers, counters and user FC/FB calls, see operation rung-boxes. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
+            },
+            "rung-boxes": {
+              "arguments": {
+                "ladFcBlock": {
+                  "blockName": "FC_LadBoxes",
+                  "blockNumber": 43,
+                  "networks": [
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Start"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "timer",
+                            "type": "TON",
+                            "instance": {
+                              "global": [
+                                "DB_LadDemo",
+                                "T1"
+                              ]
+                            },
+                            "pt": {
+                              "typed": "T#500ms"
+                            },
+                            "q": [
+                              {
+                                "kind": "coil",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Timed"
+                                  ]
+                                }
+                              }
+                            ],
+                            "et": {
+                              "global": [
+                                "DB_LadDemo",
+                                "ElapsedTime"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Start"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "counter",
+                            "type": "CTU",
+                            "instance": {
+                              "global": [
+                                "DB_LadDemo",
+                                "C1"
+                              ]
+                            },
+                            "valueType": "Int",
+                            "pv": {
+                              "literal": {
+                                "type": "Int",
+                                "value": "10"
+                              }
+                            },
+                            "reset": [
+                              {
+                                "kind": "no",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Reset"
+                                  ]
+                                }
+                              }
+                            ],
+                            "cv": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Count"
+                              ]
+                            },
+                            "q": [
+                              {
+                                "kind": "coil",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "CountReached"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "rung": {
+                        "series": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Timed"
+                              ]
+                            }
+                          }
+                        ],
+                        "outputs": [
+                          {
+                            "kind": "call",
+                            "block": "FB_LadWorker",
+                            "blockType": "FB",
+                            "instance": "DB_LadWorker",
+                            "pins": [
+                              {
+                                "name": "Command",
+                                "section": "Input",
+                                "type": "Bool",
+                                "value": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "Start"
+                                  ]
+                                }
+                              },
+                              {
+                                "name": "Ready",
+                                "section": "Output",
+                                "type": "Bool",
+                                "value": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "WorkerReady"
+                                  ]
+                                }
+                              },
+                              {
+                                "name": "State",
+                                "section": "InOut",
+                                "type": "Int",
+                                "value": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "LastValue"
+                                  ]
+                                }
+                              }
+                            ],
+                            "then": [
+                              {
+                                "kind": "coil",
+                                "operand": {
+                                  "global": [
+                                    "DB_LadDemo",
+                                    "CallDone"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              "validation": "Contract checked; V21 candidate only. VM import and compile NOT RUN.",
+              "note": "Prepare DB_LadDemo with T1 IEC_TIMER, C1 IEC_COUNTER, Start/Reset/Timed/CountReached/WorkerReady/CallDone Bool, Count/LastValue Int and ElapsedTime Time. Prepare the user FB_LadWorker (Command Input Bool, Ready Output Bool, State InOut Int) and its global instance DB_LadWorker before importing the generated FC. Global instances only; no library/system instruction calls. CTU needs reset, CTD load, CTUD down/reset/load; auxiliary series start on the powerrail. q/qd drive output lists; et/cv take symbols. Named pins are unique ignoring case and cannot be en/eno. Only move/call accept then (ENO). No symbol/type resolution; compile is the authority."
             }
           },
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Offline in-memory builder executed on each host with outputReleaseKey=21; this is output-generation evidence, not native import acceptance. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4.",
           "executionTest": "offline-in-memory",
-          "note": "The VM-tested Foundation builder examples produce V21 candidate SimaticML only (outputReleaseKey:\"21\"). Other composition builders allow only 21. UDT/GlobalDB schemas also advertise explicit older declaration targets, but those outputs were not exercised by this VM campaign. Do not import this V21 output into a V14-V19 project or infer native acceptance from successful generation.",
+          "note": "Available on V21 only; emits V21 candidate SimaticML. Native import and compile acceptance of rung networks remain NOT RUN. Historical offline builder execution does not establish native acceptance. Use operation rung for contacts/branches/MOVE and rung-boxes for timers/counters/user FC/FB calls. Prepare all referenced globals, instances and user blocks before import; compile is the authority.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -75352,7 +75923,7 @@
       "id": "sequence/plc-lad-rung-build-import",
       "topic": "plc-lad-rung",
       "purpose": "Build a V21 LAD FC from compact rung JSON, import its DB first, compile and inspect native readback.",
-      "preconditions": "A V21 project copy, exact PLC paths, absent demo DB/FC and a project-defined Int constant LAD_LIMIT. No timer/counter/rung CALL emitters until A3b.",
+      "preconditions": "A V21 project copy, exact PLC paths, absent demo DB/FC and a project-defined Int constant LAD_LIMIT. User FB_LadWorker (Command Input Bool, Ready Output Bool, State InOut Int) and its global instance DB_LadWorker already imported and compiled. Resolve them from GetProjectTree before generating the calling FC.",
       "notes": "Candidate-only offline generation; native acceptance NOT RUN. Never rewrite release markers. Import, compile and export are separate reviewed steps. No automatic save or download. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #.",
       "releaseKeys": [
         "21"
@@ -75369,7 +75940,7 @@
         {
           "tool": "GetProjectTree",
           "arguments": {},
-          "expect": "Resolve the exact PLC softwarePath and existing destination groups."
+          "expect": "Resolve the exact PLC softwarePath and existing destination groups. Verify FB_LadWorker and DB_LadWorker exist with the declared pin types before importing FC_LadDemo."
         },
         {
           "tool": "BuildPlcGlobalDb",
@@ -75430,11 +76001,27 @@
                 {
                   "name": "ElapsedTime",
                   "datatype": "Time"
+                },
+                {
+                  "name": "Timed",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "CountReached",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "WorkerReady",
+                  "datatype": "Bool"
+                },
+                {
+                  "name": "CallDone",
+                  "datatype": "Bool"
                 }
               ]
             }
           },
-          "expect": "Retain data.xml. T1/C1 reserve global instances for later timer/counter examples. Create the global Int constant LAD_LIMIT in the project before import; this builder does not define constants."
+          "expect": "Retain data.xml. T1/C1 are the global timer/counter instances for the calling FC. Create the global Int constant LAD_LIMIT in the project before import; this builder does not define constants."
         },
         {
           "tool": "BuildPlcLadFcBlock",
@@ -75613,6 +76200,184 @@
                   },
                   "titleZhCn": "条件与分支",
                   "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
+                },
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "no",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Start"
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "timer",
+                        "type": "TON",
+                        "instance": {
+                          "global": [
+                            "DB_LadDemo",
+                            "T1"
+                          ]
+                        },
+                        "pt": {
+                          "typed": "T#500ms"
+                        },
+                        "q": [
+                          {
+                            "kind": "coil",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Timed"
+                              ]
+                            }
+                          }
+                        ],
+                        "et": {
+                          "global": [
+                            "DB_LadDemo",
+                            "ElapsedTime"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "no",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Start"
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "counter",
+                        "type": "CTU",
+                        "instance": {
+                          "global": [
+                            "DB_LadDemo",
+                            "C1"
+                          ]
+                        },
+                        "valueType": "Int",
+                        "pv": {
+                          "literal": {
+                            "type": "Int",
+                            "value": "10"
+                          }
+                        },
+                        "reset": [
+                          {
+                            "kind": "no",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Reset"
+                              ]
+                            }
+                          }
+                        ],
+                        "cv": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Count"
+                          ]
+                        },
+                        "q": [
+                          {
+                            "kind": "coil",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "CountReached"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "rung": {
+                    "series": [
+                      {
+                        "kind": "no",
+                        "operand": {
+                          "global": [
+                            "DB_LadDemo",
+                            "Timed"
+                          ]
+                        }
+                      }
+                    ],
+                    "outputs": [
+                      {
+                        "kind": "call",
+                        "block": "FB_LadWorker",
+                        "blockType": "FB",
+                        "instance": "DB_LadWorker",
+                        "pins": [
+                          {
+                            "name": "Command",
+                            "section": "Input",
+                            "type": "Bool",
+                            "value": {
+                              "global": [
+                                "DB_LadDemo",
+                                "Start"
+                              ]
+                            }
+                          },
+                          {
+                            "name": "Ready",
+                            "section": "Output",
+                            "type": "Bool",
+                            "value": {
+                              "global": [
+                                "DB_LadDemo",
+                                "WorkerReady"
+                              ]
+                            }
+                          },
+                          {
+                            "name": "State",
+                            "section": "InOut",
+                            "type": "Int",
+                            "value": {
+                              "global": [
+                                "DB_LadDemo",
+                                "LastValue"
+                              ]
+                            }
+                          }
+                        ],
+                        "then": [
+                          {
+                            "kind": "coil",
+                            "operand": {
+                              "global": [
+                                "DB_LadDemo",
+                                "CallDone"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -75744,7 +76509,7 @@
             "inputPath": "<data.outputFile from completed ExportPlcBlock>",
             "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html"
           },
-          "expect": "Render the export and compare each network, indexed path, edge memory and ENO connection against the generated candidate."
+          "expect": "Render the export and compare each network, indexed path, edge memory and ENO connection against the generated candidate. Check timer Q/ET, counter reset/Q/CV, FB instance/named pins and call ENO; retain a provenance-tagged native export."
         },
         {
           "tool": "CleanupStagedImportFiles",

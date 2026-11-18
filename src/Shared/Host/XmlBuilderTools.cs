@@ -246,13 +246,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][PLC-Builders][OFFLINE] Compose a V21 LAD FC candidate from " +
                     "{blockName,blockNumber,inputs?,outputs?,networks:[{call|rung,titleZhCn?,commentZhCn?}]}. Exactly one call or rung per " +
                     "network. Rung supports NO/NC, rising/falling edges with global memory, typed comparisons, OR groups, shared-prefix " +
-                    "fan-out, coil/set/reset and MOVE with ENO chaining; global constants and indexed component paths. Local symbols must start " +
+                    "fan-out, coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins; " +
+                    "global constants and indexed component paths. Local symbols must start " +
                     "with a declared input/output. Limits: 64 networks, 256 parts per rung network, depth 16, strings 4096. No symbol/type " +
                     "resolution; compile is the authority. Returns XML only, no files, connection, import or worker. V21 only; native " +
-                    "acceptance NOT RUN. For timers, counters and math beyond A3a or other unsupported LAD, author S7DCL text and import " +
+                    "acceptance NOT RUN. For unsupported timers, counters and math or library/system instructions, author S7DCL text and import " +
                     "with ImportPlcBlocksDocuments, or start from an exported donor block.")]
         public CallToolResult ComposePlcLadFcBlockXmlV4(
-            [Description("ladFcBlock: LadFcBlockSpec with exactly one call or rung per network. Supply the structured value " +
+            [Description("ladFcBlock: LadFcBlockSpec with exactly one call or rung per network. Rung outputs include timers (TON/TOF/TP), " +
+                "counters (CTU/CTD/CTUD) with global instances, and user FC/FB calls with named pins and optional ENO chains. " +
+                "Supply the structured value " +
                 "directly; exact camelCase fields, no null or JSON string encoding.")] LadFcBlockSpec ladFcBlock)
             => OfflineContracts
                 .Run("BuildPlcLadFcBlock", () => ComposePlcLadFcBlockXml(ConstructionAdapter.ToBuilderJson(ladFcBlock)), writes: false, current: false);

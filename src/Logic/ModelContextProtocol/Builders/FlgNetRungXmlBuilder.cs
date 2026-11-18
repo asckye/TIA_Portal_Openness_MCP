@@ -30,7 +30,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             internal Pin Source { get; }
             internal List<Pin> Destinations { get; } = new List<Pin>();
-            internal Net(Pin source) { Source = source; }
+            internal bool OpenWhenUnused { get; }
+            internal Net(Pin source, bool openWhenUnused = false) { Source = source; OpenWhenUnused = openWhenUnused; }
         }
 
         private sealed class Element
@@ -39,62 +40,78 @@ namespace TiaMcpServer.ModelContextProtocol
             internal List<Net> Operands { get; } = new List<Net>();
             internal List<Net> Sources { get; } = new List<Net>();
             internal Element(XElement part) { Part = part; }
-            internal Net Output(string pin)
+            internal Net Output(string pin, bool openWhenUnused = false)
             {
-                var net = new Net(new Pin(Part, pin));
+                var net = new Net(new Pin(Part, pin), openWhenUnused);
                 Sources.Add(net);
                 return net;
             }
         }
 
         internal static XElement Build(LadRung rung, FlgNetFormat format, IReadOnlyCollection<string> localMembers)
+            => new Compiler(format).Build(rung);
+
+        private sealed class Compiler
         {
-            var ns = format.Namespace;
-            var accesses = new List<XElement>();
-            var elements = new List<Element>();
-            var rail = new Net(new Pin());
-            XElement Access(LadOperand operand)
+            private readonly XNamespace _ns;
+            private readonly List<XElement> _accesses = new List<XElement>();
+            private readonly List<Element> _elements = new List<Element>();
+            private readonly Net _rail = new Net(new Pin());
+            internal Compiler(FlgNetFormat format) { _ns = format.Namespace; }
+
+            private XElement Access(LadOperand operand)
             {
                 string scope = operand.Kind == "global" ? "GlobalVariable" : operand.Kind == "local" ? "LocalVariable"
                     : operand.Kind == "literal" ? "LiteralConstant" : operand.Kind == "typed" ? "TypedConstant" : "GlobalConstant";
                 XElement content;
                 if (operand.Components != null)
-                    content = new XElement(ns + "Symbol", operand.Components.Select(component =>
-                    {
-                        var xml = new XElement(ns + "Component", new XAttribute("Name", component.Name));
-                        if (component.Index != null)
-                        {
-                            xml.Add(new XAttribute("AccessModifier", "Array"));
-                            foreach (int index in component.Index)
-                                xml.Add(new XElement(ns + "Access", new XAttribute("Scope", "LiteralConstant"),
-                                    new XElement(ns + "Constant", new XElement(ns + "ConstantValue", index.ToString(CultureInfo.InvariantCulture)))));
-                        }
-                        return xml;
-                    }));
-                else if (operand.Kind == "constant") content = new XElement(ns + "Constant", new XAttribute("Name", operand.Value!));
-                else content = new XElement(ns + "Constant",
-                    operand.DataType == null ? null : new XElement(ns + "ConstantType", operand.DataType),
-                    new XElement(ns + "ConstantValue", operand.Value));
-                var access = new XElement(ns + "Access", new XAttribute("Scope", scope), content);
-                accesses.Add(access);
+                    content = new XElement(_ns + "Symbol", Components(operand.Components));
+                else if (operand.Kind == "constant") content = new XElement(_ns + "Constant", new XAttribute("Name", operand.Value!));
+                else content = new XElement(_ns + "Constant",
+                    operand.DataType == null ? null : new XElement(_ns + "ConstantType", operand.DataType),
+                    new XElement(_ns + "ConstantValue", operand.Value));
+                var access = new XElement(_ns + "Access", new XAttribute("Scope", scope), content);
+                _accesses.Add(access);
                 return access;
             }
-            Element Part(string name, string? template = null, string? value = null)
+            private IEnumerable<XElement> Components(IReadOnlyList<LadComponent> components)
             {
-                var part = new XElement(ns + "Part", new XAttribute("Name", name));
-                if (template != null) part.Add(new XElement(ns + "TemplateValue", new XAttribute("Name", template),
+                return components.Select(component =>
+                {
+                    var xml = new XElement(_ns + "Component", new XAttribute("Name", component.Name));
+                    if (component.Index != null)
+                    {
+                        xml.Add(new XAttribute("AccessModifier", "Array"));
+                        foreach (int index in component.Index)
+                            xml.Add(new XElement(_ns + "Access", new XAttribute("Scope", "LiteralConstant"),
+                                new XElement(_ns + "Constant", new XElement(_ns + "ConstantValue", index.ToString(CultureInfo.InvariantCulture)))));
+                    }
+                    return xml;
+                });
+            }
+
+            private void Instance(Element element, IEnumerable<XElement> components)
+            {
+                var owner = element.Part.Name.LocalName == "Call" ? element.Part.Elements().Single() : element.Part;
+                owner.AddFirst(new XElement(_ns + "Instance", new XAttribute("Scope", "GlobalVariable"), components));
+            }
+
+            private Element Part(string name, string? template = null, string? value = null)
+            {
+                var part = new XElement(_ns + "Part", new XAttribute("Name", name));
+                if (template != null) part.Add(new XElement(_ns + "TemplateValue", new XAttribute("Name", template),
                     new XAttribute("Type", template == "Card" ? "Cardinality" : "Type"), value));
                 var element = new Element(part);
-                elements.Add(element);
+                _elements.Add(element);
                 return element;
             }
-            void Operand(Element element, string pin, LadOperand operand)
+            private void Operand(Element element, string pin, LadOperand operand)
             {
                 var net = new Net(new Pin(Access(operand)));
                 net.Destinations.Add(new Pin(element.Part, pin));
                 element.Operands.Add(net);
             }
-            Net Series(IReadOnlyList<LadCondition> series, Net incoming)
+            private Net Series(IReadOnlyList<LadCondition> series, Net incoming)
             {
                 foreach (var condition in series)
                 {
@@ -112,7 +129,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         string name = compare ? char.ToUpperInvariant(condition.Op![0]) + condition.Op.Substring(1)
                             : condition.Kind == "rising" ? "PContact" : condition.Kind == "falling" ? "NContact" : "Contact";
                         var element = Part(name, compare ? "SrcType" : null, condition.DataType);
-                        if (condition.Kind == "nc") element.Part.Add(new XElement(ns + "Negated", new XAttribute("Name", "operand")));
+                        if (condition.Kind == "nc") element.Part.Add(new XElement(_ns + "Negated", new XAttribute("Name", "operand")));
                         incoming.Destinations.Add(new Pin(element.Part, compare ? "pre" : "in"));
                         if (compare)
                         {
@@ -129,10 +146,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 return incoming;
             }
-            void Outputs(IReadOnlyList<LadOutput> outputs, Net incoming)
+            private void Outputs(IReadOnlyList<LadOutput> outputs, Net incoming)
             {
                 foreach (var output in outputs)
                 {
+                    if (output.Kind == "timer") { Timer(output, incoming); continue; }
+                    if (output.Kind == "counter") { Counter(output, incoming); continue; }
+                    if (output.Kind == "call") { Call(output, incoming); continue; }
                     bool move = output.Kind == "move";
                     var element = Part(move ? "Move" : output.Kind == "set" ? "SCoil" : output.Kind == "reset" ? "RCoil" : "Coil",
                         move ? "Card" : null, output.Out?.Count.ToString(CultureInfo.InvariantCulture));
@@ -149,37 +169,103 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             }
 
-            var head = Series(rung.Series, rail);
-            Outputs(rung.Outputs, head);
-            if (rung.FanOut != null)
-                foreach (var branch in rung.FanOut) Outputs(branch.Outputs, Series(branch.Series, head));
+            private void Destination(Net net, LadOperand? operand)
+            {
+                if (operand != null) net.Destinations.Add(new Pin(Access(operand)));
+            }
 
-            int uid = 21;
-            string Next() => (uid++).ToString(CultureInfo.InvariantCulture);
-            foreach (var access in accesses) access.Add(new XAttribute("UId", Next()));
-            foreach (var element in elements) element.Part.Add(new XAttribute("UId", Next()));
-            var wires = new XElement(ns + "Wires");
-            void Wire(Net net)
+            private void Timer(LadOutput output, Net incoming)
             {
-                if (net.Destinations.Count == 0) return;
-                wires.Add(new XElement(ns + "Wire", new XAttribute("UId", Next()), net.Source.Emit(ns),
-                    net.Destinations.Select(pin => pin.Emit(ns))));
+                var element = Part(output.DataType!, "time_type", "Time");
+                element.Part.Add(new XAttribute("Version", "1.0"));
+                Instance(element, Components(output.Instance!.Components!));
+                incoming.Destinations.Add(new Pin(element.Part, "IN"));
+                Operand(element, "PT", output.Pt!);
+                var q = element.Output("Q", true);
+                Destination(element.Output("ET", true), output.Et);
+                if (output.Q != null) Outputs(output.Q, q);
             }
-            Wire(rail);
-            foreach (var element in elements)
+
+            private void Counter(LadOutput output, Net incoming)
             {
-                foreach (var operand in element.Operands) Wire(operand);
-                foreach (var source in element.Sources) Wire(source);
+                var reset = output.Reset == null ? null : Series(output.Reset, _rail);
+                var load = output.Load == null ? null : Series(output.Load, _rail);
+                var down = output.Down == null ? null : Series(output.Down, _rail);
+                var element = Part(output.DataType!, "value_type", output.ValueType);
+                element.Part.Add(new XAttribute("Version", "1.0"));
+                Instance(element, Components(output.Instance!.Components!));
+                incoming.Destinations.Add(new Pin(element.Part, output.DataType == "CTD" ? "CD" : "CU"));
+                down?.Destinations.Add(new Pin(element.Part, "CD"));
+                reset?.Destinations.Add(new Pin(element.Part, "R"));
+                load?.Destinations.Add(new Pin(element.Part, "LD"));
+                Operand(element, "PV", output.Pv!);
+                var q = element.Output(output.DataType == "CTUD" ? "QU" : "Q", true);
+                var qd = output.DataType == "CTUD" ? element.Output("QD", true) : null;
+                Destination(element.Output("CV", true), output.Cv);
+                if (output.Q != null) Outputs(output.Q, q);
+                if (output.Qd != null) Outputs(output.Qd, qd!);
             }
-            var result = new XElement(ns + "FlgNet", new XElement(ns + "Parts", accesses, elements.Select(e => e.Part)), wires);
-            Verify(result);
-            return result;
+
+            private void Call(LadOutput output, Net incoming)
+            {
+                var info = new XElement(_ns + "CallInfo", new XAttribute("Name", output.Block!),
+                    new XAttribute("BlockType", output.BlockType!), output.Pins!.Select(pin => new XElement(_ns + "Parameter",
+                        new XAttribute("Name", pin.Name), new XAttribute("Section", pin.Section), new XAttribute("Type", pin.DataType))));
+                var element = new Element(new XElement(_ns + "Call", info));
+                _elements.Add(element);
+                if (output.InstanceDb != null)
+                    Instance(element, new[] { new XElement(_ns + "Component", new XAttribute("Name", output.InstanceDb)) });
+                incoming.Destinations.Add(new Pin(element.Part, "en"));
+                foreach (var pin in output.Pins)
+                    if (pin.Section == "Output") Destination(element.Output(pin.Name), pin.Value);
+                    else Operand(element, pin.Name, pin.Value);
+                if (output.Then != null) Outputs(output.Then, element.Output("eno"));
+            }
+
+            internal XElement Build(LadRung rung)
+            {
+                var head = Series(rung.Series, _rail);
+                Outputs(rung.Outputs, head);
+                if (rung.FanOut != null)
+                    foreach (var branch in rung.FanOut) Outputs(branch.Outputs, Series(branch.Series, head));
+
+                int uid = 21;
+                string Next() => (uid++).ToString(CultureInfo.InvariantCulture);
+                foreach (var access in _accesses) access.Add(new XAttribute("UId", Next()));
+                foreach (var element in _elements)
+                {
+                    element.Part.Add(new XAttribute("UId", Next()));
+                    var instance = element.Part.Descendants(_ns + "Instance").SingleOrDefault();
+                    instance?.Add(new XAttribute("UId", Next()));
+                }
+                var wires = new XElement(_ns + "Wires");
+                void Wire(Net net)
+                {
+                    if (net.Destinations.Count == 0 && !net.OpenWhenUnused) return;
+                    string id = Next();
+                    wires.Add(new XElement(_ns + "Wire", new XAttribute("UId", id), net.Source.Emit(_ns),
+                        net.Destinations.Count == 0 ? new[] { new XElement(_ns + "OpenCon", new XAttribute("UId", Next())) }
+                            : net.Destinations.Select(pin => pin.Emit(_ns))));
+                }
+                Wire(_rail);
+                foreach (var element in _elements)
+                {
+                    foreach (var operand in element.Operands) Wire(operand);
+                    foreach (var source in element.Sources) Wire(source);
+                }
+                var result = new XElement(_ns + "FlgNet", new XElement(_ns + "Parts", _accesses, _elements.Select(e => e.Part)), wires);
+                Verify(result);
+                return result;
+            }
         }
 
         // Pin tables also serve the post-serialization structural check. Native
         // symbol/type resolution and import acceptance remain outside this compiler.
         private static string[] Inputs(XElement part)
         {
+            if (part.Name.LocalName == "Call")
+                return new[] { "en" }.Concat(part.Descendants(part.Name.Namespace + "Parameter")
+                    .Where(p => (string?)p.Attribute("Section") != "Output").Select(p => p.Attribute("Name")!.Value)).ToArray();
             switch ((string?)part.Attribute("Name"))
             {
                 case "Contact": return new[] { "in", "operand" };
@@ -187,10 +273,33 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "Eq": case "Ne": case "Gt": case "Ge": case "Lt": case "Le": return new[] { "pre", "in1", "in2" };
                 case "Coil": case "SCoil": case "RCoil": return new[] { "in", "operand" };
                 case "Move": return new[] { "en", "in" };
+                case "TON": case "TOF": case "TP": return new[] { "IN", "PT" };
+                case "CTU": return new[] { "CU", "R", "PV" };
+                case "CTD": return new[] { "CD", "LD", "PV" };
+                case "CTUD": return new[] { "CU", "CD", "R", "LD", "PV" };
                 case "O":
                     int cardinality = int.Parse(part.Elements().Single().Value, CultureInfo.InvariantCulture);
                     return Enumerable.Range(1, cardinality).Select(i => "in" + i.ToString(CultureInfo.InvariantCulture)).ToArray();
                 default: throw new InvalidOperationException("Unknown rung part.");
+            }
+        }
+
+        private static bool IsOutput(XElement part, string pin)
+        {
+            var ns = part.Name.Namespace;
+            if (part.Name.LocalName == "Call")
+                return pin == "eno" || part.Descendants(ns + "Parameter").Any(p =>
+                    (string?)p.Attribute("Name") == pin && (string?)p.Attribute("Section") == "Output");
+            switch ((string?)part.Attribute("Name"))
+            {
+                case "Move": return pin == "eno" && part.Attribute("DisabledENO") == null
+                    || Enumerable.Range(1, int.Parse(part.Elements(ns + "TemplateValue").Single().Value, CultureInfo.InvariantCulture))
+                        .Any(i => pin == "out" + i.ToString(CultureInfo.InvariantCulture));
+                case "TON": case "TOF": case "TP": return pin == "Q" || pin == "ET";
+                case "CTU": case "CTD": return pin == "Q" || pin == "CV";
+                case "CTUD": return pin == "QU" || pin == "QD" || pin == "CV";
+                case "Coil": case "SCoil": case "RCoil": return false;
+                default: return pin == "out";
             }
         }
 
@@ -199,11 +308,12 @@ namespace TiaMcpServer.ModelContextProtocol
             var ns = network.Name.Namespace;
             var parts = network.Element(ns + "Parts")!.Elements().ToArray();
             var wires = network.Element(ns + "Wires")!.Elements().ToArray();
-            var ids = parts.Concat(wires).Select(e => e.Attribute("UId")!.Value).ToArray();
+            var ids = network.Descendants().Attributes("UId").Where(a => a.Parent!.Name.LocalName != "NameCon"
+                && a.Parent.Name.LocalName != "IdentCon").Select(a => a.Value).ToArray();
             if (ids.Any(id => !int.TryParse(id, NumberStyles.None, CultureInfo.InvariantCulture, out int number) || number < 1)
                 || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length) throw new InvalidOperationException("Invalid rung UId or collision.");
             var byId = parts.ToDictionary(p => p.Attribute("UId")!.Value, StringComparer.Ordinal);
-            var inputs = parts.Where(p => p.Name.LocalName == "Part").SelectMany(p => Inputs(p)
+            var inputs = parts.Where(p => p.Name.LocalName == "Part" || p.Name.LocalName == "Call").SelectMany(p => Inputs(p)
                 .Select(pin => p.Attribute("UId")!.Value + "/" + pin)).ToDictionary(key => key, _ => 0, StringComparer.Ordinal);
             var sources = new HashSet<string>(StringComparer.Ordinal);
             foreach (var wire in wires)
@@ -217,6 +327,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (end.Name.LocalName == "Powerrail")
                     {
                         if (end != ends[0]) throw new InvalidOperationException("Powerrail must be a source.");
+                        continue;
+                    }
+                    if (end.Name.LocalName == "OpenCon")
+                    {
+                        if (end == ends[0]) throw new InvalidOperationException("Open connector must be a destination.");
                         continue;
                     }
                     if (!byId.TryGetValue(end.Attribute("UId")!.Value, out var target)
@@ -233,12 +348,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         }
                         else
                         {
-                            string name = target.Attribute("Name")!.Value;
-                            bool output = name == "Move" ? pin == "eno" && target.Attribute("DisabledENO") == null
-                                || Enumerable.Range(1, int.Parse(target.Elements(ns + "TemplateValue").Single().Value, CultureInfo.InvariantCulture))
-                                    .Any(i => pin == "out" + i.ToString(CultureInfo.InvariantCulture))
-                                : name != "Coil" && name != "SCoil" && name != "RCoil" && pin == "out";
-                            if (!output || end != ends[0]) throw new InvalidOperationException("Unknown or misdirected rung pin.");
+                            if (!IsOutput(target, pin) || end != ends[0])
+                                throw new InvalidOperationException("Unknown or misdirected rung pin.");
                         }
                     }
                 }

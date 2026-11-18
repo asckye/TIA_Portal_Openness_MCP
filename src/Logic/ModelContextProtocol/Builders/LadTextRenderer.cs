@@ -111,7 +111,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (uid == null) continue;
                 var part = new Part { UId = uid, Name = p.Attribute("Name")?.Value ?? "?" };
                 part.Negated = p.Elements("Negated").Any();
-                part.Instance = p.Descendants("Instance").Descendants("Component").FirstOrDefault()?.Attribute("Name")?.Value;
+                var instance = p.Descendants("Instance").FirstOrDefault();
+                if (instance != null) part.Instance = ReadAccess(instance).text;
                 parts[uid] = part;
             }
             // Block calls are <Call>, not <Part>: <Call UId><CallInfo Name BlockType><Instance/><Parameter Name Section/>…
@@ -180,13 +181,15 @@ namespace TiaMcpServer.ModelContextProtocol
                     var sec = Section(uid, pin);
                     if (sec != null) return sec.Equals("Output", StringComparison.OrdinalIgnoreCase);
                     return pin != null && (pin.Equals("out", StringComparison.OrdinalIgnoreCase)
-                        || pin.Equals("eno", StringComparison.OrdinalIgnoreCase) || pin == "Q" || pin.StartsWith("out", StringComparison.Ordinal));
+                        || pin.Equals("eno", StringComparison.OrdinalIgnoreCase) || pin == "Q" || pin == "QU" || pin == "QD"
+                        || pin.StartsWith("out", StringComparison.Ordinal));
                 }
                 bool IsIn(string? uid, string? pin)
                 {
                     var sec = Section(uid, pin);
                     if (sec != null) return !sec.Equals("Output", StringComparison.OrdinalIgnoreCase);
                     return pin != null && (pin.Equals("in", StringComparison.OrdinalIgnoreCase)
+                        || pin == "CU" || pin == "CD" || pin == "R" || pin == "LD"
                         || pin.Equals("en", StringComparison.OrdinalIgnoreCase) || pin.Equals("pre", StringComparison.OrdinalIgnoreCase) || pin
                             .StartsWith("in", StringComparison.Ordinal));
                 }
@@ -209,7 +212,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 // Fallback: just list the parts + operands so nothing is opaque.
                 foreach (var p in parts.Values)
-                    sb.Append($"   · {p.Name}{FormatOperands(p)}\n");
+                    sb.Append($"   · {DescribeBoxInline(p)}\n");
                 return sb.Length == 0 ? "   (空网络)\n" : sb.ToString();
             }
 
@@ -308,6 +311,18 @@ namespace TiaMcpServer.ModelContextProtocol
                     var colon = node.IndexOf(':');
                     var pin = colon >= 0 ? node.Substring(colon + 1) : "eno";
                     return Series(en, $"{CallLabel(p)}.{pin}");
+                }
+                if (p.Name is "CTU" or "CTD" or "CTUD")
+                {
+                    var conditions = new List<string>();
+                    foreach (string pin in new[] { "CU", "CD", "R", "LD" })
+                        if (flowSource.TryGetValue(uid + ":" + pin, out var source))
+                        {
+                            string expression = TraceChain(source, parts, flowSource, guard);
+                            conditions.Add(pin + "=<" + (string.IsNullOrEmpty(expression) ? "RAIL" : expression) + ">");
+                        }
+                    string outputPin = node.Substring(node.IndexOf(':') + 1);
+                    return DescribeBoxInline(p) + "[" + string.Join(", ", conditions) + "]." + outputPin;
                 }
                 // timers / edges / other boxes producing power at Q/out. Power enters at 'in' (contacts, edges),
                 // 'IN' (timers/counters) or 'en' (MOVE and other EN/ENO boxes).

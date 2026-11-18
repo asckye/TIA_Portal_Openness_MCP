@@ -27,6 +27,8 @@ internal sealed class OfflineLadderTool : McpServerTool
             [jsonParameter] = new JsonObject { ["type"] = "string", ["maxLength"] = OfflineCompositionBuilders.MaxJsonCharacters,
                 ["description"] = "Call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{call|rung}]}; optional inputs/outputs. " +
                     "Rung {series,outputs,fanOut?}: NO/NC, rising/falling with global memory, compare, OR, fan-out, coil/set/reset, MOVE with ENO chain. " +
+                    (name == "BuildPlcLadFcBlock" ? "TON/TOF/TP and CTU/CTD/CTUD with global instances; " +
+                        "user FC/FB CALL with named pins and ENO chains. " : "") +
                     "Global constants, indexed components and local inputs/outputs. Exact camelCase. 64 networks, 256 parts per rung network, " +
                     "1000 call parameters/interface members, depth 16, strings <=4096. No raw XML or caller UIds. " +
                     "No symbol/type resolution; compile is the authority." },
@@ -36,7 +38,8 @@ internal sealed class OfflineLadderTool : McpServerTool
         {
             Name = name, Description = "[offline candidate; native unverified] In-memory V21 LAD candidate generation. " +
                 (name == "BuildPlcLadFcBlock" ? "Each network contains exactly one call or rung. Rungs support contacts, edges, compares, OR, fan-out, " +
-                    "coil/set/reset and MOVE with ENO chaining. Registered on V21 only. For timers, counters and math beyond A3a or other " +
+                    "coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins. " +
+                    "Global instances only. Registered on V21 only. For unsupported timers, counters and math or library/system instructions and other " +
                     "unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. "
                     : "Builds only one FC-call fragment; use BuildPlcLadFcBlock for rung networks on V21. For timers, counters and math beyond A3a, " +
                         "and all general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. " +

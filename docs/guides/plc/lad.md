@@ -8,12 +8,14 @@
 |---|---|
 | 导入同版本 TIA 导出的程序块 | 使用该版本服务的 `ImportPlcBlock` 示例导入 SimaticML XML |
 | 编写通用触点、线圈、沿和混合网络 | V21 的 SIMATIC SD 文档例子；按 `ImportPlcBlockDocuments` 示例导入 |
-| 用 JSON 组装触点、沿、比较、OR、共用前段分支、线圈或 MOVE | `BuildPlcLadFcBlock` 的 `rung` 网络；V21 候选 XML |
+| 用 JSON 组装触点、沿、比较、OR、分支、线圈、MOVE、定时器、计数器或用户 FC/FB 调用 | `BuildPlcLadFcBlock` 的 `rung` 网络；V21 候选 XML |
 | 用 XML 组装 FC 调用网络 | `BuildFlgNetCall` 生成片段；`BuildPlcLadFcBlock` 的 `call` 网络生成完整 V21 候选块 |
 
-`BuildPlcLadFcBlock` 的每个网络须选 `call` 或 `rung` 之一。`rung` 支持常开/常闭、使用全局存储位的上升/下降沿、六种比较、OR 组、共用前段分支、普通/置位/复位线圈、MOVE 及其 ENO 串接。操作数支持全局常量、数组下标组件路径和本块声明的输入/输出局部变量；不解析符号或推断类型，编译结果才是依据。每个 rung 网络最多 256 个 Access/Part，现有 64 网络和深度 16 限制不变。
+`BuildPlcLadFcBlock` 的每个网络须选 `call` 或 `rung` 之一。`rung` 支持常开/常闭、使用全局存储位的上升/下降沿、六种比较、OR 组、共用前段分支、普通/置位/复位线圈、MOVE 及其 ENO 串接。操作数支持全局常量、数组下标组件路径和本块声明的输入/输出局部变量；不解析符号或推断类型，编译结果才是依据。每个 rung 网络最多 256 个 Access/Part/Call，现有 64 网络和深度 16 限制不变。
 
-通过 `GetToolUsage(toolName="BuildPlcLadFcBlock", operation="rung")` 获取完整输入；导入与读回步骤见 `GetToolUsage(exampleId="sequence/plc-lad-rung-build-import")`。输出仅限 V21，原生导入与编译验收为 **NOT RUN**。定时器、计数器和 rung 内用户块调用留待后续扩展；任意算术或库指令使用完整文档/同版本导出块。V20 的 SIMATIC SD 使用还取决于对应安装/更新；本包这些完整文档示例限定 V21。V14 SP1–V19 基础目录没有 V20/V21 的文档导入入口。
+`rung` 还支持 TON/TOF/TP、CTU/CTD/CTUD，以及带命名引脚的用户 FC/FB 调用。定时器和计数器的 `instance` 使用全局符号路径；FB 调用的 `instance` 是全局实例 DB 名称，FC 调用不接受实例。CTU 必须给出 `reset`，CTD 必须给出 `load`，CTUD 必须给出 `down`、`reset`、`load`；辅助条件串从电源轨开始。`q`/`qd` 接输出列表，`et`/`cv` 接符号，未使用的输出接 `OpenCon`。只有 MOVE 和 CALL 接受由 ENO 驱动的 `then`。调用引脚名不区分大小写去重，不得使用 `en`/`eno`；Output 引脚必须接符号。先准备并编译实例与被调用块，生成器不解析这些对象或推断类型。
+
+通过 `GetToolUsage(toolName="BuildPlcLadFcBlock", operation="rung")` 获取基础输入，`operation="rung-boxes"` 获取定时器、计数器和 FB 调用输入；导入与读回步骤见 `GetToolUsage(exampleId="sequence/plc-lad-rung-build-import")`。输出仅限 V21，原生导入与编译验收为 **NOT RUN**。任意算术、库或系统指令使用完整文档/同版本导出块。V20 的 SIMATIC SD 使用还取决于对应安装/更新；本包这些完整文档示例限定 V21。V14 SP1–V19 基础目录没有 V20/V21 的文档导入入口。
 
 ## V21 文档练习
 
