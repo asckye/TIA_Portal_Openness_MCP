@@ -5059,6 +5059,217 @@
           "identifier": "TiaMcp.SourceContracts.Tests.VersionCatalogWiring/PolicyWrapsFoundationDispatch( ):7f35ffe0c01efbf11d40e482083ef381d322399c1bc19ef10f176f2ef7166c18:1"
         }
       ]
+    },
+    {
+      "task": "UNIFY-1",
+      "maintainerDate": "2026-11-18",
+      "reason": "UNIFY-1 refresh 2026-11-17 assertion list plus lead approvals recorded in bin-build/refactor/tasks/UNIFY-1.md (UNIFY-1A PassiveHostDiagnostics, B1 U4 and bridge text, C1 seven session-policy rows, D1 TechnologyObjectExport and SeedReferenceHmiImport); all are intended unification changes, none loosens behaviour",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/WorkerSessionCallbackTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.WorkerSessionCallbackTests/Old_release_seed_registration_stays_unavailable( string release ):18772928523c087a506178c7e455f5054f975f91872b2098a66a416fc7b4ef1e"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B1OldReleaseBridgeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B1OldReleaseBridgeTests/BridgeUsesExactlyTheRegisteredCatalogAndReportsTargetFields( string release ):968746a45daa3f2045d7e65a5b6744cecbe95f23b5f9cb67f72ce995d286c075:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B1OldReleaseBridgeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B1OldReleaseBridgeTests/BridgeUsesExactlyTheRegisteredCatalogAndReportsTargetFields( string release ):9e3b8b5e2f20a02845460dc09c4dbfadef53cd70b12016ec1c7a6d4b64462ff3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B1OldReleaseBridgeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B1OldReleaseBridgeTests/BridgeUsesExactlyTheRegisteredCatalogAndReportsTargetFields( string release ):d878f2799d63ef6d1ece2c8d0dab6d4f96ef2f95d29c5b30a54d007f2e0a89dd:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationRecoveryTests/No_field_requires_a_tia_restart( string release ):36fea68ab33a6f795fe214afa2d0e52f551a323593fd9a1783c8d3c7e8554225:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRecoveryTests/Worker_fault_during_a_write_is_unknown_and_the_next_call_rebinds( string release , string mode ):0331e74d6c1e9ea70da8ea0594cbb0d793235f5e301e2a644d36c4a43735f224:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRecoveryTests/Worker_fault_during_a_write_is_unknown_and_the_next_call_rebinds( string release , string mode ):4694d2b6cefa89ab08ab018751356f438985265466a7e7d239fb449658b721ec:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRecoveryTests/Worker_fault_during_a_write_is_unknown_and_the_next_call_rebinds( string release , string mode ):b1c68f3c54f08538e83134d2d3fb06f6dcb2aa714686f58e42795de818996264:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRecoveryTests/Worker_fault_during_a_write_is_unknown_and_the_next_call_rebinds( string release , string mode ):cfecd140f492508adffcb6ba14c4d15a7e68e5f8dc008e183de118eb1cfc36ca:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PassiveHostDiagnosticsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PassiveHostDiagnosticsTests/Run( IMcpServer server , Action \u003C bool , string \u003E check ):f589ef7bdb9abc2761bd752a8f4950989b2beb6fa9ba6cde8e40765e563451f2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedHostSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedHostSessionTests/Disconnect_uses_one_exception_type_and_preserves_the_release_diagnostic( string release ):dfc4160e5de810e1ca32b44895f3b7393c0806aaeaa10a2af96c060c8062352d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedHostSessionTests.cs",
+          "kind": "test-removed",
+          "identifier": "SharedHostSessionTests/An_explicit_supervisor_read_starts_the_full_profile_lazily( string release ):a44ad5d0ed83628946babe97a8cc9ae4d12ea7fa53edb493a59ec47ad96dbde4"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):8588b38455697cb5655fffd3d90d543058fc9634f186ecd04d3cc7d1fe785ac2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):e834d330a2daffa89e780bed46a1289176ee704bfeae0c16ce25feaa2260de03:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):f38492fc18e2b755c584b122e6a7777c92e6e7c4dfec94da51821e87d44f2d9d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "test-removed",
+          "identifier": "SharedWorkerRegressionTests/Explicit_supervisor_reads_start_only_when_the_cold_lane_is_free( string release , bool restartPreview ):d1f3a8feff1f924e07a4b65d4ea317e69a32aa7338a999e978220414de323dec"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SpecialExportTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SpecialExportTests/Run( Action \u003C bool , string \u003E check , Action \u003C string \u003E skip ):cf7d423f424fe69910278c89327eab7402459e4c7549e7e5d3a82ed37488b92a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/StagedGenerationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "StagedGenerationTests/FullRunPublishesPostSaveWitnessesAndReplansToZeroSteps( string release ):35d8d611d69abfb9cd4228a0340cb7701d2ec56dabab911e4f5cd1109b2070ef:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/StagedGenerationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "StagedGenerationTests/FullRunPublishesPostSaveWitnessesAndReplansToZeroSteps( string release ):4cdde8da25a564fb5029daf41b99ef410feed9d09061de448ebaf17a701fe737:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/LibraryDeepTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.LibraryDeepTests/Run( Action \u003C bool , string \u003E check ):82b8a6bcdd467504c7f2aec01352050ae4086666517f734bc733811fb38c6531:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaVersionCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.TiaVersionCatalogTests/Run( Action \u003C bool , string \u003E check ):2be67b86a968207c0ae7a1512394ebfeb9cd4638744d68f58c937b422068ecc8:1"
+        }
+      ]
+    },
+    {
+      "task": "UNIFY-1-batch",
+      "maintainerDate": "2026-11-18",
+      "reason": "Lead approval 2026-11-17 under the maintainer\u0027s standing approval: integration of UNIFY-1A..1D1 with newer master; expectation updates match approved UNIFY behaviour (release-specific refusal text, old-release HMI seeding, ExportTechnologyObject roster \u002B1, shared status observation frames), reviewed independently with no loosening found",
+      "items": [
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "check_release:01a7cbb9171c74fdbaaeb1a8c92c9c42797f06fd6356a73c8e088b6081e3c1c0:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "check_release:e8d1776fd2e68197b2db1dafbaea61ade1ac02ec0594643deec7ab8420bebc48:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "check_stdio:01a7cbb9171c74fdbaaeb1a8c92c9c42797f06fd6356a73c8e088b6081e3c1c0:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "check_stdio:c2f1d5a81a3d4e6561c19e45d941f88987645bc78636dee35e94647b522c5ed5:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "main:01a7cbb9171c74fdbaaeb1a8c92c9c42797f06fd6356a73c8e088b6081e3c1c0:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "main:c2f1d5a81a3d4e6561c19e45d941f88987645bc78636dee35e94647b522c5ed5:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "plc_transports:01a7cbb9171c74fdbaaeb1a8c92c9c42797f06fd6356a73c8e088b6081e3c1c0:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "plc_transports:e8d1776fd2e68197b2db1dafbaea61ade1ac02ec0594643deec7ab8420bebc48:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B3HostPortsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "B3HostPortsTests/Old_release_discovery_usage_bridges_batches_and_passive_reports_share_the_registry( string release ):c67fabdb4a16b51ea107a29b1317629ea010368c948ffde7680be58e070eb767:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/B3HostPortsTests.cs",
+          "kind": "test-removed",
+          "identifier": "B3HostPortsTests/Seed_HMI_dependency_refuses_before_any_PLC_import( string release ):f25b62908c159fab823d68b9c188b02c2f54a764c5ffffa765785fcd15e74ed8"
+        }
+      ]
+    },
+    {
+      "task": "UNIFY-1-integration",
+      "maintainerDate": "2026-11-18",
+      "reason": "Lead approval 2026-11-17 under the maintainer\u0027s standing approval: same UNIFY-1C1 shared-session and source-contract changes as approved earlier, re-fingerprinted after squashing onto master 8ff1337a; reviewed independently, no loosening",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):76c2445ac281dc6bd85556190e8e3076a195e7b6db297a0cc6b3ada12fd3a28c:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):85ee5594d69d91779f0909ef71ede8481d24c7efabbc51256812a87cf271cd77:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):a1e26b67c34ae2d3c03af6db4b2fe296b4c4927fc5464e851a401cac94864249:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Forced_disconnect_retains_the_profile_reply_snapshot_and_approval_state( string release , bool busy ):f2891b2f181338dd9f0eaeecbf5716bbfd3b481f94393a83f78843ee0566d1fa:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "SharedWorkerRegressionTests/Restart_and_dispose_do_not_replace_or_lose_a_worker_after_identity_refusal( string release ):a1e26b67c34ae2d3c03af6db4b2fe296b4c4927fc5464e851a401cac94864249:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/VersionCatalogWiring.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.VersionCatalogWiring/PolicyWrapsFoundationDispatch( ):8007258ce3ac4c9f0ed91d1836eef446e801701aefb501ec513537f2cc5f730d:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/VersionCatalogWiring.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.VersionCatalogWiring/PolicyWrapsFoundationDispatch( ):ddfecd1e10bd8e2c24145f0ab966f5ad449f2487ef86fa48be9462a3cc69da69:1"
+        }
+      ]
     }
   ]
 }
