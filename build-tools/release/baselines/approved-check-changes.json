@@ -5676,6 +5676,103 @@
           "identifier": "TiaMcp.SourceContracts.Tests.HonestWriteSources/Syslog_marks_only_the_selected_native_mutation( ):8b9c88dcf03d08b44f76af57414f36aa5e5ca05a66ee32242008675128af3b02:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-14",
+      "maintainerDate": "2026-11-19",
+      "reason": "VMFIX-14 spec-approved assertion changes (technology-object batch item shape and write counts, previous-owner field names leaseState/unsettledRequests/origin; WriteRollbackTests opaque import cleanup now asserted on the parent journal, child has no outcome); approved under the maintainer\u0027s standing approval of recommended options (2026-11-17)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Export_name_filters_preserve_watch_selection_and_native_batch_selector( bool watch ):ec19e485c76bee48c86e3d88116811f3de4bade15b666503b9abdb4c0a7cb035:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Export_preview_uses_the_canonical_inventory_and_exact_per_item_paths( string batchName , string readerName , string exportName ):02794753b76dd953908ae4d114c7be0f27c2458de97dad66e8d24ce02dc4afad:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Export_preview_uses_the_canonical_inventory_and_exact_per_item_paths( string batchName , string readerName , string exportName ):3a5ca2062c9986ec649f0d9678c18e90124c0da52573e70710c36083e609687a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Export_preview_uses_the_canonical_inventory_and_exact_per_item_paths( string batchName , string readerName , string exportName ):8f3cfa0d793f90a347f7e6f15dcdbc5b65781b970a0caba7388c152e47a0c979:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Technology_export_preserves_the_native_route_where_canonical_export_is_unavailable( string release , bool native ):023f33f8bfdda3da2cee5913eb8f610733251250f0d4ebd6ee811a24d97bb1b8:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Technology_export_preserves_the_native_route_where_canonical_export_is_unavailable( string release , bool native ):0646fa9cd7ef765314d7ebaa41889b07c3b0532a78b18f721ee29c30289cb5bc:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Technology_export_preserves_the_native_route_where_canonical_export_is_unavailable( string release , bool native ):39dec0e9239f6025f7c5482a81587e6ea2b661fad51830bff115a0b4c5ed721d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Technology_exports_use_one_native_route_and_result_shape_on_all_eight_releases( ):7ff945e6b84307d0b91fb3e9e8ccf45cc232ca33461cca1f644d61c30ae508b7:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Technology_exports_use_one_native_route_and_result_shape_on_all_eight_releases( ):b5cddaad44d4898880185cb9f09a190db14874def5f2f09d120074c1717023bc:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/CanonicalBatchToolsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "CanonicalBatchToolsTests/Technology_exports_use_one_native_route_and_result_shape_on_all_eight_releases( ):f1a39c36596bdcf235327d7e1c0b9f1b050112cacc5b467048948228664c2f27:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationRecoveryTests/Dead_holder_unknown_is_unsettled_in_the_next_session( string release , string state ):49fd8ce858167e292978d35e7f3935e36cc6dc6fdb16c842ac2c3bccb5efe694:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DisconnectTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationRecoveryTests/Dead_holder_unknown_is_unsettled_in_the_next_session( string release , string state ):a1508201e29a2f353c4d0a8fafb552e8c585e725db66829857e5edfedd3bafdc:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease( string release ):b113273f9f396c64011594f02fa2f51951086e2dc104296130bc1c2fb82a3e6b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Unknown_outcome_can_disconnect_and_a_new_session_can_acquire_the_same_lease( string release ):c388e0d58fab9b1947832ffc5c3f5600b6ce8f2c8abcc83d7757a5dc6ed69a76:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpTakeoverTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Takeover_carries_unsettled_calls_to_the_new_session( string release ):64384efcb0010c036f92746e83da1498834578f44259468cf060315d8cf67f3f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpTakeoverTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Takeover_carries_unsettled_calls_to_the_new_session( string release ):b113273f9f396c64011594f02fa2f51951086e2dc104296130bc1c2fb82a3e6b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Takeover_data_reaches_the_connect_result_without_a_new_warning( string state ):a51fc1d217cbb0d4aeffab6c4a5a6b1eeaa04de3170ef7a6a13ec1c3ca8e582b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationProcessLeaseTests/Takeover_data_reaches_the_connect_result_without_a_new_warning( string state ):d82f4946b1d1cb48829a5791a842462ae6de0be5204efe68b3b9c09b1768efb7:1"
+        }
+      ]
     }
   ]
 }
