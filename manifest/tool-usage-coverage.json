@@ -41604,8 +41604,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "75bea3757dbfb76dc66d0ad6747b8bf41cf7f8aa45f012972b72444b9acfb598",
-      "runtimeSha256": "75bea3757dbfb76dc66d0ad6747b8bf41cf7f8aa45f012972b72444b9acfb598",
+      "sdkWorkerSha256": "0fa3c22e4412a380c5972729a0ab2bd7048b08843682e8ccbbf3b45e7a1f51c9",
+      "runtimeSha256": "0fa3c22e4412a380c5972729a0ab2bd7048b08843682e8ccbbf3b45e7a1f51c9",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -49800,8 +49800,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "7617cc66063107758a4c43df20175a604f03218939db28e997384abc890119d9",
-      "runtimeSha256": "7617cc66063107758a4c43df20175a604f03218939db28e997384abc890119d9",
+      "sdkWorkerSha256": "dabe867dbdc9477ac7a0d62a56fd0347345e8cf9a06fb2ab03526b842c753e2c",
+      "runtimeSha256": "dabe867dbdc9477ac7a0d62a56fd0347345e8cf9a06fb2ab03526b842c753e2c",
       "workerModel": "foundation-host-plc-worker"
     }
   }
