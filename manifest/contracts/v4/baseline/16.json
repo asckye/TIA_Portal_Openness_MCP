@@ -9302,7 +9302,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a579fe887a131c992c5285811ca76790aaeb104af8fa7dceb469a6ba692ba3d1",
+      "descriptionSha256": "3cbdaa5108ae960219d4cd4030f84fac022c72a66b75254e0e6591ee70d32e22",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

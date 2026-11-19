@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-19T13:56:35.0549556+00:00",
+  "generatedAt": "2026-11-19T18:44:55.6753642+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "63a1d89126e731f059d6d0ae0a9d646998fd35fccbaa480d1ae563fb50b7e38f",
+  "workerSha256": "5c1dbdd0c2a8e8e2a13b0a0b4a4c578ad50b10c32bf586075fc4c4b8e50994a9",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -9353,7 +9353,7 @@
         "expectedProjectFile",
         "exportDirectory"
       ],
-      "description": "[L2][PLC-Software][FILE] Preview the complete exact technology-object inventory and each item export plan. One batch plan hash and approval; execute in inventory order, stop on first failure. All eight releases use the same native batch export route and the groups present in the project. Default dryRun=true. Examples: GetToolUsage(toolName: \"ExportTechnologyObjectsToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. exportDir and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][FILE] Preview the complete exact technology-object inventory and each item export plan. One batch plan hash and approval; execute in inventory order, stop on first failure. Each selected item previews ExportTechnologyObject with its exact output file. Grouped exports require V19 or later. Default dryRun=true. Examples: GetToolUsage(toolName: \"ExportTechnologyObjectsToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. exportDir and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
