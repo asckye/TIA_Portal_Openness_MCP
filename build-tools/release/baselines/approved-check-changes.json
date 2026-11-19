@@ -5560,6 +5560,23 @@
           "identifier": "TiaMcp.Engine.Tests.TiaVersionCatalogTests/Run( Action \u003C bool , string \u003E check ):c0420868dc6be80417281b909bbde114ee1da415fd8f4431a98d134a53457388:1"
         }
       ]
+    },
+    {
+      "task": "UNIFY-1D2",
+      "maintainerDate": "2026-11-19",
+      "reason": "VersionCatalogWiring pins the common catalog of all eight releases instead of the retired 20/21 engine split (follows from the approved D2 scope, 2026-11-19)",
+      "items": [
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/VersionCatalogWiring.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.VersionCatalogWiring/PreciseKeysAndExistingEngines( ):3f6e05b8e8959ba8ce3ee3872327a6b4d35145cadc850623f79a256c52139e5a:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/VersionCatalogWiring.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.VersionCatalogWiring/PreciseKeysAndExistingEngines( ):92c9dc5e8fefca64807691888e4cf96c70c5cfe940908bf9aceb60b69cc0605d:1"
+        }
+      ]
     }
   ]
 }
