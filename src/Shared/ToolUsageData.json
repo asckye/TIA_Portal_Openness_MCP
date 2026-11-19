@@ -17019,7 +17019,8 @@
             "archiveName": "ExampleLibrary",
             "destinationDirectory": "C:\\Examples\\archives",
             "libraryName": "ExampleLibrary"
-          }
+          },
+          "note": "TIA writes the archive name without adding an extension."
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -25954,38 +25955,6 @@
                   },
                   "titleZhCn": "条件与分支",
                   "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
-                },
-                {
-                  "rung": {
-                    "series": [
-                      {
-                        "kind": "rising",
-                        "operand": {
-                          "global": [
-                            "DB_LadDemo",
-                            "Reset"
-                          ]
-                        },
-                        "memory": {
-                          "global": [
-                            "DB_LadDemo",
-                            "EdgeMem"
-                          ]
-                        }
-                      }
-                    ],
-                    "outputs": [
-                      {
-                        "kind": "reset",
-                        "operand": {
-                          "global": [
-                            "DB_LadDemo",
-                            "Active"
-                          ]
-                        }
-                      }
-                    ]
-                  }
                 }
               ]
             }
@@ -29464,7 +29433,7 @@
             },
             "meaning": "Merge into the reviewed preview for the same target. Execution requires confirm=true and the exact expectedProjectFile. Compile is EXECUTE: no WRITE approval or expectedPlanHash."
           },
-          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs.",
+          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs. TIA may compile a wider scope. Inspect compiledRoots on block and group results. Native counts cover the entire compile.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -29576,7 +29545,7 @@
             },
             "meaning": "Merge into the reviewed preview for the same target. Execution requires confirm=true and the exact expectedProjectFile. Compile is EXECUTE: no WRITE approval or expectedPlanHash."
           },
-          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs.",
+          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs. TIA may compile a wider scope. Inspect compiledRoots on block and group results. Native counts cover the entire compile.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -37221,7 +37190,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "Preview lists the planned XML files and manifest with their SHA-256 hashes. Supply manifest.json or XML directly under plc/types, plc/blocks, hmi/tags or hmi/screens. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "resultReading": [
             "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
             "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21).",
@@ -39414,7 +39383,8 @@
                 "archiveName": "ExampleLibrary",
                 "destinationDirectory": "C:\\Examples\\archives",
                 "libraryName": "ExampleLibrary"
-              }
+              },
+              "note": "TIA writes the archive name without adding an extension."
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -41432,7 +41402,7 @@
           },
           "parameters": {
             "ladFcBlock": {
-              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; timer pt uses Time (T#/TIME#), never LT#/LTIME#. Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; calls do not resolve block identity. Literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs. Put a contact that would start a fanned-out output branch in its own network."
+              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: NO/NC contacts, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; timer pt uses Time (T#/TIME#), never LT#/LTIME#. Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; calls do not resolve block identity. Literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs. Put a contact that would start a fanned-out output branch in its own network."
             },
             "outputReleaseKey": {
               "exampleValue": "21",
@@ -41584,38 +41554,6 @@
                       },
                       "titleZhCn": "条件与分支",
                       "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
-                    },
-                    {
-                      "rung": {
-                        "series": [
-                          {
-                            "kind": "rising",
-                            "operand": {
-                              "global": [
-                                "DB_LadDemo",
-                                "Reset"
-                              ]
-                            },
-                            "memory": {
-                              "global": [
-                                "DB_LadDemo",
-                                "EdgeMem"
-                              ]
-                            }
-                          }
-                        ],
-                        "outputs": [
-                          {
-                            "kind": "reset",
-                            "operand": {
-                              "global": [
-                                "DB_LadDemo",
-                                "Active"
-                              ]
-                            }
-                          }
-                        ]
-                      }
                     }
                   ]
                 }
@@ -50654,7 +50592,7 @@
             },
             "meaning": "Merge into the reviewed preview for the same target. Execution requires confirm=true and the exact expectedProjectFile. Compile is EXECUTE: no WRITE approval or expectedPlanHash."
           },
-          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs.",
+          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs. TIA may compile a wider scope. Inspect compiledRoots on block and group results. Native counts cover the entire compile.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -50766,7 +50704,7 @@
             },
             "meaning": "Merge into the reviewed preview for the same target. Execution requires confirm=true and the exact expectedProjectFile. Compile is EXECUTE: no WRITE approval or expectedPlanHash."
           },
-          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs.",
+          "note": "Default software scope preserves the original compiler and response. Scoped preview reports scope, scopePath, unitName, resolvedObject and compilable without compiling; compilable=false blocks apply. Missing exact objects refuse; there is no fallback to whole software. Preview state/errorCount/warningCount remain null. Execution keeps native counts and nested diagnostics; never add overlapping subtree totals. All project devices must be offline; selected PLC and all exposed OnlineProvider/RHOnlineProvider states are checked twice. Devices without exposed state are listed, not asserted Offline. Safety login/logoff and cleanup are unchanged. No download, connection-state change or automatic save. After OUTCOME_UNKNOWN inspect the target before retrying; GetSessionState lists unsettled request IDs. TIA may compile a wider scope. Inspect compiledRoots on block and group results. Native counts cover the entire compile.",
           "resultContract": {
             "type": "Envelope",
             "schemaVersion": 4,
@@ -57221,7 +57159,8 @@
                 "archiveName": "ExampleLibrary",
                 "destinationDirectory": "C:\\Examples\\archives",
                 "libraryName": "ExampleLibrary"
-              }
+              },
+              "note": "TIA writes the archive name without adding an extension."
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -65203,7 +65142,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "Preview lists the planned XML files and manifest with their SHA-256 hashes. Supply manifest.json or XML directly under plc/types, plc/blocks, hmi/tags or hmi/screens. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "resultReading": [
             "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
             "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21).",
@@ -66946,7 +66885,7 @@
           },
           "parameters": {
             "ladFcBlock": {
-              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: contacts, global edge memory, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; timer pt uses Time (T#/TIME#), never LT#/LTIME#. Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; calls do not resolve block identity. Literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs. Put a contact that would start a fanned-out output branch in its own network."
+              "meaning": "Typed LAD FC with exactly one call or rung per network. Rung {series,outputs,fanOut?}: NO/NC contacts, compares, OR, fan-out, coil/set/reset, MOVE and ENO then. Symbols {global:[components]} or declared {local:[components]}; operand adds literal, typed or constant. Maximum 256 parts per rung network. Duration constants use typed (T#1s or LT#1s), not literal; timer pt uses Time (T#/TIME#), never LT#/LTIME#. Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; calls do not resolve block identity. Literal values must be non-blank. Outputs also support timer/counter with global instance, user FC/FB call with named pins, q/qd branches, et/cv symbols and call then (ENO). See rung-boxes for the exact shape and required auxiliary inputs. Put a contact that would start a fanned-out output branch in its own network."
             },
             "outputReleaseKey": {
               "exampleValue": "21",
@@ -67097,38 +67036,6 @@
                       },
                       "titleZhCn": "条件与分支",
                       "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
-                    },
-                    {
-                      "rung": {
-                        "series": [
-                          {
-                            "kind": "rising",
-                            "operand": {
-                              "global": [
-                                "DB_LadDemo",
-                                "Reset"
-                              ]
-                            },
-                            "memory": {
-                              "global": [
-                                "DB_LadDemo",
-                                "EdgeMem"
-                              ]
-                            }
-                          }
-                        ],
-                        "outputs": [
-                          {
-                            "kind": "reset",
-                            "operand": {
-                              "global": [
-                                "DB_LadDemo",
-                                "Active"
-                              ]
-                            }
-                          }
-                        ]
-                      }
                     }
                   ]
                 }
@@ -76047,10 +75954,6 @@
                   "datatype": "IEC_COUNTER"
                 },
                 {
-                  "name": "EdgeMem",
-                  "datatype": "Bool"
-                },
-                {
                   "name": "Start",
                   "datatype": "Bool"
                 },
@@ -76256,38 +76159,6 @@
                   },
                   "titleZhCn": "条件与分支",
                   "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
-                },
-                {
-                  "rung": {
-                    "series": [
-                      {
-                        "kind": "rising",
-                        "operand": {
-                          "global": [
-                            "DB_LadDemo",
-                            "Reset"
-                          ]
-                        },
-                        "memory": {
-                          "global": [
-                            "DB_LadDemo",
-                            "EdgeMem"
-                          ]
-                        }
-                      }
-                    ],
-                    "outputs": [
-                      {
-                        "kind": "reset",
-                        "operand": {
-                          "global": [
-                            "DB_LadDemo",
-                            "Active"
-                          ]
-                        }
-                      }
-                    ]
-                  }
                 },
                 {
                   "rung": {
@@ -76597,7 +76468,7 @@
             "inputPath": "<data.outputFile from completed ExportPlcBlock>",
             "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html"
           },
-          "expect": "Render the export and compare each network, indexed path, edge memory and ENO connection against the generated candidate. Check timer Q/ET, counter reset/Q/CV, FB instance/named pins and call ENO; retain a provenance-tagged native export."
+          "expect": "Render the export and compare each network, indexed path and ENO connection against the generated candidate. Check timer Q/ET, counter reset/Q/CV, FB instance/named pins and call ENO; retain a provenance-tagged native export."
         },
         {
           "tool": "CleanupStagedImportFiles",
