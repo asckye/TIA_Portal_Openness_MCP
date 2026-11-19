@@ -4,13 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>TiaMcp.PluginLauncher</AssemblyName>
     <Nullable>annotations</Nullable>
+    <DefineConstants>$(DefineConstants);TIA_STANDALONE_VERSION_CATALOG</DefineConstants>
     <ImplicitUsings>enable</ImplicitUsings>
     <AppHostRelativeDotNet>../dotnet</AppHostRelativeDotNet>
     <AppHostDotNetSearch>AppRelative;EnvironmentVariable;Global</AppHostDotNetSearch>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="TiaMcp.ShippedTools.Tests" />
-    <ProjectReference Include="../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" Private="false" />
+    <Compile Include="../../Adapters.Contracts/OpennessApi.AssemblyIdentity.cs" Link="Versioning/OpennessApi.AssemblyIdentity.cs" />
     <Compile Include="../../Logic/Siemens/TiaVersionCatalog.cs" Link="Versioning/TiaVersionCatalog.cs" />
     <Compile Include="../../Shared/BundleLayout.cs;../../Shared/OpennessEnvironment.cs;../../Shared/ProcessArguments.cs" LinkBase="Shared" />
     <Compile Include="../../Studio/Core/Environment/WorkbenchReleaseSelection.cs;../../Studio/Core/Environment/OpennessLocator.cs" LinkBase="Environment" />

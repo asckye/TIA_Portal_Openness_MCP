@@ -4,10 +4,8 @@ using System.Globalization;
 namespace TiaMcp.Adapters.Contracts;
 
 /// <summary>Release boundaries of the SDK members used by hosts and adapters.</summary>
-public sealed class OpennessApi
+public sealed partial class OpennessApi
 {
-    // The verified V21 Base, Step7, Safety and Startdrive assemblies have a different identity from Siemens.Engineering.dll.
-    public const string SplitAssemblyRelease = "21";
     // V20 HW.Device.ShowInEditor(View) requires a view. V21 also exposes Device.ShowInEditor().
     public const string DeviceEditorRequiresViewRelease = "20";
 

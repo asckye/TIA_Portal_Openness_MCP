@@ -15,7 +15,7 @@ PlcWorker/Program.cs|if (options.ReleaseKey != "20" && options.ReleaseKey != "21
 Studio/Bridge/Program.cs|return key == "20" || key == "21";
 ToolPipeline/ReleaseCatalogData.cs|DeclaredPortReleases = TiaMcp.Adapters.Contracts.ReleaseRange.Since("20")
 # Exact SDK identities in the API table.
-Adapters.Contracts/OpennessApi.cs|public const string SplitAssemblyRelease = "21";
+Adapters.Contracts/OpennessApi.AssemblyIdentity.cs|public const string SplitAssemblyRelease = "21";
 Adapters.Contracts/OpennessApi.cs|public const string DeviceEditorRequiresViewRelease = "20";
 # Exact release identities, file extensions, catalog entries and SDK fixture directories.
 Adapters.Contracts/ReleaseRange.cs|"14sp1", "15.1", "16", "17", "18", "19", "20", "21"

@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsTestProject>true</IsTestProject>
     <Nullable>disable</Nullable>
+    <DefineConstants>$(DefineConstants);TIA_STANDALONE_VERSION_CATALOG</DefineConstants>
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
@@ -15,7 +16,7 @@
     <Compile Include="../../../src/Updater/Updater.Files.cs" Link="Updater/Updater.Files.cs" />
     <Compile Include="../../../src/Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
     <Compile Include="../../../src/Shared/ProductReleaseVersion.cs" Link="Shared/ProductReleaseVersion.cs" />
-    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" Private="false" />
+    <Compile Include="../../../src/Adapters.Contracts/OpennessApi.AssemblyIdentity.cs" Link="Shared/OpennessApi.AssemblyIdentity.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="Shared/TiaVersionCatalog.cs" />
     <Compile Include="../../../src/Updater/UpdaterText.cs" Link="Updater/UpdaterText.cs" />
     <EmbeddedResource Include="../../../src/Updater/UpdaterMessages.resx" Link="Updater/UpdaterMessages.resx">

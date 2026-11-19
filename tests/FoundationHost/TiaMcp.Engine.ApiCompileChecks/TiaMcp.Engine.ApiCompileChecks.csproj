@@ -31,7 +31,9 @@
     <Compile Include="../../../src/Adapters/Policy/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
     <Compile Include="../../../src/Shared/NativePathSelection.cs" Link="Shared/NativePathSelection.cs" />
     <Compile Include="../../../src/Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
-    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <Compile Include="../../../src/Adapters.Contracts/OpennessApi.AssemblyIdentity.cs" Link="Contracts/OpennessApi.AssemblyIdentity.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/OpennessApi.cs" Link="Contracts/OpennessApi.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/ReleaseRange.cs" Link="Contracts/ReleaseRange.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
     <Reference Include="$(CoreApiName)"><HintPath>$(SiemensEngineeringDirectory)/$(CoreApiName).dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Siemens.Engineering.Step7" Condition="'$(TiaReleaseKey)' == '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.Step7.dll</HintPath><Private>false</Private></Reference>
