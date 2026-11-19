@@ -5107,12 +5107,17 @@
       "path": "src/Shared/HardwareServicesTools.cs",
       "owner": "HardwareServicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult GetPlcPutGetAccess(\n            [Description(\"devicePath: device name from GetProjectTree, e.g. 'PLC_1'.\")] string devicePath)",
+      "signature": "public CallToolResult GetPlcPutGetAccess(\n            [Description(\"devicePath: device name from GetProjectTree, e.g. 'PLC_1'.\")] string devicePath,\n            [Description(\"Exact device-item path segments within the station. Omit to prefer the CPU owner.\")] string[]? itemPath = null)",
       "parameters": {
         "devicePath": {
           "type": "string[] | string",
           "default": null,
           "description": "Exact path segments [group, ..., station], including $ungrouped when present. Legacy string accepted with DEPRECATED_PARAMETER until 5.0."
+        },
+        "itemPath": {
+          "type": "string[]",
+          "default": null,
+          "description": "Exact device-item path segments within the station. Omit to prefer the CPU owner."
         }
       }
     },
@@ -5121,7 +5126,7 @@
       "path": "src/Shared/HardwareServicesTools.cs",
       "owner": "HardwareServicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult SetPlcPutGetAccess(\n            [Description(\"devicePath: device name from GetProjectTree, e.g. 'PLC_1'.\")] string devicePath,\n            [Description(\"enable: true to permit remote PUT/GET access, false to forbid it.\")] bool enable = true,\n            [Description(\"dryRun: true previews; false applies the approved attribute change.\")] bool dryRun = true)",
+      "signature": "public CallToolResult SetPlcPutGetAccess(\n            [Description(\"devicePath: device name from GetProjectTree, e.g. 'PLC_1'.\")] string devicePath,\n            [Description(\"enable: true to permit remote PUT/GET access, false to forbid it.\")] bool enable = true,\n            [Description(\"dryRun: true previews; false applies the approved attribute change.\")] bool dryRun = true,\n            [Description(\"Exact device-item path segments within the station. Omit to prefer the CPU owner.\")] string[]? itemPath = null)",
       "parameters": {
         "devicePath": {
           "type": "string[] | string",
@@ -5139,6 +5144,11 @@
           "default": "true",
           "description": "dryRun: true previews; false applies the approved attribute change.",
           "value": true
+        },
+        "itemPath": {
+          "type": "string[]",
+          "default": null,
+          "description": "Exact device-item path segments within the station. Omit to prefer the CPU owner."
         }
       }
     },
