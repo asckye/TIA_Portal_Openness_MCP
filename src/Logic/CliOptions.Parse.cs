@@ -21,15 +21,13 @@ namespace TiaMcpServer
                     case "--isolate-openness": case "--no-isolate-openness": case "--openness-worker-child":
                     case "--worker-parent-pid": case "--worker-parent-start": case "--worker-timeout-seconds":
                     case "--transport": case "--http-prefix": case "--http-api-key":
-                        throw new System.ArgumentException("Engine MCP host modes have retired. Start TiaMcp.FoundationHost.exe --release-key <20|21>.");
+                        throw new System.ArgumentException("Engine MCP host modes have retired. Start TiaMcp.FoundationHost.exe --release-key <key>.");
                     case "-tia-major-version":
                     case "--tia-major-version":
                     case "--tia-version":
                         if (++i >= args.Length)
                             throw new System.ArgumentException("A canonical TIA version key is required after " + args[i - 1] + ".");
                         var selectedVersion = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(args[i]);
-                        if (selectedVersion.EngineOutputDirectory == null) throw new System
-                            .ArgumentException("Use the matching PLC foundation host selected in the configurator for " + selectedVersion.DisplayName + ".");
                         if (options.TiaMajorVersion.HasValue && options.TiaMajorVersion.Value != selectedVersion.MajorVersion)
                             throw new System.ArgumentException("Conflicting TIA version options are not allowed.");
                         options.TiaMajorVersion = selectedVersion.MajorVersion;

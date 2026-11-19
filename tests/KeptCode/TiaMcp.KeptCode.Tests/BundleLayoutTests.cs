@@ -24,7 +24,11 @@ namespace TiaOpenness.Shared.Tests
         public static IEnumerable<object[]> Anchors()
         {
             foreach (string key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+            {
                 yield return new object[] { "runtime/v" + key };
+                foreach (string configuration in new[] { "Release", "Debug" })
+                    yield return new object[] { "src/PlcWorker/bin/" + key + "/" + configuration + "/net48" };
+            }
             yield return new object[] { "" };
             foreach (string configuration in new[] { "Release", "Debug" })
             {
@@ -49,7 +53,13 @@ namespace TiaOpenness.Shared.Tests
             Bundle(scratch);
             string output = Output(scratch, anchor);
             foreach (string suffix in new[] { "", Path.DirectorySeparatorChar.ToString(), "/" })
-                Assert.Equal(scratch, BundleLayout.ResolveRoot(output + suffix, null!, null!));
+            {
+                if (anchor.StartsWith("src/Engine/", StringComparison.Ordinal))
+                    Assert.Null(BundleLayout.ResolveRoot(output + suffix, null!, null!));
+                else
+                    Assert.Equal(scratch, BundleLayout.ResolveRoot(output + suffix, null!, null!));
+                Assert.Equal(scratch, BundleLayout.ResolveRoot(output + suffix, scratch, null!));
+            }
         }
 
         public static IEnumerable<object[]> Matrix()

@@ -304,11 +304,11 @@ public sealed class HostCatalogTests
     {
         var type = typeof(TiaMcp.Versioning.TiaVersionDescriptor);
         foreach (var property in new[] { "IsFullEngine", "SupportState", "WorkerKind" }) Assert.Null(type.GetProperty(property));
+        Assert.Null(type.GetProperty("EngineOutputDirectory"));
         foreach (var release in TiaMcp.Versioning.TiaVersionCatalog.All)
         {
             Assert.Equal("foundation", release.HostKind);
             Assert.Equal("v" + release.Key, release.RuntimeDirectory);
-            Assert.Equal(release.Key is "20" or "21", release.EngineOutputDirectory != null);
         }
     }
 

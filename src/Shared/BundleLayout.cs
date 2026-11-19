@@ -207,10 +207,6 @@ namespace TiaOpenness.Shared
                 {
                     var workerRoot = FromAnchor(directory, "src/PlcWorker/bin/" + version.Key + "/" + configuration + "/net48");
                     if (workerRoot != null) return workerRoot;
-                    if (version.EngineOutputDirectory == null) continue;
-                    var root = FromAnchor(directory, "src/Engine/"
-                        + version.EngineOutputDirectory + "/" + configuration + "/net48");
-                    if (root != null) return root;
                 }
                 var gui = "src/Studio/Gui/bin/" + configuration + "/net10.0-windows";
                 var guiRoot = FromAnchor(directory, gui);
@@ -265,9 +261,6 @@ namespace TiaOpenness.Shared
                 foreach (var sourceVersion in TiaVersionCatalog.Runnable)
                 {
                     if (SameRoot(FromAnchor(output, "src/PlcWorker/bin/" + sourceVersion.Key + "/" + configuration + "/net48"), root))
-                        return Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
-                    if (sourceVersion.EngineOutputDirectory == null) continue;
-                    if (SameRoot(FromAnchor(output, "src/Engine/" + sourceVersion.EngineOutputDirectory + "/" + configuration + "/net48"), root))
                         return Combine(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + name);
                 }
                 if (SameRoot(FromAnchor(output, "src/FoundationHost/bin/" + configuration + "/net10.0"), root))
@@ -391,9 +384,7 @@ namespace TiaOpenness.Shared
             foreach (var configuration in new[] { "Release", "Debug" })
                 if (SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), "src/FoundationHost/bin/" + configuration + "/net10.0"), root)
                     || TiaVersionCatalog.Runnable.Any(source => SameRoot(FromAnchor(new DirectoryInfo(baseDirectory),
-                        "src/PlcWorker/bin/" + source.Key + "/" + configuration + "/net48"), root))
-                    || TiaVersionCatalog.Runnable.Any(source => source.EngineOutputDirectory != null
-                        && SameRoot(FromAnchor(new DirectoryInfo(baseDirectory), "src/Engine/" + source.EngineOutputDirectory + "/" + configuration + "/net48"), root)))
+                        "src/PlcWorker/bin/" + source.Key + "/" + configuration + "/net48"), root)))
                     return Combine(root, "src/PlcWorker/bin/" + releaseKey + "/" + configuration + "/net48/" + GetProduct(releaseKey).WorkerExecutable);
             return WorkerPath(root, releaseKey);
         }

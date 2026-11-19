@@ -30,11 +30,20 @@ namespace TiaMcp.Engine.Tests
         public void Development_routing_keeps_the_formal_configuration(string configuration, string bin, string release)
         {
             Put(scratch, "manifest/package-manifest.json");
-            string directory = Directory.CreateDirectory(At(scratch, "src/Engine/" + bin + "/" + configuration + "/net48")).FullName;
-            string expected = At(scratch, "src/FoundationHost/bin/" + configuration + "/net10.0/TiaMcp.FoundationHost.exe");
-            Assert.Equal(expected, BundleLayout.EngineExecutablePath(scratch, release, directory));
-            string spelled = scratch + Path.DirectorySeparatorChar + "." + Path.DirectorySeparatorChar;
-            Assert.Equal(expected, Path.GetFullPath(BundleLayout.EngineExecutablePath(spelled, release, directory)));
+            string retired = Directory.CreateDirectory(At(scratch, "src/Engine/" + bin + "/" + configuration + "/net48")).FullName;
+            string workerOutput = Directory.CreateDirectory(At(scratch, "src/PlcWorker/bin/14sp1/" + configuration + "/net48")).FullName;
+            const string host = "TiaMcp.FoundationHost.exe";
+            string worker = "TiaMcp.PlcWorker." + release + ".exe";
+            string runtime = "runtime/v" + release + "/";
+            foreach (string root in new[] { scratch, scratch + Path.DirectorySeparatorChar + "." + Path.DirectorySeparatorChar })
+            {
+                Assert.Equal(At(root, runtime + host), BundleLayout.EngineExecutablePath(root, release, retired));
+                Assert.Equal(At(root, runtime + "worker/" + worker), BundleLayout.EngineWorkerPath(root, release, retired));
+                Assert.Equal(At(root, "src/FoundationHost/bin/" + configuration + "/net10.0/" + host),
+                    BundleLayout.EngineExecutablePath(root, release, workerOutput));
+                Assert.Equal(At(root, "src/PlcWorker/bin/" + release + "/" + configuration + "/net48/" + worker),
+                    BundleLayout.EngineWorkerPath(root, release, workerOutput));
+            }
         }
 
         public void Dispose() { if (Directory.Exists(scratch)) Directory.Delete(scratch, true); }

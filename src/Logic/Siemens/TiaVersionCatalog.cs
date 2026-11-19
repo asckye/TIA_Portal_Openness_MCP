@@ -19,7 +19,6 @@ namespace TiaMcp.Versioning
         public int MajorVersion { get; private set; }
         public bool IsRunnable { get; private set; }
         public string RuntimeDirectory { get; private set; }
-        public string EngineOutputDirectory { get; private set; }
         public string HostKind { get { return "foundation"; } }
         public string ApiVersion { get { return Key == "14sp1" ? "14.0.1.0" : Key == "15.1" ? "15.1.0.0" : Key + ".0.0.0"; } }
         public string ApiFolder { get { return Key == "14sp1" ? "V14 SP1" : "V" + Key; } }
@@ -35,22 +34,20 @@ namespace TiaMcp.Versioning
         }
 
         internal TiaVersionDescriptor(string key, string displayName, int majorVersion,
-            bool runnable, string runtimeDirectory, string engineOutputDirectory)
+            bool runnable, string runtimeDirectory)
         {
             Key = key;
             DisplayName = displayName;
             MajorVersion = majorVersion;
             IsRunnable = runnable;
             RuntimeDirectory = runtimeDirectory;
-            EngineOutputDirectory = engineOutputDirectory;
         }
     }
 
     /// <summary>
     /// Shared by the engines and configurator. Precise keys intentionally distinguish
     /// V14 SP1 and V15.1; original V14 and V15 are outside the target scope.
-    /// Legacy entries use the PLC foundation host and one exact-release worker.
-    /// EngineOutputDirectory records the retained compatibility build target, not native validation.
+    /// Each release uses the foundation host and its own exact-release worker.
     /// Keep this file compatible with the configurator's .NET Framework C# 5 compiler.
     /// </summary>
 #if TIA_ADAPTER_INTERNAL_VERSIONING
@@ -68,13 +65,13 @@ namespace TiaMcp.Versioning
                 Foundation("17", "V17", 17),
                 Foundation("18", "V18", 18),
                 Foundation("19", "V19", 19),
-                new TiaVersionDescriptor("20", "V20", 20, true, "v20", "bin-v20"),
-                new TiaVersionDescriptor("21", "V21", 21, true, "v21", "bin")
+                Foundation("20", "V20", 20),
+                Foundation("21", "V21", 21)
             });
 
         private static TiaVersionDescriptor Foundation(string key, string displayName, int major)
         {
-            return new TiaVersionDescriptor(key, displayName, major, true, "v" + key, null);
+            return new TiaVersionDescriptor(key, displayName, major, true, "v" + key);
         }
 
         public static IEnumerable<TiaVersionDescriptor> All { get { return Entries; } }

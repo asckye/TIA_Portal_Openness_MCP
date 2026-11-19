@@ -6,7 +6,11 @@ namespace TiaOpenness.Shared.Tests
         public static IEnumerable<object[]> Anchors()
         {
             foreach (string key in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+            {
                 yield return new object[] { "runtime/v" + key };
+                foreach (string configuration in new[] { "Release", "Debug" })
+                    yield return new object[] { "src/PlcWorker/bin/" + key + "/" + configuration + "/net48" };
+            }
             yield return new object[] { "" };
             foreach (string configuration in new[] { "Release", "Debug" })
             {

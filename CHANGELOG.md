@@ -6,6 +6,7 @@
 
 ### Changed
 
+- Development host and worker discovery now uses the FoundationHost and PlcWorker build directories. The version diagnostic recognizes all eight supported releases and gives the matching FoundationHost command when a sibling is missing.
 - On all eight releases, ported tools check capability before TIA readiness. Without a TIA installation, `GetSessionState` returns `PRECONDITION_FAILED` and leaves a cold worker stopped. `--public-api` selects worker assemblies, and readiness checks the TIA installation separately.
 - On V14 SP1 through V19, an explicit status read now leaves a cold bundled worker stopped if it cannot find the installation’s Openness API files. The doctor’s Openness check uses installation evidence on all eight releases.
 - `GetToolUsage` applies V4 field names to index and example-library requests on every release. Named full-engine examples outside the ported usage path now report `summary` for the reply’s message on V20 and V21, matching earlier releases. Caller argument names are preserved.

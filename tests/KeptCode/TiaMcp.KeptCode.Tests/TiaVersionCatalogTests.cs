@@ -210,10 +210,11 @@ namespace TiaMcp.Engine.Tests
             foreach (var key in keys.Take(6))
             {
                 var entry = TiaVersionCatalog.Get(key);
-                check(entry.IsRunnable && entry.HostKind == "foundation" && entry.RuntimeDirectory == "v" + key && entry.EngineOutputDirectory == null,
+                check(entry.IsRunnable && entry.HostKind == "foundation" && entry.RuntimeDirectory == "v" + key && entry.Key == key,
                     key + " uses an exact PLC foundation runtime");
                 check(TiaVersionCatalog.RequireRunnable(key).Key == key, key + " can select its independent runtime");
-                check(Rejects(() => CliOptions.ParseArgs(new[] { "--tia-version", key })), key + " CLI fails closed");
+                foreach (var flag in new[] { "--tia-version", "--tia-major-version", "-tia-major-version" })
+                    check(CliOptions.ParseArgs(new[] { flag, key }).TiaMajorVersion == entry.MajorVersion, flag + " preserves " + key);
             }
             foreach (var key in new[] { "", "0", "22", "15.0", "14.1", "V20", "020", " 20", "14SP1", "../20" })
                 check(Rejects(() => TiaVersionCatalog.Get(key)), "unknown or ambiguous key rejected: " + key);
@@ -222,7 +223,8 @@ namespace TiaMcp.Engine.Tests
             {
                 var entry = TiaVersionCatalog.RequireRunnable(major);
                 check(entry.MajorVersion == major && entry.RuntimeDirectory == "v" + major, "runtime path preserves V" + major);
-                check(entry.EngineOutputDirectory == (major == 20 ? "bin-v20" : "bin"), "source path preserves V" + major);
+                var product = TiaOpenness.Shared.BundleLayout.GetProduct(entry.Key);
+                check(product.RuntimeDirectory == "v" + major && product.Executable == "TiaMcp.FoundationHost.exe", "packaged host path preserves V" + major);
                 TiaVersionCatalog.RequireMatchingEngine(major, major);
                 foreach (var flag in new[] { "--tia-version", "--tia-major-version", "-tia-major-version" })
                     check(CliOptions.ParseArgs(new[] { flag, major.ToString() }).TiaMajorVersion == major, flag + " preserves V" + major);
@@ -243,13 +245,7 @@ namespace TiaMcp.Engine.Tests
             check(Capability.IsSupported(TiaFeature.HardwareHmiConnection, 21), "V21 hardware HMI gate unchanged");
             check(Capability.IsSupported(TiaFeature.DocumentExport, 20) && Capability.IsSupported(TiaFeature.DocumentExport, 21), "existing document export gates unchanged");
             check(!Capability.IsSupported((TiaFeature)999, 21), "unregistered feature fails closed");
-            foreach (int detected in new[] { 14, 15, 16, 17, 18, 19, 22 })
-            {
-                int lookups = 0;
-                var diagnostic = TiaMcpServer.Runtime.EnvironmentDoctor.EngineVersionMatch(21, detected, _ => { lookups++; return "fake.exe"; });
-                check(!diagnostic.Ok && diagnostic.Gating && lookups == 0, "doctor denies unsupported version without searching sibling: " + detected);
-                check(diagnostic.FixEn != null && !diagnostic.FixEn.Contains("runtime"), "doctor does not recommend nonexistent engine: " + detected);
-            }
+            CheckDoctorVersions(check, keys);
             check(TiaMcpServer.Runtime.EnvironmentDoctor.EngineVersionMatch(20, 20, _ => throw new Exception("must not look up matching engine")).Ok, "doctor accepts matching existing engine");
             check(!TiaMcpServer.Runtime.EnvironmentDoctor.EngineVersionMatch(21, 20, _ => null).Ok, "doctor reports missing V20 sibling");
             check(TiaMcpServer.Runtime.EnvironmentDoctor.EngineVersionMatch(21, 20, _ => "sibling.exe").Ok, "doctor preserves existing V20 sibling discovery");
@@ -267,6 +263,40 @@ namespace TiaMcp.Engine.Tests
             check(TiaMcpServer.Runtime.OpennessReadiness.Guidance(true).Contains(TiaMcpServer.Runtime.OpennessReadiness.FixZh!),
                 "Chinese readiness guidance uses the Chinese repair text");
             TiaMcpServer.Runtime.OpennessReadiness.MarkReady(true);
+        }
+
+        private static void CheckDoctorVersions(Action<bool, string> check, string[] keys)
+        {
+            foreach (var (key, detected) in keys.Zip(Enumerable.Range(14, keys.Length)))
+            {
+                var matching = TiaMcpServer.Runtime.EnvironmentDoctor.EngineVersionMatch(detected, detected,
+                    _ => throw new InvalidOperationException("matching release searched for a sibling"));
+                check(matching.Ok && matching.Gating && matching.FixEn == null && matching.FixZh == null, "doctor accepts matching release " + key);
+
+                int compiled = detected == 21 ? 20 : 21;
+                var lookups = new List<string>();
+                var missing = TiaMcpServer.Runtime.EnvironmentDoctor.EngineVersionMatch(compiled, detected,
+                    requested => { lookups.Add(requested); return null; });
+                check(!missing.Ok && missing.Gating && lookups.SequenceEqual(new[] { key }), "doctor checks the exact missing sibling " + key);
+                string command = $"TiaMcp.FoundationHost.exe doctor --release-key {key}";
+                check(missing.FixEn == $"Run `{command}` to inspect the TIA Openness installation and repair steps."
+                    && missing.FixZh == $"请运行 `{command}` 检查 TIA Openness 安装并查看修复步骤。", "doctor gives the exact release command " + key);
+
+                lookups.Clear();
+                var found = TiaMcpServer.Runtime.EnvironmentDoctor.EngineVersionMatch(compiled, detected,
+                    requested => { lookups.Add(requested); return "host.exe"; });
+                check(found.Ok && found.Gating && lookups.SequenceEqual(new[] { key }) && found.FixEn == null && found.FixZh == null,
+                    "doctor accepts the exact available sibling " + key);
+            }
+            foreach (var (compiled, detected) in new[] { (21, 22), (22, 21) })
+            {
+                int lookups = 0;
+                var diagnostic = TiaMcpServer.Runtime.EnvironmentDoctor.EngineVersionMatch(compiled, detected, _ => { lookups++; return "fake.exe"; });
+                check(!diagnostic.Ok && diagnostic.Gating && lookups == 0,
+                    $"doctor denies unsupported version without searching sibling: {compiled}/{detected}");
+                check(diagnostic.FixEn == "Select a supported release with TiaMcp.FoundationHost.exe doctor --release-key <key>."
+                    && diagnostic.FixZh == "请使用 TiaMcp.FoundationHost.exe doctor --release-key <发布键> 选择受支持的版本。", "doctor gives supported-release guidance");
+            }
         }
     }
 }

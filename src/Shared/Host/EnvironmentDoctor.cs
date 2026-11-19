@@ -188,18 +188,10 @@ namespace TiaMcpServer.Runtime
                 install.FixEn = install.FixEn!.Replace(SupportedVersions, supported);
                 install.FixZh = install.FixZh!.Replace(SupportedVersions, supported);
             }
-            var version = EngineVersionMatch(release.MajorVersion, detected, major =>
-                TiaMcp.Versioning.TiaVersionCatalog.All.Any(v => v.MajorVersion == major) ? "host" : null);
+            var version = EngineVersionMatch(release.MajorVersion, detected, _ => "host");
             string? detectedName = detected.HasValue ? detected.Value == release.MajorVersion ? release.DisplayName : "V" + detected.Value : null;
             version.DetailEn = "exe built for " + release.DisplayName + (detectedName != null ? ", machine has " + detectedName : ", machine version unknown");
             version.DetailZh = "该 exe 为 " + release.DisplayName + " 构建" + (detectedName != null ? "，本机装的是 " + detectedName : "，本机版本未知");
-            version.Ok = !detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.All.Any(v => v.MajorVersion == detected.Value);
-            if (version.Ok) { version.FixEn = null; version.FixZh = null; }
-            else
-            {
-                version.FixEn = "Select a supported release with TiaMcp.FoundationHost.exe doctor --release-key <key>.";
-                version.FixZh = "请使用 TiaMcp.FoundationHost.exe doctor --release-key <发布键> 选择受支持的版本。";
-            }
             var checks = new List<Check> { install, OpennessAssemblies(assemblies), version, DotNetFramework48(), FilesNotBlocked(binaryDirectories) };
             if (startup != null && (bool?)startup["ready"] != true)
                 checks.Add(new Check {
@@ -258,33 +250,47 @@ namespace TiaMcpServer.Runtime
             #if TIA_ENGINE_HOST || WORKER_SESSION_LIFECYCLE
             return EngineVersionMatch(compiled, detected, _ => null);
 #else
-            return EngineVersionMatch(compiled, detected, Siemens.EngineRouter.FindSiblingExe);
+            return EngineVersionMatch(compiled, detected, key =>
+            {
+                try
+                {
+                    using var process = System.Diagnostics.Process.GetCurrentProcess();
+                    var own = process.MainModule!.FileName;
+                    string path = TiaOpenness.Shared.BundleLayout.RequireEngine(key, Path.GetDirectoryName(own)!);
+                    return string.Equals(Path.GetFullPath(path), Path.GetFullPath(own), StringComparison.OrdinalIgnoreCase) ? null : path;
+                }
+                catch (IOException) /* swallow(env-probe): a missing bundle or executable leaves the sibling unavailable. */ { return null; }
+            });
 #endif
         }
 
-        internal static Check EngineVersionMatch(int compiled, int? detected, Func<int, string?> findSibling)
+        internal static Check EngineVersionMatch(int compiled, int? detected, Func<string, string?> findSibling)
         {
-            bool supported = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Where(v => v.EngineOutputDirectory != null).Any(v => v.MajorVersion == compiled)
-                && (!detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.Runnable.Where(v => v.EngineOutputDirectory != null)
-                        .Any(v => v.MajorVersion == detected.Value));
-            bool ok = supported && (detected == null || detected.Value == compiled
-                      || findSibling(detected.Value) != null);
-            string unsupported = "This full engine targets V20/V21. Select the matching PLC foundation host in the configurator for earlier releases.";
-            return new Check
+            var releases = TiaMcp.Versioning.TiaVersionCatalog.Runnable;
+            var target = releases.FirstOrDefault(v => v.MajorVersion == detected);
+            var check = new Check
             {
                 Id = "engine-version",
-                Ok = ok,
+                Ok = true,
                 NameEn = "Engine exe / TIA version",
                 NameZh = "引擎 exe 与 TIA 版本匹配",
                 DetailEn = $"exe built for V{compiled}" + (detected != null ? $", machine has V{detected}" : ", machine version unknown"),
                 DetailZh = $"该 exe 为 V{compiled} 构建" + (detected != null ? $"，本机装的是 V{detected}" : "，本机版本未知"),
-                FixEn = !supported ? unsupported
-                    : (ok || detected == null ? null
-                        : $"Use runtime\\v{detected}\\TiaMcp.Engine.V{detected}.exe from the delivery (both versions ship), or keep this one and pass --tia-major-version {compiled}."),
-                FixZh = !supported ? unsupported
-                    : (ok || detected == null ? null
-                        : $"改用交付包里的 runtime\\v{detected}\\TiaMcp.Engine.V{detected}.exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version {compiled}。"),
             };
+            if (!releases.Any(v => v.MajorVersion == compiled) || (detected.HasValue && target == null))
+            {
+                check.Ok = false;
+                check.FixEn = "Select a supported release with TiaMcp.FoundationHost.exe doctor --release-key <key>.";
+                check.FixZh = "请使用 TiaMcp.FoundationHost.exe doctor --release-key <发布键> 选择受支持的版本。";
+            }
+            else if (target != null && target.MajorVersion != compiled && findSibling(target.Key) == null)
+            {
+                check.Ok = false;
+                string command = $"TiaMcp.FoundationHost.exe doctor --release-key {target.Key}";
+                check.FixEn = DefaultFixEn.Replace("tia doctor", command);
+                check.FixZh = DefaultFixZh.Replace("tia doctor", command);
+            }
+            return check;
         }
 
         private static Check DotNetFramework48()

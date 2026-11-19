@@ -55,7 +55,7 @@ internal static class PassiveHostDiagnosticsTests
         foreach (var release in TiaVersionCatalog.All)
         foreach (var native in new[] { false, true })
         {
-            using var engineScope = release.EngineOutputDirectory != null ? EngineHostParity.EnterScope() : null;
+            using var engineScope = EngineHostParity.EnterScope();
             var worker = new ForbiddenWorker();
             var registry = LegacyHostToolRegistry.Create(worker, release.Key, native);
             check(registry.Where(t => TiaMcp.Adapters.Contracts.PortedFamilies.Contains(t.ProtocolTool.Name) && PortedToolContract.Families(release.Key).Any(f => f.Tools.Contains(t.ProtocolTool.Name))).Select(t => t.ProtocolTool.Name).Order().SequenceEqual(
@@ -100,7 +100,7 @@ internal static class PassiveHostDiagnosticsTests
         }
         foreach (var release in TiaVersionCatalog.All)
         {
-            using var engineScope = release.EngineOutputDirectory != null ? EngineHostParity.EnterScope() : null;
+            using var engineScope = EngineHostParity.EnterScope();
             var worker = new ForbiddenWorker();
             var actual = LegacyHostToolRegistry.Create(worker, release.Key, true);
             var large = actual.Concat(Enumerable.Range(0, 1024 - actual.Count)

@@ -90,8 +90,15 @@ namespace TiaMcp.Engine.Tests
             Put(scratch, "reference/siemens-openness/skills/blocks/SKILL.md", "Fixture guidance");
             Put(scratch, "reference/siemens-openness/UPSTREAM.json", "{\"commit\":\"fixture\"}");
             string output = Directory.CreateDirectory(At(scratch, anchor)).FullName;
-            Assert.Equal(scratch, EcosystemFiles.RepositoryRoot(output, null));
-            Assert.Equal(1, EcosystemFiles.Guidance(scratch, "", "", 0, 100)["total"]!.GetValue<int>());
+            if (anchor.StartsWith("src/Engine/", StringComparison.Ordinal))
+            {
+                var error = Assert.Throws<TiaOpenness.Shared.BundleResourceUnavailableException>(() => EcosystemFiles.RepositoryRoot(output, null));
+                Assert.Equal(At(output, "manifest/package-manifest.json"), error.Resource);
+            }
+            else Assert.Equal(scratch, EcosystemFiles.RepositoryRoot(output, null));
+            string root = EcosystemFiles.RepositoryRoot(output, scratch);
+            Assert.Equal(scratch, root);
+            Assert.Equal(1, EcosystemFiles.Guidance(root, "", "", 0, 100)["total"]!.GetValue<int>());
         }
 
         [Theory]
