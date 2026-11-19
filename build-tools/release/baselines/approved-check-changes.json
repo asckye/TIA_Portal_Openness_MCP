@@ -5577,6 +5577,93 @@
           "identifier": "TiaMcp.SourceContracts.Tests.VersionCatalogWiring/PreciseKeysAndExistingEngines( ):92c9dc5e8fefca64807691888e4cf96c70c5cfe940908bf9aceb60b69cc0605d:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-13",
+      "maintainerDate": "2026-11-19",
+      "reason": "VMFIX-13 approved flips (lead under maintainer standing approval, 2026-11-19): verified import uncompiled readback becomes completed with an incomplete-data warning (13a); the published rung example and expanded sequence drop the unverified PContact-\u003ERCoil network (13b)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LadCompositeRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LadCompositeRegressionTests/Maintained_operation_names_are_retrievable_and_return_executable_builder_arguments( string operation ):4272a497891c48100eccb0cee8003e8a7cc7198bfb199dca311294a0d263e011:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LadCompositeRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LadCompositeRegressionTests/Maintained_operation_names_are_retrievable_and_return_executable_builder_arguments( string operation ):b204413548fcafba1badff524977a0bee5e17ff0390924b8589b95178aa44ce7:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LadCompositeRegressionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LadCompositeRegressionTests/Maintained_operation_names_are_retrievable_and_return_executable_builder_arguments( string operation ):fa5c34e8658d4b93ebd4f5ced4415935d876e9308ffb6b1154faeac55744ac80:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LadRungBoxBuilderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LadRungBoxBuilderTests/MaintainedBoxExamplesAndSequenceUseTheTypedContract( string profile , ConstructionProfile contractProfile ):78de2e582c442f6ad7770d2987b8e462b46c562fd306d1fee4100dbeb5e07f18:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LadRungBoxBuilderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LadRungBoxBuilderTests/MaintainedBoxExamplesAndSequenceUseTheTypedContract( string profile , ConstructionProfile contractProfile ):a50bdcfd02c16ed2b48044371d9006944f6f5d051ae6684fd7ed71668d83703a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LadRungBoxBuilderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LadRungBoxBuilderTests/MaintainedBoxExamplesAndSequenceUseTheTypedContract( string profile , ConstructionProfile contractProfile ):ca71a1b1e4fc0050cc5e965afce41fe92100ef0680803ca37a7ca9c2c636c91a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LadRungBoxBuilderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LadRungBoxBuilderTests/MaintainedBoxExamplesAndSequenceUseTheTypedContract( string profile , ConstructionProfile contractProfile ):d795a5aa1f9f0e8ce12057e6132b79b98567345a272f501ade11d4955b55b064:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):2c5645b159a93b950e7402349f3fde5af5aebeebb52055c0eb9b5c9db28c579f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):39d42c99835ae9d5c713d8c4000780d52f7e52a2e8a46e88442ff0a95fa220f5:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):521ec8fdb0b50026e04af1713e857d1ae757ac43c9b936c7672e0656ba21f3e0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):656e99598234302aa166fcc15f4a605becacea4a0792bf3f856d76b4031e5b8d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):91fb53039f498416a6998c9f44ac59b6c879e77393fc5e395e28518c7ec40533:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):a4968a143d7536bb0d59e549ca90ae0c0a230e4986e1959bf8631c23c447ac9a:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):af26ae1ed7db19f3dd15e599991906df0eabcb033c1abd838492105907502ee7:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):bdd6ecfdd18705e51791e6d03a92bb2e875db24170adc271e7d33b230586a75f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/VerifiedImportOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "VerifiedImportOutcomeTests/Inconsistent_verified_block_is_a_precondition_only_before_override_import( bool inconsistentBefore ):d6a3547e383f18f245c1b490ac397b741fc64e9f7751b9f0cb6e720f9ca80211:1"
+        }
+      ]
     }
   ]
 }
