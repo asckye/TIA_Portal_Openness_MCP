@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-19T01:46:48.7407698+00:00",
+  "generatedAt": "2026-11-19T02:31:46.6681970+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "aa17c41af4b341f72d0a72cffc550c85a1ac8bf63d32a9899269c9c69d2ff5ce",
+  "workerSha256": "cbd0a2ac80ba856da3e77b60425c8026551f15d69235a2d457657c87e855934d",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -747,7 +747,7 @@
         "exportOptions"
       ],
       "description": "[L2][HMI-Classic][WRITE] Classic WinCC screen objects beyond plain screens: objectKind popup (ScreenPopup: read / export / delete, objectPath folder/.../name), template (ScreenTemplate: read / export / delete), slidein (ScreenSlidein addressed by SlideinType Top/Bottom/Left/Right: read / export; no native Delete), overview (ScreenOverview: read / export / import) and globalElements (ScreenGlobalElements: read / export / import). export defaults to WithDefaults and writes a NEW absolute XML file and hashes it; import (objectPath = target folder for popups / templates, importOptions None/Override) uses ScreenPopupComposition / ScreenTemplateComposition / ScreenSlideinComposition.Import or HmiTarget.ImportScreenOverview / ImportScreenGlobalElements and returns the imported names. Deletion and Override import need confirmDelete=true besides dryRun=false; every delete is verified by Find. No save/compile/download; Plain screen and tag-table deletion and single-tag XML exchange are outside the 4.0 tool surface; use ExportHmiScreen for classic screen content. Examples: GetToolUsage(toolName: \"ManageClassicHmiScreenObject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\",\"objectKind\":\"popup\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"objectPath\":\"Popup_1\"}"
+      "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\",\"objectKind\":\"popup\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"objectPath\":\"/Popup_1\"}"
     },
     {
       "name": "ManageClassicHmiGraphic",
@@ -2534,7 +2534,7 @@
         "includeBlockParameters"
       ],
       "description": "[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before SivarcDataProvider access; all block types are refused on V20 because definition access can crash TIA Portal V20; works on V21; blockPath Group/Subgroup/Name as GetSoftwareTree shows it, or the bare name for a root block) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListSivarcBlockDefinitions\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"\\u003Cexact FB or FC path from GetPlcBlockHierarchy\\u003E\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\"}"
     },
     {
       "name": "ListSafetyActivationTests",
@@ -2891,7 +2891,7 @@
         "texts"
       ],
       "description": "[L2][PLC-Software][WRITE] One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. All block-definition reads and writes are refused with UNSUPPORTED_CAPABILITY on V20 before native access because SivarcDataProvider definition access can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcBlockDefinition\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"\\u003Cexact FB or FC path from GetPlcBlockHierarchy\\u003E\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
     },
     {
       "name": "SetUnifiedHmiRuntimeState",
