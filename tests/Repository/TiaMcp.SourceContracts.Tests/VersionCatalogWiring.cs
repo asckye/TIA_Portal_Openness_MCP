@@ -96,9 +96,24 @@ public sealed partial class VersionCatalogWiring
         var source = Read(Path.Combine(LOGIC, "Siemens/TiaVersionCatalog.cs"));
         var keys = FindAll("(?:Foundation|new TiaVersionDescriptor)\\(\"([0-9.a-z]+)\",", source);
         Assert.Equal(new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, keys);
-        var runnable = FindAll("new TiaVersionDescriptor\\(\"([^\"]+)\", \"[^\"]+\", \\d+, true,", source);
-        Assert.Equal(new[] { "20", "21" }, runnable);
-        Assert.Contains("major, true, \"v\" + key, null", source, StringComparison.Ordinal);
+
+        static IEnumerable<string> Tokens(string code) => new CSharpLexer(code).Scan().Tokens.Select(token => token.Value);
+        var entries = EngineSources.BlockAfter(source, "ReadOnlyCollection<TiaVersionDescriptor> Entries =");
+        var rows = keys.Select((key, index) =>
+        {
+            var displayName = key == "14sp1" ? "V14 SP1" : "V" + key;
+            return $"Foundation(\"{key}\", \"{displayName}\", {14 + index})";
+        });
+        Assert.Equal(Tokens("{ " + string.Join(", ", rows) + " }"), Tokens(entries));
+
+        var factory = EngineSources.BlockAfter(source, "TiaVersionDescriptor Foundation(");
+        Assert.Equal(Tokens("{ return new TiaVersionDescriptor(key, displayName, major, true, \"v\" + key); }"), Tokens(factory));
+        var descriptor = EngineSources.BlockAfter(source, "internal TiaVersionDescriptor(");
+        Assert.Equal(Tokens("{ Key = key; DisplayName = displayName; MajorVersion = majorVersion; " +
+            "IsRunnable = runnable; RuntimeDirectory = runtimeDirectory; }"), Tokens(descriptor));
+        var runnable = EngineSources.BlockAfter(source, "IEnumerable<TiaVersionDescriptor> Runnable");
+        Assert.Equal(Tokens("{ get { return Entries.Where(v => v.IsRunnable).Reverse(); } }"), Tokens(runnable));
+        Assert.DoesNotContain("EngineOutputDirectory", source, StringComparison.Ordinal);
     }
 
     [Fact]
