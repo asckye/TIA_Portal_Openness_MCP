@@ -10,6 +10,8 @@
 
 ## 未发布改动的验收边界
 
+VMFIX-15（2026-11-19）：V16 的 `rc-full-v16/results-B.jsonl` 第 102 行与 `results-B2.jsonl` 第 143 行记录了空 PLC 报警文本列表或报警实例文本导出 XLSX 时 TIA 进程退出。V16 已撤下两个独立导出工具，并拒绝交换工具的导出动作。**NOT RUN**：修复后在同一会话重连、V16 无报警 PLC 的实例文本导入，以及 V17 及以上的真机导出复验。
+
 TIA-BATCH-5a：**NOT RUN**。V21 工程副本上按 unified-alarms-excel 与 unified-tags-excel 各走一遍 60 行（两个批次），含一个故意失败的行，核对失败项回滚、其后为 NOT_EXECUTED、Excel 文件可读。另逐行对照当前 PLC 导出核对变量绑定的数据类型与读写权限，确认不匹配或证据缺失的行在批次预览前报告并排除；核对多语言报警文本与变更后的读回结果。
 
 TIA-BATCH-4：**NOT RUN**。在 V15.1 与 V21 工程副本上：导出含结构、数组、默认与非默认起始值的全局 DB，转 xlsx，修改 5 个起始值（含 1 个原为默认值的 Int 成员），转回 XML，ImportPlcBlockVerified 预览并执行，读回并编译；确认 TIA 接受新增的非默认 StartValue，并核对各基础类型字面量的导出规范形式；表格拒绝常量引用、批量值、清空单元格和新默认值。

@@ -1,6 +1,8 @@
 extern alias foundationhost;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using TiaMcpServer.ModelContextProtocol;
 using TiaMcp.FoundationHost;
 using TiaMcp.PlcWorker;
 using TiaMcp.WorkerChannel;
@@ -17,6 +19,156 @@ public sealed class FoundationProcessLeaseTests
         JsonSerializer.Serialize(new { processId = pid }, new JsonSerializerOptions { WriteIndented = true }));
     private static ChannelFailureException Rejection(string message) => new(message, -32603, ChannelOutcome.RejectedBeforeNative,
         "{\"exceptionType\":\"InvalidOperationException\"}");
+
+    private sealed class FixtureNonRecoverableException : Exception { }
+    private sealed class CommunicationObjectFaultedException : Exception { }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Successful_disconnect_preserves_its_acknowledgement_when_loss_is_latched(bool earlierWriteUncertain)
+    {
+        var state = new WorkerSessionOutcomeState();
+        if (earlierWriteUncertain) state.MarkUncertain();
+        long revision = state.Revision;
+        bool detached = false;
+        int clears = 0, refreshes = 0;
+        var recovery = new WorkerSessionRecovery(state, () => detached, () => refreshes++, () => clears++, () => { }, () => { });
+        var acknowledgement = JsonSerializer.SerializeToNode(new TiaMcp.Adapters.PlcDisconnectResult())!.AsObject();
+        acknowledgement["Detached"] = true;
+        acknowledgement["ProcessId"] = Environment.ProcessId;
+        var request = Request("Disconnect");
+        var response = recovery.Dispatch(request, _ => {
+            recovery.ObserveFailure(new FixtureNonRecoverableException());
+            detached = true;
+            return ChannelResponse.Success(acknowledgement.ToJsonString());
+        });
+        Assert.Same(response, recovery.Synchronize(request, response));
+        Assert.Null(response.Failure);
+        Assert.Equal(earlierWriteUncertain, state.Uncertain);
+        Assert.Equal(revision, state.Revision);
+        Assert.Equal(1, clears);
+        Assert.Equal(0, refreshes);
+    }
+
+    [Fact]
+    public void Loss_during_a_write_overrides_a_refusal_and_preserves_its_evidence()
+    {
+        var state = new WorkerSessionOutcomeState();
+        var recovery = new WorkerSessionRecovery(state, () => false, () => { }, () => { }, () => { }, () => { });
+        var request = Request("SaveProject");
+        var result = recovery.Dispatch(request, _ => {
+            recovery.ObserveFailure(new System.Runtime.InteropServices.COMException("Wrapped channel failure", new CommunicationObjectFaultedException()));
+            recovery.ObserveFailure(new System.Runtime.InteropServices.COMException());
+            return ChannelResponse.Error(Rejection("Precondition reported by the facade."));
+        });
+        var failure = recovery.Synchronize(request, result).Failure!;
+        var evidence = JsonNode.Parse(failure.EvidenceJson!)!;
+        Assert.Equal(ChannelOutcome.Unknown, failure.Outcome);
+        Assert.True(state.Uncertain);
+        Assert.Equal("InvalidOperationException", (string?)evidence["exceptionType"]);
+        Assert.Equal(typeof(CommunicationObjectFaultedException).FullName, (string?)evidence["portalLost"]);
+    }
+
+    [Theory]
+    [InlineData("plc-alarms.ExecutePlcB5", false, true, ChannelOutcome.Unknown)]
+    [InlineData("plc-alarms.ExecutePlcB5", false, false, ChannelOutcome.Unknown)]
+    [InlineData("plc-alarms.ExecutePlcB5", true, false, ChannelOutcome.ReadFailed)]
+    [InlineData("ReadBlocks", false, true, ChannelOutcome.ReadFailed)]
+    public void Swallowed_native_loss_preserves_the_reply_and_classifies_the_call(string operation, bool dryRun, bool ok, ChannelOutcome expected)
+    {
+        var state = new WorkerSessionOutcomeState();
+        var recovery = new WorkerSessionRecovery(state, () => false, () => { }, () => { }, () => { }, () => { });
+        var previous = PortalFailureClassifier.ProcessLostObserved;
+        try
+        {
+            recovery.InstallProcessLossObserver();
+            var request = Request(operation, JsonSerializer.Serialize(new { dryRun }));
+            var response = recovery.Dispatch(request, _ => {
+                try { throw new FixtureNonRecoverableException(); }
+                catch (FixtureNonRecoverableException error)
+                {
+                    Assert.True(PortalFailureClassifier.IsPortalProcessLost(error));
+                    return ChannelResponse.Success(JsonSerializer.Serialize(new { Ok = ok, Message = "facade reply" }));
+                }
+            });
+            var failure = recovery.Synchronize(request, response).Failure!;
+            Assert.Equal(expected, failure.Outcome);
+            var evidence = JsonNode.Parse(failure.EvidenceJson!)!;
+            Assert.Equal(typeof(FixtureNonRecoverableException).FullName, (string?)evidence["portalLost"]);
+            Assert.Equal(ok, (bool?)evidence["Ok"]);
+            Assert.Equal("facade reply", (string?)evidence["Message"]);
+            Assert.Equal(expected == ChannelOutcome.Unknown, state.Uncertain);
+            var next = Request("ReadState");
+            Assert.Null(recovery.Synchronize(next, recovery.Dispatch(next, _ => ChannelResponse.Success("{}"))).Failure);
+        }
+        finally { PortalFailureClassifier.ProcessLostObserved = previous; }
+    }
+
+    [Theory]
+    [InlineData("ReadState", true)]
+    [InlineData("HostObserve", true)]
+    [InlineData("ReadBlocks", false)]
+    public void Managed_observations_keep_their_reply_when_a_channel_loss_is_observed(string operation, bool unaffected)
+    {
+        var state = new WorkerSessionOutcomeState();
+        var recovery = new WorkerSessionRecovery(state, () => false, () => { }, () => { }, () => { }, () => { });
+        var request = Request(operation);
+        var response = recovery.Dispatch(request, _ => {
+            recovery.ObserveFailure(new CommunicationObjectFaultedException());
+            return ChannelResponse.Success("[42]");
+        });
+        var result = recovery.Synchronize(request, response);
+        if (unaffected) { Assert.Null(result.Failure); Assert.Equal("[42]", result.ResultJson); }
+        else
+        {
+            Assert.Equal(ChannelOutcome.ReadFailed, result.Failure!.Outcome);
+            var evidence = JsonNode.Parse(result.Failure.EvidenceJson!)!;
+            Assert.Equal(typeof(CommunicationObjectFaultedException).FullName, (string?)evidence["portalLost"]);
+            Assert.Equal(42, (int?)evidence["result"]?[0]);
+        }
+        Assert.False(state.Uncertain);
+    }
+
+    [Theory]
+    [InlineData("SaveProject", true, true, false, 2, true)]
+    [InlineData("SaveProject", false, true, false, 2, true)]
+    [InlineData("SaveProject", true, true, true, 2, false)]
+    [InlineData("SaveProject", true, false, false, 1, false)]
+    [InlineData("SaveProject", true, true, null, 2, false)]
+    [InlineData("ReadPortalProcessProjects", true, false, false, 0, false)]
+    [InlineData("ReadPortalProcessProjects", true, true, false, 0, false)]
+    public void Only_an_observed_exit_of_the_leased_process_confirms_loss(string operation, bool comFailure, bool aliveBefore, bool? aliveAfter,
+        int expectedProbes, bool lost)
+    {
+        using var session = new Session();
+        var state = new WorkerSessionOutcomeState();
+        var recovery = new WorkerSessionRecovery(state, () => false, () => { }, () => { }, () => { }, () => { });
+        int probes = 0;
+        using var lease = new FoundationProcessLease(() => session.Root, request => recovery.Dispatch(request, _ => {
+            if (comFailure) recovery.ObserveFailure(new System.Runtime.InteropServices.COMException());
+            return ChannelResponse.Success("{\"Ok\":true}");
+        }), () => true, () => false, () => state.Uncertain, recovery.DisposeSession, recovery.Synchronize,
+            processExited: recovery.ObserveProcessExit, processAlive: (pid, ticks) => {
+                Assert.Equal(session.Pid, pid);
+                Assert.Equal(session.Ticks, ticks);
+                return ++probes == 1 ? aliveBefore : aliveAfter;
+            });
+        lease.ReserveCreatedProcess(session.Pid);
+        var result = lease.Dispatch(Request(operation));
+        Assert.Equal(expectedProbes, probes);
+        Assert.Equal(lost, state.Uncertain);
+        if (lost)
+        {
+            Assert.Equal(ChannelOutcome.Unknown, result.Failure!.Outcome);
+            var evidence = JsonNode.Parse(result.Failure.EvidenceJson!)!;
+            Assert.Equal("tia-process-exited", (string?)evidence["portalLost"]);
+            Assert.True((bool?)evidence["Ok"]);
+        }
+        else { Assert.Null(result.Failure); Assert.Equal("{\"Ok\":true}", result.ResultJson); }
+        lease.Dispose();
+        Assert.Equal(lost ? "UNCERTAIN 1\n" : "RELEASED\n", File.ReadAllText(session.FilePath));
+    }
 
     [Fact]
     public void Previous_owner_import_preserves_local_identity_and_skips_settled_requests()

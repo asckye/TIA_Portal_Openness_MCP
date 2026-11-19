@@ -8,7 +8,7 @@ public sealed class PlcB5PortTests
     [Theory]
     [InlineData("14sp1", 1, 0, 0)]
     [InlineData("15.1", 1, 0, 6)]
-    [InlineData("16", 1, 5, 6)]
+    [InlineData("16", 1, 3, 6)]
     [InlineData("17", 1, 10, 6)]
     [InlineData("18", 1, 11, 6)]
     [InlineData("19", 1, 11, 6)]
@@ -24,6 +24,22 @@ public sealed class PlcB5PortTests
         }
     }
     [Theory]
+    [InlineData("16", false)]
+    [InlineData("17", true)]
+    [InlineData("21", true)]
+    public void AlarmXlsxExportsStartAtV17(string release, bool available)
+    {
+        Assert.Equal(available, PortedFamilies.Available(release, "ExportAlarmTextLists"));
+        Assert.Equal(available, PortedFamilies.Available(release, "ExportAlarmInstanceTexts"));
+        Assert.True(PortedFamilies.Available(release, "ImportPlcAlarmInstanceTexts"));
+    }
+    [Theory]
+    [InlineData("16", "ExchangePlcAlarmTextLists", "export", "", "", "", true)]
+    [InlineData("16", "ExchangePlcAlarmTextLists", "import", "", "", "", false)]
+    [InlineData("17", "ExchangePlcAlarmTextLists", "export", "", "", "", false)]
+    [InlineData("17", "ExchangePlcAlarmTextLists", "import", "", "", "", false)]
+    [InlineData("21", "ExchangePlcAlarmTextLists", "export", "", "", "", false)]
+    [InlineData("21", "ExchangePlcAlarmTextLists", "import", "", "", "", false)]
     [InlineData("15.1", "ManageOpcUaInterface", "read", "SimaticInterface", "", "", true)]
     [InlineData("16", "ManageOpcUaInterface", "read", "SimaticInterface", "", "", false)]
     [InlineData("15.1", "GenerateOpcUaModelledInterface", "", "", "Unit", "unit", true)]

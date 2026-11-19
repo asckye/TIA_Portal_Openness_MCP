@@ -37,16 +37,17 @@ public sealed class NoLockRecoveryTests
             "bin-build", "recovery-" + Guid.NewGuid().ToString("N"));
         internal WorkerClient Worker { get; }
         private readonly string release;
-        internal string ProjectFile => "C:/fixture.ap" + release;
+        internal string ProjectFile { get; }
         internal string FactsPath => Path.Combine(root, "processes.json");
         internal string Gate => root;
         internal string TracePath => Path.Combine(root, "trace.jsonl");
         internal string SecondaryStatePath => Path.Combine(root, "secondary.json");
         internal Process Child => (Process)typeof(WorkerClient).GetField("process", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Worker)!;
         internal JsonObject[] Trace => File.ReadAllLines(TracePath).Select(line => JsonNode.Parse(line)!.AsObject()).ToArray();
-        internal Scope(string mode = "crash", bool shared = true, string? timeoutConfig = null, string release = "19")
+        internal Scope(string mode = "crash", bool shared = true, string? timeoutConfig = null, string release = "19", string? projectFile = null)
         {
             this.release = release;
+            ProjectFile = projectFile ?? "C:/fixture.ap" + release;
             Directory.CreateDirectory(root);
             Facts(ProjectFile);
             string fixture = TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
@@ -61,10 +62,10 @@ public sealed class NoLockRecoveryTests
         }
         private void Set(string name, string value)
         { environment[name] = Environment.GetEnvironmentVariable(name); Environment.SetEnvironmentVariable(name, value); }
-        internal void Facts(string? project)
+        internal void Facts(string? project, int? processId = null)
         {
-            using var process = Process.GetCurrentProcess();
-            File.WriteAllText(FactsPath, project == null ? "[]" : new JsonArray(new JsonObject { ["ProcessId"] = Environment.ProcessId,
+            using var process = Process.GetProcessById(processId ?? Environment.ProcessId);
+            File.WriteAllText(FactsPath, project == null ? "[]" : new JsonArray(new JsonObject { ["ProcessId"] = process.Id,
                 ["ProcessStartUtc"] = process.StartTime.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture),
                 ["ProjectPath"] = project, ["AttachedSessions"] = 0 }).ToJsonString());
         }
@@ -319,14 +320,16 @@ public sealed class NoLockRecoveryTests
     [Theory, MemberData(nameof(ReleasesAndFlags))]
     public async Task Automatic_recovery_never_disposes_a_worker_started_portal(string release, bool attached)
     {
-        using var scope = new Scope("tia-lost", release: release);
+        const string reason = "System.Runtime.InteropServices.COMException";
+        using var scope = new Scope("portal-read-failed:" + reason, release: release);
         using var production = new ProductionWorkerBudgets(scope.Worker);
         if (attached) await scope.Bind();
         await scope.Worker.Call("FixtureOwnsPortal", new(), CancellationToken.None);
         await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         using var request = FoundationWorkerRequest.Use("lost", "ListPlcBlocks");
         await scope.Arm("ReadBlocks");
-        await Assert.ThrowsAsync<WorkerOperationException>(() => scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
+        var failed = await Assert.ThrowsAsync<WorkerOperationException>(() => scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
+        Assert.Equal(reason, (string?)JsonNode.Parse(failed.EvidenceJson!)?["portalLost"]);
         int pid = scope.Child.Id;
         var refusal = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
         Assert.Equal("worker-owns-portal", refusal.Condition);
@@ -335,6 +338,33 @@ public sealed class NoLockRecoveryTests
         Assert.False((bool?)refusal.Data["foundationRequestSent"]);
         Assert.Equal(pid, scope.Child.Id);
         Assert.False(scope.Child.HasExited);
+        Assert.DoesNotContain(scope.Trace, IsProcessRead);
+    }
+
+    [Theory]
+    [InlineData("FixtureNonRecoverableException")]
+    [InlineData("System.ServiceModel.CommunicationObjectFaultedException")]
+    [InlineData("tia-process-exited")]
+    public async Task Confirmed_loss_of_an_owned_portal_allows_a_new_isolated_connection(string reason)
+    {
+        using var scope = new Scope("portal-read-failed:" + reason);
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        const string connect = "project-lifecycle.ConnectIsolatedPortal";
+        await scope.Worker.Call(connect, new(), CancellationToken.None);
+        int firstWorker = scope.Child.Id;
+        using var request = FoundationWorkerRequest.Use("owned-portal-loss", "ListPlcBlocks");
+        await scope.Arm("ReadBlocks");
+        var failed = await Assert.ThrowsAsync<WorkerOperationException>(() => scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
+        Assert.Equal(reason, (string?)JsonNode.Parse(failed.EvidenceJson!)?["portalLost"]);
+        Assert.True(scope.Worker.RecoveryNeeded);
+        Assert.False(scope.Child.HasExited);
+        using var selection = FoundationWorkerRequest.Use("new-isolated-portal", "ConnectIsolatedPortal");
+        var result = await scope.Worker.Call(connect, new(), CancellationToken.None);
+        Assert.True((bool?)result?["Meta"]?["operationSuccess"]);
+        Assert.Equal(2, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+        Assert.False(scope.Worker.RecoveryNeeded);
+        var connections = scope.Trace.Where(row => (string?)row["method"] == "adapter." + connect);
+        Assert.Equal(new[] { firstWorker, scope.Child.Id }, connections.Select(row => (int)row["pid"]!));
         Assert.DoesNotContain(scope.Trace, IsProcessRead);
     }
 
@@ -349,13 +379,183 @@ public sealed class NoLockRecoveryTests
         var error = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
         Assert.Equal(missingProject ? "project-not-open" : "tia-process-gone", error.Condition);
         Assert.Equal(missingProject
-            ? $"Could not rebind TIA PID {Environment.ProcessId}, project {scope.ProjectFile}. The next call will try again."
-            : $"TIA PID {Environment.ProcessId}, project {scope.ProjectFile}, is gone. The next call will try again.", error.Message);
+            ? $"Could not rebind TIA PID {Environment.ProcessId}. The next binding call will try again. Project: {scope.ProjectFile}"
+            : $"TIA PID {Environment.ProcessId} is gone. The next binding call will try again. Project: {scope.ProjectFile}", error.Message);
         Assert.False((bool?)error.Data["foundationRequestSent"]);
         Assert.DoesNotContain(scope.Trace, row => (string?)row["method"] == "adapter.ReadBlocks");
+        var generation = (long?)scope.Worker.OperatorSnapshot()["generation"];
         scope.Facts(scope.ProjectFile);
         var blocks = await scope.Worker.Call("ReadBlocks", new(), CancellationToken.None);
         Assert.Equal("fixture", (string?)blocks?[0]?["Name"]);
+        if (!missingProject) Assert.Equal(generation, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+    }
+
+    [Theory]
+    [InlineData("isolated")]
+    [InlineData("connect")]
+    [InlineData("createProject")]
+    [InlineData("disconnect-attach")]
+    public async Task A_missing_target_allows_process_listing_and_explicit_session_selection(string selection)
+    {
+        using var scope = new Scope(projectFile: @"C:\生产 工程\Fixture Project.ap19");
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        await scope.Bind();
+        scope.StopOwnedChild();
+        scope.Facts(null);
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            var error = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
+            Assert.Equal("tia-process-gone", error.Condition);
+            var body = FoundationV4Result.Failure("19", "ListPlcBlocks", "gone", false, false, null, error).StructuredContent!;
+            Assert.Equal($"TIA PID {Environment.ProcessId} is gone. The next binding call will try again. Project: <path>",
+                (string?)body["error"]?["message"]);
+            Assert.Equal(2, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+        }
+        int probes = scope.Trace.Count(IsProcessRead);
+        using (var lane = await scope.Worker.AcquireLane(CancellationToken.None))
+        {
+            WorkerClient.ActivateLane(lane);
+            var query = await scope.Worker.Call("ReadPortalProcessProjects", new(), CancellationToken.None);
+            Assert.Empty(query!["Processes"]!.AsArray());
+            Assert.True(scope.Worker.RecoveryNeeded);
+            Assert.Equal(2, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+            if (selection == "disconnect-attach")
+            {
+                await scope.Worker.Call("Disconnect", new(), CancellationToken.None);
+                Assert.False(scope.Worker.RecoveryNeeded);
+                await scope.Worker.Call("Attach", new() { ["processId"] = Environment.ProcessId }, CancellationToken.None);
+            }
+            else if (selection == "isolated")
+                await scope.Worker.Call("project-lifecycle.ConnectIsolatedPortal", new(), CancellationToken.None);
+            else
+                await scope.Worker.Call("project-lifecycle.ExecuteProjectScaffoldPrimitive",
+                    new() { ["request"] = new JsonObject { ["Kind"] = selection,
+                        ["Text"] = selection == "connect" ? new JsonArray() : new JsonArray("C:/fixture", "NewProject") } }, CancellationToken.None);
+        }
+        Assert.False(scope.Worker.RecoveryNeeded);
+        Assert.Equal(probes, scope.Trace.Count(IsProcessRead));
+    }
+
+    [Theory]
+    [InlineData("ReadBlocks", "ListPlcBlocks", false, "NATIVE_OPERATION_FAILED")]
+    [InlineData("SaveProject", "SaveProject", true, "OUTCOME_UNKNOWN")]
+    [InlineData("plc-alarms.ExecutePlcB5", "ImportPlcAlarmInstanceTexts", true, "OUTCOME_UNKNOWN")]
+    public async Task Swallowed_loss_is_reported_by_the_host_on_the_originating_call(string operation, string tool, bool mutation, string code)
+    {
+        using var scope = new Scope("swallowed-portal-loss");
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        await scope.Bind();
+        using var request = FoundationWorkerRequest.Use("loss", tool);
+        await scope.Arm(operation);
+        var args = operation == "plc-alarms.ExecutePlcB5"
+            ? new JsonObject { ["request"] = new JsonObject { ["Operation"] = tool, ["DryRun"] = false }, ["dryRun"] = false }
+            : new JsonObject();
+        var failure = await Assert.ThrowsAsync<WorkerOperationException>(() => scope.Worker.Call(operation, args, CancellationToken.None));
+        Assert.True(scope.Worker.RecoveryNeeded);
+        var result = FoundationV4Result.Failure("19", tool, "loss", true, mutation, null, failure);
+        var error = result.StructuredContent!["error"]!;
+        Assert.Equal(code, (string?)error["code"]);
+        Assert.True((bool?)result.StructuredContent["data"]?["evidence"]?["Ok"]);
+        Assert.Contains("TIA process exited during this call. The session is lost.", (string?)error["message"]);
+        Assert.Contains("ConnectIsolatedPortal", (string?)error["message"]);
+        Assert.Contains("DisconnectPortal then ConnectPortal", (string?)error["message"]);
+        Assert.Equal("FixtureNonRecoverableException", (string?)error["details"]?["evidence"]?["portalLost"]);
+        if (code == "OUTCOME_UNKNOWN") Assert.Equal("tia-process-exited", (string?)error["details"]?["reason"]);
+    }
+
+    [Fact]
+    public async Task Alarm_export_reports_the_lost_portal_through_the_registered_tool()
+    {
+        const string name = "ExportAlarmInstanceTexts";
+        using var scope = new Scope("swallowed-portal-loss");
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        await scope.Bind();
+        var services = FoundationHostPorts.CreateServices(scope.Worker, "19", () => new() { ["ready"] = true }, AppContext.BaseDirectory);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("19", services, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        using var invocation = FoundationWorkerRequest.Use("export-loss", name);
+        await scope.Arm("plc-alarms.ExecutePlcB5");
+        var tool = PortedToolContract.Create(scope.Worker, "19").Single(candidate => candidate.ProtocolTool.Name == name);
+        var arguments = new Dictionary<string, JsonElement> {
+            ["softwarePath"] = JsonSerializer.SerializeToElement("PLC_1"),
+            ["exportPath"] = JsonSerializer.SerializeToElement(Path.Combine(scope.Gate, "alarms.xlsx"))
+        };
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
+            Params = new() { Name = name, Arguments = arguments }
+        };
+        var result = await tool.InvokeAsync(request);
+        var error = result.StructuredContent!["error"]!;
+        Assert.False((bool?)result.StructuredContent["ok"]);
+        Assert.Equal("read-failed", (string?)result.StructuredContent["meta"]?["outcome"]);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)error["code"]);
+        Assert.Equal("FixtureNonRecoverableException", (string?)error["details"]?["evidence"]?["portalLost"]);
+        Assert.Contains("ConnectIsolatedPortal", (string?)error["message"]);
+        Assert.Contains("DisconnectPortal then ConnectPortal", (string?)error["message"]);
+        Assert.True(scope.Worker.RecoveryNeeded);
+    }
+
+    [Fact]
+    public async Task File_only_block_inspection_keeps_the_missing_rebind_target()
+    {
+        using var scope = new Scope();
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        await scope.Bind();
+        scope.StopOwnedChild();
+        scope.Facts(null);
+        const string name = "GetPlcBlockEditCapabilities";
+        var tool = PortedToolContract.Create(scope.Worker, "19").Single(candidate => candidate.ProtocolTool.Name == name);
+        var path = Path.Combine(TestPaths.RepositoryRoot(AppContext.BaseDirectory), "templates", "plc", "block-xml", "DB_HMI_Interface.xml");
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
+            Params = new() { Name = name, Arguments = new Dictionary<string, JsonElement> { ["filePath"] = JsonSerializer.SerializeToElement(path) } }
+        };
+        var services = FoundationHostPorts.CreateServices(scope.Worker, "19", () => new() { ["ready"] = true }, AppContext.BaseDirectory);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("19", services, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var result = await tool.InvokeAsync(request);
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
+        Assert.True(scope.Worker.RecoveryNeeded);
+        Assert.DoesNotContain(scope.Trace, IsProcessRead);
+        Assert.DoesNotContain(scope.Trace, row => (string?)row["method"] == "adapter.plc-analysis.ExportBlockDocument");
+    }
+
+    [Fact]
+    public async Task Reopened_project_in_a_new_process_rebinds_on_the_same_worker_generation()
+    {
+        using var scope = new Scope();
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        await scope.Bind();
+        scope.StopOwnedChild();
+        scope.Facts(null);
+        var refused = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
+        Assert.Equal("tia-process-gone", refused.Condition);
+        int newPid = scope.Child.Id;
+        scope.Facts(scope.ProjectFile, newPid);
+        var blocks = await scope.Worker.Call("ReadBlocks", new(), CancellationToken.None);
+        Assert.Equal("fixture", (string?)blocks?[0]?["Name"]);
+        var attach = scope.Trace.Last(row => (string?)row["method"] == "adapter.Attach");
+        Assert.Equal(newPid, (int?)attach["arguments"]?["processId"]);
+        Assert.Equal(newPid, scope.Child.Id);
+        Assert.Equal(2, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+        Assert.False(scope.Worker.RecoveryNeeded);
+    }
+
+    [Fact]
+    public async Task Disconnect_then_connect_replaces_an_exited_binding()
+    {
+        using var scope = new Scope();
+        using var production = new ProductionWorkerBudgets(scope.Worker);
+        await scope.Worker.Call("ReadPortalProcessProjects", new(), CancellationToken.None);
+        int leasedPid = scope.Child.Id;
+        await scope.Worker.Call("Attach", new() { ["processId"] = leasedPid }, CancellationToken.None);
+        scope.StopOwnedChild();
+        var selection = new JsonObject { ["processId"] = Environment.ProcessId };
+        var refused = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("Attach", selection, CancellationToken.None));
+        Assert.Equal("session-lost", refused.Condition);
+        Assert.Contains("DisconnectPortal first", refused.Message);
+        await scope.Worker.Call("Disconnect", new(), CancellationToken.None);
+        await scope.Worker.Call("Attach", selection, CancellationToken.None);
+        Assert.Equal(Environment.ProcessId, (int?)scope.Trace.Last(row => (string?)row["method"] == "adapter.Attach")["arguments"]?["processId"]);
+        Assert.False(scope.Worker.RecoveryNeeded);
     }
 
     [Theory, MemberData(nameof(Releases))]
@@ -694,9 +894,9 @@ public sealed class NoLockRecoveryTests
         scope.StopOwnedChild();
         var error = await Assert.ThrowsAsync<AdapterPreconditionException>(() => scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
         Assert.Equal("tia-process-gone", error.Condition);
-        Assert.Equal($"TIA PID {Environment.ProcessId}, project {scope.ProjectFile}, was started by the worker that exited. "
-            + "Its lifetime is no longer owned by this session. Select a TIA instance deliberately with ConnectPortal or ConnectIsolatedPortal.", error
-                .Message);
+        Assert.Equal($"TIA PID {Environment.ProcessId} was started by the worker that exited. "
+            + "Its lifetime is no longer owned by this session. Select a TIA instance deliberately with ConnectPortal or ConnectIsolatedPortal. "
+            + $"Project: {scope.ProjectFile}", error.Message);
         Assert.False((bool?)error.Data["foundationRequestSent"]);
         Assert.DoesNotContain(scope.Trace, row => (int?)row["pid"] != oldWorker && (string?)row["method"] == "adapter.Attach");
         await scope.Worker.Call("ReadBlocks", new(), CancellationToken.None);

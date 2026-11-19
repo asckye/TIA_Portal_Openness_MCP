@@ -9,6 +9,12 @@ Stored PLC test libraries add no Openness member: library runs reuse the existin
 `RunPlcTestLibrary` calls those same executors sequentially after one batch approval; its PLCSIM scenarios use the existing simulation service.
 It adds no Openness call, and real execution remains NOT RUN.
 
+## V16 PLC alarm text workbooks
+
+On a PLC without text lists or alarms, V16 can terminate TIA during XLSX export. V16 has no API to enumerate these objects before export. V17 adds `TextListNotFoundException`.
+`ExportAlarmTextLists` and `ExportAlarmInstanceTexts` start at V17. On V16, `ExchangePlcAlarmTextLists` accepts import and refuses export during capability admission.
+`ImportPlcAlarmInstanceTexts` remains available on V16. It omits both export snapshots, so a native import failure leaves the write outcome unknown.
+
 ## API-P1b offline table configuration (beta.6)
 
 V15.1–V21 expose `PlcWatchTableComposition.Create(string)` through `ManagePlcTableEntries action=createTable`,

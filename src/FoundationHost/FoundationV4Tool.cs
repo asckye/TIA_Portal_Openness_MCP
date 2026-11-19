@@ -366,13 +366,14 @@ internal sealed class FoundationV4Tool : McpServerTool
                     }
                 }
             }
+            string? recoveredIdentity = null;
             if (write && inner is FoundationTool { WorkerRecoveryNeeded: true } recoveryTool)
             {
-                using var recoveryLane = await recoveryTool.AcquireLane(cancellationToken);
+                recoveredIdentity = await recoveryTool.RecoverApprovalIdentity(cancellationToken);
             }
             bool vaultApproval = !internalPrecheck && VaultArguments.RequiresApproval(tool.Name, argumentsInput, tool.InputSchema);
-            async Task<string?> ApprovalIdentity()
-                => VaultArguments.ApprovalIdentity(tool.Name, argumentsInput, (inner as FoundationTool)?.ApprovalIdentity,
+            async Task<string?> ApprovalIdentity(string? binding = null)
+                => VaultArguments.ApprovalIdentity(tool.Name, argumentsInput, binding ?? (inner as FoundationTool)?.ApprovalIdentity,
                     vaultApproval && VaultArguments.NeedsUmcDestination(tool.Name, argumentsInput) && inner is FoundationTool umcTool
                         ? await umcTool.ReadUmcVaultDestination(cancellationToken, VaultArguments.TargetProject(tool.Name, argumentsInput))
                             .ConfigureAwait(false) : null);
@@ -384,7 +385,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             {
                 pending = TiaOpenness.Shared.PendingApproval
                     .Create(InvocationHost.InvocationHostTag, release, tool.Name, JsonSerializer.Serialize(args),
-                    await ApprovalIdentity(), settings.TimeoutSeconds, id);
+                    await ApprovalIdentity(recoveredIdentity), settings.TimeoutSeconds, id);
                 audit?.RecordRequest(pending.PlanHash);
                 if (HostBehavior.NeedsPrecheck(internalPrecheck, write || vaultApproval, settings.Enabled, true))
                 {

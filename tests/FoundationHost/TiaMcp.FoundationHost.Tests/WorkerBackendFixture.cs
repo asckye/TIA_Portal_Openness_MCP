@@ -27,6 +27,7 @@ internal sealed class WorkerBackendFixture : Foundation.IFoundationSessionWorker
     internal object Client => plc;
     internal static string Hash(string path) => TiaMcpServer.Siemens.ArgumentRules.HashFile(path, FileShare.Read);
     public bool Faulted => services.Faulted;
+    public bool HasPendingRebindTarget => Inner.HasPendingRebindTarget;
     public Engine.UnsettledCalls Unsettled => plc.Unsettled;
     public Engine.LateCalls LateResults => plc.LateResults;
     public JsonObject? Running => plc.Running;

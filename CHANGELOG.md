@@ -33,6 +33,8 @@
 - Environment diagnostics check the selected release's PublicAPI directory and DLL. Generation planning reads article and firmware from the CPU on text-tree releases.
 - Tag and constant updates apply `addressOrValue` and reject conflicting properties. V14 SP1 SCL inspection identifies interface-only exports.
 - Offline symbol manifests accept Siemens Interface v2–v5, including V16 GlobalDB exports.
+- V16 now refuses PLC alarm text list and instance text XLSX exports that could terminate TIA on an empty PLC. Both imports remain available. A failed V16 instance text import retains an unknown outcome.
+- A call that loses its TIA process reports the lost session immediately. Writes retain `OUTCOME_UNKNOWN`. The same host session can list processes or select a new portal while the previous project is unavailable.
 - A missing HMI target returns `NOT_FOUND` before operation. An unsuccessful CAx import reports the returned failure, possible device changes and bounded diagnostics.
 - A verified PLC import with mismatching readback retains its recovery file relative to the evidence directory. OPC UA model generation reports the failing phase and whether the output file exists.
 

@@ -184,6 +184,16 @@ internal sealed partial class FoundationTool : McpServerTool
         => TiaMcpServer.ModelContextProtocol.SecretVaultArguments.ReadUmcDestinationAsync(worker.Call, token, targetProject);
 #endif
     internal bool WorkerRecoveryNeeded => worker is WorkerClient { RecoveryNeeded: true };
+    internal async Task<string?> RecoverApprovalIdentity(CancellationToken token)
+    {
+        using var lane = await AcquireLane(token);
+        ActivateLane(lane);
+        if (worker is WorkerClient client && RequiresTia && (Ported
+            ? PortedToolContract.WiredOperations(tool.Name, portedRelease!).Any(TiaMcp.PlcWorker.WorkerOperations.RequiresPortal)
+            : TiaMcp.PlcWorker.WorkerOperations.RequiresPortal(definition.Operation)))
+            await client.RecoverLostWorker(true, token);
+        return ApprovalIdentity;
+    }
     internal string? BoundProjectFile => (string?)SharedSessionState.For(worker).Identity?["projectPath"];
     private bool CachedSessionState => definition.Name == "GetSessionState"
         && (Unsettled.Snapshot().Count > 0 || worker is WorkerClient client && client.ExitedBinding() != null || worker is WorkerClient { Disconnected: true }

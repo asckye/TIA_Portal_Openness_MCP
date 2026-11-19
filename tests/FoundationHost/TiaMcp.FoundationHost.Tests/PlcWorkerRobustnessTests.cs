@@ -141,11 +141,13 @@ public sealed class PlcFixtureWorkerRobustnessTests
         else Assert.IsType<ChannelFaultException>(error);
         Environment.SetEnvironmentVariable("TIA_MCP_PLC_WORKER_FAULT", null);
         scope.VerifyChild();
-        // The explicit restart and the next generation's first read run under the production budgets (P8-stab-1).
+        // The fixture targets a correlation. A new invocation can read state on the same healthy worker.
+        using var nextRequest = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
         using var production = new ProductionWorkerBudgets(scope.Worker);
         var recovered = await scope.Worker.Call("ReadState", new(), CancellationToken.None);
         Assert.Equal(release, (string?)recovered?["ReleaseKey"]);
-        Assert.Equal(2, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+        Assert.Equal(mode == "tia-lost" ? 1 : 2, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+        if (mode == "tia-lost") Assert.True(scope.Worker.RecoveryNeeded);
         Assert.False(scope.Worker.Faulted);
         var restarted = await scope.Worker.RestartHostWorker(true, CancellationToken.None);
         Assert.True((bool?)restarted["restarted"]); Assert.Null(restarted["requiresExplicitRebind"]);

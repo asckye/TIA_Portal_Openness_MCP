@@ -56,6 +56,8 @@ internal static class FoundationV4Result
 
     internal static CallToolResult WorkerFailure(CallToolResult result, string release, string name, string id, bool mutation, Exception? failure)
     {
+        if (failure?.Data["workerPortalLost"] is string)
+            return Failure(release, name, id, true, mutation, (result.StructuredContent as JsonObject)?["data"], failure);
         if (failure == null || result.IsError != true || Classified(result.StructuredContent)
             || failure is not WorkerOperationException && !failure.Data.Contains("foundationRequestSent")) return result;
         return Failure(release, name, id, failure.Data["foundationRequestSent"] is not false, mutation,
@@ -187,6 +189,30 @@ internal static class FoundationV4Result
         new("An earlier operation may have changed state. Do not repeat this call. Read GetCallResult(requestId) and inspect the target.",
             new OutcomeUnknownDetails("tool-call", evidence));
 
+    private static CallToolResult PortalLossFailure(string release, string name, string id, JsonObject? data,
+        WorkerOperationException failure, string lost)
+    {
+        var facts = (HostBehavior.WorkerReplyEvidence(name, failure) ?? Empty).ToDictionary(pair => pair.Key, pair => pair.Value);
+        facts["portalLost"] = JsonSerializer.SerializeToElement(HostBehavior.SafeDiagnostic(lost));
+        if (name == "SetUnifiedGlobalScript") data = JsonSerializer.SerializeToNode(facts)!.AsObject();
+        else if (failure.EvidenceJson != null)
+        {
+            var retained = JsonNode.Parse(failure.EvidenceJson);
+            HostBehavior.SanitizeEvidence(retained);
+            (data ??= new JsonObject())["evidence"] = retained;
+        }
+        bool priorMutation = TiaOpenness.Shared.HostFailurePolicy.PriorMutation(failure);
+        if (priorMutation) (data ??= new JsonObject())["earlierMutationMayHaveChanged"] = true;
+        const string message = "The TIA process exited during this call. The session is lost. "
+            + "Use ConnectIsolatedPortal to start a new instance, or call DisconnectPortal then ConnectPortal to select an existing one.";
+        if (failure.Outcome == "unknown" || priorMutation)
+            return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
+                new Error(message + " Do not repeat this call. Read GetCallResult(requestId) and inspect the target.",
+                    new OutcomeUnknownDetails("tool-call", facts, "tia-process-exited")), true);
+        return Wire(release, name, id, data, Outcome.ReadFailed, Execution.ReadOnly, Completeness.None,
+            new Error(message, new NativeOperationFailedDetails(null, message, facts)), true);
+    }
+
     internal static Error WorkerRejection(Exception exception)
     {
         var worker = exception as WorkerOperationException;
@@ -201,6 +227,8 @@ internal static class FoundationV4Result
             null)
     {
         var data = evidence == null ? null : Object(evidence);
+        if (exception is WorkerOperationException portalFailure && exception.Data["workerPortalLost"] is string lost)
+            return PortalLossFailure(release, name, id, data, portalFailure, lost);
         if (data?["failure"] is JsonObject workerDiagnostic)
             data["failure"] = JsonNode.Parse(NativeFailureDiagnostics.Evidence(JsonSerializer.SerializeToElement(workerDiagnostic)).GetRawText());
         if (exception != null && TiaOpenness.Shared.HostFailurePolicy.PriorMutation(exception))

@@ -709,7 +709,8 @@ namespace TiaMcp.Logic.V4
         {
             Stage = DiagnosticVocabulary.Key(stage);
             Evidence = V4Validation.Object(evidence);
-            if (reason != null && reason != "awaiting-openness-confirmation") throw new System.ArgumentException("Unknown session timeout reason.");
+            if (reason is not (null or "awaiting-openness-confirmation" or "tia-process-exited"))
+                throw new System.ArgumentException("Unknown session outcome reason.");
             Reason = DiagnosticVocabulary.Key(reason);
             V4Validation.Details(this);
         }

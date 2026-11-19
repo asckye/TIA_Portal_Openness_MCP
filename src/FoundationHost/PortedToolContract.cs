@@ -525,7 +525,8 @@ internal sealed partial class FoundationTool
         }
         Func<bool> hasProject = () => !string.IsNullOrEmpty((string?)state?["ProjectFile"]);
         Func<string> identity = () => (string?)state?["ProjectFile"] ?? "";
-        bool missingPortal = state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true && !hasProject();
+        bool missingPortal = state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true && !hasProject()
+            && worker is not IFoundationSessionWorker { HasPendingRebindTarget: true };
         bool portalDispatchRefused = false;
         Exception? workerFailure = null;
         JsonObject? nativeDiagnostics = null;

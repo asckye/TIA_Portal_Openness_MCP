@@ -84,11 +84,13 @@ internal static class Program
                 engine.RefreshWorkerSessionBinding, engine.ClearWorkerSessionBinding,
                 engine.InvalidateUncertainShutdown, engine.Dispose,
                 () => { engine.Disconnect(); dispatcher.EndSharedSession(); }, () => engine.CanDetachOnUncertainShutdown);
+            recovery.InstallProcessLossObserver();
             using var session = new FoundationProcessLease(() => TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
                 request => recovery.Dispatch(request, dispatcher.Dispatch),
                 () => dispatcher.State.IsAttached, () => dispatcher.Detached, () => dispatcher.SessionOutcome.Uncertain,
                 recovery.DisposeSession, recovery.Synchronize,
-                int.TryParse(Environment.GetEnvironmentVariable("TIA_MCP_HOST_PROCESS_ID"), out int hostPid) ? hostPid : (int?)null, releaseKey
+                int.TryParse(Environment.GetEnvironmentVariable("TIA_MCP_HOST_PROCESS_ID"), out int hostPid) ? hostPid : (int?)null, releaseKey,
+                processExited: recovery.ObserveProcessExit
                 );
             dispatcher.ProcessStartTicks = () => session.ProcessStartTicks;
             engine.ProjectEnsureGroup = () => TiaMcpServer.Siemens.WindowsOpennessGroup.RequireEffectiveMembership(

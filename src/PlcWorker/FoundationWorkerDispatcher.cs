@@ -101,10 +101,7 @@ namespace TiaMcp.PlcWorker
         {
             // The engine retains its own fixture boundary. Only explicitly marked
             // standalone PlcWorker artifacts can enter this path.
-            var injected = WorkerFaultInjection.PlcBeforeDispatch(policyAssembly, request, lost => {
-                SessionOutcome.MarkUncertain();
-                failureObserved?.Invoke(lost);
-            });
+            var injected = WorkerFaultInjection.PlcBeforeDispatch(policyAssembly, request, lost => failureObserved?.Invoke(lost));
             if (injected != null) return injected;
             if (request.Method == PlcSimAdvancedWorkerModule.Operation) return PlcSimAdvancedWorkerModule.Dispatch(request);
             if (request.Method == "adapter.HostObserve") return WorkerObservations.Reply(() => {

@@ -12,11 +12,13 @@ namespace TiaMcpServer.ModelContextProtocol
     /// Siemens.Engineering 的大文件里时，本机没装 TIA 就一行都测不到，而这条判断
     /// 恰恰属于「判错了也悄无声息」的那类：崩溃路径本来就少见，测不到就等于没写。
     /// </summary>
-    internal static class PortalFailureClassifier
+    public static class PortalFailureClassifier
     {
         // A worker can latch recognized channel loss even if an inner tool converts it to a normal error response.
         // No hook is installed in the ordinary host or the offline suite.
         internal static Action<string>? ProcessLostObserved;
+        // The woven native calls live in the adapter assembly. Its worker installs the observer here.
+        public static void SetProcessLostObserver(Action<string>? observer) => ProcessLostObserved = observer;
         private static bool Lost(string reason) { try { ProcessLostObserved?.Invoke(reason); } catch /* swallow(fail-open-guard): an observer failure must not change the recognized process-loss result */ { } return true; }
         /// <summary>
         /// 一律按类型名（含 InnerException 链）判断，不硬引用具体异常类型，原因有两条：

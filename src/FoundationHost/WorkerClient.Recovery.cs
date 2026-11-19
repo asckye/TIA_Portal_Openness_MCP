@@ -62,10 +62,15 @@ internal sealed partial class WorkerClient
         return error;
     }
 
-    private void RememberRebindTarget(string operation, JsonObject arguments, JsonNode? result)
+    private void RememberRebindTarget(string operation, JsonObject arguments, JsonNode? result, bool bindingChanged)
     {
         lock (stateSync)
         {
+            if (rebindPending && bindingChanged && !recovering)
+            {
+                rebindTarget = null;
+                rebindPending = false;
+            }
             if (operation == "CloseProject" && !IsSecondaryProjectOperation(operation, arguments) && (bool?)arguments["dryRun"] == false)
             { rebindTarget = null; return; }
             if (operation == "Attach") ownsPortal = (bool?)result?["OwnsPortal"] == true;
@@ -88,40 +93,45 @@ internal sealed partial class WorkerClient
         RebindTarget? target;
         string reason;
         long previousGeneration;
-        bool lostOwnedPortal;
+        bool restart;
         lock (stateSync)
         {
             ForgetSecondaryIfHolderGone();
             if (takenOverBy != null) return;
             if (recovering || !Faulted && portalLostReason == null && !rebindPending) return;
+            restart = Faulted || portalLostReason != null || rebind && rebindPending && attachedProcessId.HasValue;
+            if (!restart && !rebind) return;
             if (CallRunning || UnansweredRequest) throw Busy();
-            if (process is { HasExited: false } && ownsPortal)
+            if (restart && process is { HasExited: false } && ownsPortal && !TiaOpenness.Shared.ProcessLossPolicy.IsConfirmedLoss(portalLostReason))
                 throw RecoveryRefusal("worker-owns-portal", "This worker started the TIA instance it uses. Stopping it would close TIA. "
                     + "Save in TIA, then call RestartOpennessWorker.");
-            target = rebind ? rebindTarget : null;
-            lostOwnedPortal = rebind && process is { HasExited: true } && (ownsPortal || target?.WorkerStartedPortal == true);
-            if (lostOwnedPortal) { rebindTarget = null; rebindPending = false; ownsPortal = false; }
+            target = rebindTarget;
+            if (rebind && (process is { HasExited: true } && ownsPortal || target?.WorkerStartedPortal == true))
+            {
+                rebindTarget = null; rebindPending = false; ownsPortal = false;
+                throw RecoveryRefusal("tia-process-gone", $"TIA PID {target?.ProcessId} was started by the worker that exited. "
+                    + "Its lifetime is no longer owned by this session. Select a TIA instance deliberately with ConnectPortal or ConnectIsolatedPortal. "
+                    + $"Project: {target?.ProjectFile}");
+            }
             reason = portalLostReason ?? channel?.LastFault?.GetType().Name ?? (rebindPending ? "rebind-pending" : "worker-exited");
             previousGeneration = generation;
         }
-        if (lostOwnedPortal)
-            throw RecoveryRefusal("tia-process-gone", $"TIA PID {target?.ProcessId}, project {target?.ProjectFile}, was started by the worker that exited. "
-                + "Its lifetime is no longer owned by this session. Select a TIA instance deliberately with ConnectPortal or ConnectIsolatedPortal.");
-        if (!ResetDisconnectedWorker(reason, clearTarget: false))
-            throw RecoveryRefusal("tia-not-responding", "The previous worker could not detach. Try the next call again.");
-        var recovery = new JsonObject { ["previousGeneration"] = previousGeneration, ["generation"] = generation,
-            ["reason"] = reason, ["lost"] = new JsonArray("preview-plans", "approval-identity", "batch-plans", "engineering-transactions",
-                "hmi-read-tokens", "unified-read-cursors", "reflection-paths", "analysis-export-path", "project-ownership", "dialog-records"),
-            ["rebound"] = false };
-        lock (stateSync)
+        if (restart)
         {
-            rebindTarget = target;
-            rebindPending = target != null;
-            workerRecovery = (JsonObject)recovery.DeepClone();
-            recoveryWarningPending = true;
-            recovering = target != null;
+            if (!ResetDisconnectedWorker(reason, clearTarget: false))
+                throw RecoveryRefusal("tia-not-responding", "The previous worker could not detach. Try the next call again.");
+            lock (stateSync)
+            {
+                rebindPending = target != null;
+                workerRecovery = new JsonObject { ["previousGeneration"] = previousGeneration, ["generation"] = generation,
+                    ["reason"] = reason, ["lost"] = new JsonArray("preview-plans", "approval-identity", "batch-plans", "engineering-transactions",
+                        "hmi-read-tokens", "unified-read-cursors", "reflection-paths", "analysis-export-path", "project-ownership", "dialog-records"),
+                    ["rebound"] = false };
+                recoveryWarningPending = true;
+            }
         }
-        if (target == null) return;
+        if (!rebind || target == null) return;
+        lock (stateSync) recovering = true;
         var previousLane = Held.Value;
         Held.Value = this;
         string phase = "processes";
@@ -134,11 +144,12 @@ internal sealed partial class WorkerClient
             var resolution = RebindTargetResolver.Resolve(target, processes);
             string candidates = string.Join(", ", resolution.Candidates.Select(candidate => candidate.Id));
             if (resolution.Disposition == RebindDisposition.Gone)
-                throw RecoveryRefusal("tia-process-gone", $"TIA PID {target.ProcessId}, project {target.ProjectFile}, is gone. The next call will try again.");
+                throw RecoveryRefusal("tia-process-gone",
+                    $"TIA PID {target.ProcessId} is gone. The next binding call will try again. Project: {target.ProjectFile}");
             if (resolution.Disposition is RebindDisposition.Ambiguous or RebindDisposition.Held)
-                throw RecoveryRefusal("project-not-open", $"Cannot rebind project {target.ProjectFile}. "
+                throw RecoveryRefusal("project-not-open", "Cannot rebind the project. "
                     + (resolution.Disposition == RebindDisposition.Ambiguous ? $"Several matching TIA processes are open ({candidates}). "
-                        : $"TIA PID {candidates} has an attached Openness client. ") + "Select a process with ConnectPortal.");
+                        : $"TIA PID {candidates} has an attached Openness client. ") + $"Select a process with ConnectPortal. Project: {target.ProjectFile}");
             int pid = resolution.Process!.Id;
             phase = "attach";
             await CallCore("Attach", new JsonObject { ["processId"] = pid }, false, false, cancellationToken);
@@ -148,8 +159,7 @@ internal sealed partial class WorkerClient
                 await CallCore("BindProject", new JsonObject { ["projectName"] = target.ProjectName,
                     ["expectedProjectFile"] = target.ProjectFile }, false, false, cancellationToken);
             }
-            recovery["rebound"] = true;
-            lock (stateSync) { rebindPending = false; workerRecovery = (JsonObject)recovery.DeepClone(); }
+            lock (stateSync) { rebindPending = false; workerRecovery!["rebound"] = true; }
             bool readBackAttempted = false;
             await UnknownSettlement.RunPending(Unsettled, LateResults, (operation, arguments) => {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -170,7 +180,7 @@ internal sealed partial class WorkerClient
         catch (Exception error) when (error is not OperationCanceledException and not AdapterPreconditionException)
         {
             throw RecoveryRefusal(phase == "project" ? "project-not-open" : "tia-not-responding",
-                $"Could not rebind TIA PID {target.ProcessId}, project {target.ProjectFile}. The next call will try again.");
+                $"Could not rebind TIA PID {target.ProcessId}. The next binding call will try again. Project: {target.ProjectFile}");
         }
         finally
         {

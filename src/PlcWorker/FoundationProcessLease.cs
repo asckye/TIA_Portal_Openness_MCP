@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.WorkerChannel;
+using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
+using TiaOpenness.Shared;
 
 namespace TiaMcp.PlcWorker
 {
@@ -33,11 +35,18 @@ namespace TiaMcp.PlcWorker
 
         internal void ObserveFailure(Exception error)
         {
-            if (TiaOpenness.Shared.ProcessLossPolicy.Reason(error) is string reason)
-            {
-                portalLost = reason;
-            }
+            if (ProcessLossPolicy.Reason(error) is string reason)
+                ObserveLoss(reason);
         }
+
+        internal void InstallProcessLossObserver() => PortalFailureClassifier.SetProcessLostObserver(ObserveLoss);
+
+        private void ObserveLoss(string reason)
+        {
+            if (portalLost == null || ProcessLossPolicy.IsComException(portalLost)) portalLost = reason;
+        }
+
+        internal void ObserveProcessExit() => portalLost = "tia-process-exited";
 
         internal ChannelResponse Dispatch(ChannelRequest request, Func<ChannelRequest, ChannelResponse> dispatch)
         {
@@ -50,21 +59,29 @@ namespace TiaMcp.PlcWorker
         {
             if (_detached()) { _clear(); return response; }
             string operation = request.Method.Substring("adapter.".Length);
-            if (response.Failure == null && _outcome.Revision != revisionAtEntry && !WorkerOperations.IsReadOnly(operation)
-                && !(JsonNode.Parse(request.ArgumentsJson)?["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && preview))
-                response = ChannelResponse.Error(new ChannelFailureException("The write outcome is unknown.", -32603,
-                    ChannelOutcome.Unknown, response.ResultJson));
-            if (response.Failure?.Outcome == ChannelOutcome.Unknown && !WorkerOperations.IsReadOnly(operation)
-                && !(JsonNode.Parse(request.ArgumentsJson)?["dryRun"] is JsonValue value && value.TryGetValue<bool>(out var isPreview) && isPreview))
-                _outcome.MarkUncertain();
-            if (portalLost != null && response.Failure is { } failure)
+            bool observation = operation is "ReadState" or "HostObserve";
+            bool write = !observation && !WorkerOperations.IsReadOnly(operation)
+                && !(JsonNode.Parse(request.ArgumentsJson) is JsonObject args && args["dryRun"] is JsonValue dryRun
+                    && dryRun.TryGetValue<bool>(out var preview) && preview);
+            var failure = response.Failure;
+            bool confirmedLoss = !observation && ProcessLossPolicy.IsConfirmedLoss(portalLost);
+            if (confirmedLoss)
             {
-                var evidence = JsonNode.Parse(failure.EvidenceJson ?? "{}") as JsonObject ?? new JsonObject();
+                failure = new ChannelFailureException("The TIA process exited during this call. The session is lost.", failure?.Code ?? -32603,
+                    write ? ChannelOutcome.Unknown : ChannelOutcome.ReadFailed, failure == null ? response.ResultJson : failure.EvidenceJson);
+            }
+            else if (failure == null && _outcome.Revision != revisionAtEntry && write)
+                failure = new ChannelFailureException("The write outcome is unknown.", -32603, ChannelOutcome.Unknown, response.ResultJson);
+            if (failure?.Outcome == ChannelOutcome.Unknown && write) _outcome.MarkUncertain();
+            if (portalLost != null && failure != null && (confirmedLoss || response.Failure != null))
+            {
+                var original = JsonNode.Parse(failure.EvidenceJson ?? "{}");
+                var evidence = original as JsonObject ?? new JsonObject { ["result"] = original };
                 evidence["portalLost"] = portalLost;
-                response = ChannelResponse.Error(new ChannelFailureException(failure.Message, failure.Code, failure.Outcome, evidence.ToJsonString()));
+                failure = new ChannelFailureException(failure.Message, failure.Code, failure.Outcome, evidence.ToJsonString());
             }
             _refresh();
-            return response;
+            return failure == null ? response : ChannelResponse.Error(failure);
         }
 
         internal void DisposeSession()
@@ -123,6 +140,9 @@ namespace TiaMcp.PlcWorker
         private readonly Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch;
         private readonly int? hostProcessId;
         private readonly string? releaseKey;
+        private readonly Action? processExited;
+        private readonly Func<int, long, bool?> processAlive;
+        private int leasedProcessId;
         private PortalProcessLease? lease;
         private string? currentRequestId;
         private bool uncertain, disposed;
@@ -131,13 +151,28 @@ namespace TiaMcp.PlcWorker
 
         internal FoundationProcessLease(Func<string> root, Func<ChannelRequest, ChannelResponse> dispatch,
             Func<bool> attached, Func<bool> detached, Func<bool> requiresReset, Action disposeEngine,
-            Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch = null, int? hostProcessId = null, string? releaseKey = null)
+            Func<ChannelRequest, ChannelResponse, ChannelResponse>? afterDispatch = null, int? hostProcessId = null, string? releaseKey = null,
+            Action? processExited = null, Func<int, long, bool?>? processAlive = null)
         {
             this.root = root; this.dispatch = dispatch; this.attached = attached;
             this.detached = detached; this.requiresReset = requiresReset; this.disposeEngine = disposeEngine;
             this.afterDispatch = afterDispatch;
             this.hostProcessId = hostProcessId;
             this.releaseKey = releaseKey;
+            this.processExited = processExited;
+            this.processAlive = processAlive ?? IsProcessAlive;
+        }
+
+        private static bool? IsProcessAlive(int pid, long startTicks)
+        {
+            try
+            {
+                using var process = Process.GetProcessById(pid);
+                return !process.HasExited && process.StartTime.ToUniversalTime().Ticks == startTicks;
+            }
+            catch (ArgumentException) { /* swallow(env-probe): the PID no longer exists */ return false; }
+            catch (Exception error) when (error is InvalidOperationException or System.ComponentModel.Win32Exception or System.Security.SecurityException)
+            { /* swallow(env-probe): an unreadable process cannot prove exit */ return null; }
         }
 
         internal long ReserveCreatedProcess(int processId)
@@ -147,6 +182,7 @@ namespace TiaMcp.PlcWorker
             if (process.HasExited) throw new InvalidOperationException("TIA process exited before attachment.");
             long ticks = process.StartTime.ToUniversalTime().Ticks;
             lease = PortalProcessLease.Acquire(root(), processId, ticks, hostProcessId, releaseKey);
+            leasedProcessId = processId;
             ProcessStartTicks = ticks;
             lease.BeginRequest(currentRequestId);
             return ticks;
@@ -174,6 +210,7 @@ namespace TiaMcp.PlcWorker
                     if (process.HasExited) throw new InvalidOperationException("TIA process exited before attachment.");
                     ProcessStartTicks = process.StartTime.ToUniversalTime().Ticks;
                     lease = PortalProcessLease.Acquire(root(), pid.Value, ProcessStartTicks, hostProcessId, releaseKey);
+                    leasedProcessId = pid.Value;
                     reserved = true;
                 }
                 // Post-call probes precede the host's outcome recording. Retain new unknown IDs
@@ -181,8 +218,13 @@ namespace TiaMcp.PlcWorker
                 if (!reserved && request.Method is not ("adapter.ReadState" or "adapter.HostObserve"))
                     lease?.SetUnsettledRequests(request.UnsettledRequests);
                 if (request.Method != "adapter.ReadState") lease?.BeginRequest(request.CorrelationId);
+                int entryPid = leasedProcessId;
+                long entryTicks = ProcessStartTicks;
+                bool checkExit = processExited != null && lease != null && request.Method != "adapter.HostObserve"
+                    && WorkerOperations.RequiresPortal(request.Method.Substring("adapter.".Length)) && processAlive(entryPid, entryTicks) == true;
                 entered = true;
                 var response = dispatch(request);
+                if (checkExit && processAlive(entryPid, entryTicks) == false) processExited!();
                 if (afterDispatch != null) response = afterDispatch(request, response);
                 if (detached()) { ReleaseCleanly(); uncertain = false; }
                 else
@@ -214,7 +256,7 @@ namespace TiaMcp.PlcWorker
             finally { currentRequestId = null; }
         }
 
-        private void ReleaseCleanly() { lease?.ReleaseCleanly(); lease = null; ProcessStartTicks = 0; }
+        private void ReleaseCleanly() { lease?.ReleaseCleanly(); lease = null; leasedProcessId = 0; ProcessStartTicks = 0; }
 
         public void Dispose()
         {

@@ -76,6 +76,8 @@ internal static class Program
             }
             if (request.Method == "adapter.FixtureOwnsPortal")
             { ownsPortal = true; return ChannelResponse.Success("{}"); }
+            if (request.Method == "adapter.ReadPortalProcessProjects")
+                return ChannelResponse.Success(JsonSerializer.Serialize(new TiaMcp.Adapters.PlcProcessQuery { ReleaseKey = options.ReleaseKey }));
             if (request.Method == "adapter.FixtureWriteCount") return ChannelResponse.Success(writes.ToString());
             if (request.Method == "adapter.ReadTagTableNames")
             {
@@ -121,7 +123,13 @@ internal static class Program
             if (request.Method == "adapter.engineering-services.ReadEngineeringTransaction") return ChannelResponse.Success("true");
             if (request.Method is "adapter.engineering-services.CommitEngineeringTransaction" or "adapter.engineering-services.DisposeEngineeringTransaction")
                 return ChannelResponse.Success("null");
-            if (FamilyReply(request.Method, request.ArgumentsJson) is { } familyReply) return ChannelResponse.Success(familyReply);
+            if (FamilyReply(request.Method, request.ArgumentsJson) is { } familyReply)
+            {
+                if (request.Method == "adapter.project-lifecycle.ExecuteProjectScaffoldPrimitive"
+                    && (string?)JsonNode.Parse(request.ArgumentsJson)?["request"]?["Kind"] is "connect" or "createProject" && !bound)
+                { bound = true; epoch++; }
+                return ChannelResponse.Success(familyReply);
+            }
             if (request.Method == "adapter.FaultFixtureArm")
             {
                 faultMethod = JsonNode.Parse(request.ArgumentsJson)!["method"]!.GetValue<string>();
@@ -136,6 +144,16 @@ internal static class Program
             bool target = request.Method == faultMethod && request.ToolName == faultTool && request.CorrelationId == faultCorrelation;
             string? fixtureMode = WorkerFaultInjection.PlcMode(typeof(Program).Assembly);
             string? mode = target ? fixtureMode : null;
+            const string readFailure = "portal-read-failed:";
+            if (mode != null && mode.StartsWith(readFailure, StringComparison.Ordinal))
+                return ChannelResponse.Error(new ChannelFailureException("Synthetic portal read failure.", -32603, ChannelOutcome.ReadFailed,
+                    JsonSerializer.Serialize(new { portalLost = mode.Substring(readFailure.Length) })));
+            if (mode == "swallowed-portal-loss")
+            {
+                // Wire reply from Synchronize after the facade reported a normal result.
+                return ChannelResponse.Error(new ChannelFailureException("The TIA process exited during this call.", -32603, PortalLossOutcome(request),
+                    "{\"Ok\":true,\"portalLost\":\"FixtureNonRecoverableException\"}"));
+            }
             if (mode == "hang" && request.Method == "adapter.SaveProject"
                 && (bool?)JsonNode.Parse(request.ArgumentsJson)?["dryRun"] == true) mode = null;
             if (mode == "hang" && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE")))
@@ -157,7 +175,7 @@ internal static class Program
             }
             var injected = mode == null ? null : WorkerFaultInjection.PlcBeforeDispatch(typeof(Program).Assembly, request, _ => { });
             if (injected?.Failure is { } lostFailure && mode is "tia-lost" or "background-tia-exit")
-                injected = ChannelResponse.Error(new ChannelFailureException(lostFailure.Message, lostFailure.Code, lostFailure.Outcome,
+                injected = ChannelResponse.Error(new ChannelFailureException(lostFailure.Message, lostFailure.Code, PortalLossOutcome(request),
                     "{\"exceptionType\":\"PortalProcessLost\",\"portalLost\":\"FixtureNonRecoverableException\"}"));
             if (injected != null) return injected;
             if (mode == "slow" && request.Method != "adapter.ReadState") Slow();
@@ -304,6 +322,14 @@ internal static class Program
             return ChannelResponse.WithSpill(raw, () => Spill(raw, mode));
         }).Run();
         return 0;
+    }
+
+    // The fault fixture serves block reads and dry-run family operations. ReadState retains the injected observation failure.
+    private static ChannelOutcome PortalLossOutcome(ChannelRequest request)
+    {
+        bool read = request.Method is "adapter.ReadBlocks" or "adapter.plc-paging.ReadBlockPage"
+            || request.Method is not ("adapter.ReadState" or "adapter.HostObserve") && (bool?)JsonNode.Parse(request.ArgumentsJson)?["dryRun"] == true;
+        return read ? ChannelOutcome.ReadFailed : ChannelOutcome.Unknown;
     }
 
     private static ChannelResponse Step(string meta, bool changed) => ChannelResponse.Success(new JsonObject {

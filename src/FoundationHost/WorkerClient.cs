@@ -39,6 +39,7 @@ internal interface IFoundationSessionWorker : IFoundationWorker
 {
     public string ApprovalIdentity { get; }
     public bool Faulted => false;
+    public bool HasPendingRebindTarget => false;
     public UnsettledCalls Unsettled => UnsettledCalls.For(this);
     public LateCalls LateResults => LateCalls.For(this);
     public JsonObject? Running => null;
@@ -161,9 +162,9 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             string? tool = FoundationWorkerRequest.ToolName;
             if (tool != "ConnectPortal") RequireCurrentOwner();
             RequireBindingProcess(tool);
-            if (nativeEnabled && (tool == null || !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)
+            if (nativeEnabled && Faulted && (tool == null || !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool).Name != "F04"))
-                await RecoverLostWorker(tool != "ConnectPortal", token);
+                await RecoverLostWorker(false, token);
             return lane;
         }
         catch { lane.Dispose(); throw; }
@@ -292,6 +293,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
     internal string? PresetProjectFile { get; init; }
     string IFoundationSessionWorker.ApprovalIdentity => ApprovalIdentity;
     bool IFoundationSessionWorker.Faulted => Faulted;
+    bool IFoundationSessionWorker.HasPendingRebindTarget { get { lock (stateSync) return rebindPending && rebindTarget != null; } }
     JsonObject? IFoundationSessionWorker.Running => Running;
     bool IFoundationSessionWorker.Bundled => Bundled;
     Task<IDisposable?> IFoundationSessionWorker.AcquireLane(CancellationToken token) => AcquireLane(token);
@@ -356,7 +358,14 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             if (disconnectAcknowledgement != null && !managed && (operation == "Attach" || disconnectCompleted)
                 && !ResetDisconnectedWorker("disconnect"))
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("The previous worker could not stop.", "worker-faulted", null);
-            if (!settling && !managed && !WorkerOperations.IsIndependentRuntime(operation)) await RecoverLostWorker(operation != "Attach", token);
+            if (!settling && !managed && !WorkerOperations.IsIndependentRuntime(operation))
+            {
+                bool selectSession = operation is "Attach" or "ConnectPortal" or "project-lifecycle.ConnectIsolatedPortal"
+                    || operation == "project-lifecycle.ExecuteProjectScaffoldPrimitive"
+                        && (string?)arguments["request"]?["Kind"] is "connect" or "createProject";
+                bool independentRead = !WorkerOperations.RequiresPortal(operation) && WorkerOperations.IsReadOnly(operation);
+                if (!independentRead || Faulted) await RecoverLostWorker(!selectSession && !independentRead, token);
+            }
             if (Faulted && (managed || WorkerOperations.IsIndependentRuntime(operation)
                 && !(process is { HasExited: false } && channel?.CanCallIndependentRuntime == true)))
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
@@ -507,7 +516,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             }
             if (operation == "ReadState" && result is JsonObject cachedState)
                 lock (stateSync) CacheRuntimeState(cachedState);
-            RememberRebindTarget(operation, arguments, result);
+            RememberRebindTarget(operation, arguments, result, channel.BindingEpoch > epochBefore);
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
             if (statusAvailable && !settling && SharedSession && !WorkerOperations.IsIndependentRuntime(operation))
@@ -556,8 +565,11 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 lock (stateSync) ownsPortal = ownershipBeforeStart.Value;
             if (ex is WorkerOperationException workerFailure && workerFailure.EvidenceJson != null
                 && JsonNode.Parse(workerFailure.EvidenceJson) is JsonObject evidence && (string?)evidence["portalLost"] is string lost)
+            {
                 lock (stateSync) portalLostReason = lost;
-            if (sent && RecoveryNeeded)
+                if (TiaOpenness.Shared.ProcessLossPolicy.IsConfirmedLoss(lost)) ex.Data["workerPortalLost"] = lost;
+            }
+            if (sent && RecoveryNeeded && ex.Data["workerPortalLost"] == null)
                 ex.Data["workerRecoveryMessage"] = "The worker connection failed during this call. Its outcome is unknown. Do not repeat this call. "
                     + "Read GetCallResult(requestId). The next native call restarts the worker. "
                     + (rebindTarget is { } target ? $"It attempts to rebind TIA PID {target.ProcessId}, project {target.ProjectFile}."

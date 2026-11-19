@@ -8,6 +8,8 @@ namespace TiaMcp.Adapters.Contracts
             bool AtLeast(string first) => EngineeringServicesCapabilities.AtLeast(release, first);
             var tool = request.Operation;
             if (!PortedFamilies.Available(release, tool)) return tool + " has no available native action on TIA " + release + ".";
+            if (release == "16" && tool == "ExchangePlcAlarmTextLists" && request.Action == "export")
+                return "V16 terminates TIA when the PLC has no text lists. V17 added a defined error; requires V17";
             if (request.UnitName.Length != 0 && !OpennessApi.PlcUnits.Includes(release)) return "PlcUnitProvider requires V16.";
             if (request.UnitName.Length != 0 && request.UnitKind == "safety" && !AtLeast("18")) return "PlcSafetyUnit requires V18.";
             if ((tool == "ManageOpcUaInterface" || tool == "SetOpcUaInterfaceEnabled" || tool == "ExportOpcUaInterface" || tool == "ImportOpcUaInterface")

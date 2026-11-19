@@ -435,7 +435,8 @@ namespace TiaMcp.Adapters.Native.Plc
                         catch (UnauthorizedAccessException) { /* swallow(cleanup): retain the original outcome when temporary removal is unavailable */ }
                     }
                 }
-                var before = Snapshot();
+                // The baseline export can terminate V16 when there are no alarms.
+                var before = Version >= 17 ? Snapshot() : null;
                 meta["phase"] = "import"; meta["mayHaveChanged"] = true;
                 PlcAlarmTextXlsxResult result;
                 try { result = (PlcAlarmTextXlsxResult)EngineeringGroupOperations.Call(provider, "ImportInstanceTextsFromXlsx", signature, file, languages); }
