@@ -1,6 +1,9 @@
 extern alias toolpipeline;
-using System.Text.Json.Nodes;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using System.Diagnostics;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
@@ -16,12 +19,21 @@ public sealed class OnlineTargetAdmissionTests
     public void Required_address_schema_and_CallTool_admission_preserve_other_input_validation(string release, string operation)
     {
         using var settings = new OnlineTargetSettingsScope(null);
-        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
-        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        using var session = fixture.EnterSession();
+        var worker = fixture.Worker;
         var tool = PortedToolContract.Create(worker, release).OfType<FoundationTool>()
             .Single(tool => tool.ProtocolTool.Name == operation);
         Assert.Contains(tool.ProtocolTool.InputSchema.GetProperty("required").EnumerateArray(), item => item.GetString() == Parameter(operation));
-        Func<JsonElement, bool> refuses = tool.RefusesByCapability;
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, VersionControlAdmissionTests.ServerProxy>());
+        using var call = Host.McpServer.UseProgressRequest(request, CancellationToken.None);
+        bool refuses(JsonElement arguments)
+        {
+            var body = Host.McpServer.CallTool(operation, new TiaMcp.Logic.V4.Inputs.ToolArguments(arguments)).StructuredContent!;
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            return (string?)body["error"]?["details"]?["parameter"] == "/" + Parameter(operation);
+        }
         Assert.True(refuses(JsonSerializer.SerializeToElement(Arguments(operation, "missing", true))));
         Assert.True(refuses(JsonSerializer.SerializeToElement(Arguments(operation, "host.invalid", true))));
         var invalid = Arguments(operation, "missing", true);

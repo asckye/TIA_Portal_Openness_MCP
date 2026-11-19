@@ -35,11 +35,6 @@ internal interface IFoundationWorkerResult
 {
     public ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name);
 }
-internal interface IFoundationWorkerReadiness
-{
-    public Task PrepareReadiness(CancellationToken token);
-}
-
 internal interface IFoundationSessionWorker : IFoundationWorker
 {
     public string ApprovalIdentity { get; }
@@ -121,7 +116,7 @@ internal static class FoundationWorkerRequest
 
 internal sealed partial class WorkerClient(string releaseKey, string workerExe, string apiDirectory, bool nativeEnabled, int defaultTimeoutSeconds = 120, string
         ? timeoutConfig = null)
-    : IFoundationSessionWorker, IFoundationWorkerResult, IFoundationWorkerSupervisor, IFoundationWorkerReadiness
+    : IFoundationSessionWorker, IFoundationWorkerResult, IFoundationWorkerSupervisor
 {
     internal string? NativeCrossReferenceSessionFile { get; set; }
     internal string? NativeCrossReferenceSessionSecret { get; set; }

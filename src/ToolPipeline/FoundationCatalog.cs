@@ -20,7 +20,8 @@ internal sealed class FoundationCatalog : IToolCatalogView
     internal FoundationCatalog(string release, IReadOnlyList<McpServerTool> shared, ISet<string>? essentials = null)
     {
         var data = ReleaseCatalogData.Releases[release];
-        essentials ??= new HashSet<string>(data.LiteNames, StringComparer.Ordinal);
+        var roster = ReleaseCatalogData.Rosters[release];
+        essentials ??= new HashSet<string>(roster.LiteNames, StringComparer.Ordinal);
         Instructions = data.Instructions;
         BehaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(EngineHostPipeline).Assembly, release);
         var declared = data.Declarations(release).ToDictionary(ReleaseCatalogData.Name, method =>
@@ -41,7 +42,7 @@ internal sealed class FoundationCatalog : IToolCatalogView
                 .Where(pair => pair.Value.Execution == "host" && TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(pair.Key) && all
                     .ContainsKey(pair.Key)))
             all[pair.Key] = pair.Value;
-        var order = data.PreferredOrder.Concat(shared.Select(tool => tool.ProtocolTool.Name)).Concat(all.Keys)
+        var order = roster.PreferredOrder.Concat(shared.Select(tool => tool.ProtocolTool.Name)).Concat(all.Keys)
             .Distinct(StringComparer.Ordinal).Where(all.ContainsKey);
         All = order.ToDictionary(name => name, name => CanonicalParameterTool.Describe(all[name]), data.NameComparer);
         IncludingUnavailable = data.RetainUnavailable

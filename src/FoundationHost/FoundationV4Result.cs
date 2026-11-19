@@ -476,10 +476,7 @@ internal static class FoundationV4Result
         bool portedUsage = usageName != null && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(usageName)
             && TiaMcpServer.ModelContextProtocol.ToolExecution.Table.TryGetValue(usageName, out var execution)
             && (execution == "host" || execution == "foundation" || TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(usageName).Name is "F27" or "F28");
-        // Preserve master's release-specific usage mapping until UNIFY-1 unifies this call-flow rule.
-        bool rawUsage = name == "GetToolUsage" && (portedUsage
-            || TiaMcp.Versioning.TiaVersionCatalog.Get(release).EngineOutputDirectory != null
-                && (usageName == null || TiaOpenness.Shared.ToolUsageCatalog.ExampleSource(usageName, release) == "full-engine"));
+        bool rawUsage = name == "GetToolUsage" && portedUsage;
         var data = rawUsage ? raw!.DeepClone().AsObject() : Object(raw, preserveArguments: name == "GetToolUsage");
         // Collapse the legacy wrapper while retaining all domain and candidate evidence.
         if (data["data"] is JsonObject nested)

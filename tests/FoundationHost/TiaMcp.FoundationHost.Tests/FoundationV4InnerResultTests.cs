@@ -124,10 +124,10 @@ public sealed class FoundationV4InnerResultTests : IDisposable
     [InlineData("19", null, true)]
     [InlineData("20", "DeleteHmiTag", false)]
     [InlineData("20", "ManageGenerationArtifacts", true)]
-    [InlineData("20", null, false)]
+    [InlineData("20", null, true)]
     [InlineData("21", "DeleteHmiTag", false)]
     [InlineData("21", "ManageGenerationArtifacts", true)]
-    [InlineData("21", null, false)]
+    [InlineData("21", null, true)]
     public void Public_usage_profile_preserves_master_output_schema(string release, string? toolName, bool mapped)
     {
         var schema = JsonNode.Parse("""

@@ -6,6 +6,10 @@
 
 ### Changed
 
+- On all eight releases, ported tools check capability before TIA readiness. Without a TIA installation, `GetSessionState` returns `PRECONDITION_FAILED` and leaves a cold worker stopped. `--public-api` selects worker assemblies, and readiness checks the TIA installation separately.
+- On V14 SP1 through V19, an explicit status read now leaves a cold bundled worker stopped if it cannot find the installation’s Openness API files. The doctor’s Openness check uses installation evidence on all eight releases.
+- `GetToolUsage` applies V4 field names to index and example-library requests on every release. Named full-engine examples outside the ported usage path now report `summary` for the reply’s message on V20 and V21, matching earlier releases. Caller argument names are preserved.
+
 - Ported tools on V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21 share a Workbench approval and result path. Replies now identify unverified native behavior according to each release’s verification record, including early refusals.
 - V19 now returns the V20/V21 argument diagnostics for Unified inputs that repeat an object key.
 - On V20 and V21, ported calls include recovery guidance from the Foundation host. A refused `SetUnifiedGlobalScript` create request also reports when Workbench approval is disabled. `ManagePlcExternalSources` reports `UNSUPPORTED_CAPABILITY` for unknown actions on both releases and for `renameGroup` on V20.

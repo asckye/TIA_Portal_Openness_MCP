@@ -3,7 +3,6 @@ extern alias toolpipeline;
 using EngineHostPipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
 using IEngineWorker = toolpipeline::TiaMcp.FoundationHost.IEngineWorker;
 using IEngineWorkerProgress = toolpipeline::TiaMcp.FoundationHost.IEngineWorkerProgress;
-using IEngineWorkerReadiness = toolpipeline::TiaMcp.FoundationHost.IEngineWorkerReadiness;
 using EngineReply = toolpipeline::TiaMcp.FoundationHost.EngineReply;
 using IWorkerLane = toolpipeline::TiaMcpServer.Dispatch.ToolDispatchLanes.IWorkerLane;
 using IHostToolServices = toolpipeline::TiaMcpServer.ModelContextProtocol.IHostToolServices;
@@ -49,7 +48,7 @@ internal static class FoundationHostPorts
     }
 
     internal sealed class Services(IFoundationWorker worker, string release, Func<JsonObject> readiness, string? apiDirectory)
-        : IEngineWorker, IEngineWorkerProgress, IEngineWorkerReadiness, IHostToolServices
+        : IEngineWorker, IEngineWorkerProgress, IHostToolServices
     {
         public async Task<JsonObject?> ReadSimulatorInstances(CancellationToken token)
         {
@@ -58,8 +57,6 @@ internal static class FoundationHostPorts
                 ["request"] = new JsonObject { ["operation"] = "ReadPlcSimAdvancedInstances",
                     ["arguments"] = new JsonObject { ["includeState"] = true } } }, token).ConfigureAwait(false) as JsonObject;
         }
-        public Task PrepareReadiness(CancellationToken token)
-            => worker is IFoundationWorkerReadiness readiness ? readiness.PrepareReadiness(token) : Task.CompletedTask;
         public IDisposable UseProgress(Action<string>? report)
             => worker is IEngineWorkerProgress progress ? progress.UseProgress(report) : new EmptyLane();
         internal Func<IReadOnlyList<McpServerTool>> Roster = () => Array.Empty<McpServerTool>();
@@ -73,18 +70,20 @@ internal static class FoundationHostPorts
         public JsonNode? Binding => Snapshot()["binding"]?.DeepClone();
         internal JsonObject OperatorSnapshot()
             => SharedSessionState.For(worker).OperatorSnapshot(release);
+        public JsonObject EnvironmentReadiness()
+        {
+            var environment = readiness();
+            return new JsonObject { ["ready"] = environment["ready"]?.DeepClone(), ["cause"] = environment["cause"]?.DeepClone(),
+                ["groupOk"] = environment["environment"]?["opennessGroupOk"]?.DeepClone(),
+                ["recommendedFix"] = environment["recommendedFix"]?.DeepClone(), ["recommendedFixZh"] = environment["recommendedFixZh"]?.DeepClone() };
+        }
         public JsonObject Snapshot()
         {
             if (worker is IEngineWorker engine)
             {
                 var snapshot = engine.Snapshot();
                 if ((string?)snapshot["state"] == "NotStarted")
-                {
-                    var initial = readiness();
-                    snapshot["readiness"] = new JsonObject { ["ready"] = initial["ready"]?.DeepClone(), ["cause"] = initial["cause"]?.DeepClone(),
-                        ["groupOk"] = initial["environment"]?["opennessGroupOk"]?.DeepClone(),
-                        ["recommendedFix"] = initial["recommendedFix"]?.DeepClone(), ["recommendedFixZh"] = initial["recommendedFixZh"]?.DeepClone() };
-                }
+                    snapshot["readiness"] = EnvironmentReadiness();
                 return SessionSnapshot(snapshot);
             }
             var ready = readiness();

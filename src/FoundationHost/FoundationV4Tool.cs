@@ -1,7 +1,6 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias toolpipeline;
 using ResponseGuard = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
-using ReadinessGuard = toolpipeline::TiaMcpServer.Dispatch.OpennessReadinessGuard;
 using DeclaredHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
@@ -16,7 +15,6 @@ using VaultArguments = toolpipeline::TiaMcpServer.ModelContextProtocol.SecretVau
 using PresetProjectGuard = toolpipeline::TiaMcp.FoundationHost.PresetProjectGuard;
 #else
 using ResponseGuard = TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
-using ReadinessGuard = TiaMcpServer.Dispatch.OpennessReadinessGuard;
 using DeclaredHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using InvocationHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
@@ -50,7 +48,6 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly Func<JsonObject>? readinessForTest;
     private readonly bool sharedSession;
     private readonly bool declaredPortInputAndPaging;
-    private readonly bool useHostReadiness;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -58,7 +55,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings = null,
         Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings,
             CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null,
-        Func<JsonObject>? readinessForTest = null, bool sharedSession = false, bool registered = false)
+        Func<JsonObject>? readinessForTest = null, bool sharedSession = false)
     {
         if (inner is OfflineXmlTool xmlTool) inner = xmlTool.ForRelease(release);
         else if (inner is OfflineCompositionTool compositionTool) inner = compositionTool.ForRelease(release);
@@ -75,7 +72,6 @@ internal sealed class FoundationV4Tool : McpServerTool
         PlcSoftwareUnitSchema.Apply(schema, source.Name, release);
         if (inner is FoundationTool { Ported: true })
         {
-            useHostReadiness = registered && !ReleaseCatalogData.Releases[release].FoundationReadinessBoundary;
             declaredPortInputAndPaging = ReleaseCatalogData.DeclaredPortInputAndPaging(release);
             DeclaredHost.AssertV4Tool(source.Name);
             tool = new Tool { Name = source.Name, Title = source.Title,
@@ -350,30 +346,20 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(unavailable);
             if (!internalPrecheck && DeclaredHost.OnlinePlanRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()) is Error expired)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, expired, true));
-            // Registered V20/V21 ports use the engine session snapshot. Standalone Foundation tools keep their own worker requirements.
-            if (useHostReadiness && EngineHostConfiguration.CurrentOrNull != null)
+            if (tool.Name != "DisconnectPortal" && inner is FoundationTool nativeTool)
             {
-                if (await ReadinessGuard.Check(tool.Name, request, cancellationToken).ConfigureAwait(false) is { } refusal)
-                    return await Recorded(refusal);
-            }
-            else if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool
-                && (nativeTool.UsesProductionWorker || readinessForTest != null))
-            {
-                await nativeTool.PrepareReadiness(cancellationToken).ConfigureAwait(false);
-                var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
-                if (!readiness["ready"]!.GetValue<bool>())
-                    return await Recorded(FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness));
-            }
-            // V20/V21 with their bundled PlcWorker answer like the engine (P8-04j2): its session and process reads stopped at
-            // native admission without a ready TIA environment. A ready environment dispatches exactly as before.
-            else
-                if (ReleaseCatalogData.Releases[release].MergeWorkerReadiness && inner is FoundationTool { IsRuntimeQuery: true, UsesBundledPlcWorker: true
-                } runtimeQuery)
-            {
-                await runtimeQuery.PrepareReadiness(cancellationToken).ConfigureAwait(false);
-                if (!(readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release))["ready"]!.GetValue<bool>())
-                    return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
-                        HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()), true));
+                bool runtimeQuery = nativeTool.IsRuntimeQuery && nativeTool.UsesBundledPlcWorker;
+                if (runtimeQuery || nativeTool.RequiresTia && (nativeTool.UsesProductionWorker || readinessForTest != null))
+                {
+                    var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
+                    if (!readiness["ready"]!.GetValue<bool>())
+                    {
+                        var refusal = runtimeQuery ? FoundationV4Result.Reject(release, tool.Name, id,
+                            HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()), true)
+                            : FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness);
+                        return await Recorded(refusal);
+                    }
+                }
             }
             if (write && inner is FoundationTool { WorkerRecoveryNeeded: true } recoveryTool)
             {

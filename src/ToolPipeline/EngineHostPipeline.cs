@@ -33,6 +33,7 @@ namespace TiaMcp.FoundationHost
         public JsonNode? Binding { get; }
         public object SessionKey { get; }
         public JsonObject Snapshot();
+        public JsonObject EnvironmentReadiness() => Snapshot()["readiness"]!.AsObject();
         public Task<JsonObject> Status(CancellationToken token);
         public Task<JsonObject> StartForStatus(CancellationToken token) => Status(token);
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token);
@@ -43,11 +44,6 @@ namespace TiaMcp.FoundationHost
     {
         public IDisposable UseProgress(Action<string>? report);
     }
-    public interface IEngineWorkerReadiness
-    {
-        public Task PrepareReadiness(CancellationToken token);
-    }
-
     internal static class EngineHostConfiguration
     {
         internal static string ReleaseKey = "21";

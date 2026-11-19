@@ -2,10 +2,10 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Runtime
 {
-    // The worker supplies these observations. The host never probes Openness.
+    // Admission uses the session's installation evidence, even when a running worker has a cached status.
     public static class OpennessReadiness
     {
-        private static JsonObject Current => TiaMcp.FoundationHost.EngineHostConfiguration.Worker.Snapshot()["readiness"]!.AsObject();
+        private static JsonObject Current => TiaMcp.FoundationHost.EngineHostConfiguration.Worker.EnvironmentReadiness();
         public static bool? GroupOk => (bool?)Current["groupOk"];
         public static bool Ready => (bool?)Current["ready"] == true;
         public static string? Cause => (string?)Current["cause"];

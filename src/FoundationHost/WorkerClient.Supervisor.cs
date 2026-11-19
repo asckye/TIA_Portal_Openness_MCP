@@ -24,24 +24,9 @@ using TiaMcpServer.Siemens;
 namespace TiaMcp.FoundationHost;
 internal sealed partial class WorkerClient
 {
-    public async Task PrepareReadiness(CancellationToken token)
-    {
-        // The engine read its worker status for V20/V21 and stayed usable when TIA was missing. A bundled PlcWorker cannot start
-        // without the release's Openness assemblies; then the host probe alone answers readiness (P8-04j2).
-        if (SharedSession && ReleaseCatalogData.Releases[releaseKey].MergeWorkerReadiness && sharedStatus == null
-            && !Disconnected && !RecoveryNeeded && CanStartForStatus())
-            await Observe("status", new JsonObject(), token);
-    }
-    // notReady answers when neither the worker nor an SDK fixture reports a ready environment (V20/V21: the engine's probe, P8-04j2).
-    internal JsonObject Readiness(Func<JsonObject> production, Func<JsonObject>? notReady = null)
-    {
-        if (ReleaseCatalogData.Releases[releaseKey].MergeWorkerReadiness
-            && ((bool?)SharedStatus?["readiness"]?["ready"] == true || WorkerSdkFixture.Ready(workerExe, releaseKey)))
-        {
-            var merged = production(); merged["ready"] = true; merged["cause"] = null; return merged;
-        }
-        return WorkerSdkFixture.Readiness(workerExe, releaseKey, apiDirectory, notReady ?? production);
-    }
+    internal JsonObject Readiness(Func<JsonObject> environment)
+        => WorkerSdkFixture.Readiness(workerExe, releaseKey, apiDirectory, environment);
+
     private JsonObject SupervisorEnvironment() => SupervisorReadiness?.Invoke()
         ?? Readiness(() => FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, null));
     public ModelContextProtocol.Protocol.CallToolResult ParkResult(ModelContextProtocol.Protocol.CallToolResult result, string name)
@@ -238,9 +223,7 @@ internal sealed partial class WorkerClient
                     ["generation"] = approvalIdentity["BindingEpoch"]?.DeepClone() } } };
         }
     }
-    // The V20/V21 engine started for a status read without TIA; the PlcWorker needs this release's Openness assemblies to start.
-    // Without them a status read reports the stopped worker and the not-ready environment instead of a fault (P8-04j2).
-    private bool CanStartForStatus() => !ReleaseCatalogData.Releases[releaseKey].MergeWorkerReadiness || !Bundled
+    private bool CanStartForStatus() => !Bundled
         || !string.IsNullOrWhiteSpace(apiDirectory) && Directory.Exists(apiDirectory)
             && FoundationPassiveDiagnostics.Readiness(releaseKey, apiDirectory, null)["environment"]?["tiaInstallPath"] != null;
     internal async Task RefreshHostState(bool startForStatus, CancellationToken token)

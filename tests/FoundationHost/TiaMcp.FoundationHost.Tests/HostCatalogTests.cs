@@ -15,6 +15,14 @@ namespace TiaMcp.FoundationHost.Tests;
 
 public sealed class HostCatalogTests
 {
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void All_release_catalog_policy_fields_have_one_value(string release)
+    {
+        foreach (var field in typeof(Data).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            Assert.Equal(field.GetValue(Data.Releases["14sp1"]), field.GetValue(Data.Releases[release]));
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"),
         InlineData("20"), InlineData("21")]
     public void Whole_roster_runtime_disclosure_and_description_agree_in_both_directions(string release)
@@ -216,7 +224,7 @@ public sealed class HostCatalogTests
         var (host, _, _) = Build(release);
         Assert.Equal(host.All.Keys.OrderBy(name => name, StringComparer.Ordinal), host.All.Keys);
         Assert.Equal(host.IncludingUnavailable.Keys.OrderBy(name => name, StringComparer.Ordinal), host.IncludingUnavailable.Keys);
-        Assert.Equal(data.LiteNames.OrderBy(name => name, StringComparer.Ordinal), host.Lite.Select(tool => tool.Name));
+        Assert.Equal(Data.Rosters[release].LiteNames.OrderBy(name => name, StringComparer.Ordinal), host.Lite.Select(tool => tool.Name));
         Assert.All(host.Lite, tool => Assert.True(host.All.ContainsKey(tool.Name)));
         Assert.NotEmpty(host.Lite);
         Assert.True(host.Lite.Count < host.All.Count);

@@ -10,8 +10,7 @@ namespace TiaMcp.FoundationHost;
 
 // Presentation is selected here; FoundationCatalog never branches on a release key.
 internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, bool RetainUnavailable,
-    bool UseDeclaredDiscovery, IReadOnlyList<string> PreferredOrder,
-    IReadOnlyList<string> LiteNames, IReadOnlyList<string> ManifestSupplementaryReleases, StringComparer NameComparer,
+    bool UseDeclaredDiscovery, IReadOnlyList<string> ManifestSupplementaryReleases, StringComparer NameComparer,
     string DefaultExampleProfile, IReadOnlyDictionary<string, string> ExampleProfiles,
     IReadOnlyDictionary<string, string> ManifestReturnTypes)
 {
@@ -20,7 +19,6 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
     internal bool CatalogCallDiscipline { get; init; }
     internal bool HasManifestCatalog { get; init; }
     internal bool SharedSession { get; init; } = true;
-    internal bool MergeWorkerReadiness { get; init; }
     internal bool ExtendedWorkerStatus { get; init; } = true;
     internal bool StartSupervisorOnRead { get; init; }
     internal bool NativeObservations { get; init; } = true;
@@ -28,7 +26,6 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
         "environment", "group", "group.fix", "assemblies", "tool-names", "reflection", "reflection-deny",
         "session.GetState", "session.ListPortalProcessProjects", "session.GetProjectTree", "session.ConnectPortal",
         "session.ValidateAutomationContext" };
-    internal bool FoundationReadinessBoundary { get; init; } = true;
 
     // Direct V20/V21 ports publish declaration errors, check caller files at the host and page at the client text limit.
     // Earlier direct ports retain Foundation argument errors, worker-side file access and the worker channel size limit.
@@ -43,25 +40,22 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
         .GetTypes().SelectMany(type => type.GetMethods())
         .Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray());
 
-    internal static IReadOnlyDictionary<string, ReleaseCatalogData> Releases { get; } =
-        new Dictionary<string, ReleaseCatalogData>(StringComparer.Ordinal)
-        {
-            ["14sp1"] = Foundation("14sp1"),
-            ["15.1"] = Foundation("15.1"),
-            ["16"] = Foundation("16"),
-            ["17"] = Foundation("17"),
-            ["18"] = Foundation("18"),
-            ["19"] = Foundation("19"),
-            ["20"] = Declared("20"),
-            ["21"] = Declared("21")
-        };
+    internal sealed record Roster(IReadOnlyList<string> PreferredOrder, IReadOnlyList<string> LiteNames);
 
-    private static ReleaseCatalogData Presentation(string release) => new(DiscoveryInstructions, true, true, true,
-        ToolUsageCatalog.ProfileEntries(release).Select(row => (string)row!["currentName"]!)
-            .Append("GetCallResult").Append("GetApprovalStatus").Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray(),
-        ToolUsageCatalog.ProfileEntries(release).Where(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"))
-            .Select(row => (string)row!["currentName"]!).Append("GetCallResult").Append("GetApprovalStatus").Distinct(StringComparer.Ordinal).ToArray(),
-        new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }, StringComparer.Ordinal,
+    internal static IReadOnlyDictionary<string, Roster> Rosters { get; } =
+        TiaMcp.Adapters.Contracts.ReleaseRange.All.ToDictionary(key => key, key =>
+        {
+            var entries = ToolUsageCatalog.ProfileEntries(key);
+            var names = entries.Select(row => (string)row!["currentName"]!);
+            var lite = entries.Where(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"))
+                .Select(row => (string)row!["currentName"]!);
+            return new Roster(
+                names.Append("GetCallResult").Append("GetApprovalStatus").Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray(),
+                lite.Append("GetCallResult").Append("GetApprovalStatus").Distinct(StringComparer.Ordinal).ToArray());
+        }, StringComparer.Ordinal);
+
+    private static readonly ReleaseCatalogData Presentation = new(DiscoveryInstructions, true, true, true,
+        TiaMcp.Adapters.Contracts.ReleaseRange.All, StringComparer.Ordinal,
         "plc-foundation", new Dictionary<string, string>(StringComparer.Ordinal),
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
@@ -73,10 +67,8 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
             ["GetEnvironmentDiagnostics"] = "CallToolResult"
         }) { RegisterDiscoveryHandlers = true, CatalogCallDiscipline = true, HasManifestCatalog = true };
 
-    private static ReleaseCatalogData Foundation(string release) => Presentation(release);
-
-    private static ReleaseCatalogData Declared(string release) => Presentation(release) with
-        { MergeWorkerReadiness = true, FoundationReadinessBoundary = false };
+    internal static IReadOnlyDictionary<string, ReleaseCatalogData> Releases { get; } =
+        Rosters.Keys.ToDictionary(key => key, _ => Presentation, StringComparer.Ordinal);
 
     internal string ExampleProfile(string name) => ExampleProfiles.GetValueOrDefault(name, DefaultExampleProfile);
 
@@ -84,8 +76,9 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
     {
         var ported = PortedToolDeclarations.Methods(release, RetainUnavailable).ToArray();
         var names = ported.Select(Name).ToHashSet(StringComparer.Ordinal);
-        var discovery = PreferredOrder.Count == 0 ? Enumerable.Empty<MethodInfo>() : s_attributedMethods.Value
-            .Where(method => !names.Contains(Name(method)) && PreferredOrder.Contains(Name(method), StringComparer.Ordinal));
+        var order = Rosters[release].PreferredOrder;
+        var discovery = order.Count == 0 ? Enumerable.Empty<MethodInfo>() : s_attributedMethods.Value
+            .Where(method => !names.Contains(Name(method)) && order.Contains(Name(method), StringComparer.Ordinal));
         return ported.Concat(discovery).Where(method => UseDeclaredDiscovery || ToolExecution.Table[Name(method)] == "host");
     }
 

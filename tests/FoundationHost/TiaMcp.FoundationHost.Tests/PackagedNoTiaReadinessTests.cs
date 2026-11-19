@@ -10,14 +10,13 @@ using TiaOpenness.Shared;
 using Pipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
 using Xunit;
 
-// P8-04j2: a packaged V20/V21 host now runs its bundled PlcWorker. Without TIA the PlcWorker cannot start (it needs the release's
-// Openness assemblies), while the engine started and reported "not ready". These cases use a real bundled WorkerClient that cannot
-// start (no worker file, no PublicAPI directory) and the no-TIA environment answer, and require the engine's replies:
-// readiness for a write preview, native admission for a session read, a fault-free status read and capability before readiness.
+// The packaged worker cannot start without its Openness assemblies. Exercise the public pipeline with a missing
+// installation and assert native admission, capability precedence and a fault-free, cold worker on every release.
 [Collection(BundleSelectionCollection.Name)]
 public sealed class PackagedNoTiaReadinessTests
 {
-    [Theory, InlineData("20"), InlineData("21")]
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Write_preview_stops_at_readiness_and_does_not_start_or_fault_the_worker(string release)
     {
         using var host = new Host(release);
@@ -25,14 +24,17 @@ public sealed class PackagedNoTiaReadinessTests
         Assert.True(reply["ok"]?.GetValue<bool>() == false, reply.ToJsonString());
         Assert.Equal("RESOURCE_UNAVAILABLE", (string?)reply["error"]?["code"]);
         Assert.Equal("tia-openness-environment", (string?)reply["error"]?["details"]?["resource"]);
-        Assert.Contains("TIA Portal V" + release + " or its Openness API files were not found.", (string?)reply["error"]?["message"]);
+        Assert.Contains("TIA Portal " + TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName + " or its Openness API files were not found.",
+            (string?)reply["error"]?["message"]);
         Assert.Equal("rejected-before-operation", (string?)reply["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)reply["meta"]?["execution"]);
         Assert.False(host.Worker.WorkerFaulted);
+        Assert.Null(host.Worker.OperatorSnapshot()["pid"]);
     }
 
-    [Theory, InlineData("20"), InlineData("21")]
-    public async Task Session_read_stops_at_native_admission_like_the_engine(string release)
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Session_read_stops_at_native_admission(string release)
     {
         using var host = new Host(release);
         var reply = await host.Call("GetSessionState", new JsonObject());
@@ -44,7 +46,8 @@ public sealed class PackagedNoTiaReadinessTests
         Assert.Equal("not-started", (string?)reply["meta"]?["execution"]);
     }
 
-    [Theory, InlineData("20"), InlineData("21")]
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Status_read_reports_the_environment_without_faulting_the_worker(string release)
     {
         using var host = new Host(release);
@@ -55,30 +58,42 @@ public sealed class PackagedNoTiaReadinessTests
         Assert.Null(worker?["sessionLocked"]);
         Assert.False(worker?["readiness"]?["ready"]?.GetValue<bool>());
         Assert.False(host.Worker.WorkerFaulted);
+        Assert.Null(host.Worker.OperatorSnapshot()["pid"]);
         // A later read keeps the admission answer instead of a session reset.
         var state = await host.Call("GetSessionState", new JsonObject());
         Assert.Equal("PRECONDITION_FAILED", (string?)state["error"]?["code"]);
     }
 
-    [Theory, InlineData("20"), InlineData("21")]
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Bootstrap_reports_the_no_tia_cause(string release)
     {
         using var host = new Host(release);
         var reply = await host.Call("InitializeEnvironment", new JsonObject());
         Assert.True(reply["ok"]?.GetValue<bool>() == true, reply.ToJsonString());
         Assert.False(reply["data"]?["ready"]?.GetValue<bool>());
-        Assert.Contains("TIA Portal V" + release + " or its Openness API files were not found.", (string?)reply["data"]?["recommendedReason"]);
+        Assert.Contains("TIA Portal " + TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName + " or its Openness API files were not found.",
+            (string?)reply["data"]?["recommendedReason"]);
         Assert.False(host.Worker.WorkerFaulted);
+        Assert.Null(host.Worker.OperatorSnapshot()["pid"]);
     }
 
-    [Theory, InlineData("20"), InlineData("21")]
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Bridged_capability_refusal_precedes_readiness_like_the_engine(string release)
     {
         using var host = new Host(release);
-        foreach (var action in new[] { "create", "update", "delete" })
+        // Unified list entries start at V20. Earlier releases expose PLC user groups and refuse these rename actions.
+        bool hasLists = TiaMcp.Adapters.Contracts.PortedFamilies.Available(release, "ManageUnifiedListEntries");
+        foreach (var example in hasLists ? new[] { "create", "update", "delete" } : new[] { "blocks", "types", "externalSources" })
         {
-            var reply = await host.Call("CallTool", new JsonObject { ["name"] = "ManageUnifiedListEntries", ["arguments"] = new JsonObject {
-                ["softwarePath"] = "HMI_RT_1", ["category"] = "textLists", ["listName"] = "Fixture", ["action"] = action, ["dryRun"] = true } });
+            var target = hasLists ? "ManageUnifiedListEntries" : "ManagePlcUserGroup";
+            var arguments = hasLists
+                ? new JsonObject { ["softwarePath"] = "HMI_RT_1", ["category"] = "textLists", ["listName"] = "Fixture",
+                    ["action"] = example, ["dryRun"] = true }
+                : new JsonObject { ["softwarePath"] = "PLC_1", ["family"] = example, ["groupPath"] = "Group",
+                    ["action"] = "rename", ["newName"] = "Renamed", ["dryRun"] = true };
+            var reply = await host.Call("CallTool", new JsonObject { ["name"] = target, ["arguments"] = arguments });
             Assert.True(reply["ok"]?.GetValue<bool>() == false, reply.ToJsonString());
             Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)reply["error"]?["code"]);
             Assert.Equal("rejected-before-operation", (string?)reply["meta"]?["outcome"]);
@@ -89,8 +104,9 @@ public sealed class PackagedNoTiaReadinessTests
         Assert.True((string?)save["error"]?["code"] == "RESOURCE_UNAVAILABLE", save.ToJsonString());
     }
 
-    [Theory, InlineData("20"), InlineData("21")]
-    public void Explicit_public_api_is_not_a_tia_installation_for_the_engine_releases(string release)
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Explicit_public_api_is_not_a_tia_installation(string release)
     {
         using var files = new ApiFiles(release);
         var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(["--bundle-root", files.Bundle, "--release-key", release, "--public-api", files.Api, "--offline"], files.Bundle);
@@ -106,11 +122,11 @@ public sealed class PackagedNoTiaReadinessTests
     }
 
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
-    public void Old_releases_keep_their_explicit_public_api_installation(string release)
+    public void Sdk_only_directory_does_not_supply_an_old_release_installation(string release)
     {
         using var files = new ApiFiles(release);
         var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(["--bundle-root", files.Bundle, "--release-key", release, "--public-api", files.Api, "--offline"], files.Bundle);
-        Assert.Equal((files.Api, "host-option"), foundationhost::TiaMcp.FoundationHost.SharedReleaseHost.ReadinessInstallation(options));
+        Assert.Equal(((string?)null, (string?)null), foundationhost::TiaMcp.FoundationHost.SharedReleaseHost.ReadinessInstallation(options));
     }
 
     private sealed class Host : IDisposable
@@ -130,7 +146,7 @@ public sealed class PackagedNoTiaReadinessTests
             { Bundled = true, SharedSession = true };
             // The host's no-TIA answer: no installation found (the engine's "not found" cause).
             Func<JsonObject> environment = () => FoundationPassiveDiagnostics.Readiness(release, _ => null, () => false);
-            Func<JsonObject> readiness = () => Worker.Readiness(environment, environment);
+            Func<JsonObject> readiness = () => Worker.Readiness(environment);
             IReadOnlyList<McpServerTool>? roster = null;
             var shared = LegacyHostToolRegistry.Create(Worker, release, true, readinessProvider: readiness, usageRoster: () => roster!, hostPorts: false);
             var services = FoundationHostPorts.CreateServices(Worker, release, readiness, "");
@@ -141,7 +157,7 @@ public sealed class PackagedNoTiaReadinessTests
         }
         internal async Task<JsonObject> Call(string name, JsonObject arguments)
         {
-            var tool = pipeline.AllTools.Single(t => t.ProtocolTool.Name == name);
+            var tool = pipeline.Tools.Single(t => t.ProtocolTool.Name == name);
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
             { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
             // As the MCP server's serialized-call wrapper does: a bridged target is invoked on the current call's server.

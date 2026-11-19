@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -22,8 +21,7 @@ namespace TiaMcpServer.Dispatch
         internal static bool IsSafeWithoutTia(string name)
         {
 #if TIA_ENGINE_HOST
-            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].FoundationReadinessBoundary
-                && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+            if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
                 && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03") return true;
 #endif
             return ToolTaxonomy.IsSafeWithoutTia(name);
@@ -32,9 +30,8 @@ namespace TiaMcpServer.Dispatch
         private static bool RequiresOpenness(string name)
         {
 #if TIA_ENGINE_HOST
-            // Foundation targets retain their own release readiness and approval boundary.
-            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].FoundationReadinessBoundary
-                && McpServer.CatalogView.Find(name)?.Execution == "foundation") return false;
+            // The Foundation target checks readiness after capability admission.
+            if (McpServer.CatalogView.Find(name)?.Execution == "foundation") return false;
 #endif
             return !IsSafeWithoutTia(name);
         }
@@ -58,7 +55,7 @@ namespace TiaMcpServer.Dispatch
             return RequiresOpenness(name) ? name : null;
         }
 
-        internal static async ValueTask<CallToolResult?> Check(string name, RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
+        private static CallToolResult? Check(string name, RequestContext<CallToolRequestParams> request)
         {
             var target = NativeTarget(name, request.Params?.Arguments);
             if (target == null || OpennessReadiness.Ready) return null;
@@ -77,27 +74,6 @@ namespace TiaMcpServer.Dispatch
                     name == "CallTool" && admission.Details is InvalidArgumentDetails { Parameter: not "" }
                         ? target : name, admission,
                     McpServer.CurrentBehaviorTargets(name, arguments));
-#if TIA_ENGINE_HOST
-            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].MergeWorkerReadiness
-                && (string?)McpServer.Worker.Snapshot()["state"] == "NotStarted")
-            {
-                try
-                {
-                    if (McpServer.Worker is TiaMcp.FoundationHost.IEngineWorkerReadiness readiness)
-                        await readiness.PrepareReadiness(cancellationToken).ConfigureAwait(false);
-                    else await McpServer.Worker.Status(cancellationToken).ConfigureAwait(false);
-                }
-                catch (Exception failure)
-                { return McpServer.DiscloseTargets(McpServer.TargetFailure(name, failure, false), name, arguments); }
-                if (OpennessReadiness.Ready) return null;
-            }
-            // V20/V21 (P8-04j2): a ported capability refusal starts no native call, and the engine reported it before
-            // readiness. The bridge dispatches such a target so its own capability admission answers.
-            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].MergeWorkerReadiness && name == "CallTool"
-                && arguments.TryGetProperty("arguments", out var portedArguments) && portedArguments.ValueKind == JsonValueKind.Object
-                && McpServer.PortedCapabilityRefusals.TryGetValue((McpServer.ReleaseKey, target), out var refuses) && refuses(portedArguments))
-                return null;
-#endif
             var cause = OpennessReadiness.Cause ?? "TIA Openness initialization has not completed.";
             var fix = OpennessReadiness.FixEn ?? "Run `tia doctor` to inspect the TIA Openness installation.";
             var fixZh = OpennessReadiness.FixZh ?? Runtime.EnvironmentDoctor.DefaultFixZh;
@@ -117,20 +93,8 @@ namespace TiaMcpServer.Dispatch
 
             public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
                 CancellationToken cancellationToken = default)
-                => await Check(ProtocolTool.Name, request, cancellationToken).ConfigureAwait(false)
+                => Check(ProtocolTool.Name, request)
                     ?? await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
         }
     }
 }
-#if TIA_ENGINE_HOST
-
-namespace TiaMcpServer.ModelContextProtocol
-{
-    public static partial class McpServer
-    {
-        // Registered by the Foundation host's ported tools per release and tool: true when the target refuses these arguments by capability.
-        internal static System.Collections.Concurrent.ConcurrentDictionary<(string Release, string Tool), Func<JsonElement, bool>> PortedCapabilityRefusals {
-            get; } = new();
-    }
-}
-#endif

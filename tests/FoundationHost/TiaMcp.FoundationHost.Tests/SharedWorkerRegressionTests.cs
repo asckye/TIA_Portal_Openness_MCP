@@ -184,12 +184,32 @@ public sealed class SharedWorkerRegressionTests
     }
 
     [Theory, InlineData("20"), InlineData("21")]
-    public async Task Non_shared_readiness_does_not_add_a_managed_worker_operation(string release)
+    public void Non_shared_readiness_does_not_add_a_managed_worker_operation(string release)
     {
         using var worker = new WorkerClient(release, "missing-worker", "missing-api", true) { Bundled = false, SharedSession = false };
-        await worker.PrepareReadiness(CancellationToken.None);
+        Assert.False((bool?)worker.Readiness(() => new JsonObject { ["ready"] = false })["ready"]);
         Assert.Null(worker.OperatorSnapshot()["pid"]);
         Assert.False(worker.WorkerFaulted);
+    }
+
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task A_ready_worker_does_not_override_a_missing_installation(string release)
+    {
+        using var fixture = new Fixture(release);
+        var worker = fixture.Worker;
+        JsonObject Missing() => FoundationPassiveDiagnostics.Readiness(release, _ => null, () => false);
+        var services = FoundationHostPorts.CreateServices(worker, release, Missing, null);
+        using var pipeline = new Pipeline(release, services, Array.Empty<McpServerTool>());
+        using var context = pipeline.EnterSession();
+        Assert.True(JsonNode.DeepEquals(Missing(), worker.Readiness(Missing)));
+        Assert.False(toolpipeline::TiaMcpServer.Runtime.OpennessReadiness.Ready);
+        Assert.Null(worker.OperatorSnapshot()["pid"]);
+        await worker.Observe("status", new(), CancellationToken.None);
+        Assert.True((bool?)worker.SharedStatus?["readiness"]?["ready"]);
+        Assert.True(JsonNode.DeepEquals(Missing(), worker.Readiness(Missing)));
+        Assert.False(toolpipeline::TiaMcpServer.Runtime.OpennessReadiness.Ready);
+        Assert.Equal((string?)Missing()["cause"], toolpipeline::TiaMcpServer.Runtime.OpennessReadiness.Cause);
     }
 
     [Theory, InlineData("20", "doctor"), InlineData("21", "doctor"),
@@ -275,14 +295,17 @@ public sealed class SharedWorkerRegressionTests
     }
 
     [Theory, InlineData("20"), InlineData("21")]
-    public async Task Worker_readiness_probe_uses_the_owned_candidate_lane(string release)
+    public async Task Readiness_keeps_the_worker_cold_and_explicit_status_uses_the_owned_candidate_lane(string release)
     {
         using var fixture = new Fixture(release);
         var worker = fixture.Worker;
         using var lane = await worker.AcquireLane(CancellationToken.None);
         WorkerClient.ActivateLane(lane);
         using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
-        await worker.PrepareReadiness(deadline.Token);
+        worker.Readiness(() => new JsonObject { ["ready"] = false });
+        Assert.Null(worker.OperatorSnapshot()["pid"]);
+        Assert.Null(worker.SharedStatus);
+        await worker.Observe("status", new(), deadline.Token);
         Assert.True((bool?)worker.SharedStatus?["readiness"]?["ready"]);
         Assert.Null(await worker.AcquireLane(deadline.Token));
         lane?.Dispose();

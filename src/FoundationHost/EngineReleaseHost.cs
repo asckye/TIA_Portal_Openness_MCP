@@ -101,11 +101,9 @@ internal static class SharedReleaseHost
         return 0;
     }
 
-    // The installation that answers a not-ready environment. V20/V21 keep the engine's answer (P8-04j2): the engine located TIA
-    // from --tia-portal-location, TiaPortalLocation or the registry, so an explicit --public-api names only the worker's assemblies.
     internal static (string? Directory, string? Source) ReadinessInstallation(HostOptions options)
     {
-        if (!ReleaseCatalogData.Releases[options.ReleaseKey].MergeWorkerReadiness || !options.PublicApiOption)
+        if (!options.PublicApiOption)
             return (options.ApiDirectory, options.ApiDirectorySource);
         string? installation = string.IsNullOrWhiteSpace(options.TiaPortalLocation) ? null
             : TiaMcp.Versioning.TiaVersionCatalog.Get(options.ReleaseKey).FindApiDirectory(options.TiaPortalLocation);
@@ -130,12 +128,9 @@ internal static class SharedReleaseHost
         {
             var data = ReleaseCatalogData.Releases[options.ReleaseKey];
             IReadOnlyList<McpServerTool>? roster = null;
-            Func<System.Text.Json.Nodes.JsonObject> production = () => FoundationPassiveDiagnostics
-                .Readiness(options.ReleaseKey, options.ApiDirectory, options.ApiDirectorySource);
             var (installation, installationSource) = ReadinessInstallation(options);
-            Func<System.Text.Json.Nodes.JsonObject> notReady = () => FoundationPassiveDiagnostics
-                .Readiness(options.ReleaseKey, installation, installationSource);
-            Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker.Readiness(production, notReady);
+            Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker.Readiness(() => FoundationPassiveDiagnostics
+                .Readiness(options.ReleaseKey, installation, installationSource));
             var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
                 options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false, presets: options.Presets);
             LocalStabilityTelemetry.StartupStage("session.registry.created");
@@ -143,7 +138,7 @@ internal static class SharedReleaseHost
             var services = FoundationHostPorts.CreateServices(worker, options.ReleaseKey, readiness, options.ApiDirectory);
             LocalStabilityTelemetry.StartupStage("session.services.created");
             var pipeline = new EngineHostPipeline("", options.WorkerExe, options.ReleaseKey, services,
-                options.Profile, shared, data.LiteNames.ToHashSet(StringComparer.Ordinal), catalogForTest, options.Presets);
+                options.Profile, shared, null, catalogForTest, options.Presets);
             LocalStabilityTelemetry.StartupStage("session.pipeline.created");
             services.Roster = () => roster!;
             services.ResetExports = pipeline.ResetExports;

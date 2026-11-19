@@ -251,19 +251,11 @@ internal sealed partial class FoundationTool
         }
         return arguments;
     }
-    internal void RegisterCapabilityRefusal()
-        => McpServer.PortedCapabilityRefusals[(portedRelease!, tool.Name)] = RefusesByCapability;
-
     internal bool HasDuplicateUnifiedInput(JsonElement arguments)
         => PortedFamilies.ForTool(tool.Name).Name is "F27" or "F28" && UnifiedInputCodec.HasDuplicateKeys(arguments);
 
     internal Error? ValidatePortedInput(JsonElement arguments)
         => WorkerToolInvoker.ValidateToolArguments(portedDescriptor!, arguments, tool.InputSchema);
-
-    // The bridge's readiness guard must defer to a capability refusal only for valid input.
-    internal bool RefusesByCapability(JsonElement arguments)
-        => ValidatePortedInput(CapabilityInput(arguments)) == null && RefusePortedCapability(arguments.EnumerateObject()
-            .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal)) != null;
 
     private static readonly IReadOnlyDictionary<string, string> UnifiedParameters = new Dictionary<string, string>(StringComparer.Ordinal)
     {

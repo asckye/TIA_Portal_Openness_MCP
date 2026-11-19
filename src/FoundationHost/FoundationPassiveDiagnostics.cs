@@ -325,9 +325,8 @@ internal static class LegacyHostToolRegistry
         {
             // Gate only the bundled worker: an explicit --worker-exe fixture must reach its own dispatch path.
             Func<JsonObject>? readinessForTool = worker is IFoundationSessionWorker { Bundled: true } ? readiness : null;
-            if (tools[i] is FoundationTool { Ported: true } ported) ported.RegisterCapabilityRefusal();
             wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, readinessForTest: readinessForTool,
-                sharedSession: worker is IFoundationSessionWorker { SharedSession: true }, registered: true));
+                sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });
         tools.Clear(); tools.AddRange(wrapped);
         CompatibilityTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
@@ -339,7 +338,7 @@ internal static class LegacyHostToolRegistry
                 || presets.ContainsKey("expectedProjectFile")
                 || TiaMcp.Logic.V4.ParameterPresets.Names(tools[i].ProtocolTool.Name, tools[i].ProtocolTool.InputSchema, presets).Length != 0)
                 tools[i] = new CanonicalParameterTool(tools[i], releaseKey, presets: presets);
-        if (hostPorts && ReleaseCatalogData.Releases[releaseKey].FoundationReadinessBoundary)
+        if (hostPorts)
         {
             var all = FoundationHostPorts.Create(worker, releaseKey, tools.AsReadOnly(), readiness, apiDirectory);
             tools.Clear(); tools.AddRange(all);
