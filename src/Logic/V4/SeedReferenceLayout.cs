@@ -27,7 +27,7 @@ namespace TiaMcp.Logic.V4
             return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
         }
 
-        internal static SeedReferenceLayout Read(string root) => NativeInputPolicy.Read("referenceDir", () =>
+        internal static SeedReferenceLayout Read(string root, string release, JsonObject? placeholders) => NativeInputPolicy.Read("referenceDir", () =>
         {
             var layout = new SeedReferenceLayout();
             if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root)) throw Missing();
@@ -52,6 +52,12 @@ namespace TiaMcp.Logic.V4
                 {
                     using var stream = NativeInputPolicy.OpenRead(file, "referenceDir");
                     string hash = Hash(stream);
+                    if (destination == "plc/blocks")
+                    {
+                        stream.Position = 0;
+                        var document = SimaticMlImportWindow.Load(Encoding.UTF8.GetBytes(ReadSeedText(stream, placeholders)));
+                        SimaticMlImportWindow.RequireBlockProgram(release, document, "referenceDir");
+                    }
                     string filename = Path.GetFileName(file);
                     string target = destination + "/" + filename;
                     layout.PlannedFiles.Add(new JsonObject { ["name"] = Path.Combine(directory, filename).Replace('\\', '/'),
@@ -67,6 +73,15 @@ namespace TiaMcp.Logic.V4
             return layout;
         });
 
+        private static string ReadSeedText(Stream stream, JsonObject? placeholders)
+        {
+            using var reader = new StreamReader(stream, Encoding.UTF8, true, 1024, leaveOpen: true);
+            string text = reader.ReadToEnd();
+            if (placeholders != null)
+                foreach (var pair in placeholders) text = text.Replace("{{" + pair.Key + "}}", pair.Value?.ToString() ?? "");
+            return text;
+        }
+
         internal void Stage(string directory, JsonObject placeholders)
         {
             foreach (var file in Imports)
@@ -75,9 +90,7 @@ namespace TiaMcp.Logic.V4
                 if (Hash(stream) != file.Hash)
                     throw AdapterPreconditionException.Failed("Seed file changed since preview. Preview again.", "seed-input-changed", "referenceDir");
                 stream.Position = 0;
-                using var reader = new StreamReader(stream, Encoding.UTF8, true);
-                string text = reader.ReadToEnd();
-                foreach (var pair in placeholders) text = text.Replace("{{" + pair.Key + "}}", pair.Value?.ToString() ?? "");
+                string text = ReadSeedText(stream, placeholders);
                 string output = Path.Combine(directory, file.Destination);
                 Directory.CreateDirectory(Path.GetDirectoryName(output)!);
                 File.WriteAllText(output, text, Encoding.UTF8);

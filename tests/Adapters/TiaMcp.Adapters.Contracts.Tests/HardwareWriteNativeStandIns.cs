@@ -177,7 +177,12 @@ namespace Siemens.Engineering.HW
         public HardwareObject? OwnedBy { get; set; }
         public Features.NetworkInterface? Interface { get; set; }
         public List<NetworkPort> ConnectedPorts { get; } = new();
-        public void ConnectToPort(NetworkPort port) => ConnectedPorts.Add(port);
+        internal Action<NetworkPort>? Connecting;
+        public void ConnectToPort(NetworkPort port)
+        {
+            if (Connecting == null) ConnectedPorts.Add(port);
+            else Connecting(port);
+        }
         public void DisconnectFromPort(NetworkPort port) => ConnectedPorts.Remove(port);
     }
 }
@@ -359,8 +364,10 @@ namespace Siemens.Engineering.HW
     }
     public sealed class WebserverUserComposition : List<WebserverUser>
     {
+        internal Action? Creating;
         public WebserverUser Create(string name, WebserverUserPermissions permissions, System.Security.SecureString password)
         {
+            Creating?.Invoke();
             var user = new WebserverUser { UserName = name, Permissions = permissions };
             Add(user);
             return user;

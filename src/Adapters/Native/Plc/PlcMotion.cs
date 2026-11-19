@@ -82,6 +82,30 @@ namespace TiaMcp.Adapters.Native.Plc
                 return "Motion technology object configuration read; no drive or motion command.";
             });
 
+        private void ProbeConnect(Dictionary<string, object?> meta, string softwarePath, string objectPath, string service, Action connect)
+        {
+            string Identity(object target)
+            {
+                if (target is not PlcTag) return HardwareAddressPrimitives.ProjectOwnerPath(_session.CurrentProject!, target);
+                var path = new Stack<string>();
+                object? owner = target;
+                while (owner != null && owner is not PlcSoftware && path.Count < 64)
+                {
+                    path.Push((string)PlcGroupOperations.Get(owner, "Name"));
+                    owner = (owner as IEngineeringInstance)?.Parent;
+                }
+                if (owner is not PlcSoftware plc) throw new InvalidOperationException("The connected tag path could not be verified.");
+                path.Push(_session.PlcSoftwarePath(plc));
+                return PlcObjectPath.Format(path);
+            }
+            try
+            {
+                ProbeMotionConnect(meta, () => RequireOfficialService(ExactTechnology(softwarePath, objectPath, false), service),
+                    Identity, row => _session.SerializeEvidence(row), connect);
+            }
+            finally { MutationStarted |= meta.TryGetValue("mayHaveChanged", out var changed) && changed is true; }
+        }
+
         public HardwareAddressingReply ManageMotionAxis(string softwarePath, string objectPath, string action, string aspect, string name,
                 MotionConnectionTarget targetRequest, Dictionary<string, HardwareScalar> properties, string targetError, string propertiesError,
                 int sensorIndex = 0, bool confirmDelete = false, bool dryRun = true)
@@ -341,12 +365,13 @@ namespace TiaMcp.Adapters.Native.Plc
                             .GetType().FullName + ".");
                     meta["nativeSignature"] = "Connect(" + string.Join(",", signature.Select(t => t.Name)) + ")";
                     if (!writing) return "Hardware connection preview; native overload validated, no changes.";
-                    meta["mayHaveChanged"] = true; MutationStarted = true;
-                    if (!ConnectTyped(iface, target, softwarePath, (ConnectOption)Option())) PlcGroupOperations.Call(iface, "Connect", signature, args);
+                    var option = (ConnectOption)Option();
+                    ProbeConnect(meta, softwarePath, objectPath, serviceName, () => {
+                        if (!ConnectTyped(iface, target, softwarePath, option, args)) PlcGroupOperations.Call(iface, "Connect", signature, args);
+                    });
                     meta["apiCallSuccess"] = true;
                     meta["after"] = InterfaceRow(iface);
-                    if (!(IsConnectedTyped(iface) ?? (isConnected == null || (bool)isConnected.GetValue(iface)!)))
-                        throw new InvalidOperationException("Connect returned but IsConnected is false.");
+                    VerifyMotionConnect(meta, IsConnectedTyped(iface) ?? (isConnected != null && (bool)isConnected.GetValue(iface)!));
                     meta["mappingVerified"] = isConnected != null;
                     return "Offline hardware connection changed; inspect native readback. No save/compile/download or motion command.";
                 }
@@ -416,17 +441,21 @@ namespace TiaMcp.Adapters.Native.Plc
                         .ConvertValue(new HardwareScalar { Kind = "string", Text = connectOption },method!.GetParameters()[2].ParameterType);
                 }
                 if(!write)return "Motion hardware mapping read/preview. Addresses are bits; no drive operation performed.";
-                meta["mayHaveChanged"]=true;MutationStarted=true;
                 if(action=="connect") {
                     var option=(global::Siemens.Engineering.SW.TechnologicalObjects.Motion.ConnectOption)mode!;
-                    if(selected is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.AxisEncoderHardwareConnectionInterface axisInterface)axisInterface
-                        .Connect(inputBitAddress,outputBitAddress,option);
+                    ProbeConnect(meta, softwarePath, objectPath, Logic.ConnectionAspects["actor"].Service, () => {
+                        if (selected is AxisEncoderHardwareConnectionInterface axisInterface)
+                            axisInterface.Connect(inputBitAddress, outputBitAddress, option);
 #if PLC_WATCH_READ
-                    else ((global::Siemens.Engineering.SW.TechnologicalObjects.Motion.TorqueHardwareConnectionInterface)selected)
-                        .Connect(inputBitAddress,outputBitAddress,option);
+                        else ((TorqueHardwareConnectionInterface)selected).Connect(inputBitAddress, outputBitAddress, option);
 #endif
-                } else if(!DisconnectTyped(selected))PlcGroupOperations.Call(selected,"Disconnect",Type.EmptyTypes);
+                    });
+                } else {
+                    meta["mayHaveChanged"] = true; MutationStarted = true;
+                    if (!DisconnectTyped(selected)) PlcGroupOperations.Call(selected, "Disconnect", Type.EmptyTypes);
+                }
                 meta["after"]=InterfaceRow(selected);meta["mappingVerified"]=IsConnectedTyped(selected)==(action=="connect");
+                if (action == "connect") VerifyMotionConnect(meta, meta["mappingVerified"] is true);
                 return "Offline motion hardware mapping changed; inspect native readback. No save/compile/download or motion command.";
             });
         private HardwareAddressingReply RunTool(string tool, Func<Dictionary<string, object?>, string> action)

@@ -15,6 +15,27 @@ public sealed class PlcSoftwareAuditRulesTests
         + "<SW.Blocks.FC ID=\"0\"><AttributeList><Name>FC_1</Name><Number>1</Number></AttributeList></SW.Blocks.FC></Document>");
 
     // Each release's own header spelling ("V14 SP1", "V15.1", "V16" ...) parses and is inside its own window.
+    [Fact]
+    public void Failed_recovery_export_retains_partial_file_evidence_without_deleting_the_source()
+    {
+        string path = Path.Combine(AppContext.BaseDirectory, "partial-move-" + Guid.NewGuid().ToString("N") + ".xml");
+        int writes = 0;
+        void Unexpected() => writes++;
+        try
+        {
+            var error = Assert.Throws<IOException>(() => PlcMovePolicy.ExportDeleteImportRestore(path, "FC", 1, "LAD",
+                () => { File.WriteAllText(path, "<Document>"); throw new IOException("Export interrupted."); },
+                Unexpected, Unexpected, () => { Unexpected(); return false; }, Unexpected, Unexpected, Unexpected, Unexpected));
+            var evidence = Assert.IsType<Dictionary<string, object?>>(error.Data["nativeResultEvidence"]);
+            Assert.Equal("backup", evidence["stage"]);
+            Assert.Equal(true, evidence["mayHaveWrittenFiles"]);
+            Assert.Equal(false, evidence["deleteStarted"]);
+            Assert.Equal(0, writes);
+            Assert.True(File.Exists(path));
+        }
+        finally { File.Delete(path); }
+    }
+
     [Theory]
     [InlineData("14sp1", "V14 SP1")][InlineData("15.1", "V15.1")][InlineData("16", "V16")][InlineData("17", "V17")]
     [InlineData("18", "V18")][InlineData("19", "V19")][InlineData("20", "V20")][InlineData("21", "V21")]
@@ -144,6 +165,7 @@ public sealed class PlcSoftwareAuditRulesTests
                     File.WriteAllText(backup, phase == "malformed" ? "<Document>" : phase == "wrong-name" ? xml.Replace("FC_1", "Other")
                         : phase == "wrong-number" ? xml.Replace("<Number>1", "<Number>2") : phase == "wrong-language" ? xml.Replace("SCL", "LAD") : xml);
                 },
+                () => SimaticMlImportWindow.RequireBlockProgram("21", SimaticMlImportWindow.Load(File.ReadAllBytes(backup)), "backup"),
                 () => { Step("delete-source"); source = false; },
                 () => {
                     Step("import"); if (phase is "restore" or "verify-restore") throw new IOException("import"); target = true; return phase != "inconsistent";

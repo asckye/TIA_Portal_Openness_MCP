@@ -219,7 +219,7 @@ namespace TiaMcpServer.Siemens.Services
                     return new ResponseSeed { Imported = imported, Failed = failed, Placeholders = placeholders };
                 }
 
-                layout ??= TiaMcp.Logic.V4.SeedReferenceLayout.Read(referenceDir);
+                layout ??= TiaMcp.Logic.V4.SeedReferenceLayout.Read(referenceDir, HardwareContract.ReleaseKey, placeholders);
                 if (layout.ManifestError != null) failed.Add(new ImportFailure { Path = Path.Combine(referenceDir, "manifest.json"),
                     Error = "Failed to parse manifest.json: " + layout.ManifestError });
                 var manifest = layout.Manifest;

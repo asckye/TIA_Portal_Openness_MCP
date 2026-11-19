@@ -171,8 +171,68 @@ namespace TiaMcp.Adapters.Reflection
             };
         }
 
+        private static Dictionary<string, string>? AttributeModes(object target)
+        {
+            var method = typeof(Siemens.Engineering.IEngineeringObject).IsInstanceOfType(target)
+                ? typeof(Siemens.Engineering.IEngineeringObject).GetMethod("GetAttributeInfos", Type.EmptyTypes) : null;
+            method ??= target.GetType().GetMethod("GetAttributeInfos", Type.EmptyTypes);
+            if (method == null) return null;
+            var infos = (IEnumerable)method.Invoke(target, null)!;
+            return infos.Cast<object>().ToDictionary(info => (string)info.GetType().GetProperty("Name")!.GetValue(info)!,
+                info => info.GetType().GetProperty("AccessMode")!.GetValue(info)!.ToString()!, StringComparer.Ordinal);
+        }
+
+        private static OpennessObservation AttributeAdmission(string kind, string path, string attribute, Dictionary<string, string>? modes)
+        {
+            bool readOnly = modes != null && modes.TryGetValue(attribute, out var mode) && mode != "ReadWrite" && mode != "Write";
+            string message = readOnly ? "GetAttributeInfos reports that " + attribute + " is not writable." : "Attribute write preview.";
+            return new OpennessObservation { ObjectKind = kind, ObjectPath = path, Message = message, Meta = readOnly
+                ? ReflectionSession.Meta(false, ("status", "PreconditionFailed"), ("precondition", "attribute-not-writable"),
+                    ("parameter", "args"), ("refusal", message), ("mayHaveChanged", false), ("invocationAttempted", false))
+                : ReflectionSession.Meta(true, ("mayHaveChanged", false), ("invocationAttempted", false)) };
+        }
+
+        internal OpennessObservation PreviewSetAttribute(string kind, string path, string software, string attribute)
+        {
+            var target = _session.ResolveObject(kind, path, software) ?? throw new PlcSoftwareException("NotFound", "Reflection target not found.");
+            return AttributeAdmission(kind, path, attribute, AttributeModes(target));
+        }
+
+        private static object?[]? AttributeFingerprint(Siemens.Engineering.IEngineeringObject target, string attribute,
+            Dictionary<string, string>? modes, Func<string, object?> read)
+        {
+            if (modes != null && (!modes.TryGetValue(attribute, out var mode) || mode is not ("Read" or "ReadWrite"))) return null;
+            var names = (modes ?? new Dictionary<string, string>()).Where(p => p.Value is "Read" or "ReadWrite").Select(p => p.Key)
+                .Concat(new[] { attribute }).Distinct(StringComparer.Ordinal).OrderBy(n => n, StringComparer.Ordinal);
+            var values = new List<object?> { target.GetType().FullName, modes != null };
+            foreach (string name in names)
+            {
+                object? value = read(name);
+                values.Add(name);
+                if (value is Array array)
+                {
+                    values.Add(array.GetType());
+                    for (int dim = 0; dim < array.Rank; dim++) { values.Add(array.GetLowerBound(dim)); values.Add(array.GetLength(dim)); }
+                    foreach (object? item in array)
+                    {
+                        if (!AttributeScalar(item)) return null;
+                        values.Add(item);
+                    }
+                }
+                else
+                {
+                    if (!AttributeScalar(value)) return null;
+                    values.Add(value);
+                }
+            }
+            return values.ToArray();
+        }
+
+        private static bool AttributeScalar(object? value) => value == null || value is string or decimal or TimeSpan or Guid or DateTime
+            or DateTimeOffset or Version || value.GetType().IsPrimitive || value.GetType().IsEnum;
+
         private OpennessObservation InvokeOnInstance(object instance, string resultKind, string resultPath, string methodName, HardwareScalar[]? args,
-                bool allowWrite)
+                bool allowWrite, Func<object?>? resolve = null)
         {
             var hardDenyReason = GetHardDeniedReflectionReason(instance, resultKind, resultPath, methodName, args?.Length ?? 0);
             if (!string.IsNullOrWhiteSpace(hardDenyReason))
@@ -215,12 +275,18 @@ namespace TiaMcp.Adapters.Reflection
                 }
             }
 
-            object? originalNumber = null;
-            var block = resultKind.Equals("Block", StringComparison.OrdinalIgnoreCase) && methodName == "SetAttribute"
-                && argValues.Count == 2 && Equals(argValues[0], "Number") ? instance as Siemens.Engineering.IEngineeringObject : null;
+            var proof = new Dictionary<string, object?>();
             bool invocationAttempted = false;
             try
             {
+                Dictionary<string, string>? modes = null;
+                if (resolve != null && instance is Siemens.Engineering.IEngineeringObject
+                    && methodName.Equals("SetAttribute", StringComparison.OrdinalIgnoreCase) && argValues.Count == 2 && argValues[0] is string name)
+                {
+                    modes = AttributeModes(instance);
+                    var admission = AttributeAdmission(resultKind, resultPath, name, modes);
+                    if (Equals(admission.Meta["success"], false)) return admission;
+                }
                 using var binding = _session.BindMethod(instance, methodName, argValues);
                 if (binding == null)
                 {
@@ -233,9 +299,24 @@ namespace TiaMcp.Adapters.Reflection
                     };
                 }
 
-                if (block != null) originalNumber = binding.OriginalNumber;
-                invocationAttempted = true;
-                var result = binding.Method.Invoke(instance, binding.Arguments);
+                object? result = null;
+                void Invoke() { invocationAttempted = true; result = binding.Method.Invoke(instance, binding.Arguments); }
+                if (resolve != null && instance is Siemens.Engineering.IEngineeringObject target && binding.Method.Name == "SetAttribute"
+                    && binding.Arguments.Length == 2 && binding.Arguments[0] is string attribute
+                    && binding.Method.GetParameters()[0].ParameterType == typeof(string)
+                    && binding.Method.GetParameters()[1].ParameterType == typeof(object))
+                {
+                    object?[]? Fingerprint()
+                    {
+                        if (!invocationAttempted)
+                            return AttributeFingerprint(target, attribute, modes,
+                                key => key == attribute ? binding.OriginalAttribute : target.GetAttribute(key));
+                        if (resolve() is not Siemens.Engineering.IEngineeringObject fresh) return null;
+                        return AttributeFingerprint(fresh, attribute, AttributeModes(fresh), key => fresh.GetAttribute(key));
+                    }
+                    NativeRefusalProbe.Run(proof, Fingerprint, Invoke);
+                }
+                else Invoke();
 
                 object? outValue = result;
                 if (result is IEnumerable enumerable && result is not string)
@@ -260,41 +341,14 @@ namespace TiaMcp.Adapters.Reflection
                     Value = outValue
                 };
             }
-            catch (TargetInvocationException tie)
+            catch (Exception error)
             {
-                var reason = tie.GetBaseException().Message;
+                var reason = NativeFailureText.Compose(error.GetBaseException().Message, null, Array.Empty<string>());
                 var meta = ReflectionSession.Meta(false, ("invocationAttempted", invocationAttempted), ("nativeMessage", reason),
                     ("phase", "invoke"), ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT"));
-                if (originalNumber is byte or sbyte or short or ushort or int or uint or long or ulong && invocationAttempted)
-                {
-                    try
-                    {
-                        if (Equals(block!.GetAttribute("Number"), originalNumber))
-                        {
-                            meta["mayHaveChanged"] = false;
-                            meta["apiCallSuccess"] = false;
-                        }
-                    }
-                    catch (Exception) { /* swallow(probe-optional): an unavailable readback leaves the attempted write uncertain */ }
-                }
-                return new OpennessObservation
-                {
-                    Message = reason, Meta = meta,
-                    ObjectKind = resultKind,
-                    ObjectPath = resultPath
-                };
-            }
-            catch (Exception ex)
-            {
-                return new OpennessObservation
-                {
-                    Message = ex.Message,
-                    Meta = ReflectionSession.Meta(false, ("invocationAttempted", invocationAttempted),
-                        ("nativeMessage", ex.GetBaseException().Message), ("phase", "invoke"),
-                        ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT")),
-                    ObjectKind = resultKind,
-                    ObjectPath = resultPath
-                };
+                foreach (var pair in proof) meta[pair.Key] = pair.Value;
+                var message = error is TargetInvocationException ? reason : NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
+                return new OpennessObservation { Message = message, Meta = meta, ObjectKind = resultKind, ObjectPath = resultPath };
             }
         }
 
@@ -367,7 +421,8 @@ namespace TiaMcp.Adapters.Reflection
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetPlcBlockHierarchy); "
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
-            return InvokeOnInstance(o, objectKind, objectPath, methodName, args, allowWrite);
+            return InvokeOnInstance(o, objectKind, objectPath, methodName, args, allowWrite,
+                () => _session.ResolveAfterWrite(objectKind, objectPath, softwarePath, allowWrite));
         }
 
         public OpennessObservation DescribeService(string objectKind, string objectPath, string serviceTypeSuffix, string softwarePath = "", int maxMembers =

@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Domain;
 using TiaMcp.Logic.V4.Inputs;
@@ -93,6 +94,10 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("PatchPlcBlockDocument", meta => {
                 var edited = PlcDocumentEditing.Patch(PlcDocumentEditing.Read(filePath), changesJson, expectedFingerprint);
                 meta["dryRun"] = dryRun; meta["result"] = PlcDocumentEditing.Inspect(edited);
+                var document = SimaticMlImportWindow.Load(Encoding.UTF8.GetBytes(edited));
+                if (PlcDocumentEditing.Block(document).Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal)
+                    && SimaticMlImportWindow.BlockContent(HardwareContract.ReleaseKey, document) != "native-xml")
+                    meta["warnings"] = new JsonArray("This patch edits the XML only. The document cannot establish or restore the SCL implementation.");
                 meta["nativeImportValidated"] = false;
                 if (!dryRun) {
                     if (string.IsNullOrWhiteSpace(outputPath)) throw new ArgumentException("New absolute outputPath required.");
@@ -101,8 +106,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     using (var writer = new StreamWriter(stream, new UTF8Encoding(true))) writer.Write(edited);
                     meta["output"] = Siemens.NativeFileOutput.Verify(output);
                 }
-                return dryRun ? "Offline patch preview validated. No file or project changed."
+                string summary = dryRun ? "Offline patch preview validated. No file or project changed."
                     : "Patched document written; native import/compilation remain unverified.";
+                return meta["warnings"] is JsonArray warnings ? summary + " " + warnings[0] : summary;
             });
 
         [McpServerTool(Name = "ConvertEngineeringTable"),

@@ -75,6 +75,10 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = Unknown(); }
             else if (readOnly && issued && success != true)
             { outcome = Outcome.ReadFailed; execution = Execution.ReadOnly; error = Failure(); }
+            else if (!readOnly && Flag(data, "foundationKnownNoMutation") == true && HostBehavior.UnchangedNativeFailure(data, success))
+            {
+                outcome = Outcome.Failed; execution = Execution.Completed; error = HostBehavior.UnchangedNativeError(data);
+            }
             else if (refusal != null)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
             else if (success == true && !unknown)

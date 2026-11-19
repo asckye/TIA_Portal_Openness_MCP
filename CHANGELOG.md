@@ -27,6 +27,8 @@
 - A missing HMI target returns `NOT_FOUND` before operation. An unsuccessful CAx import reports the returned failure, possible device changes and bounded diagnostics.
 - A verified PLC import with mismatching readback retains its recovery file relative to the evidence directory. OPC UA model generation reports the failing phase and whether the output file exists.
 
+- V14 SP1 SCL moves and incomplete block XML imports are refused before source deletion or overwrite. Offline patches warn about incomplete SCL XML. Verified PLC imports compare schema-ordered block attributes while retaining member and network order.
+- Port and motion connections, reflected attribute writes and device-user changes compare fresh native state after a refusal. Empty library type selections and reflected writes to read-only attributes are refused during preview.
 - Hardware connection and network-domain changes, custom role creation, library archive, and PLC imports distinguish completed writes from unavailable readback. The warning includes the readback phase and redacted native diagnostic. Verified PLC import retains the original backup when compilation is needed to verify content.
 - `ManagePlcBlockDocuments` reports `OUTCOME_UNKNOWN` when it can read the target group after import and finds an imported block name missing. If the lookup itself throws an ordinary read error, the completed write carries an `INCOMPLETE_DATA` warning.
 - In worker failure evidence, the host includes `previousType` in `cleanupRequired` rows so operators can identify the type needed for manual restoration. It omits `previousValue` from these rows because the value can contain secrets.

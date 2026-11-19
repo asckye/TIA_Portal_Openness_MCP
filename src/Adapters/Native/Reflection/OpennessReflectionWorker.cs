@@ -15,12 +15,21 @@ namespace TiaMcp.Adapters
         public Func<string?>? EngineeringReflectionLookupPaths { get; set; }
         public Func<object, object?>? RenderEngineeringReflectionValue { get; set; }
 
+        private object? ResolveReflectionReadback(string kind, string path, string software, bool write)
+        {
+            // Session roots are otherwise returned straight from cached fields.
+            if (string.Equals(kind.Trim(), "Project", StringComparison.OrdinalIgnoreCase))
+                return lifecycle.ProjectFile is { Length: > 0 } file ? ExactOpenProject(file) : null;
+            if (string.Equals(kind.Trim(), "Portal", StringComparison.OrdinalIgnoreCase)) return null;
+            return ResolveReflectionObject(kind, path, software, write);
+        }
+
         public OpennessReflectionReply ExecuteOpennessReflection(OpennessReflectionRequest request, bool dryRun = true)
         {
             Check();
             if (dryRun == request.AllowWrite) throw new ArgumentException("Conflicting reflection write mode.");
             var service = new OpennessReflection(new ReflectionSession(ResolveReflectionObject,
-                () => EngineeringReflectionLookupPaths != null ? EngineeringReflectionLookupPaths() : reflectionLookupPaths));
+                () => EngineeringReflectionLookupPaths != null ? EngineeringReflectionLookupPaths() : reflectionLookupPaths, ResolveReflectionReadback));
             var reply = new OpennessReflectionReply();
             try
             {
@@ -33,6 +42,8 @@ namespace TiaMcp.Adapters
                         .ListObjectChildren(request.ObjectKind, request.ObjectPath, request.PropertyPath, request.SoftwarePath, request.Limit),
                     "DescribeService" => service
                         .DescribeService(request.ObjectKind, request.ObjectPath, request.ServiceTypeSuffix, request.SoftwarePath, request.Limit),
+                    "PreviewSetAttribute" when !request.AllowWrite => service.PreviewSetAttribute(request.ObjectKind, request.ObjectPath, request.SoftwarePath,
+                        request.PropertyPath),
                     "InvokeObject" => service
                         .InvokeObject(request.ObjectKind, request.ObjectPath, request.MethodName, request.Arguments, request.SoftwarePath, request.AllowWrite),
                     "InvokeService" => service

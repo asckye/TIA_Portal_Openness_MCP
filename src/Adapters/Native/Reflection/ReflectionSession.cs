@@ -15,10 +15,13 @@ namespace TiaMcp.Adapters.Reflection
     {
         private readonly Func<string, string, string, bool, object?> resolve;
         private readonly Func<string?> lookupPaths;
-        internal ReflectionSession(Func<string, string, string, bool, object?> resolve, Func<string?> lookupPaths)
-        { this.resolve = resolve; this.lookupPaths = lookupPaths; }
+        private readonly Func<string, string, string, bool, object?> resolveAfterWrite;
+        internal ReflectionSession(Func<string, string, string, bool, object?> resolve, Func<string?> lookupPaths,
+            Func<string, string, string, bool, object?>? resolveAfterWrite = null)
+        { this.resolve = resolve; this.lookupPaths = lookupPaths; this.resolveAfterWrite = resolveAfterWrite ?? resolve; }
         internal string? PlcLookupPathsSuffix => lookupPaths();
         internal object? ResolveObject(string kind, string path, string software, bool write = false) => resolve(kind, path, software, write);
+        internal object? ResolveAfterWrite(string kind, string path, string software, bool write) => resolveAfterWrite(kind, path, software, write);
         internal static Dictionary<string, object?> Meta(bool success, params (string Key, object? Value)[] values)
         {
             var result = new Dictionary<string, object?> { ["success"] = success };
@@ -111,9 +114,9 @@ namespace TiaMcp.Adapters.Reflection
         {
             internal readonly MethodInfo Method;
             internal readonly object?[] Arguments;
-            internal readonly object? OriginalNumber;
-            internal MethodBinding(MethodInfo method, object?[] arguments, object? originalNumber)
-            { Method = method; Arguments = arguments; OriginalNumber = originalNumber; }
+            internal readonly object? OriginalAttribute;
+            internal MethodBinding(MethodInfo method, object?[] arguments, object? originalAttribute)
+            { Method = method; Arguments = arguments; OriginalAttribute = originalAttribute; }
             public void Dispose()
             {
                 foreach (var secret in Arguments.OfType<SecureString>()) secret.Dispose();
@@ -132,7 +135,7 @@ namespace TiaMcp.Adapters.Reflection
                     var parameters = method.GetParameters();
                     var converted = new object?[values.Count];
                     bool matches = false;
-                    object? originalNumber = null;
+                    object? originalAttribute = null;
                     try
                     {
                         for (int i = 0; i < values.Count; i++)
@@ -142,10 +145,10 @@ namespace TiaMcp.Adapters.Reflection
                             object? value = values[i];
                             if (type == typeof(object) && method.Name == "SetAttribute" && i == 1 && values[0] is string attribute)
                             {
-                                var current = instance.GetType().GetMethod("GetAttribute", new[] { typeof(string) })?
-                                    .Invoke(instance, new object[] { attribute });
+                                var current = instance is Siemens.Engineering.IEngineeringObject engineering ? engineering.GetAttribute(attribute)
+                                    : instance.GetType().GetMethod("GetAttribute", new[] { typeof(string) })?.Invoke(instance, new object[] { attribute });
                                 if (current != null) type = current.GetType();
-                                if (attribute == "Number") originalNumber = current;
+                                originalAttribute = current;
                             }
                             if (value == null)
                             {
@@ -172,7 +175,7 @@ namespace TiaMcp.Adapters.Reflection
                         if (!matches) foreach (var secret in converted.OfType<SecureString>()) secret.Dispose();
                     }
                     if (!matches) continue;
-                    var binding = new MethodBinding(method, converted, originalNumber);
+                    var binding = new MethodBinding(method, converted, originalAttribute);
                     if (selected != null)
                     {
                         binding.Dispose();

@@ -13,6 +13,7 @@ namespace TiaMcp.Adapters.Native.Plc
             => _session.RunHmiStepTool("ImportPlcBlockVerified", meta => {
                 string softwarePath = request.SoftwarePath, blockPath = request.Path;
                 var candidate = validate(request);
+                var document = SimaticMlImportWindow.Load(System.Text.Encoding.UTF8.GetBytes(candidate.Xml));
                 var parts = PlcObjectPath.Parts(blockPath, parameter: "blockPath");
                 if (parts.Length == 0 || parts.Last() != candidate.Name) throw new ArgumentException("Exact blockPath must end with candidate Name.");
                 meta["mayHaveChanged"] = false; meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath;
@@ -53,6 +54,8 @@ namespace TiaMcp.Adapters.Native.Plc
                                     .Succeeded(PlcBlockPrimitives.State(result))))
                             throw new InvalidOperationException("Imported block compilation failed. Backup retained; no further native readback attempted.");
                     }
+                    string language = PlcOrganisationPrimitives.Language(Resolve()).ToString();
+                    SimaticMlImportWindow.RequireBlockProgram(_session.ReleaseKey, document, "importPath", language);
                     var identity = _session.BindingIdentity();
                     if (string.IsNullOrEmpty(identity)) throw new InvalidOperationException("Exact binding identity required.");
                     var scope = identity + "\n" + softwarePath + "\n" + blockPath;

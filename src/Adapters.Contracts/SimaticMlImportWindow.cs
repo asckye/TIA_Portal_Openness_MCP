@@ -92,6 +92,29 @@ namespace TiaMcp.Adapters.Contracts
             return (native.Name.LocalName.Substring(native.Name.LocalName.LastIndexOf('.') + 1), name!);
         }
 
+        public static string BlockContent(string release, XDocument document, string? existingLanguage = null)
+        {
+            var languages = document.Descendants().Where(e => e.Name.LocalName == "ProgrammingLanguage").Select(e => e.Value.Trim()).ToArray();
+            bool scl = languages.Contains("SCL", StringComparer.OrdinalIgnoreCase)
+                || string.Equals(existingLanguage, "SCL", StringComparison.OrdinalIgnoreCase);
+            string? version = ReadVersion(document)?.Trim();
+            if (scl && (release == "14sp1" || version?.StartsWith("V14", StringComparison.OrdinalIgnoreCase) == true))
+                return "interface-only";
+            bool knownProducer = TryParse(version, out var producer)
+                && (producer == new Version(15, 1) || producer.Major is >= 16 and <= 21);
+            if ((scl && !knownProducer) || (release == "14sp1" && languages.Length == 0))
+                return "unverified";
+            return "native-xml";
+        }
+
+        public static void RequireBlockProgram(string release, XDocument document, string parameter, string? existingLanguage = null)
+        {
+            if (document.Root?.Elements().Any(e => e.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal)) == true
+                && BlockContent(release, document, existingLanguage) != "native-xml")
+                throw AdapterPreconditionException.Failed("Interface-only or unverified SCL XML cannot replace a complete PLC program.",
+                    "incomplete-block-xml", parameter);
+        }
+
         public static XDocument Load(byte[] bytes)
         {
             var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 64 * 1024 * 1024 };

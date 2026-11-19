@@ -30,18 +30,20 @@ namespace TiaMcp.Adapters.Contracts
         }
 
         public static Dictionary<string, object?> ExportDeleteImportRestore(string recoveryPath, string name, int number, string language,
-            Action exportSource, Action deleteSource, Func<bool> importTarget, Action verifyTarget, Action deleteTarget, Action restoreSource,
-                Action verifyRestored, bool dryRun = false)
+            Action exportSource, Action requireImport, Action deleteSource, Func<bool> importTarget, Action verifyTarget, Action deleteTarget,
+            Action restoreSource, Action verifyRestored, bool dryRun = false)
         {
             var evidence = new Dictionary<string, object?>(StringComparer.Ordinal) { ["mayHaveChanged"] = false,
                 ["deleteStarted"] = false, ["nativeMutationIssued"] = false, ["originalRetained"] = true, ["restored"] = false, ["restoreAttempted"] = false };
             if (dryRun) return evidence;
+            bool recoveryExisted = File.Exists(recoveryPath);
             string stage = "backup";
             try
             {
                 exportSource();
                 stage = "verify-export";
                 if (!File.Exists(recoveryPath)) throw new IOException("The recovery export is missing.");
+                evidence["mayHaveWrittenFiles"] = true;
                 var document = SimaticMlImportWindow.Load(File.ReadAllBytes(recoveryPath));
                 var blocks = document.Root?.Elements().Where(element => element.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal)).ToArray();
                 var attributes = blocks?.Length == 1 ? blocks[0].Elements().SingleOrDefault(element => element.Name.LocalName == "AttributeList") : null;
@@ -49,6 +51,7 @@ namespace TiaMcp.Adapters.Contracts
                 if (document.Root?.Name.LocalName != "Document" || Attribute("Name") != name
                     || Number(Attribute("Number")) != number || Attribute("ProgrammingLanguage") != language)
                     throw new IOException("The recovery export does not match the source block name, number and language.");
+                requireImport();
                 evidence["recoveryExportVerified"] = true;
                 stage = "delete-source";
                 evidence["recoveryExportPath"] = recoveryPath;
@@ -64,7 +67,10 @@ namespace TiaMcp.Adapters.Contracts
             catch (Exception error)
             {
                 evidence["stage"] = stage; evidence["error"] = error.Message;
-                string message = "Move failed during " + stage + ". Recovery file retained at '" + recoveryPath + "'. " + error.Message;
+                bool retained = File.Exists(recoveryPath);
+                if (!recoveryExisted && retained) evidence["mayHaveWrittenFiles"] = true;
+                string fileStatus = retained ? "Recovery file retained at " : "No recovery file found at ";
+                string message = "Move failed during " + stage + ". " + fileStatus + "'" + recoveryPath + "'. " + error.Message;
                 if (stage is "import" or "verify")
                 {
                     bool canRestore = true;

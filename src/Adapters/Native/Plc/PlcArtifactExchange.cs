@@ -16,28 +16,50 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         // A caller's SimaticML document is imported as written (API audit 2026-10-19 F6): its Engineering version is never
         // rewritten. A header outside the documented window of this release is refused before any native call. Only a missing
-        // UTF-8 BOM is added, on a temporary copy with identical content.
-        private sealed class PreparedImport
+        // UTF-8 BOM is added. Blocks use private copies so a directory import consumes exactly the bytes admitted during planning.
+        private sealed class PreparedImport : IDisposable
         {
             internal string Path = "";
             internal string Kind = "";
             internal string Name = "";
+            internal bool Temporary;
+            public void Dispose()
+            {
+                if (!Temporary) return;
+                try { File.Delete(Path); }
+                catch (IOException) { /* swallow(cleanup): a locked snapshot does not change the native import verdict. */ }
+                catch (UnauthorizedAccessException) { /* swallow(cleanup): preserve the original operation outcome. */ }
+            }
         }
 
         private PreparedImport PrepareXmlForImport(string path, string parameter = "importPath")
         {
             var bytes = TiaOpenness.Shared.NativeInputPolicy.Read(parameter, () => File.ReadAllBytes(path));
             SimaticMlImportWindow.Require(_session.ReleaseKey, bytes, parameter);
-            var native = SimaticMlImportWindow.ReadObject(SimaticMlImportWindow.Load(bytes))
+            var document = SimaticMlImportWindow.Load(bytes);
+            SimaticMlImportWindow.RequireBlockProgram(_session.ReleaseKey, document, parameter);
+            var native = SimaticMlImportWindow.ReadObject(document)
                 ?? throw new AdapterPreconditionException("The import file holds no SW.Blocks, SW.Types or SW.Tags object with a Name.", parameter);
             var prepared = new PreparedImport { Path = path, Kind = native.Kind, Name = native.Name };
             bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
-            if (hasBom) return prepared;
-            var tmp = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_import_" + Guid.NewGuid().ToString("N") + ".xml");
-            File
-                .WriteAllText(tmp, TiaOpenness.Shared.NativeInputPolicy.Read(parameter, () => File.ReadAllText(path, Encoding.UTF8)),
-                    new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-            prepared.Path = tmp;
+            bool block = document.Root!.Elements().Any(e => e.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal));
+            if (hasBom && !block) return prepared;
+            prepared.Path = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory,
+                "tia_mcp_import_" + Guid.NewGuid().ToString("N") + ".xml");
+            try
+            {
+                using var output = new FileStream(prepared.Path, FileMode.CreateNew, FileAccess.Write);
+                prepared.Temporary = true;
+                if (hasBom) output.Write(bytes, 0, bytes.Length);
+                else
+                {
+                    using var data = new MemoryStream(bytes, false);
+                    using var text = new StreamReader(data, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+                    using var writer = new StreamWriter(output, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+                    writer.Write(text.ReadToEnd());
+                }
+            }
+            catch { prepared.Dispose(); throw; }
             return prepared;
         }
 
@@ -112,7 +134,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
                 if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PlcSoftwareException("InvalidParams", $"Import file not found: {importPath}");
-                var prepared = PrepareXmlForImport(importPath);
+                using var prepared = PrepareXmlForImport(importPath);
                 RequireKind(prepared, true, false, "importPath");
                 RequireImportTarget("block", prepared.Name, ExistingBlocks(plcSoftware), group, overwrite);
                 var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path));
@@ -184,7 +206,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
                 if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PlcSoftwareException("InvalidParams", $"Import file not found: {importPath}");
-                var prepared = PrepareXmlForImport(importPath);
+                using var prepared = PrepareXmlForImport(importPath);
                 RequireKind(prepared, false, true, "importPath");
                 RequireImportTarget("data type", prepared.Name, ExistingTypes(plcSoftware.TypeGroup), group, overwrite);
                 var fileInfo = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path));
@@ -229,7 +251,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
                 if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PlcSoftwareException("InvalidParams", $"Import file not found: {importPath}");
-                var prepared = PrepareXmlForImport(importPath);
+                using var prepared = PrepareXmlForImport(importPath);
                 RequireKind(prepared, false, false, "importPath");
                 RequireImportTarget("tag table", prepared.Name, ExistingTagTables(plc.TagTableGroup), group, overwrite);
 
@@ -275,6 +297,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
             var imported = new List<string>();
             var failed = new List<PlcSeedImportFailure>();
+            var snapshots = new List<PreparedImport>();
 
             try
             {
@@ -317,6 +340,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 {
                     if (regex != null && !regex.IsMatch(Path.GetFileNameWithoutExtension(file))) continue;
                     var prepared = PrepareXmlForImport(file, "dir");
+                    snapshots.Add(prepared);
                     RequireKind(prepared, true, false, "dir");
                     RequireImportTarget("block", prepared.Name, existing, group, overwrite);
                     planned.Add((file, prepared));
@@ -353,6 +377,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 failed.Add(new PlcSeedImportFailure { Path = dir, Error = ex.ToString() });
                 return new PlcSeedHmiReply { Imported = imported, Failed = failed };
             }
+            finally { foreach (var snapshot in snapshots) snapshot.Dispose(); }
         }
     }
 }

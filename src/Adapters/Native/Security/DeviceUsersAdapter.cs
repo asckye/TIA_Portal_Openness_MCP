@@ -47,15 +47,17 @@ namespace TiaMcp.Adapters.Native.Security
                 meta["family"] = family; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["ownerPath"] = _session
                     .HardwareOwnerPath(owner);
                 meta["passwordProvided"] = !string.IsNullOrEmpty(password);
-                Func<object> fresh = family switch
+                object Composition(HardwareObject hardware) => family switch
                 {
-                    "webserver" => () => _session.RequireHardwareService<WebserverUserManagement>(owner, "itemPathJson").WebserverUsers,
+                    "webserver" => _session.RequireHardwareService<WebserverUserManagement>(hardware, "itemPathJson").WebserverUsers,
 #if SECURITY_SIMPLE_WEB
-                    "simpleWebserver" => () => (object)_session.RequireHardwareService<SimpleWebserverUserManagement>(owner, "itemPathJson").WebserverUsers,
+                    "simpleWebserver" => _session.RequireHardwareService<SimpleWebserverUserManagement>(hardware, "itemPathJson").WebserverUsers,
 #endif
-                    _ => () => (object)_session.RequireHardwareService<OpcUaUserManagement>(owner, "itemPathJson").OpcUaUsers
+                    _ => _session.RequireHardwareService<OpcUaUserManagement>(hardware, "itemPathJson").OpcUaUsers
                 };
-                object composition = fresh();
+                Func<object> fresh = action is "create" or "setPermissions"
+                    ? () => Composition(_session.ExactEngineeringHardware(devicePathJson, itemPathJson)) : () => Composition(owner);
+                object composition = Composition(owner);
                 var users = HardwareGroupOperations.Items(composition).ToArray(); meta["countBefore"] = users.Length;
                 if (action == "read")
                 {
@@ -74,16 +76,34 @@ namespace TiaMcp.Adapters.Native.Security
                 meta["requestedPermissions"] = new HmiArray(permissionNames.Select(x => (object?)x).ToArray());
                 if (!write) return "Device user " + action
                     + " preview; nothing changed (TIA refuses create/delete/setPassword while the web server or OPC UA authentication is disabled).";
-                meta["mayHaveChanged"] = true;
+                meta["mayHaveChanged"] = action is not ("create" or "setPermissions");
+                object?[]? Fingerprint()
+                {
+                    var rows = HardwareGroupOperations.Items(fresh()).Select(u => {
+                        string name = (string?)u.GetType().GetProperty("UserName")?.GetValue(u)
+                            ?? throw new InvalidOperationException("Missing user identity.");
+                        object? permissions = null;
+                        if (name == userName && family != "opcUa")
+                            permissions = u.GetType().GetProperty("Permissions")?.GetValue(u)
+                                ?? throw new InvalidOperationException("Missing user permissions.");
+                        return (name, permissions);
+                    }).ToArray();
+                    if (rows.Count(row => row.name == userName) != (action == "create" ? 0 : 1)) return null;
+                    return rows.OrderBy(row => row.name, StringComparer.Ordinal).SelectMany(row => new[] { row.name, row.permissions }).ToArray();
+                }
                 switch (action)
                 {
                     case "create":
                         using (var secure = EngineeringCredentialRules.ToSecureString(password))
-                            user = family == "webserver"
-                                ? ((WebserverUserComposition)composition)
-                                    .Create(userName, (WebserverUserPermissions)Enum.Parse(typeof(WebserverUserPermissions), joined), secure)
-                                : (object)((OpcUaUserComposition)composition).Create(userName, secure);
-                        meta["createdName"] = user.GetType().GetProperty("UserName")?.GetValue(user)?.ToString();
+                        {
+                            if (family == "webserver")
+                            {
+                                var flags = (WebserverUserPermissions)Enum.Parse(typeof(WebserverUserPermissions), joined);
+                                NativeRefusalProbe.Run(meta, Fingerprint, () => user = ((WebserverUserComposition)composition).Create(userName, flags, secure));
+                            }
+                            else NativeRefusalProbe.Run(meta, Fingerprint, () => user = ((OpcUaUserComposition)composition).Create(userName, secure));
+                        }
+                        meta["createdName"] = user!.GetType().GetProperty("UserName")?.GetValue(user)?.ToString();
                         if (_session.CountOnFresh(fresh, meta, "countAfter") is int grown && grown != users.Length + 1)
                             throw new InvalidOperationException("Create returned but the refreshed user count did not grow by one.");
                         break;
@@ -106,11 +126,23 @@ namespace TiaMcp.Adapters.Native.Security
                         EngineeringWriteJournal.Property(user!, user!.GetType().GetProperty("Permissions")!,
                             () => HardwareGroupOperations.Items(fresh()).Single(u =>
                                 string.Equals((string?)u.GetType().GetProperty("UserName")?.GetValue(u), userName, StringComparison.Ordinal)));
-                        if (user is WebserverUser web) web.Permissions = (WebserverUserPermissions)Enum.Parse(typeof(WebserverUserPermissions), joined);
+                        if (user is WebserverUser web)
+                        {
+                            var flags = (WebserverUserPermissions)Enum.Parse(typeof(WebserverUserPermissions), joined);
+                            NativeRefusalProbe.Run(meta, Fingerprint, () => web.Permissions = flags);
+                        }
 #if SECURITY_SIMPLE_WEB
-                        else ((SimpleWebserverUser)user!).Permissions = (SimpleWebserverUserPermissions)Enum
-                            .Parse(typeof(SimpleWebserverUserPermissions), joined);
+                        else
+                        {
+                            var simple = (SimpleWebserverUser)user!;
+                            var flags = (SimpleWebserverUserPermissions)Enum.Parse(typeof(SimpleWebserverUserPermissions), joined);
+                            NativeRefusalProbe.Run(meta, Fingerprint, () => simple.Permissions = flags);
+                        }
+#else
+                        else throw new NotSupportedException("Simple web users require V18 or later.");
+#endif
                         break;
+#if SECURITY_SIMPLE_WEB
                     case "setActive":
                         ((SimpleWebserverUser)user!).Active = active;
                         if (((SimpleWebserverUser)user).Active != active) throw new InvalidOperationException("Active readback differs.");
@@ -118,9 +150,6 @@ namespace TiaMcp.Adapters.Native.Security
                     case "rename":
                         ((SimpleWebserverUser)user!).UserName = newName;
                         if (((SimpleWebserverUser)user).UserName != newName) throw new InvalidOperationException("UserName readback differs.");
-                        break;
-#else
-                        else throw new NotSupportedException("Simple web users require V18 or later.");
                         break;
 #endif
                 }

@@ -44,6 +44,66 @@ public sealed class PlcObjectPathTests
         Assert.Equal(1, block.Exports);
     }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public void V14_SCL_move_refuses_before_creating_groups_or_exporting(bool apply)
+    {
+        var engine = new PathEngine("14sp1");
+        var block = AddBlock(AddGroup(engine.Plc.BlockGroup, "From"), "SCL_FC");
+        block.Language = "SCL";
+        var error = Assert.Throws<AdapterPreconditionException>(() => apply
+            ? engine.ApplyMove("From/SCL_FC", "New", "", "stale") : engine.MovePlcBlockToGroup("From/SCL_FC", "New"));
+        Assert.Equal("blockName", error.ParamName);
+        Assert.Equal(0, block.Exports);
+        Assert.Same(block, engine.ExactBlock("From/SCL_FC"));
+        Assert.Null(engine.BlockGroup("New"));
+    }
+
+    [Theory, InlineData("14sp1", true), InlineData("14sp1", false), InlineData("15.1", true), InlineData("15.1", false)]
+    public void Verified_Override_admits_the_live_SCL_block_before_export_or_import(string release, bool preview)
+    {
+        var engine = new PathEngine(release);
+        var block = AddBlock(AddGroup(engine.Plc.BlockGroup, "From"), "FC");
+        block.Language = "SCL";
+        var request = new PlcSoftwareRequest { SoftwarePath = "PLC", Path = "From/FC", DryRun = preview };
+        var candidate = new PlcVerifiedCandidate { Name = "FC", Xml = """
+            <Document><Engineering version="V14 SP1"/><SW.Blocks.FC ID="0"><AttributeList>
+            <Name>FC</Name><Number>1</Number><Interface><Sections/></Interface></AttributeList></SW.Blocks.FC></Document>
+            """ };
+        int executions = 0;
+        var error = Assert.Throws<AdapterPreconditionException>(() => engine.VerifiedImport(request, candidate, _ => { executions++; return ""; }));
+        Assert.Equal("incomplete-block-xml", error.Condition);
+        Assert.Equal(0, executions);
+        Assert.Equal(0, block.Exports);
+    }
+
+    [Fact]
+    public void Move_keeps_the_original_when_the_export_has_no_known_SCL_producer()
+    {
+        var engine = new PathEngine("15.1");
+        var source = AddGroup(engine.Plc.BlockGroup, "From");
+        AddGroup(engine.Plc.BlockGroup, "To");
+        var block = AddBlock(source, "FC");
+        block.Language = "SCL";
+        var calls = new List<string>();
+        source.OnCall = calls.Add;
+        var preview = engine.MovePlcBlockToGroup("From/FC", "To");
+        string file = Path.Combine(AppContext.BaseDirectory, "recovery-" + Guid.NewGuid().ToString("N") + ".xml");
+        try
+        {
+            var error = Assert.Throws<IOException>(() => engine.ApplyMove("From/FC", "To", file, (string)preview.Meta["planHash"]!));
+            var evidence = Assert.IsType<Dictionary<string, object?>>(error.Data["nativeResultEvidence"]);
+            Assert.Equal("verify-export", evidence["stage"]);
+            Assert.Equal(false, evidence["deleteStarted"]);
+            Assert.Equal(true, evidence["mayHaveWrittenFiles"]);
+            Assert.Contains(file, error.Message, StringComparison.Ordinal);
+            Assert.False(evidence.ContainsKey("recoveryExportPath"));
+            Assert.Equal(new[] { "export FC" }, calls);
+            Assert.True(File.Exists(file));
+            Assert.Same(block, engine.ExactBlock("From/FC"));
+        }
+        finally { File.Delete(file); }
+    }
+
     [Theory, MemberData(nameof(NamedReleases))]
     public void Logic_reads_use_the_tree_encoded_slash_and_Chinese_names(string release, string name)
     {

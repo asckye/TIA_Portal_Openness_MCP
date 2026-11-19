@@ -477,6 +477,14 @@ namespace TiaMcp.Adapters
                     : "Device user group operation completed (CreateFrom(MasterCopy) is not exposed here). No save/compile/download.";
             });
 
+        private string[] ConnectedPortPaths(string[] device, string[] item)
+        {
+            var endpoint = HardwareRequireHardwareService<NetworkPort>(ExactHardware(device, item), "itemPathJson");
+            return HardwareGroupOperations.Items(endpoint.ConnectedPorts).Cast<NetworkPort>()
+                .Select(peer => HardwareAddressPrimitives.ProjectOwnerPath(project!, peer.OwnedBy))
+                .OrderBy(path => path, StringComparer.Ordinal).ToArray();
+        }
+
         public HardwareAddressingReply HardwareManagePortInterconnection(string[] devicePathJson, string[] itemPathJson, string action = "read",
                 string[] partnerDevicePathJson = null!, string[] partnerItemPathJson = null!, bool dryRun = true)
             => RunHardwareAddressStep("ManagePortInterconnection", meta => {
@@ -497,13 +505,25 @@ namespace TiaMcp.Adapters
                 if (action == "disconnect" && !linked) throw new InvalidOperationException("Ports are not interconnected.");
                 if (!write) return "Port " + action
                     + " preview; nothing changed (TIA refuses ports of the same interface and second partners on ports without alternative partners).";
-                meta["mayHaveChanged"] = true;
-                if (action == "connect") port.ConnectToPort(partner); else port.DisconnectFromPort(partner);
+                if (action == "connect")
+                {
+                    object?[] Fingerprint()
+                    {
+                        var first = ConnectedPortPaths(devicePathJson, itemPathJson);
+                        var second = ConnectedPortPaths(partnerDevicePathJson, partnerItemPathJson);
+                        return first.Cast<object?>().Concat(new object?[] { first.Length }).Concat(second).ToArray();
+                    }
+                    NativeRefusalProbe.Run(meta, Fingerprint, () => port.ConnectToPort(partner));
+                }
+                else { meta["mayHaveChanged"] = true; port.DisconnectFromPort(partner); }
                 var after = HardwarePortRow(port); meta["after"] = after;
                 int count = ((List<object?>)after["connectedPorts"]!).Count; int before =
                     ((List<object?>)((Dictionary<string, object?>)meta["port"]!)["connectedPorts"]!).Count;
                 if (count != before + (action == "connect" ? 1 : -1))
+                {
+                    meta["writeOutcomeUnknown"] = true;
                     throw new InvalidOperationException("Native call returned but ConnectedPorts count did not change as expected.");
+                }
                 return "Port " + action + " completed and ConnectedPorts count verified. No save/compile/download.";
             });
     }

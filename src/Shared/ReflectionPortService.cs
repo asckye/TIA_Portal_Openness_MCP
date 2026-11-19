@@ -99,6 +99,10 @@ namespace TiaMcpServer.Siemens.Services
                         softwarePath, Limit = limit
                 });
 
+        internal ResponseObjectValue PreviewSetAttribute(string kind, string path, string software, string attribute)
+            => Invoke<ResponseObjectValue>(new OpennessReflectionRequest { Operation = "PreviewSetAttribute", ObjectKind = kind,
+                ObjectPath = path, SoftwarePath = software, PropertyPath = attribute });
+
         public ResponseObjectValue InvokeObject(string objectKind, string objectPath, string methodName, JsonArray? args = null, string softwarePath = "",
                 bool allowWrite = false)
             =>

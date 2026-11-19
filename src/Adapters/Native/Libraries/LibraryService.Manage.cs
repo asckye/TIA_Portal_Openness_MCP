@@ -122,6 +122,7 @@ namespace TiaMcp.Adapters
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["library"] = EngineeringLibraryRef(library);
                 var selected = ResolveSelection(library, selection, meta);
+                RequireSelectedTypes(selected);
                 switch (action)
                 {
                     case "updateLibrary":

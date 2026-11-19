@@ -210,12 +210,18 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => McpServer
-                .RunWritePreview("InvokeObject", dryRun, new { objectKind, objectPath, methodName, args, softwarePath, allowWrite }, () =>
-                    HmiInspectionContract
-                .Run("InvokeObject", allowWrite, allowWrite, () =>
-                    InvokeObject(objectKind, objectPath, methodName, args == null ? null : args.Select(value => value.Json).ToArray(), softwarePath,
-                        allowWrite)), expectedPlanHash, expectedProjectFile, writing: allowWrite);
+        {
+            var plan = new { objectKind, objectPath, methodName, args, softwarePath, allowWrite };
+            CallToolResult Execute() => HmiInspectionContract.Run("InvokeObject", allowWrite, allowWrite, () =>
+                InvokeObject(objectKind, objectPath, methodName, args?.Select(value => value.Json).ToArray(), softwarePath, allowWrite));
+            if (allowWrite && methodName.Equals("SetAttribute", StringComparison.OrdinalIgnoreCase) && args is { Length: 2 }
+                && args[0].Json.ValueKind == System.Text.Json.JsonValueKind.String)
+                return McpServer.RunNativeWritePreview("InvokeObject", dryRun, plan,
+                    () => HmiInspectionContract.Run("InvokeObject", false, true, () =>
+                        _reflection.PreviewSetAttribute(objectKind, objectPath, softwarePath, args[0].Json.GetString()!)),
+                    Execute, expectedPlanHash, expectedProjectFile);
+            return McpServer.RunWritePreview("InvokeObject", dryRun, plan, Execute, expectedPlanHash, expectedProjectFile, writing: allowWrite);
+        }
 
         public ResponseObjectValue InvokeObject(
             [Description("Object kind: " +

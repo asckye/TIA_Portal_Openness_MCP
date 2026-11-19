@@ -32,49 +32,6 @@ namespace TiaMcp.Adapters.Native.Plc
             ConnectTyped(value, target, softwarePath, option);
 
         // ---- rows -------------------------------------------------------------------------------------------------------------------
-        private static object? ModuleRef(DeviceItem? item) => item == null ? null : new Dictionary<string, object?> {
-            ["name"] = item.Name, ["ownerPath"] = HardwareAddressPrimitives.HardwareOwnerPath(item) };
-        private static object? ChannelRef(Channel? channel) => channel == null ? null : new Dictionary<string, object?> {
-            ["number"] = channel.Number, ["type"] = channel.Type.ToString(), ["ioType"] = channel.IoType.ToString(), ["ownerPath"] = HardwareAddressPrimitives
-                .HardwareOwnerPath(channel)
-        };
-        private static Dictionary<string, object?> AxisEncoderInterfaceRow(AxisEncoderHardwareConnectionInterface i)
-        {
-            var row = new Dictionary<string, object?> { ["interfaceClass"] = i.GetType().Name };
-            Safe(row, "isConnected", () => i.IsConnected); Safe(row, "connectOption", () => i.ConnectOption.ToString());
-            Safe(row, "inputAddress", () => i.InputAddress); Safe(row, "outputAddress", () => i.OutputAddress);
-            Safe(row, "pathToDbMember", () => i.PathToDBMember); Safe(row, "sensorIndexInActorTelegram", () => i.SensorIndexInActorTelegram);
-            Safe(row, "inputModule", () => ModuleRef(i.InputModule)); Safe(row, "outputModule", () => ModuleRef(i.OutputModule));
-            Safe(row, "inputOutputModule", () => ModuleRef(i.InputOutputModule));
-            Safe(row, "outputTag", () => i.OutputTag?.Name); Safe(row, "channel", () => ChannelRef(i.Channel));
-            return row;
-        }
-#if PLC_WATCH_READ
-        private static Dictionary<string, object?> TorqueInterfaceRow(TorqueHardwareConnectionInterface i)
-        {
-            var row = new Dictionary<string, object?> { ["interfaceClass"] = i.GetType().Name };
-            Safe(row, "isConnected", () => i.IsConnected); Safe(row, "connectOption", () => i.ConnectOption.ToString());
-            Safe(row, "inputAddress", () => i.InputAddress); Safe(row, "outputAddress", () => i.OutputAddress);
-            Safe(row, "pathToDbMember", () => i.PathToDBMember);
-            Safe(row, "inputModule", () => ModuleRef(i.InputModule)); Safe(row, "outputModule", () => ModuleRef(i.OutputModule));
-            Safe(row, "inputOutputModule", () => ModuleRef(i.InputOutputModule));
-            return row;
-        }
-#endif
-        private static Dictionary<string, object?> MeasuringInputRow(MeasuringInputHardwareConnectionProvider p)
-        {
-            var row = new Dictionary<string, object?> { ["interfaceClass"] = p.GetType().Name };
-            Safe(row, "isConnected", () => p.IsConnected); Safe(row, "inputAddress", () => p.InputAddress); Safe(row, "channelIndex", () => p.ChannelIndex);
-            Safe(row, "inputModule", () => ModuleRef(p.InputModule)); Safe(row, "channel", () => ChannelRef(p.Channel));
-            return row;
-        }
-        private static Dictionary<string, object?> OutputCamRow(OutputCamHardwareConnectionProvider p)
-        {
-            var row = new Dictionary<string, object?> { ["interfaceClass"] = p.GetType().Name };
-            Safe(row, "isConnected", () => p.IsConnected); Safe(row, "outputAddress", () => p.OutputAddress); Safe(row, "outputTag", () => p.OutputTag?.Name);
-            Safe(row, "channel", () => ChannelRef(p.Channel));
-            return row;
-        }
         private static object?[] AssociationNames(TechnologicalInstanceDBAssociation? association)
             => association == null ? Array.Empty<object?>() : PlcGroupOperations.Items(association).Cast<TechnologicalInstanceDB>().Select(x => (object?)x.Name)
                 .ToArray();
@@ -93,17 +50,6 @@ namespace TiaMcp.Adapters.Native.Plc
             Safe(row, "parameterCount", () => { TechnologicalParameterComposition parameters = db.Parameters; return parameters.Count; });
             return row;
         }
-        // The typed interface row for any hardware-connection object, or the generic node description for anything else.
-        private static Dictionary<string, object?> InterfaceRow(object iface) => iface switch
-        {
-            AxisEncoderHardwareConnectionInterface a => AxisEncoderInterfaceRow(a),
-#if PLC_WATCH_READ
-            TorqueHardwareConnectionInterface t => TorqueInterfaceRow(t),
-#endif
-            MeasuringInputHardwareConnectionProvider m => MeasuringInputRow(m),
-            OutputCamHardwareConnectionProvider o => OutputCamRow(o),
-            _ => DescribeNode(iface, 1)
-        };
         private static bool? IsConnectedTyped(object iface) => iface switch
         {
             AxisEncoderHardwareConnectionInterface a => a.IsConnected,
@@ -219,11 +165,13 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 
         // ---- typed Connect / Disconnect (reflective fallback stays for overloads outside the typed set, e.g. V20 Telegram) ------------------
-        private bool ConnectTyped(object iface, MotionConnectionTarget target, string softwarePath, ConnectOption option)
+        private bool ConnectTyped(object iface, MotionConnectionTarget target, string softwarePath, ConnectOption option, object[]? resolved = null)
         {
-            DeviceItem First() => ExactDeviceItem(target.DevicePath!, target.ItemPath!);
-            DeviceItem Second() => ExactDeviceItem(target.DevicePath!, target.SecondItemPath!);
-            Channel ChannelOf() => ExactChannel(First(), target.ChannelType, target.ChannelIoType, target.ChannelNumber);
+            DeviceItem First() => resolved != null ? (DeviceItem)resolved[0] : ExactDeviceItem(target.DevicePath!, target.ItemPath!);
+            DeviceItem Second() => resolved != null ? (DeviceItem)resolved[1] : ExactDeviceItem(target.DevicePath!, target.SecondItemPath!);
+            Channel ChannelOf() => resolved != null ? (Channel)resolved[0]
+                : ExactChannel(First(), target.ChannelType, target.ChannelIoType, target.ChannelNumber);
+            PlcTag Tag() => resolved != null ? (PlcTag)resolved[0] : ExactPlcTag(softwarePath, target.PlcTagPath);
             switch (iface)
             {
                 case AxisEncoderHardwareConnectionInterface a:
@@ -231,7 +179,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     {
                         case "channel": a.Connect(ChannelOf()); return true;
                         case "deviceItem": a.Connect(First()); return true;
-                        case "plcTag": a.Connect(ExactPlcTag(softwarePath, target.PlcTagPath)); return true;
+                        case "plcTag": a.Connect(Tag()); return true;
                         case "dbMember": a.Connect(target.DbMemberPath); return true;
                         case "deviceItems": if (target.HasConnectOption) a.Connect(First(), Second(), option); else a.Connect(First(), Second()); return true;
                         case "addresses": a.Connect(target.InputBitAddress, target.OutputBitAddress, option); return true;
@@ -260,7 +208,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     switch (target.Mode)
                     {
                         case "channel": o.Connect(ChannelOf()); return true;
-                        case "plcTag": o.Connect(ExactPlcTag(softwarePath, target.PlcTagPath)); return true;
+                        case "plcTag": o.Connect(Tag()); return true;
                         case "address": o.Connect(target.Address); return true;
                         default: return false;
                     }

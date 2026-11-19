@@ -5,7 +5,14 @@ using Siemens.Engineering.HW;
 
 namespace Siemens.Engineering.Library.Types
 {
-    public sealed class LibraryType { public string Name { get; set; } = "Motor"; }
+    public interface ILibraryTypeOrFolderSelection { }
+    public class LibraryTypeFolder : ILibraryTypeOrFolderSelection
+    {
+        public List<LibraryType> Types { get; } = new();
+        public List<LibraryTypeUserFolder> Folders { get; } = new();
+    }
+    public sealed class LibraryTypeUserFolder : LibraryTypeFolder { }
+    public sealed class LibraryType : ILibraryTypeOrFolderSelection { public string Name { get; set; } = "Motor"; }
     public class LibraryTypeVersion
     {
         public LibraryTypeVersionState State { get; set; } = LibraryTypeVersionState.Committed;

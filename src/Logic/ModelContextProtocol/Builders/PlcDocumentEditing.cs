@@ -56,11 +56,22 @@ namespace TiaMcpServer.ModelContextProtocol
         public static bool LibraryBound(XDocument d) => Child(Block(d), "AttributeList").Elements().Any(e =>
             new[] { "LibraryType", "LibraryTypeGuid", "LibraryTypeVersionGuid" }.Contains(e.Name.LocalName) && !string.IsNullOrWhiteSpace(e.Value));
 
-        // Keep namespaces, all program strings and wiring. Only renumber identifiers;
-        // never erase UId connections, GUID literals, timestamps in logic or member attributes.
+        // Preserve namespaces, program strings and wiring while normalizing identifiers and AttributeList ordering.
         public static string Canonical(XDocument document)
         {
             var block = new XElement(Block(document));
+            // TIA emits schema order, while PrepareImport appends omitted attributes. Sort before assigning object IDs.
+            foreach (var list in block.Descendants().Where(e => e.Name.LocalName == "AttributeList").ToArray())
+            {
+                var children = list.Elements().ToArray();
+                var sorted = children.OrderBy(e => e.Name.LocalName, StringComparer.Ordinal).ThenBy(e => (string?)e.Attribute("Name"), StringComparer.Ordinal)
+                    .ToArray();
+                if (children.SequenceEqual(sorted)) continue;
+                var nodes = list.Nodes().ToArray();
+                list.RemoveNodes();
+                int child = 0;
+                foreach (var node in nodes) list.Add(node is XElement ? sorted[child++] : node);
+            }
             var ids = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var e in block.DescendantsAndSelf())
                 if (e.Attribute("ID") is XAttribute id)

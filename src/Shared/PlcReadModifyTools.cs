@@ -586,7 +586,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 new { plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite },
                 () => PlcToolContract.Run("SeedProjectFromReference", true, true, () =>
                     ApplySeed(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite, layout)),
-                expectedPlanHash, expectedProjectFile, plannedFiles: () => (layout = SeedReferenceLayout.Read(referenceDir)).PlannedFiles);
+                expectedPlanHash, expectedProjectFile,
+                plannedFiles: () => (layout = SeedReferenceLayout.Read(referenceDir, HardwareContract.ReleaseKey, placeholders)).PlannedFiles);
         }
 
         public ResponseSeed SeedProjectFromReference(string plcSoftwarePath, string hmiSoftwarePath, string referenceDir,

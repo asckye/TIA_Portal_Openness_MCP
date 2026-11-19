@@ -73,6 +73,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var build = BuildPlcArtifact(normalizedKind, json);
                 var xml = build["xml"]?.ToString() ?? "";
                 ConstructionAdapter.VerifyOutput(xml, false);
+                TiaMcp.Adapters.Contracts.SimaticMlImportWindow.RequireBlockProgram(HardwareContract.ReleaseKey,
+                    TiaMcp.Adapters.Contracts.SimaticMlImportWindow.Load(System.Text.Encoding.UTF8.GetBytes(xml)), "spec");
                 var objectName = ResolveBuiltPlcObjectName(xml);
                 var tempDir = Path
                     .Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_plc_build_import_" + DateTime.Now

@@ -45,18 +45,9 @@ namespace TiaMcp.Adapters
             var settings=new XmlReaderSettings { DtdProcessing=DtdProcessing.Prohibit,XmlResolver=null,MaxCharactersInDocument=64*1024*1024 };
             XDocument document;
             using(var reader=XmlReader.Create(file,settings)) document=XDocument.Load(reader);
-            var languages=document.Descendants().Where(x=>x.Name.LocalName=="ProgrammingLanguage").Select(x=>x.Value.Trim()).ToArray();
-            bool scl=languages.Any(x=>string.Equals(x,"SCL",StringComparison.OrdinalIgnoreCase));
-            var versions=document.Descendants().Where(x=>x.Name.LocalName=="Engineering").Attributes()
-                .Where(x=>string.Equals(x.Name.LocalName,"version",StringComparison.OrdinalIgnoreCase)).Select(x=>x.Value.Trim()).ToArray();
-            // Treat any V14 producer conservatively: original V14 is not substituted
-            // for SP1 and no XML version marker is rewritten to make it importable.
-            bool v14=versions.Any(x=>x.StartsWith("V14",StringComparison.OrdinalIgnoreCase));
-            if(scl && (release=="14sp1" || v14)) return InterfaceOnly();
-            bool knownProducer=versions.Length>0 && versions
-                .All(v=>new[]{"V15.1","V16","V17","V18","V19","V20","V21"}
-                    .Any(k=>string.Equals(v,k,StringComparison.OrdinalIgnoreCase) || v.StartsWith(k+".",StringComparison.OrdinalIgnoreCase)));
-            if((scl && !knownProducer) || (release=="14sp1" && languages.Length==0))
+            var content = Contracts.SimaticMlImportWindow.BlockContent(release, document);
+            if (content == "interface-only") return InterfaceOnly();
+            if (content == "unverified")
                 return new PlcBlockXmlCapability {
                     Content="unverified",FullProgramRestoreSupported=false,ImportAllowed=false,Warnings=new[]{
                         "SCL implementation completeness cannot be established from this XML; full program import is blocked."}

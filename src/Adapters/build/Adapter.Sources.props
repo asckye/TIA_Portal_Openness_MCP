@@ -170,6 +170,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.Manage.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.Selection.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.Global.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryArchive.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryPolicy.cs" />
@@ -208,6 +209,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/EngineeringFileExport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcMotionPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcMotion.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcMotionConnection.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcTechnologyEvidence.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCrossReferencePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcCrossReferences.cs" />

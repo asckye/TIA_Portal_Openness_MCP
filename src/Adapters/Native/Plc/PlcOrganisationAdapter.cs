@@ -155,6 +155,14 @@ namespace TiaMcp.Adapters.Native.Plc
             return _session.GetPlcBlockGroupByPath(softwarePath, groupPath);
         }
 
+        private void RequireMoveExport(string language)
+        {
+            var export = PlcBlockXmlPolicy.Export(_session.ReleaseKey, language);
+            if (!export.ImportAllowed) throw AdapterPreconditionException.Failed(export.Warnings[0], "incomplete-block-xml", "blockName");
+        }
+
+        private void RequireRecoveryImport(string recovery) => PlcBlockXmlPolicy.Import(_session.ReleaseKey, recovery).RequireImport();
+
         public HardwareAddressingReply MoveBlockToGroup(string softwarePath, string blockName, string targetGroupPath, bool autoCreateGroup = true,
             string recoveryPath = "", bool dryRun = true, string expectedPlanHash = "")
         {
@@ -180,6 +188,7 @@ namespace TiaMcp.Adapters.Native.Plc
             string name = PlcOrganisationPrimitives.Name(block);
             int number = PlcOrganisationPrimitives.Number(block);
             string language = PlcOrganisationPrimitives.Language(block).ToString();
+            RequireMoveExport(language);
             var plan = new Dictionary<string, object?>(StringComparer.Ordinal) { ["softwarePath"] = softwarePath, ["sourcePath"] = _session.GetBlockPath(block),
                 ["name"] = name, ["number"] = number, ["language"] = language,
                 ["targetGroupPath"] = targetGroupPath, ["autoCreateGroup"] = autoCreateGroup,
@@ -239,7 +248,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     Directory.CreateDirectory(Path.GetDirectoryName(recovery)!);
                     if (File.Exists(recovery)) throw new IOException("The recovery path already exists.");
                     PlcOrganisationPrimitives.Export(block, new FileInfo(recovery), ExportOptions.WithDefaults);
-                }, () => {
+                }, () => RequireRecoveryImport(recovery), () => {
                     MutationStarted = true;
                     PlcOrganisationPrimitives.Delete(block);
                     if (PlcOrganisationPrimitives.Blocks((PlcBlockGroup)parent).Any(item => PlcOrganisationPrimitives.Name(item) == name))

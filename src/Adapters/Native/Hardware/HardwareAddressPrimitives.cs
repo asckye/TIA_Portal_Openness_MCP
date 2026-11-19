@@ -6,6 +6,11 @@ using System.Linq;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using TiaMcp.Adapters.Contracts;
+#if PROJECT_BASE
+using EngineeringProject = Siemens.Engineering.ProjectBase;
+#else
+using EngineeringProject = Siemens.Engineering.Project;
+#endif
 
 namespace TiaMcp.Adapters.Hardware
 {
@@ -42,6 +47,30 @@ namespace TiaMcp.Adapters.Hardware
                 current = ownedBy ?? (current as IEngineeringInstance)?.Parent;
             }
             return names.ToArray();
+        }
+
+        internal static string ProjectOwnerPath(EngineeringProject project, object target)
+        {
+            var names = new Stack<string>();
+            object? current = target;
+            for (int hop = 0; hop < 64 && current != null; hop++)
+            {
+                if (current is Device device)
+                {
+                    var prefix = Native.Hardware.ProjectDeviceWalk.DevicePathPrefix(
+                        project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, device);
+                    if (prefix == null) break;
+                    return string.Join("/", new[] { prefix }.Concat(names));
+                }
+                if (current is DeviceItem item)
+                {
+                    if (string.IsNullOrEmpty(item.Name)) break;
+                    names.Push(ObjectPathEncoding.EncodeSegment(item.Name));
+                    current = item.Parent;
+                }
+                else current = current.GetType().GetProperty("OwnedBy")?.GetValue(current) ?? (current as IEngineeringInstance)?.Parent;
+            }
+            throw new InvalidOperationException("The hardware owner path could not be verified.");
         }
 
         public static Dictionary<string, object?> DynamicAttributes(IEngineeringObject target, string[] names)
