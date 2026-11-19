@@ -5466,6 +5466,48 @@
           "identifier": "TiaMcp.Engine.Tests.VerifiedReadbackTests/Preview_token_still_refuses_changed_block_content( string before , string after ):771ed317abec6a96548dd0e42da4113ba7bd0d0756391a96a0e4174e301cbfa5:1"
         }
       ]
+    },
+    {
+      "task": "UNIFY-1C2",
+      "maintainerDate": "2026-11-19",
+      "reason": "U2 readiness unification: approved rows of the UNIFY-1 refresh block (20/21 null rows mapped, old-release public-api flip), accessor move and stricter DisplayName checks, and the lead-approved worker readiness test that now pins no worker start (maintainer standing approval, 2026-11-19)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4InnerResultTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4InnerResultTests/Public_usage_profile_preserves_master_output_schema( string release , string ? toolName , bool mapped ):5809d49e8c9a9d763683f73a53b7668634760afba40bb3b6ed1c1f8ec66e836b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4InnerResultTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4InnerResultTests/Public_usage_profile_preserves_master_output_schema( string release , string ? toolName , bool mapped ):9dcd0e8b765db1e09ee6bea952a11cf66f6499d5fd89b76794f6995bd134f283:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HostCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.HostCatalogTests/Every_release_has_the_same_presentation_policy_and_exact_generated_lite_roster( string release ):0b8b07880f5970c91317ebe6b447eba031249e5308e5c6fac2a82b0b68e50d43:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PackagedNoTiaReadinessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PackagedNoTiaReadinessTests/Bootstrap_reports_the_no_tia_cause( string release ):6c2c666b2f2fcfb90285e4eccf8378a591b350aa7eaaf802e267a94a421cf08e:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PackagedNoTiaReadinessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PackagedNoTiaReadinessTests/Write_preview_stops_at_readiness_and_does_not_start_or_fault_the_worker( string release ):fb27f53990ca054f7899f62a4ef3f1ea88639e6acc9520d496c7717335bcec72:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PackagedNoTiaReadinessTests.cs",
+          "kind": "test-removed",
+          "identifier": "PackagedNoTiaReadinessTests/Old_releases_keep_their_explicit_public_api_installation( string release ):7900fc92f9b356007baf586ceed48993014b723091a3d838164bf5bacf581d69"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SharedWorkerRegressionTests.cs",
+          "kind": "test-removed",
+          "identifier": "SharedWorkerRegressionTests/Worker_readiness_probe_uses_the_owned_candidate_lane( string release ):08c2c341ad2ade8bd66f8721efcec4f73ab3f0636395323081876a1cb36a2476"
+        }
+      ]
     }
   ]
 }
