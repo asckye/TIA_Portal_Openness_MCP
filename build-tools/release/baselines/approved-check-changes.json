@@ -5795,6 +5795,33 @@
           "identifier": "WriteOutcomeContractTests/AutomationML_native_false_retains_returned_state_and_counts_through_the_host_catch( ):e6d7d9329a85d1980e8b139adac6d65b9f7732ac6f22ecefc3c531d707c65775:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-14C\u002B15",
+      "maintainerDate": "2026-11-19",
+      "reason": "VMFIX-14C/15 spec-approved changes: V16 F14 registration counts (two alarm XLSX exports from V17), recovery refusal messages put the project path last, worker-robustness ReadState generation unchanged after a lost portal (15c), plus any 14C UnsupportedCapability message/code rows; standing approval of recommended options (2026-11-17)",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/PlcB5PortTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.PlcB5PortTests/EveryToolHasAnExplicitRegistrationDecision( string release , int documents , int alarms , int opcUa ):bab36fcf7891d818ff85a2157bc2118fddf995ab15a472b34b24c6d3b4073c3f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRecoveryTests/A_dead_worker_that_started_tia_is_not_rebound( string release ):d5ba595481f2854e4f4955863a50930f3c0a4570ca7920c7aba40f8439e2aeaf:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/NoLockRecoveryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "NoLockRecoveryTests/Rebind_refusal_names_the_target_and_retries_on_the_next_call( string release , bool missingProject ):ea1734de354b151ff6dc3481fab675dac57d0bc89842a984e0924f53726b7718:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcWorkerRobustnessTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcFixtureWorkerRobustnessTests/Plc_faults_recover_on_the_next_native_call( string release , string mode ):45af2e0e86c224a7c5cf5bfb94893be4b76b784666535d62440e025ed4226827:1"
+        }
+      ]
     }
   ]
 }
