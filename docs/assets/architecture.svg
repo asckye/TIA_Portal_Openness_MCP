@@ -1,27 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 450" role="img" aria-labelledby="title desc">
-  <title id="title">Automation Engineering Workbench 4.0 components</title>
-  <desc id="desc">AI clients and the Workbench Engineering page share a FoundationHost session. Each session owns a version-matched worker: PLC worker on V14 SP1 through V19, engine worker on V20 and V21. The worker alone calls TIA Openness.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 470" role="img" aria-labelledby="title desc">
+  <title id="title">Automation Engineering Workbench 4.0 architecture</title>
+  <desc id="desc">AI MCP clients and the Workbench Project page share a FoundationHost session over protected local pipes. Each MCP session owns one isolated version-matched PLC worker running on .NET Framework 4.8, which alone calls Siemens TIA Portal Openness.</desc>
   <!-- Editable vector source. Relationships match docs/standards/design.md. -->
   <defs>
-    <style>text{font-family:Segoe UI,Arial,sans-serif;fill:#172b4d} .heading{font-size:19px;font-weight:600} .body{font-size:15px} .box{fill:#f6f8fa;stroke:#8799b0;stroke-width:1.5} .arrow{stroke:#405778;stroke-width:2;fill:none}</style>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#405778"/></marker>
+    <style>
+      text { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif; fill: #1f2328; }
+      .title { font-size: 20px; font-weight: 700; }
+      .subtitle { font-size: 14px; fill: #59636e; }
+      .heading { font-size: 17px; font-weight: 600; fill: #0969da; }
+      .heading-tia { font-size: 17px; font-weight: 600; fill: #1a7f37; }
+      .body { font-size: 14px; fill: #1f2328; }
+      .muted { font-size: 13px; fill: #59636e; }
+      .badge { font-size: 12px; font-weight: 600; fill: #424a53; }
+      .canvas { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.5; }
+      .box { fill: #f6f8fa; stroke: #8c959f; stroke-width: 1.5; }
+      .box-host { fill: #f0f6ff; stroke: #54aeff; stroke-width: 1.5; }
+      .box-tia { fill: #f2fbf5; stroke: #4ac26b; stroke-width: 1.5; }
+      .pill { fill: #eaeef2; stroke: #d0d7de; stroke-width: 1; }
+      .arrow { stroke: #424a53; stroke-width: 2; fill: none; }
+      .footer { font-size: 13px; fill: #59636e; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0L8 4L0 8Z" fill="#424a53"/>
+    </marker>
   </defs>
-  <rect width="1100" height="450" fill="white"/>
-  <text x="30" y="37" class="heading">Automation Engineering Workbench 4.0</text>
-  <text x="30" y="65" class="body">Eight exact releases · One worker per MCP session · Native acceptance recorded separately</text>
-  <rect x="25" y="112" width="230" height="90" rx="8" class="box"/>
-  <text x="42" y="145" class="heading">AI MCP client</text><text x="42" y="177" class="body">STDIO or HTTP</text>
-  <rect x="25" y="270" width="230" height="135" rx="8" class="box"/>
-  <text x="42" y="302" class="heading">Workbench</text><text x="42" y="331" class="body">Engineering: operator pipe</text><text x="42" y="359" class="body">Write approvals and audit</text><text x="42" y="386" class="body">UI control: separate pipe</text>
-  <rect x="305" y="112" width="230" height="293" rx="8" class="box"/>
-  <text x="323" y="148" class="heading">FoundationHost</text><text x="323" y="179" class="body">MCP session and catalog</text><text x="323" y="216" class="body">Precheck → approval</text><text x="323" y="245" class="body">Recheck → dispatch</text><text x="323" y="282" class="body">Shared human / AI session</text><text x="323" y="311" class="body">Lease, journal and audit</text><text x="323" y="365" class="body">.NET 10</text>
-  <rect x="585" y="112" width="230" height="293" rx="8" class="box"/>
-  <text x="603" y="148" class="heading">Openness worker</text><text x="603" y="184" class="body">V14 SP1–V19: PLC worker</text><text x="603" y="211" class="body">STA owner thread</text><text x="603" y="259" class="body">V20/V21: engine worker</text><text x="603" y="286" class="body">MTA owner thread</text><text x="603" y="333" class="body">Version-specific adapters</text><text x="603" y="365" class="body">.NET Framework 4.8</text>
-  <rect x="865" y="112" width="210" height="293" rx="8" class="box"/>
-  <text x="884" y="148" class="heading">TIA Portal</text><text x="884" y="191" class="body">Matching release / API</text><text x="884" y="230" class="body">Selected process</text><text x="884" y="259" class="body">Explicit project binding</text><text x="884" y="333" class="body">Project and engineering</text><text x="884" y="362" class="body">objects</text>
-  <path d="M255 156H305" class="arrow" marker-end="url(#arrow)"/>
-  <path d="M255 333H305" class="arrow" marker-end="url(#arrow)"/>
-  <path d="M535 247H585" class="arrow" marker-end="url(#arrow)"/>
-  <path d="M815 247H865" class="arrow" marker-end="url(#arrow)"/>
-  <text x="30" y="436" class="body">A dispatched write with an unknown result must be inspected before recovery. No automatic replay.</text>
+
+  <rect x="1" y="1" width="1118" height="468" rx="12" class="canvas"/>
+  <text x="28" y="38" class="title">Automation Engineering Workbench 4.0</text>
+  <text x="28" y="64" class="subtitle">Eight exact TIA Portal releases (V14 SP1–V21) · One isolated PLC worker per MCP session · Native acceptance recorded separately</text>
+
+  <!-- Column 1: Clients & Workbench -->
+  <rect x="28" y="96" width="236" height="118" rx="8" class="box"/>
+  <text x="44" y="126" class="heading">AI MCP client</text>
+  <text x="44" y="154" class="body">Local STDIO or VM HTTP relay</text>
+  <text x="44" y="178" class="body">10+ supported MCP clients</text>
+  <text x="44" y="200" class="muted">DPAPI-protected relay secrets</text>
+
+  <rect x="28" y="242" width="236" height="168" rx="8" class="box"/>
+  <text x="44" y="272" class="heading">Workbench</text>
+  <text x="44" y="300" class="body">MCP &amp; clients + Project pages</text>
+  <text x="44" y="324" class="body">Project: operator pipe</text>
+  <text x="44" y="348" class="body">Write approvals &amp; audit view</text>
+  <text x="44" y="372" class="body">UI control: separate pipe</text>
+  <rect x="44" y="382" width="120" height="20" rx="10" class="pill"/>
+  <text x="56" y="396" class="badge">.NET 10 · WPF</text>
+
+  <!-- Column 2: FoundationHost -->
+  <rect x="312" y="96" width="236" height="314" rx="8" class="box-host"/>
+  <text x="328" y="126" class="heading">FoundationHost</text>
+  <text x="328" y="156" class="body">MCP session &amp; tool catalog</text>
+  <text x="328" y="182" class="body">V4 schema &amp; policy admission</text>
+  <text x="328" y="216" class="body">Precheck → approval → recheck</text>
+  <text x="328" y="242" class="body">Shared human / AI session</text>
+  <text x="328" y="276" class="body">Openness lane &amp; write fence</text>
+  <text x="328" y="302" class="body">Lease, call journal &amp; audit chain</text>
+  <text x="328" y="328" class="muted">Credential vault &amp; IPv4 allowlist</text>
+  <rect x="328" y="376" width="144" height="22" rx="11" class="pill"/>
+  <text x="340" y="391" class="badge">Bundled .NET 10</text>
+
+  <!-- Column 3: PLC worker -->
+  <rect x="596" y="96" width="236" height="314" rx="8" class="box"/>
+  <text x="612" y="126" class="heading">PLC worker</text>
+  <text x="612" y="156" class="body">One process per MCP session</text>
+  <text x="612" y="182" class="body">Sole caller of TIA Openness</text>
+  <text x="612" y="216" class="body">V14 SP1–V19: STA owner thread</text>
+  <text x="612" y="242" class="body">V20 / V21: MTA owner thread</text>
+  <text x="612" y="276" class="body">Version-matched adapters</text>
+  <text x="612" y="302" class="muted">SHA-256 verified handshake</text>
+  <text x="612" y="328" class="muted">Job-object lifetime &amp; recovery</text>
+  <rect x="612" y="376" width="154" height="22" rx="11" class="pill"/>
+  <text x="624" y="391" class="badge">.NET Framework 4.8</text>
+
+  <!-- Column 4: TIA Portal -->
+  <rect x="880" y="96" width="212" height="314" rx="8" class="box-tia"/>
+  <text x="896" y="126" class="heading-tia">TIA Portal</text>
+  <text x="896" y="156" class="body">Matching release &amp; API</text>
+  <text x="896" y="182" class="body">Selected process &amp; lease</text>
+  <text x="896" y="216" class="body">Explicit project binding</text>
+  <text x="896" y="250" class="body">PLC, HMI, hardware,</text>
+  <text x="896" y="272" class="body">libraries &amp; online targets</text>
+  <text x="896" y="328" class="muted">Installed &amp; licensed</text>
+  <text x="896" y="350" class="muted">separately</text>
+
+  <!-- Arrows -->
+  <path d="M264 155H312" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M264 326H312" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M548 253H596" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M832 253H880" class="arrow" marker-end="url(#arrow)"/>
+
+  <text x="28" y="446" class="footer">A dispatched write with an unknown outcome is never replayed automatically. Inspect actual target state before recovery.</text>
 </svg>

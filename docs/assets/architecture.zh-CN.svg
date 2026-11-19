@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 470" role="img" aria-labelledby="title desc">
+  <title id="title">自动化工程工作台 4.0 架构</title>
+  <desc id="desc">AI MCP 客户端与工作台项目页通过受保护的本机命名管道共享 FoundationHost 会话。每个 MCP 会话拥有一个运行在 .NET Framework 4.8 上的隔离 PLC worker，由它单独调用 Siemens TIA Portal Openness。</desc>
+  <!-- 可编辑矢量源文件。组件关系与 docs/standards/design.md 一致。 -->
+  <defs>
+    <style>
+      text { font-family: "Microsoft YaHei UI", "Segoe UI", "PingFang SC", Arial, sans-serif; fill: #1f2328; }
+      .title { font-size: 20px; font-weight: 700; }
+      .subtitle { font-size: 14px; fill: #59636e; }
+      .heading { font-size: 17px; font-weight: 600; fill: #0969da; }
+      .heading-tia { font-size: 17px; font-weight: 600; fill: #1a7f37; }
+      .body { font-size: 14px; fill: #1f2328; }
+      .muted { font-size: 13px; fill: #59636e; }
+      .badge { font-size: 12px; font-weight: 600; fill: #424a53; }
+      .canvas { fill: #ffffff; stroke: #d0d7de; stroke-width: 1.5; }
+      .box { fill: #f6f8fa; stroke: #8c959f; stroke-width: 1.5; }
+      .box-host { fill: #f0f6ff; stroke: #54aeff; stroke-width: 1.5; }
+      .box-tia { fill: #f2fbf5; stroke: #4ac26b; stroke-width: 1.5; }
+      .pill { fill: #eaeef2; stroke: #d0d7de; stroke-width: 1; }
+      .arrow { stroke: #424a53; stroke-width: 2; fill: none; }
+      .footer { font-size: 13px; fill: #59636e; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0L8 4L0 8Z" fill="#424a53"/>
+    </marker>
+  </defs>
+
+  <rect x="1" y="1" width="1118" height="468" rx="12" class="canvas"/>
+  <text x="28" y="38" class="title">自动化工程工作台 4.0</text>
+  <text x="28" y="64" class="subtitle">精确支持八个 TIA Portal 版本（V14 SP1–V21） · 每个 MCP 会话一个隔离 PLC worker · 真机验收独立记录</text>
+
+  <!-- 第 1 列：AI 客户端与工作台 -->
+  <rect x="28" y="96" width="236" height="118" rx="8" class="box"/>
+  <text x="44" y="126" class="heading">AI MCP 客户端</text>
+  <text x="44" y="154" class="body">本机 STDIO 或虚拟机中继</text>
+  <text x="44" y="178" class="body">内置 10+ 客户端一键配置</text>
+  <text x="44" y="200" class="muted">中继密钥由 DPAPI 加密保护</text>
+
+  <rect x="28" y="242" width="236" height="168" rx="8" class="box"/>
+  <text x="44" y="272" class="heading">工作台</text>
+  <text x="44" y="300" class="body">MCP 与客户端 + 项目页</text>
+  <text x="44" y="324" class="body">项目页：操作端管道共享会话</text>
+  <text x="44" y="348" class="body">写入审批与审计日志查看</text>
+  <text x="44" y="372" class="body">界面控制：独立受限管道</text>
+  <rect x="44" y="382" width="120" height="20" rx="10" class="pill"/>
+  <text x="56" y="396" class="badge">.NET 10 · WPF</text>
+
+  <!-- 第 2 列：FoundationHost -->
+  <rect x="312" y="96" width="236" height="314" rx="8" class="box-host"/>
+  <text x="328" y="126" class="heading">FoundationHost 宿主</text>
+  <text x="328" y="156" class="body">MCP 会话与工具目录</text>
+  <text x="328" y="182" class="body">V4 参数校验与策略准入</text>
+  <text x="328" y="216" class="body">预检 → 审批 → 复核后派发</text>
+  <text x="328" y="242" class="body">人机共享同一会话与状态</text>
+  <text x="328" y="276" class="body">Openness 通道与生成写栅栏</text>
+  <text x="328" y="302" class="body">租约、调用日志与审计哈希链</text>
+  <text x="328" y="328" class="muted">凭据保管库与 IPv4 白名单</text>
+  <rect x="328" y="376" width="140" height="22" rx="11" class="pill"/>
+  <text x="342" y="391" class="badge">随包 .NET 10</text>
+
+  <!-- 第 3 列：PLC worker -->
+  <rect x="596" y="96" width="236" height="314" rx="8" class="box"/>
+  <text x="612" y="126" class="heading">PLC worker</text>
+  <text x="612" y="156" class="body">每个 MCP 会话一个独立进程</text>
+  <text x="612" y="182" class="body">唯一接触 TIA Openness 对象</text>
+  <text x="612" y="216" class="body">V14 SP1–V19：STA 所属线程</text>
+  <text x="612" y="242" class="body">V20 / V21：MTA 所属线程</text>
+  <text x="612" y="276" class="body">按官方 SDK 编译的八版适配器</text>
+  <text x="612" y="302" class="muted">启动前校验程序集 SHA-256</text>
+  <text x="612" y="328" class="muted">作业对象托管生命周期与恢复</text>
+  <rect x="612" y="376" width="154" height="22" rx="11" class="pill"/>
+  <text x="624" y="391" class="badge">.NET Framework 4.8</text>
+
+  <!-- 第 4 列：TIA Portal -->
+  <rect x="880" y="96" width="212" height="314" rx="8" class="box-tia"/>
+  <text x="896" y="126" class="heading-tia">TIA Portal</text>
+  <text x="896" y="156" class="body">匹配版本的工程软件与 API</text>
+  <text x="896" y="182" class="body">显式选定进程与独占租约</text>
+  <text x="896" y="216" class="body">显式绑定目标项目</text>
+  <text x="896" y="250" class="body">PLC、HMI、硬件网络、</text>
+  <text x="896" y="272" class="body">库对象与在线目标</text>
+  <text x="896" y="328" class="muted">需按需独立安装并</text>
+  <text x="896" y="350" class="muted">准备对应许可证</text>
+
+  <!-- 连线箭头 -->
+  <path d="M264 155H312" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M264 326H312" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M548 253H596" class="arrow" marker-end="url(#arrow)"/>
+  <path d="M832 253H880" class="arrow" marker-end="url(#arrow)"/>
+
+  <text x="28" y="446" class="footer">结果未知的写入从不自动重放。恢复或重试前，请先核对实际项目状态与诊断证据。</text>
+</svg>
