@@ -58,7 +58,7 @@ namespace TiaMcp.Adapters
             var ungrouped=new List<PlcReadCandidate<PlcSoftware>>();
             foreach(var device in p.UngroupedDevicesGroup.Devices) ReadDeviceCandidates(device,new string[0],"ungrouped",ungrouped);
             foreach(var candidate in ungrouped) { candidate.AllowLegacyAlias=false; candidates.Add(candidate); }
-            return PlcReadPathPolicy.Select(candidates,softwarePath);
+            return PlcReadPathPolicy.Select(candidates,softwarePath,plcOnly: true);
         }
         private static void ReadGroupCandidates(DeviceUserGroup group,string[] parents,string path,List<PlcReadCandidate<PlcSoftware>> result,int depth)
         {

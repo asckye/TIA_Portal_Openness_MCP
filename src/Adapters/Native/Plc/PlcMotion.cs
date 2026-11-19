@@ -371,7 +371,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     });
                     meta["apiCallSuccess"] = true;
                     meta["after"] = InterfaceRow(iface);
-                    VerifyMotionConnect(meta, IsConnectedTyped(iface) ?? (isConnected != null && (bool)isConnected.GetValue(iface)!));
+                    VerifyMotionConnect(meta, () => IsConnectedTyped(iface) ?? (bool?)isConnected?.GetValue(iface));
                     meta["mappingVerified"] = isConnected != null;
                     return "Offline hardware connection changed; inspect native readback. No save/compile/download or motion command.";
                 }
@@ -454,8 +454,16 @@ namespace TiaMcp.Adapters.Native.Plc
                     meta["mayHaveChanged"] = true; MutationStarted = true;
                     if (!DisconnectTyped(selected)) PlcGroupOperations.Call(selected, "Disconnect", Type.EmptyTypes);
                 }
-                meta["after"]=InterfaceRow(selected);meta["mappingVerified"]=IsConnectedTyped(selected)==(action=="connect");
-                if (action == "connect") VerifyMotionConnect(meta, meta["mappingVerified"] is true);
+                meta["after"] = InterfaceRow(selected);
+                if (action == "connect")
+                {
+                    VerifyMotionConnect(meta, () => {
+                        bool? connected = IsConnectedTyped(selected);
+                        meta["mappingVerified"] = connected == true;
+                        return connected;
+                    });
+                }
+                else meta["mappingVerified"] = IsConnectedTyped(selected) == false;
                 return "Offline motion hardware mapping changed; inspect native readback. No save/compile/download or motion command.";
             });
         private HardwareAddressingReply RunTool(string tool, Func<Dictionary<string, object?>, string> action)

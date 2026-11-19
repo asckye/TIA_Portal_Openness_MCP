@@ -280,11 +280,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var node in nodes.Where(n => (string?)n["kind"] == "device" || n["deviceItems"] != null))
                     observed.Devices.Add(new ProjectDevice { Station = station.Id, Name = station.Id,
                         Article = (string?)node["articleNumber"] ?? "", Firmware = (string?)node["version"] ?? "" });
-                // The Foundation tree is text. Presence prevents duplicate creation, while
-                // unverified hardware attributes remain a conflict rather than a guessed match.
                 string? textTree = (string?)tree["tree"] ?? (string?)tree["value"];
-                if (nodes.Length == 0 && textTree != null && textTree.Split('\n').Any(line => line.Trim().TrimEnd('\r') == "Device: " + station.Id))
-                    observed.Devices.Add(new ProjectDevice { Station = station.Id, Name = station.Id });
+                if (nodes.Length == 0 && textTree != null)
+                    ObserveTextStation(textTree, station.Id, observed);
                 if (!machine.Devices.Any(d => d.Station == station.Id)) continue;
                 string software = machine.Target.Project.SoftwarePath ?? station.Id;
                 var softwareTree = Read("GetSoftwareTree", new JsonObject { ["softwarePath"] = software });
@@ -327,6 +325,37 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return observed;
         }
+        private void ObserveTextStation(string tree, string station, ProjectModel observed)
+        {
+            var lines = tree.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].TrimEnd();
+                if (line.TrimStart() != "Device: " + station) continue;
+                var device = new ProjectDevice { Station = station, Name = station };
+                observed.Devices.Add(device);
+                int indent = line.Length - line.TrimStart().Length;
+                var paths = new List<string>();
+                while (i + 1 < lines.Length)
+                {
+                    string child = lines[i + 1].TrimEnd();
+                    if (child.Length - child.TrimStart().Length <= indent) break;
+                    i++;
+                    const string marker = " [softwarePath=";
+                    int start = child.LastIndexOf(marker, StringComparison.Ordinal);
+                    if (start >= 0 && child.TrimStart().StartsWith("PlcSoftware: ", StringComparison.Ordinal)
+                            && child.EndsWith("]", StringComparison.Ordinal))
+                        paths.Add(child.Substring(start + marker.Length, child.Length - start - marker.Length - 1));
+                }
+                if (paths.Count != 1) continue;
+                var item = Read("GetDeviceItemInfo", new JsonObject { ["deviceItemPath"] = paths[0] });
+                if (item["attributes"] is not JsonArray attributes) continue;
+                string Value(string name) => (string?)attributes.OfType<JsonObject>().SingleOrDefault(a => (string?)a["name"] == name)?["value"] ?? "";
+                device.Article = Value("OrderNumber");
+                device.Firmware = Value("FirmwareVersion");
+            }
+        }
+
         private static IEnumerable<JsonObject> Walk(JsonNode? node)
         {
             if (node is JsonObject obj) { yield return obj; foreach (var pair in obj) foreach (var child in Walk(pair.Value)) yield return child; }

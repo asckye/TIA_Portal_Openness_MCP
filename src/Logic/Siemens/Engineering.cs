@@ -42,6 +42,15 @@ namespace TiaMcpServer.Siemens
             return ResolveFromInstallPath(args, tiaInstallPath);
         }
 
+        private static TiaMcp.Versioning.TiaVersionDescriptor SelectedRelease =>
+            TiaMcp.Versioning.TiaVersionCatalog.All.Single(v => v.MajorVersion == TiaMajorVersion);
+
+        private static string[] SearchDirectories(string installPath, TiaMcp.Versioning.TiaVersionDescriptor release)
+            => new[] { Path.Combine(installPath, "PublicAPI", release.ApiFolder), Path.Combine(installPath, "Bin", "PublicAPI") };
+
+        private static IEnumerable<string> OtherApiFolders(TiaMcp.Versioning.TiaVersionDescriptor release)
+            => TiaMcp.Versioning.TiaVersionCatalog.All.Select(v => v.ApiFolder).Concat(new[] { "V13", "V14", "V15" }).Where(v => v != release.ApiFolder);
+
         internal static Assembly? ResolveFromInstallPath(ResolveEventArgs args, string? tiaInstallPath)
         {
             var assemblyName = new AssemblyName(args.Name);
@@ -49,16 +58,9 @@ namespace TiaMcpServer.Siemens
                 return null;
             if (string.IsNullOrEmpty(tiaInstallPath)) return null;
 
-            var tiaMajorVersionString = TiaMajorVersion.ToString();
-            var searchDirectories = new[]
-            {
-                Path.Combine(tiaInstallPath, "PublicAPI", $"V{tiaMajorVersionString}"),
-                Path.Combine(tiaInstallPath, "Bin", "PublicAPI")
-            };
-
-            // IEnumerable without given majorVersionString
-            var excludedTiaMajorVersions = new[] { "V13", "V14", "V15", "V16", "V17", "V18", "V19", "V20" }
-                                    .Where(v => v != $"V{tiaMajorVersionString}");
+            var release = SelectedRelease;
+            var searchDirectories = SearchDirectories(tiaInstallPath, release);
+            var excludedTiaMajorVersions = OtherApiFolders(release);
 
             foreach (var dir in searchDirectories)
             {
@@ -156,30 +158,18 @@ namespace TiaMcpServer.Siemens
                     "explicit CLI path and matching TiaPortalLocation env var checked)");
             }
 
-            var versionString = TiaMajorVersion.ToString();
-            var searchDirectories = new[]
+            var release = SelectedRelease;
+            var searchDirectories = SearchDirectories(installPath, release);
+            foreach (var dir in searchDirectories)
             {
-                Path.Combine(installPath, "PublicAPI", $"V{versionString}"),
-                Path.Combine(installPath, "Bin", "PublicAPI")
-            };
-            var excluded = new[] { "V13", "V14", "V15", "V16", "V17", "V18", "V19", "V20" }
-                .Where(v => v != $"V{versionString}");
-
-            // V20 ships the monolithic Siemens.Engineering.dll; V21 splits it into
-            // Siemens.Engineering.Base/Step7/... — either one proves Openness is present.
-            foreach (var dll in new[] { "Siemens.Engineering.dll", "Siemens.Engineering.Base.dll" })
-            {
-                foreach (var dir in searchDirectories)
-                {
-                    string? found;
-                    try { found = FindAssemblyRecursive(dir, dll, excluded); }
-                    catch /* swallow(env-probe): an inaccessible SDK search directory does not rule out the remaining assembly locations */ { continue; }
-                    if (found != null) return (true, installPath, found, null);
-                }
+                string? found;
+                try { found = FindAssemblyRecursive(dir, release.ApiAssembly, OtherApiFolders(release)); }
+                catch /* swallow(env-probe): an inaccessible SDK search directory does not rule out the remaining assembly locations */ { continue; }
+                if (found != null) return (true, installPath, found, null);
             }
 
             return (false, installPath, null,
-                $"found the TIA folder but no Siemens.Engineering(.Base).dll under {string.Join(" or ", searchDirectories)}");
+                $"found the TIA folder but no {release.ApiAssembly} under {string.Join(" or ", searchDirectories)}");
         }
 
         private static string? GetTiaPortalInstallPath()
@@ -242,7 +232,7 @@ namespace TiaMcpServer.Siemens
             foreach (var subDir in Directory.GetDirectories(directory))
             {
                 var subDirName = new DirectoryInfo(subDir).Name;
-                if (excludedTiaMajorVersions.Contains(subDirName))
+                if (excludedTiaMajorVersions.Contains(subDirName, StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
                 }

@@ -48,13 +48,19 @@ namespace TiaMcpServer.Siemens.Services
                 string code = (string?)failure["Code"] ?? "", message = (string?)failure["Message"] ?? "HMI operation failed.";
                 bool unchanged = (bool?)reply["MayHaveChanged"] == false && (bool?)reply["OutcomeUnknown"] == false;
                 if (!unchanged) throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure(message, reply);
-                string? parameter = (string?)failure["Evidence"]?["parameter"];
-                Exception error = (string?)failure["Evidence"]?["v4FailureCode"] == "NOT_FOUND"
-                    ? AdapterPreconditionException.NotFound(message, parameter)
-                    : Enum.TryParse<PortalErrorCode>(code, out var native) ? new PortalException(native, message)
-                    : code == nameof(ArgumentException) ? new ArgumentException(message, parameter)
-                    : code == nameof(NotSupportedException) ? new NotSupportedException(message)
-                    : new InvalidOperationException(message);
+                var evidence = failure["Evidence"];
+                string? parameter = (string?)evidence?["parameter"];
+                Exception error = (string?)evidence?["v4FailureCode"] switch {
+                    "NOT_FOUND" => AdapterPreconditionException.NotFound(message, parameter),
+                    "INVALID_ARGUMENT" => new AdapterPreconditionException(message, parameter),
+                    "PRECONDITION_FAILED" => AdapterPreconditionException.Failed(message, (string?)evidence?["condition"] ?? "native-admission", parameter),
+                    _ when Enum.TryParse<PortalErrorCode>(code, out var native) && code == native.ToString()
+                        && native is PortalErrorCode.NotFound or PortalErrorCode.InvalidParams or PortalErrorCode.InvalidState
+                            or PortalErrorCode.NotSupportedOnVersion or PortalErrorCode.NativeCrashRiskBlocked => new PortalException(native, message),
+                    _ when code == nameof(ArgumentException) => new ArgumentException(message, parameter),
+                    _ when code == nameof(NotSupportedException) => new NotSupportedException(message),
+                    _ => throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure(message, reply)
+                };
                 error.Data["foundationKnownNoMutation"] = true;
                 throw error;
             }

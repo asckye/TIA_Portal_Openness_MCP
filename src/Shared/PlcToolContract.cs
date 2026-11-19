@@ -263,7 +263,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var warnings = new List<Warning>();
             if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
-            if (tool == "PatchPlcBlockDocument" && data?["evidence"]?["warnings"] is JsonArray patchWarnings)
+            if (tool is "PatchPlcBlockDocument" or "DescribePlcBlockLogic" && data?["evidence"]?["warnings"] is JsonArray patchWarnings)
                 foreach (var message in patchWarnings.OfType<JsonValue>())
                     warnings.Add(new Warning(WarningCode.NativeCapabilityLimit, message.GetValue<string>(), new Dictionary<string, JsonElement>()));
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior,

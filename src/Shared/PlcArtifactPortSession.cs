@@ -9,7 +9,12 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcpServer.ModelContextProtocol;
 namespace TiaMcpServer.Siemens.Services
 {
-    internal sealed class PlcArtifactBlock { public string Name { get; set; } = ""; public string ProgrammingLanguage { get; set; } = ""; }
+    internal sealed class PlcArtifactBlock
+    {
+        public string Name { get; set; } = "";
+        public string ProgrammingLanguage { get; set; } = "";
+        public string[] Warnings { get; set; } = Array.Empty<string>();
+    }
     internal sealed class PlcArtifactPortSession
     {
         private readonly PlcOrganisationPortService service;

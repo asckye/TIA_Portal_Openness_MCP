@@ -41,13 +41,13 @@ public static class OptionalEngineeringCapabilities
         return reply;
     }
 
+    public static string? UnavailableTool(string release, string operation)
+        => operation is "ListSivarcBlockDefinitions" or "ManageSivarcBlockDefinition" or "ResolveSivarcExpression" or "UpgradeSivarcDefinitions"
+            ? SivarcBlockDefinitionProblem(release) : null;
+
     public static string? Unsupported(string release, OptionalEngineeringRequest request)
     {
-        if (request.Operation is "ListSivarcBlockDefinitions" or "ManageSivarcBlockDefinition"
-            or "ResolveSivarcExpression"
-            or "UpgradeSivarcDefinitions"
-            && SivarcBlockDefinitionProblem(release) is string blockProblem)
-            return blockProblem;
+        if (UnavailableTool(release, request.Operation) is string blockProblem) return blockProblem;
         int major = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
         if (major == 14 && request.DriveObjectIndex > 0)
             return "V14 SP1 exposes one DriveObject service per device item; select driveObjectIndex=0.";

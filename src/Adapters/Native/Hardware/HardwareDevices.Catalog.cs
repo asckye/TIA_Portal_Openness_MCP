@@ -26,14 +26,15 @@ namespace TiaMcp.Adapters
                     "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
                     "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
             var local = this.project as Project ?? throw new HardwareAddressingException("InvalidState", "Current project is not a local Project instance");
-            // CreateWithItem names the device and its head item (CPU, interface module) with deviceName, so both names collide.
+            // HMI stations have a read-only device name. The requested name still identifies the head item.
             DeviceCreationRules.RequireFreeName(ProjectDeviceWalk.OccupiedNames(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup), deviceName);
             GuardUnifiedPanelVersion(typeIdentifier, "");
             var before = HardwareDeviceInventory();
             Device? created;
             try
             {
-                created = TiaMcp.Adapters.Hardware.HardwarePrimitives.CreateWithItem(TiaMcp.Adapters.Hardware.HardwarePrimitives.Devices(local), typeIdentifier, deviceName, deviceName);
+                created = TiaMcp.Adapters.Hardware.HardwarePrimitives.CreateWithItem(TiaMcp.Adapters.Hardware.HardwarePrimitives.Devices(local),
+                    typeIdentifier, deviceName, DeviceCreationRules.StationName(typeIdentifier, deviceName));
             }
             catch (Exception error)
             {

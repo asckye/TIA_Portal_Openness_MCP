@@ -168,7 +168,7 @@ internal static class CatalogAudits
     }
 
     internal static void ValidateUsageExamples(JsonNode catalog, JsonObject schemas, string release, IReadOnlyDictionary<string, string>? usageProfiles = null,
-            IReadOnlyDictionary<string, string>? exampleSources = null)
+            IReadOnlyDictionary<string, string>? exampleSources = null, IReadOnlyDictionary<string, JsonNode>? servedEntries = null)
     {
         const string profile = "plc-foundation";
         var problems = new List<string>();
@@ -196,14 +196,32 @@ internal static class CatalogAudits
             if (!string.IsNullOrEmpty(servedProfile)) Require(servedProfile == profile, "Usage profile differs: " + release + "/" + pair.Key);
             // Select the maintained variant by the generated tool/schema mapping, never the release family.
             if (sourceProfile.Key != (exampleSources?.GetValueOrDefault(pair.Key) ?? profile)) continue;
-            var entry = pair.Value!; var args = Bound(entry["arguments"]!);
+            var entry = pair.Value!;
+            var args = Bound(entry["arguments"]!);
+            var servedTemplate = servedEntries != null && servedEntries.TryGetValue(pair.Key, out var served)
+                && TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(pair.Key)?.Domain.StartsWith("HMI", StringComparison.Ordinal) != true
+                ? served["arguments"]! : entry["arguments"]!;
+            var servedArgs = Bound(TiaOpenness.Shared.ToolUsageCatalog.ServedArguments(catalog["calls"]!, pair.Key, release, servedTemplate));
+            Check(pair.Key, servedArgs, "served/" + pair.Key);
+            var capabilityArgs = TiaOpenness.Shared.ReleaseCapabilityQuery.WithSelectorDefaults(servedArgs, schemas[pair.Key]!["properties"]!.AsObject());
+            if (TiaOpenness.Shared.ReleaseCapabilityQuery.Problem(pair.Key, release, capabilityArgs) is string reason)
+            {
+                // A registered tool with a blanket release refusal serves that refusal for every example.
+                string? blocked = TiaMcp.Adapters.Contracts.OptionalEngineeringCapabilities.UnavailableTool(release, pair.Key);
+                if (blocked == null || !reason.Contains(blocked, StringComparison.Ordinal)
+                    || TiaOpenness.Shared.ToolUsageCatalog.ReleaseVariant(catalog["calls"]!, pair.Key, release) != null)
+                    problems.Add(release + "/served/" + pair.Key + ": " + reason);
+            }
             ToolUsageGenerator.ValidateHints(entry, schemas[pair.Key]!["properties"]!.AsObject().Select(p => p.Key), release + "/" + pair.Key);
             Check(pair.Key, args, sourceProfile.Key + "/" + pair.Key);
             void Variant(JsonNode patch, string location, bool complete = false)
             {
-                var variant = complete ? new JsonObject() : args.DeepClone().AsObject();
-                foreach (var field in Bound(patch)) variant[field.Key] = field.Value?.DeepClone();
-                Check(pair.Key, variant, sourceProfile.Key + "/" + pair.Key + "/" + location);
+                foreach (var source in new[] { (args, sourceProfile.Key), (servedArgs, "served") })
+                {
+                    var variant = complete ? new JsonObject() : source.Item1.DeepClone().AsObject();
+                    foreach (var field in Bound(patch)) variant[field.Key] = field.Value?.DeepClone();
+                    Check(pair.Key, variant, source.Item2 + "/" + pair.Key + "/" + location);
+                }
             }
             if (entry["execution"]?["arguments"] is JsonObject execution) Variant(execution, "execution");
             foreach (var operation in entry["operations"]?.AsObject() ?? [])

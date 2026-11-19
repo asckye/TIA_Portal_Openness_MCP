@@ -24,6 +24,7 @@ internal sealed class OnlineSession
         Log = new OnlineLog(session, log);
     }
     internal OnlineLog Log { get; }
+    internal bool CanConnectOnline => PortedFamilies.Available(_session.ReleaseKey, "ConnectOnlinePlc");
     internal bool IsProjectNull() => _session.IsProjectNull();
     internal Project? CurrentProject => _session.CurrentProject;
     internal PlcSoftware? GetPlcSoftware(string path) => _session.GetPlcSoftware(path);

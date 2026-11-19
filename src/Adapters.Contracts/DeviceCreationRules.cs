@@ -89,6 +89,10 @@ public static class DeviceCreationRules
         return (slash >= 0 ? text.Substring(0, slash) : text).Trim();
     }
 
+    public static string? StationName(string typeIdentifier, string itemName)
+        => typeIdentifier.StartsWith("OrderNumber:", StringComparison.Ordinal)
+            && CatalogFilter(typeIdentifier).StartsWith("6AV", StringComparison.OrdinalIgnoreCase) ? null : itemName;
+
     public static string CandidateText(string filter, IEnumerable<string?> catalogTypeIdentifiers)
     {
         var rows = (catalogTypeIdentifiers ?? Enumerable.Empty<string?>()).Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!)
@@ -107,7 +111,9 @@ public static class DeviceCreationRules
     public static AdapterPreconditionException TiaRefusal(string typeIdentifier, string deviceName, string reason, string candidates, string parameter,
             Exception cause)
         => new AdapterPreconditionException("TIA refused CreateWithItem('" + typeIdentifier + "', '" + deviceName + "'): " + reason
-            + " No device was created (device inventory unchanged); no other type, version or name was tried." + candidates, parameter, false, cause);
+            + " No device was created (device inventory unchanged); no other type, version or name was tried." + candidates,
+            reason.IndexOf("name could not be set at device", StringComparison.OrdinalIgnoreCase) >= 0
+            && reason.IndexOf("read-only attribute", StringComparison.OrdinalIgnoreCase) >= 0 ? "deviceName" : parameter, false, cause);
 
     public static bool SameInventory<T>(IReadOnlyCollection<T> before, IReadOnlyCollection<T> after)
         => before.Count == after.Count && before.All(after.Contains);

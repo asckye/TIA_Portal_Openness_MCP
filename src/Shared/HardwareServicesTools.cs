@@ -112,39 +112,40 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "GetPlcPutGetAccess"), Description(
             "[L2][Category:Hardware][PreCondition:ConnectPortal+OpenProject]" +
             " Read whether a CPU permits remote PUT/GET access — the precondition for GetPlcLiveValuesS7 on DB areas." +
-            " Only exact documented or VM-verified attributes are read; the allow-list is currently empty, so this tool reports unavailable pending VM " +
-                "confirmation.")]
+            " Reads the exact approved Boolean attribute from the selected owner.")]
         public CallToolResult GetPlcPutGetAccess(
-            [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath)
+            [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath,
+            [Description("Exact device-item path segments within the station. Omit to prefer the CPU owner.")] string[]? itemPath = null)
             => HardwareToolContract.Invoke("GetPlcPutGetAccess", true, false, () =>
             {
-                return GetPutGetAccessCore(devicePath);
+                return GetPutGetAccessCore(devicePath, itemPath);
             });
 
         [McpServerTool(Name = "SetPlcPutGetAccess"), Description(
             "[L2][Category:Hardware][WRITE][PreCondition:ConnectPortal+OpenProject]" +
             " Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads)." +
             " This is a hardware-configuration change — you must run DownloadPlc afterwards for it to take effect on the live CPU." +
-            " Defaults to dryRun=true. Only exact approved ReadWrite Boolean attributes may be written; the allow-list is currently empty and writes refuse " +
-                "pending VM confirmation. Returns before/after evidence. Native behaviorPolicy=current; V4 native acceptance is pending.")]
+            " Defaults to dryRun=true. Only the approved ReadWrite Boolean attribute may be written. Returns before/after evidence. " +
+            "Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult SetPlcPutGetAccess(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath,
             [Description("enable: true to permit remote PUT/GET access, false to forbid it.")] bool enable = true,
-            [Description("dryRun: true previews; false applies the approved attribute change.")] bool dryRun = true)
+            [Description("dryRun: true previews; false applies the approved attribute change.")] bool dryRun = true,
+            [Description("Exact device-item path segments within the station. Omit to prefer the CPU owner.")] string[]? itemPath = null)
             => HardwareToolContract.Invoke("SetPlcPutGetAccess", dryRun, true, () =>
             {
-                return SetPutGetAccessCore(devicePath, enable, dryRun);
+                return SetPutGetAccessCore(devicePath, enable, dryRun, itemPath);
             });
 
 
 
         // Unregistered adapters retain the existing domain response construction.
         private ResponseJsonReport GetPutGetAccessCore(
-            [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath)
+            [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath, string[]? itemPath)
         {
             try
             {
-                var data = _hardware.GetPutGetAccess(devicePath);
+                var data = _hardware.GetPutGetAccess(devicePath, itemPath);
                 bool found = data["found"]?.GetValue<bool>() ?? false;
                 bool enabled = data["enabled"]?.GetValue<bool>() ?? false;
                 return new ResponseJsonReport
@@ -165,11 +166,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private ResponseJsonReport SetPutGetAccessCore(
             [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath,
-            [Description("enable: true to permit remote PUT/GET access, false to forbid it.")] bool enable = true, bool dryRun = true)
+            [Description("enable: true to permit remote PUT/GET access, false to forbid it.")] bool enable = true, bool dryRun = true,
+            string[]? itemPath = null)
         {
             try
             {
-                var data = _hardware.SetPutGetAccess(devicePath, enable, dryRun);
+                var data = _hardware.SetPutGetAccess(devicePath, enable, dryRun, itemPath);
                 bool ok = data["ok"]?.GetValue<bool>() ?? false;
                 return new ResponseJsonReport
                 {

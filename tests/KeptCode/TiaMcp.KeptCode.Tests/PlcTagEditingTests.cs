@@ -16,6 +16,13 @@ namespace TiaMcp.Engine.Tests
                 => PlcTagEditingLogic.Validate(action, kind, "Tag_1", dataType, address, props, dryRun);
 
             check(!V("read").Writes && !V("update", props: "{\"Comment\":\"c\"}").Writes && V("update", props: "{\"Comment\":\"c\"}", dryRun: false).Writes, "plc tag: read / preview never write, real update writes");
+            foreach (bool preview in new[] { true, false })
+            {
+                check((string?)V("update", address: "%M2.0", dryRun: preview).Scalars["LogicalAddress"] == "%M2.0", "tag address reaches native scalars");
+                check((string?)V("update", "constant", address: "42", dryRun: preview).Scalars["Value"] == "42", "constant value reaches native scalars");
+                check(Fails<ArgumentException>(() => V("update", props: "{\"LogicalAddress\":\"%M1.0\"}", address: "%M2.0", dryRun: preview)),
+                    "conflicting tag addresses refuse before writing");
+            }
             var r = V("update", props: "{\"Comment\":\"电机启动\",\"ExternalVisible\":false}", dryRun: false);
             check(r.Scalars.Count == 1 && r.Scalars.ContainsKey("ExternalVisible") && r.Comments.Length == 1 && r.Comments[0].Culture == null && r.Comments[0].Text == "电机启动", "plc tag: string Comment -> editing language, scalars kept apart");
             r = V("update", props: "{\"Comment\":{\"zh-CN\":\"文本\",\"en-US\":\"text\"}}", dryRun: false);

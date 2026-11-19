@@ -21,7 +21,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 string? parameter = cause.Data["parameter"] as string ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(cause);
                 Error? rejection = HostBehavior.KnownMissingTarget(exception)
                     ? Rejection(tool, "NotFound", cause.Message, parameter: parameter)
-                    : cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message, parameter: parameter) : null;
+                    : cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message, parameter: parameter)
+                    : HostBehavior.KnownAdapterRefusal(exception);
                 var retained = writes ? HostBehavior.WorkerReplyEvidence(tool, exception) : null;
                 JsonObject? data = null;
                 if (tool == "ListObjectChildren" && rejection != null && cause is PortalException refusal)
@@ -47,12 +48,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "NotSupportedOnVersion" || status == "UNSUPPORTED_CAPABILITY"
                     ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI/reflection", null)
                 : status == "NativeCrashRiskBlocked" || status == "ACCESS_DENIED" ? new AccessDeniedDetails("reflection", null)
+                : status == "NATIVE_OPERATION_FAILED" ? new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())
                 : status == "PRECONDITION_FAILED" ? new PreconditionFailedDetails("HMI/reflection admission", null) : null;
             if (details == null) return null;
             if (tool == "ListObjectChildren")
                 return new Error(HostBehavior.SafeDiagnostic(message ?? evidence?["nativeMessage"]?.ToString())
                     ?? "The collection could not be read. Check the target and collectionProperty.", details);
-            return new Error((status == "NotSupportedOnVersion" || status == "PRECONDITION_FAILED") && message != null ? message
+            return new Error(status == "NATIVE_OPERATION_FAILED" ? HostBehavior.SafeDiagnostic((string?)evidence?["nativeMessage"] ?? message)
+                    ?? "Native metadata could not be read."
+                : (status == "NotSupportedOnVersion" || status == "PRECONDITION_FAILED") && message != null ? message
                 : "The request could not be admitted; inspect the retained evidence.", details);
         }
 

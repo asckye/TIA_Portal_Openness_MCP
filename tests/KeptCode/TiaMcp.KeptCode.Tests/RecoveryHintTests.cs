@@ -13,6 +13,25 @@ namespace TiaMcp.Engine.Tests
     public sealed class RecoveryHintTests
     {
 
+        [Fact]
+        public void Recovery_recommends_only_registered_tools()
+        {
+            string hint = RecoveryHints.RecoveryCode("NOT_FOUND", name => name == "GetSoftwareTree");
+            Assert.Contains("GetSoftwareTree", hint);
+            Assert.DoesNotContain("GetProjectTree", hint);
+            Assert.DoesNotContain("ListPlcBlocks", hint);
+            Assert.DoesNotContain("GetCallResult", RecoveryHints.RecoveryCode("OUTCOME_UNKNOWN", _ => false));
+            Assert.DoesNotContain("GetSessionState", RecoveryHints.RecoveryCode("OUTCOME_UNKNOWN", _ => false));
+            Assert.DoesNotContain("GetToolUsage", RecoveryHints.RecoveryCode("PRECONDITION_FAILED", _ => false));
+            foreach (string release in new[] { "14sp1", "21" })
+            {
+                bool Registered(string name) => TiaOpenness.Shared.ToolUsageCatalog.IsRegistered(name, release);
+                string message = RecoveryHints.RecoveryCode("NOT_FOUND", Registered);
+                foreach (string name in new[] { "GetProjectTree", "GetSoftwareTree", "ListPlcBlocks" })
+                    Assert.Equal(Registered(name), message.Contains(name, StringComparison.Ordinal));
+            }
+        }
+
         [Theory]
         [InlineData("INVALID_ARGUMENT")][InlineData("PRECONDITION_FAILED")]
         [InlineData("CONFIRMATION_REQUIRED")]

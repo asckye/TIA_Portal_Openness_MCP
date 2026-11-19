@@ -208,8 +208,13 @@ namespace TiaMcp.Adapters
                     case "DescribePlcBlockLogic":
                         var exported = adapter.ExportBlock(request.SoftwarePath, request.Path, request.FilePath);
                         reply.Found = exported != null;
-                        if (exported != null) reply.Data = new Dictionary<string, object?> {
-                            ["Name"] = exported.Name, ["ProgrammingLanguage"] = exported.ProgrammingLanguage.ToString() };
+                        if (exported != null)
+                        {
+                            var blockName = exported.Name;
+                            var language = exported.ProgrammingLanguage.ToString();
+                            reply.Data = new Dictionary<string, object?> { ["Name"] = blockName, ["ProgrammingLanguage"] = language,
+                                ["Warnings"] = PlcBlockXmlPolicy.Export(ReleaseKey, language).Warnings };
+                        }
                         break;
                     case "CompileDevice": step = adapter.CompileDevice(request.DevicePath, request.ItemPath, compilerEvidence); break;
                     case "CompileHmiDiagnostics":

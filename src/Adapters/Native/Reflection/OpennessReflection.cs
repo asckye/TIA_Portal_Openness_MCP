@@ -277,13 +277,16 @@ namespace TiaMcp.Adapters.Reflection
 
             var proof = new Dictionary<string, object?>();
             bool invocationAttempted = false;
+            string phase = "invoke";
             try
             {
                 Dictionary<string, string>? modes = null;
                 if (resolve != null && instance is Siemens.Engineering.IEngineeringObject
                     && methodName.Equals("SetAttribute", StringComparison.OrdinalIgnoreCase) && argValues.Count == 2 && argValues[0] is string name)
                 {
+                    phase = "GetAttributeInfos";
                     modes = AttributeModes(instance);
+                    phase = "invoke";
                     var admission = AttributeAdmission(resultKind, resultPath, name, modes);
                     if (Equals(admission.Meta["success"], false)) return admission;
                 }
@@ -345,7 +348,9 @@ namespace TiaMcp.Adapters.Reflection
             {
                 var reason = NativeFailureText.Compose(error.GetBaseException().Message, null, Array.Empty<string>());
                 var meta = ReflectionSession.Meta(false, ("invocationAttempted", invocationAttempted), ("nativeMessage", reason),
-                    ("phase", "invoke"), ("v4Rejection", invocationAttempted ? null : "INVALID_ARGUMENT"));
+                    ("phase", phase), ("v4Rejection", invocationAttempted ? null
+                        : phase == "GetAttributeInfos" ? "NATIVE_OPERATION_FAILED" : "INVALID_ARGUMENT"));
+                if (phase == "GetAttributeInfos") meta["mayHaveChanged"] = false;
                 foreach (var pair in proof) meta[pair.Key] = pair.Value;
                 var message = error is TargetInvocationException ? reason : NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
                 return new OpennessObservation { Message = message, Meta = meta, ObjectKind = resultKind, ObjectPath = resultPath };

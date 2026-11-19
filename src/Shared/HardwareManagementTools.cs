@@ -45,8 +45,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: absolute project file from the preview's targetIdentity; required when dryRun=false.")]
                 string expectedProjectFile = "")
         {
-            if (TiaMcp.Adapters.Contracts.HardwareCapabilities.Unsupported(HardwareContract.ReleaseKey, "ManageHardwareObject", action) != null)
-                return HardwareToolContract.Unsupported("ManageHardwareObject", HardwareContract.ReleaseKey, action);
+            if (TiaMcp.Adapters.Contracts.HardwareCapabilities.Unsupported(HardwareContract.ReleaseKey, "ManageHardwareObject", action) is string reason)
+                return HardwareToolContract.Unsupported("ManageHardwareObject", TiaOpenness.Shared.ReleaseCapabilityQuery.Error("ManageHardwareObject",
+                    HardwareContract.ReleaseKey, new JsonObject { ["action"] = action }, reason));
             return McpServer.RunNativeWritePreview("ManageHardwareObject", dryRun,
                 new { action, devicePath = devicePath ?? Array.Empty<string>(), itemPath = itemPath ?? Array.Empty<string>(),
                     destinationDevicePath = destinationDevicePath ?? Array.Empty<string>(),

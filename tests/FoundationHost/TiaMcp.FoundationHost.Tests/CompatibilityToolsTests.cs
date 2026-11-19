@@ -6,6 +6,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
+using TiaMcp.Logic.V4.Inputs;
 using Xunit;
 
 public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper output)
@@ -262,6 +263,36 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         args["name"] = "Original";
         Assert.Same(destination.Result, await forward.InvokeAsync(Request(tool, args)));
         Assert.Equal(2, destination.Calls);
+    }
+
+    [Theory]
+    [InlineData("tag", "addressOrValue", "%M4.0")]
+    [InlineData("tag", "LogicalAddress", "%M4.1")]
+    [InlineData("constant", "Value", "42")]
+    [InlineData("tag", "Comment", null)]
+    public void Tag_update_preview_reports_the_bound_address_or_value(string kind, string field, string? expected)
+    {
+        int calls = 0;
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((_, args) => {
+            calls++;
+            var request = args["request"]!;
+            Assert.True((bool?)request["DryRun"]);
+            Assert.Equal("", (string?)request["ValidationError"]);
+            string property = kind == "tag" ? "LogicalAddress" : "Value";
+            Assert.Equal(expected, (string?)request["Properties"]?[property]?["Text"]);
+            if (field == "Comment") Assert.Equal("Ready for operation", (string?)request["Comments"]?[0]?["Text"]);
+            return new JsonObject { ["Message"] = "preview", ["Meta"] = new JsonObject { ["operationSuccess"] = true, ["mayHaveChanged"] = false } };
+        }, () => true, () => "fixture.ap21");
+        var tool = new toolpipeline::TiaMcpServer.ModelContextProtocol.PlcReadModifyTools(service);
+        var properties = field == "addressOrValue" ? null : new AttributeMap<Scalar>(new Dictionary<string, Scalar> {
+            [field] = new Scalar(JsonSerializer.SerializeToElement(expected ?? "Ready for operation")) });
+        var result = tool.ManagePlcTagDefinitionV4("PLC_1", "Default tag table", "Ready", kind, "update",
+            addressOrValue: field == "addressOrValue" ? expected! : "", properties: properties, dryRun: true);
+        Assert.True((bool?)result.StructuredContent?["ok"]);
+        var data = Assert.IsType<JsonObject>(result.StructuredContent?["data"]);
+        Assert.Equal(expected, (string?)data["addressOrValue"]);
+        Assert.Equal(expected != null, data.ContainsKey("addressOrValue"));
+        Assert.Equal(1, calls);
     }
 
     [Fact]

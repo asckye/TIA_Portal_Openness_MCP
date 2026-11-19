@@ -357,10 +357,17 @@ internal sealed partial class FoundationTool
     {
         using var release = HardwareContract.UseRelease(portedRelease!);
         var family = PortedFamilies.ForTool(tool.Name);
-        if (!PortedFamilies.Available(portedRelease!, tool.Name) || arguments.TryGetValue("action", out var action)
-            && !family.SupportsAction(portedRelease!, action.GetString()!))
-            return HardwareContract.Run(tool.Name, () => throw new NotSupportedException("Tool is unavailable in this release."), false, true);
-        string actionName = arguments.TryGetValue("action", out var requestedAction) ? requestedAction.GetString() ?? "" : "";
+        string actionName = arguments.TryGetValue("action", out var action) ? action.GetString() ?? "" : "";
+        Error UnsupportedError(string reason)
+        {
+            var input = JsonSerializer.SerializeToNode(arguments)!.AsObject();
+            var schemaProperties = JsonSerializer.SerializeToNode(tool.InputSchema.GetProperty("properties"))!.AsObject();
+            return TiaOpenness.Shared.ReleaseCapabilityQuery.Error(tool.Name, portedRelease!,
+                TiaOpenness.Shared.ReleaseCapabilityQuery.WithSelectorDefaults(input, schemaProperties), reason);
+        }
+        CallToolResult Unsupported(string reason) => HardwareToolContract.Unsupported(tool.Name, UnsupportedError(reason));
+        if (!PortedFamilies.Available(portedRelease!, tool.Name) || arguments.ContainsKey("action") && !family.SupportsAction(portedRelease!, actionName))
+            return HardwareContract.Unsupported(tool.Name, UnsupportedError("The release capability table excludes this operation."));
         string scope = arguments.TryGetValue("family", out var requestedFamily) ? requestedFamily.GetString() ?? "" : arguments
             .TryGetValue("kind", out var requestedKind) ? requestedKind.GetString() ?? "" : "";
         if (HardwareCapabilities.Unsupported(portedRelease!, tool.Name, actionName, scope,
@@ -368,7 +375,7 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("extendedPositionNumber", out var extendedPosition) ? extendedPosition.GetInt32() : -1,
             arguments.TryGetValue("password", out var password) && !string.IsNullOrEmpty(password.GetString())) is string hardwareReason)
             return tool.Name == "ManageDeviceServiceObjects" ? CapabilityRefusal(hardwareReason)
-                : HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+                : Unsupported(hardwareReason);
         if (PlcSoftwareCapabilities.Unsupported(portedRelease!, tool.Name, actionName, scope,
             arguments.TryGetValue("unitName", out var unit) ? unit.GetString() ?? "" : "",
             arguments.TryGetValue("unitKind", out var unitKind) ? unitKind.GetString() ?? "unit" : "unit",
@@ -376,9 +383,9 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("copyMode", out var copyMode) ? copyMode.GetString() ?? "" : "",
             arguments.TryGetValue("generateOption", out var generateOption) ? generateOption.GetString() ?? "None" : "None") is string softwareReason)
             return tool.Name == "ManagePlcUserGroup" ? CapabilityRefusal(softwareReason)
-                : HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+                : Unsupported(softwareReason);
         CallToolResult CapabilityRefusal(string reason) => McpServer.V4TargetReject(tool.Name,
-            new Error(reason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true);
+            UnsupportedError(reason), current: true);
         string Text(string name) => arguments.TryGetValue(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString()! : "";
         string TextPath(string name) => arguments.TryGetValue(name, out var value) && value.ValueKind == JsonValueKind.Array
             ? string.Join("/", value.EnumerateArray().Select(segment => segment.GetString())) : Text(name);
@@ -390,16 +397,16 @@ internal sealed partial class FoundationTool
             TypeIdentifier = Text("typeIdentifier"), Version = Text("version") };
         if (family.Name == "F26")
         {
-            if (UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, Text("itemType"), Text("dynamizationType")) != null)
-                return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            if (UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, Text("itemType"), Text("dynamizationType")) is string hmiReason)
+                return Unsupported(hmiReason);
             foreach (var name in new[] { "design", "layout" })
                 if (arguments.TryGetValue(name, out var design) && design.ValueKind == JsonValueKind.Object
                     && design.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
                     foreach (var item in items.EnumerateArray())
                         if (item.ValueKind == JsonValueKind.Object && item.TryGetProperty("type", out var type)
                             && type.ValueKind == JsonValueKind.String
-                            && UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, type.GetString()!) != null)
-                            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+                            && UnifiedHmiCapabilities.Unsupported(portedRelease!, tool.Name, actionName, type.GetString()!) is string itemReason)
+                            return Unsupported(itemReason);
         }
         if (family.Name == "F22")
         {
@@ -407,8 +414,8 @@ internal sealed partial class FoundationTool
                 Operation = tool.Name, Action = actionName, RhTarget = Text("rhTarget"), Password = Text("password"),
                 UserName = Text("userName"), UserType = Text("userType"), IpAddress = Text("ipAddress"),
                 TargetIpAddress = Text("targetIpAddress"), ObjectKind = Text("objectKind") };
-            if (OnlineCapabilities.Unsupported(portedRelease!, online) != null)
-                return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            if (OnlineCapabilities.Unsupported(portedRelease!, online) is string onlineReason)
+                return Unsupported(onlineReason);
             if (OnlineTargetPolicy.AddressParameter(tool.Name) != null)
             {
                 OnlineTargetList? targets;
@@ -441,8 +448,8 @@ internal sealed partial class FoundationTool
                 return tool.Name is "SetUnifiedGlobalScript" or "ManageUnifiedEngineeringObject" or "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings"
                     || UnifiedCapabilities.WritesRuntimeSettings(unified)
                     ? McpServer.V4TargetReject(tool.Name,
-                        new Error(unifiedReason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true)
-                    : HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+                        UnsupportedError(unifiedReason), current: true)
+                    : Unsupported(unifiedReason);
             if (tool.Name is "ManageUnifiedEngineeringObject" or "SetUnifiedGlobalScript" or "SetUnifiedRuntimeSettings" && !unified.DryRun)
                 foreach (var field in new[] { "expectedPlanHash", "expectedProjectFile" })
                     if (!arguments.TryGetValue(field, out var value) || value.ValueKind != JsonValueKind.String
@@ -452,8 +459,8 @@ internal sealed partial class FoundationTool
         }
         if (family.Name == "F07" && SecurityCapabilities.Unsupported(portedRelease!, tool.Name, actionName,
             tool.Name == "ManageSyslogServers" ? (Text("scope").Length == 0 ? "project" : Text("scope")) : scope,
-            Text("category"), Text("filePath")) != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            Text("category"), Text("filePath")) is string securityReason)
+            return Unsupported(securityReason);
         b4.Aspect = Text(tool.Name == "ConfigureMotionHardwareConnection" ? "interfaceKind" : "aspect");
         if (family.Name == "F13") b4.Path = Text("objectPath");
         b4.GroupPath = TextPath(tool.Name.StartsWith("ImportTechnologyObject", StringComparison.Ordinal) ? "folderPath" : "groupPath");
@@ -462,28 +469,26 @@ internal sealed partial class FoundationTool
             b4.Properties["NamespacePreset"] = new HardwareScalar();
         if ((family.Name is "F10" or "F14" or "F15") && PlcB5Capabilities.Unsupported(portedRelease!, new PlcB5Request {
             Operation = tool.Name, Action = actionName, UnitName = Text("unitName"), UnitKind = Text("unitKind"), InterfaceType = Text("interfaceType"),
-                ObjectKind = Text("objectKind").Length == 0 ? "document" : Text("objectKind"), CopyMode = Text("copyMode") }) != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
-        if (HmiCapabilities.Unsupported(portedRelease!, tool.Name) != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+                ObjectKind = Text("objectKind").Length == 0 ? "document" : Text("objectKind"), CopyMode = Text("copyMode") }) is string b5Reason)
+            return Unsupported(b5Reason);
+        if (HmiCapabilities.Unsupported(portedRelease!, tool.Name) is string hmiToolReason)
+            return Unsupported(hmiToolReason);
         if (PlcB4Capabilities.Unsupported(portedRelease!, b4) is string b4Reason)
             return McpServer.V4TargetReject(tool.Name,
-                new Error(b4Reason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true);
+                UnsupportedError(b4Reason), current: true);
         if (OptionalProductCapabilities.Unsupported(portedRelease!, tool.Name,
             arguments.TryGetValue("category", out var optionalCategory) ? optionalCategory.GetString() ?? "" : "",
             arguments.TryGetValue("kind", out var optionalKind) ? optionalKind.GetString() ?? "" : "", actionName,
             arguments.TryGetValue("executionMode", out var executionMode) ? executionMode.GetString() ?? "" : "",
-            arguments.TryGetValue("password", out var optionalPassword) ? optionalPassword.GetString() ?? "" : "") != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            arguments.TryGetValue("password", out var optionalPassword) ? optionalPassword.GetString() ?? "" : "") is string optionalReason)
+            return Unsupported(optionalReason);
         var engineeringUnavailable = EngineeringServicesCapabilities.Unsupported(portedRelease!, tool.Name, scope,
             arguments.TryGetValue("customIdentityKey", out var customIdentity) ? customIdentity.GetString() ?? "" : "",
             arguments.TryGetValue("properties", out var engineeringProperties) && engineeringProperties.ValueKind == JsonValueKind.Object
                   ? engineeringProperties.EnumerateObject().Select(p => p.Name) : null,
               arguments.TryGetValue("view", out var editorView) ? editorView.GetString() ?? "" : "");
         if (engineeringUnavailable != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName,
-                tool.Name == "ShowObjectInEditor" && portedRelease == OpennessApi.DeviceEditorRequiresViewRelease && scope == "device"
-                    ? engineeringUnavailable : null);
+            return Unsupported(engineeringUnavailable);
         if (LibraryCapabilities.Unsupported(portedRelease!, tool.Name, actionName,
             arguments.TryGetValue("sourceKind", out var sourceKind) ? sourceKind.GetString() ?? "" : "",
             arguments.TryGetValue("properties", out var libraryProperties) && libraryProperties.ValueKind == JsonValueKind.Object ? libraryProperties
@@ -492,8 +497,8 @@ internal sealed partial class FoundationTool
             arguments.TryGetValue("deleteUnusedVersionsMode", out var deleteMode) ? deleteMode.GetString() ?? "" : "DoNotDelete",
             arguments.TryGetValue("structureConflictResolutionMode", out var structureMode) ? structureMode.GetString() ?? "" : "RetainStructure",
             arguments.TryGetValue("copyMode", out var libraryCopyMode) ? libraryCopyMode.GetString() ?? "" : "",
-            arguments.TryGetValue("updatePathsMode", out var libraryPathsMode) ? libraryPathsMode.GetString() ?? "" : "") != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            arguments.TryGetValue("updatePathsMode", out var libraryPathsMode) ? libraryPathsMode.GetString() ?? "" : "") is string libraryReason)
+            return Unsupported(libraryReason);
         return null;
     }
 

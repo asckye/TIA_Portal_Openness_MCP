@@ -26,6 +26,14 @@ namespace TiaMcp.Logic.V4
             => HostFailurePolicy.KnownNoMutation(error) && !HostFailurePolicy.PriorMutation(error) && !HostFailurePolicy.WorkerOutcomeUnknown(error)
                 && TiaMcp.Adapters.Contracts.MutationEvidence.FailureCode(error) == "NOT_FOUND";
 
+        internal static Error? KnownAdapterRefusal(Exception error)
+        {
+            if (!HostFailurePolicy.KnownNoMutation(error) || HostFailurePolicy.PriorMutation(error) || HostFailurePolicy.WorkerOutcomeUnknown(error)
+                || HostFailurePolicy.Precondition(error) is not { } refusal) return null;
+            return FailureError(refusal.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition, refusal.ParamName,
+                FailureEvidence(refusal.GetType().Name), SafeDiagnostic(refusal.Message), condition: refusal.Condition);
+        }
+
         internal static Error? DevicePathRefusal(Exception error)
         {
             if (HostFailurePolicy.PriorMutation(error)) return null;
@@ -475,8 +483,8 @@ namespace TiaMcp.Logic.V4
                             .Where(v => v.TryGetValue<string>(out _)).Select(v => v.GetValue<string>()).ToArray() : Array.Empty<string>())),
                 "AlreadyExists" or "ALREADY_EXISTS" =>
                     new Error(message ?? "The requested object already exists.", new AlreadyExistsDetails(resolveMissingTarget?.Invoke(parameter).Target)),
-                "NotSupported" or "NotSupportedOnVersion" or "UNSUPPORTED_CAPABILITY" => new Error(message ?? "This capability is unavailable.",
-                    new UnsupportedCapabilityDetails(release, tool, null)),
+                "NotSupported" or "NotSupportedOnVersion" or "UNSUPPORTED_CAPABILITY" =>
+                    UnsupportedCapabilityDetails.ErrorFor(release, tool, (string?)evidence["action"], message),
                 _ => null
             };
             if (refusal != null && evidence.ContainsKey("nativeMessage")) evidence["nativeMessage"] = message;
@@ -489,7 +497,10 @@ namespace TiaMcp.Logic.V4
             var refusal = KnownRefusal(evidence, success, release, tool, resolveMissingTarget);
             if (refusal == null) return null;
             string? nativeMessage = SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? SafeDiagnostic(message);
-            return nativeMessage == null ? refusal : new Error(nativeMessage, refusal.Details);
+            if (nativeMessage == null) return refusal;
+            return refusal.Details is UnsupportedCapabilityDetails capability
+                ? UnsupportedCapabilityDetails.ErrorFor(release, tool, capability.Action, nativeMessage)
+                : new Error(nativeMessage, refusal.Details);
         }
 
         // A negative worker verdict with explicit unchanged evidence is known, even for a write-declared tool.

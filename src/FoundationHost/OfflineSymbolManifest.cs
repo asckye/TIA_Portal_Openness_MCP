@@ -11,7 +11,8 @@ internal static class OfflineSymbolManifest
     internal const int MaxFiles = 32, MaxFileBytes = 1024 * 1024, MaxTotalBytes = 8 * 1024 * 1024;
     internal const int MaxDepth = 48, MaxTextCharacters = 1024 * 1024, MaxNodes = 50000, MaxSymbols = 10000;
     internal const string ExpectedOrigin = "caller-owned-immutable-export-snapshot";
-    internal const string InterfaceNamespace = "http://www.siemens.com/automation/Openness/SW/Interface/v5";
+    private static readonly HashSet<XNamespace> SupportedInterfaces = TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ReleaseKeys
+        .Select(key => TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ForRelease(key).InterfaceNamespace).ToHashSet();
     private static readonly HashSet<string> ElementaryTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "Bool", "Byte", "Word", "DWord", "LWord", "SInt", "Int", "DInt", "LInt", "USInt", "UInt", "UDInt", "ULInt", "Real", "LReal", "Char", "WChar", "Time",
@@ -226,26 +227,29 @@ internal static class OfflineSymbolManifest
                 Require(!dbNameElement.HasElements, "unsupported-db-name-shape");
                 var dbName = Symbol(dbNameElement.Value);
                 var iface = Single(attrs, "Interface");
-                Require(iface.Elements().Count() == 1 && iface.Elements().Single().Name == XName.Get("Sections", InterfaceNamespace),
+                Require(iface.Elements().Count() == 1 && iface.Elements().Single().Name.LocalName == "Sections",
                         "unsupported-interface-namespace-or-version");
-                var sections = iface.Elements().Single(); observedNamespace = InterfaceNamespace;
-                Require(sections.Descendants().All(x => x.Name.NamespaceName == InterfaceNamespace), "unsupported-interface-namespace");
-                Require(sections.Elements().Count() == 1 && sections.Elements().Single().Name == XName.Get("Section", InterfaceNamespace) && (string?)sections
+                var sections = iface.Elements().Single();
+                var ns = sections.Name.Namespace;
+                Require(SupportedInterfaces.Contains(ns), "unsupported-interface-namespace-or-version");
+                observedNamespace = ns.NamespaceName;
+                Require(sections.Descendants().All(x => x.Name.Namespace == ns), "unsupported-interface-namespace");
+                Require(sections.Elements().Count() == 1 && sections.Elements().Single().Name == ns + "Section" && (string?)sections
                         .Elements().Single().Attribute("Name") == "Static", "unsupported-or-nonstatic-section");
                 var section = sections.Elements().Single(); consumedDeclarations.Add(section);
-                Require(section.Elements().All(x => x.Name == XName.Get("Member", InterfaceNamespace)), "unsupported-static-member-shape");
+                Require(section.Elements().All(x => x.Name == ns + "Member"), "unsupported-static-member-shape");
                 void Member(XElement member, string prefix)
                 {
                     consumedDeclarations.Add(member);
                     Require(member.Elements()
-                            .All(x => x.Name == XName.Get("Member", InterfaceNamespace) || x.Name == XName.Get("AttributeList", InterfaceNamespace) || x
-                                .Name == XName.Get("StartValue", InterfaceNamespace) || x.Name == XName.Get("Comment", InterfaceNamespace)),
+                            .All(x => x.Name == ns + "Member" || x.Name == ns + "AttributeList" || x
+                                .Name == ns + "StartValue" || x.Name == ns + "Comment"),
                             "unsupported-nested-member-shape");
                     var name = Symbol(member.Attribute("Name")?.Value ?? ""); var path = prefix + "." + name;
                     Add(path, member.Attribute("Datatype")?.Value ?? "", "GlobalDBMember");
-                    foreach (var child in member.Elements(XName.Get("Member", InterfaceNamespace))) Member(child, path);
+                    foreach (var child in member.Elements(ns + "Member")) Member(child, path);
                 }
-                foreach (var member in section.Elements(XName.Get("Member", InterfaceNamespace))) Member(member, dbName);
+                foreach (var member in section.Elements(ns + "Member")) Member(member, dbName);
             }
         }
         // Declaration-like nodes hidden in metadata, wrappers or wrong-case names cannot disappear silently.

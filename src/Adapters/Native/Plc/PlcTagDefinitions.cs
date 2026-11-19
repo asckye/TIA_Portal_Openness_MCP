@@ -16,6 +16,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     throw new NotSupportedException("Tag and constant creation must use the Foundation CreatePlcTag/CreatePlcUserConstant route; update " +
                     "properties separately.");
                 if (request.ValidationError.Length != 0) throw new ArgumentException(request.ValidationError);
+                request.BindTagUpdate();
                 string softwarePath = request.SoftwarePath, tablePath = request.Path, name = request.Name, kind = request.Kind, action = request.Action;
                 bool dryRun = request.DryRun;
                 bool writing=action != "read" && !dryRun;

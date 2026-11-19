@@ -17,6 +17,7 @@ public sealed class GenerationExecutionTests : IDisposable
     private readonly string? previousDataDirectory;
     private readonly string repository;
     private int writes, approvals;
+    private string? textTreeFirmware;
     private string bindingGeneration = "1";
     private string? approvalReason, failure;
     private int stopAt = 2;
@@ -72,6 +73,17 @@ public sealed class GenerationExecutionTests : IDisposable
                 ["processStartUtc"] = "2026-10-10T00:00:00Z", ["generation"] = bindingGeneration } } } });
             if (name == "GetOpennessWorkerStatus") return SessionToolContract.Map(name, new ResponseMessage {
                 Meta = new JsonObject { ["worker"] = new JsonObject { ["binding"] = null }, ["operationSuccess"] = true } }, false, false);
+            if (name == "GetProjectTree" && textTreeFirmware != null) return Result(name, new JsonObject {
+                ["value"] = "Project\r\n  Device: PLC1\r\n    Item: CPU\r\n      PlcSoftware: PLC1 [softwarePath=devices/PLC1/CPU]\r\n"
+                    + "    Item: HMI\r\n      HmiTarget: RT [softwarePath=devices/PLC1/HMI]\r\n"
+            });
+            if (name == "GetDeviceItemInfo")
+            {
+                Assert.Equal("devices/PLC1/CPU", (string?)args["deviceItemPath"]);
+                return Result(name, new JsonObject { ["attributes"] = new JsonArray(
+                    new JsonObject { ["name"] = "OrderNumber", ["value"] = "6ES7 513-1AL02-0AB0" },
+                    new JsonObject { ["name"] = "FirmwareVersion", ["value"] = textTreeFirmware }) });
+            }
             if (name == "GetProjectTree") return Result(name, new JsonObject { ["devices"] = new JsonArray(new JsonObject { ["kind"] = "device", ["name"] = "PLC1", ["articleNumber"] = "6ES7 513-1AL02-0AB0", ["version"] = "V2.0" }) });
             if (name == "GetSoftwareTree") return Result(name, new JsonObject { ["paths"] = new JsonArray() }, incomplete ? "partial" : "complete");
             if (name.StartsWith("List", StringComparison.Ordinal)) return Result(name, new JsonObject { ["items"] = new JsonArray() });
@@ -157,6 +169,19 @@ public sealed class GenerationExecutionTests : IDisposable
     private static CallToolResult Apply(GenerationExecutionSession session, JsonObject plan, bool preview = false)
         => session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, (string)plan["target"]!["projectIdentity"]!, null, preview);
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });
+
+    [Fact]
+    public void Existing_text_tree_station_uses_native_article_and_firmware()
+    {
+        var structured = Plan(Session("14sp1"), "14sp1");
+        textTreeFirmware = "V2.0";
+        var observed = Plan(Session("14sp1"), "14sp1");
+        Assert.True(JsonNode.DeepEquals(structured["conflicts"], observed["conflicts"]));
+        textTreeFirmware = "V1.0";
+        var changed = Plan(Session("14sp1"), "14sp1");
+        Assert.Contains("firmware", changed["conflicts"]!.ToJsonString(), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, writes);
+    }
 
     [Theory, MemberData(nameof(Releases))]
     public void Plan_uses_the_session_state_binding(string release)

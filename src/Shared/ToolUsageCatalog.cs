@@ -28,9 +28,12 @@ namespace TiaOpenness.Shared
         {
             if (contractVersion != 4) throw new ArgumentException("Unsupported contract version.");
             var rows = (JsonArray)(Profiles.Value[engineSource ? "engineSourceReleases" : "releases"]?[release]?.DeepClone() ?? new JsonArray());
-            foreach (var row in rows.OfType<JsonObject>()) CurrentHmiArguments(row, release);
+            foreach (var row in rows.OfType<JsonObject>()) UseServedArguments(row, release);
             return rows;
         }
+
+        public static bool IsRegistered(string name, string release)
+            => (Profiles.Value["releases"]?[release] as JsonArray)?.Any(row => (string?)row!["currentName"] == name) == true;
 
         public static string ExampleSource(string name, string release)
             => (string?)(Profiles.Value["releases"]?[release] as JsonArray)?.FirstOrDefault(row => (string?)row!["currentName"] == name)?["exampleSource"]
@@ -41,17 +44,19 @@ namespace TiaOpenness.Shared
                 ? Data.Value["calls"]?["profiles"]?[ExampleSource(name, release)]?[name] as JsonObject : null;
 
         // Historical catalog rows remain comparison evidence; live HMI examples come from the maintained call library.
-        private static void CurrentHmiArguments(JsonObject row, string release)
+        private static void UseServedArguments(JsonObject row, string release)
         {
-            if (CurrentHmiCall((string)row["currentName"]!, release)?["arguments"] is JsonObject arguments)
-                row["arguments"] = arguments.DeepClone();
+            string name = (string)row["currentName"]!;
+            var template = CurrentHmiCall(name, release)?["arguments"] ?? row["arguments"];
+            if (template != null && (template != row["arguments"] || ReleaseVariant(Data.Value["calls"]!, name, release) != null))
+                row["arguments"] = ReleaseArguments(Data.Value["calls"]!, name, release, template);
         }
         private static JsonObject? ProfileEntry(string name, string release, bool source = false)
         {
             var row = (Profiles.Value[source ? "engineSourceReleases" : "releases"]?[release] as JsonArray)?
                 .OfType<JsonObject>().FirstOrDefault(entry => (string?)entry["currentName"] == name || (string?)entry["sourceName"] == name)?.DeepClone()
                     .AsObject();
-            if (row != null) CurrentHmiArguments(row, release);
+            if (row != null) UseServedArguments(row, release);
             return row;
         }
 
@@ -126,14 +131,31 @@ namespace TiaOpenness.Shared
                     ?? (profile == "engine-source" ? Data.Value["engineSourceCalls"]?[source] : Data.Value["calls"]?["profiles"]?[exampleSource]?[source]))
                 ?.DeepClone();
             if (row == null) return null;
-            if (entry != null) row["arguments"] = entry["arguments"]!.DeepClone();
-            if (TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation != "UI")
-                PreviewForm(row["arguments"]!.AsObject());
+            row["arguments"] = ServedArguments(Data.Value["calls"]!, name, release, entry?["arguments"] ?? row["arguments"]!);
             var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
             // Only our explicit format tokens are replaced; braces in JSON/code are preserved.
             return JsonNode.Parse(row.ToJsonString().Replace("{extension}", extension).Replace("{release}", release)
                 .Replace("{major}", release == "14sp1" ? "14" : release == "15.1" ? "15" : release))!.AsObject();
         }
+
+        public static JsonObject ServedArguments(JsonNode calls, string name, string release, JsonNode template)
+        {
+            var args = ReleaseArguments(calls, name, release, template);
+            if (TiaMcpServer.ModelContextProtocol.ToolMetadata.Find(name)?.Operation != "UI") PreviewForm(args);
+            return args;
+        }
+
+        public static JsonObject ReleaseArguments(JsonNode calls, string name, string release, JsonNode template)
+        {
+            var args = template.DeepClone().AsObject();
+            if (ReleaseVariant(calls, name, release) is JsonObject overrides)
+                foreach (var field in overrides) args[field.Key] = field.Value?.DeepClone();
+            return args;
+        }
+
+        public static JsonObject? ReleaseVariant(JsonNode calls, string name, string release)
+            => (calls["releaseArguments"]?[name] as JsonArray)?.SingleOrDefault(v => v!["releases"]!.AsArray().Any(key => (string?)key == release))
+                ?["arguments"]?.AsObject();
 
         public static void CompactExampleIndex(JsonObject usage)
         {
@@ -287,14 +309,20 @@ namespace TiaOpenness.Shared
             if (mapping["manualReferences"] is JsonArray manuals)
                 mapping["manualReferences"] = new JsonArray(manuals.Where(m => (string?)m!["releaseKey"] == release).Select(m => m!.DeepClone()).ToArray());
             var properties = (JsonObject)schema["properties"]!;
-            var releaseKeys = Data.Value["toolNotes"]?[name]?["releaseKeys"] as JsonArray;
-            string releaseProblem = releaseKeys != null && !releaseKeys.Any(r => (string?)r == release)
-                ? "This registered wrapper has no native implementation for release " + release + "; see interpretation and the tool description." : "";
+            var note = Data.Value["toolNotes"]?[name];
+            string releaseProblem = note?["releaseKeys"] is JsonArray { Count: 0 } ? (string?)note["input"] ?? "No supported release." : "";
+            string Problem(JsonObject input)
+            {
+                input = ReleaseCapabilityQuery.WithSelectorDefaults(input, properties);
+                string version = callProblem?.Invoke(input) ?? TiaMcpServer.Siemens.ToolVersionPolicy.CallProblem(release, name, key => input[key]?.ToString());
+                return ReleaseCapabilityQuery.Problem(name, release, input) ?? version;
+            }
             string selector = properties.ContainsKey("action") ? "action" : properties.ContainsKey("operation") ? "operation"
+                : name is "BuildAndImportPlcArtifact" or "CompareProjects" ? "kind" : name == "GetDriveParameters" ? "source"
                 : name == "ConvertEngineeringTable" ? "direction" : "";
             var call = CallExample(name, release, profile);
-            var choices = selector.Length == 0 ? new JsonArray() : properties[selector]!["enum"] as JsonArray ?? new JsonArray();
-            if (selector.Length == 0 && call?["operations"] is JsonObject examples)
+            var choices = selector.Length == 0 ? new JsonArray() : properties[selector]?["enum"] as JsonArray ?? new JsonArray();
+            if (choices.Count == 0 && call?["operations"] is JsonObject examples)
                 choices = new JsonArray(examples.Select(example => (JsonNode?)JsonValue.Create(example.Key)).ToArray());
             choices = new JsonArray(choices.Where(c => !string.IsNullOrEmpty((string?)c)).Select(c => c!.DeepClone()).ToArray());
             if (operation.Length > 0 && !choices.Any(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase)))
@@ -311,7 +339,7 @@ namespace TiaOpenness.Shared
                         callArguments = new JsonObject();
                     foreach (var pair in overrides) callArguments![pair.Key] = pair.Value?.DeepClone();
                 }
-                else callArguments = null;
+                else if (selector.Length == 0 || (string?)callArguments?[selector] != operation) callArguments = null;
             }
             var args = callArguments is JsonObject concrete ? (JsonObject)concrete.DeepClone()
                 : matches ? (JsonObject)curated!.DeepClone() : new JsonObject();
@@ -359,9 +387,14 @@ namespace TiaOpenness.Shared
             foreach (var choice in choices)
             {
                 var candidate = (JsonObject)args.DeepClone();
+                if (call?["operations"]?[(string)choice!]?["arguments"] is JsonObject operationArgs)
+                {
+                    if ((string?)call["operations"]![(string)choice!]!["argumentsMode"] == "complete") candidate.Clear();
+                    foreach (var field in operationArgs) candidate[field.Key] = field.Value?.DeepClone();
+                }
                 if (selector.Length > 0) candidate[selector] = choice!.DeepClone();
                 var variants = new JsonArray();
-                string discriminator = name == "ManageDeviceServiceObjects" ? "family" : name == "ManagePlcDocuments" ? "objectKind"
+                string discriminator = name is "ManageDeviceServiceObjects" or "ManagePlcUserGroup" ? "family" : name == "ManagePlcDocuments" ? "objectKind"
                     : name == "ManageSivarcBlockDefinition" ? "kind" : "";
                 var contexts = discriminator.Length > 0 ? properties[discriminator]?["enum"] as JsonArray : null;
                 bool chosenContext = false;
@@ -369,7 +402,7 @@ namespace TiaOpenness.Shared
                 {
                     var variant = (JsonObject)candidate.DeepClone();
                     if (context != null) variant[discriminator] = context.DeepClone();
-                    string reason = releaseProblem.Length > 0 ? releaseProblem : callProblem?.Invoke(variant) ?? "";
+                    string reason = releaseProblem.Length > 0 ? releaseProblem : Problem(variant);
                     variants.Add(new JsonObject { ["context"] = context == null ? null : new JsonObject { [discriminator] = context.DeepClone() },
                         ["availableInRelease"] = reason.Length == 0, ["reason"] = reason.Length == 0 ? null : reason });
                     if (operation == (string?)choice && reason.Length == 0 && context != null && !chosenContext)
@@ -378,7 +411,7 @@ namespace TiaOpenness.Shared
                 operations.Add(new JsonObject { ["operation"] = choice!.DeepClone(), ["selector"] = selector,
                     ["variants"] = variants, ["exampleQuery"] = new JsonObject { ["toolName"] = name, ["operation"] = choice.DeepClone() } });
             }
-            string selectedProblem = releaseProblem.Length > 0 ? releaseProblem : callProblem?.Invoke(args) ?? "";
+            string selectedProblem = releaseProblem.Length > 0 ? releaseProblem : Problem(args);
             var response = new JsonObject {
                 ["toolName"] = name, ["releaseKey"] = release, ["profile"] = "plc-foundation", ["available"] = true,
                 ["description"] = description, ["inputSchema"] = schema.DeepClone(),

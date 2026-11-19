@@ -35,6 +35,29 @@ namespace TiaMcp.Adapters.Contracts.Tests
         }
 
         [Fact]
+        public void Mirrored_put_get_owners_prefer_one_cpu_and_respect_an_explicit_path()
+        {
+            const string attribute = "ProtectionEnablePutGetCommunication";
+            var device = new Siemens.Engineering.HW.Device();
+            var rack = new Siemens.Engineering.HW.DeviceItem { Name = "Rack" };
+            var cpu = new Siemens.Engineering.HW.DeviceItem { Name = "CPU", Classification = Siemens.Engineering.HW.DeviceItemClassifications.CPU };
+            device.DeviceItems.Add(rack);
+            rack.DeviceItems.Add(cpu);
+            rack.AttributeInfos.Add(new Siemens.Engineering.EngineeringAttributeInfo { Name = attribute });
+            cpu.AttributeInfos.Add(new Siemens.Engineering.EngineeringAttributeInfo { Name = attribute, AccessMode = "ReadWrite" });
+            cpu.AttributeInfos.Add(new Siemens.Engineering.EngineeringAttributeInfo { Name = attribute, AccessMode = "ReadWrite" });
+            Native.Security.PutGetAccess.RequireWritable(cpu, attribute, true);
+            cpu.AttributeInfos[1].AccessMode = "Read";
+            Assert.Throws<InvalidOperationException>(() => Native.Security.PutGetAccess.RequireWritable(cpu, attribute, true));
+            Assert.Same(cpu, Native.Security.PutGetAccess.FindPutGetAttribute(device).item);
+            Assert.Same(rack, Native.Security.PutGetAccess.FindPutGetAttribute(device, ["Rack"]).item);
+            Assert.Same(cpu, Native.Security.PutGetAccess.FindPutGetAttribute(device, ["Rack", "CPU"]).item);
+            Assert.Throws<AdapterPreconditionException>(() => Native.Security.PutGetAccess.FindPutGetAttribute(device, ["Absent"]));
+            rack.Classification = cpu.Classification;
+            Assert.Throws<InvalidOperationException>(() => Native.Security.PutGetAccess.FindPutGetAttribute(device));
+        }
+
+        [Fact]
         public void Exact_attribute_selection_refuses_fuzzy_names_and_ambiguous_owners()
         {
             var approved = new[] { "ConfirmedName" };

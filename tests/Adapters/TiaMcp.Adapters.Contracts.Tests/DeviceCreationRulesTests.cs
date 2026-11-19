@@ -7,6 +7,16 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 // the hardware-catalog candidates so the caller chooses again.
 public sealed class DeviceCreationRulesTests
 {
+    [Fact]
+    public void Classic_panel_names_only_the_head_item_and_attributes_a_native_name_refusal()
+    {
+        const string panel = "OrderNumber:6AV2 123-2GB03-0AX0/15.1.0.0";
+        Assert.Null(DeviceCreationRules.StationName(panel, "KTP700"));
+        Assert.Equal("PLC_2", DeviceCreationRules.StationName("OrderNumber:6ES7 511-1AK01-0AB0/V2.1", "PLC_2"));
+        var error = new InvalidOperationException("The name could not be set at device. Trying to set read-only attribute.");
+        Assert.Equal("deviceName", DeviceCreationRules.TiaRefusal(panel, "KTP700", error.Message, "", "orderNumber/version", error).ParamName);
+    }
+
     [Theory]
     [InlineData("6ES7 513-1AM03-0AB0", "V3.0", "OrderNumber:6ES7 513-1AM03-0AB0/V3.0")]
     [InlineData("6ES7513-1AM03-0AB0", "V3.0", "OrderNumber:6ES7513-1AM03-0AB0/V3.0")]

@@ -9,6 +9,33 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class ToolUsageGenerator
 {
+    internal static void ValidateServedExamples(string root, JsonObject usage)
+    {
+        var runtime = System.Xml.Linq.XDocument.Load(Path.Combine(root, CatalogGenerator.Resource)).Root!.Elements("data")
+            .Single(element => (string?)element.Attribute("name") == "Catalog").Element("value")!.Value;
+        var profiles = JsonNode.Parse(runtime)!["releases"]!;
+        foreach (var tool in usage["calls"]!["releaseArguments"]?.AsObject() ?? [])
+        {
+            var listed = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var variant in tool.Value!.AsArray())
+            foreach (var key in Strings(variant!["releases"]))
+            {
+                Require(Keys.Contains(key) && listed.Add(key), "Unknown or duplicate example release: " + tool.Key + "/" + key);
+                Require(profiles[key]!.AsArray().Any(row => Text(row!["currentName"]) == tool.Key),
+                    "Release-specific example names an unregistered tool: " + key + "/" + tool.Key);
+            }
+        }
+        foreach (var key in Keys)
+        {
+            var schemas = new JsonObject();
+            foreach (var tool in Read(root, $"manifest/contracts/v4/baseline/{key}.json")["tools"]!.AsArray())
+                schemas.Add(Text(tool!["name"]), tool["inputSchema"]!.DeepClone());
+            var entries = profiles[key]!.AsArray().ToDictionary(row => Text(row!["currentName"]), row => row!);
+            CatalogAudits.ValidateUsageExamples(usage, schemas, key,
+                exampleSources: entries.ToDictionary(p => p.Key, p => Text(p.Value["exampleSource"])), servedEntries: entries);
+        }
+    }
+
     internal static JsonObject Generate(string root) => Generate(root, PlcPatternLibrary.Served(root));
 
     internal static JsonObject Generate(string root, JsonArray patterns)

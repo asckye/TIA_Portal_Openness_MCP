@@ -18,7 +18,7 @@ namespace TiaMcp.Adapters.Contracts
         public static AdapterPreconditionException NotFound(string message, string? parameter = null)
             => new AdapterPreconditionException(message, parameter, false) { Condition = "not-found" };
 
-        public static AdapterPreconditionException Failed(string message, string condition, string parameter)
+        public static AdapterPreconditionException Failed(string message, string condition, string? parameter)
             => new AdapterPreconditionException(message, condition: condition, innerException: null) { ParamName = parameter };
 
         public AdapterPreconditionException(string message, string? parameter = null, bool isArgument = true, Exception? innerException = null)

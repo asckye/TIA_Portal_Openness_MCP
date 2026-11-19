@@ -19,6 +19,53 @@ public sealed class ProvenOutcomeTests
         Assert.Equal(code, (string?)body["error"]?["code"]);
     }
 
+    [Theory, InlineData("InvalidState", null, "PROJECT_NOT_BOUND"), InlineData("AdapterPreconditionException", "NOT_FOUND", "NOT_FOUND")]
+    [InlineData("Exception", null, "OUTCOME_UNKNOWN"), InlineData("OpennessError", null, "OUTCOME_UNKNOWN")]
+    [InlineData("AdapterPreconditionException", "INVALID_ARGUMENT", "INVALID_ARGUMENT")]
+    [InlineData("AdapterPreconditionException", "PRECONDITION_FAILED", "PRECONDITION_FAILED")]
+    [InlineData("AdapterPreconditionException", "PRECONDITION_FAILED", "PRECONDITION_FAILED", false, false, "output-parent-missing")]
+    [InlineData("AdapterPreconditionException", null, "OUTCOME_UNKNOWN")]
+    [InlineData("AdapterPreconditionException", "INVALID_ARGUMENT", "OUTCOME_UNKNOWN", true, false)]
+    [InlineData("AdapterPreconditionException", "PRECONDITION_FAILED", "OUTCOME_UNKNOWN", false, true)]
+    public void Hmi_write_requires_typed_evidence_for_an_unchanged_refusal(string code, string? typed, string expected,
+        bool mayHaveChanged = false, bool outcomeUnknown = false, string? condition = null)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "21");
+        string parameter = typed == "PRECONDITION_FAILED" ? "outputPath" : "softwarePath";
+        var evidence = new JsonObject { ["v4FailureCode"] = typed, ["parameter"] = parameter };
+        if (condition != null) evidence["condition"] = condition;
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HmiExchangeService((_, _) => new JsonObject {
+            ["Failure"] = new JsonObject { ["Code"] = code, ["Message"] = "native import refused",
+                ["Evidence"] = evidence.DeepClone() },
+            ["MayHaveChanged"] = mayHaveChanged, ["OutcomeUnknown"] = outcomeUnknown }, () => "fixture.ap21");
+        Host.ResponseMessage Import()
+        {
+            service.ImportHmiTagTable("HMI", "", "tags.xml");
+            return new Host.ResponseMessage();
+        }
+        var body = Host.HmiExchangeContract.Run("ImportHmiTagTable", true, true, Import).StructuredContent!;
+        Assert.Equal(expected, (string?)body["error"]?["code"]);
+        if (expected == "OUTCOME_UNKNOWN")
+            Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
+        if (code == nameof(AdapterPreconditionException))
+        {
+            var inspection = Host.HmiInspectionContract.Run("ImportHmiTagTable", true, true, Import).StructuredContent!;
+            foreach (var result in new[] { body, inspection })
+            {
+                Verdict(result, expected == "OUTCOME_UNKNOWN" ? "unknown" : "rejected-before-operation",
+                    expected == "OUTCOME_UNKNOWN" ? "unknown" : "not-started", expected);
+                var details = result["error"]?["details"];
+                if (expected == "INVALID_ARGUMENT") Assert.Equal("/softwarePath", (string?)details?["parameter"]);
+                if (expected == "PRECONDITION_FAILED")
+                {
+                    Assert.Equal("outputPath", (string?)details?["parameter"]);
+                    Assert.Equal(condition ?? "native-admission", (string?)details?["condition"]);
+                }
+            }
+        }
+    }
+
     private static JsonObject BatchExport(bool exported = false, bool uncertain = false)
     {
         JsonObject Item(string name, string status) => new() {

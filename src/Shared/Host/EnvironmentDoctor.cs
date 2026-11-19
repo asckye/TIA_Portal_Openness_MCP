@@ -77,6 +77,8 @@ namespace TiaMcpServer.Runtime
         public const string DefaultFixEn = "Run `tia doctor` to inspect the TIA Openness installation and repair steps.";
         public const string DefaultFixZh = "请运行 `tia doctor` 检查 TIA Openness 安装并查看修复步骤。";
 
+        private const string ApiRepairZh = "请修复与 TIA Portal 版本匹配的 Openness 安装，并确认相应 PublicAPI 文件完整。";
+
         internal static string ChineseRepair(string reason, string repair, string? repairZh)
         {
             if (ContainsChinese(repairZh)) return repairZh!;
@@ -86,7 +88,7 @@ namespace TiaMcpServer.Runtime
             if (Contains(repair, "install TIA Portal") || Contains(reason, "TIA Portal") && Contains(reason, "not found"))
                 return "请安装受支持的 TIA Portal 版本并选择 Openness 组件，或将 TiaPortalLocation 设置为安装目录；运行 `tia doctor` 查看详情。";
             if (Contains(repair, "PublicAPI") || Contains(reason, "assemblies") || Contains(repair, "architecture"))
-                return "请修复与 TIA Portal 版本匹配的 Openness 安装，并确认相应 PublicAPI 文件完整。";
+                return ApiRepairZh;
             if (Contains(repair, "engine") || Contains(repair, "runtime") || Contains(reason, "engine"))
                 return "请使用与已安装 TIA Portal 版本匹配的 TIA MCP 引擎和 Openness API。";
             return DefaultFixZh;
@@ -154,7 +156,7 @@ namespace TiaMcpServer.Runtime
             var checks = new List<Check>
             {
                 TiaInstall(detectedTiaMajorVersion),
-                OpennessAssemblies(),
+                OpennessAssemblies(compiledTiaMajorVersion),
                 EngineVersionMatch(compiledTiaMajorVersion, detectedTiaMajorVersion),
                 DotNetFramework48(),
                 FilesNotBlocked(),
@@ -192,7 +194,7 @@ namespace TiaMcpServer.Runtime
             string? detectedName = detected.HasValue ? detected.Value == release.MajorVersion ? release.DisplayName : "V" + detected.Value : null;
             version.DetailEn = "exe built for " + release.DisplayName + (detectedName != null ? ", machine has " + detectedName : ", machine version unknown");
             version.DetailZh = "该 exe 为 " + release.DisplayName + " 构建" + (detectedName != null ? "，本机装的是 " + detectedName : "，本机版本未知");
-            var checks = new List<Check> { install, OpennessAssemblies(assemblies), version, DotNetFramework48(), FilesNotBlocked(binaryDirectories) };
+            var checks = new List<Check> { install, OpennessAssemblies(assemblies, release), version, DotNetFramework48(), FilesNotBlocked(binaryDirectories) };
             if (startup != null && (bool?)startup["ready"] != true)
                 checks.Add(new Check {
                     Id = "openness-startup", Ok = false, NameEn = "TIA Openness startup", NameZh = "TIA Openness startup",
@@ -222,13 +224,16 @@ namespace TiaMcpServer.Runtime
             };
         }
 
-        private static Check OpennessAssemblies()
+        private static Check OpennessAssemblies(int major)
         {
-            return OpennessAssemblies(Siemens.Engineering.ProbeOpennessAssemblies());
+            var release = TiaMcp.Versioning.TiaVersionCatalog.All.Single(v => v.MajorVersion == major);
+            return OpennessAssemblies(Siemens.Engineering.ProbeOpennessAssemblies(), release);
         }
 
-        private static Check OpennessAssemblies((bool Ok, string? InstallPath, string? ResolvedDll, string? Problem) probe)
+        private static Check OpennessAssemblies((bool Ok, string? InstallPath, string? ResolvedDll, string? Problem) probe,
+            TiaMcp.Versioning.TiaVersionDescriptor release)
         {
+            var relative = Path.Combine("PublicAPI", release.ApiFolder);
             return new Check
             {
                 Id = "openness-dll",
@@ -238,10 +243,8 @@ namespace TiaMcpServer.Runtime
                 DetailEn = probe.Ok ? "resolvable: " + probe.ResolvedDll : (probe.Problem ?? "not resolvable"),
                 DetailZh = probe.Ok ? "可解析：" + probe.ResolvedDll : ("无法解析——" + (probe.Problem ?? "原因未知")),
                 FixEn = probe.Ok ? null
-                    : "TIA can be installed without Openness. Re-run the TIA Portal setup and add the 'Openness' component, then confirm " +
-                    "Siemens.Engineering.dll (V20) or Siemens.Engineering.Base.dll (V21) exists under <install>\\PublicAPI\\V<version>\\.",
-                FixZh = probe.Ok ? null
-                    : "装了 TIA 不等于装了 Openness。重新运行 TIA Portal 安装程序补装『Openness』组件，然后确认 <安装目录>\\PublicAPI\\V<版本>\\ 下存在 Siemens.Engineering.dll（V20）或 Siemens.Engineering.Base.dll（V21）。",
+                    : $"Add the Openness component in TIA Portal {release.DisplayName} setup. Check for {release.ApiAssembly} under {relative}.",
+                FixZh = probe.Ok ? null : ApiRepairZh + " " + release.DisplayName + ": " + Path.Combine(relative, release.ApiAssembly),
             };
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -8,29 +9,39 @@ namespace TiaMcp.Logic.ModelContextProtocol
     public static class RecoveryHints
     {
         public const int ExampleByteLimit = 4096;
-        public static string RecoveryCode(string code)
+        public static string RecoveryCode(string code, Func<string, bool>? registered = null)
         {
+            bool Has(string name) => registered?.Invoke(name) ?? true;
+            string reference = Has("GetToolUsage") ? "GetToolUsage" : "the tool input schema";
+            string usage = Has("GetToolUsage") ? "GetToolUsage and the tool input schema" : "the tool input schema";
             switch (code)
             {
-                case "NOT_FOUND": return Tip("verify the exact target names with GetProjectTree / GetSoftwareTree / ListPlcBlocks before another call.");
+                case "NOT_FOUND":
+                    var readers = new[] { "GetProjectTree", "GetSoftwareTree", "ListPlcBlocks" }.Where(Has).ToArray();
+                    string lookup = readers.Length == 0 ? "" : " with " + string.Join(" / ", readers);
+                    return Tip("verify the exact target names" + lookup + " before another call.");
                 case "INVALID_ARGUMENT"
-                    : return Tip("read GetToolUsage and the tool input schema, then correct the argument without issuing the operation again automatically.");
-                case "UNSUPPORTED_CAPABILITY": return Tip("check this release's capabilities with GetToolUsage; do not substitute an unverified operation.");
+                    : return Tip("read " + usage + ", then correct the argument without issuing the operation again automatically.");
+                case "UNSUPPORTED_CAPABILITY":
+                    string lookupHint = Has("GetToolUsage") ? "with GetToolUsage" : "in the release documentation";
+                    return Tip("check this release's capabilities " + lookupHint + "; do not substitute an unverified operation.");
                 case "ACCESS_DENIED": return Tip("check the required permissions; do not bypass the access restriction.");
                 case "OFFLINE_REQUIRED"
                     : return Tip("the affected target must be offline; verify its state and obtain explicit authorization before changing the online " +
                     "connection.");
                 case "OUTCOME_UNKNOWN"
-                    : return Tip("only this call is unknown. Do not repeat this call. Read GetCallResult(requestId) and inspect the target. " +
-                        "GetSessionState lists unsettled request IDs.");
+                    : return Tip("only this call is unknown. Do not repeat this call. " +
+                        (Has("GetCallResult") ? "Read GetCallResult(requestId) and inspect the target." : "Inspect the target.") +
+                        (Has("GetSessionState") ? " GetSessionState lists unsettled request IDs." : ""));
                 case "PRECONDITION_FAILED"
-                    : return Tip("read GetToolUsage, verify the target and the stated preconditions, then review a new preview before another call.");
-                case "CONFIRMATION_REQUIRED": return Tip("read GetToolUsage, review the preview and obtain Workbench confirmation before a new apply request.");
+                    : return Tip("read " + reference + ", verify the target and the stated preconditions, then review a new preview before another call.");
+                case "CONFIRMATION_REQUIRED":
+                    return Tip("read " + reference + ", review the preview and obtain Workbench confirmation before a new apply request.");
                 default: return "";
             }
         }
 
-        public static bool Attach(JsonNode? body, Func<string, string, string, JsonObject?> example)
+        public static bool Attach(JsonNode? body, Func<string, string, string, JsonObject?> example, Func<string, bool>? registered = null)
         {
             if (body is not JsonObject || body["ok"]?.GetValue<bool>() != false
                 || body["meta"] is not JsonObject meta || meta["warnings"] is not JsonArray warnings) return false;
@@ -39,6 +50,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
             foreach (var warning in warnings) if ((string?)warning?["code"] == "RECOVERY_GUIDANCE") return false;
             string tool = (string?)meta["tool"] ?? "";
             string release = (string?)meta["releaseKey"] ?? "";
+            if (registered != null && (!registered("GetToolUsage") || !registered(tool))) return false;
             var query = new JsonObject { ["toolName"] = tool };
             var verified = example(tool, release, "");
             var arguments = verified?["request"]?["params"]?["arguments"] as JsonObject;
@@ -57,7 +69,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
                 ["validation"] = verified?["validation"]?.DeepClone(),
                 ["bindingMeaning"] =
                     "Example values are placeholders and sample targets. Resolve and review them against this session; this hint does not authorize a write." };
-            var guidance = new TiaMcp.Logic.V4.Warning(TiaMcp.Logic.V4.WarningCode.RecoveryGuidance, RecoveryCode(code).Trim(),
+            var guidance = new TiaMcp.Logic.V4.Warning(TiaMcp.Logic.V4.WarningCode.RecoveryGuidance, RecoveryCode(code, registered).Trim(),
                 System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, System.Text.Json
                     .JsonElement>>(details.ToJsonString())!);
             if (body["schemaVersion"]?.GetValue<int?>() != 4)

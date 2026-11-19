@@ -25,10 +25,42 @@ public sealed class HostDoctorFixTests : IDisposable
 {
     private readonly string scratch = Path.Combine(Root(), "bin-build", "doctor-fix-" + Guid.NewGuid().ToString("N"));
     private static string Root([CallerFilePath] string file = "") => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file)!, "../../.."));
-    private static string HostDirectory => Path.Combine(Root(), "src/FoundationHost/bin/Release/net10.0");
+    private static string HostPath => Environment.GetEnvironmentVariable("TIA_MCP_TEST_HOST_PATH")
+        ?? Path.Combine(Root(), "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe");
     private static string Fixture => TiaMcp.Engine.Tests.Shared.TestPaths.WorkerFixture("TiaMcp.PlcWorker.FaultFixture", "TiaMcp.PlcWorker.FaultFixture.exe", "net48");
     private static readonly string[] JsonKeys = { "releaseKey", "fix", "ready", "logs", "diagnostics", "checks", "group", "clients", "report" };
     public static IEnumerable<object[]> Releases() => TiaVersionCatalog.Runnable.Select(release => new object[] { release.Key });
+
+    [Theory, MemberData(nameof(Releases))]
+    public void Probe_and_repair_use_the_selected_PublicAPI_folder_and_assembly(string release)
+    {
+        var descriptor = TiaVersionCatalog.Get(release);
+        var oldMajor = Engineering.TiaMajorVersion;
+        var oldLocation = Engineering.TiaPortalLocationOverride;
+        try
+        {
+            Engineering.TiaMajorVersion = descriptor.MajorVersion;
+            Engineering.TiaPortalLocationOverride = scratch;
+            string folder = Path.Combine("PublicAPI", descriptor.ApiFolder);
+            string assembly = descriptor.ApiAssembly;
+            Put(Path.Combine(folder, release == "21" ? "Siemens.Engineering.dll" : "Siemens.Engineering.Base.dll"), "other layout");
+            Put(Path.Combine("PublicAPI", release == "21" ? "V20" : "V21", assembly), "other release");
+            var probe = Engineering.ProbeOpennessAssemblies();
+            Assert.False(probe.Ok);
+            var check = EnvironmentDoctor.RunHost(release, descriptor.MajorVersion, probe, new[] { scratch }, null).Single(row => row.Id == "openness-dll");
+            Assert.Contains(folder, check.FixEn);
+            Assert.Contains(assembly, check.FixEn);
+            Assert.Contains(folder, check.FixZh);
+            Assert.Contains(assembly, check.FixZh);
+            Put(Path.Combine(folder, assembly), "selected API");
+            Assert.Equal(Path.Combine(scratch, folder, assembly), Engineering.ProbeOpennessAssemblies().ResolvedDll);
+        }
+        finally
+        {
+            Engineering.TiaMajorVersion = oldMajor;
+            Engineering.TiaPortalLocationOverride = oldLocation;
+        }
+    }
 
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Serving_host_preflight_finds_the_release_installation(string release)
@@ -36,7 +68,7 @@ public sealed class HostDoctorFixTests : IDisposable
         int major = int.Parse(release, CultureInfo.InvariantCulture);
         string installation = Path.Combine(scratch, "Portal V" + release);
         string api = Path.Combine(installation, "PublicAPI", "V" + release);
-        Put(Path.GetRelativePath(scratch, Path.Combine(api, "Siemens.Engineering.dll")), "fixture API marker");
+        Put(Path.GetRelativePath(scratch, Path.Combine(api, TiaVersionCatalog.Get(release).ApiAssembly)), "fixture API marker");
         Put(Path.GetRelativePath(scratch, Path.Combine(installation, "Bin", "Siemens.Automation.Portal.exe")), "fixture portal marker");
         var previousMajor = Engineering.TiaMajorVersion;
         var previousLocation = Engineering.TiaPortalLocationOverride;
@@ -365,7 +397,7 @@ public sealed class HostDoctorFixTests : IDisposable
     private Result Run(IReadOnlyDictionary<string, string> environment, params string[] args)
     {
         Directory.CreateDirectory(scratch);
-        var start = new ProcessStartInfo(Path.Combine(HostDirectory, "TiaMcp.FoundationHost.exe"))
+        var start = new ProcessStartInfo(HostPath)
             { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, WorkingDirectory = Root() };
         foreach (string arg in args) start.ArgumentList.Add(arg);
         start.Environment["TIA_MCP_DATA_DIRECTORY"] = scratch;

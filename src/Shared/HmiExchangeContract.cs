@@ -37,7 +37,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
                         parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(portal))
                     : cause is NotSupportedException ? Rejection(tool, "NotSupportedOnVersion", cause.Message)
-                    : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", parameter: argument.ParamName) : null;
+                    : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", parameter: argument.ParamName)
+                    : HostBehavior.KnownAdapterRefusal(ex);
                 var outcome = rejection != null ? Outcome.RejectedBeforeOperation : writes ? Outcome.Unknown : Outcome.ReadFailed;
                 if (outcome == Outcome.Unknown && HostBehavior.WorkerReplyEvidence(tool, ex) is { } retained)
                     foreach (var pair in retained) evidence[pair.Key] = JsonSerializer.SerializeToNode(pair.Value);

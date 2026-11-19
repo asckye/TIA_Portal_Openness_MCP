@@ -7,7 +7,11 @@ using TiaMcp.Adapters.Hardware;
 // exception mapping, property conversion and failure readbacks are production code.
 namespace Siemens.Engineering
 {
-    public sealed class EngineeringAttributeInfo { public string Name { get; set; } = ""; }
+    public sealed class EngineeringAttributeInfo
+    {
+        public string Name { get; set; } = "";
+        public string AccessMode { get; set; } = "";
+    }
     public interface IEngineeringService { }
     public sealed class EngineeringServiceInfo { public Type Type { get; set; } = typeof(object); }
     public interface IEngineeringServiceProvider

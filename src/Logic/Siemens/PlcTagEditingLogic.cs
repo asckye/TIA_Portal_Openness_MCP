@@ -34,6 +34,9 @@ namespace TiaMcpServer.Siemens
             if ((action == "read" || action == "delete") && changes.Count != 0) throw new ArgumentException("No properties allowed for read/delete.");
             if (action == "create" && (string.IsNullOrWhiteSpace(dataType) || string.IsNullOrWhiteSpace(addressOrValue)))
                 throw new ArgumentException("Creation requires explicit dataType and addressOrValue.");
+            var updateField = TiaMcp.Adapters.Contracts.PlcSoftwareRequest.TagUpdateField(action, kind, addressOrValue,
+                key => changes.TryGetPropertyValue(key, out var supplied) && !JsonNode.DeepEquals(supplied, JsonValue.Create(addressOrValue)));
+            if (updateField != null) changes[updateField] = addressOrValue;
             if (action == "update" && changes.Count == 0)
                 throw new ArgumentException("update needs at least one property (scalars, or Comment as a string / {culture: text} object).");
             var r = new Request { Action = action, Kind = kind, Writes = action != "read" && !dryRun };

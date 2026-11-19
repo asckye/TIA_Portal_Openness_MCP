@@ -53,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Error? rejection = ex is ArgumentException argument
                     ? new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, argument.ParamName))
                     : ex is NotSupportedException
-                        ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)) : null;
+                        ? UnsupportedCapabilityDetails.ErrorFor(HardwareContract.ReleaseKey, tool, null, HostBehavior.SafeDiagnostic(ex.Message)) : null;
                 while (ex.InnerException != null && !(ex is TiaMcpServer.Siemens.PortalException)) ex = ex.InnerException;
                 if (ex is TiaMcpServer.Siemens.PortalException portal)
                 {
@@ -159,7 +159,8 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "NotSupported" || status == "UNSUPPORTED_CAPABILITY")
             {
                 outcome = Outcome.RejectedBeforeOperation; error =
-                    new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null));
+                    UnsupportedCapabilityDetails.ErrorFor(HardwareContract.ReleaseKey, tool, (string?)data["action"],
+                        HostBehavior.SafeDiagnostic((string?)data["nativeMessage"]));
             }
             else if (status == "ApiNotFound")
             {

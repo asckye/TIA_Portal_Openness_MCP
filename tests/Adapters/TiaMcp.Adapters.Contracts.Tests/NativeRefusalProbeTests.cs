@@ -144,7 +144,8 @@ public sealed class NativeRefusalProbeTests
         internal string Mode = "ReadWrite";
         public object GetAttribute(string name) => Read(name);
         public void SetAttribute(string name, object? value) => Set!();
-        public object[] GetAttributeInfos() => [
+        internal bool MetadataUnavailable;
+        public object[] GetAttributeInfos() => MetadataUnavailable ? throw new IOException("Attribute metadata unavailable.") : [
             new { Name = "HeaderAuthor", AccessMode = Mode }, new { Name = "Revision", AccessMode = "Read" },
             new { Name = "Secret", AccessMode = "Write" }
         ];
@@ -185,6 +186,19 @@ public sealed class NativeRefusalProbeTests
         Assert.Contains("before/Revision", reads);
         Assert.Equal(outcome is not ("connection" or "lookup"), reads.Contains("after/Revision"));
         return reply.Meta;
+    }
+
+    [Fact]
+    public void Apply_metadata_failure_precedes_SetAttribute_and_keeps_its_native_error()
+    {
+        bool called = false;
+        var target = new AttributeTarget { MetadataUnavailable = true, Set = () => called = true };
+        var adapter = new OpennessReflection(new ReflectionSession((_, _, _, _) => target, () => null));
+        var reply = adapter.InvokeObject("Block", "FC", "SetAttribute", AuthorArgs(), allowWrite: true);
+        Assert.False(called);
+        Assert.Equal(false, reply.Meta["invocationAttempted"]);
+        Assert.Equal(false, reply.Meta["mayHaveChanged"]);
+        Assert.Equal("NATIVE_OPERATION_FAILED", reply.Meta["v4Rejection"]);
     }
 
     [Fact]

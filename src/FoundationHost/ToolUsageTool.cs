@@ -24,6 +24,9 @@ internal sealed class UsageHintTool : McpServerTool
         => inner.InvokeAsync(request, cancellationToken);
 }
 
+internal sealed class UnregisteredUsageToolException(string release) : ArgumentException("The requested tool is not registered on TIA "
+    + TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName + ".", "toolName");
+
 internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpServerTool>> roster, Func<string, string>? exampleProfile = null) : McpServerTool
 {
     private readonly Tool tool = new() {
@@ -83,8 +86,8 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
             if (name.Length > 0)
             {
                 if (query.Length > 0 || id.Length > 0) throw new ArgumentException("Use toolName alone, or query/documentId for references.");
-                var target = all.Select(t => t.ProtocolTool).FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase))
-                    ?? throw new ArgumentException("Tool is not available in this release: " + name);
+                var target = all.Select(t => t.ProtocolTool).FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
+                if (target == null) throw new UnregisteredUsageToolException(releaseKey);
                 usage = ToolUsageCatalog.Describe(target.Name, releaseKey, Profile(name), target.Description ?? "",
                     (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!, operation: operation, roster: all.Select(t => t.ProtocolTool.Name), schemaFor
                         : SchemaFor);

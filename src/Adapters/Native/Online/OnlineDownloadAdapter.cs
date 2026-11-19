@@ -375,12 +375,12 @@ namespace TiaMcp.Adapters.Native.Online
             };
         }
 
-        private static string BuildOnlineStateMessage(string state, string softwarePath)
+        private string BuildOnlineStateMessage(string state, string softwarePath)
         {
             return state switch
             {
                 "Online" => $"'{softwarePath}' is online and reachable.",
-                "Offline" => $"'{softwarePath}' is offline. Call ConnectOnlinePlc first.",
+                "Offline" => $"'{softwarePath}' is offline. " + (_session.CanConnectOnline ? "Call ConnectOnlinePlc first." : "Go online in TIA Portal."),
                 "Connecting" => $"'{softwarePath}' is connecting...",
                 "Incompatible" => $"'{softwarePath}' online but firmware/config mismatch. Download required.",
                 "NotReachable" => $"'{softwarePath}' not reachable. Check IP address and network.",

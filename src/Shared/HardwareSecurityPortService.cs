@@ -26,14 +26,15 @@ internal sealed class HardwareSecurityPortService
         if (!request.DryRun && request.Action != "read") { arguments["confirm"] = true; arguments["expectedProjectFile"] = identity(); }
         return call("project-security.ExecuteHardwareSecurity", arguments) ?? throw new InvalidOperationException("Missing hardware security worker reply.");
     }
-    public JsonObject GetPutGetAccess(string devicePath)
+    public JsonObject GetPutGetAccess(string devicePath, string[]? itemPath = null)
         => !hasProject() ? new JsonObject {
                 ["found"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["mayHaveChanged"] = false, ["message"] = "No project open." }
-            : Invoke(new HardwareSecurityRequest { Operation = "GetPlcPutGetAccess", DeviceName = devicePath }).AsObject();
-    public JsonObject SetPutGetAccess(string devicePath, bool enable, bool dryRun = true)
+            : Invoke(new HardwareSecurityRequest { Operation = "GetPlcPutGetAccess", DeviceName = devicePath,
+                    ItemPath = itemPath ?? Array.Empty<string>() }).AsObject();
+    public JsonObject SetPutGetAccess(string devicePath, bool enable, bool dryRun = true, string[]? itemPath = null)
         => !hasProject() ? new JsonObject { ["ok"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." }
-            : Invoke(new HardwareSecurityRequest { Operation = "SetPlcPutGetAccess", DeviceName = devicePath, Enable = enable, Action = "set", DryRun = dryRun
-                })
+            : Invoke(new HardwareSecurityRequest { Operation = "SetPlcPutGetAccess", DeviceName = devicePath, Enable = enable, Action = "set",
+                    DryRun = dryRun, ItemPath = itemPath ?? Array.Empty<string>() })
                 .AsObject();
     private ResponseMessage Run(HardwareSecurityRequest request, string devicePathJson, string itemPathJson)
     {

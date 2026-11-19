@@ -40,11 +40,24 @@ namespace TiaMcp.Adapters.Native.Plc
             NativeRefusalProbe.Run(meta, Fingerprint, connect);
         }
 
-        internal static void VerifyMotionConnect(Dictionary<string, object?> meta, bool connected)
+        internal static void VerifyMotionConnect(Dictionary<string, object?> meta, Func<bool?> readConnected)
         {
-            if (connected) return;
+            bool? connected;
+            try { connected = readConnected(); }
+            catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error))
+            {
+                meta["writeOutcomeUnknown"] = true;
+                throw new InvalidOperationException("Connect returned but connection state unreadable.", error);
+            }
+            VerifyMotionConnect(meta, connected);
+        }
+
+        internal static void VerifyMotionConnect(Dictionary<string, object?> meta, bool? connected)
+        {
+            if (connected == true) return;
             meta["writeOutcomeUnknown"] = true;
-            throw new InvalidOperationException("Connect returned but IsConnected is false.");
+            throw new InvalidOperationException(connected == null ? "Connect returned but connection state unreadable."
+                : "Connect returned but IsConnected is false.");
         }
 
         private static object? ModuleRef(DeviceItem? item, Func<object, string>? identity = null)

@@ -44,9 +44,10 @@ internal sealed class SecuritySession
     internal HardwareObject ExactEngineeringHardware(string[] devicePath, string[] itemPath)
     { Validate("locator"); return engine.PlcB5Session.ExactEngineeringHardware(devicePath, itemPath); }
     internal Siemens.Engineering.HW.Device? GetDevice(string path) => new PutGetAccess(engine).GetDevice(path);
-    internal (DeviceItem? item, string? attrName) FindPutGetAttribute(Siemens.Engineering.HW.Device device) => PutGetAccess.FindPutGetAttribute(device);
+    internal (DeviceItem? item, string? attrName) FindPutGetAttribute(Siemens.Engineering.HW.Device device, string[]? itemPath)
+        => PutGetAccess.FindPutGetAttribute(device, itemPath);
     internal bool AttrValueIsEnabled(object? value) => PutGetAccess.AttrValueIsEnabled(value);
-    internal HmiObject GetPutGetAccess(string path) => new PutGetAccess(engine).GetPutGetAccess(path);
+    internal HmiObject GetPutGetAccess(string path, string[]? itemPath) => new PutGetAccess(engine).GetPutGetAccess(path, itemPath);
     internal Siemens.Engineering.SW.PlcSoftware ExactPlcForEngineering(string path, bool writing) => engine.PlcB5Session.ExactPlcForEngineering(path, writing);
     internal void Validate(string stage)
     {

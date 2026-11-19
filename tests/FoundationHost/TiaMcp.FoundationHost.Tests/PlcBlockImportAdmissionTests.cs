@@ -19,25 +19,42 @@ public sealed class PlcBlockImportAdmissionTests
 
     private static string GeneratedScl() => (string)PlcBuilderToolJson.ComposeFcBlock(FcSpec)["xml"]!;
 
+    internal const string Scl15 = """
+        <Document><Engineering version="V15.1"/><SW.Blocks.FC ID="0"><AttributeList>
+        <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v3">
+        <Section Name="Output"><Member Name="Ready" Datatype="Bool"/></Section></Sections></Interface>
+        <Name>FC_Ready</Name><Number>10</Number><ProgrammingLanguage>SCL</ProgrammingLanguage></AttributeList>
+        <ObjectList><SW.Blocks.CompileUnit ID="1" CompositionName="CompileUnits"><AttributeList><NetworkSource>
+        <StructuredText xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v2">
+        <Access Scope="LocalVariable" UId="21"><Symbol><Component Name="Ready"/></Symbol></Access><Token Text=":="/>
+        <Access Scope="LiteralConstant" UId="22"><Constant><ConstantType>Bool</ConstantType><ConstantValue>TRUE</ConstantValue></Constant></Access>
+        <Token Text=";"/></StructuredText></NetworkSource><ProgrammingLanguage>SCL</ProgrammingLanguage>
+        </AttributeList></SW.Blocks.CompileUnit></ObjectList></SW.Blocks.FC></Document>
+        """;
+
     [Theory, InlineData(false), InlineData(true)]
     public void Generated_SCL_imports_the_exact_reviewed_bytes(bool bom)
     {
-        var bytes = Encoding.UTF8.GetBytes(GeneratedScl());
-        SimaticMlImportWindow.Require("21", bytes, "importPath");
-        var document = SimaticMlImportWindow.Load(bytes);
-        Assert.Contains(document.Descendants(), e => e.Name.LocalName == "StructuredText" && e.HasElements);
-        SimaticMlImportWindow.RequireBlockProgram("21", document, "importPath");
-        string file = Path.Combine(AppContext.BaseDirectory, "FC-" + Guid.NewGuid().ToString("N") + ".xml");
-        try
+        foreach (string release in new[] { "21", "15.1" })
         {
-            File.WriteAllText(file, GeneratedScl(), new UTF8Encoding(bom));
-            var engine = new PathEngine("21");
-            engine.Plc.BlockGroup.OnCall = _ => File.WriteAllText(file, Before);
-            Assert.True(engine.Artifacts.ImportBlock("PLC", "", file, true));
-            Assert.Equal("FC_Ready", Assert.Single(engine.Plc.BlockGroup.Blocks).Name);
-            Assert.Equal(Before, File.ReadAllText(file));
+            var xml = release == "15.1" ? Scl15 : GeneratedScl();
+            var bytes = Encoding.UTF8.GetBytes(xml);
+            SimaticMlImportWindow.Require(release, bytes, "importPath");
+            var document = SimaticMlImportWindow.Load(bytes);
+            Assert.Contains(document.Descendants(), e => e.Name.LocalName == "StructuredText" && e.HasElements);
+            SimaticMlImportWindow.RequireBlockProgram(release, document, "importPath");
+            string file = Path.Combine(AppContext.BaseDirectory, "FC-" + Guid.NewGuid().ToString("N") + ".xml");
+            try
+            {
+                File.WriteAllText(file, xml, new UTF8Encoding(bom));
+                var engine = new PathEngine(release);
+                engine.Plc.BlockGroup.OnCall = _ => File.WriteAllText(file, Before);
+                Assert.True(engine.Artifacts.ImportBlock("PLC", "", file, true));
+                Assert.Equal("FC_Ready", Assert.Single(engine.Plc.BlockGroup.Blocks).Name);
+                Assert.Equal(Before, File.ReadAllText(file));
+            }
+            finally { File.Delete(file); }
         }
-        finally { File.Delete(file); }
     }
 
     [Theory, InlineData("udt"), InlineData("tags")]

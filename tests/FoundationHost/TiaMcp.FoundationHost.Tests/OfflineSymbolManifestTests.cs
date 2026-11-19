@@ -95,6 +95,16 @@ internal static class OfflineSymbolManifestTests
             Write("future.xml", tag.Replace("V17", "V99"));
             check(Build("future.xml")["files"]![0]!["engineeringVersionStatus"]!.GetValue<string>() == "unknown-or-missing-marker", "manifest future marker reported without inferred support");
             Bad("namespace.xml", tag.Replace("<Document>", "<Document xmlns='urn:spoof'>"), "unsupported-document-root");
+            foreach (var (version, schema) in new[] { ("V14 SP1", "v2"), ("V15.1", "v3"), ("V16", "v4"), ("V21", "v5") })
+            {
+                var nativeDb = db.Replace("V21", version).Replace("Interface/v5", "Interface/" + schema);
+                Write("release-db.xml", nativeDb);
+                var manifest = Build("release-db.xml");
+                check((bool?)manifest["ok"] == true && (int?)manifest["symbolCount"] == 2
+                    && ((string?)manifest["files"]![0]!["interfaceNamespace"])?.EndsWith("/" + schema, StringComparison.Ordinal) == true,
+                    "manifest extracts nested members with the observed interface namespace " + version);
+            }
+            Bad("mixed-interface.xml", db.Replace("<Member Name='Run'", "<Member xmlns='urn:other' Name='Run'"), "unsupported-interface-namespace");
             Bad("unsupported.xml", db.Replace("Interface/v5", "Interface/v99"), "unsupported-interface-namespace-or-version");
             Bad("wrapped.xml", "<wrapper>" + tag + "</wrapper>", "unsupported-document-root");
             Bad("mixed.xml", tag.Replace("</Document>", "<SW.Blocks.FC/></Document>"), "unsupported-document-object");
@@ -112,7 +122,8 @@ internal static class OfflineSymbolManifestTests
             Bad("nested-db-name.xml", db.Replace("<Name>DB</Name>", "<Name>D<b>B</b></Name>"), "unsupported-db-name-shape");
             Bad("attribute-case.xml", db.Replace("Datatype=", "datatype="), "missing-datatype");
             var prefixed = System.Xml.Linq.XDocument.Parse(db);
-            prefixed.Root!.Add(new System.Xml.Linq.XAttribute(System.Xml.Linq.XNamespace.Xmlns + "i", OfflineSymbolManifest.InterfaceNamespace));
+            var interfaceNamespace = prefixed.Descendants().Single(e => e.Name.LocalName == "Sections").Name.NamespaceName;
+            prefixed.Root!.Add(new System.Xml.Linq.XAttribute(System.Xml.Linq.XNamespace.Xmlns + "i", interfaceNamespace));
             foreach (var declaration in prefixed.Descendants().Where(x => x != prefixed.Root).Attributes().Where(x => x.IsNamespaceDeclaration).ToArray()) declaration.Remove();
             Write("prefixed.xml", prefixed.ToString());
             check(Build("prefixed.xml")["ok"]!.GetValue<bool>(), "manifest accepts namespace prefix alias with exact URI");

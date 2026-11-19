@@ -475,38 +475,23 @@
     },
     "ManageSinumerikArchive": {
       "profile": "full-engine",
-      "releaseKeys": [
-        "20"
-      ],
-      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+      "result": "The corresponding Siemens option must be installed on a release that exposes this provider."
     },
     "ImportSinumerikAlarmTexts": {
       "profile": "full-engine",
-      "releaseKeys": [
-        "20"
-      ],
-      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+      "result": "The corresponding Siemens option must be installed on a release that exposes this provider."
     },
     "ManageSinumerikSafetyMode": {
       "profile": "full-engine",
-      "releaseKeys": [
-        "20"
-      ],
-      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+      "result": "The corresponding Siemens option must be installed on a release that exposes this provider."
     },
     "InitializeSimotionScripting": {
       "profile": "full-engine",
-      "releaseKeys": [
-        "20"
-      ],
-      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+      "result": "The corresponding Siemens option must be installed on a release that exposes this provider."
     },
     "ExportScadaData": {
       "profile": "full-engine",
-      "releaseKeys": [
-        "20"
-      ],
-      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+      "result": "The corresponding Siemens option must be installed on a release that exposes this provider."
     },
     "ExchangeMotionCamData": {
       "profile": "full-engine",

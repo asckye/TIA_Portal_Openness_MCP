@@ -92,6 +92,36 @@ public sealed class PlcObjectPathHostTests
         }
     }
 
+    [Theory, InlineData("14sp1", true), InlineData("15.1", false)]
+    public void Describe_block_logic_reports_the_native_export_limit(string release, bool interfaceOnly)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        var capability = TiaMcp.Adapters.PlcBlockXmlPolicy.Export(release, "SCL");
+        var service = new Services.PlcOrganisationPortService((_, arguments) => {
+            var request = arguments["request"]!;
+            Assert.Equal("DescribePlcBlockLogic", (string?)request["Operation"]);
+            Assert.Equal("FC_Ready", (string?)request["Path"]);
+            var xml = interfaceOnly
+                ? "<Document><Engineering version=\"V14 SP1\"/><SW.Blocks.FC><AttributeList><Interface>" +
+                    "<Sections xmlns=\"http://www.siemens.com/automation/Openness/SW/Interface/v2\"/></Interface>" +
+                    "<Name>FC_Ready</Name><ProgrammingLanguage>SCL</ProgrammingLanguage></AttributeList></SW.Blocks.FC></Document>"
+                : PlcBlockImportAdmissionTests.Scl15;
+            File.WriteAllText(Path.Combine((string)request["FilePath"]!, "FC_Ready.xml"), xml);
+            return JsonSerializer.SerializeToNode(new { Data = new { Name = "FC_Ready", ProgrammingLanguage = "SCL", capability.Warnings } });
+        }, () => true, () => "fixture.ap" + release);
+        var body = new Host.PlcReadModifyTools(service).DescribeBlockLogicV4("PLC", "FC_Ready").StructuredContent!;
+        Assert.True((bool?)body["ok"]);
+        var warnings = body["meta"]!["warnings"]!.AsArray();
+        Assert.Equal(interfaceOnly, warnings.Any(row => (string?)row!["code"] == "NATIVE_CAPABILITY_LIMIT"));
+        if (interfaceOnly)
+        {
+            Assert.Equal("interface-only", (string?)body["data"]?["evidence"]?["xmlContent"]);
+            Assert.Contains("interface only", (string?)body["data"]?["readable"]);
+        }
+    }
+
     private static Services.PlcOrganisationPortService CreateService(PathEngine engine, string release)
         => new((_, arguments) => {
             var request = JsonSerializer.Deserialize<PlcSoftwareRequest>(arguments["request"]!.ToJsonString())!;

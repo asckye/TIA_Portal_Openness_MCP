@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using TiaMcp.Adapters;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 
 internal static class SoftwareReadTests
@@ -25,6 +26,12 @@ internal static class SoftwareReadTests
         Check(PlcReadPathPolicy.Resolve(candidates,"D/CPU")==1,"unique device/host alias selection");
         Reject(()=>PlcReadPathPolicy.Resolve(candidates,"CPU"),"ambiguous alias");
         Reject(()=>PlcReadPathPolicy.Resolve(candidates,"Missing"),"missing software");
+        try { PlcReadPathPolicy.Select(candidates, "HMI_Missing"); throw new Exception("Expected a missing HMI target."); }
+        catch (AdapterPreconditionException error)
+        {
+            Check(error.Condition == "not-found" && error.Message.Contains("HMI software") && error.ParamName == "softwarePath",
+                "mixed software lookup identifies missing HMI target");
+        }
         Reject(()=>PlcReadPathPolicy.Resolve(candidates,"D/CPU/unused"),"unused segment");
         var grouped=new[]{new PlcReadCandidate<int>{Value=3,ExactPath="devices/D/Group/PLC_1",Groups=new[]{"Group"},Device="D",Host="PLC_1"}};
         Check(PlcReadPathPolicy.Resolve(grouped,"Group/PLC_1")==3,"group-qualified PLC alias selection");

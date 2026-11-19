@@ -22,8 +22,8 @@ namespace TiaMcp.Adapters
         // Group segments are case-sensitive; device/host segments ignore case.
         // Deliberate safety corrections: reject ambiguous aliases and unconsumed segments.
         internal static T Resolve<T>(IEnumerable<PlcReadCandidate<T>> inventory,string path)
-            => Select(inventory,path).Value;
-        internal static PlcReadCandidate<T> Select<T>(IEnumerable<PlcReadCandidate<T>> inventory,string path)
+            => Select(inventory,path,plcOnly: true).Value;
+        internal static PlcReadCandidate<T> Select<T>(IEnumerable<PlcReadCandidate<T>> inventory,string path,bool plcOnly = false)
         {
             if(string.IsNullOrWhiteSpace(path)) throw new AdapterPreconditionException("softwarePath must not be empty.","softwarePath");
             var all=inventory.ToArray();
@@ -35,7 +35,11 @@ namespace TiaMcp.Adapters
                 throw new AdapterPreconditionException("Ambiguous softwarePath '"+path+"'. Select an exact address: "+string
                     .Join(", ",all.Select(c=>c.ExactPath)),"softwarePath");
             if(selected<0)
-                throw AdapterPreconditionException.NotFound("PLC software not found at '"+path+"'. Use the exact address from GetProjectTree.","softwarePath");
+            {
+                var location = " at '" + path + "'. Use the exact address from GetProjectTree.";
+                throw plcOnly ? AdapterPreconditionException.NotFound("PLC software not found" + location, "softwarePath")
+                    : AdapterPreconditionException.NotFound("PLC or HMI software not found" + location, "softwarePath");
+            }
             return all[selected];
         }
         private static bool Matches<T>(PlcReadCandidate<T> c,string[] parts)

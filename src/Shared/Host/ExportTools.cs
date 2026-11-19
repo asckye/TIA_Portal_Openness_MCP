@@ -307,8 +307,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
                 case "InvalidParams": return new Error(InvalidInput("").Message, ArgumentDetails(tool, null, data));
                 case "NotFound": return new Error("The exact target was not found.", MissingTargetDetails(tool, evidence: data));
-                case "NotSupportedOnVersion": return new Error(HostBehavior.SafeDiagnostic((string?)data["nativeMessage"])
-                    ?? "This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
+                case "NotSupportedOnVersion": return UnsupportedCapabilityDetails.ErrorFor(ReleaseKey, tool, (string?)data["action"],
+                    HostBehavior.SafeDiagnostic((string?)data["nativeMessage"]));
                 default
                     : return new Error("The operation did not succeed; inspect the retained evidence.", new PreconditionFailedDetails("native-exchange", null));
             }
@@ -351,7 +351,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error =
                     InvalidInput("");
                 if (cause is NotSupportedException) error =
-                    new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null));
+                    UnsupportedCapabilityDetails.ErrorFor(ReleaseKey, tool, null, HostBehavior.SafeDiagnostic(cause.Message));
                 if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error =
                     new Error("The input file or directory was not found.", MissingTargetDetails(tool, evidence: data));
             }

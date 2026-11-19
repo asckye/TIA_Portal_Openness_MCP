@@ -93,12 +93,13 @@ namespace TiaMcp.Adapters.Native.Online
             catch (Exception ex)
             {
                 if (probeState == "Offline")
-                    return new OnlineCompareResult { IsOnline = false, Message = $"'{softwarePath}' is offline. Call ConnectOnlinePlc first." };
+                    return new OnlineCompareResult { IsOnline = false, Message = $"'{softwarePath}' is offline. "
+                        + (_session.CanConnectOnline ? "Call ConnectOnlinePlc first." : "Go online in TIA Portal.") };
                 _session.Log.Error(ex, "CompareSoftwareToOnline failed for {SoftwarePath}", softwarePath);
                 throw new PortalException(PortalErrorCode.OpennessError,
                     $"CompareSoftwareToOnline failed for '{softwarePath}': {ex.Message} "
                     + "NO comparison result is available — do not read this as 'offline and online are identical'. "
-                    + "Go online first (ConnectOnlinePlc) and retry.", null, ex);
+                    + (_session.CanConnectOnline ? "Go online first (ConnectOnlinePlc) and retry." : "Go online in TIA Portal and retry."), null, ex);
             }
         }
 

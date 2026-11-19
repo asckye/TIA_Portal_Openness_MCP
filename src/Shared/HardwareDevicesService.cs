@@ -86,6 +86,6 @@ namespace TiaMcpServer.Siemens.Services
         public JsonObject DumpDeviceAttributes(string devicePath, string? nameFilter = null, int maxItems = 500)
             =>
                 (JsonObject)Invoke("hardware-devices.HardwareLegacyDumpDeviceAttributes", new() {
-                    ["devicePath"] = devicePath, ["nameFilter"] = nameFilter, ["maxItems"] = maxItems }, false)!;
+                    ["devicePath"] = devicePath, ["nameFilter"] = nameFilter ?? "", ["maxItems"] = maxItems }, false)!;
     }
 }

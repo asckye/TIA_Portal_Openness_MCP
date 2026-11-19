@@ -47,6 +47,33 @@ public sealed class CaxTransferResultTests
     }
 
     [Fact]
+    public void Log_keeps_the_https_url_and_redacts_local_paths()
+    {
+        const string url = "https://example.invalid/devices/report";
+        var result = new Cax.TransferResult(Cax.TransferResultState.Error, 1, 0,
+            [new(Cax.TransferResultState.Error, url + @" C:\private folder\source.aml " + url + "/after", [])]);
+        var line = Assert.Single(Assert.IsType<List<string>>(Import("21", result).Meta["messages"]));
+        Assert.Contains(url, line);
+        Assert.Contains(url + "/after", line);
+        Assert.DoesNotContain("private", line);
+        Assert.Contains("<path>", line);
+    }
+
+    [Theory]
+    [InlineData("file:///C:/Users/private/source.aml")]
+    [InlineData("FILE://private-server/share/source%20file.aml")]
+    [InlineData("file:///C:/Users/name/folder;private/source.aml")]
+    public void File_uris_are_redacted_between_intact_web_urls(string file)
+    {
+        const string before = "https://example.invalid/devices?path=C:/public";
+        const string after = "http://example.invalid/mirror/C:/public";
+        var result = new Cax.TransferResult(Cax.TransferResultState.Error, 1, 0,
+            [new(Cax.TransferResultState.Error, before + " " + file + " failed near " + after, [])]);
+        Assert.Equal("Error: " + before + " <path> failed near " + after,
+            Assert.Single(Assert.IsType<List<string>>(Import("21", result).Meta["messages"])));
+    }
+
+    [Fact]
     public void Long_transfer_message_is_bounded_to_four_KiB_of_valid_utf8()
     {
         var result = new Cax.TransferResult(Cax.TransferResultState.Error, 1, 0,

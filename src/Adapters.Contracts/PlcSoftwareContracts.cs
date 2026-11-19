@@ -119,6 +119,21 @@ namespace TiaMcp.Adapters.Contracts
         public string TargetGroupPath { get; set; } = "";
         public string DataType { get; set; } = "";
         public string AddressOrValue { get; set; } = "";
+
+        public static string? TagUpdateField(string action, string kind, string addressOrValue, Func<string, bool> conflicts)
+        {
+            if (action != "update" || string.IsNullOrWhiteSpace(addressOrValue)) return null;
+            string property = kind == "tag" ? "LogicalAddress" : "Value";
+            if (conflicts(property)) throw new ArgumentException("addressOrValue conflicts with propertiesJson." + property + ".", nameof(addressOrValue));
+            return property;
+        }
+
+        public void BindTagUpdate()
+        {
+            var field = TagUpdateField(Action, Kind, AddressOrValue, key => Properties.TryGetValue(key, out var supplied)
+                && (supplied.Kind != "string" || supplied.Text != AddressOrValue));
+            if (field != null) Properties[field] = new HardwareScalar { Kind = "string", Text = AddressOrValue };
+        }
         public Dictionary<string, HardwareScalar> Properties { get; set; } = new Dictionary<string, HardwareScalar>();
         public PlcTagComment[] Comments { get; set; } = Array.Empty<PlcTagComment>();
         public string Kind { get; set; } = "all";

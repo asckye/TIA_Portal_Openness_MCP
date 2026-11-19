@@ -50,7 +50,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (query.Length > 0 || documentId.Length > 0) throw new ArgumentException("Use toolName alone, or query/documentId for references.");
                     if (!methods.TryGetValue(toolName, out var method))
                         return McpServer.V4Reject("GetToolUsage", McpServer.AllToolDescriptors(includeUnavailable: true).ContainsKey(toolName)
-                            ? new Error("Tool is not available in this release.", new UnsupportedCapabilityDetails(release, toolName, null))
+                            ? new Error("The requested tool is not registered on TIA " + TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName + ".",
+                                new UnsupportedCapabilityDetails(release, toolName, null))
                             : new Error("Tool is not registered in this release.", new ToolNotFoundDetails(toolName)));
                     var name = methods.Keys.First(k => string.Equals(k, toolName, StringComparison.OrdinalIgnoreCase));
                     var tool = method.Tool;

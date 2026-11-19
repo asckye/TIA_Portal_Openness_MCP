@@ -20,6 +20,29 @@ public sealed class MutationEvidenceTests
         Assert.Equal(expected, MutationEvidence.ProvesNoMutation(meta));
     }
 
+    [Theory, InlineData("NotFound", "NOT_FOUND"), InlineData("OpennessError", "NATIVE_OPERATION_FAILED")]
+    public void Native_status_decides_whether_a_lookup_failed(string status, string expected)
+    {
+        Assert.Equal(expected, MutationEvidence.FailureCode(new HardwareAddressingException(status, "native diagnostic")));
+        Assert.Equal(expected, MutationEvidence.FailureCode(new PlcSoftwareException(status, "native diagnostic")));
+        var inner = new InvalidOperationException("native context");
+        Assert.Equal(expected, MutationEvidence.FailureCode(new Exception("wrapper", new PlcSoftwareException(status, "native diagnostic", inner: inner))));
+        Assert.Equal("NATIVE_OPERATION_FAILED", MutationEvidence.FailureCode(new Exception("not found")));
+    }
+
+    [Theory, InlineData("tag", "LogicalAddress", "%M4.2"), InlineData("constant", "Value", "42")]
+    public void Worker_applies_the_same_tag_field_with_or_without_an_explicit_property(string kind, string property, string address)
+    {
+        var request = new PlcSoftwareRequest { Kind = kind, Action = "update", AddressOrValue = address };
+        request.BindTagUpdate();
+        Assert.Equal(address, request.Properties[property].Text);
+        request.BindTagUpdate();
+        Assert.Single(request.Properties);
+        request.Properties[property].Text = "different";
+        Assert.Throws<ArgumentException>(() => request.BindTagUpdate());
+        Assert.Equal("different", request.Properties[property].Text);
+    }
+
     [Fact]
     public void Archive_and_standard_transfer_area_require_native_target_eligibility()
     {

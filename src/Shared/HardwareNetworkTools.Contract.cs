@@ -81,10 +81,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             new ConfirmationRequiredDetails(null)));
         }
 
-        internal static CallToolResult Unsupported(string tool, string release, string? action, string? reason = null)
-            =>
-                Result(tool, null, new Error(reason ?? "This capability is unavailable.", new UnsupportedCapabilityDetails(release, tool, action)), Outcome
-                    .RejectedBeforeOperation, Execution.NotStarted, Completeness.None, true);
+        internal static CallToolResult Unsupported(string tool, Error error)
+            => Result(tool, null, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, true);
 
         internal static CallToolResult Invoke(string tool, bool readOnly, bool current, Func<ResponseMessage> operation)
         {

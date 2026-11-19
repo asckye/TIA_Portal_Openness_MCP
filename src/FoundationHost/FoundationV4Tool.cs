@@ -204,7 +204,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (!usage["operations"]!.AsArray().Any(row => (string?)row!["operation"] == operation)) return null;
             return TiaOpenness.Shared.ToolUsageCatalog
                 .Describe(name, key, "plc-foundation", tool.Description ?? "", schema, operation: operation)["example"] as JsonObject;
-        }))
+        }, name => TiaOpenness.Shared.ToolUsageCatalog.IsRegistered(name, release)))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
         if (body != null && (approval != null || write && !settings.Enabled))
@@ -536,6 +536,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         { return await Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)
         { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, FoundationV4Result.Invalid(""))); }
+        catch (UnregisteredUsageToolException error)
+        { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(error.Message, new InvalidArgumentDetails("toolName", [])))); }
         catch (Exception ex) when (ex is ArgumentException or JsonException or InvalidOperationException)
         { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
             FoundationV4Result.Invalid((ex as ArgumentException)?.ParamName ?? ""))); }

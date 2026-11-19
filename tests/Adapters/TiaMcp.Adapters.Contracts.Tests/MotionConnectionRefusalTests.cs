@@ -9,10 +9,22 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class MotionConnectionRefusalTests
     {
-        public static IEnumerable<object[]> Cases() =>
-            from tool in new[] { "ManageMotionAxis", "ConfigureMotionHardwareConnection" }
-            from outcome in new[] { "unchanged", "actor", "sensor", "torque", "module", "unreadable", "lookup", "connection", "returned" }
-            select new object[] { tool, outcome };
+        [Fact]
+        public void Missing_or_throwing_connection_state_stays_unknown()
+        {
+            foreach (Func<bool?> read in new Func<bool?>[] { () => null, () => throw new IOException("Unavailable") })
+            {
+                var meta = new Dictionary<string, object?>();
+                var failure = Assert.Throws<InvalidOperationException>(() => PlcOrganisationAdapter.VerifyMotionConnect(meta, read));
+                Assert.Contains("connection state unreadable", failure.Message);
+                Assert.Equal(true, meta["writeOutcomeUnknown"]);
+            }
+        }
+
+            public static IEnumerable<object[]> Cases() =>
+                from tool in new[] { "ManageMotionAxis", "ConfigureMotionHardwareConnection" }
+                from outcome in new[] { "unchanged", "actor", "sensor", "torque", "module", "unreadable", "lookup", "connection", "returned" }
+                select new object[] { tool, outcome };
 
         [Theory, MemberData(nameof(Cases))]
         public void Native_connect_refusal_checks_the_entire_fresh_axis(string tool, string outcome) => _ = MotionConnect(tool, outcome);

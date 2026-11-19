@@ -49,8 +49,10 @@ namespace Siemens.Engineering.SW.Blocks
 }
 namespace Siemens.Engineering.HW
 {
+    public enum DeviceItemClassifications { None, CPU }
     public sealed class DeviceItem : HardwareObject
     {
+        public DeviceItemClassifications Classification { get; set; }
         public string TypeIdentifier { get; set; } = "";
         public List<Address> Addresses { get; } = new();
         public ChannelComposition Channels { get; } = new();

@@ -8,6 +8,31 @@ namespace TiaMcp.Engine.Tests;
 public sealed class ProvenWriteJournalTests
 {
     [Fact]
+    public void Disconnected_empty_journal_keeps_returned_failure_unknown()
+    {
+        var meta = new Dictionary<string, object?> { ["operationSuccess"] = false };
+        EngineeringWriteJournal.Run(meta, () => {
+            EngineeringWriteJournal.ObserveFailure(new ObjectDisposedException("session"));
+            return "failed";
+        });
+        Assert.Equal(true, meta["writeOutcomeUnknown"]);
+        Assert.Equal(true, meta["mayHaveChanged"]);
+    }
+
+    [Fact]
+    public void Disconnected_domain_verdict_keeps_cleanup_and_an_unknown_outcome()
+    {
+        var meta = new Dictionary<string, object?> { ["operationSuccess"] = false, ["cleanupRequired"] = new[] { "inspect the device" } };
+        EngineeringWriteJournal.Run(meta, () => {
+            EngineeringWriteJournal.ObserveFailure(new ObjectDisposedException("session"));
+            return "failed";
+        });
+        Assert.Equal("unknown", meta["rollbackOutcome"]);
+        Assert.Equal(true, meta["mayHaveChanged"]);
+        Assert.Equal(true, meta["connectionUnavailable"]);
+    }
+
+    [Fact]
     public void Creating_with_nothing_created_restores_and_clears_the_change_mark()
     {
         var meta = new Dictionary<string, object?>(StringComparer.Ordinal) { ["mayHaveChanged"] = false };

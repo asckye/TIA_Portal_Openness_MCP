@@ -85,7 +85,11 @@ namespace TiaMcpServer.Siemens.Services
                 };
             }
             request.Comments = parsed.Comments.Select(c => new PlcTagComment { Culture = c.Culture, Text = c.Text }).ToArray();
-            return SoftwareStep(request);
+            var result = SoftwareStep(request);
+            if (dryRun && action == "update" && (bool?)result.Meta?["operationSuccess"] == true
+                && parsed.Scalars.TryGetPropertyValue(kind == "tag" ? "LogicalAddress" : "Value", out var bound))
+                result.Meta["addressOrValue"] = bound?.DeepClone();
+            return result;
         }
         public System.Collections.Generic.List<CrossReferenceEntry>
             ? GetCrossReferences(string softwarePath, string objectPath, string kind, string filter, out string? reason, out bool queried, string unitName,

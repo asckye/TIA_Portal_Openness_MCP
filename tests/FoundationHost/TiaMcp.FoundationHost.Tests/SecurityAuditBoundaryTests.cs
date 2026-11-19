@@ -10,6 +10,19 @@ namespace TiaMcp.FoundationHost.Tests;
 
 public sealed class SecurityAuditBoundaryTests
 {
+    [Theory, InlineData(false), InlineData(true)]
+    public void Explicit_put_get_owner_reaches_the_worker_as_exact_segments(bool set)
+    {
+        JsonObject? sent = null;
+        var service = new HardwareSecurityPortService((_, arguments) => { sent = arguments; return new JsonObject { ["ok"] = true }; },
+            () => true, () => "fixture.ap15_1");
+        string[] owner = { "Rack", "CPU/1" };
+        if (set) service.SetPutGetAccess("Station", true, true, owner);
+        else service.GetPutGetAccess("Station", owner);
+        Assert.Equal("Station", (string?)sent?["request"]?["DeviceName"]);
+        Assert.Equal(owner, sent!["request"]!["ItemPath"]!.AsArray().Select(segment => (string)segment!).ToArray());
+    }
+
     [Theory]
     [InlineData("17", "ProtectAllConfiguration")]
     [InlineData("18", " UNPROTECTALLCONFIGURATION ")]

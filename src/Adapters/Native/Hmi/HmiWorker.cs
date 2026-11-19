@@ -132,6 +132,7 @@ namespace TiaMcp.Adapters
                 {
                     reply.Failure.Evidence["v4FailureCode"] = MutationEvidence.FailureCode(refusal);
                     reply.Failure.Evidence["parameter"] = refusal.ParamName;
+                    if (refusal.Condition != null) reply.Failure.Evidence["condition"] = refusal.Condition;
                 }
             }
             finally { HmiValues.Renderer = previous; HmiValues.ExportFailure = previousExportFailure; HmiValues.TraceWriter = previousTraceWriter; }

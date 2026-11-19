@@ -438,7 +438,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DescribePlcBlockLogic"),
-                Description("[L1][PLC-Software] Read a block's LOGIC as READABLE TEXT — the fast, accurate way to analyze LADDER (LAD) without hand-parsing FlgNet XML. For each LAD network it reconstructs the power flow as a boolean-ish expression (series = ' · ', parallel = ' + '), shows coils ( )/(S)/(R), MOVE/compare/timer boxes with their operands, and — critically — FLAGS any contact whose operand is a LITERAL CONSTANT with a literal-constant marker (a normally-open contact wired to FALSE silently disables its whole rung; this is nearly impossible to spot by eye). SCL/STL networks are rendered inline as code. Use this to understand or review LAD logic before editing. Requires: ConnectPortal + OpenProject + the block consistent (compile first if IsConsistent=false; export does not work in online mode — DisconnectOnlinePlc first). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree; names containing '/' or other reserved characters use the encoded form printed by read tools, e.g. 'Group/A%2FB'. Current native policy; V4 safety behavior is not yet accepted.")]
+                Description("[L1][PLC-Software] Read a block's LOGIC as READABLE TEXT — the fast, accurate way to analyze LADDER (LAD) without hand-parsing FlgNet XML. For each LAD network it reconstructs the power flow as a boolean-ish expression (series = ' · ', parallel = ' + '), shows coils ( )/(S)/(R), MOVE/compare/timer boxes with their operands, and — critically — FLAGS any contact whose operand is a LITERAL CONSTANT with a literal-constant marker (a normally-open contact wired to FALSE silently disables its whole rung; this is nearly impossible to spot by eye). SCL/STL networks are rendered inline as code. Use this to understand or review LAD logic before editing. Requires: ConnectPortal + OpenProject + the block consistent (compile first if IsConsistent=false; export requires offline mode). blockPath must be fully qualified 'Group/Subgroup/Name' from GetSoftwareTree; names containing '/' or other reserved characters use the encoded form printed by read tools, e.g. 'Group/A%2FB'. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult DescribeBlockLogicV4(
             [Description("softwarePath: PLC software path, e.g. '5T车' or 'PLC_1' (from GetProjectTree)")] string softwarePath,
             [Description("blockPath: fully qualified 'Group/Subgroup/Name' from GetSoftwareTree; names containing '/' or other reserved characters use the " +
@@ -457,7 +457,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var block = new PlcArtifactPortSession(_service, "DescribePlcBlockLogic").ExportBlock(softwarePath, blockPath, tempDir);
                 if (block == null)
                 {
-                    throw new McpException($"Could not export '{blockPath}' from '{softwarePath}' for analysis. If IsConsistent=false, compile first; if online, DisconnectOnlinePlc first; verify the path with GetSoftwareTree.",
+                    throw new McpException($"Could not export '{blockPath}' from '{softwarePath}' for analysis. "
+                        + "If IsConsistent=false, compile first. Go offline and verify the path with GetSoftwareTree.",
                             McpErrorCode.InternalError);
                 }
 
@@ -469,8 +470,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 var xml = File.ReadAllText(xmlFile.FullName);
+                var lang = block.ProgrammingLanguage;
+                if (block.Warnings.Length != 0)
+                {
+                    var warning = string.Join(" ", block.Warnings);
+                    return new ResponseBlockLogic { BlockPath = blockPath, Language = lang, Readable = warning, Message = warning,
+                        Meta = ResponseMeta.Basic(DateTime.Now, true, ("language", lang), ("xmlContent", "interface-only"),
+                            ("warnings", System.Text.Json.JsonSerializer.SerializeToNode(block.Warnings))) };
+                }
                 var readable = LadTextRenderer.Render(xml);
-                var lang = block.ProgrammingLanguage.ToString();
 
                 return new ResponseBlockLogic
                 {

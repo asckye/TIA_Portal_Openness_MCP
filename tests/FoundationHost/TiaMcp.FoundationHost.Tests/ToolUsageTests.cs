@@ -18,7 +18,8 @@ internal static class ToolUsageTests
         ("SamplePlcLiveValuesS7", ""), ("SetDeviceItemAttribute", ""), ("ManageSivarcRuleContainer", ""),
         ("ManageCfcChartProtection", ""), ("ManageClassicHmiScreenObject", ""), ("ManageLibraryFolder", ""),
         ("ScanAccessibleDevices", "plcsim"), ("SetUnifiedLogDuration", ""), ("SetUnifiedPlantObject", ""), ("ShowObjectInEditor", ""),
-        ("BuildPlcLadFcBlock", "rung"), ("BuildPlcLadFcBlock", "rung-boxes"), ("ManagePlcExternalSources", ""), ("WritePlcSclSourceFile", "")
+        ("ManagePlcTagDefinition", "update"), ("BuildPlcLadFcBlock", "rung"), ("BuildPlcLadFcBlock", "rung-boxes"),
+        ("ManagePlcExternalSources", ""), ("WritePlcSclSourceFile", "")
     ];
 
     internal static bool ReviewedExampleMatches(string name, string operation, JsonNode response, int length)
@@ -29,6 +30,9 @@ internal static class ToolUsageTests
             "ListSivarcBlockDefinitions" or "ManageSivarcBlockDefinition" => (string?)args?["blockPath"] == "FC_1"
                 && (bool?)usage?["parameterSources"]?["blockPath"]?["requiresBinding"] == true
                 && ((string?)usage?["parameterSources"]?["blockPath"]?["meaning"])?.Contains("FB or FC") == true,
+            "ManagePlcTagDefinition" => (string?)args?["action"] == "update" && (bool?)args?["dryRun"] == true
+                && args?["properties"] is JsonObject { Count: 1 } properties && (string?)properties["Comment"] == "Ready for operation"
+                && args is JsonObject tag && !tag.ContainsKey("addressOrValue") && !tag.ContainsKey("dataType"),
             "ImportPlcBlocksDocuments" => (string?)args?["softwarePath"] == "devices/PLC_1/PLC_1",
             "SamplePlcLiveValuesS7" => (string?)args?["items"]?[0] == "DB1.DBX0.0:BOOL",
             "SetDeviceItemAttribute" => (string?)args?["attributeName"] == "Comment" && (bool?)args?["dryRun"] == true,
@@ -181,6 +185,10 @@ internal static class ToolUsageTests
                     && (string?)body["meta"]?["outcome"] == "rejected-before-operation" && (string?)body["meta"]?["execution"] == "not-started";
             }
             check(await Rejected("{\"toolName\":\"__test_unregistered_tool__\"}"), "foundation must reject unavailable full-engine usage: " + release);
+            var missing = await Call("{\"toolName\":\"__test_unregistered_tool__\"}");
+            var message = (string?)missing.StructuredContent?["error"]?["message"];
+            check(message?.Contains("not registered on TIA " + TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName) == true,
+                "usage identifies the missing registration and selected release: " + release);
             check(await Rejected("{\"offset\":-1}"), "invalid page is an argument error: " + release);
             check(await Rejected("{\"toolName\":\"ConnectPortal\",\"query\":\"x\"}"), "conflicting selectors rejected: " + release);
             check(worker.Calls == 0, "usage never invokes worker even when native access enabled");

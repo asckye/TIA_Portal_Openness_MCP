@@ -131,8 +131,9 @@ public sealed partial class PlcFoundationEngine
         var security = new HardwareSecurityAdapter(new SecuritySession(this, request.Faults), request);
         switch (request.Operation)
         {
-            case "GetPlcPutGetAccess": return security.GetPutGetAccess(request.DeviceName);
-            case "SetPlcPutGetAccess": return new SecurityDataResult(security.SetPutGetAccess(request.DeviceName, request.Enable, request.DryRun));
+            case "GetPlcPutGetAccess": return security.GetPutGetAccess(request.DeviceName, request.ItemPath);
+            case "SetPlcPutGetAccess":
+                return new SecurityDataResult(security.SetPutGetAccess(request.DeviceName, request.Enable, request.DryRun, request.ItemPath));
 #if SECURITY_WATCH_WEB
             case "ManageWatchForceTableWebAccess": return security
                 .ManageWatchForceTableWebAccess(request.DevicePath, request.ItemPath, request.Action, request.SoftwarePath, request.TableKind, request

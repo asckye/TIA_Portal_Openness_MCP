@@ -168,8 +168,10 @@ namespace TiaMcp.Adapters
                 string text = NativeFailureText.Compose(line, null, Array.Empty<string>());
                 int end = text.IndexOf("] ", StringComparison.Ordinal);
                 if (text.StartsWith("[", StringComparison.Ordinal) && end > 0) text = text.Substring(1, end - 1) + ": " + text.Substring(end + 2);
-                return Regex.Replace(text, @"(?i)(?:[a-z]:[\\/]|\\\\)[^\r\n""<>|;]*", "<path>",
-                    RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                const string uri = @"\b(?:(?<web>https?)://|file:/+)[^\s""<>]+";
+                const string windowsPath = @"(?:(?<![\w/])[a-z]:[\\/]|\\\\)(?:(?!\s+https?://)[^\r\n""<>|;])*";
+                return Regex.Replace(text, uri + "|" + windowsPath, match => match.Groups["web"].Success ? match.Value : "<path>",
+                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
             });
         }
     }

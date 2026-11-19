@@ -219,30 +219,6 @@ namespace TiaMcpServer.Siemens.Services
             return false;
         }
 
-        internal static UnifiedValue Decode(JsonElement value)
-        {
-            var result = new UnifiedValue();
-            switch (value.ValueKind)
-            {
-                case JsonValueKind.Object:
-                    result.Kind = "object";
-                    foreach (var property in value.EnumerateObject())
-                    {
-                        if (result.Properties.ContainsKey(property.Name))
-                            throw new ArgumentException("Duplicate JSON key.");
-                        result.Properties.Add(property.Name, Decode(property.Value));
-                    }
-                    break;
-                case JsonValueKind.Array:
-                    result.Kind = "array";
-                    foreach (var item in value.EnumerateArray()) result.Items.Add(Decode(item));
-                    break;
-                case JsonValueKind.String: result.Kind = "string"; result.Text = value.GetString()!; break;
-                case JsonValueKind.True: case JsonValueKind.False:
-                    result.Kind = "boolean"; result.Text = value.GetRawText(); break;
-                case JsonValueKind.Number: result.Kind = "number"; result.Text = value.GetRawText(); break;
-            }
-            return result;
-        }
+        internal static UnifiedValue Decode(JsonElement value) => TiaOpenness.Shared.CapabilityInput.Unified(value);
     }
 }

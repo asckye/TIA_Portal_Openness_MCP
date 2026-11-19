@@ -10,6 +10,17 @@ using Xunit;
 
 public sealed class HardwareFamilyAdmissionTests
 {
+    [Theory, InlineData(null, ""), InlineData("Firmware", "Firmware")]
+    public void Device_attribute_worker_receives_a_string_for_an_optional_filter(string? filter, string expected)
+    {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, args) => {
+            Assert.Equal("hardware-devices.HardwareLegacyDumpDeviceAttributes", operation);
+            Assert.Equal(expected, args["nameFilter"]!.GetValue<string>());
+            return new JsonObject { ["device"] = "PLC_1" };
+        }, () => true, () => "fixture.ap15_1");
+        Assert.Equal("PLC_1", (string?)service.DumpDeviceAttributes("PLC_1", filter)["device"]);
+    }
+
     [Theory]
     [InlineData("14sp1")]
     [InlineData("15.1")]

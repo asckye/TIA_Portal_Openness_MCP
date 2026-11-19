@@ -56,7 +56,12 @@ namespace TiaMcp.Adapters.Native.Engineering
                 }
                 else if (inspectVerdict && meta.TryGetValue("operationSuccess", out var success) && success is false)
                 {
-                    if (journal.entries.Count != 0 || journal.unrestoredEffects.Count != 0 || journal.checks.Count != 0)
+                    if (journal.disconnected && journal.entries.Count == 0 && journal.CleanupTasks(meta).Count == 0)
+                    {
+                        journal.SetOutcome(meta, false, false, false);
+                        journal.Commit();
+                    }
+                    else if (journal.disconnected || journal.entries.Count != 0 || journal.unrestoredEffects.Count != 0 || journal.checks.Count != 0)
                         journal.Undo(meta, acquireUndo);
                     else if (journal.parent != null)
                     {

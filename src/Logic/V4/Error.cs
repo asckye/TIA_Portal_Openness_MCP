@@ -403,6 +403,17 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(0)] public string? ReleaseKey { get; }
         [JsonPropertyOrder(1)] public string? Capability { get; }
         [JsonPropertyOrder(2)] public string? Action { get; }
+        public static string MessageFor(string release, string tool, string? action, string? reason)
+        {
+            string subject = string.IsNullOrEmpty(action) ? tool : tool + "." + action;
+            string displayName = TiaMcp.Versioning.TiaVersionCatalog.All.FirstOrDefault(v => v.Key == release)?.DisplayName ?? release;
+            return subject + " is unavailable on TIA " + displayName + "."
+                + (string.IsNullOrEmpty(reason) ? "" : " " + reason);
+        }
+
+        public static Error ErrorFor(string release, string tool, string? action, string? reason)
+            => new Error(MessageFor(release, tool, action, reason), new UnsupportedCapabilityDetails(release, tool, action));
+
         public UnsupportedCapabilityDetails(string? releaseKey, string? capability, string? action)
         {
             ReleaseKey = releaseKey;

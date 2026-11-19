@@ -22,21 +22,9 @@ internal sealed class OptionalEngineeringPort
         try
         {
             using var document = JsonDocument.Parse(raw);
-            request.Inputs[raw] = Value(document.RootElement);
+            request.Inputs[raw] = TiaOpenness.Shared.CapabilityInput.Optional(document.RootElement);
         }
         catch (JsonException error) { request.InputErrors[raw] = error.Message; }
-    }
-    private static OptionalEngineeringValue Value(JsonElement value)
-    {
-        return value.ValueKind switch {
-            JsonValueKind.Object => new OptionalEngineeringValue {
-                Kind = "object", Properties = value.EnumerateObject().ToDictionary(p => p.Name, p => Value(p.Value)) },
-            JsonValueKind.Array => new OptionalEngineeringValue { Kind = "array", Items = value.EnumerateArray().Select(Value).ToArray() },
-            JsonValueKind.String => new OptionalEngineeringValue { Kind = "string", Text = value.GetString()! },
-            JsonValueKind.Number => new OptionalEngineeringValue { Kind = "number", Text = value.GetRawText() },
-            JsonValueKind.True or JsonValueKind.False => new OptionalEngineeringValue { Kind = "boolean", Text = value.GetRawText() },
-            _ => new OptionalEngineeringValue()
-        };
     }
     internal ResponseMessage Invoke(string module, OptionalEngineeringRequest request)
     {
@@ -44,9 +32,12 @@ internal sealed class OptionalEngineeringPort
             if (text.Length != 0) UnifiedPortService.ValidateAddress(text, optional: true);
         if (request.PropertiesJson.Length != 0) UnifiedPortService.ValidateProperties(request.PropertiesJson);
         request.IsWrite = OptionalEngineeringMutations.Writes(request);
-        if (OptionalEngineeringCapabilities.Unsupported(HardwareContract.ReleaseKey, request) is string unavailable)
-            return new ResponseMessage { Message = unavailable,
-                Meta = JsonSerializer.SerializeToNode(OptionalEngineeringCapabilities.Refusal(unavailable).Meta)!.AsObject() };
+        if (TiaOpenness.Shared.ReleaseCapabilityQuery.OptionalProblem(HardwareContract.ReleaseKey, request) is string reason)
+        {
+            var meta = JsonSerializer.SerializeToNode(OptionalEngineeringCapabilities.Refusal(reason).Meta)!.AsObject();
+            meta["action"] = new[] { request.Action, request.Kind, request.Source }.FirstOrDefault(value => !string.IsNullOrEmpty(value));
+            return new ResponseMessage { Message = reason, Meta = meta };
+        }
         foreach (var raw in new[] { "{}", "[]", "null" }) Input(request, raw);
         var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = !request.IsWrite };
         if (request.IsWrite)

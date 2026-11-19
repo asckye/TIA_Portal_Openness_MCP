@@ -6,6 +6,8 @@
 
 ### Changed
 
+- PUT/GET inspection and configuration prefer the CPU when a station mirrors its attribute. Both tools accept an optional exact `itemPath`.
+- Release-specific tool guidance describes unavailable actions and their API requirements. `GetToolUsage` names the selected release when a tool is unregistered.
 - `ExportTechnologyObjectsToDirectory` now previews and executes one `ExportTechnologyObject` per inventory entry. Grouped objects require V19 or later. An uncertain export is tracked by the batch request ID.
 - `ConnectPortal` reports the previous owner's `leaseState` and lists `unsettledRequests` with their request ID and origin. Reconnecting preserves requests already held by the session.
 
@@ -24,6 +26,13 @@
 
 ### Fixed
 
+- An untyped HMI write failure now reports `OUTCOME_UNKNOWN`. Typed pre-write refusals retain their invalid argument, precondition or missing-target code.
+- A disconnected write journal now reports an unknown outcome for a returned failure even when its entry list is empty.
+- The PLC tag update example previews a comment edit. A successful update preview reports an explicitly bound address or constant value. CAx diagnostics redact file URIs and preserve HTTP and HTTPS URLs.
+- Classic HMI creation lets TIA assign the device name. Device attribute inspection accepts an omitted name filter.
+- Environment diagnostics check the selected release's PublicAPI directory and DLL. Generation planning reads article and firmware from the CPU on text-tree releases.
+- Tag and constant updates apply `addressOrValue` and reject conflicting properties. V14 SP1 SCL inspection identifies interface-only exports.
+- Offline symbol manifests accept Siemens Interface v2–v5, including V16 GlobalDB exports.
 - A missing HMI target returns `NOT_FOUND` before operation. An unsuccessful CAx import reports the returned failure, possible device changes and bounded diagnostics.
 - A verified PLC import with mismatching readback retains its recovery file relative to the evidence directory. OPC UA model generation reports the failing phase and whether the output file exists.
 

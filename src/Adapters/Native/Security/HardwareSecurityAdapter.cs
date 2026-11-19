@@ -89,7 +89,7 @@ namespace TiaMcp.Adapters.Native.Security
             });
 
 #endif
-        public HmiObject SetPutGetAccess(string devicePath, bool enable, bool dryRun = true)
+        public HmiObject SetPutGetAccess(string devicePath, bool enable, bool dryRun = true, string[]? itemPath = null)
         {
             // envelope: legacy-ok-only
             if (_session.IsProjectNull()) return new HmiObject { ["ok"] = false, ["failureCode"] = "PROJECT_NOT_BOUND", ["message"] = "No project open." };
@@ -99,12 +99,13 @@ namespace TiaMcp.Adapters.Native.Security
 
             DeviceItem? item;
             string? attrName;
-            try { (item, attrName) = _session.FindPutGetAttribute(device); }
+            try { (item, attrName) = _session.FindPutGetAttribute(device, itemPath); }
             catch (Exception error) when (error is NotSupportedException || error is InvalidOperationException)
             {
                 string message = error.Message + (error is NotSupportedException
                     ? " Check or set it in TIA: CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication'." : "");
-                return new HmiObject { ["ok"] = false, ["failureCode"] = "UNSUPPORTED_CAPABILITY", ["mayHaveChanged"] = false,
+                return new HmiObject { ["ok"] = false, ["failureCode"] = error is AdapterPreconditionException
+                        ? MutationEvidence.FailureCode(error) : "UNSUPPORTED_CAPABILITY", ["mayHaveChanged"] = false,
                     ["device"] = device.Name, ["message"] = message, ["nativeMessage"] = message };
             }
             if (item == null || attrName == null)
@@ -122,8 +123,7 @@ namespace TiaMcp.Adapters.Native.Security
             try
             {
                 before = item.GetAttribute(attrName);
-                var info = item.GetAttributeInfos().Single(i => i.Name == attrName);
-                SecurityAttributePolicy.RequireBooleanWrite(info.AccessMode.ToString(), before);
+                PutGetAccess.RequireWritable(item, attrName, before);
             }
             catch (Exception error)
             {
@@ -352,7 +352,7 @@ namespace TiaMcp.Adapters.Native.Security
 
 
 #endif
-        public HmiObject GetPutGetAccess(string devicePath) => _session.GetPutGetAccess(devicePath);
+        public HmiObject GetPutGetAccess(string devicePath, string[]? itemPath = null) => _session.GetPutGetAccess(devicePath, itemPath);
         private static string? MasterSecretState(object secret)
         {
 #if SECURITY_MASTER_SECRET

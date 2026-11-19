@@ -20,16 +20,31 @@ namespace TiaMcp.Adapters.Contracts
                 && (!meta.TryGetValue("cleanupRequired", out var cleanup) || cleanup == null || cleanup is ICollection { Count: 0 });
         }
 
-        public static string FailureCode(Exception error) => error.GetBaseException() switch {
-            AdapterPreconditionException { Condition: "not-found" } or FileNotFoundException or DirectoryNotFoundException => "NOT_FOUND",
-            AdapterPreconditionException { IsArgument: false } => "PRECONDITION_FAILED",
-            ArgumentException or FormatException or AdapterPreconditionException => "INVALID_ARGUMENT",
-            NotSupportedException => "UNSUPPORTED_CAPABILITY",
-            HardwareAddressingException hardware => hardware.Status == "InvalidState" ? "PRECONDITION_FAILED" : hardware.Status,
-            PlcSoftwareException plc => plc.Code == "InvalidState" ? "PRECONDITION_FAILED" : plc.Code,
-            InvalidOperationException => "PRECONDITION_FAILED",
-            _ => "NATIVE_OPERATION_FAILED"
-        };
+        public static string FailureCode(Exception error)
+        {
+            for (Exception? cause = error; cause != null; cause = cause.InnerException)
+            {
+                if (cause is AdapterPreconditionException refusal)
+                    return refusal.Condition == "not-found" ? "NOT_FOUND" : refusal.IsArgument ? "INVALID_ARGUMENT" : "PRECONDITION_FAILED";
+                string? status = cause switch {
+                    HardwareAddressingException hardware => hardware.Status,
+                    PlcSoftwareException plc => plc.Code,
+                    TiaMcpServer.Siemens.PortalException { Code: TiaMcpServer.Siemens.PortalErrorCode.NotFound } => "NOT_FOUND",
+                    _ => null
+                };
+                if (status != null) return status switch {
+                    "NotFound" => "NOT_FOUND", "OpennessError" or "ReadOrWriteFailed" => "NATIVE_OPERATION_FAILED",
+                    "InvalidState" => "PRECONDITION_FAILED", _ => status
+                };
+            }
+            return error.GetBaseException() switch {
+                FileNotFoundException or DirectoryNotFoundException => "NOT_FOUND",
+                ArgumentException or FormatException => "INVALID_ARGUMENT",
+                NotSupportedException => "UNSUPPORTED_CAPABILITY",
+                InvalidOperationException => "PRECONDITION_FAILED",
+                _ => "NATIVE_OPERATION_FAILED"
+            };
+        }
 
         public static void RecordStepFailure(Exception error, Dictionary<string, object?> meta)
         {

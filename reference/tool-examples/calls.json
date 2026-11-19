@@ -11,6 +11,143 @@
     "21": "21"
   },
   "scope": "Examples for every registered tool in both profiles. Target-dependent bindings and operation parameters accompany the call. A sample value is not evidence that an object exists or an API operation is supported by that device. Ported examples are offered only for tools registered on the selected release, using PortedFamilies.ToolReleases; partial tools keep their action and format refusals.",
+  "releaseArguments": {
+    "GetUnifiedAuditSettings": [
+      {
+        "releases": ["19"],
+        "arguments": { "category": "auditTrails" }
+      }
+    ],
+    "ListUnifiedEngineeringObjects": [
+      {
+        "releases": ["19"],
+        "arguments": { "category": "alarmClasses" }
+      }
+    ],
+    "ManageLibraryType": [
+      {
+        "releases": ["14sp1", "15.1", "16", "17", "18", "19"],
+        "arguments": { "properties": { "Name": "FB_MotorReviewed" } }
+      }
+    ],
+    "ManageSivarcRule": [
+      {
+        "releases": ["15.1"],
+        "arguments": { "action": "update", "collectionPath": [{ "property": "Rules" }], "properties": { "Name": "ReviewedRule" } }
+      },
+      {
+        "releases": ["16", "17"],
+        "arguments": { "collectionPath": [{ "property": "Rules" }] }
+      }
+    ],
+    "ManageTransferArea": [
+      {
+        "releases": ["15.1"],
+        "arguments": { "positionNumber": -1 }
+      }
+    ],
+    "ManageDcbLibraries": [
+      {
+        "releases": ["16", "17"],
+        "arguments": { "action": "import", "filePath": "C:\\Examples\\DCB-extension.zip" }
+      }
+    ],
+    "ManageSyslogServers": [
+      {
+        "releases": ["19"],
+        "arguments": { "scope": "plc", "devicePath": ["PLC_1"], "itemPath": ["<exact CPU item from GetProjectTree>"] }
+      }
+    ],
+    "FindTools": [
+      {
+        "releases": ["14sp1"],
+        "arguments": { "query": "GetProjectTree" }
+      }
+    ],
+    "DescribeService": [
+      {
+        "releases": ["14sp1", "15.1"],
+        "arguments": { "objectKind": "Software", "objectPath": "PLC_1", "serviceTypeSuffix": "ICompilable" }
+      }
+    ],
+    "BuildAndImportPlcArtifact": [
+      {
+        "releases": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20"
+        ],
+        "arguments": {
+          "kind": "udt",
+          "spec": {
+            "name": "Motor",
+            "members": [
+              {
+                "name": "Ready",
+                "datatype": "Bool"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "GetDriveParameters": [
+      {
+        "releases": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19"
+        ],
+        "arguments": {
+          "source": "write"
+        }
+      }
+    ],
+    "CreateDevice": [
+      {
+        "releases": [
+          "14sp1",
+          "15.1"
+        ],
+        "arguments": {
+          "orderNumber": "6ES7 511-1AK01-0AB0",
+          "version": "V2.1"
+        }
+      }
+    ],
+    "PlugDeviceItem": [
+      {
+        "releases": [
+          "14sp1",
+          "15.1"
+        ],
+        "arguments": {
+          "version": "V2.0"
+        }
+      }
+    ],
+    "InvokeObject": [
+      {
+        "releases": [
+          "14sp1",
+          "15.1"
+        ],
+        "arguments": {
+          "methodName": "GetAttribute",
+          "args": [
+            "Name"
+          ]
+        }
+      }
+    ]
+  },
   "profiles": {
     "plc-foundation": {
       "BuildProjectScaffold": {
@@ -7934,11 +8071,17 @@
             }
           },
           "update": {
+            "argumentsMode": "complete",
             "arguments": {
+              "softwarePath": "PLC_1",
+              "tablePath": "Default tag table",
+              "name": "Ready",
+              "kind": "tag",
               "action": "update",
               "properties": {
-                "Name": "Ready_2"
-              }
+                "Comment": "Ready for operation"
+              },
+              "dryRun": true
             }
           },
           "delete": {
@@ -7951,7 +8094,7 @@
         "inline": true,
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. DES-2: tag/constant create and ordinary root external-source import/delete/generate/group actions forward to the canonical Foundation tool. Use its preview, confirm, expectedPlanHash (source operations) and expectedProjectFile; each result and diagnostic is canonical. Tag create cannot also set properties: use a separate update. For createFromFile omit name or use the exact file name. Unit/advanced source scopes retain their distinct documented operation.",
         "resultReading": [
-          "Renaming a tag (operation update with properties Name) needs the public PlcTag.Name setter of V20/V21; V14 SP1-V19 refuse it with 'Public writable property unavailable'."
+          "The update example changes only the comment. Supply addressOrValue explicitly to change a tag address or constant value."
         ]
       },
       "SetPlcProgram": {
@@ -30598,11 +30741,17 @@
             }
           },
           "update": {
+            "argumentsMode": "complete",
             "arguments": {
+              "softwarePath": "PLC_1",
+              "tablePath": "Default tag table",
+              "name": "Ready",
+              "kind": "tag",
               "action": "update",
               "properties": {
-                "Name": "Ready_2"
-              }
+                "Comment": "Ready for operation"
+              },
+              "dryRun": true
             }
           },
           "delete": {
@@ -30615,7 +30764,7 @@
         "inline": true,
         "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. DES-2: tag/constant create and ordinary root external-source import/delete/generate/group actions forward to the canonical Foundation tool. Use its preview, confirm, expectedPlanHash (source operations) and expectedProjectFile; each result and diagnostic is canonical. Tag create cannot also set properties: use a separate update. For createFromFile omit name or use the exact file name. Unit/advanced source scopes retain their distinct documented operation.",
         "resultReading": [
-          "Renaming a tag (operation update with properties Name) needs the public PlcTag.Name setter of V20/V21; V14 SP1-V19 refuse it with 'Public writable property unavailable'."
+          "The update example changes only the comment. Supply addressOrValue explicitly to change a tag address or constant value."
         ]
       },
       "ManagePlcUserGroup": {
