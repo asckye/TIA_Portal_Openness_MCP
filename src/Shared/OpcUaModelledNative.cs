@@ -75,9 +75,10 @@ namespace TiaMcpServer.Siemens
             lock (OpcUaModelLock)
             {
                 string scratch = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcp-OpcUa-" + Guid.NewGuid().ToString("N"));
-                Directory.CreateDirectory(scratch);
+                string phase = "prepareScratch";
                 try
                 {
+                    Directory.CreateDirectory(scratch);
                     using (var ctx = new AddInExecutionContext())
                     {
                         ctx.InterfaceName = interfaceName; ctx.InterfaceURI = namespaceUri; ctx.FilePath = Path.Combine(scratch, "interface.xml");
@@ -88,11 +89,14 @@ namespace TiaMcpServer.Siemens
                         ctx.KeepFolderStructure = keepFolderStructure; ctx.KeepEmptyDBs = keepEmptyDataBlocks; ctx.OptimizedData = true;
                         foreach (var item in access) typeof(AddInExecutionContext).GetField(item.Key + "AccessLevel")!
                             .SetValue(ctx, item.Value!.GetValue<int>());
+                        phase = "loadTemplate";
                         using (var template = typeof(OpcUaModelledNative).Assembly.GetManifestResourceStream("TiaMcp.OpcUa.InterfaceTemplate.xml")
                                 ?? throw new FileNotFoundException("Embedded template missing."))
                             InterfaceTemplate.ImportTemplate(template);
                         ctx.NumberDefaultNodes = InterfaceTemplate.GetTotalInterfaceElements();
+                        phase = "readConstants";
                         UserConstants.GetUserConstants(RootTagTableGroup(plc, unit));
+                        phase = "readDataTypes";
                         UserSystemDataTypes.GetUserSystemDataTypeElements(Native.Types(plc), false);
                         var types = UserSystemDataTypes.XElementUserSystemDataTypes.Select(e => new XElement(e)).ToList();
                         #if !OPCUA_NO_UNITS
@@ -105,8 +109,10 @@ namespace TiaMcpServer.Siemens
                         }
                         #endif
                         ctx.OpcUaInterface.Root!.Add(types); ctx.NumberUserSystemDataTypes = types.Count;
+                        phase = "readTags";
                         Tags.ResetTagElements(); Tags.GetTagElements(RootTagTableGroup(plc, unit));
                         ctx.OpcUaInterface.Root.Add(Tags.XElementTags); ctx.NumberTags = Tags.XElementTags.Count;
+                        phase = "readDataBlocks";
                         BuildDataBlockElements.ResetDatablocksElements();
                         DataBlocksGlobal.ResetDatablockElements(); DataBlocksGlobal.GetDatablockElements(RootBlockGroup(plc, unit));
                         ctx.NumberGlobalDBs = BuildDataBlockElements.XElementDataBlocks.Count;
@@ -114,11 +120,17 @@ namespace TiaMcpServer.Siemens
                         ctx.NumberInstanceDBs = BuildDataBlockElements.XElementDataBlocks.Count - ctx.NumberGlobalDBs;
                         ctx.OpcUaInterface.Root.Add(BuildDataBlockElements.XElementDataBlocks);
                         // Reject duplicate NodeIds instead of exporting an invalid model with false success.
+                        phase = "validateNodeIds";
                         var duplicates = ctx.OpcUaInterface.Root.Elements().Where(e => e.Attribute("NodeId") != null)
                             .GroupBy(e => (string)e.Attribute("NodeId")!, StringComparer.Ordinal).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
                         if (duplicates.Count > 0) throw new InvalidOperationException("Generated duplicate NodeIds: " + string.Join(", ", duplicates.Take(10)));
+                        phase = "writeOutput";
+                        // CreateNew never overwrites an existing file. A fresh absence check can therefore prove no published output.
                         using (var stream = new FileStream(output.FullName, FileMode.CreateNew, FileAccess.Write)) ctx.OpcUaInterface.Save(stream);
+                        phase = "verifyOutput";
                         result["generated"] = true; result["output"] = NativeFileOutput.Verify(output);
+                        result["phase"] = "complete"; result["outputExists"] = true;
+                        result["mayHaveChanged"] = true; result["mayHaveWrittenFiles"] = true;
                         result["counts"] = new JsonObject {
                             ["templateNodes"] = ctx.NumberDefaultNodes, ["typeNodes"] = ctx.NumberUserSystemDataTypes, ["tagNodes"] = ctx.NumberTags,
                                 ["globalDbNodes"] = ctx.NumberGlobalDBs, ["instanceDbNodes"] = ctx.NumberInstanceDBs
@@ -126,6 +138,11 @@ namespace TiaMcpServer.Siemens
                         result["warnings"] = new JsonArray(ctx.Warnings.Select(s => (JsonNode)s).ToArray()); result["dataComplete"] = ctx.Warnings.Count == 0;
                         result["imported"] = false;
                     }
+                }
+                catch (Exception error) when (error.GetBaseException() is not global::Siemens.Engineering.NonRecoverableException)
+                {
+                    NativeFileOutput.RecordFailure(result, output, phase, error);
+                    result["generated"] = false; result["imported"] = false;
                 }
                 finally { try { Directory.Delete(scratch, true); } catch { /* swallow(cleanup): Scratch deletion failure is reported without replacing the generated result or original failure. */ result["scratchCleanupFailed"] = scratch; } }
             }

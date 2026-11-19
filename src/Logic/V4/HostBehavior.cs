@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,6 +11,21 @@ namespace TiaMcp.Logic.V4
     // Host wrappers supply transport/native evidence; this code owns admission decisions.
     internal static class HostBehavior
     {
+        internal sealed class UncertainWorkerFailure : InvalidOperationException, TiaMcp.Adapters.Contracts.IWorkerFailureEvidence
+        {
+            public string EvidenceJson { get; }
+            internal UncertainWorkerFailure(string message, JsonObject reply) : base(message)
+            {
+                EvidenceJson = reply.ToJsonString();
+                Data["workerOutcomeUnknown"] = true;
+                Data["foundationRequestSent"] = true;
+            }
+        }
+
+        internal static bool KnownMissingTarget(Exception error)
+            => HostFailurePolicy.KnownNoMutation(error) && !HostFailurePolicy.PriorMutation(error) && !HostFailurePolicy.WorkerOutcomeUnknown(error)
+                && TiaMcp.Adapters.Contracts.MutationEvidence.FailureCode(error) == "NOT_FOUND";
+
         internal static Error? DevicePathRefusal(Exception error)
         {
             if (HostFailurePolicy.PriorMutation(error)) return null;
@@ -170,6 +186,11 @@ namespace TiaMcp.Logic.V4
             if (node is JsonObject obj)
                 foreach (var pair in obj.ToArray())
                 {
+                    if (pair.Key == "cleanupRequired" && pair.Value is JsonArray cleanup)
+                        foreach (var task in cleanup.OfType<JsonObject>())
+                            if (task["restoreFrom"] is JsonValue restore && restore.TryGetValue<string>(out var path)
+                                && (obj.ContainsKey("evidenceDirectory") || Path.IsPathRooted(path)))
+                                task["restoreFrom"] = RestorePath(obj, path);
                     bool sourceText = !evidence && (pair.Key.Equals("code", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("sourceCode", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("source", StringComparison.OrdinalIgnoreCase)
@@ -292,7 +313,8 @@ namespace TiaMcp.Logic.V4
                     if (task is not JsonObject fields) continue;
                     var row = new JsonObject();
                     foreach (var key in new[] { "target", "reason", "action", "restoreFrom", "previousType" })
-                        if (fields[key] is JsonValue field && field.TryGetValue<string>(out var content)) row[key] = Diagnostic(content);
+                        if (fields[key] is JsonValue field && field.TryGetValue<string>(out var content))
+                            row[key] = Diagnostic(key == "restoreFrom" ? RestorePath(source, content) : content);
                     safe.Add(row);
                 }
                 retained["cleanupRequired"] = safe;
@@ -304,7 +326,8 @@ namespace TiaMcp.Logic.V4
             }
             foreach (string key in new[] { "nativeMessage", "phase", "nativeResult", "errorCount", "warningCount", "deviceCountBefore",
                 "deviceCountAfter", "tagCountBefore", "tagCountAfter", "countBefore", "countAfter", "readbackFailed", "writeReturned",
-                "connectionUnavailable", "portalLost", "restored", "exportsIssued", "queryRefusals", "mapped", "mappedAfterFailure", "failed" })
+                "connectionUnavailable", "portalLost", "restored", "exportsIssued", "queryRefusals", "mapped", "mappedAfterFailure", "failed",
+                "status", "importReturned", "logFileMissing" })
                 if (source[key] is JsonValue scalar)
                 {
                     if (scalar.TryGetValue<string>(out var raw)) retained[key] = Diagnostic(raw);
@@ -315,7 +338,43 @@ namespace TiaMcp.Logic.V4
             if (source["messages"] is JsonArray messages)
                 retained["messages"] = new JsonArray(messages.OfType<JsonValue>().Where(v => v.TryGetValue<string>(out _))
                     .Take(16).Select(v => (JsonNode?)JsonValue.Create(Diagnostic(v.GetValue<string>()))).ToArray());
+            if (source.ContainsKey("logFile")) retained["logFile"] = source["logFile"]?.DeepClone();
+            if (source["logExcerpt"] is JsonArray lines) retained["logExcerpt"] = lines.DeepClone();
+            if (source.ContainsKey("logFile") || source.ContainsKey("logExcerpt")) SanitizeAmlDiagnostics(retained, redact);
             SanitizeEvidence(retained, diagnostic: true);
+        }
+
+        internal static void SanitizeAmlDiagnostics(JsonObject evidence, Func<string, string>? redact = null)
+        {
+            if (evidence["logFile"] is JsonObject file)
+            {
+                var summary = new JsonObject();
+                foreach (string key in new[] { "bytes", "sha256", "contentSemanticsVerified" })
+                    if (file[key] != null) summary[key] = file[key]!.DeepClone();
+                if (file.ContainsKey("path")) summary["path"] = "<path>";
+                evidence["logFile"] = summary;
+            }
+            foreach (string key in new[] { "logExcerpt", "messages" })
+            {
+                if (evidence[key] is not JsonArray values) continue;
+                var lines = values.OfType<JsonValue>().Where(v => v.TryGetValue<string>(out _)).Select(v => v.GetValue<string>());
+                evidence[key] = JsonSerializer.SerializeToNode(TiaMcp.Adapters.Contracts.NativeFailureText.BoundedLines(lines,
+                    raw => SafeDiagnostic(redact == null ? raw : redact(raw)) ?? ""));
+            }
+        }
+
+        private static string RestorePath(JsonObject evidence, string path)
+        {
+            if (evidence["evidenceDirectory"] is not JsonValue directory || !directory.TryGetValue<string>(out var root)
+                || !Path.IsPathRooted(root)) return "<path>";
+            try
+            {
+                string boundary = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                string full = Path.GetFullPath(Path.Combine(boundary, path));
+                return full.StartsWith(boundary, StringComparison.OrdinalIgnoreCase)
+                    ? full.Substring(boundary.Length) : "<path>";
+            }
+            catch (Exception error) when (error is ArgumentException or IOException or NotSupportedException) { return "<path>"; }
         }
 
         internal static IReadOnlyDictionary<string, JsonElement> WorkerReplyEvidence(JsonObject source, Func<string, string>? redact = null)

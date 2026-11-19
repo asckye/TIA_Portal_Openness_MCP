@@ -468,7 +468,7 @@ namespace TiaMcp.Adapters.Contracts
             ["RepairAndReimportPlcBlock"] = "ImportPlcBlock / CompilePlcDiagnostics (one approved batch)",
             ["ImportPlcTagTablesFromDirectory"] = "ImportPlcTagTable (one approved batch)",
             ["ExportPlcWatchTablesToDirectory"] = "ListPlcWatchTables / ExportPlcWatchTable (one approved batch)",
-            ["ExportTechnologyObjectsToDirectory"] = "ExportTechnologyObjectsToDirectory (one approved native batch)"
+            ["ExportTechnologyObjectsToDirectory"] = "ExportTechnologyObject (one approved batch)"
         };
 
         public static Family ForTool(string tool) => All.Single(f => f.Tools.Contains(tool, StringComparer.Ordinal));

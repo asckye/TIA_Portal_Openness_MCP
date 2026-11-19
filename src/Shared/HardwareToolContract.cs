@@ -145,6 +145,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }))!.AsObject();
             var evidence = body["meta"] as JsonObject ?? new JsonObject();
             body.Remove("meta");
+            if (tool == "ImportDeviceAml" && Bool(evidence, "operationSuccess") == false) HostBehavior.SanitizeAmlDiagnostics(evidence);
             bool? verdict = Bool(evidence, "operationSuccess") ?? Bool(evidence, "success");
             if (body.ContainsKey("ok")) verdict = Bool(body, "ok");
             if (body.ContainsKey("success")) verdict = Bool(body, "success");
@@ -226,7 +227,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (NativeResultState.TryUnsuccessful(evidence, write, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, body, nativeError, nativeOutcome, current, write, nativeOutcome == Outcome.Unknown ? Completeness.Unknown
-                        : nativeOutcome == Outcome.Partial ? Completeness.Partial : Completeness.Complete);
+                        : nativeOutcome == Outcome.Partial || tool == "ImportDeviceAml" && nativeOutcome == Outcome.Failed && incomplete
+                            ? Completeness.Partial : Completeness.Complete);
             Paging? paging = null;
             if (evidence["offset"] != null && evidence["limit"] != null && (evidence["total"] ?? evidence["expectedCount"]) != null)
                 paging = McpServer.OffsetPage((int)evidence["offset"]!, (int)evidence["limit"]!, (int)(evidence["total"] ?? evidence["expectedCount"])!);

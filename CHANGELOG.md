@@ -6,6 +6,9 @@
 
 ### Changed
 
+- `ExportTechnologyObjectsToDirectory` now previews and executes one `ExportTechnologyObject` per inventory entry. Grouped objects require V19 or later. An uncertain export is tracked by the batch request ID.
+- `ConnectPortal` reports the previous owner's `leaseState` and lists `unsettledRequests` with their request ID and origin. Reconnecting preserves requests already held by the session.
+
 - Development host and worker discovery now uses the FoundationHost and PlcWorker build directories. The version diagnostic recognizes all eight supported releases and gives the matching FoundationHost command when a sibling is missing.
 - On all eight releases, ported tools check capability before TIA readiness. Without a TIA installation, `GetSessionState` returns `PRECONDITION_FAILED` and leaves a cold worker stopped. `--public-api` selects worker assemblies, and readiness checks the TIA installation separately.
 - On V14 SP1 through V19, an explicit status read now leaves a cold bundled worker stopped if it cannot find the installation’s Openness API files. The doctor’s Openness check uses installation evidence on all eight releases.
@@ -20,6 +23,9 @@
 - V4 tool results report host `meta.elapsedMs` on success and failure across all eight releases. Time spent waiting for a Workbench decision appears separately in `meta.approvalWaitMs`. Calls with timed worker replies also report the total worker processing time in `meta.workerElapsedMs`. After a call detaches, `GetCallResult` returns the original call’s timing.
 
 ### Fixed
+
+- A missing HMI target returns `NOT_FOUND` before operation. An unsuccessful CAx import reports the returned failure, possible device changes and bounded diagnostics.
+- A verified PLC import with mismatching readback retains its recovery file relative to the evidence directory. OPC UA model generation reports the failing phase and whether the output file exists.
 
 - Hardware connection and network-domain changes, custom role creation, library archive, and PLC imports distinguish completed writes from unavailable readback. The warning includes the readback phase and redacted native diagnostic. Verified PLC import retains the original backup when compilation is needed to verify content.
 - `ManagePlcBlockDocuments` reports `OUTCOME_UNKNOWN` when it can read the target group after import and finds an imported block name missing. If the lookup itself throws an ordinary read error, the completed write carries an `INCOMPLETE_DATA` warning.

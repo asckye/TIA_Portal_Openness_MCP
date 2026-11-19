@@ -32,7 +32,7 @@ The session retains its last 16 completed call results in completion order and e
 
 The accepted design and implementation stages are recorded in [ADR 0034](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/decisions/0034-no-session-lock.md).
 
-After an acknowledged `DisconnectPortal`, call `ConnectPortal` and `AttachOpenProject` in the same MCP session. The explicit connection starts a new worker generation. A live lease handle still prevents a second writer. Once the handle closes, BUSY, UNCERTAIN and legacy ACTIVE records add `PREVIOUS_OWNER_UNCLEAN` and disclose `data.previousOwner {state, requests}`. The next session inherits unsettled IDs, including those retained by an acknowledged disconnect, and save continues to report `UNSETTLED_CALLS`.
+After an acknowledged `DisconnectPortal`, call `ConnectPortal` and `AttachOpenProject` in the same MCP session. The explicit connection starts a new worker generation. A live lease handle still prevents a second writer. Once the handle closes, BUSY, UNCERTAIN and legacy ACTIVE records add `PREVIOUS_OWNER_UNCLEAN` and disclose the prior lease state in `data.previousOwner.leaseState`. Each `unsettledRequests` entry identifies the request by `requestId` and records its `origin` as `this-session` or `previous-owner`. Save continues to report `UNSETTLED_CALLS`.
 
 ## Automatic worker recovery
 

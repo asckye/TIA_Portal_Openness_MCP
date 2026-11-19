@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ExportTechnologyObjectsToDirectory"),
                 Description("[L2][PLC-Software][WRITE] Preview the complete exact technology-object inventory and each item export plan. One " +
                 "batch plan hash and approval; execute in inventory order, stop on first failure. " +
-                "All eight releases use the same native batch export route and the groups present in the project. " +
+                "Each selected item previews ExportTechnologyObject with its exact output file. Grouped exports require V19 or later. " +
                 "Default dryRun=true. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportTechnologyObjectsToDirectoryV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,

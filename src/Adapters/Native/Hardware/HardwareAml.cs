@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using Siemens.Engineering;
 using Siemens.Engineering.Cax;
 using TiaMcp.Adapters.Contracts;
@@ -57,7 +58,7 @@ namespace TiaMcp.Adapters
         }
 
 #if PLC_CAX_TRANSFER_RESULT
-        private static List<string> FlattenHardwareAmlMessages(IEnumerable<TransferResultMessage>? messages)
+        private static List<string> FlattenHardwareAmlMessages(IEnumerable<TransferResultMessage>? messages, int limit = int.MaxValue)
         {
             var lines = new List<string>();
             void Walk(IEnumerable<TransferResultMessage>? ms)
@@ -65,6 +66,7 @@ namespace TiaMcp.Adapters
                 if (ms == null) return;
                 foreach (var m in ms)
                 {
+                    if (lines.Count >= limit) break;
                     if (m == null) continue;
                     lines.Add($"[{m.State}] {m.Message}");
                     try { Walk(m.Messages); } catch /* swallow(enumerate-optional): Unavailable nested CAx messages must not discard the parent transfer result. */ { }
@@ -93,6 +95,7 @@ namespace TiaMcp.Adapters
                 meta["deviceCountBefore"] = EnumerateAllDevices().Count();
                 if (dryRun) return "CAx/AutomationML import preview; source hashed, nothing imported.";
                 meta["phase"] = "import";
+                bool returnedFailure = false;
                 try
                 {
 #if PLC_CAX_TRANSFER_RESULT
@@ -101,28 +104,46 @@ namespace TiaMcp.Adapters
                 var result = cax.Import(source, option);
                 var state = result?.State.ToString() ?? "Unknown";
                 bool ok = result != null && NativeResultStates.Succeeded(result.State);
+                returnedFailure = !ok;
                 meta["apiCallSuccess"] = true; meta["nativeResult"] = state;
                 meta["errorCount"] = result?.ErrorCount ?? 0; meta["warningCount"] = result?.WarningCount ?? 0;
-                meta["messages"] = new List<object?>(FlattenHardwareAmlMessages(result?.Messages).Cast<object?>());
+                var messages = FlattenHardwareAmlMessages(result?.Messages, ok ? int.MaxValue : 40);
+                meta["messages"] = ok ? messages : DiagnosticLines(messages);
                 meta["deviceCountAfter"] = EnumerateAllDevices().Count();
                 meta["logFile"] = null; meta["logFileScope"] = "V19+ reports the TransferResult messages; logFilePath is not written by this overload.";
-                if (!ok)
-                    throw new HardwareAddressingException("ImportFailed", "CaxProvider.Import returned TransferResult state " + state
-                        + "; inspect the reported messages.");
+                if (!ok) return ImportFailed(meta);
                 return "CAx/AutomationML import returned TransferResult " + state
                     + " (messages reported); imported content not semantically verified. Project not saved, compiled or downloaded.";
 #else
                 meta["mayHaveChanged"] = true; meta["mayHaveWrittenFiles"] = true;
                 bool ok = cax.Import(source, log, option);
+                returnedFailure = !ok;
                 meta["apiCallSuccess"] = true; meta["nativeResult"] = ok;
                 meta["deviceCountAfter"] = EnumerateAllDevices().Count();
                 log.Refresh();
                 if (log.Exists && log.Length > 0) meta["logFile"] = HardwareAmlPolicy.Verify(log);
                 else { meta["logFile"] = null; meta["logFileMissing"] = true; }
-                if (!ok) throw new HardwareAddressingException("ImportFailed", "CaxProvider.Import returned false; inspect the native log file.");
+                if (!ok)
+                {
+                    if (log.Exists && log.Length > 0)
+                    {
+                        using var file = log.OpenRead();
+                        using var reader = new BinaryReader(file);
+                        using var prefix = new StreamReader(new MemoryStream(reader.ReadBytes(4096)));
+                        var lines = new List<string>();
+                        while (lines.Count < 40 && prefix.ReadLine() is string line) lines.Add(line);
+                        meta["logExcerpt"] = DiagnosticLines(lines);
+                    }
+                    return ImportFailed(meta);
+                }
                 return "CAx/AutomationML import returned true (native log hashed); imported content not semantically verified. Project not saved, compiled " +
                     "or downloaded.";
 #endif
+                }
+                catch (Exception error) when (returnedFailure && !HmiReadPolicy.ConnectionUnavailable(error))
+                {
+                    meta["diagnosticReadFailed"] = true;
+                    return ImportFailed(meta);
                 }
                 catch
                 {
@@ -130,6 +151,25 @@ namespace TiaMcp.Adapters
                     catch { /* swallow(probe-optional): import remains unknown when even the device count is unavailable. */ }
                     throw;
                 }
+            });
+        }
+
+        private static string ImportFailed(Dictionary<string, object?> meta)
+        {
+            meta["operationSuccess"] = false; meta["status"] = "ImportFailed"; meta["dataComplete"] = false;
+            meta["cleanupRequired"] = new[] { new Dictionary<string, object?> { ["action"] = "inspect devices per log" } };
+            return "CAx import returned an unsuccessful result. Inspect devices per log for partial changes.";
+        }
+
+        private static List<string> DiagnosticLines(IEnumerable<string> lines)
+        {
+            return NativeFailureText.BoundedLines(lines.TakeWhile(line => !line.Contains("-----BEGIN")
+                && !NativeFailureText.IsStackBoundary(line)), line => {
+                string text = NativeFailureText.Compose(line, null, Array.Empty<string>());
+                int end = text.IndexOf("] ", StringComparison.Ordinal);
+                if (text.StartsWith("[", StringComparison.Ordinal) && end > 0) text = text.Substring(1, end - 1) + ": " + text.Substring(end + 2);
+                return Regex.Replace(text, @"(?i)(?:[a-z]:[\\/]|\\\\)[^\r\n""<>|;]*", "<path>",
+                    RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
             });
         }
     }

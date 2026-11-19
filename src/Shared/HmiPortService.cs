@@ -46,10 +46,17 @@ namespace TiaMcpServer.Siemens.Services
             if (reply["Failure"] is JsonObject failure)
             {
                 string code = (string?)failure["Code"] ?? "", message = (string?)failure["Message"] ?? "HMI operation failed.";
-                if (Enum.TryParse<PortalErrorCode>(code, out var native)) throw new PortalException(native, message);
-                if (code == nameof(ArgumentException)) throw new ArgumentException(message);
-                if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
-                throw new InvalidOperationException(message);
+                bool unchanged = (bool?)reply["MayHaveChanged"] == false && (bool?)reply["OutcomeUnknown"] == false;
+                if (!unchanged) throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure(message, reply);
+                string? parameter = (string?)failure["Evidence"]?["parameter"];
+                Exception error = (string?)failure["Evidence"]?["v4FailureCode"] == "NOT_FOUND"
+                    ? AdapterPreconditionException.NotFound(message, parameter)
+                    : Enum.TryParse<PortalErrorCode>(code, out var native) ? new PortalException(native, message)
+                    : code == nameof(ArgumentException) ? new ArgumentException(message, parameter)
+                    : code == nameof(NotSupportedException) ? new NotSupportedException(message)
+                    : new InvalidOperationException(message);
+                error.Data["foundationKnownNoMutation"] = true;
+                throw error;
             }
             return reply["Value"] == null ? default! : JsonSerializer.Deserialize<T>(reply["Value"]!.ToJsonString())!;
         }

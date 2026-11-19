@@ -20,6 +20,14 @@ namespace TiaMcp.Adapters
         private string DefaultB5ContainerPath(object? container)
             => container != null && b5ResolvedPaths.TryGetValue(container, out var path) ? path.Value : "";
         public Func<string, object>? PlcB5DocumentPreflight { get; set; }
+#if PLC_OPC_UA
+        private PlcB5Reply GenerateModelled(PlcB5Request request)
+        {
+            var data = (PlcB5GenerateModelled ?? throw new NotSupportedException("Missing OPC UA modelled worker extension."))(request);
+            bool Flag(string field) => data.TryGetValue(field, out var value) && bool.TryParse(value?.ToString(), out bool flag) && flag;
+            return new PlcB5Reply { Data = data, MayHaveChanged = Flag("mayHaveChanged"), OutcomeUnknown = Flag("writeOutcomeUnknown") };
+        }
+#endif
         public PlcB5Reply ExecutePlcB5(PlcB5Request request, bool dryRun = true)
         {
             Check();
@@ -62,8 +70,7 @@ namespace TiaMcp.Adapters
                             .CopyMode, request.ConfirmDelete, request.Offset, request.Limit, request.DryRun),
 #endif
 #if PLC_OPC_UA
-                    "GenerateOpcUaModelledInterface" => new PlcB5Reply {
-                        Data = (PlcB5GenerateModelled ?? throw new NotSupportedException("Missing OPC UA modelled worker extension."))(request) },
+                    "GenerateOpcUaModelledInterface" => GenerateModelled(request),
                     "GetPlcOpcUaConfiguration" => adapter.GetOpcUaConfig(request.SoftwarePath),
 #endif
 #if PLC_OPC_UA
@@ -123,11 +130,15 @@ namespace TiaMcp.Adapters
             }
             catch (Exception error) when (error.GetBaseException() is not Siemens.Engineering.NonRecoverableException)
             {
-                return new PlcB5Reply {
-                    Failure = new PlcSoftwareFailure {
-                        Code = error is PlcSoftwareException failure ? failure.Code : error.GetType().Name, Message = error.Message }, MayHaveChanged = adapter
-                        .MayHaveChanged, OutcomeUnknown = adapter.MayHaveChanged
-                };
+                var failure = new PlcSoftwareFailure {
+                    Code = error is PlcSoftwareException native ? native.Code : error.GetType().Name, Message = error.Message };
+                if (request.Operation == "GenerateOpcUaModelledInterface" && error is ArgumentException or AdapterPreconditionException)
+                {
+                    failure.Evidence["v4FailureCode"] = MutationEvidence.FailureCode(error);
+                    failure.Evidence["parameter"] = StepFailureStatus.Parameter(error);
+                    failure.Evidence["condition"] = (error as AdapterPreconditionException)?.Condition;
+                }
+                return new PlcB5Reply { Failure = failure, MayHaveChanged = adapter.MayHaveChanged, OutcomeUnknown = adapter.MayHaveChanged };
             }
         }
     }

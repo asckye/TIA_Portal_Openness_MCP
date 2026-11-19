@@ -8,6 +8,7 @@ namespace TiaMcp.Adapters
         internal Func<Exception, PlcSoftwareFailure>? EngineeringReflectionFailure => null;
         public HmiMessage NativeReply { get; set; } = new();
         public bool NativeMayHaveChanged { get; set; }
+        public Exception? LookupFailure { get; set; }
         public int NativeCalls { get; set; }
         internal FakeSession EngineeringPlcSession { get; } = new();
         internal Action<string, string>? WriteEngineeringHmiTrace => null;
@@ -31,6 +32,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal bool MayHaveChanged => engine.NativeMayHaveChanged;
         internal HmiMessage Invoke()
         {
+            if (engine.LookupFailure != null) throw engine.LookupFailure;
             engine.NativeCalls++;
             return engine.NativeReply;
         }

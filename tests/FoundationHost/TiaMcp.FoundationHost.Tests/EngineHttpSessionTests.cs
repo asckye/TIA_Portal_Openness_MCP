@@ -84,11 +84,12 @@ public sealed partial class EngineHttpSessionTestsPlc
         Assert.Equal("RELEASED " + prior + "\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "321-1.lease")));
         using var b = new Session(host); await b.Initialize();
         var connected = await b.Tool("ConnectPortal", new() { ["processId"] = 321 });
-        Assert.Equal("RELEASED", (string?)connected["data"]?["previousOwner"]?["state"]);
-        Assert.Equal(prior, (string?)connected["data"]?["previousOwner"]?["requests"]?[0]);
+        Assert.Equal("RELEASED", (string?)connected["data"]?["previousOwner"]?["leaseState"]);
+        Assert.Equal(prior, (string?)connected["data"]?["previousOwner"]?["unsettledRequests"]?[0]?["requestId"]);
         var inherited = Assert.Single((await b.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray())!;
         Assert.Equal(prior, (string?)inherited["requestId"]);
         Assert.True((bool?)inherited["fromPreviousOwner"]);
+        Assert.Equal("previous-owner", (string?)inherited["origin"]);
         Assert.Contains(Directory.EnumerateFiles(host.DataDirectory, "*.jsonl", SearchOption.AllDirectories),
             path => File.ReadAllText(path).Contains("RECOVERY_DISCONNECT") && File.ReadAllText(path).Contains(prior));
         await b.Tool("DisconnectPortal"); await a.End(); await b.End();

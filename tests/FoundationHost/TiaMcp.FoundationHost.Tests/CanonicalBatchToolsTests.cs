@@ -336,7 +336,7 @@ public sealed class CanonicalBatchToolsTests
         var reader = new Target(readerName) { Inventory = readerName == "ListPlcWatchTables"
             ? new JsonArray("Group/Watch") : new JsonArray(new JsonObject { ["folder"] = "Group", ["name"] = "Axis" }) };
         var export = new Target(exportName, "20");
-        var native = new Target(batchName, "20") { HashInEvidence = true };
+        var native = new Target(batchName, "20") { HashInEvidence = true, TechnologyPaths = new[] { "Group/Axis" } };
         var source = Declaration(batchName); var roster = new Dictionary<string, McpServerTool> {
             [readerName] = reader, [exportName] = export, [batchName] = native };
         var batch = new CanonicalBatchTools.BatchTool(source, roster, "20", () => Binding.DeepClone().AsObject());
@@ -345,19 +345,24 @@ public sealed class CanonicalBatchToolsTests
         var result = await batch.InvokeAsync(Request(batchName, args));
         Assert.True((bool?)result.StructuredContent?["ok"]); var item = Assert.Single(result.StructuredContent!["data"]!["items"]!.AsArray());
         bool watch = batchName == "ExportPlcWatchTablesToDirectory";
-        Assert.Equal(watch ? exportName : batchName, (string?)item!["tool"]);
+        Assert.Equal(exportName, (string?)item!["tool"]);
         if (watch) Assert.Contains("Group", (string?)item["arguments"]?["exportPath"]);
-        else Assert.Equal(Path.GetTempPath(), (string?)item["arguments"]?["exportDir"]);
+        else
+        {
+            Assert.Equal("Group/Axis", (string?)item["arguments"]?["toName"]);
+            Assert.Equal(Path.Combine(Path.GetTempPath(), "Group", "Axis.xml"), (string?)item["arguments"]?["exportPath"]);
+            Assert.Equal((string?)item["arguments"]?["exportPath"], (string?)item["inventory"]?["outputFile"]);
+        }
         Assert.Empty(export.Writes); Assert.Empty(native.Writes); Assert.Equal(watch ? 1 : 0, reader.Calls);
-        if (watch) Assert.Equal(Path.GetFullPath(Path.GetTempPath()), Assert.Single(export.ExportRoots));
-        else Assert.Null(Assert.Single(native.ExportRoots));
+        Assert.Equal(Path.GetFullPath(Path.GetTempPath()), Assert.Single(export.ExportRoots));
+        if (!watch) Assert.Null(Assert.Single(native.ExportRoots));
         Assert.Null(CanonicalBatchTools.CurrentExportRoot.Value);
         int approvals = 0;
         batch.Approve = (pending, settings, token) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
         batch.CompleteApproval = (_, _) => Task.CompletedTask;
         Apply(args, result.StructuredContent!["data"]!.AsObject());
         Assert.True((bool?)(await batch.InvokeAsync(Request(batchName, args))).StructuredContent?["ok"]);
-        Assert.Equal(1, approvals); Assert.Single(watch ? export.Writes : native.Writes);
+        Assert.Equal(1, approvals); Assert.Single(export.Writes); Assert.Empty(native.Writes);
     }
 
     [Fact]
@@ -444,9 +449,9 @@ public sealed class CanonicalBatchToolsTests
         Assert.Equal(native ? 1 : 0, source.Calls); Assert.Empty(source.Writes); Assert.Empty(export.Writes);
         Apply(args, preview.StructuredContent!["data"]!.AsObject());
         Assert.True((bool?)(await batch.InvokeAsync(Request(source.ProtocolTool.Name, args))).StructuredContent?["ok"]);
-        Assert.Equal(native ? 1 : 0, source.Writes.Count); Assert.Equal(native ? 0 : 1, export.Writes.Count);
+        Assert.Empty(source.Writes); Assert.Single(export.Writes);
         if (native) Assert.Equal(new string('a', 64),
-            (string?)source.Arguments.Single(values => (bool?)values["dryRun"] == false)["expectedPlanHash"]);
+            (string?)export.Arguments.Single(values => (bool?)values["dryRun"] == false)["expectedPlanHash"]);
     }
 
     [Theory]
@@ -470,17 +475,18 @@ public sealed class CanonicalBatchToolsTests
     {
         var reader = new Target(watch ? "ListPlcWatchTables" : "ListTechnologyObjects") { Inventory = watch
             ? new JsonArray("Group/MixedName") : new JsonArray(new JsonObject { ["folder"] = "Group", ["name"] = "MixedName" }) };
-        var target = new Target(watch ? "ExportPlcWatchTable" : "ExportTechnologyObjectsToDirectory", "20");
+        var target = new Target(watch ? "ExportPlcWatchTable" : "ExportTechnologyObject", "20");
         var name = watch ? "ExportPlcWatchTablesToDirectory" : "ExportTechnologyObjectsToDirectory";
+        var source = new Target(name, "20") { HashInEvidence = true, TechnologyPaths = new[] { "Group/MixedName" } };
         var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
-            [reader.ProtocolTool.Name] = reader, [target.ProtocolTool.Name] = target }, "20", () => Binding.DeepClone().AsObject());
+            [reader.ProtocolTool.Name] = reader, [name] = source, [target.ProtocolTool.Name] = target }, "20", () => Binding.DeepClone().AsObject());
         var args = new JsonObject { ["softwarePath"] = "PLC", [watch ? "dir" : "exportDir"] = Path.GetTempPath(),
             ["regexName"] = "^mixedname$" };
         var result = await batch.InvokeAsync(Request(name, args));
         Assert.True((bool?)result.StructuredContent?["ok"]);
         Assert.Single(result.StructuredContent!["data"]!["items"]!.AsArray());
         Assert.Single(target.Arguments);
-        if (!watch) Assert.Equal("^mixedname$", (string?)target.Arguments[0]["regexName"]);
+        if (!watch) Assert.Equal("^mixedname$", (string?)Assert.Single(source.Arguments)["regexName"]);
     }
 
     [Fact]
@@ -517,6 +523,140 @@ public sealed class CanonicalBatchToolsTests
         public void Dispose() { }
     }
 
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")]
+    public async Task A_grouped_technology_object_blocks_the_batch_before_approval(string release)
+    {
+        using var files = new Files();
+        const string name = "ExportTechnologyObjectsToDirectory";
+        var inventory = new Target(name, release) { HashInEvidence = true, TechnologyPaths = new[] { "Root", "Group/Axis" } };
+        var single = new Target("ExportTechnologyObject", release);
+        int approvals = 0;
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [name] = inventory, [single.ProtocolTool.Name] = single }, release, () => Binding.DeepClone().AsObject()) {
+            Approve = (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); } };
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["exportDir"] = files.Directory };
+        var preview = await batch.InvokeAsync(Request(name, args));
+        var plan = preview.StructuredContent!["data"]!.AsObject();
+        Assert.False((bool?)plan["canApply"]);
+        var rows = plan["items"]!.AsArray();
+        Assert.Equal("planned", (string?)rows[0]?["status"]);
+        Assert.Equal("Group/Axis", (string?)rows[1]?["inventory"]?["objectPath"]);
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)rows[1]?["preview"]?["error"]?["code"]);
+        Assert.Contains("before V19", (string?)rows[1]?["preview"]?["error"]?["message"]);
+        Apply(args, plan);
+        var refused = await batch.InvokeAsync(Request(name, args));
+        Assert.Equal("not-started", (string?)refused.StructuredContent?["meta"]?["execution"]);
+        Assert.Equal(0, approvals);
+        Assert.Empty(single.Writes);
+        Assert.All(single.Arguments, call => Assert.Equal("Root", (string?)call["toName"]));
+    }
+
+    [Fact]
+    public async Task Technology_inventory_keeps_literal_percent_sequences_in_object_names()
+    {
+        using var files = new Files();
+        const string name = "ExportTechnologyObjectsToDirectory";
+        var inventory = new Target(name, "20") { HashInEvidence = true, TechnologyPaths = new[] { "Group/Axis%2F" } };
+        var single = new Target("ExportTechnologyObject", "20");
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [name] = inventory, [single.ProtocolTool.Name] = single }, "20", () => Binding.DeepClone().AsObject());
+        var preview = await batch.InvokeAsync(Request(name, new JsonObject { ["softwarePath"] = "PLC", ["exportDir"] = files.Directory }));
+        var row = Assert.Single(preview.StructuredContent!["data"]!["items"]!.AsArray());
+        Assert.Equal("Group/Axis%2F", (string?)row?["inventory"]?["objectPath"]);
+        Assert.Equal("Group/Axis%252F", (string?)row?["arguments"]?["toName"]);
+        Assert.Equal(Path.Combine(files.Directory, "Group", "Axis%2F.xml"), (string?)row?["arguments"]?["exportPath"]);
+    }
+
+    [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true)]
+    public async Task A_failed_technology_export_needs_a_worker_return_and_absence_to_settle(bool partialFile, bool lostReply)
+    {
+        using var files = new Files();
+        using var worker = new TechnologyExportWorker(partialFile, lostReply);
+        const string name = "ExportTechnologyObjectsToDirectory";
+        var inventory = new Target(name, "20") { HashInEvidence = true, TechnologyPaths = new[] { "Group/Axis", "Second" } };
+        var native = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ExportTechnologyObject"), worker);
+        var single = new FoundationV4Tool(native, "20", () => new(false, 1));
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [name] = inventory, [single.ProtocolTool.Name] = single }, "20", () => Binding.DeepClone().AsObject(), native.Unsettled) {
+            Approve = (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)), CompleteApproval = (_, _) => Task.CompletedTask };
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["exportDir"] = files.Directory };
+        var blocked = (await batch.InvokeAsync(Request(name, args))).StructuredContent!["data"]!;
+        Assert.False((bool?)blocked["canApply"]);
+        Assert.Equal("output-parent-missing", (string?)blocked["items"]?[0]?["preview"]?["error"]?["details"]?["condition"]);
+        Assert.False(Directory.Exists(Path.Combine(files.Directory, "Group")));
+        Directory.CreateDirectory(Path.Combine(files.Directory, "Group"));
+        var plan = (await batch.InvokeAsync(Request(name, args))).StructuredContent!["data"]!.AsObject();
+        Assert.True((bool?)plan["canApply"], plan.ToJsonString());
+        Apply(args, plan);
+        const string batchId = "batch-export-request";
+        using var recording = native.LateResults.CreateInvocation(name, batchId, CancellationToken.None);
+        CallToolResult reply;
+        using (recording.Enter())
+        using (NativeFailureDiagnostics.Begin(batchId, JsonSerializer.SerializeToElement(args)))
+            reply = await batch.InvokeAsync(Request(name, args));
+        Assert.Empty(native.LateResults.Snapshot());
+        recording.Complete(reply, native.Unsettled);
+        var result = reply.StructuredContent!;
+        var rows = result["data"]!["items"]!.AsArray();
+        var child = rows[0]!["result"]!;
+        Assert.True(worker.Writes == 1, child.ToJsonString());
+        Assert.Equal("not-started", (string?)rows[1]?["status"]);
+        Assert.Equal(partialFile, File.Exists(Path.Combine(files.Directory, "Group", "Axis.xml")));
+        bool unknown = partialFile || lostReply;
+        Assert.Equal(unknown ? "unknown" : "failed", (string?)child["meta"]?["outcome"]);
+        Assert.Equal(unknown ? "unknown" : "failed", (string?)result["meta"]?["outcome"]);
+        if (!lostReply)
+        {
+            Assert.Equal(!partialFile, (bool?)child["data"]?["outputFileAbsent"]);
+            Assert.Equal(partialFile, (bool?)child["data"]?["outcomeUnknown"]);
+        }
+        if (unknown)
+        {
+            var held = Assert.Single(native.Unsettled.Snapshot());
+            Assert.Equal((string?)result["meta"]?["requestId"], held.RequestId);
+            Assert.Equal(name, held.Tool);
+            var late = Assert.Single(native.LateResults.Snapshot());
+            Assert.Equal(name, (string?)late?["tool"]);
+            Assert.Equal(batchId, (string?)late?["requestId"]);
+            var repeat = (await batch.InvokeAsync(Request(name, args))).StructuredContent!;
+            Assert.Equal("same-call-unsettled", (string?)repeat["error"]?["details"]?["condition"]);
+            Assert.Equal(1, worker.Writes);
+        }
+        else
+        {
+            Assert.Empty(native.Unsettled.Snapshot());
+            Assert.Empty(native.LateResults.Snapshot());
+        }
+    }
+
+    private sealed class TechnologyExportWorker(bool partial, bool lostReply) : IFoundationSessionWorker
+    {
+        internal int Writes;
+        public string ApprovalIdentity => Binding.ToJsonString();
+        public bool Bundled => false;
+        public bool SharedSession => false;
+        public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => null;
+        public IDisposable? EnterRequest(RequestContext<CallToolRequestParams> request) => null;
+        public Task<IDisposable?> AcquireLane(CancellationToken token) => Task.FromResult<IDisposable?>(null);
+        public void ActivateLane(IDisposable? lane) { }
+        public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
+        {
+            string root = (string)args["plannedExportRoot"]!;
+            bool dry = (bool)args["dryRun"]!;
+            var result = TiaMcp.Adapters.PlcSpecialExportPolicy.Run("technology-object", "20", "C:/Project.ap21", "PLC",
+                (string)args["toName"]!, (string)args["exportPath"]!, true, dry, (string?)args["expectedPlanHash"] ?? "", () => { }, _ => { },
+                (file, _) => {
+                    Writes++;
+                    if (partial) File.WriteAllText(file.FullName, "<Document>");
+                    throw new IOException("Export publication interrupted.");
+                }, allowPlannedDirectories: true, plannedExportRoot: root);
+            if (!dry && lostReply) throw new WorkerOperationException("Fixture reply lost.", -32603, "unknown");
+            return Task.FromResult(JsonSerializer.SerializeToNode(result));
+        }
+        public void Dispose() { }
+    }
+
     [Fact]
     public async Task Technology_exports_use_one_native_route_and_result_shape_on_all_eight_releases()
     {
@@ -532,9 +672,10 @@ public sealed class CanonicalBatchToolsTests
             using var files = new Files();
             const string name = "ExportTechnologyObjectsToDirectory";
             var source = new Target(name, release) { HashInEvidence = true };
+            var target = new Target("ExportTechnologyObject", release);
             int approvals = 0;
-            var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> { [name] = source },
-                release, () => Binding.DeepClone().AsObject()) {
+            var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> { [name] = source,
+                [target.ProtocolTool.Name] = target }, release, () => Binding.DeepClone().AsObject()) {
                 Approve = (pending, _, _) => { approvals++; return Task.FromResult(new ApprovalOutcome(pending, false, null)); },
                 CompleteApproval = (_, _) => Task.CompletedTask };
             var args = new JsonObject { ["softwarePath"] = "PLC", ["exportDir"] = Path.Combine(files.Directory, "planned") };
@@ -543,17 +684,17 @@ public sealed class CanonicalBatchToolsTests
             Assert.Equal(1, source.Calls); Assert.Empty(source.Writes);
             envelopeShape ??= Shape(preview.StructuredContent); Assert.Equal(envelopeShape, Shape(preview.StructuredContent));
             var plan = preview.StructuredContent!["data"]!.AsObject(); var item = Assert.Single(plan["items"]!.AsArray())!.AsObject();
-            Assert.Equal(name, (string?)item["tool"]);
+            Assert.Equal("ExportTechnologyObject", (string?)item["tool"]);
             string actual = string.Join(",", plan.Select(p => p.Key).Order()) + ":" + string.Join(",", item.Select(p => p.Key).Order());
             shape ??= actual; Assert.Equal(shape, actual);
             Apply(args, plan);
             var applied = await batch.InvokeAsync(Request(name, args));
             Assert.True((bool?)applied.StructuredContent?["ok"], release + ": " + applied.StructuredContent?.ToJsonString());
-            Assert.Single(source.Writes); Assert.Equal(1, approvals);
+            Assert.Empty(source.Writes); Assert.Single(target.Writes); Assert.Equal(1, approvals);
             appliedEnvelopeShape ??= Shape(applied.StructuredContent); Assert.Equal(appliedEnvelopeShape, Shape(applied.StructuredContent));
             var appliedPlan = applied.StructuredContent!["data"]!.AsObject();
             var appliedItem = Assert.Single(appliedPlan["items"]!.AsArray())!.AsObject();
-            Assert.Equal(name, (string?)appliedItem["tool"]);
+            Assert.Equal("ExportTechnologyObject", (string?)appliedItem["tool"]);
             string currentShape = string.Join(",", appliedPlan.Select(p => p.Key).Order()) + ":" + string.Join(",", appliedItem.Select(p => p.Key).Order());
             appliedShape ??= currentShape; Assert.Equal(appliedShape, currentShape);
         }
@@ -614,6 +755,7 @@ public sealed class CanonicalBatchToolsTests
         internal int FailWrite;
         internal bool BlockPreview;
         internal bool HashInEvidence;
+        internal string[] TechnologyPaths = new[] { "Axis" };
         internal bool OmitRequestId;
         internal bool UnknownFailure, LegacyReset;
         internal Action<int>? AfterWrite;
@@ -647,6 +789,10 @@ public sealed class CanonicalBatchToolsTests
             if (HashInEvidence)
             {
                 data.Remove("planHash"); data["evidence"] = new JsonObject { ["planHash"] = new string('a', 64) };
+                if (name == "ExportTechnologyObjectsToDirectory")
+                    data["evidence"]!["items"] = new JsonArray(TechnologyPaths.Select(path => (JsonNode)new JsonObject {
+                        ["objectPath"] = path, ["outputFile"] = Path.GetFullPath(Path.Combine((string)args["exportDir"]!, path + ".xml")),
+                        ["status"] = "planned" }).ToArray());
             }
             if (BlockPreview) { data["applyBlocked"] = true; data["applyBlockedReason"] = "Native semantics not verified."; }
             bool unknown = failure && UnknownFailure;

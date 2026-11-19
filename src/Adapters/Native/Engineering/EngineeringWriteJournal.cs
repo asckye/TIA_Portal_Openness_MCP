@@ -55,7 +55,17 @@ namespace TiaMcp.Adapters.Native.Engineering
                     journal.Undo(meta, acquireUndo);
                 }
                 else if (inspectVerdict && meta.TryGetValue("operationSuccess", out var success) && success is false)
-                    journal.Undo(meta, acquireUndo);
+                {
+                    if (journal.entries.Count != 0 || journal.unrestoredEffects.Count != 0 || journal.checks.Count != 0)
+                        journal.Undo(meta, acquireUndo);
+                    else if (journal.parent != null)
+                    {
+                        // The domain owns this verdict. An enclosing write must still account for its cleanup.
+                        var tasks = journal.CleanupTasks(meta);
+                        journal.parent.pendingCleanup.AddRange(tasks);
+                        if (tasks.Count > 0) journal.parent.pendingRefused = false;
+                    }
+                }
                 else journal.Commit();
                 return message;
             }

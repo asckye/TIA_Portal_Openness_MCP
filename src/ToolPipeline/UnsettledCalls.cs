@@ -75,10 +75,20 @@ public sealed class UnsettledCalls
         }
     }
 
-    public void ImportPreviousOwner(IEnumerable<string> requestIds)
+    public JsonArray ImportPreviousOwner(IEnumerable<string> requestIds)
     {
         lock (gate)
-            foreach (string requestId in requestIds) AddPreviousOwner(requestId, process);
+        {
+            var local = calls.Where(call => !call.FromPreviousOwner).Select(call => call.RequestId).ToHashSet(StringComparer.Ordinal);
+            var rows = new JsonArray();
+            foreach (string id in requestIds.Distinct(StringComparer.Ordinal))
+            {
+                if (settled.ContainsKey(id)) continue;
+                if (!ids.Contains(id)) AddPreviousOwner(id, process);
+                rows.Add(new JsonObject { ["requestId"] = id, ["origin"] = local.Contains(id) ? "this-session" : "previous-owner" });
+            }
+            return rows;
+        }
     }
 
     public void ImportPreviousOwner(IEnumerable<UnsettledCall> previous)
@@ -89,7 +99,8 @@ public sealed class UnsettledCalls
 
     private void AddPreviousOwner(string requestId, (int? Id, string? StartUtc) owner)
     {
-        if (ids.Add(requestId)) calls.Add(new UnsettledCall(requestId, "previous-owner", null, DateTimeOffset.UtcNow, true) { Process = owner });
+        if (!settled.ContainsKey(requestId) && ids.Add(requestId))
+            calls.Add(new UnsettledCall(requestId, "previous-owner", null, DateTimeOffset.UtcNow, true) { Process = owner });
     }
 
     public void Clear()
@@ -129,7 +140,7 @@ public sealed class UnsettledCalls
     }
     public JsonArray ToJson() => new(Snapshot().Select(call => (JsonNode)new JsonObject {
         ["requestId"] = call.RequestId, ["tool"] = call.Tool, ["utc"] = call.Utc.ToString("O"),
-        ["fromPreviousOwner"] = call.FromPreviousOwner }).ToArray());
+        ["fromPreviousOwner"] = call.FromPreviousOwner, ["origin"] = call.FromPreviousOwner ? "previous-owner" : "this-session" }).ToArray());
 
     public JsonArray SettledJson()
     { lock (gate) return new JsonArray(settled.Values.Select(value => (JsonNode)value.ToJson()).ToArray()); }

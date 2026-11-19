@@ -449,8 +449,9 @@ public sealed class FoundationRecoveryTests
             var definition = FoundationTools.Definitions.Single(row => row.Name == "ConnectPortal");
             var raw = await worker.Call("Attach", new JsonObject { ["processId"] = 123 }, CancellationToken.None);
             var body = FoundationV4Result.Worker(release, definition, "connect", new(), raw, null).StructuredContent!;
-            Assert.Equal(state, (string?)body["data"]?["previousOwner"]?["state"]);
-            Assert.Equal("prior-write", (string?)body["data"]?["previousOwner"]?["requests"]?[0]);
+            Assert.Equal(state, (string?)body["data"]?["previousOwner"]?["leaseState"]);
+            Assert.Equal("prior-write", (string?)body["data"]?["previousOwner"]?["unsettledRequests"]?[0]?["requestId"]);
+            Assert.Equal("previous-owner", (string?)body["data"]?["previousOwner"]?["unsettledRequests"]?[0]?["origin"]);
             Assert.Equal(state != "RELEASED", body["meta"]!["warnings"]!.AsArray()
                 .Any(w => (string?)w?["code"] == "PREVIOUS_OWNER_UNCLEAN"));
             var inherited = Assert.Single(worker.Unsettled.Snapshot());

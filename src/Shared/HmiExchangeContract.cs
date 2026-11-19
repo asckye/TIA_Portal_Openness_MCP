@@ -32,7 +32,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 Exception cause = ex;
                 while (cause.InnerException != null) cause = cause.InnerException;
                 var evidence = new JsonObject { ["exceptionType"] = cause.GetType().Name };
-                var rejection = cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
+                var rejection = HostBehavior.KnownMissingTarget(ex)
+                    ? Rejection(tool, "NotFound", cause.Message, parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(ex))
+                    : cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
                         parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(portal))
                     : cause is NotSupportedException ? Rejection(tool, "NotSupportedOnVersion", cause.Message)
                     : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", parameter: argument.ParamName) : null;

@@ -6,6 +6,15 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class NativeFailureTextTests
 {
     [Fact]
+    public void The_log_excerpt_byte_limit_preserves_complete_UTF8_characters()
+    {
+        string deviceName = new string('\u8f74', 2000);
+        var excerpt = NativeFailureText.BoundedLines(new[] { "X", deviceName, "past the byte budget" }, text => text);
+        Assert.Equal(new[] { "X", deviceName.Substring(0, 1364) }, excerpt);
+        Assert.Equal(4094, System.Text.Encoding.UTF8.GetByteCount(string.Join("\n", excerpt)));
+    }
+
+    [Fact]
     public void Qualified_key_error_name_is_redacted_before_composition()
         => Assert.DoesNotContain("hunter2", NativeFailureText.Compose("PasswordStore.KeyNotFoundError: hunter2", null,
             Array.Empty<string>()), StringComparison.Ordinal);

@@ -53,6 +53,13 @@ namespace TiaMcpServer.Siemens.Services
                 ErrorCount = result.ErrorCount, WarningCount = result.WarningCount, Errors = result.Errors, Warnings = result.Warnings, Info = result.Info,
                     RawMessages = result.RawMessages,
                 Meta = JsonSerializer.SerializeToNode(result.Meta)!.AsObject() }; }
+            catch (Exception error) when (tool == "CompileHmiDiagnostics" && TiaOpenness.Shared.HostFailurePolicy.KnownNoMutation(error)
+                && error.Data["nativeResultEvidence"] is JsonObject evidence && (string?)evidence["status"] == "NotFound")
+            {
+                var missing = AdapterPreconditionException.NotFound(error.Message, (string?)evidence["parameter"]);
+                missing.Data["foundationKnownNoMutation"] = true;
+                throw missing;
+            }
             catch (PortalException error) {
                 throw new McpException("Failed compiling software '" + path + "' [" + error.Code + "]: " + error.Message, error, McpErrorCode.InternalError); }
             catch (Exception error) when (error is not McpException) {

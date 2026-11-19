@@ -429,6 +429,33 @@ public sealed class HardwareWriteFailureTests
         finally { System.IO.File.Delete(source); System.IO.Directory.Delete(directory); }
     }
 
+    public static HardwareAddressingReply ImportWithLog(string source, string log, Action<FileInfo> writeLog)
+    {
+        var fixture = NativeFixture("15.1");
+        var provider = new Siemens.Engineering.Cax.CaxProvider { WriteLog = writeLog };
+        fixture.Project.Services[typeof(Siemens.Engineering.Cax.CaxProvider)] = provider;
+        var reply = fixture.Engine.ImportHardwareAml(source, log, confirmImport: true, dryRun: false);
+        Assert.Equal(1, provider.ImportCalls);
+        return reply;
+    }
+
+    public static System.Text.Json.Nodes.JsonObject FailedGeneration(string output, bool create, bool unreadable = false)
+    {
+        var file = TiaMcpServer.Siemens.NativeFileOutput.Plan(output, "outputPath");
+        var result = new System.Text.Json.Nodes.JsonObject();
+        try
+        {
+            if (create) { using var stream = file.Open(FileMode.CreateNew, FileAccess.Write); stream.WriteByte(60); }
+            throw new IOException("NodeSet generation interrupted.");
+        }
+        catch (IOException error)
+        {
+            TiaMcpServer.Siemens.NativeFileOutput.RecordFailure(result, file, create ? "writeOutput" : "readDataTypes", error,
+                unreadable ? _ => throw new UnauthorizedAccessException("Output probe denied.") : null);
+        }
+        return result;
+    }
+
     [Fact]
     public void Attribute_only_failure_can_still_use_unchanged_readback()
     {

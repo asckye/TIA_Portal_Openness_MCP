@@ -225,4 +225,4 @@ worker 超时预算默认为 120 秒，每个代次的首次附着为 300 秒，
 
 八版 MCP 均由 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>` 启动。宿主自动使用 `worker/` 子目录中的 PLC worker，保持完整解压包即可。
 
-`DisconnectPortal` 断开后，可在同一 MCP 会话显式调用 `ConnectPortal` 和 `AttachOpenProject`。连接时若提示 `PREVIOUS_OWNER_UNCLEAN`，检查 `data.previousOwner.requests` 对应的目标。这些编号会进入当前会话未确认清单，保存继续提示 `UNSETTLED_CALLS`。
+`DisconnectPortal` 断开后，可在同一 MCP 会话显式调用 `ConnectPortal` 和 `AttachOpenProject`。连接时若提示 `PREVIOUS_OWNER_UNCLEAN`，查看 `data.previousOwner.leaseState` 和 `unsettledRequests` 中每个 `requestId` 对应的目标。`origin` 为 `this-session` 表示当前会话已持有该请求，为 `previous-owner` 表示继承自前持有者。保存时继续提示 `UNSETTLED_CALLS`。

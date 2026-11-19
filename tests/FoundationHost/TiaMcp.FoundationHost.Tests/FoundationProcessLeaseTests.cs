@@ -19,6 +19,27 @@ public sealed class FoundationProcessLeaseTests
         "{\"exceptionType\":\"InvalidOperationException\"}");
 
     [Fact]
+    public void Previous_owner_import_preserves_local_identity_and_skips_settled_requests()
+    {
+        using var worker = new WorkerClient("17", "/missing/never-launch-worker", "/missing/no-api", false);
+        var calls = worker.Unsettled;
+        calls.Record("local", "ImportDeviceAml", "original-digest", DateTimeOffset.UtcNow);
+        var ids = new[] { "previous", "local", "previous" };
+        var first = calls.ImportPreviousOwner(ids);
+        var repeated = calls.ImportPreviousOwner(ids);
+        Assert.Equal(first.ToJsonString(), repeated.ToJsonString());
+        Assert.Equal(2, repeated.Count);
+        Assert.Equal("previous-owner", (string?)repeated[0]?["origin"]);
+        Assert.Equal("this-session", (string?)repeated[1]?["origin"]);
+        Assert.Equal("local", calls.FindWrite("original-digest")!.RequestId);
+        Assert.Equal(2, calls.Snapshot().Count);
+        calls.SettleByReadBack("previous", "applied");
+        var remaining = Assert.Single(calls.ImportPreviousOwner(ids));
+        Assert.Equal("local", (string?)remaining?["requestId"]);
+        Assert.Single(calls.Snapshot());
+    }
+
+    [Fact]
     public async Task Holder_in_another_host_is_named_and_refused_before_dispatch()
     {
         using var session = new Session();
@@ -501,8 +522,8 @@ public sealed class FoundationProcessLeaseTests
         raw["PreviousOwnerState"] = lease.PreviousOwnerState;
         raw["PreviousOwnerRequests"] = JsonSerializer.SerializeToNode(lease.PreviousOwnerRequests);
         var result = V17ProjectEnvelope.Wrap("Connect", "Connection", raw, false);
-        Assert.Equal(state, (string?)result["previousOwner"]?["state"]);
-        Assert.Empty(result["previousOwner"]!["requests"]!.AsArray());
+        Assert.Equal(state, (string?)result["previousOwner"]?["leaseState"]);
+        Assert.Empty(result["previousOwner"]!["unsettledRequests"]!.AsArray());
         Assert.Null(result["previousOwnerEndedIdle"]);
         var definition = FoundationTools.Definitions.Single(row => row.Name == "ConnectPortal");
         var body = FoundationV4Result.Worker("19", definition, "connect", new(), raw, result).StructuredContent!;

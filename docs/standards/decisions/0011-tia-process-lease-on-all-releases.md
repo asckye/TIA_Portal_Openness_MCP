@@ -24,7 +24,7 @@ V20/V21 已经对选定的 TIA 进程取租约，V14 SP1–V19 没有。工作�
 - 另一个存活的会话持有时返回 `LeaseReserved`；
 - 租约随持有者结束。独占文件句柄能够重新打开时，新会话可以取得租约，包括 `BUSY`、`UNCERTAIN` 和 3.x 遗留的 `ACTIVE` 记录。
 - `BUSY <requestId>` 记录正在执行的请求。未决编号以逗号分隔，结果未知写入 `UNCERTAIN <ids>`，确认断开写入 `RELEASED <ids>`。
-- 新连接返回 `data.previousOwner {state, requests}`。`BUSY`、`UNCERTAIN` 或遗留 `ACTIVE` 增加 `PREVIOUS_OWNER_UNCLEAN`，`IDLE` 和 `RELEASED` 保持无此警告。
+- 新连接返回前持有者的租约状态与未决请求。VMFIX-14A 将字段名更新为 `data.previousOwner.leaseState` 和 `data.previousOwner.unsettledRequests`，每条请求包含 `requestId` 和 `origin`。`BUSY`、`UNCERTAIN` 或遗留 `ACTIVE` 增加 `PREVIOUS_OWNER_UNCLEAN`，`IDLE` 和 `RELEASED` 保持无此警告。
 - 前持有者编号进入新会话的未确认清单，标记 `fromPreviousOwner=true`，保存继续提示 `UNSETTLED_CALLS`。
 
 同一宿主中的连接可以移交给新会话。持有者须没有调用、审批等待、通道占用、工作台参与或操作端所有权，并且使用附着的 TIA。距最后一次请求至少 10 分钟，或新连接显式传入 `ConnectPortal.takeOver=true` 时，宿主以非阻塞方式取得持有者通道，要求所属线程确认 Disconnect，再允许新会话附着。移交保留 `RELEASED <ids>`，记入审批审计。旧会话的后续原生调用返回 `taken-over`，由其自行调用 `ConnectPortal` 重新连接。

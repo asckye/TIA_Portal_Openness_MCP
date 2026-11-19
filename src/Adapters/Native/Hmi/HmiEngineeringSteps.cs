@@ -38,6 +38,7 @@ namespace TiaMcp.Adapters
             var reply = new HardwareAddressingReply();
             var meta = LegacyResponseMetadata.Step(TiaMcpServer.ModelContextProtocol.ResponseClock.Now, tool);
             reply.Meta = meta;
+            bool returnedFailure = false;
             try
             {
                 if (requiresProject && EngineeringPlcSession.IsProjectNull())
@@ -48,6 +49,13 @@ namespace TiaMcp.Adapters
                 meta["mayHaveChanged"] = false;
                 reply.Message = action(meta);
                 LegacyResponseMetadata.Complete(meta);
+                returnedFailure = Equals(meta["operationSuccess"], false) && !meta.ContainsKey("rollbackOutcome")
+                    && !(meta.TryGetValue("unrestoredWrite", out var unrestored) && unrestored is true)
+                    && !(meta.TryGetValue("portalLost", out var lost) && lost is true)
+                    && (tool == "ImportDeviceAml" && meta.TryGetValue("apiCallSuccess", out var api) && api is true
+                        && meta.TryGetValue("status", out var aml) && Equals(aml, "ImportFailed")
+                    || tool == "ImportPlcBlockVerified" && meta.TryGetValue("importReturned", out var imported) && imported is true
+                        && meta.TryGetValue("status", out var block) && Equals(block, "DocumentReadbackMismatch"));
             }
             catch (Exception error)
             {
@@ -92,7 +100,7 @@ namespace TiaMcp.Adapters
             reply.OutcomeUnknown = writing && !MutationEvidence.ProvesNoMutation(meta)
                 && (meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true
                 || meta.TryGetValue("connectionUnavailable", out var unavailable) && unavailable is true
-                || !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial")
+                || !returnedFailure && !(meta.TryGetValue("rollbackOutcome", out var rolledBack) && rolledBack as string == "partial")
                     && meta.TryGetValue("mayHaveChanged", out var changed) && changed is true
                     && meta.TryGetValue("operationSuccess", out var success) && success is false);
             if (reply.OutcomeUnknown) { meta["writeOutcomeUnknown"] = true; }

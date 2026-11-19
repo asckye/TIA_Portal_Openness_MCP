@@ -330,7 +330,7 @@ internal static class LegacyHostToolRegistry
         });
         tools.Clear(); tools.AddRange(wrapped);
         CompatibilityTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
-        CanonicalBatchTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
+        CanonicalBatchTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity, SharedSessionState.For(worker).Unsettled);
         presets ??= TiaMcp.Logic.V4.ParameterPresets.Empty;
         for (int i = 0; i < tools.Count; i++)
             if (TiaMcp.Logic.V4.CanonicalToolParameters.Aliases(tools[i].ProtocolTool.Name).Count != 0

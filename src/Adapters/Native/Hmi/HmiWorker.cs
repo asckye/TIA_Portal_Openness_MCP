@@ -128,6 +128,11 @@ namespace TiaMcp.Adapters
                 reply.Failure = EngineeringReflectionFailure != null ? EngineeringReflectionFailure(error)
                     : new PlcSoftwareFailure { Code = error is PlcSoftwareException native ? native.Code : error.GetType().Name, Message = error.Message };
                 reply.MayHaveChanged = session.MayHaveChanged; reply.OutcomeUnknown = !request.DryRun && session.MayHaveChanged;
+                if (!reply.MayHaveChanged && error.GetBaseException() is AdapterPreconditionException refusal)
+                {
+                    reply.Failure.Evidence["v4FailureCode"] = MutationEvidence.FailureCode(refusal);
+                    reply.Failure.Evidence["parameter"] = refusal.ParamName;
+                }
             }
             finally { HmiValues.Renderer = previous; HmiValues.ExportFailure = previousExportFailure; HmiValues.TraceWriter = previousTraceWriter; }
             if (reply.OutcomeUnknown && reply.Value is HmiMessage uncertain)

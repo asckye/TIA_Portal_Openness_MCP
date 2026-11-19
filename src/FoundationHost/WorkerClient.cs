@@ -473,7 +473,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                         hostProcessStartUtc = startBeforeAttach;
                     Unsettled.BindProcess(attachedProcessId, hostProcessStartUtc);
                     if (result?["PreviousOwnerRequests"] is JsonArray previousRequests)
-                        Unsettled.ImportPreviousOwner(previousRequests.Select(value => value!.GetValue<string>()));
+                        result["PreviousOwnerRequests"] = Unsettled.ImportPreviousOwner(previousRequests.Select(value => value!.GetValue<string>()));
                 }
             }
             bool statusAvailable = true;

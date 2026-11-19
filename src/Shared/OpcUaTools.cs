@@ -190,19 +190,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public ResponseMessage GenerateOpcUaModelledInterface(string softwarePath, string interfaceName, string namespaceUri, string outputPath,
             string unitName = "", bool keepFolderStructure = false, bool keepEmptyDataBlocks = false, string accessLevelsJson = "{}", bool dryRun = true)
         {
-            try {
-                return new ResponseMessage {
-                    Message = dryRun ? "Generation preview." : "Model XML generated; inspect warnings and validate by separate import/compile.", Meta = _service
-                        .GenerateOpcUaModelledInterface(softwarePath, interfaceName, namespaceUri, outputPath, unitName, keepFolderStructure,
-                            keepEmptyDataBlocks, accessLevelsJson, dryRun)
-                };
-            }
-            catch (Exception ex) {
-                return new ResponseMessage {
-                    Message = "Generation failed: " + ex.Message, Meta = new JsonObject {
-                        ["success"] = false, ["error"] = ex.Message, ["mayHaveWrittenFiles"] = !dryRun, ["imported"] = false }
-                };
-            }
+            var result = _service.GenerateOpcUaModelledInterface(softwarePath, interfaceName, namespaceUri, outputPath, unitName,
+                keepFolderStructure, keepEmptyDataBlocks, accessLevelsJson, dryRun);
+            return new ResponseMessage { Meta = result, Message = dryRun ? "Generation preview."
+                : (bool?)result["success"] == false ? "Model generation failed; inspect the reported phase and output."
+                : "Model XML generated; inspect warnings and validate by separate import/compile." };
         }
 
         [McpServerTool(Name="GetOpcUaAccessControl"),

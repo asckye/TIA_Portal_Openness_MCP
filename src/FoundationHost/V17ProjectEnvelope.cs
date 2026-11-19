@@ -5,6 +5,11 @@ namespace TiaMcp.FoundationHost;
 
 internal static class V17ProjectEnvelope
 {
+    internal static JsonObject PreviousOwner(JsonNode state, JsonArray? requests)
+        => new() { ["leaseState"] = state.DeepClone(), ["unsettledRequests"] = new JsonArray((requests ?? new JsonArray())
+            .Select(entry => entry is JsonObject ? entry.DeepClone()
+                : new JsonObject { ["requestId"] = entry!.DeepClone(), ["origin"] = "previous-owner" }).ToArray()) };
+
     internal static JsonObject Wrap(string tool,string shape,JsonNode? result,bool dryRun)
     {
         string Wire(string name)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name)??name;
@@ -34,8 +39,7 @@ internal static class V17ProjectEnvelope
             response=new JsonObject {
                 [Wire("Message")]="Attached to the selected existing TIA process",[Wire("Meta")]=new JsonObject { ["success"]=true,["ownsPortal"]=false } };
             if (state["PreviousOwnerState"] is JsonValue previous)
-                response["previousOwner"] = new JsonObject { ["state"] = previous.DeepClone(),
-                    ["requests"] = state["PreviousOwnerRequests"]?.DeepClone() ?? new JsonArray() };
+                response["previousOwner"] = PreviousOwner(previous, state["PreviousOwnerRequests"] as JsonArray);
             foreach(var name in new[]{"Stage","Strategy","AttemptedPids","LaunchMode"}) response[Wire(name)]=state[name]?.DeepClone();
         }
         var meta=(JsonObject)response[Wire("Meta")]!;

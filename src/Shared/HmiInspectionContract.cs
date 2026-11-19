@@ -19,7 +19,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 var cause = exception;
                 while (cause.InnerException != null) cause = cause.InnerException;
                 string? parameter = cause.Data["parameter"] as string ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(cause);
-                Error? rejection = cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message, parameter: parameter) : null;
+                Error? rejection = HostBehavior.KnownMissingTarget(exception)
+                    ? Rejection(tool, "NotFound", cause.Message, parameter: parameter)
+                    : cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message, parameter: parameter) : null;
                 var retained = writes ? HostBehavior.WorkerReplyEvidence(tool, exception) : null;
                 JsonObject? data = null;
                 if (tool == "ListObjectChildren" && rejection != null && cause is PortalException refusal)

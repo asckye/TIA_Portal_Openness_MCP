@@ -63,4 +63,4 @@ V20/V21 可用 `GetOpennessCompatibility` 查看加载程序集版本，用 `Get
 
 开发者应沿用现有错误类型和结果封装，不在本页维护第二套编码、异常装饰或日志规范。仓库行尾与编码以 `.gitattributes` 和现有构建检查为准。
 
-断开后可在同一 MCP 会话调用 `ConnectPortal` 和 `AttachOpenProject`。新连接的 `PREVIOUS_OWNER_UNCLEAN` 表示前持有者留下 `BUSY`、`UNCERTAIN` 或遗留 `ACTIVE` 记录，详情在 `data.previousOwner`。未决编号进入当前会话并标记 `fromPreviousOwner=true`。检查这些调用的目标，保存时核对 `UNSETTLED_CALLS`。
+断开后可在同一 MCP 会话调用 `ConnectPortal` 和 `AttachOpenProject`。新连接的 `PREVIOUS_OWNER_UNCLEAN` 表示前持有者留下 `BUSY`、`UNCERTAIN` 或遗留 `ACTIVE` 记录，详情在 `data.previousOwner`。在 `unsettledRequests` 中，继承的请求标记为 `origin=previous-owner`，当前会话已持有的请求标记为 `origin=this-session`。检查这些调用的目标，保存时核对 `UNSETTLED_CALLS`。

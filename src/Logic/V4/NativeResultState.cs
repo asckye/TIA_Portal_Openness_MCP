@@ -116,13 +116,33 @@ namespace TiaMcp.Logic.V4
             bool cleanup = evidence["cleanupRequired"] is JsonArray tasks && tasks.Count > 0;
             if (!writes) return false;
             bool Flag(string name) => evidence[name] is JsonValue flag && flag.TryGetValue<bool>(out var value) && value;
+            if (!Flag("writeOutcomeUnknown") && !Flag("unrestoredWrite") && !Flag("connectionUnavailable") && !Flag("portalLost")
+                && !evidence.ContainsKey("rollbackOutcome") && (bool?)evidence["operationSuccess"] == false)
+            {
+                if (tool == "ImportDeviceAml" && (string?)evidence["status"] == "ImportFailed" && Flag("apiCallSuccess") && Flag("mayHaveChanged"))
+                {
+                    outcome = Outcome.Failed;
+                    error = new Error("CAx import returned an unsuccessful result. Inspect devices per log for partial changes.",
+                        new NativeOperationFailedDetails(null, null, HostBehavior.WorkerReplyEvidence(evidence)));
+                    return true;
+                }
+                if (tool == "GenerateOpcUaModelledInterface" && evidence["outputExists"] is JsonValue exists
+                    && exists.TryGetValue<bool>(out var present) && (!present || cleanup))
+                {
+                    outcome = Outcome.Failed;
+                    error = new Error(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? "Model generation failed.",
+                        new NativeOperationFailedDetails(null, null, Evidence(evidence, tool)));
+                    return true;
+                }
+            }
             if (tool == "ImportPlcBlockVerified" && (bool?)evidence["compileRequested"] == false && (string?)evidence["phase"] == "exportReadback"
                 && Flag("writeReturned") && Flag("importReturned") && Flag("readbackFailed")
                 && Flag("operationSuccess") && !Flag("writeOutcomeUnknown") && !Flag("unrestoredWrite") && !Flag("rollbackCompleted")
                 && !evidence.ContainsKey("rollbackOutcome") && !evidence.ContainsKey("connectionUnavailable") && !evidence.ContainsKey("portalLost"))
                 return false; // The backup remains available for manual cleanup after a completed uncompiled import.
-            if ((string?)evidence["status"] == "DocumentReadbackMismatch" && Flag("importReturned")
-                && !Flag("writeOutcomeUnknown") && !Flag("connectionUnavailable") && !Flag("unrestoredWrite"))
+            if (tool == "ImportPlcBlockVerified" && (string?)evidence["status"] == "DocumentReadbackMismatch" && Flag("importReturned")
+                && !Flag("writeOutcomeUnknown") && !Flag("connectionUnavailable") && !Flag("portalLost") && !Flag("unrestoredWrite")
+                && !evidence.ContainsKey("rollbackOutcome"))
             {
                 outcome = Outcome.Failed;
                 error = new Error("The import returned, but the re-exported document differs from the plan. "
@@ -178,7 +198,8 @@ namespace TiaMcp.Logic.V4
                 "nativeState", "nativeStateType", "nativeResultReturned", "mayHaveChanged", "logFilePath", "nativeMessages", "targetFile", "targetFiles",
                     "recoveryDirectory", "candidateDirectory", "candidateDirectoryRelativeToTemp", "scriptCountAfterImport", "moduleExistsAfterImport",
                     "rollbackCompleted", "rollbackScope", "restoredChanges", "cleanupRequired",
-                    "rollbackRefused", "rollbackReachable", "unrestoredWrite", "connectionUnavailable", "writeOutcomeUnknown"
+                    "rollbackRefused", "rollbackReachable", "unrestoredWrite", "connectionUnavailable", "writeOutcomeUnknown",
+                    "status", "importReturned", "outputExists", "phase"
             };
             var details = keys.Where(evidence.ContainsKey).ToDictionary(k => k, k => JsonSerializer.SerializeToElement(evidence[k]), StringComparer.Ordinal);
             if (!details.ContainsKey("nativeStateType") && EnumType(evidence, tool) is string type)

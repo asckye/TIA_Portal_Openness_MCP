@@ -269,7 +269,7 @@ namespace TiaMcp.Logic.V4
                 body = Regex.Replace(body, @"(?i)\b(Bearer|Basic)\s+[^\s""'<>\\,;]+", "$1 ••••",
                     RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
                 body = Regex.Replace(body, @"(?i)(https?://)[^/\s@]+@", "$1••••@", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
-                body = Regex.Replace(body, @"(?i)(?<![\w])(?:[a-z]:\\|\\\\)[^\r\n""<>|;]*", "<path>",
+                body = Regex.Replace(body, @"(?i)(?<![\w])(?:[a-z]:[\\/]|\\\\)[^\r\n""<>|;]*", "<path>",
                     RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
                 text = prefix.Value + body;
                 if (text.Length <= 4096) return text;

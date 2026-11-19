@@ -48,6 +48,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly Func<JsonObject>? readinessForTest;
     private readonly bool sharedSession;
     private readonly bool declaredPortInputAndPaging;
+    private bool BatchOwnsExportOutcome => tool.Name == "ExportTechnologyObject" && CanonicalBatchTools.CurrentExportRoot.Value != null;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -217,7 +218,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         if (audit != null) audit.Complete(result.StructuredContent?.ToJsonString() ?? (result.Content.FirstOrDefault() as TextContentBlock)?.Text);
         if (inner is FoundationTool producingTool) result = producingTool.ParkWorkerResult(result, tool.Name);
         if (result.StructuredContent is { } final && UnsettledCalls.HasUnknownOutcome(final) && inner is FoundationTool completedTool
-            && IsNonPreviewMutation(arguments, write))
+            && IsNonPreviewMutation(arguments, write) && !BatchOwnsExportOutcome)
             completedTool.LateResults.RecordUnknown((string?)final["meta"]?["requestId"] ?? id, tool.Name,
                 WriteDigest.ForOutcome(tool.Name, arguments, completedTool.BoundProjectFile), result);
         return result;
@@ -271,7 +272,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             {
                 var arguments = JsonSerializer.SerializeToNode(args)!.AsObject();
                 sessionTool.Unsettled.ObserveProjectAfterCall(sessionTool.BoundProjectFile);
-                if (UnsettledCalls.HasUnknownOutcome(body) && IsNonPreviewMutation(arguments, write))
+                if (UnsettledCalls.HasUnknownOutcome(body) && IsNonPreviewMutation(arguments, write) && !BatchOwnsExportOutcome)
                     sessionTool.Unsettled.Record((string?)body["meta"]?["requestId"] ?? id, tool.Name,
                         WriteDigest.ForOutcome(tool.Name, arguments, sessionTool.BoundProjectFile), DateTimeOffset.UtcNow, arguments);
                 if (UnsettledCalls.HasUnknownOutcome(body)) body = await sessionTool.SettleUnknown(body).ConfigureAwait(false);

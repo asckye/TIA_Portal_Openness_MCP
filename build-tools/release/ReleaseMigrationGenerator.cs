@@ -85,8 +85,8 @@ internal static class ReleaseMigrationGenerator
                     "These current names retain their inputs with the mappings below and return the canonical tool's result, preview, approval and " +
                     "diagnostics. Device creation forwards from V18; older releases retain their native CreateWithItem route with the same " +
                     "preview/hash/project contract. New optional dryRun defaults to true; execution also uses the canonical confirmation fields. " +
-                    "ExportTechnologyObjectsToDirectory uses its native batch route on all eight releases under the same " +
-                    "preview/hash/project and approval contract; groups come from the current project.",
+                    "ExportTechnologyObjectsToDirectory previews each selected object's export under the same " +
+                    "preview/hash/project and approval contract. Grouped technology exports require V19 or later.",
                     "", "| Compatibility name | Kept implementation | Argument mapping |", "|---|---|---|"]);
         foreach (var pair in compatibility.OrderBy(pair => pair.Key, StringComparer.Ordinal))
         {
@@ -100,7 +100,7 @@ internal static class ReleaseMigrationGenerator
                 "ImportPlcTagTablesFromDirectory" => "ordinal XML file order; one canonical ImportPlcTagTable preview per file, one batch hash and approval",
                 "ExportPlcWatchTablesToDirectory" => "canonical exact inventory and per-table export previews; one batch hash/approval, stop on first failure",
                 "ExportTechnologyObjectsToDirectory" =>
-                    "All eight releases: native batch export and actual project groups. " +
+                    "Each selected technology object uses its own export preview. Grouped items require V19 or later. " +
                     "One complete preview/hash/approval; create planned directories only during apply; stop on first failure",
                 "ManagePlcTagDefinition" =>
                     "create: softwarePath → plc; tablePath → table; addressOrValue → address/value. Extra create properties refused; preview update separately",

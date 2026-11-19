@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="TiaFeatureProfile;TiaReleaseKey">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- V19 is the first SDK with the TransferResult CAx overload shared by V19–V21. -->
+    <TiaFeatureProfile>Adapter</TiaFeatureProfile>
+    <TiaReleaseKey>19</TiaReleaseKey>
+  </PropertyGroup>
+  <Import Project="../../../src/Shared/TiaFeatures.props" />
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAml.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAmlPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareServicesPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativeInputPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" />
+  </ItemGroup>
+</Project>

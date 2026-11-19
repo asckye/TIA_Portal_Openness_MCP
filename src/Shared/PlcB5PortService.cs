@@ -42,6 +42,9 @@ namespace TiaMcpServer.Siemens.Services
                 string code = (string?)error["Code"] ?? "", message = (string?)error["Message"] ?? "";
                 bool writes = !request.DryRun && ToolTaxonomy.OperationOf(request.Operation, null)
                     .Operation is "WRITE" or "ONLINE-WRITE" or "FILE" or "EXECUTE";
+                if (request.Operation == "GenerateOpcUaModelledInterface" && writes
+                    && ((bool?)reply["MayHaveChanged"] != false || (bool?)reply["OutcomeUnknown"] != false))
+                    throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure(message, reply);
                 if ((bool?)reply["MayHaveChanged"] == true || writes && (bool?)reply["OutcomeUnknown"] == true)
                 {
                     var uncertain = new InvalidOperationException(message);
@@ -51,6 +54,15 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 if (Enum.TryParse<PortalErrorCode>(code, out var native) && native != PortalErrorCode.OpennessError) throw new PortalException(native, message);
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
+                if (request.Operation == "GenerateOpcUaModelledInterface" && error["Evidence"] is JsonObject evidence
+                    && (bool?)reply["MayHaveChanged"] == false && (bool?)reply["OutcomeUnknown"] == false)
+                {
+                    string? parameter = (string?)evidence["parameter"];
+                    if ((string?)evidence["v4FailureCode"] == "NOT_FOUND") throw new PortalException(PortalErrorCode.NotFound, message);
+                    if ((string?)evidence["v4FailureCode"] == "INVALID_ARGUMENT") throw new AdapterPreconditionException(message, parameter);
+                    if ((string?)evidence["v4FailureCode"] == "PRECONDITION_FAILED")
+                        throw AdapterPreconditionException.Failed(message, (string?)evidence["condition"] ?? "generation-admission", parameter ?? "outputPath");
+                }
                 var nativeFailure = new PortalException(PortalErrorCode.OpennessError, message);
                 nativeFailure.Data["foundationKnownNoMutation"] = (bool?)reply["MayHaveChanged"] == false
                     && (!writes || (bool?)reply["OutcomeUnknown"] == false);

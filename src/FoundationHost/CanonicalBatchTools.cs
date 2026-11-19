@@ -4,6 +4,8 @@ using AuditCallTool = toolpipeline::TiaMcpServer.ModelContextProtocol.AuditCallT
 using VersionPolicyTool = toolpipeline::TiaMcpServer.ModelContextProtocol.VersionPolicyTool;
 using BatchPlanStore = TiaMcpServer.ModelContextProtocol.BatchPlanStore;
 using InvocationHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
+using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
 #else
 using InvocationHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using AuditCallTool = TiaMcpServer.ModelContextProtocol.AuditCallTool;
@@ -20,6 +22,7 @@ using ModelContextProtocol.Server;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using TiaOpenness.Shared;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.FoundationHost;
 
@@ -28,12 +31,12 @@ internal static class CanonicalBatchTools
     internal static readonly AsyncLocal<string?> CurrentExportRoot = new();
     internal static readonly string[] Names = {
         "RepairAndReimportPlcBlock", "ImportPlcTagTablesFromDirectory", "ExportPlcWatchTablesToDirectory", "ExportTechnologyObjectsToDirectory" };
-    internal static void Apply(List<McpServerTool> tools, string release, Func<JsonObject?> identity)
+    internal static void Apply(List<McpServerTool> tools, string release, Func<JsonObject?> identity, UnsettledCalls unsettled)
     {
         var roster = tools.ToDictionary(t => t.ProtocolTool.Name, StringComparer.Ordinal);
         for (int i = 0; i < tools.Count; i++)
             if (Names.Contains(tools[i].ProtocolTool.Name, StringComparer.Ordinal))
-                tools[i] = new AuditCallTool(new VersionPolicyTool(new BatchTool(tools[i].ProtocolTool, roster, release, identity)));
+                tools[i] = new AuditCallTool(new VersionPolicyTool(new BatchTool(tools[i].ProtocolTool, roster, release, identity, unsettled)));
     }
 
     internal sealed class BatchTool : McpServerTool
@@ -43,13 +46,15 @@ internal static class CanonicalBatchTools
         private readonly IReadOnlyDictionary<string, McpServerTool> roster;
         private readonly string release;
         private readonly Func<JsonObject?> identity;
+        private readonly UnsettledCalls? unsettled;
         internal Func<PendingApproval, ApprovalSettings, CancellationToken, Task<ApprovalOutcome>> Approve = (pending, settings, token) => ApprovalClient
             .Wait(pending, settings, token);
         internal Func<ApprovalOutcome, string, Task> CompleteApproval = (approved, outcome) => ApprovalClient.Complete(approved, outcome);
 
-        internal BatchTool(Tool declaration, IReadOnlyDictionary<string, McpServerTool> roster, string release, Func<JsonObject?> identity)
+        internal BatchTool(Tool declaration, IReadOnlyDictionary<string, McpServerTool> roster, string release, Func<JsonObject?> identity,
+            UnsettledCalls? unsettled = null)
         {
-            this.roster = roster; this.release = release; this.identity = identity;
+            this.roster = roster; this.release = release; this.identity = identity; this.unsettled = unsettled;
             var input = JsonNode.Parse(declaration.InputSchema.GetRawText())!.AsObject();
             var properties = input["properties"]!.AsObject();
             foreach (var field in new[] { "dryRun", "confirm", "expectedPlanHash", "expectedProjectFile" })
@@ -70,7 +75,7 @@ internal static class CanonicalBatchTools
                 default)
         {
             var args = JsonSerializer.SerializeToNode(request.Params?.Arguments ?? new Dictionary<string, JsonElement>(StringComparer.Ordinal))!.AsObject();
-            string id = Guid.NewGuid().ToString("N");
+            string id = NativeFailureDiagnostics.RequestId ?? Guid.NewGuid().ToString("N");
             var invalid = schema.Validate(JsonSerializer.SerializeToElement(args), "arguments");
             if (invalid != null) return Reject(invalid);
             bool dry = (bool?)args["dryRun"] ?? true;
@@ -90,8 +95,17 @@ internal static class CanonicalBatchTools
                 if (!dry && ((bool?)args["confirm"] != true || (string?)args["expectedProjectFile"] != project))
                     return Reject(new Error("Batch execution requires confirm=true and the preview's exact expectedProjectFile.",
                                 new InvalidArgumentDetails("expectedProjectFile", Array.Empty<string>())));
+                string? batchDigest = null;
+                if (!dry && tool.Name == "ExportTechnologyObjectsToDirectory")
+                {
+                    batchDigest = UnsettledCalls.WriteDigest(tool.Name, args, project);
+                    if (unsettled?.FindWrite(batchDigest) is { } previous)
+                        return Reject(new Error("Read the previous batch result and inspect its targets before repeating the export.",
+                            new PreconditionFailedDetails("same-call-unsettled", previous.RequestId)));
+                    LateCalls.IdentifyWrite(batchDigest);
+                }
                 var plan = await Preview(args, binding, request, filter, cancellationToken);
-                if (dry || !(bool)plan["canApply"]!) return Result(plan, false);
+                if (dry || !(bool)plan["canApply"]!) return Result(plan, false, id);
                 string hash = (string)plan["planHash"]!;
                 if ((string?)args["expectedPlanHash"] != hash)
                     return Reject(new Error("This batch plan no longer matches the preview: its items, their input files or the TIA binding differ. "
@@ -151,7 +165,9 @@ internal static class CanonicalBatchTools
                         }
                     }
                     plan["executed"] = true;
-                    final = Result(plan, true);
+                    final = Result(plan, true, id);
+                    if (batchDigest != null && (string?)final.StructuredContent?["meta"]?["outcome"] == "unknown")
+                        unsettled?.Record(id, tool.Name, batchDigest, DateTimeOffset.UtcNow, args);
                     audit?.Complete(final.StructuredContent?.ToJsonString());
                     return final;
                 }
@@ -167,7 +183,7 @@ internal static class CanonicalBatchTools
             CancellationToken token)
         {
             string Text(string key) => (string?)args[key] ?? "";
-            var calls = new List<(string Tool, JsonObject Args)>();
+            var calls = new List<(string Tool, JsonObject Args, JsonObject? Inventory)>();
             string? exportRoot = ExportRoot(args);
             JsonObject Common() => new() { ["softwarePath"] = Text("softwarePath"), ["dryRun"] = true };
             void Import(string target, string file, string groupKey, string group)
@@ -177,12 +193,12 @@ internal static class CanonicalBatchTools
                 if (target == "ImportPlcTagTable")
                     foreach (var field in new[] { "unitName", "swImportOptions", "importOptions" })
                         if (args[field] is { } value) values[field] = value.DeepClone();
-                calls.Add((target, values));
+                calls.Add((target, values, null));
             }
             if (tool.Name == "RepairAndReimportPlcBlock")
             {
                 Import("ImportPlcBlock", Text("importPath"), "groupPath", Text("groupPath"));
-                if ((bool?)args["compileAfter"] ?? true) calls.Add(("CompilePlcDiagnostics", Common()));
+                if ((bool?)args["compileAfter"] ?? true) calls.Add(("CompilePlcDiagnostics", Common(), null));
             }
             else if (tool.Name == "ImportPlcTagTablesFromDirectory")
             {
@@ -192,8 +208,22 @@ internal static class CanonicalBatchTools
             }
             else if (tool.Name == "ExportTechnologyObjectsToDirectory")
             {
-                calls.Add((tool.Name, new JsonObject { ["softwarePath"] = Text("softwarePath"), ["exportDir"] = Text("exportDir"),
-                    ["regexName"] = Text("regexName"), ["dryRun"] = true }));
+                var selectorArgs = Common(); selectorArgs["exportDir"] = exportRoot; selectorArgs["regexName"] = Text("regexName");
+                var listed = Body(await Invoke(roster[tool.Name], selectorArgs, request, token));
+                if ((bool?)listed["ok"] != true || listed["data"]?["evidence"]?["items"] is not JsonArray inventory)
+                    throw new InvalidDataException((string?)listed["error"]?["message"] ?? "Technology export inventory is unavailable.");
+                foreach (var entry in inventory)
+                {
+                    var row = entry!.AsObject();
+                    string path = (string)row["objectPath"]!;
+                    int leaf = path.LastIndexOf('/') + 1;
+                    string canonical = path.Substring(0, leaf) + ObjectPathEncoding.EncodeSegment(path.Substring(leaf));
+                    string output = (string)row["outputFile"]!;
+                    if (!string.Equals(ExportPath(exportRoot!, canonical), output, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("Technology export inventory and output path disagree.");
+                    var values = Common(); values["toName"] = canonical; values["exportPath"] = output;
+                    calls.Add(("ExportTechnologyObject", values, row));
+                }
             }
             else
             {
@@ -213,12 +243,12 @@ internal static class CanonicalBatchTools
                     {
                         values["tableKind"] = "force"; values["dir"] = Path.GetFullPath(Text("dir"));
                         values["regexName"] = "\\A" + Regex.Escape(path) + "\\z";
-                        calls.Add((tool.Name, values));
+                        calls.Add((tool.Name, values, null));
                     }
                     else
                     {
                         values["watchTableName"] = path; values["exportPath"] = output;
-                        calls.Add(("ExportPlcWatchTable", values));
+                        calls.Add(("ExportPlcWatchTable", values, null));
                     }
                 }
             }
@@ -226,7 +256,13 @@ internal static class CanonicalBatchTools
             foreach (var call in calls)
             {
                 token.ThrowIfCancellationRequested();
-                var child = roster.TryGetValue(call.Tool, out var target)
+                bool grouped = call.Tool == "ExportTechnologyObject" && !OpennessApi.TechnologyGroups.Includes(release)
+                    && ((string)call.Args["toName"]!).Contains('/');
+                var child = grouped
+                    ? FoundationV4Result.Reject(release, call.Tool, Guid.NewGuid().ToString("N"),
+                        new Error("Only root technology objects can be exported individually before V19. Select root objects for this batch.",
+                            new UnsupportedCapabilityDetails(release, "grouped technology-object export", null)))
+                    : roster.TryGetValue(call.Tool, out var target)
                     ? await Invoke(target, call.Args, request, token, exportRoot)
                     : FoundationV4Result
                         .Reject(release, tool.Name, Guid.NewGuid().ToString("N"),
@@ -237,16 +273,23 @@ internal static class CanonicalBatchTools
                 var data = body["data"];
                 string itemHash = (string?)data?["planHash"] ?? (string?)data?["evidence"]?["planHash"] ?? Hash(data);
                 string? file = (string?)call.Args["importPath"];
-                rows.Add(new JsonObject { ["index"] = rows.Count, ["tool"] = call.Tool, ["arguments"] = call.Args,
+                var row = new JsonObject { ["index"] = rows.Count, ["tool"] = call.Tool, ["arguments"] = call.Args,
                     ["sourceSha256"] = file == null || !File.Exists(file) ? null : Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(file))),
-                    ["preview"] = body, ["canonicalPlanHash"] = itemHash, ["status"] = ok ? "planned" : "preview-failed" });
+                    ["preview"] = body, ["canonicalPlanHash"] = itemHash, ["status"] = ok ? "planned" : "preview-failed" };
+                if (call.Inventory != null) row["inventory"] = call.Inventory.DeepClone();
+                rows.Add(row);
             }
-            var hashRows = new JsonArray(rows.OfType<JsonObject>().Select(row => (JsonNode)new JsonObject {
-                ["tool"] = row["tool"]!.DeepClone(), ["arguments"] = row["arguments"]!.DeepClone(), ["sourceSha256"] = row["sourceSha256"]?.DeepClone(),
-                ["previewData"] = row["preview"]?["data"]?.DeepClone(), ["canonicalPlanHash"] = row["canonicalPlanHash"]!.DeepClone(), ["status"] =
-                    row["status"]!.DeepClone() }).ToArray());
+            var hashRows = new JsonArray();
+            foreach (var row in rows.OfType<JsonObject>())
+            {
+                var hashed = new JsonObject { ["tool"] = row["tool"]!.DeepClone(), ["arguments"] = row["arguments"]!.DeepClone(),
+                    ["sourceSha256"] = row["sourceSha256"]?.DeepClone(), ["previewData"] = row["preview"]?["data"]?.DeepClone(),
+                    ["canonicalPlanHash"] = row["canonicalPlanHash"]!.DeepClone(), ["status"] = row["status"]!.DeepClone() };
+                if (row["inventory"] is { } inventory) hashed["inventory"] = inventory.DeepClone();
+                hashRows.Add(hashed);
+            }
             var selector = args.DeepClone().AsObject();
-            if (exportRoot != null) selector["dir"] = exportRoot;
+            if (exportRoot != null) selector[tool.Name == "ExportTechnologyObjectsToDirectory" ? "exportDir" : "dir"] = exportRoot;
             foreach (var field in new[] { "dryRun", "confirm", "expectedPlanHash", "expectedProjectFile" }) selector.Remove(field);
             foreach (var property in tool.InputSchema.GetProperty("properties").EnumerateObject())
                 if (property.Name is not ("dryRun" or "confirm" or "expectedPlanHash" or "expectedProjectFile") && !selector.ContainsKey(property.Name)
@@ -257,9 +300,8 @@ internal static class CanonicalBatchTools
                 ["expectedProjectFile"] = binding["projectPath"]!.DeepClone(), ["canApply"] = ready, ["executed"] = false, ["items"] = rows };
         }
 
-        private CallToolResult Result(JsonObject plan, bool executed)
+        private CallToolResult Result(JsonObject plan, bool executed, string requestId)
         {
-            string requestId = NativeFailureDiagnostics.RequestId ?? Guid.NewGuid().ToString("N");
             var rows = plan["items"]!.AsArray(); int completed = rows.Count(r => (string?)r!["status"] == "completed");
             foreach (var row in rows)
                 foreach (string member in new[] { "preview", "result" })
@@ -289,6 +331,7 @@ internal static class CanonicalBatchTools
         }
         private string? ExportRoot(JsonObject args) => tool.Name switch {
             "ExportPlcWatchTablesToDirectory" => Path.GetFullPath((string?)args["dir"] ?? ""),
+            "ExportTechnologyObjectsToDirectory" => Path.GetFullPath((string?)args["exportDir"] ?? ""),
             _ => null
         };
         private static string ExportPath(string directory, string path)

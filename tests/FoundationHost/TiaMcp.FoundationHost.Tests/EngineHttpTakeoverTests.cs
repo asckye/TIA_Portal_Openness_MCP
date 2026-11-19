@@ -70,11 +70,12 @@ public sealed partial class EngineHttpSessionTestsPlc
         var unknown = await holder.Tool(SessionFixtureTool.Name, new() { ["fault"] = true }, ok: false);
         string id = (string)unknown["meta"]!["requestId"]!;
         var connected = await newcomer.Tool("ConnectPortal", new() { ["processId"] = 333, ["takeOver"] = true });
-        Assert.Equal("RELEASED", (string?)connected["data"]?["previousOwner"]?["state"]);
-        Assert.Equal(id, (string?)connected["data"]?["previousOwner"]?["requests"]?[0]);
+        Assert.Equal("RELEASED", (string?)connected["data"]?["previousOwner"]?["leaseState"]);
+        Assert.Equal(id, (string?)connected["data"]?["previousOwner"]?["unsettledRequests"]?[0]?["requestId"]);
         var inherited = Assert.Single((await newcomer.Tool("GetSessionState"))["data"]!["sessionState"]!["unsettled"]!.AsArray())!;
         Assert.Equal(id, (string?)inherited["requestId"]);
         Assert.True((bool?)inherited["fromPreviousOwner"]);
+        Assert.Equal("previous-owner", (string?)inherited["origin"]);
         var saved = await newcomer.Tool("SaveProject", new() { ["dryRun"] = true });
         Assert.Contains(saved["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "UNSETTLED_CALLS");
         await newcomer.Tool("DisconnectPortal"); await holder.End(); await newcomer.End();

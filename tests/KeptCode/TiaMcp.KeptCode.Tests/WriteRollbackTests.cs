@@ -335,9 +335,17 @@ public sealed class WriteRollbackTests(ITestOutputHelper output)
     public void An_opaque_import_cleanup_task_survives_the_outer_journal(bool hasResult)
     {
         var task = new Dictionary<string, object?> { ["target"] = "/HMI/Scripts/Start", ["restoreFrom"] = "evidence/original.xml" };
-        var meta = new HmiObject { ["cleanupRequired"] = new List<object?> { task } };
-        if (hasResult) meta["rollbackCompleted"] = false;
-        EngineeringWriteJournal.Run(meta, () => { meta["operationSuccess"] = false; return "import not confirmed"; });
+        var child = new HmiObject { ["cleanupRequired"] = new List<object?> { task } };
+        if (hasResult) child["rollbackCompleted"] = false;
+        var meta = new HmiObject();
+        EngineeringWriteJournal.Run(meta, () => EngineeringWriteJournal.Run(child, () => {
+            child["operationSuccess"] = false; return "import not confirmed";
+        }));
+        Assert.Same(task, Assert.Single((List<object?>)child["cleanupRequired"]!));
+        Assert.False(child.ContainsKey("outcome"));
+        Assert.False(child.ContainsKey("rollbackOutcome"));
+        Assert.False(child.ContainsKey("writeOutcomeUnknown"));
+        Assert.Equal(hasResult, child.ContainsKey("rollbackCompleted"));
         Assert.Same(task, Assert.Single((List<object?>)meta["cleanupRequired"]!));
         Assert.Equal("unknown", meta["outcome"]);
         Assert.Equal(true, meta["writeOutcomeUnknown"]);

@@ -37,6 +37,9 @@ namespace TiaMcpServer.Siemens.Services
             {
                 string code = (string?)failure["Code"] ?? "";
                 string message = (string?)failure["Message"] ?? "PLC organisation failed.";
+                if (request.Operation == "CompileHmiDiagnostics"
+                    && ((bool?)reply["MayHaveChanged"] != false || (bool?)reply["OutcomeUnknown"] != false))
+                    throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure(message, reply);
                 if (failure["Evidence"] is JsonObject deviceEvidence && deviceEvidence["target"] != null
                     && (bool?)reply["MayHaveChanged"] == false && code is "Ambiguous" or "HardwareAddressingException")
                     return new JsonObject { ["Message"] = message, ["Meta"] = deviceEvidence.DeepClone() };

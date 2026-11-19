@@ -286,8 +286,7 @@ internal static class FoundationV4Result
         var data = definition.ResponseMember == "BlockPage" ? ValidateBlockPage(raw, args) : Object(raw);
         if (definition.ResponseMember == "Connection" && data["previousOwnerState"] is JsonValue previous)
         {
-            data["previousOwner"] = new JsonObject { ["state"] = previous.DeepClone(),
-                ["requests"] = data["previousOwnerRequests"]?.DeepClone() ?? new JsonArray() };
+            data["previousOwner"] = V17ProjectEnvelope.PreviousOwner(previous, data["previousOwnerRequests"] as JsonArray);
             data.Remove("previousOwnerState");
             data.Remove("previousOwnerRequests");
         }
@@ -354,6 +353,13 @@ internal static class FoundationV4Result
             return Failure(release, name, id, true, mutation, raw);
         Outcome outcome = HostBehavior.OperationOutcome(status != "failed", status == "outcome-unknown" || mutation && status == "unknown", false, mutation);
         Error? error = null;
+        if (name == "ExportTechnologyObject" && status == "failed" && CanonicalBatchTools.CurrentExportRoot.Value != null)
+        {
+            // The validated worker reply closes the export. A transport timeout could still publish a file later.
+            bool absent = CallerInputFiles.ExportObservation.Absent((string)args["exportPath"]!);
+            data["outputFileAbsent"] = absent;
+            if (!absent) { data["outcomeUnknown"] = true; outcome = Outcome.Unknown; }
+        }
         Paging? previewPage = null;
         if (definition.ResponseMember == "BatchExport")
         {
@@ -572,7 +578,7 @@ internal static class FoundationV4Result
         current = policy == BehaviorPolicy.Current;
         if (outcome == Outcome.Unknown) data?.Remove("recovery");
         var warnings = new List<Warning>();
-        if (name == "ConnectPortal" && (string?)data?["previousOwner"]?["state"] is "BUSY" or "UNCERTAIN" or "ACTIVE")
+        if (name == "ConnectPortal" && (string?)data?["previousOwner"]?["leaseState"] is "BUSY" or "UNCERTAIN" or "ACTIVE")
             warnings.Add(new Warning(WarningCode.PreviousOwnerUnclean,
                 "The previous owner's record is unclean. Inspect its state, these request IDs and their targets before repeating calls.",
                 new Dictionary<string, JsonElement> { ["previousOwner"] = JsonSerializer.SerializeToElement(data!["previousOwner"]) }));
