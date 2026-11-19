@@ -1,5 +1,5 @@
 using TiaMcp.Adapters.Contracts;
-using TiaMcp.Adapters.Native.Plc;
+using TiaMcp.Adapters.Native.Engineering;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -116,6 +116,44 @@ namespace TiaMcp.Adapters.Native.Hmi
                     .OrderBy(f => f.Name, StringComparer.Ordinal).Take(200))
                 rows.Add(new HmiObject { ["name"] = file.Name, ["bytes"] = file.Length });
             return rows;
+        }
+
+        internal static Dictionary<string, string> ExportFingerprint(Func<DirectoryInfo, object> export)
+        {
+            var directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "tia-tag-probe-" + Guid.NewGuid().ToString("N")));
+            try
+            {
+                var files = VerifyNativeFiles(export(directory), directory);
+                if (!files.Cast<HmiObject>().Any(f => ((string)f["path"]!).EndsWith(".hmi.yml", StringComparison.OrdinalIgnoreCase)
+                    && !((string)f["path"]!).EndsWith(".def.hmi.yml", StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException("Tag export did not report a WinCC ML tag document.");
+                var hashes = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (var file in directory.EnumerateFiles("*", SearchOption.AllDirectories))
+                {
+                    using var sha = SHA256.Create();
+                    using var stream = file.OpenRead();
+                    hashes.Add(file.FullName.Substring(directory.FullName.Length + 1), BitConverter.ToString(sha.ComputeHash(stream)));
+                }
+                return hashes;
+            }
+            finally { directory.Delete(true); }
+        }
+
+        internal static void JournalTagImport(Func<Dictionary<string, string>> fingerprint, HmiObject meta)
+        {
+            Dictionary<string, string> before;
+            try { before = fingerprint(); }
+            catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error))
+            {
+                meta["beforeExportError"] = NativeFailureText.Compose(error.GetBaseException().Message, null, Array.Empty<string>());
+                EngineeringWriteJournal.Unrestored("Tag import with no verified before export");
+                return;
+            }
+            EngineeringWriteJournal.Record("Verify the tag-table export after import", () => {
+                var after = fingerprint();
+                if (before.Count == 0 || before.Count != after.Count || before.Any(p => !after.TryGetValue(p.Key, out var hash) || hash != p.Value))
+                    throw new InvalidOperationException("Tag-table exports differ after import.");
+            });
         }
 
         internal static bool IsUnifiedTagCollection(object? value) => value?.GetType().FullName == "Siemens.Engineering.HmiUnified.HmiTags.HmiTagComposition";

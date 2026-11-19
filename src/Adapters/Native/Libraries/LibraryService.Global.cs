@@ -108,18 +108,8 @@ namespace TiaMcp.Adapters
                     if (dryRun)
                         return "Archive preview; nothing written (None/DiscardRestorableData produce a folder that cannot be retrieved through the API; " +
                         "Compressed modes produce a .zalXX file).";
-                    meta["mayHaveChanged"] = true;
-                    var before = archiveDirectory.Exists ? archiveDirectory.GetFileSystemInfos().Select(f => f.Name).ToArray() : Array.Empty<string>();
-                    target.Archive(archiveDirectory, archiveName, (LibraryArchivationMode)System.Enum.Parse(typeof(LibraryArchivationMode), archiveMode));
-                    var created = archiveDirectory.Exists ? archiveDirectory.GetFileSystemInfos().Where(f => !before.Contains(f.Name))
-                        .Select(f => (object)new Dictionary<string, object?> { ["name"] = f.Name, ["bytes"] = f is FileInfo fi ? fi.Length : (long?)null })
-                        .ToArray() : Array.Empty<object>();
-                    meta["createdEntries"] = new List<object?>(created); meta["apiCallSuccess"] = true;
-                    if (created.Length == 0) {
-                        meta["operationSuccess"] = false;
-                        return "Archive returned but no new entry appeared in the destination directory; inspect the directory before retrying.";
-                    }
-                    return "User global library archived; new directory entries listed. The library stays open at its original location.";
+                    return LibraryArchive.Write(meta, archiveDirectory, () => target.Archive(archiveDirectory, archiveName,
+                        (LibraryArchivationMode)System.Enum.Parse(typeof(LibraryArchivationMode), archiveMode)));
                 }
 #endif
                 // An empty openMode defaults to ReadOnly before enum parsing, including actions that do not open a library.

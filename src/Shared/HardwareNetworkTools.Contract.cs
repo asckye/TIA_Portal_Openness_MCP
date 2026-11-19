@@ -95,7 +95,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (HostBehavior.DevicePathRefusal(error) is { } refusal)
                     return Result(tool, null, refusal, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current);
-                return Result(tool, null, readOnly ? NativeFailureDiagnostics.FromException(NativeFailure(), error) : UnknownFailure(),
+                return Result(tool, null, readOnly ? NativeFailureDiagnostics.FromException(NativeFailure(), error)
+                    : UnknownFailure(HostBehavior.WorkerReplyEvidence(tool, error)),
                     readOnly ? Outcome.ReadFailed : Outcome.Unknown,
                     readOnly ? Execution.ReadOnly : Execution.Unknown, Completeness.Unknown, current);
             }
@@ -155,7 +156,7 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("No project is bound.",
                 new ProjectNotBoundDetails()); }
             else if (nestedUnknown || !readOnly && success != true && !knownFailure && !knownPartial && issued)
-            { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
+            { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(HostBehavior.WorkerReplyEvidence(evidence)); }
             else if (!readOnly && success != true && knownPartial)
             {
                 outcome = Outcome.Partial; execution = Execution.Partial; error =
@@ -193,7 +194,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     new Error("Hardware preconditions were not satisfied.", new PreconditionFailedDetails("hardware-before-write", null));
             }
             else
-            { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
+            { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(HostBehavior.WorkerReplyEvidence(evidence)); }
 
             if (response is ResponseStringList list) data["items"] =
                 new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
@@ -249,6 +250,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] =
                     "Native observation failed; details are available in the local diagnostic log.";
+                else if (pair.Key == "nativeMessage") obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());
                 else if (pair.Key == "messageData" || pair.Key == "detailMessageData" || pair.Key == "lastFailure") obj.Remove(pair.Key);
                 else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text))
                     obj[pair.Key] = Regex.Replace(text, @"(?m)\r?\n[ \t]+(?:at |\p{Lo} ).*$", "");
@@ -258,10 +260,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static Error NativeFailure() => new Error("The hardware operation did not establish a successful result.",
             new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>()));
-        private static Error UnknownFailure() =>
+        private static Error UnknownFailure(IReadOnlyDictionary<string, JsonElement>? evidence = null) =>
             new Error("The hardware write outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. GetSessionState " +
                 "lists unsettled request IDs.",
-            new OutcomeUnknownDetails("hardware-operation", new Dictionary<string, JsonElement>()));
+            new OutcomeUnknownDetails("hardware-operation", evidence ?? new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,
             Completeness completeness, bool current, Paging? paging = null)
@@ -271,7 +273,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (current) warnings
                 .Add(new Warning(WarningCode.UnverifiedBehavior, BehaviorCapabilities.CurrentDisclosure,
                         new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings
+            if (HostBehavior.ReadbackWarning(data, outcome) is Warning warning) warnings.Add(warning);
+            else if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The hardware observation covers only the reported scope and available fields.",
                         new Dictionary<string, JsonElement>()));
             var meta =

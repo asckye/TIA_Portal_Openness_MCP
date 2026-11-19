@@ -25,7 +25,7 @@ namespace TiaMcp.Adapters
         }
         private static IEngineeringServiceProvider HardwareServiceProvider(object target)
             => target as IEngineeringServiceProvider ?? throw new NotSupportedException("Selected object is not a service provider.");
-        private static bool HardwareDisposedOnly(Exception error) => error.GetBaseException().GetType().Name == "EngineeringObjectDisposedException";
+        private static bool HardwareDisposedOnly(Exception error) => HmiReadPolicy.DisposedObjectOnly(error);
         private static void HardwarePage(object[] rows, int offset, int limit, Dictionary<string, object?> meta)
         {
             var page = rows.Skip(offset).Take(limit).ToArray(); meta["records"] = page;
@@ -48,14 +48,21 @@ namespace TiaMcp.Adapters
                 ?? throw new NotSupportedException(HardwareServicesPolicy.DeclaredParameter(parameter) + " does not expose " + typeof(T).Name
                     + " (service is null for this hardware object).");
 
+        internal static void JournalTransferAreaCreate(Func<object> freshAreas, string name)
+            => Native.Engineering.EngineeringWriteJournal.Creating(() => HardwareGroupOperations.Items(freshAreas()).SingleOrDefault(area =>
+                string.Equals((string)HardwareGroupOperations.Get(area, "Name"), name, StringComparison.Ordinal)), name);
+
         private static object? HardwareFindOnFresh(Func<object> composition, string name, Dictionary<string, object?> meta, string phase)
+            => HardwareReadOnFresh(() => HardwareGroupOperations.Find(composition(), name), meta, phase, null);
+
+        private static T HardwareReadOnFresh<T>(Func<T> read, Dictionary<string, object?> meta, string phase, T disposedValue)
         {
-            try { return HardwareGroupOperations.Find(composition(), name); }
+            try { return read(); }
             catch (Exception ex) when (HardwareDisposedOnly(ex))
             {
-                meta[phase + "Enumeration"] = "EngineeringObjectDisposedException on the refreshed composition (TIA released a proxy): " + ex.GetBaseException()
-                    .Message;
-                return null;
+                meta[phase + "Enumeration"] = "EngineeringObjectDisposedException on the refreshed composition (TIA released a proxy): "
+                    + NativeFailureText.Compose(ex.GetBaseException().Message, null, Array.Empty<string>());
+                return disposedValue;
             }
         }
 

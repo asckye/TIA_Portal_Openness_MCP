@@ -78,6 +78,72 @@ public sealed class B6TransactionRoutingTests
         Assert.True(service.ImportMasterCopyFromGlobalLibrary("library.al21", "Button", "HMI", "Main", "Button", 10, 20).Ok);
     }
 
+    [Theory]
+    [InlineData("rollback")]
+    [InlineData("commitThrows")]
+    [InlineData("commitUnconfirmed")]
+    [InlineData("disposeThrows")]
+    [InlineData("portalLost")]
+    [InlineData("childDisconnected")]
+    public void Uncertain_child_settles_only_after_confirmed_uncommitted_rollback(string mode)
+    {
+        using var owner = new Worker();
+        Engine.IEngineWorker worker = owner;
+        using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker));
+        const string name = "ManagePlcUserGroup";
+        string requestId = Guid.NewGuid().ToString("N");
+        var child = Host.SessionToolContract.Map(name, new Host.ResponseMessage {
+            Meta = new JsonObject { ["mayHaveChanged"] = true, ["writeOutcomeUnknown"] = true,
+                ["connectionUnavailable"] = mode == "childDisconnected", ["nativeMessage"] = "Group edit interrupted" }
+        }, true, false);
+        child.StructuredContent!["meta"]!["requestId"] = requestId;
+        worker.Unsettled.Record(requestId, name, "group-digest", DateTimeOffset.UtcNow);
+        worker.LateResults.RecordUnknown(requestId, name, "group-digest", child);
+        var transaction = new Transaction(mode);
+        var meta = new JsonObject {
+            ["results"] = new JsonArray(new JsonObject { ["name"] = name, ["ok"] = false, ["result"] = child.StructuredContent.DeepClone() })
+        };
+        // The commit cases model a native commit attempt whose final acknowledgement was lost.
+        bool Run() => Host.TransactionExecution.Run(1, () => transaction, _ => mode.StartsWith("commit", StringComparison.Ordinal), meta);
+        if (mode is "commitThrows" or "disposeThrows") Assert.Throws<IOException>(() => Run());
+        else Assert.False(Run());
+        meta["success"] = false;
+        if (mode == "portalLost") meta["portalLost"] = true;
+        var body = Host.SessionToolContract.Map("RunToolTransaction", new Host.ResponseMessage { Meta = meta }, true, false).StructuredContent!;
+        Assert.Equal(mode is "commitThrows" or "commitUnconfirmed", (bool?)meta["commitRequested"]);
+        Assert.Equal(mode is "rollback" or "portalLost" or "childDisconnected", (bool?)meta["rollbackCompleted"]);
+        var result = body["data"]!["items"]![0]!["result"]!;
+        Assert.Equal(mode == "rollback" ? "failed" : "unknown", (string?)result["meta"]!["outcome"]);
+        Assert.Equal(mode == "rollback" ? "failed" : "unknown", (string?)body["meta"]!["outcome"]);
+        if (mode == "rollback")
+        {
+            Assert.Contains("rolled back with the transaction", (string)result["error"]!["message"]!);
+            Assert.Equal("Group edit interrupted", (string?)result["error"]!["details"]!["evidence"]!["nativeMessage"]);
+            Assert.Empty(worker.Unsettled.Snapshot());
+            Assert.Equal("not-applied", worker.Unsettled.Settlement(requestId)?.Outcome);
+            var recovered = worker.LateResults.Read("21", requestId, worker.Unsettled);
+            Assert.Equal("not-applied", (string?)recovered?.StructuredContent?["data"]?["settlement"]?["outcome"]);
+        }
+        else
+        {
+            Assert.Equal(requestId, Assert.Single(worker.Unsettled.Snapshot()).RequestId);
+            Assert.Equal("Transaction outcome is unconfirmed.", (string?)body["data"]?["summary"]);
+        }
+    }
+
+    private sealed class Transaction(string mode) : Host.IEngineeringTransaction
+    {
+        public bool CanCommit => true;
+        public bool IsCancellationRequested => false;
+        public bool CommitRequested { get; private set; }
+        public void Commit()
+        {
+            if (mode == "commitThrows") throw new IOException("Commit acknowledgement unavailable.");
+            CommitRequested = mode != "commitUnconfirmed";
+        }
+        public void Dispose() { if (mode == "disposeThrows") throw new IOException("Rollback acknowledgement unavailable."); }
+    }
+
     private sealed class Catalog : Host.IToolCatalogView
     {
         public IReadOnlyDictionary<string, Host.ToolDescriptor> All { get; }

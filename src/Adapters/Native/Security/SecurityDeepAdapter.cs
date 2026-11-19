@@ -1,4 +1,5 @@
 using System;
+using TiaMcp.Adapters.Native.Engineering;
 using TiaMcpServer.Siemens;
 using System.Linq;
 using System.Security;
@@ -82,6 +83,9 @@ namespace TiaMcp.Adapters.Native.Security
                             "certificate attributes are withheld pending VM confirmation.";
                         return "PLC syslog configuration read; no modification.";
                     }
+                    if (action == "createServer" && !manager.EnableSystemLogging)
+                        throw AdapterPreconditionException.Failed("Enable system logging on the selected PLC before adding a syslog server.",
+                            "system-logging-disabled", "itemPath");
                     var existing = string.IsNullOrEmpty(serverAddress) ? null : manager.SysLogServerConfiguration.Find(serverAddress);
                     if (action == "createServer" && existing != null)
                         throw new InvalidOperationException("A syslog server with this address exists on the CPU: " + serverAddress);
@@ -104,6 +108,8 @@ namespace TiaMcp.Adapters.Native.Security
                             if (attributes.Count > 0) _session.SetDynamicAttributes((IEngineeringObject)owner, attributes, meta);
                             break;
                         case "createServer":
+                            EngineeringWriteJournal.Creating(() => _session.RequireHardwareService<SysLogConfigurationManager>(owner, "itemPathJson")
+                                .SysLogServerConfiguration.Find(serverAddress), serverAddress);
                             meta["mayHaveChanged"] = true;
                             var created = manager.SysLogServerConfiguration.Create(serverAddress, (ushort)serverPort);
                             meta["created"] = new HmiObject { ["address"] = created.SysLogServerAddress, ["port"] = created.SysLogServerPort };

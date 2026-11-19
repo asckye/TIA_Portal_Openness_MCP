@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using TiaMcp.Adapters.Engineering;
+using TiaMcp.Adapters.Native.Engineering;
 using Siemens.Engineering;
 using Siemens.Engineering.Library;
 using Siemens.Engineering.Library.Types;
@@ -50,12 +51,21 @@ namespace TiaMcp.Adapters
                     }
                     case "delete":
                     {
-                        var parent = EngineeringLibraryFolder(library, LibraryPathOf(type, "LibraryTypeSystemFolder"), "TypeFolder"); var name = type.Name;
+                        string parentPath = LibraryPathOf(type, "LibraryTypeSystemFolder");
+                        var parent = EngineeringLibraryFolder(library, parentPath, "TypeFolder");
+                        var name = type.Name;
                         if (dryRun) return "Library type delete preview; deletes every version. Nothing changed.";
-                        meta["mayHaveChanged"] = true; type.Delete();
-                        if (PlcGroupOperations.Find(PlcGroupOperations.Get(parent, "Types"), name) != null)
-                            throw new InvalidOperationException("Delete returned but the type is still listed in its folder; do not blindly retry.");
-                        meta["verifiedAbsent"] = true; return "Library type deleted and verified absent. No save.";
+                        return EngineeringWriteJournal.Run(meta, () => {
+                            EngineeringWriteJournal.Deleting(() => {
+                                var freshParent = EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName), parentPath, "TypeFolder");
+                                var found = PlcGroupOperations.Find(PlcGroupOperations.Get(freshParent, "Types"), name) as LibraryType;
+                                return found == null ? null : TypeRow(found, true);
+                            }, meta["before"]!, typePath);
+                            meta["mayHaveChanged"] = true; type.Delete();
+                            if (PlcGroupOperations.Find(PlcGroupOperations.Get(parent, "Types"), name) != null)
+                                throw new InvalidOperationException("Delete returned but the type is still listed in its folder; do not blindly retry.");
+                            meta["verifiedAbsent"] = true; return "Library type deleted and verified absent. No save.";
+                        });
                     }
                     case "updateLibrary":
                     {

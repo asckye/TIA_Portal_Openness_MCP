@@ -82,7 +82,7 @@ namespace TiaMcp.Adapters.Native.Engineering
             if (current != null && !current.undoing) current.entries.Add((target, undo, previous, probe, owner));
         }
 
-        internal static void Property(object target, PropertyInfo property)
+        internal static void Property(object target, PropertyInfo property, Func<object>? freshTarget = null)
         {
             if (current == null || current.undoing) return;
             string owner = Identity(target);
@@ -95,14 +95,15 @@ namespace TiaMcp.Adapters.Native.Engineering
             }
             var previous = current.snapshots.TryGetValue((target, "." + property.Name), out var captured) ? captured : property.GetValue(target);
             owner = Identity(target);
+            object Fresh() => freshTarget == null ? target : freshTarget();
             Check(target, "." + property.Name, name, owner, previous, () => {
-                if (!Equals(property.GetValue(target), previous)) throw new RestoreMismatchException("Final restore readback differs.");
+                if (!Equals(property.GetValue(Fresh()), previous)) throw new RestoreMismatchException("Final restore readback differs.");
             });
             Record(name + ": restore previous value", () => {
-                if (Equals(property.GetValue(target), previous)) return;
-                property.SetValue(target, previous);
-                if (!Equals(property.GetValue(target), previous)) throw new InvalidOperationException("Restore readback differs.");
-            }, previous, () => { property.GetValue(target); }, owner);
+                if (Equals(property.GetValue(Fresh()), previous)) return;
+                property.SetValue(Fresh(), previous);
+                if (!Equals(property.GetValue(Fresh()), previous)) throw new InvalidOperationException("Restore readback differs.");
+            }, previous, () => { property.GetValue(Fresh()); }, owner);
         }
 
         internal static void CaptureProperties(object target, IEnumerable<PropertyInfo> properties)
@@ -258,6 +259,33 @@ namespace TiaMcp.Adapters.Native.Engineering
                 if (find() != null) throw new InvalidOperationException("Deleted object remains in its collection.");
                 if (current != null) { current.deletedObjects.Add(target); if (named) current.deleted.Add(identity); }
             });
+        }
+
+        internal static void Deleting(Func<object?> freshRow, object beforeRow, string path)
+        {
+            Record(path + ": verify the type and its versions after delete", () => {
+                if (!IdenticalRow(beforeRow, freshRow()))
+                    throw new InvalidOperationException("The deleted target or its recorded contents differ from the before state.");
+            });
+        }
+
+        private static bool IdenticalRow(object? before, object? after)
+        {
+            if (before is IDictionary<string, object?> left && after is IDictionary<string, object?> right)
+            {
+                if (left.Count != right.Count) return false;
+                foreach (var pair in left)
+                    if (pair.Key.EndsWith("Error", StringComparison.OrdinalIgnoreCase) || !right.TryGetValue(pair.Key, out var value)
+                        || !IdenticalRow(pair.Value, value)) return false;
+                return true;
+            }
+            if (before is IList first && after is IList second)
+            {
+                if (first.Count != second.Count) return false;
+                for (int i = 0; i < first.Count; i++) if (!IdenticalRow(first[i], second[i])) return false;
+                return true;
+            }
+            return Equals(before, after);
         }
 
         internal void Commit()

@@ -31,7 +31,8 @@ public sealed partial class PlcFoundationEngine
                 .SyncVersionControlWorkspace(request.Direction, request.WorkspaceName, dryRun, request.ChangedOnly),
             _ => throw new ArgumentException("Unregistered VCI operation: " + request.Operation)
         };
-        reply.OutcomeUnknown = !dryRun && reply.Meta.TryGetValue("success", out var success) && success is false
+        reply.OutcomeUnknown = request.Operation == "ConnectProjectToWorkspace" ? reply.Meta.TryGetValue("writeOutcomeUnknown", out var unknown)
+            && unknown is true : !dryRun && reply.Meta.TryGetValue("success", out var success) && success is false
             && (reply.MayHaveChanged || reply.Meta.TryGetValue("failed", out var failed) && failed is int count && count > 0);
         if (reply.OutcomeUnknown) { reply.Meta["writeOutcomeUnknown"] = true; }
         return reply;

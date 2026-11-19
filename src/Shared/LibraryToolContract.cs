@@ -61,7 +61,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             Completeness.None, current: current);
                 }
                 return Result(tool, new JsonObject { ["exceptionType"] = ex.GetType().Name },
-                    writes ? Unknown(tool is "ManageSivarcRuleContainer" or "GenerateSivarc" ? HostBehavior.WorkerReplyEvidence(tool, ex) : null)
+                    writes ? Unknown(HostBehavior.WorkerReplyEvidence(tool, ex))
                         : NativeFailureDiagnostics.FromException(NativeFailure(), ex),
                     writes ? Outcome.Unknown : Outcome.ReadFailed, Completeness.Unknown, current: current);
             }
@@ -132,12 +132,21 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
+            else if (tool == "ConnectProjectToWorkspace" && writes && success == false && evidence["exportsIssued"] != null
+                && Flag(evidence, "writeOutcomeUnknown") == false && evidence["v4Rejection"] == null)
+            {
+                var mapped = succeeded + Count(evidence, "mappedAfterFailure") + Count(evidence, "alreadyMapped");
+                outcome = mapped > 0 ? Outcome.Partial : Outcome.Failed;
+                error = mapped > 0 ? new Error("Some objects have confirmed workspace mappings.", new PartialFailureDetails(mapped, Math.Max(1, failed), 0))
+                    : NativeFailure(HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) ?? nativeMessage);
+            }
             else if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
             {
                 outcome = Outcome.Unknown;
-                var reason = tool is "ManageSivarcRuleContainer" or "GenerateSivarc"
-                    ? HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"] ?? nativeMessage) : null;
-                error = Unknown(reason == null ? null : new Dictionary<string, JsonElement> { ["nativeMessage"] = JsonSerializer.SerializeToElement(reason) });
+                var retained = HostBehavior.WorkerReplyEvidence(evidence).ToDictionary(p => p.Key, p => p.Value);
+                if (tool is "ManageSivarcRuleContainer" or "GenerateSivarc" && !retained.ContainsKey("nativeMessage") && nativeMessage != null)
+                    retained["nativeMessage"] = JsonSerializer.SerializeToElement(nativeMessage);
+                error = Unknown(retained);
             }
             else if (projectMissing)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
@@ -213,6 +222,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     obj[pair.Key] = HostBehavior.SafeDiagnostic(detail);
                 else if ((pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) && pair.Value != null) obj[pair.Key] =
                     "Native diagnostic details are retained in the server log.";
+                else if (pair.Key == "nativeMessage") obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());
                 else Clean(pair.Value, diagnostic || pair.Key is "messageData" or "detailMessageData");
             }
         }
@@ -230,7 +240,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
             if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
-            if (completeness == Completeness.Partial) warnings
+            if (HostBehavior.ReadbackWarning(data?["evidence"] as JsonObject, outcome) is Warning warning) warnings.Add(warning);
+            else if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The observation covers only the reported scope and available fields.", new Dictionary<string,
                         JsonElement>()));
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown

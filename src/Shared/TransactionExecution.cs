@@ -34,7 +34,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static bool Run(int count, Func<IEngineeringTransaction> begin, Func<int, bool> invoke, JsonObject meta)
         {
             meta["committed"] = false; meta["rollbackCompleted"] = false;
-            bool committed;
+            bool committed, commitIssued = false, requested;
             using (var scope = begin())
             {
                 bool allOk = true;
@@ -47,15 +47,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 bool canCommit = scope.CanCommit;
                 bool cancelled = scope.IsCancellationRequested;
                 meta["canCommit"] = canCommit; meta["cancellationRequested"] = cancelled;
-                if (allOk && canCommit && !cancelled) scope.Commit();
-                bool requested = scope.CommitRequested;
+                if (allOk && canCommit && !cancelled)
+                {
+                    commitIssued = true;
+                    meta["commitRequested"] = true;
+                    scope.Commit();
+                }
+                requested = scope.CommitRequested;
                 // CanCommit may become false even when an inner tool caught its own
                 // native exception. RETURNED/bridgeSuccess alone cannot prove commit.
                 committed = allOk && !cancelled && requested && scope.CanCommit;
-                meta["commitRequested"] = requested;
+                meta["commitRequested"] = commitIssued || requested;
             }
             // A throwing Dispose never reaches this point: outcome stays unconfirmed.
-            meta["committed"] = committed; meta["rollbackCompleted"] = !committed;
+            meta["committed"] = committed; meta["rollbackCompleted"] = !commitIssued && !requested && !committed;
             return committed;
         }
     }

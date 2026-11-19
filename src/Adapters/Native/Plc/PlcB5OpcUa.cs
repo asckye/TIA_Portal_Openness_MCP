@@ -155,6 +155,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
             };
 
+            var meta = ResponseMeta.Unstamped(false, ("operationSuccess", false), ("mayHaveChanged", false));
             try
             {
                 var sig = GetOpcUaServerInterfaceGroup(plc);
@@ -178,16 +179,15 @@ namespace TiaMcp.Adapters.Native.Plc
                             .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
                     };
 
-                PlcB5Scalar.TrySetProperty(item, "Enabled", enabled);
-                return new PlcB5Reply
-                {
-                    Message = $"{interfaceType} '{interfaceName}' {(enabled ? "enabled" : "disabled")}. Download to PLC to apply.",
-                    Meta = new PlcB5Object { ["softwarePath"] = softwarePath, ["interfaceName"] = interfaceName, ["enabled"] = enabled }
-                };
+                return PlcB5Scalar.SetEnabled(item, meta, softwarePath, interfaceName, interfaceType, enabled);
             }
             catch (Exception ex)
             {
-                return new PlcB5Reply { Message = $"Error: {ex.Message}" };
+                bool unknown = meta["mayHaveChanged"] is true || HmiReadPolicy.ConnectionUnavailable(ex);
+                meta["apiCallSuccess"] = false; meta["writeOutcomeUnknown"] = unknown;
+                meta["nativeMessage"] = NativeFailureText.Compose(ex.GetBaseException().Message, null, Array.Empty<string>());
+                return new PlcB5Reply { Message = "Setting Enabled failed.", Meta = meta, MayHaveChanged = meta["mayHaveChanged"] is true,
+                    OutcomeUnknown = unknown };
             }
         }
 

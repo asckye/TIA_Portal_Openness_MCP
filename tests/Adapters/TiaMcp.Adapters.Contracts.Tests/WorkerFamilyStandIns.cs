@@ -76,6 +76,7 @@ namespace TiaMcp.Adapters.Native.Hmi
     public static class HmiReadSafety
     {
         public static bool ConnectionUnavailable(Exception error) => HmiReadPolicy.ConnectionUnavailable(error);
+        public static bool DisposedObjectOnly(Exception error) => HmiReadPolicy.DisposedObjectOnly(error);
     }
 
     public static class HmiReadTrace

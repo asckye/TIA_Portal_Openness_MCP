@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TiaMcpServer.Siemens;
 using System.Linq;
 using System.Security;
@@ -13,6 +14,21 @@ using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
 using TiaMcp.Adapters.Native.Hmi;
 namespace TiaMcp.Adapters.Native.Security;
+internal static class ProjectRoleCreation
+{
+    internal static string Run(Dictionary<string, object?> meta, Action create, Func<object[]> matches, Func<object, object> row)
+    {
+        create();
+        meta["writeReturned"] = true;
+        meta["apiCallSuccess"] = true;
+        if (!ReadbackStep.TryRead(meta, "findCreatedRole", matches, out var roles)) return ReadbackStep.Message;
+        if (roles.Length != 1) throw new InvalidOperationException("Create returned but the exact role name matched " + roles.Length + " roles.");
+        if (!ReadbackStep.TryRead(meta, "readCreatedRole", () => row(roles[0]), out var after)) return ReadbackStep.Message;
+        meta["after"] = after;
+        return "UMAC createRole executed and read back; no save/compile/download.";
+    }
+}
+
 #if SECURITY_UMAC
 internal sealed class ProjectUsers
 {
@@ -144,7 +160,10 @@ internal sealed class ProjectUsers
                         case "assignRole": userRoles!.Add(role!); break;
                         case "unassignRole": if (!userRoles!.Remove(role!))
                             throw new InvalidOperationException("RoleAssociation.Remove returned false; the role was not assigned."); break;
-                        case "createRole": customRoles.Create(name, comment); break;
+                        case "createRole":
+                            return ProjectRoleCreation.Run(meta, () => customRoles.Create(name, comment),
+                                () => HardwareGroupOperations.Items(_session.RequireUmac().CustomRoles).Cast<CustomRole>()
+                                    .Where(r => r.Name == name).Take(2).Cast<object>().ToArray(), _session.UmacRow);
                         case "deleteRole": customRole!.Delete(); break;
                         case "assignEngineeringRight": engineeringRights!.Add(engineeringRight!); break;
                         case "unassignEngineeringRight": if (!engineeringRights!.Remove(engineeringRight!))

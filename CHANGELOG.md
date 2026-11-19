@@ -21,6 +21,12 @@
 
 ### Fixed
 
+- Hardware connection and network-domain changes, custom role creation, library archive, and PLC imports distinguish completed writes from unavailable readback. The warning includes the readback phase and redacted native diagnostic. Verified PLC import retains the original backup when compilation is needed to verify content.
+- `ManagePlcBlockDocuments` reports `OUTCOME_UNKNOWN` when it can read the target group after import and finds an imported block name missing. If the lookup itself throws an ordinary read error, the completed write carries an `INCOMPLETE_DATA` warning.
+- In worker failure evidence, the host includes `previousType` in `cleanupRequired` rows so operators can identify the type needed for manual restoration. It omits `previousValue` from these rows because the value can contain secrets.
+- All callers of `HmiReadPolicy` treat `CommunicationObjectFaultedException` and `CommunicationObjectAbortedException` as connection loss. More writes can therefore report `OUTCOME_UNKNOWN` when the channel fails during verification.
+- Device permissions, transfer areas, syslog servers, library type deletion and Unified tag import use post-failure evidence to identify unchanged targets. Unknown writes retain native diagnostics, including AutomationML import messages and device counts. PLC syslog creation checks that logging is enabled during preview and apply.
+- Project transactions report confirmed rollback for their inner calls. OPC UA interface changes verify the Enabled setting, missing PLC groups report the lookup failure, and workspace mapping distinguishes format-query refusals from attempted exports.
 - `MovePlcBlockToGroup` creates missing groups before exporting and deleting the source. A failed move reports verified restoration or retains the target groups and blocks for inspection when recovery is uncertain.
 - `ImportPlcWatchTableOffline` preserves the native import diagnostic and reports an unchanged project when readback confirms all attempted tables are absent.
 - `GetSessionState` keeps the identity status of the bound process when a write outcome becomes unknown. It lists each unknown target call once, including a PLC test-library run that stopped on an uncertain case. If the bound TIA process exits, its calls move to `settled` with outcome `process-exited`. `GetCallResult` explains that the write effect is still unknown. Unread writes keep their save warning and replay guard.

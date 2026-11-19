@@ -209,6 +209,15 @@ namespace Siemens.Engineering.HW.Features
         public string InterfaceType => FailScalarRead ? throw new InvalidOperationException("Interface type read failed.") : "Ethernet";
         public string InterfaceOperatingMode => "IoController";
     }
+    public sealed class WebserverUserManagement : IEngineeringService
+    {
+        internal Func<HW.WebserverUserComposition> ReadUsers = () => new();
+        public HW.WebserverUserComposition WebserverUsers => ReadUsers();
+    }
+    public sealed class OpcUaUserManagement : IEngineeringService
+    {
+        public HW.OpcUaUserComposition OpcUaUsers { get; } = new();
+    }
     public sealed class SysLogConfigurationManager : IEngineeringService
     {
         private bool enabled;
@@ -228,7 +237,12 @@ namespace Siemens.Engineering.HW.Features
     public sealed class SysLogServerComposition : List<SysLogServerConfiguration>
     {
         public SysLogServerConfiguration? Find(string address) => this.FirstOrDefault(s => s.SysLogServerAddress == address);
-        public SysLogServerConfiguration Create(string address, ushort port) { var server = new SysLogServerConfiguration { SysLogServerAddress = address,
+        public Exception? CreateFailure { get; set; }
+        public int CreateCalls { get; private set; }
+        public SysLogServerConfiguration Create(string address, ushort port) {
+            CreateCalls++;
+            if (CreateFailure != null) throw CreateFailure;
+            var server = new SysLogServerConfiguration { SysLogServerAddress = address,
             SysLogServerPort = port }; Add(server); return server; }
     }
 }
@@ -333,6 +347,27 @@ namespace Siemens.Engineering
 }
 namespace Siemens.Engineering.HW
 {
+    [Flags] public enum WebserverUserPermissions { None = 0, ReadTag = 1, ReadFiles = 2 }
+    public sealed class WebserverUser
+    {
+        public string UserName { get; set; } = "";
+        internal WebserverUserPermissions Bits;
+        internal Action<WebserverUserPermissions>? Set;
+        public WebserverUserPermissions Permissions { get => Bits; set { if (Set == null) Bits = value; else Set(value); } }
+    }
+    public sealed class WebserverUserComposition : List<WebserverUser>
+    {
+        public WebserverUser Create(string name, WebserverUserPermissions permissions, System.Security.SecureString password)
+        {
+            var user = new WebserverUser { UserName = name, Permissions = permissions };
+            Add(user);
+            return user;
+        }
+    }
+    public sealed class OpcUaUserComposition : List<object>
+    {
+        public object Create(string name, System.Security.SecureString password) => throw new NotSupportedException();
+    }
     public enum SysLogTransportProtocolType { None, TLSServerAndClientAuthentication, TLSOnlyServerAuthentication, UDP }
     public sealed class Device : HardwareObject { }
     public sealed class Address : Siemens.Engineering.IEngineeringObject

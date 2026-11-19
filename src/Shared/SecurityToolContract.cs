@@ -34,7 +34,8 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception error) /* swallow(privacy): escaped writes retain their unknown outcome */
             {
                 return Result(tool, null, readOnly ? NativeFailureDiagnostics.FromException(NativeFailure(), error,
-                    Diagnostic(error.GetBaseException().Message, secrets)) : UnknownFailure(),
+                    Diagnostic(error.GetBaseException().Message, secrets))
+                    : UnknownFailure(HostBehavior.WorkerReplyEvidence(tool, error, null, text => Redact(text, secrets))),
                     readOnly ? Outcome.ReadFailed : Outcome.Unknown, readOnly ? Execution.ReadOnly : Execution.Unknown,
                     Completeness.Unknown, current);
             }
@@ -47,6 +48,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             string? nativeMessage = HostBehavior.SafeDiagnostic(Redact(response.Message, secrets));
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
+            if (data["nativeMessage"] is JsonValue diagnostic && diagnostic.TryGetValue<string>(out var raw))
+                data["nativeMessage"] = Diagnostic(raw, secrets);
             bool? success = data.ContainsKey("operationSuccess") ? Flag(data, "operationSuccess") : Flag(data, "success");
             bool issued = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
             bool reset = !readOnly && Flag(data, "writeOutcomeUnknown") == true;
@@ -63,7 +66,10 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
                 HostBehavior.UnchangedNativeError(data, nativeMessage); }
             else if (!readOnly && issued && (reset || success != true && !knownFailure && !knownFile))
-            { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
+            {
+                outcome = Outcome.Unknown; execution = Execution.Unknown;
+                error = UnknownFailure(HostBehavior.WorkerReplyEvidence(data, text => Redact(text, secrets)));
+            }
             else if (knownFailure)
             { outcome = Outcome.Failed; execution = Execution.Completed; error = NativeFailure(nativeMessage); }
             else if (success != true && knownFile)
@@ -105,7 +111,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     new Error("Security operation preconditions were not satisfied.", new PreconditionFailedDetails("security-before-write", null));
             }
             else
-            { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
+            {
+                outcome = Outcome.Unknown; execution = Execution.Unknown;
+                error = UnknownFailure(HostBehavior.WorkerReplyEvidence(data, text => Redact(text, secrets)));
+            }
 
             if (tool == "ManagePlcCertificate" && (string?)data["phase"] == "get-certificate-template"
                 && error?.Details is NativeOperationFailedDetails details)
@@ -185,10 +194,10 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error NativeFailure(string? nativeMessage = null) =>
             new Error(nativeMessage ?? "The security operation did not establish a successful result.",
             new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
-        private static Error UnknownFailure() =>
+        private static Error UnknownFailure(IReadOnlyDictionary<string, JsonElement>? evidence = null) =>
             new Error("The security operation outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. " +
                 "GetSessionState lists unsettled request IDs.",
-            new OutcomeUnknownDetails("security-operation", new Dictionary<string, JsonElement>()));
+            new OutcomeUnknownDetails("security-operation", evidence ?? new Dictionary<string, JsonElement>()));
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,
             Completeness completeness, bool current, Paging? paging = null)
@@ -197,7 +206,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (current) warnings
                 .Add(new Warning(WarningCode.UnverifiedBehavior, "Native behavior retains the current policy; V4 native acceptance is pending.",
                         new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings
+            if (HostBehavior.ReadbackWarning(data, outcome) is Warning warning) warnings.Add(warning);
+            else if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The security observation covers only the reported scope and available fields.",
                         new Dictionary<string, JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,

@@ -78,6 +78,58 @@ namespace TiaMcp.Adapters
             => HardwareGroupOperations.Items(composition)
                 .Where(c => string.Equals(c.GetType().GetProperty("LocalConnectionName")?.GetValue(c)?.ToString(), name, StringComparison.Ordinal)).ToArray();
 
+        internal static string DeleteCommunicationConnection(object target, Func<object> fresh, string connectionName, Dictionary<string, object?> meta)
+        {
+            meta["mayHaveChanged"] = true;
+            HardwareGroupOperations.Call(target, "Delete", Type.EmptyTypes);
+            meta["writeReturned"] = true;
+            if (!ReadbackStep.TryRead(meta, "postDelete", () => HardwareConnectionsNamed(fresh(), connectionName),
+                out var remaining)) return ReadbackStep.Message;
+            if (remaining.Length != 0)
+                throw new InvalidOperationException("Connection remains after Delete.");
+            meta["apiCallSuccess"] = true; meta["verifiedAbsent"] = true;
+            if (!ReadbackStep.TryRead(meta, "countAfter", () => HardwareGroupOperations.Items(fresh()).Count(),
+                out var count)) return ReadbackStep.Message;
+            meta["countAfter"] = count;
+            return "Connection deleted and verified absent; project not saved, compiled or downloaded.";
+        }
+
+        internal static string FinishCommunicationConnection(object created, Func<object> fresh, string connectionName, int before,
+            Dictionary<string, object?> meta)
+        {
+            meta["apiCallSuccess"] = true;
+            if (!string.IsNullOrEmpty(connectionName))
+            {
+                var nameProperty = created.GetType().GetProperty("LocalConnectionName");
+                if (nameProperty?.SetMethod?.IsPublic != true)
+                    throw new InvalidOperationException("Connection created but LocalConnectionName is not writable; it keeps the native default name.");
+                // The create precedes a second write. Restoring the name alone cannot undo the create.
+                var originalName = nameProperty.GetValue(created)?.ToString();
+                EngineeringWriteJournal.Created(created, "communication connection", () => originalName != null
+                    && HardwareConnectionsNamed(fresh(), originalName).Length == 0
+                    && HardwareConnectionsNamed(fresh(), connectionName).Length == 0
+                    && HardwareGroupOperations.Items(fresh()).Count() == before);
+                EngineeringWriteJournal.Property(created, nameProperty, () => HardwareGroupOperations.Items(fresh()).Single(c => {
+                    var value = c.GetType().GetProperty("LocalConnectionName")?.GetValue(c)?.ToString();
+                    return value == originalName || value == connectionName;
+                }));
+                meta["writeReturned"] = false;
+                nameProperty.SetValue(created, connectionName);
+                meta["writeReturned"] = true;
+                if (!ReadbackStep.TryRead(meta, "renameReadback", () => nameProperty.GetValue(created)?.ToString(), out var actualName))
+                    return ReadbackStep.Message;
+                if (actualName != connectionName)
+                    throw new InvalidOperationException("Connection created but LocalConnectionName readback differs.");
+            }
+            if (!ReadbackStep.TryRead(meta, "connectionReadback", () => HardwareReadConnection(created), out var row)) return ReadbackStep.Message;
+            meta["after"] = row;
+            if (!ReadbackStep.TryRead(meta, "countAfter", () => HardwareGroupOperations.Items(fresh()).Count(),
+                out var after)) return ReadbackStep.Message;
+            meta["countAfter"] = after;
+            if (after != before + 1) throw new InvalidOperationException("Native Create returned but the connection count did not increase by one.");
+            return "Connection created and read back; project not saved, compiled or downloaded.";
+        }
+
 #if PLC_HARDWARE_LINKED_TAGS
         public HardwareAddressingReply HardwareReadCommunicationConnections(string[] devicePathJson, string[] itemPathJson = null!, int offset = 0, int limit =
                 100)
@@ -123,12 +175,7 @@ namespace TiaMcp.Adapters
                     if (matches[0].GetType().GetMethod("Delete", Type.EmptyTypes) == null) throw new NotSupportedException("Connection.Delete is unavailable.");
                     meta["before"] = HardwareReadConnection(matches[0]);
                     if (dryRun) return "Connection delete preview; nothing changed.";
-                    meta["mayHaveChanged"] = true;
-                    HardwareGroupOperations.Call(matches[0], "Delete", Type.EmptyTypes);
-                    if (HardwareConnectionsNamed(composition, connectionName).Length != 0)
-                        throw new InvalidOperationException("Connection remains after Delete.");
-                    meta["apiCallSuccess"] = true; meta["verifiedAbsent"] = true; meta["countAfter"] = HardwareGroupOperations.Items(composition).Count();
-                    return "Connection deleted and verified absent; project not saved, compiled or downloaded.";
+                    return DeleteCommunicationConnection(matches[0], () => HardwareRequireConnectionComposition(owner), connectionName, meta);
                 }
                 var kind = HardwareRequireHardwareApiType(HardwareServicesPolicy.ConnectionTypeName(connectionType));
                 var create = composition.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -155,22 +202,10 @@ namespace TiaMcp.Adapters
                 try {
                     created = create.MakeGenericMethod(kind).Invoke(composition, new object[] { localNode, partnerTarget, partnerNode })
                         ?? throw new InvalidOperationException("Native Create returned null.");
+                    meta["writeReturned"] = true;
                 }
                 catch (TargetInvocationException ex) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw(); throw; }
-                meta["apiCallSuccess"] = true;
-                if (!string.IsNullOrEmpty(connectionName))
-                {
-                    var nameProperty = created.GetType().GetProperty("LocalConnectionName");
-                    if (nameProperty?.SetMethod?.IsPublic != true)
-                        throw new InvalidOperationException("Connection created but LocalConnectionName is not writable; it keeps the native default name.");
-                    nameProperty.SetValue(created, connectionName);
-                    if (nameProperty.GetValue(created)?.ToString() != connectionName)
-                        throw new InvalidOperationException("Connection created but LocalConnectionName readback differs.");
-                }
-                meta["after"] = HardwareReadConnection(created);
-                int after = HardwareGroupOperations.Items(composition).Count(); meta["countAfter"] = after;
-                if (after != before + 1) throw new InvalidOperationException("Native Create returned but the connection count did not increase by one.");
-                return "Connection created and read back; project not saved, compiled or downloaded.";
+                return FinishCommunicationConnection(created, () => HardwareRequireConnectionComposition(owner), connectionName, before, meta);
             });
 #else
         public HardwareAddressingReply HardwareManageCommunicationConnection(string[] devicePathJson, string[] itemPathJson, string action,

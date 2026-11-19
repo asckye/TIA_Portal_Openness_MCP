@@ -72,6 +72,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["expectedCount"] = expected.Length;
                 HmiExchangePolicy.BeforeOpaqueImport(hmi.Tags, overwrite, meta);
                 if (dryRun) return "Unified tag import preview; no changes.";
+                UnifiedExchangeLogic.JournalTagImport(() => UnifiedExchangeLogic.ExportFingerprint(output => {
+                    var software = ExactUnifiedSoftware(softwarePath);
+                    var fresh = string.IsNullOrWhiteSpace(tagTable) ? software.Tags
+                        : (FindUnifiedTagTable(software, tagTable) ?? throw new InvalidOperationException("Tag table unavailable for export.")).Tags;
+                    return fresh.Export(output);
+                }), meta);
                 meta["mayHaveChanged"] = true;
                 bool ok = name.Length == 0 ? tags.Import(dir) : tags.Import(dir, name);
                 meta["nativeSuccess"] = ok; meta["apiCallSuccess"] = true;

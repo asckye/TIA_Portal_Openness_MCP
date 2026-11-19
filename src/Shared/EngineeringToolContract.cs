@@ -207,6 +207,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         .Equals("password", StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
                 else if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] =
                     "Native diagnostic details are retained in the server log.";
+                else if (pair.Key == "nativeMessage") obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());
                 else Clean(pair.Value);
             }
         }
@@ -226,7 +227,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (data?["evidence"]?["readbackWarning"] is JsonValue readback)
                 warnings.Add(new Warning(WarningCode.NativeWarning, HostBehavior.SafeDiagnostic(readback.ToString()) ?? "Verification export failed.",
                     new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings
+            if (HostBehavior.ReadbackWarning(data?["evidence"] as JsonObject, outcome) is Warning warning) warnings.Add(warning);
+            else if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The observation covers only the reported scope and available fields.", new Dictionary<string,
                         JsonElement>()));
             Execution execution = outcome == Outcome.RejectedBeforeOperation ? Execution.NotStarted : outcome == Outcome.Unknown ? Execution.Unknown

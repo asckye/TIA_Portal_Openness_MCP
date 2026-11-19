@@ -53,7 +53,7 @@ namespace TiaMcp.Adapters.Native.Vci
         }
 
         private static string Flatten(string s)
-            => (s ?? "").Replace('\r', ' ').Replace('\n', ' ').Trim();
+            => NativeFailureText.Compose(s, null, Array.Empty<string>());
 
         private static string ObjName(IEngineeringObject o)
         {
@@ -189,7 +189,8 @@ namespace TiaMcp.Adapters.Native.Vci
             int maxObjects = 3000,
             bool walkTrace = false)
         {
-            bool issued = false;
+            var attempts = new VciExportAttempts();
+            int mapped = 0;
             var lines = new List<string>();
             try
             {
@@ -211,7 +212,7 @@ namespace TiaMcp.Adapters.Native.Vci
                     return FindWorkspace(RequireVci(), wsName);
                 }
 
-                int mapped = 0, already = 0, failed = 0, unsupported = 0, visited = 0;
+                int already = 0, failed = 0, unsupported = 0, visited = 0;
                 bool truncated = false;
                 var ungroupedDevices = new List<VcNode>();
                 void Note(VcNode reported) {
@@ -241,6 +242,7 @@ namespace TiaMcp.Adapters.Native.Vci
                         continue;
                     if (node.UngroupedDevice) ungroupedDevices.Add(node);
 
+                    bool queryRefused = false;
                     IList<string> formats = new List<string>();
                     if (!node.Structural)   // the UngroupedDevicesGroup is a folder only: never asked, always walked
                     {
@@ -251,17 +253,18 @@ namespace TiaMcp.Adapters.Native.Vci
                         }
                         catch (Exception ex)
                         {
-                            formats = new List<string>();
+                            queryRefused = true;
                             if (walkTrace) Console.Error.WriteLine("[VCI-walk]     query threw: " + ex.Message.Split('\n')[0]);
-                            ws = ReAcquire();   // the throw killed the handle
+                            attempts.QueryRefused(ex);
                             if (node.UngroupedDevice)
                             {
                                 // A native refusal of an ungrouped device is reported as a failure, not walked past.
-                                failed++;
                                 Note(node);
                                 lines.Add(VciWorkspaceLayout.NativeRefusal(node.Label, Flatten(ex.Message)));
-                                continue;
                             }
+                            else lines.Add(node.Label + " | format query refused: " + Flatten(ex.GetBaseException().Message));
+                            ws = ReAcquire();
+                            if (node.UngroupedDevice) continue;
                         }
                     }
 
@@ -277,7 +280,13 @@ namespace TiaMcp.Adapters.Native.Vci
 
                         MappedObject? existing = null;
                         try { existing = PortVci.Find(PortVci.MappedObjects(ws), node.Obj); }
-                        catch { /* swallow(native-fallback): A failed mapped-object lookup can invalidate its workspace proxy; reacquire it before continuing the existing mapping flow. */ ws = ReAcquire(); }
+                        catch (Exception error)
+                        {
+                            attempts.QueryRefused(error);
+                            lines.Add(node.Label + " | mapping query refused: " + Flatten(error.GetBaseException().Message));
+                            Note(node); ws = ReAcquire();
+                            continue;
+                        }
 
                         if (existing != null)
                         {
@@ -296,32 +305,26 @@ namespace TiaMcp.Adapters.Native.Vci
                         }
                         else
                         {
-                            try
+                            if (attempts.Export(() => PortVci.Export(ws, node.Obj, VciExportPolicy.RootDirectory(), flatName, fmt),
+                                () => { ws = ReAcquire(); return PortVci.Find(PortVci.MappedObjects(ws), node.Obj) != null; },
+                                detail => lines.Add(node.Label + " | " + detail)))
                             {
-                                // Use the established root layout once. An exception can follow a partial
-                                // export, so never retry the same object with a different target directory.
-                                issued = true;
-                                PortVci.Export(ws, node.Obj, TiaMcp.Adapters.Native.Vci.VciExportPolicy.RootDirectory(), flatName, fmt);
                                 mapped++;
-                                lines.Add(node.Label + " | mapped | format=" + fmt +
-                                          " | dir=<root> | file=" + flatName);
+                                lines.Add(node.Label + " | mapped | format=" + fmt + " | dir=<root> | file=" + flatName);
                             }
-                            catch (Exception ex)
-                            {
-                                failed++;
-                                lines.Add(node.Label + " | FAILED: " + Flatten(ex.Message) +
-                                          (ex.InnerException != null ? " || inner: " + Flatten(ex.InnerException.Message) : ""));
-                                ws = ReAcquire();
-                            }
+                            else failed++;
                         }
                         continue;   // coarse-first: a mapped object owns its children
                     }
 
                     if (!node.Descendable)
                     {
-                        unsupported++;
+                        if (!queryRefused)
+                        {
+                            unsupported++;
+                            lines.Add(node.Label + " | not supported by VCI (" + node.Obj.GetType().Name + ")");
+                        }
                         Note(node);
-                        lines.Add(node.Label + " | not supported by VCI (" + node.Obj.GetType().Name + ")");
                         continue;
                     }
 
@@ -329,9 +332,16 @@ namespace TiaMcp.Adapters.Native.Vci
                     try { kids = TypedChildren(node); }
                     catch (Exception ex) when (!(ex is AdapterPreconditionException))   // the ungrouped-folder refusal ends the call
                     {
+                        attempts.QueryRefused(ex);
+                        queryRefused = true;
                         kids = new List<VcNode>();
                         Note(node);
-                        lines.Add(node.Label + " | could not enumerate children: " + ex.Message.Split('\n')[0]);
+                        lines.Add(node.Label + " | could not enumerate children: " + Flatten(ex.Message));
+                    }
+                    if (!node.Structural && !queryRefused && !node.UngroupedDevice)
+                    {
+                        if (kids.Count == 0) unsupported++;
+                        lines.Add(node.Label + (kids.Count == 0 ? " | not supported by VCI" : " | no direct mapping format; inspecting children"));
                     }
                     if (walkTrace) Console.Error.WriteLine("[VCI-walk]     children=" + kids.Count);
                     foreach (var kid in kids) stack.Push(kid);
@@ -343,6 +353,8 @@ namespace TiaMcp.Adapters.Native.Vci
                         lines.Add(VciWorkspaceLayout.NothingMappable(device.Label));
                     }
 
+                failed += attempts.QueryRefusals;
+                bool unsupportedOnly = !dryRun && attempts.Issued == 0 && unsupported > 0 && failed == 0;
                 string head = dryRun
                     ? string.Format("DRY RUN - nothing was mapped. {0} object(s) would be mapped into workspace '{1}' ({2}); " +
                                     "{3} already mapped, {4} not supported by VCI, {5} tree nodes visited.{6} " +
@@ -361,19 +373,28 @@ namespace TiaMcp.Adapters.Native.Vci
                     Message = head,
                     Items = lines,
                     Meta = new HmiObject {
-                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = failed == 0, ["workspaceName"] = wsName,
-                            ["rootPath"] = wsRootPath, ["dryRun"] = dryRun, ["visited"] = visited, ["mapped"] = mapped, ["alreadyMapped"] = already,
-                            ["unsupported"] = unsupported, ["failed"] = failed, ["truncated"] = truncated
+                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = failed == 0 && !unsupportedOnly,
+                            ["workspaceName"] = wsName, ["rootPath"] = wsRootPath, ["dryRun"] = dryRun, ["visited"] = visited,
+                            ["mapped"] = mapped, ["alreadyMapped"] = already,
+                            ["unsupported"] = unsupported, ["failed"] = failed, ["truncated"] = truncated,
+                            ["nativeMessage"] = attempts.NativeMessage, ["exportsIssued"] = attempts.Issued,
+                            ["queryRefusals"] = attempts.QueryRefusals, ["mappedAfterFailure"] = attempts.MappedAfterFailure,
+                            ["mayHaveChanged"] = attempts.Issued > 0, ["writeOutcomeUnknown"] = attempts.Unconfirmed > 0
                     },
                 };
             }
             catch (Exception ex)
             {
+                var meta = FailureEvidence(ex, attempts.Issued > 0);
+                meta["exportsIssued"] = attempts.Issued; meta["mapped"] = mapped; meta["mappedAfterFailure"] = attempts.MappedAfterFailure;
+                meta["queryRefusals"] = attempts.QueryRefusals; meta["failed"] = attempts.QueryRefusals + 1;
+                meta["writeOutcomeUnknown"] = attempts.Unconfirmed > 0;
+                meta["nativeMessage"] = attempts.NativeMessage ?? Flatten(ex.GetBaseException().Message);
                 return new VersionControlResult
                 {
-                    Message = "ConnectProjectToWorkspace failed: " + ex.Message,
+                    Message = "ConnectProjectToWorkspace failed: " + Flatten(ex.Message),
                     Items = lines,
-                    Meta = FailureEvidence(ex, issued),
+                    Meta = meta,
                 };
             }
         }

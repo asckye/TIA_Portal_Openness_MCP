@@ -279,8 +279,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return SessionToolContract
                     .Map(tool, new ResponseMessage {
                         Message = committed ? "Transaction committed as one undo unit (" + calls.Length + " call(s)). No save."
-                            : "Transaction not committed; project transaction disposed with rollback. Inspect results and commit/cancellation state.", Meta =
-                            meta
+                            : (bool?)meta["rollbackCompleted"] == true ? "Transaction rolled back. Inspect the individual results."
+                            : "Transaction commit was requested but its outcome is unconfirmed.", Meta = meta
                     }, true, false);
             }
             catch (Exception ex)

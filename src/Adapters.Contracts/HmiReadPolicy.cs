@@ -9,13 +9,16 @@ namespace TiaMcp.Adapters.Contracts
             {
                 var name = e.GetType().Name;
                 if (name == "EngineeringObjectDisposedException" || name == "ObjectDisposedException"
-                    || name == "RemotingException" || name.IndexOf("NonRecoverable", StringComparison.Ordinal) >= 0)
+                    || ChannelLost(name) || name.IndexOf("NonRecoverable", StringComparison.Ordinal) >= 0)
                     return true;
                 // COM failures are not proof of a process exit, but are unsafe to retry in a graph walk.
                 if (e is System.Runtime.InteropServices.COMException) return true;
             }
             return false;
         }
+
+        private static bool ChannelLost(string name) =>
+            name is "RemotingException" or "CommunicationObjectFaultedException" or "CommunicationObjectAbortedException";
 
         public static bool DisposedObjectOnly(Exception error)
         {
@@ -24,7 +27,7 @@ namespace TiaMcp.Adapters.Contracts
             {
                 var name = e.GetType().Name;
                 if (name == "EngineeringObjectDisposedException") { disposed = true; continue; }
-                if (name == "ObjectDisposedException" || name == "RemotingException" || name.IndexOf("NonRecoverable", StringComparison.Ordinal) >= 0
+                if (name == "ObjectDisposedException" || ChannelLost(name) || name.IndexOf("NonRecoverable", StringComparison.Ordinal) >= 0
                     || e is System.Runtime.InteropServices.COMException) return false;
             }
             return disposed;

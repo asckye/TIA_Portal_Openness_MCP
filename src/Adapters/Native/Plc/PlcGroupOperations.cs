@@ -67,7 +67,7 @@ namespace TiaMcp.Adapters.Native.Plc
             return current;
         }
         internal static Dictionary<string, object?> Manage(object root, string path, string action, string newName, bool dryRun,
-            string contents, string firstGroups = "Groups", Func<string, string[]>? pathParts = null)
+            string contents, string firstGroups = "Groups", Func<string, string[]>? pathParts = null, Action? beforeWrite = null)
         {
             if (action != "create" && action != "rename" && action != "deleteEmpty")
                 throw new ArgumentException("action must be create, rename or deleteEmpty.");
@@ -82,8 +82,11 @@ namespace TiaMcp.Adapters.Native.Plc
                 return PlcGroupCreation.Execute<object>(root, path, dryRun,
                     g => Items(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups")),
                     g => Get(g, "Name").ToString()!,
-                    (g, name) => Invoke(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups"), "Create", new[] { typeof(string) },
-                        new object[] { name }, recordCreated: !blockGroup), false, pathParts,
+                    (g, name) => {
+                        beforeWrite?.Invoke();
+                        return Invoke(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups"), "Create", new[] { typeof(string) },
+                            new object[] { name }, recordCreated: !blockGroup);
+                    }, false, pathParts,
                     blockGroup ? g => !Items(Get(g, "Blocks")).Any() && !Items(Get(g, "Groups")).Any() : null);
             }
             var parentPath = string.Join("/", parts.Take(parts.Length - 1));
@@ -106,6 +109,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 result["newName"] = newName;
                 if (!dryRun)
                 {
+                    beforeWrite?.Invoke();
                     result["mayHaveChanged"] = true;
                     if (dynamicName) Call(target, "SetAttribute", new[] { typeof(string), typeof(object) }, "Name", newName);
                     else { EngineeringWriteJournal.Property(target, property!); property!.SetValue(target, newName); }
@@ -123,9 +127,10 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (target.GetType().GetMethod("Delete", Type.EmptyTypes) == null) throw new NotSupportedException("Native Delete unavailable.");
                 if (!dryRun)
                 {
+                    beforeWrite?.Invoke();
                     result["mayHaveChanged"] = true;
                     Call(target, "Delete", Type.EmptyTypes);
-                    if (Find(siblings, parts.Last()) != null)
+                    if (Find(Get(parent, parts.Length == 1 ? firstGroups : "Groups"), parts.Last()) != null)
                         throw new InvalidOperationException("Delete returned but target is still present; do not blindly retry.");
                     result["changed"] = true;
                 }

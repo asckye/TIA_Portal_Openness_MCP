@@ -116,6 +116,11 @@ namespace TiaMcp.Logic.V4
             bool cleanup = evidence["cleanupRequired"] is JsonArray tasks && tasks.Count > 0;
             if (!writes) return false;
             bool Flag(string name) => evidence[name] is JsonValue flag && flag.TryGetValue<bool>(out var value) && value;
+            if (tool == "ImportPlcBlockVerified" && (bool?)evidence["compileRequested"] == false && (string?)evidence["phase"] == "exportReadback"
+                && Flag("writeReturned") && Flag("importReturned") && Flag("readbackFailed")
+                && Flag("operationSuccess") && !Flag("writeOutcomeUnknown") && !Flag("unrestoredWrite") && !Flag("rollbackCompleted")
+                && !evidence.ContainsKey("rollbackOutcome") && !evidence.ContainsKey("connectionUnavailable") && !evidence.ContainsKey("portalLost"))
+                return false; // The backup remains available for manual cleanup after a completed uncompiled import.
             if ((string?)evidence["status"] == "DocumentReadbackMismatch" && Flag("importReturned")
                 && !Flag("writeOutcomeUnknown") && !Flag("connectionUnavailable") && !Flag("unrestoredWrite"))
             {
@@ -140,6 +145,10 @@ namespace TiaMcp.Logic.V4
             if (!evidence.ContainsKey("rollbackCompleted") && !cleanup) return false;
             string result = WriteRollbackPolicy.Outcome(Flag("rollbackCompleted"), Flag("connectionUnavailable"),
                 Flag("writeOutcomeUnknown"), Flag("unrestoredWrite"), Flag("rollbackRefused"), Flag("rollbackReachable"));
+            var details = Evidence(evidence, tool);
+            if (tool is "ManageCommunicationConnection" or "ManageDeviceUsers" or "ManageTransferArea" or "ManageSyslogServers" or "ManageLibraryType"
+                or "ExchangeUnifiedTags")
+                foreach (var pair in HostBehavior.WorkerReplyEvidence(evidence)) details[pair.Key] = pair.Value;
             if (result == "restored")
             {
                 outcome = Outcome.Failed;
@@ -148,8 +157,9 @@ namespace TiaMcp.Logic.V4
                         + "Inspect the retained candidate JS/YAML pair in candidateDirectoryRelativeToTemp under the MCP temp directory "
                         + "and the native invocation log before retrying."
                     : "The write failed; captured writes were restored and verified.";
-                error = new Error(message,
-                    new NativeOperationFailedDetails(null, null, Evidence(evidence, tool)));
+                string? nativeMessage = details.TryGetValue("nativeMessage", out var native) && native.ValueKind == JsonValueKind.String
+                    ? native.GetString() : null;
+                error = new Error(nativeMessage ?? message, new NativeOperationFailedDetails(null, nativeMessage, details));
             }
             else if (result == "partial")
             {
@@ -158,7 +168,7 @@ namespace TiaMcp.Logic.V4
             }
             else error = new Error("Restoration could not be established. Inspect the target and retained evidence; "
                 + "the call stays on GetSessionState.unsettled. Do not replay it.",
-                new OutcomeUnknownDetails("rollback", Evidence(evidence, tool)));
+                new OutcomeUnknownDetails("rollback", details));
             return true;
         }
 

@@ -37,6 +37,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is NotSupportedException ? Rejection(tool, "NotSupportedOnVersion", cause.Message)
                     : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", parameter: argument.ParamName) : null;
                 var outcome = rejection != null ? Outcome.RejectedBeforeOperation : writes ? Outcome.Unknown : Outcome.ReadFailed;
+                if (outcome == Outcome.Unknown && HostBehavior.WorkerReplyEvidence(tool, ex) is { } retained)
+                    foreach (var pair in retained) evidence[pair.Key] = JsonSerializer.SerializeToNode(pair.Value);
                 return Result(tool, new JsonObject { ["evidence"] = evidence },
                     rejection ?? NativeFailureDiagnostics.FromException(Failure(outcome, evidence), ex),
                     outcome, outcome == Outcome.RejectedBeforeOperation ? Completeness.None : Completeness.Unknown, writes, current);
@@ -94,7 +96,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ?? HostBehavior
                     .KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
-            else if (exportOnly && success == false)
+            else if (exportOnly && success == false || tool == "ExchangeUnifiedTags" && (string?)evidence["rollbackOutcome"] == "restored"
+                && HostBehavior.UnchangedNativeFailure(evidence, success))
             {
                 outcome = Outcome.Failed;
                 error = HostBehavior.UnchangedNativeError(evidence);
@@ -170,12 +173,18 @@ namespace TiaMcpServer.ModelContextProtocol
         private static bool? Bool(JsonNode? value) => value is JsonValue v && v.TryGetValue<bool>(out var b) ? b : (bool?)null;
         private static IReadOnlyDictionary<string, JsonElement> Evidence(JsonObject evidence)
             => evidence.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value), StringComparer.Ordinal);
+        private static IReadOnlyDictionary<string, JsonElement> UnknownEvidence(JsonObject evidence)
+        {
+            var retained = Evidence(evidence).Where(p => p.Key is not ("nativeMessage" or "workerMessage" or "readError"))
+                .ToDictionary(p => p.Key, p => p.Value);
+            foreach (var pair in HostBehavior.WorkerReplyEvidence(evidence)) retained[pair.Key] = pair.Value;
+            return retained;
+        }
         private static Error Failure(Outcome outcome, JsonObject evidence)
             => outcome == Outcome.Unknown
                 ? new Error("The HMI write outcome is unconfirmed; inspect the target before repeating this call. Never replay it automatically. " +
                     "GetSessionState lists unsettled request IDs.",
-                    new OutcomeUnknownDetails("HMI exchange", Evidence(evidence)
-                        .Where(p => p.Key is not ("nativeMessage" or "workerMessage" or "readError")).ToDictionary(p => p.Key, p => p.Value)))
+                    new OutcomeUnknownDetails("HMI exchange", UnknownEvidence(evidence)))
                 : outcome == Outcome.Partial ? new Error("The HMI operation left partial results.", new PartialFailureDetails(0, 0, 0))
                 : outcome == Outcome.RejectedBeforeOperation
                     ? new Error("The HMI operation did not start.", new PreconditionFailedDetails("HMI operation prerequisites", null))

@@ -35,9 +35,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (!dryRun && PlcOrganisationPrimitives.StateOrNull(_session.ResolvePlcService<OnlineProvider>(softwarePath, plc))?.ToString() != "Offline")
                     throw new PlcSoftwareException("InvalidState", "Confirmed Offline state is required for group editing.");
-                if (!dryRun) meta["mayHaveChanged"] = true;
                 meta["result"] = PlcGroupOperations
-                    .Manage(PlcGroupOperations.Get(plc, shape.Item1), groupPath, action, newName, dryRun, shape.Item2, pathParts: pathParts);
+                    .Manage(PlcGroupOperations.Get(plc, shape.Item1), groupPath, action, newName, dryRun, shape.Item2, pathParts: pathParts,
+                        beforeWrite: () => meta["mayHaveChanged"] = true);
                 if (action != "deleteEmpty" || dryRun) {
                     try {
                         string resolvedGroupPath = groupPath;

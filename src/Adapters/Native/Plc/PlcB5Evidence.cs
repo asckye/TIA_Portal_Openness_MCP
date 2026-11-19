@@ -5,9 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Siemens.Engineering;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
 
@@ -36,6 +33,24 @@ namespace TiaMcp.Adapters.Native.Plc
             return result;
         }
     }
+    internal static class PlcDocumentReadback
+    {
+        internal static bool VerifyPresence(Dictionary<string, object?> meta, Func<bool> findImportedBlocks)
+        {
+            if (!ReadbackStep.TryRead(meta, "findImportedBlocks", findImportedBlocks, out var exists)) return false;
+            meta["existsVerified"] = exists;
+            if (!exists) throw new InvalidOperationException("Import returned but exact target readback failed.");
+            return true;
+        }
+
+        internal static bool VerifyExport(Dictionary<string, object?> meta, Func<string?> readback)
+        {
+            if (!ReadbackStep.TryRead(meta, "verificationExport", readback, out var failure)) return false;
+            if (failure != null) ReadbackStep.Failed(meta, "verificationExport", failure);
+            return failure == null;
+        }
+    }
+
     internal static class PlcB5Result
     {
         internal static void Record(Dictionary<string, object?> evidence, object? state, bool changesProject, string? logFilePath = null, string? targetPath =
@@ -84,16 +99,32 @@ namespace TiaMcp.Adapters.Native.Plc
             try { return target.GetType().GetProperty(name)?.GetValue(target); }
             catch { /* swallow(probe-optional): Preserve the optional property probe used by the interface inventory. */ return null; }
         }
-        internal static bool TrySetProperty(object target, string name, object value)
+        internal static PlcB5Reply SetEnabled(object item, PlcB5Object meta, string softwarePath, string interfaceName, string interfaceType, bool enabled)
         {
-            try
+            var property = item.GetType().GetProperty("Enabled");
+            if (property == null || !TrySetProperty(item, property, enabled, meta))
             {
-                var property = target.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-                if (property?.CanWrite != true) return false;
-                EngineeringWriteJournal.Property(target, property);
-                property.SetValue(target, value); return true;
+                meta["v4Rejection"] = "UNSUPPORTED_CAPABILITY";
+                return new PlcB5Reply { Message = "The interface has no public Enabled setter.", Meta = meta };
             }
-            catch { /* swallow(native-fallback): Unsupported property conversion or assignment reports false to the original caller fallback. */ return false; }
+            meta["softwarePath"] = softwarePath; meta["interfaceName"] = interfaceName; meta["enabled"] = enabled;
+            var message = $"{interfaceType} '{interfaceName}' {(enabled ? "enabled" : "disabled")}. Download to PLC to apply.";
+            if (!ReadbackStep.TryRead(meta, "readEnabled", () => property.GetValue(item), out var actual))
+                message = ReadbackStep.Message;
+            else if (!Equals(actual, enabled)) throw new InvalidOperationException("Enabled readback differs.");
+            LegacyResponseMetadata.Complete(meta, true);
+            meta["apiCallSuccess"] = true;
+            return new PlcB5Reply { Message = message, Meta = meta, MayHaveChanged = true, Ok = true };
+        }
+
+        private static bool TrySetProperty(object target, PropertyInfo property, object value, PlcB5Object meta)
+        {
+            if (property.SetMethod?.IsPublic != true) return false;
+            EngineeringWriteJournal.Property(target, property);
+            meta["mayHaveChanged"] = true;
+            property.SetValue(target, value);
+            meta["writeReturned"] = true;
+            return true;
         }
         internal static object? TryInvokeMethodByName(object target, string name, params object[] args)
         {

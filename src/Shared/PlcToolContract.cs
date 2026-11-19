@@ -265,7 +265,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (data?["evidence"] is JsonObject nativeEvidence) warnings.AddRange(NativeResultState.Warnings(nativeEvidence, tool));
             if (current) warnings.Add(new Warning(WarningCode.UnverifiedBehavior,
                 "Native behavior retains the current policy; V4 native acceptance is pending.", new Dictionary<string, JsonElement>()));
-            if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData,
+            if (HostBehavior.ReadbackWarning(data?["evidence"] as JsonObject, outcome) is Warning warning) warnings.Add(warning);
+            else if (completeness == Completeness.Partial) warnings.Add(new Warning(WarningCode.IncompleteData,
                 "The returned observation is incomplete; inspect the retained evidence.", new Dictionary<string, JsonElement>()));
             Execution execution = HostBehavior.ExecutionOf(outcome, writes);
             Paging? paging = null;

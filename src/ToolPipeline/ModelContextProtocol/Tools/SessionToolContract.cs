@@ -115,7 +115,16 @@ namespace TiaMcpServer.ModelContextProtocol
             bool unknown = writes && (Flag("verified") == false || Flag("writeOutcomeUnknown") == true
                 || Text("outcome") == "unknown");
             bool before = success != true && Flag("mayHaveChanged") == false;
+            bool transaction = tool == "RunToolTransaction";
             bool knownFailure = Flag("rollbackCompleted") == true;
+            if (transaction)
+            {
+                knownFailure &= Flag("commitRequested") == false && Flag("committed") == false
+                    && Flag("connectionUnavailable") != true && Flag("portalLost") != true;
+                if (evidence["results"] is JsonArray children && children.Any(row => LostTransactionConnection(row?["result"]))) knownFailure = false;
+                if (knownFailure) { unknown = false; before = false; success = false; }
+                else if (writes && (Flag("commitRequested") == true && Flag("committed") != true || Flag("committed") == false)) unknown = true;
+            }
 
             // Read-only probes remain callable while disconnected. A bound-project
             // refusal is identified by the step executor's explicit admission shape.
@@ -139,6 +148,14 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (tool == "RunToolTransaction" && evidence["results"] is JsonArray results)
             {
+                if (knownFailure)
+                {
+                    foreach (var row in results)
+                    {
+                        if (row?["result"] is not JsonObject child || (string?)child["meta"]?["outcome"] != "unknown") continue;
+                        SettleRolledBackChild(child);
+                    }
+                }
                 var items = new JsonArray(results.Select((row, index) => (JsonNode)new JsonObject {
                     ["index"] = index, ["target"] = row?["name"]?.DeepClone(), ["result"] = row?["result"]?.DeepClone()
                 }).ToArray());
@@ -162,7 +179,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 before |= !writes && success == false;
             }
             if (unknown || writes && success != true && !knownFailure && !before)
+            {
+                if (transaction) data["summary"] = "Transaction outcome is unconfirmed.";
                 return Result(tool, data, Unknown(evidence), Outcome.Unknown, Completeness.Unknown, writes, current);
+            }
             if (success != true)
             {
                 var outcome = before ? Outcome.RejectedBeforeOperation : writes ? Outcome.Failed : Outcome.ReadFailed;
@@ -173,6 +193,30 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, error, outcome, incomplete ? Completeness.Partial : Completeness.None, writes, current);
             }
             return Result(tool, data, null, Outcome.Succeeded, incomplete ? Completeness.Partial : Completeness.Complete, writes, current);
+        }
+
+        private static bool LostTransactionConnection(JsonNode? child)
+        {
+            return new[] { child?["data"], child?["data"]?["evidence"], child?["error"]?["details"], child?["error"]?["details"]?["evidence"] }
+                .Any(meta => Bool(meta?["portalLost"]) == true || Bool(meta?["connectionUnavailable"]) == true);
+        }
+
+        private static void SettleRolledBackChild(JsonObject child)
+        {
+            const string message = "The operation was rolled back with the transaction.";
+            var meta = child["meta"]!.AsObject();
+            meta["outcome"] = "failed"; meta["execution"] = "completed"; meta["completeness"] = "none";
+            var evidence = child["error"]?["details"]?["evidence"] as JsonObject ?? new JsonObject();
+            var error = new Error(message, new NativeOperationFailedDetails(null, (string?)evidence["nativeMessage"], Evidence(evidence)));
+            child["error"] = JsonNode.Parse(V4Json.Serialize(error));
+            var data = child["data"] as JsonObject;
+            if (data == null) child["data"] = data = new JsonObject();
+            data["transactionRolledBack"] = true;
+            data["summary"] = message;
+            var worker = TiaMcp.FoundationHost.EngineHostConfiguration.CurrentOrNull?.Worker;
+            if (worker != null && meta["requestId"] is JsonValue id && id.TryGetValue<string>(out var requestId)
+                && worker.Unsettled.SettleByReadBack(requestId, "not-applied") is { } settlement)
+                worker.LateResults.ObserveSettlement(settlement);
         }
 
         private static bool? Bool(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out var flag) ? flag : (bool?)null;

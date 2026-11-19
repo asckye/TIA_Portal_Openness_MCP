@@ -233,8 +233,23 @@ namespace TiaMcp.Logic.V4
                 .ToDictionary(field => field.Name, field => field.Value, StringComparer.Ordinal);
         }
 
+        internal static Warning? ReadbackWarning(JsonObject? evidence, Outcome outcome)
+        {
+            bool Flag(string key) => evidence?[key] is JsonValue flag && flag.TryGetValue<bool>(out var value) && value;
+            if (outcome != Outcome.Succeeded || evidence == null || !Flag("readbackFailed") || !Flag("writeReturned") || evidence.ContainsKey("rollbackOutcome")
+                || evidence.ContainsKey("connectionUnavailable") || evidence.ContainsKey("portalLost")
+                || Flag("writeOutcomeUnknown") || Flag("rollbackCompleted") || Flag("unrestoredWrite")) return null;
+            return new Warning(WarningCode.IncompleteData, "The write completed but its readback failed.", new Dictionary<string, JsonElement> {
+                ["reason"] = JsonSerializer.SerializeToElement("readback-failed"),
+                ["phase"] = JsonSerializer.SerializeToElement(evidence["phase"]?.ToString()),
+                ["nativeMessage"] = JsonSerializer.SerializeToElement(SafeDiagnostic(evidence["nativeMessage"]?.ToString())) });
+        }
+
         internal static IReadOnlyDictionary<string, JsonElement>? WorkerReplyEvidence(string tool, Exception error,
-            IReadOnlyDictionary<string, JsonElement>? initial = null)
+            IReadOnlyDictionary<string, JsonElement>? initial = null) => WorkerReplyEvidence(tool, error, initial, null);
+
+        internal static IReadOnlyDictionary<string, JsonElement>? WorkerReplyEvidence(string tool, Exception error,
+            IReadOnlyDictionary<string, JsonElement>? initial, Func<string, string>? redact)
         {
             for (Exception? cause = error; cause != null; cause = cause.InnerException)
             {
@@ -249,8 +264,7 @@ namespace TiaMcp.Logic.V4
                 void Collect(JsonObject? source)
                 {
                     if (source == null) return;
-                    foreach (string key in new[] { "nativeMessage", "phase", "cleanupRequired", "restored" })
-                        if (source[key] is { } value) retained[key] = value.DeepClone();
+                    CollectWorkerEvidence(source, retained, redact);
                 }
                 Collect(reply);
                 foreach (var owner in new[] { reply, reply["Value"] as JsonObject, reply["Step"] as JsonObject, reply["Import"] as JsonObject,
@@ -260,12 +274,60 @@ namespace TiaMcp.Logic.V4
                     Collect((owner?["Failure"] as JsonObject)?["Evidence"] as JsonObject);
                 }
                 if (retained.Count == 0) continue;
-                SanitizeEvidence(retained);
                 var result = initial?.ToDictionary(p => p.Key, p => p.Value) ?? new Dictionary<string, JsonElement>();
                 foreach (var pair in retained) result[pair.Key] = JsonSerializer.SerializeToElement(pair.Value);
                 return result;
             }
             return tool == "SetUnifiedGlobalScript" ? new Dictionary<string, JsonElement>() : initial;
+        }
+
+        private static void CollectWorkerEvidence(JsonObject source, JsonObject retained, Func<string, string>? redact = null)
+        {
+            if (source["cleanupRequired"] is JsonArray tasks)
+            {
+                var safe = new JsonArray();
+                foreach (var task in tasks.Take(16))
+                {
+                    if (task is JsonValue text && text.TryGetValue<string>(out var message)) safe.Add(Diagnostic(message));
+                    if (task is not JsonObject fields) continue;
+                    var row = new JsonObject();
+                    foreach (var key in new[] { "target", "reason", "action", "restoreFrom", "previousType" })
+                        if (fields[key] is JsonValue field && field.TryGetValue<string>(out var content)) row[key] = Diagnostic(content);
+                    safe.Add(row);
+                }
+                retained["cleanupRequired"] = safe;
+            }
+            string Diagnostic(string raw)
+            {
+                var safe = SafeDiagnostic(redact == null ? raw : redact(raw)) ?? "";
+                return safe.Length <= 1024 ? safe : safe.Substring(0, 1024);
+            }
+            foreach (string key in new[] { "nativeMessage", "phase", "nativeResult", "errorCount", "warningCount", "deviceCountBefore",
+                "deviceCountAfter", "tagCountBefore", "tagCountAfter", "countBefore", "countAfter", "readbackFailed", "writeReturned",
+                "connectionUnavailable", "portalLost", "restored", "exportsIssued", "queryRefusals", "mapped", "mappedAfterFailure", "failed" })
+                if (source[key] is JsonValue scalar)
+                {
+                    if (scalar.TryGetValue<string>(out var raw)) retained[key] = Diagnostic(raw);
+                    else if (scalar.TryGetValue<bool>(out var flag)) retained[key] = flag;
+                    else if (scalar.TryGetValue<long>(out var count)) retained[key] = count;
+                    else if (scalar.TryGetValue<int>(out var number)) retained[key] = number;
+                }
+            if (source["messages"] is JsonArray messages)
+                retained["messages"] = new JsonArray(messages.OfType<JsonValue>().Where(v => v.TryGetValue<string>(out _))
+                    .Take(16).Select(v => (JsonNode?)JsonValue.Create(Diagnostic(v.GetValue<string>()))).ToArray());
+            SanitizeEvidence(retained, diagnostic: true);
+        }
+
+        internal static IReadOnlyDictionary<string, JsonElement> WorkerReplyEvidence(JsonObject source, Func<string, string>? redact = null)
+        {
+            var retained = new JsonObject();
+            CollectWorkerEvidence(source, retained, redact);
+            // A preflight refusal reported alongside possible mutation is not a diagnostic of the native write.
+            if (source["rollbackOutcome"] == null && source["nativeResult"] == null && source["writeReturned"] == null
+                && source["status"]?.ToString() is "NotFound" or "NOT_FOUND" or "InvalidParams" or "INVALID_ARGUMENT" or "AlreadyExists"
+                    or "ALREADY_EXISTS" or "Ambiguous" or "NotSupported" or "NotSupportedOnVersion" or "UNSUPPORTED_CAPABILITY")
+                retained.Remove("nativeMessage");
+            return retained.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value));
         }
 
         internal static Error? ExpectedProjectArgument(string? expectedProject)

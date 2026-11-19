@@ -100,43 +100,46 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (dryRun) return "Exact scope import preview; review formatPreflight before applying.";
                 meta["mayHaveChanged"] = true;
                 var result = InvocationJournal.Native("ScopedBlock.ImportFromDocuments", () => group.Blocks.ImportFromDocuments(directory, name, option));
-                meta["result"] = DocumentImportRow(result, Names(result.ImportedPlcBlocks));
-                NativeResultState.Record(meta, result.State, true, messages: DocumentMessages(result.Messages));
-                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State))
+                meta["writeReturned"] = true;
+                var importState = result.State;
+                NativeResultState.Record(meta, importState, true);
+                if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(importState))
+                {
+                    meta["nativeMessages"] = DocumentMessages(result.Messages);
+                    meta["result"] = DocumentImportRow(result, Names(result.ImportedPlcBlocks));
                     throw new PortalException("ImportFailed",
                         "Document import did not return Success; may have changed, inspect the native messages before retrying.");
-                var imported = EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Select(b => b.Name).ToArray();
-                meta["existsVerified"] = ExactNamesPresent(imported, EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>().Select(b => b.Name));
-                if (meta["existsVerified"]!.GetValue<bool>() != true) throw new InvalidOperationException("Import returned but exact target readback failed.");
+                }
+                if (!ReadbackStep.TryRead(meta, "importedBlocks", () => DocumentImportRow(result, Names(result.ImportedPlcBlocks)), out var row))
+                    return ReadbackStep.Message;
+                meta["nativeMessages"] = row["messages"]; meta["result"] = row;
+                var imported = ((PlcB5Array)row["imported"]!).Cast<string>().ToArray();
+                if (!PlcDocumentReadback.VerifyPresence(meta, () => ExactNamesPresent(imported,
+                    EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>().Select(b => b.Name)))) return ReadbackStep.Message;
                 meta["contentVerified"] = null;
                 if (verifyDocumentReadback)
                 {
                     if (imported.Length != 1)
                         throw new InvalidOperationException("Import succeeded; automatic document comparison supports one native imported block only. " +
                         "Inspect all returned names.");
-                    var readbackDir = Directory.CreateDirectory(Path.Combine(directoryPath, "tia-readback-" + Guid.NewGuid().ToString("N")));
+                    var readbackDir = new DirectoryInfo(Path.Combine(directoryPath, "tia-readback-" + Guid.NewGuid().ToString("N")));
                     meta["mayHaveWrittenFiles"] = true; meta["readbackDirectory"] = readbackDir.FullName;
-                    DocumentExportResult readback;
-                    try
-                    {
-                        readback = InvocationJournal.Native("ScopedBlock.verifyExport",
+                    if (!PlcDocumentReadback.VerifyExport(meta, () => {
+                        readbackDir.Create();
+                        var readback = InvocationJournal.Native("ScopedBlock.verifyExport",
                             () => group.Blocks.Find(imported[0]).ExportAsDocuments(readbackDir, name));
-                    }
-                    catch (Exception error)
-                    {
-                        meta["readbackWarning"] = error.GetBaseException().Message;
-                        meta["dataComplete"] = false;
-                        return "Block documents imported and existence verified. Verification export failed.";
-                    }
-                    meta["verificationResult"] = DocumentExportRow(readback);
-                    if (!TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(readback.State))
-                        throw new InvalidOperationException("Import succeeded, but verification export failed.");
+                        var exportRow = DocumentExportRow(readback);
+                        meta["verificationResult"] = exportRow;
+                        return TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(readback.State) ? null :
+                            "Verification export returned " + readback.State + ". " + string.Join(" ", (PlcB5Array)exportRow["messages"]!);
+                    })) return ReadbackStep.Message;
                     var comparisons = new PlcB5Array(); bool equal = true;
                     foreach (var extension in new[] { ".s7dcl", ".s7res" })
                     {
                         string input = Path.Combine(directoryPath, name + extension), output = Path.Combine(readbackDir.FullName, name + extension);
-                        bool match = File.Exists(input) == File.Exists(output)
-                            && (!File.Exists(input) || NormalizeDocument(File.ReadAllText(input)) == NormalizeDocument(File.ReadAllText(output)));
+                        if (!ReadbackStep.TryRead(meta, "compareDocuments", () => File.Exists(input) == File.Exists(output)
+                            && (!File.Exists(input) || NormalizeDocument(File.ReadAllText(input)) == NormalizeDocument(File.ReadAllText(output))),
+                            out bool match)) return ReadbackStep.Message;
                         comparisons.Add(new PlcB5Object { ["extension"] = extension, ["matches"] = match }); equal &= match;
                     }
                     meta["documentComparison"] = comparisons; meta["sdDocumentsMatch"] = equal;

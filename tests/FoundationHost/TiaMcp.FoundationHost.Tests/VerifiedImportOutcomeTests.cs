@@ -134,11 +134,11 @@ public sealed class VerifiedImportOutcomeTests
             var body = Host.PlcToolContract.Map(tool, wire, true, true).StructuredContent!;
             var synchronized = recovery.Synchronize(request, response);
             Assert.Equal(inconsistentBefore ? 0 : 1, imports);
-            Assert.Equal(!inconsistentBefore, state.Uncertain);
-            Assert.Equal(!inconsistentBefore, wire.OutcomeUnknown);
+            Assert.False(state.Uncertain);
+            Assert.False(wire.OutcomeUnknown);
             Assert.Equal(inconsistentBefore ? "exportBefore" : "exportReadback", step.Meta["phase"]);
-            Assert.Equal(inconsistentBefore ? "PRECONDITION_FAILED" : "OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
-            Assert.Equal(inconsistentBefore ? "rejected-before-operation" : "unknown", (string?)body["meta"]?["outcome"]);
+            Assert.Equal(inconsistentBefore ? "PRECONDITION_FAILED" : null, (string?)body["error"]?["code"]);
+            Assert.Equal(inconsistentBefore ? "rejected-before-operation" : "succeeded", (string?)body["meta"]?["outcome"]);
             if (inconsistentBefore)
             {
                 Assert.Null(synchronized.Failure);
@@ -147,12 +147,12 @@ public sealed class VerifiedImportOutcomeTests
             }
             else
             {
-                var failure = Assert.IsType<ChannelFailureException>(synchronized.Failure);
-                Assert.Equal(ChannelOutcome.Unknown, failure.Outcome);
-                var caught = Host.PlcToolContract.Failure(tool, WorkerOperationException.FromChannelFailure(failure), true, true).StructuredContent!;
-                Assert.Equal("OUTCOME_UNKNOWN", (string?)caught["error"]?["code"]);
-                Assert.Equal("unknown", (string?)caught["meta"]?["outcome"]);
-                Assert.Equal("exportReadback", (string?)caught["error"]?["details"]?["evidence"]?["phase"]);
+                Assert.Null(synchronized.Failure);
+                Assert.Equal("completed", (string?)body["meta"]?["execution"]);
+                var warning = Assert.Single(body["meta"]!["warnings"]!.AsArray(), w => (string?)w?["details"]?["reason"] == "readback-failed");
+                Assert.Equal("INCOMPLETE_DATA", (string?)warning?["code"]);
+                Assert.Equal("exportReadback", (string?)warning?["details"]?["phase"]);
+                Assert.Equal("Fixture block is inconsistent.", (string?)warning?["details"]?["nativeMessage"]);
                 Assert.Equal(true, step.Meta["importReturned"]);
                 Assert.Equal(true, step.Meta["mayHaveChanged"]);
                 Assert.NotEmpty(body["data"]!["evidence"]!["cleanupRequired"]!.AsArray());

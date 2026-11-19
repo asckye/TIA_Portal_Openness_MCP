@@ -132,8 +132,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is NotSupportedException ? new Error("This capability is unavailable.", new UnsupportedCapabilityDetails(ReleaseKey, tool, null))
                     : null;
                 if (error != null && !write) return Result(tool, null, error, Outcome.RejectedBeforeOperation, current);
-                if (tool == "ImportDeviceAml" && write && HostBehavior.WorkerReplyEvidence(tool, ex) is { } retained
-                    && retained.TryGetValue("phase", out var phase) && phase.ValueKind == JsonValueKind.String && phase.GetString() == "import")
+                if (tool == "ImportDeviceAml" && write && HostBehavior.WorkerReplyEvidence(tool, ex) is { } retained)
                     return Result(tool, null, AmlImportFailure(retained), Outcome.Unknown, current, write);
                 return Result(tool, null, NativeFailureDiagnostics.FromException(Failure(write, new JsonObject()), ex),
                     write ? Outcome.Unknown : Outcome.ReadFailed, current);
@@ -191,9 +190,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 && Bool(evidence, "postStateKnown") != true && status != "InvalidState" && status != "HmiReadSessionBlocked")
             {
                 outcome = Outcome.Unknown;
-                error = tool == "ImportDeviceAml" && (string?)evidence["phase"] == "import"
-                    ? AmlImportFailure(evidence.Where(p => p.Key is "phase" or "nativeMessage" or "deviceCountBefore" or "deviceCountAfter")
-                        .ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))) : Failure(true, evidence);
+                error = tool == "ImportDeviceAml"
+                    ? AmlImportFailure(HostBehavior.WorkerReplyEvidence(evidence)) : Failure(true, evidence);
             }
             else if (write && applied > 0 && verdict != true)
             {

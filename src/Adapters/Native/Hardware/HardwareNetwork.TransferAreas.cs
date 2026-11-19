@@ -177,8 +177,9 @@ namespace TiaMcp.Adapters
                     HardwareNetworkPolicy.RequireStandardTransferAreaMode((mode & InterfaceOperatingModes.IoDevice) != 0);
                     meta["requestedName"] = name; meta["requestedType"] = type; meta["requestedPositionNumber"] = positionNumber;
                     if (dryRun) return "Transfer area create preview; nothing changed (type cannot be changed afterwards).";
-                    meta["mayHaveChanged"] = true;
                     var areaType = HardwareParseTransferAreaType(type);
+                    JournalTransferAreaCreate(freshAreas, name);
+                    meta["mayHaveChanged"] = true;
                     #if PLC_HARDWARE_DOMAINS
                     var created = positionNumber >= 0 ? areas.Create(name, areaType, positionNumber) : areas.Create(name, areaType);
 #else

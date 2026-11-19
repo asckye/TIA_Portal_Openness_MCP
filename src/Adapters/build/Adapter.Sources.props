@@ -88,6 +88,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.Connect.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciExportPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciExportAttempts.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/LegacyVciPortPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/ClassicHmiFoldersAdapter.cs" />
@@ -170,6 +171,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.Manage.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.Global.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryArchive.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryInstantiation.cs" />

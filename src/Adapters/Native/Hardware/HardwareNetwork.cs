@@ -12,6 +12,34 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
+        internal static string DeleteNetworkDomain(object target, Func<object> composition, string name, Dictionary<string, object?> meta)
+        {
+            meta["mayHaveChanged"] = true; HardwareGroupOperations.Call(target, "Delete", Type.EmptyTypes);
+            meta["writeReturned"] = true;
+            bool StillPresent() => HardwareGroupOperations.Items(composition()).Any(domain =>
+                string.Equals((string)HardwareGroupOperations.Get(domain, "Name"), name, StringComparison.OrdinalIgnoreCase));
+            if (!ReadbackStep.TryRead(meta, "postDelete", () => HardwareReadOnFresh(StillPresent, meta, "postDelete", false), out bool present))
+                return ReadbackStep.Message;
+            if (present)
+                throw new InvalidOperationException("Delete returned but the domain is still present on the refreshed composition; do not blindly " +
+                "retry.");
+            bool unreadable = meta.TryGetValue("postDeleteEnumeration", out var disposed) && disposed != null;
+            if (unreadable)
+            {
+                meta["absenceEvidence"] = "The refreshed composition raised a disposed-proxy error.";
+                ReadbackStep.Failed(meta, "postDelete", disposed!.ToString()!);
+            }
+            else
+            {
+                meta["verifiedAbsent"] = true;
+                meta["absenceEvidence"] = "not found by name on the refreshed composition";
+            }
+            if (!ReadbackStep.TryRead(meta, "countAfter", () => HardwareCountOnFresh(composition, meta, "countAfter"), out var count))
+                return ReadbackStep.Message;
+            if (!unreadable && count == null) ReadbackStep.Failed(meta, "countAfter", (string)meta["countAfterError"]!);
+            return unreadable || count == null ? ReadbackStep.Message : "Domain deleted and verified absent. No save/compile/download.";
+        }
+
         private Subnet HardwareExactSubnet(string subnetName)
             => HardwareGroupOperations.Find(project!.Subnets, HardwareNetworkPolicy.RequireExactName(subnetName, "subnetName")) as Subnet
                ?? throw new HardwareAddressingException("NotFound", "Subnet not found: " + subnetName);
@@ -332,15 +360,7 @@ namespace TiaMcp.Adapters
                 if (action == "delete")
                 {
                     if (dryRun) return "Domain delete preview; nothing changed.";
-                    meta["mayHaveChanged"] = true; HardwareGroupOperations.Call(target!, "Delete", Type.EmptyTypes);
-                    var still = HardwareFindOnFresh(composition, name, meta, "postDelete");
-                    if (still != null)
-                        throw new InvalidOperationException("Delete returned but the domain is still present on the refreshed composition; do not blindly " +
-                        "retry.");
-                    meta["verifiedAbsent"] = true; meta["absenceEvidence"] = meta["postDeleteEnumeration"] != null
-                        ? "refreshed composition raised a disposed-proxy error for the deleted domain" : "not found by name on the refreshed composition";
-                    HardwareCountOnFresh(composition, meta, "countAfter");
-                    return "Domain deleted and verified absent. No save/compile/download.";
+                    return DeleteNetworkDomain(target!, composition, name, meta);
                 }
                 if (action == "addParticipant")
                 {

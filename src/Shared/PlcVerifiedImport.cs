@@ -99,10 +99,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["action"] =
                     "Compare the exact block with the retained original backup and restore it manually if needed; do not replay an unconfirmed import." });
             import(plannedPath); // An exception exits immediately: no second native call or automatic retry.
-            meta["importReturned"] = true;
+            meta["writeReturned"] = true; meta["importReturned"] = true;
             if (compile != null) { meta["phase"] = "compile"; verifyBinding(); compile(); meta["compileReturned"] = true; }
             meta["phase"] = "exportReadback";
-            verifyBinding(); export(afterPath);
+            verifyBinding();
+            try { export(afterPath); }
+            catch (PlcSoftwareException error) when (compile == null && error.Code == "BlockInconsistent")
+            {
+                meta["readbackFailed"] = true; meta["dataComplete"] = false; meta["operationSuccess"] = true;
+                meta["nativeMessage"] = NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
+                return "Block imported, content unverifiable until compiled. Original backup retained.";
+            }
             var actual = PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(PlcDocumentEditing.Read(afterPath)));
             var matches = expected == actual;
             meta["afterPath"] = afterPath; meta["actualFingerprint"] = PlcDocumentEditing.HashText(actual);

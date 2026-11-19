@@ -1,4 +1,5 @@
 using System;
+using TiaMcp.Adapters.Native.Engineering;
 using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering;
@@ -102,6 +103,9 @@ namespace TiaMcp.Adapters.Native.Security
                         meta["passwordReadbackPossible"] = false;
                         break;
                     case "setPermissions":
+                        EngineeringWriteJournal.Property(user!, user!.GetType().GetProperty("Permissions")!,
+                            () => HardwareGroupOperations.Items(fresh()).Single(u =>
+                                string.Equals((string?)u.GetType().GetProperty("UserName")?.GetValue(u), userName, StringComparison.Ordinal)));
                         if (user is WebserverUser web) web.Permissions = (WebserverUserPermissions)Enum.Parse(typeof(WebserverUserPermissions), joined);
 #if SECURITY_SIMPLE_WEB
                         else ((SimpleWebserverUser)user!).Permissions = (SimpleWebserverUserPermissions)Enum
