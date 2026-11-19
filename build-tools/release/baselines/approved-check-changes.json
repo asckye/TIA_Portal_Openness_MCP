@@ -5822,6 +5822,53 @@
           "identifier": "PlcFixtureWorkerRobustnessTests/Plc_faults_recover_on_the_next_native_call( string release , string mode ):45af2e0e86c224a7c5cf5bfb94893be4b76b784666535d62440e025ed4226827:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-14C\u002B15",
+      "maintainerDate": "2026-11-19",
+      "reason": "VMFIX-14C approved UnsupportedCapability message change: NotSupportedOnVersion refusals now carry the release-qualified message (refusal matrices), plus recovery-guidance and served-example expectation updates; outcomes unchanged; standing approval of recommended options (2026-11-17)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):1537695dc60d6cad4f06fc8b11298858745ae3971efe63b5e7c465e1d9169945:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/MaintainedExamplesFitEveryAdvertisedSchema( string release ):573644953eb02626c989ae4b95397e538f9e06ccb5d478b618d177b5051a89f2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Known_refusal_keeps_the_redacted_top_level_worker_message( string family ):e50e367764a97a61c024a50c4f8d40a5c8ec3821da447820ee89fda2eaf5d8ba:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Known_refusal_maps_for_each_family( string release , string family , string status , bool writes ):87566f645c85e9fd67462f53c454377b5aa5140f71bf2e5b2a4849e74973ae94:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_provider_is_unsupported_capability( string release ):6ae2c251d10c71c3d5a86ad41e0ca832f286c34f64b278dd002f028d51cdd7e2:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Worker_failure_codes_do_not_override_a_known_unchanged_refusal( string release , string family , string status , bool writes ):55712a54b046066cbfe4468a8a405453c4e803f62db3cd0775aa91cc8db63d29:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ServedExampleRowsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ServedExampleRowsTests/Verified_rows_hold_the_verified_values( string release , string name ):10aeb98caf1932a72bfda8b5702a7ef55a0a99bf06ee984c2f1662bef79a0cf3:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ServedExamplesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ServedExamplesTests/Maintained_data_corrects_the_reported_bindings( string release ):74774116315f2e48005f587b800f0c4ffa59003663a394854ac21388d1f7c8b9:1"
+        }
+      ]
     }
   ]
 }
