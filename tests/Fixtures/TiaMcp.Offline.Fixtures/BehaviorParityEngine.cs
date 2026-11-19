@@ -35,6 +35,7 @@ namespace TiaMcp.Engine.Tests
         private static int writes, previews, waits;
         private static BatchReplacementPolicyTests.AdmissionFixture? batchFixture;
         private static Exception refusal = new InvalidOperationException();
+        private static ToolCatalog ParityCatalog(Type tools) => new ToolCatalog(new[] { typeof(McpServer), typeof(ToolUsageTools), tools });
         public static class PreconditionProbe
         {
             [McpServerTool(Name = "AttachOpenProject")]
@@ -51,7 +52,7 @@ namespace TiaMcp.Engine.Tests
             using var fixture = new InfrastructureContractsTests();
             refusal = typed ? new AdapterPreconditionException(message, parameter, argument) : new InvalidOperationException(message);
             if (wrapped) refusal = new InvalidOperationException("Private wrapper diagnostic.", refusal);
-            McpServer.ConfigureToolBridge(new ToolCatalog(new[] { typeof(McpServer), typeof(PreconditionProbe) }), () => false, new HashSet<string>());
+            McpServer.ConfigureToolBridge(ParityCatalog(typeof(PreconditionProbe)), () => false, new HashSet<string>());
             using var external = ExternalHost?.Invoke();
             return (ExternalCall?.Invoke(tool, JsonNode.Parse(arguments)!.AsObject())
                 ?? McpServer.ResultBody(McpServer.CallTool(tool, new ToolArguments(JsonSerializer.Deserialize<JsonElement>(arguments))))!).ToJsonString();
@@ -165,7 +166,7 @@ namespace TiaMcp.Engine.Tests
             if (value.StartsWith("staging-", StringComparison.Ordinal)) return RunStaging(value,enabled);
             using var fixture = new InfrastructureContractsTests();
             scenario = value; writes = previews = waits = 0;
-            McpServer.ConfigureToolBridge(new ToolCatalog(new[] { typeof(McpServer), typeof(Probe) }), () => false, new HashSet<string>());
+            McpServer.ConfigureToolBridge(ParityCatalog(typeof(Probe)), () => false, new HashSet<string>());
             using var external = ExternalHost?.Invoke();
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             var wait = McpServer.ApprovalWaitOverrideForTests; var session = McpServer.ApprovalSessionKeyForTests;
@@ -202,7 +203,7 @@ namespace TiaMcp.Engine.Tests
             bool program=value.StartsWith("disabled-program-",StringComparison.Ordinal);
             using var fixture=new BatchReplacementPolicyTests.AdmissionFixture(value.Substring(program ? 17 : 15),program);
             batchFixture=fixture;scenario="followup";writes=previews=waits=0;
-            McpServer.ConfigureToolBridge(new ToolCatalog(new[]{typeof(McpServer),typeof(Probe)}),()=>false,new HashSet<string>());
+            McpServer.ConfigureToolBridge(ParityCatalog(typeof(Probe)),()=>false,new HashSet<string>());
             using var external = ExternalHost?.Invoke();
             var settings=ApprovalSettings.Load(ApprovalSettings.SettingsPath);var previousKey=McpServer.ApprovalSessionKeyForTests;var wait=McpServer.ApprovalWaitOverrideForTests;
             bool context=McpServer.EnterMcpApprovalContext();var key=new object();
@@ -224,7 +225,7 @@ namespace TiaMcp.Engine.Tests
             using var fixture = new InfrastructureContractsTests();
             string bundle = Path.Combine(Path.GetTempPath(), "tia-stg-" + Guid.NewGuid().ToString("N").Substring(0, 8)); Directory.CreateDirectory(bundle);
             var store = new ImportStagingStore(bundle, McpServer.ReleaseKey, Guid.NewGuid().ToString("N"));
-            var catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ImportStagingTools) });
+            var catalog = ParityCatalog(typeof(ImportStagingTools));
             McpServer.ConfigureToolBridge(catalog, () => false, new HashSet<string>());
             EngineServices.SetServiceProvider(new ServiceCollection().AddSingleton(new ImportStagingTools(store)).AddEngine(false, catalog).BuildServiceProvider());
             ExternalStagingStore = store;

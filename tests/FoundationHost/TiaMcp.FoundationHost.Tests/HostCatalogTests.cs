@@ -288,6 +288,7 @@ public sealed class HostCatalogTests : IDisposable
     public void Identical_tool_schemas_select_identical_maintained_example_arguments()
     {
         var examples = new Dictionary<string, string>(StringComparer.Ordinal);
+        var calls = ServedExampleRowsTests.Calls;
         foreach (var release in Data.Releases.Keys)
         {
             var (host, _, _) = Build(release);
@@ -295,7 +296,21 @@ public sealed class HostCatalogTests : IDisposable
             foreach (var descriptor in host.All.Values)
             {
                 string identity = descriptor.Name + "\n" + descriptor.Tool.InputSchema.GetRawText();
-                string arguments = rows[descriptor.Name]!["arguments"]!.ToJsonString();
+                var row = rows[descriptor.Name]!;
+                var template = row["arguments"]!.DeepClone().AsObject();
+                // Check release-specific values before comparing the underlying template across identical schemas.
+                if (ServedExampleRowsTests.MaintainedOverrides(calls, descriptor.Name, release) is { } overrides)
+                {
+                    var original = calls["profiles"]![(string)row["exampleSource"]!]![descriptor.Name]!["arguments"]!.AsObject();
+                    foreach (var field in overrides)
+                    {
+                        Assert.True(template.ContainsKey(field.Key) && JsonNode.DeepEquals(field.Value, template[field.Key]),
+                            release + "/" + descriptor.Name + "/" + field.Key);
+                        if (original.TryGetPropertyValue(field.Key, out var value)) template[field.Key] = value?.DeepClone();
+                        else template.Remove(field.Key);
+                    }
+                }
+                string arguments = template.ToJsonString();
                 if (examples.TryGetValue(identity, out var existing)) Assert.Equal(existing, arguments);
                 else examples.Add(identity, arguments);
             }

@@ -51,22 +51,34 @@ public sealed class HonestWriteOutcomeTests
             yield return new object[] { release, family, status, writes };
     }
 
+    private static string RefusalTool(string family) => family switch {
+        "hardware" => "SetCpuAttributes", "network" => "SetDeviceItemChannel", "plc" => "CreatePlcTypeGroup",
+        "hmi" => "ManageUnifiedScreenLayout", "engineering" => "ManagePlcBlockProtection", "drive" => "SetDriveParameters",
+        "library" => "ImportLibraryTypeDocuments", "security" => "ManagePlcProtection", "optional" => "ManageCfcChartProtection",
+        "classic-motion" => "ManagePlcSupervision", "hmi-exchange" => "ListHmiTags", "hmi-inspection" => "GetHmiProgramInfo",
+        _ => throw new ArgumentOutOfRangeException(nameof(family))
+    };
+
+    private static string CapabilityMessage(string release, string tool, string reason)
+        => $"{tool} is unavailable on TIA {(release == "14sp1" ? "V14 SP1" : "V" + release)}. {reason}";
+
     private static JsonNode KnownRefusalResult(string family, JsonObject evidence, bool writes, string message = "Generic step failure.")
     {
         var response = new Host.ResponseMessage { Message = message, Meta = evidence };
+        string tool = RefusalTool(family);
         return (family switch {
-            "hardware" => Host.HardwareContract.Map("SetCpuAttributes", response, writes, true),
-            "network" => Host.HardwareToolContract.MapResult("SetDeviceItemChannel", response, !writes, true),
-            "plc" => Host.PlcToolContract.Map("CreatePlcTypeGroup", response, writes, true),
-            "hmi" => Host.UnifiedHmiContract.Map("ManageUnifiedScreenLayout", response, writes, true),
-            "engineering" => Host.EngineeringToolContract.Map("ManagePlcBlockProtection", response, writes),
-            "drive" => Host.DriveToolContract.Map("SetDriveParameters", response, writes, true),
-            "library" => Host.LibraryToolContract.Map("ImportLibraryTypeDocuments", response, writes),
-            "security" => Host.SecurityToolContract.MapResult("ManagePlcProtection", response, !writes, true),
-            "optional" => Host.OptionalPackageContract.Map("ManageCfcChartProtection", response, writes),
-            "classic-motion" => Host.ClassicMotionToolContract.Map("ManagePlcSupervision", response, !writes, true),
-            "hmi-exchange" => Host.HmiExchangeContract.Map("ListHmiTags", response, writes, true),
-            _ => Host.HmiInspectionContract.Map("GetHmiProgramInfo", response, writes, true)
+            "hardware" => Host.HardwareContract.Map(tool, response, writes, true),
+            "network" => Host.HardwareToolContract.MapResult(tool, response, !writes, true),
+            "plc" => Host.PlcToolContract.Map(tool, response, writes, true),
+            "hmi" => Host.UnifiedHmiContract.Map(tool, response, writes, true),
+            "engineering" => Host.EngineeringToolContract.Map(tool, response, writes),
+            "drive" => Host.DriveToolContract.Map(tool, response, writes, true),
+            "library" => Host.LibraryToolContract.Map(tool, response, writes),
+            "security" => Host.SecurityToolContract.MapResult(tool, response, !writes, true),
+            "optional" => Host.OptionalPackageContract.Map(tool, response, writes),
+            "classic-motion" => Host.ClassicMotionToolContract.Map(tool, response, !writes, true),
+            "hmi-exchange" => Host.HmiExchangeContract.Map(tool, response, writes, true),
+            _ => Host.HmiInspectionContract.Map(tool, response, writes, true)
         }).StructuredContent!;
     }
 
@@ -83,7 +95,9 @@ public sealed class HonestWriteOutcomeTests
             "NotFound" => "NOT_FOUND", "InvalidParams" => "INVALID_ARGUMENT", "AlreadyExists" => "ALREADY_EXISTS",
             _ => "UNSUPPORTED_CAPABILITY" };
         Assert.Equal(code, (string?)body["error"]?["code"]);
-        Assert.Equal("Exact library type not found.", (string?)body["error"]?["message"]);
+        const string reason = "Exact library type not found.";
+        Assert.Equal(status == "NotSupportedOnVersion" ? CapabilityMessage(release, RefusalTool(family), reason) : reason,
+            (string?)body["error"]?["message"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
         Assert.Equal("none", (string?)body["meta"]?["completeness"]);
@@ -129,7 +143,9 @@ public sealed class HonestWriteOutcomeTests
             if (field != "v4FailureCode") evidence["rejectionCode"] = code;
             var body = KnownRefusalResult(family, evidence, writes);
             Assert.Equal(expected, (string?)body["error"]?["code"]);
-            Assert.Equal("Exact target refused.", (string?)body["error"]?["message"]);
+            const string reason = "Exact target refused.";
+            Assert.Equal(status == "NotSupportedOnVersion" ? CapabilityMessage(release, RefusalTool(family), reason) : reason,
+                (string?)body["error"]?["message"]);
             Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
             Assert.Equal("none", (string?)body["meta"]?["completeness"]);
@@ -162,7 +178,7 @@ public sealed class HonestWriteOutcomeTests
         };
         var body = KnownRefusalResult(family, evidence, true, "Synthetic native capability verdict.\n   password=hunter2");
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
-        Assert.Equal("Synthetic native capability verdict.", (string?)body["error"]?["message"]);
+        Assert.Equal(CapabilityMessage("14sp1", RefusalTool(family), "Synthetic native capability verdict."), (string?)body["error"]?["message"]);
         Assert.Equal("14sp1", (string?)body["error"]?["details"]?["releaseKey"]);
         Assert.DoesNotContain("hunter2", body.ToJsonString(), StringComparison.Ordinal);
     }
@@ -336,7 +352,7 @@ public sealed class HonestWriteOutcomeTests
         var body = Host.PlcToolContract.Map("GetPlcBlockFingerprints", response, false, true).StructuredContent!;
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
-        Assert.Equal("Provider is unavailable for this CPU.", (string?)body["error"]?["message"]);
+        Assert.Equal(CapabilityMessage(release, "GetPlcBlockFingerprints", "Provider is unavailable for this CPU."), (string?)body["error"]?["message"]);
     }
 
     [Theory]

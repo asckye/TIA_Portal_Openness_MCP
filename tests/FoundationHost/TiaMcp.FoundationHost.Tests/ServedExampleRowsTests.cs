@@ -10,7 +10,10 @@ using Xunit;
 public sealed class ServedExampleRowsTests
 {
     private static string Root => TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
-    private static JsonObject Calls => JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "reference/tool-examples/calls.json")))!.AsObject();
+    internal static JsonObject Calls => JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "reference/tool-examples/calls.json")))!.AsObject();
+    internal static JsonObject? MaintainedOverrides(JsonObject calls, string name, string release)
+        => calls["releaseArguments"]?[name]?.AsArray().SingleOrDefault(row =>
+            row!["releases"]!.AsArray().Any(value => (string?)value == release))?["arguments"]!.AsObject();
     private static readonly string[] VerifiedTools = {
         "ListIoSystems", "EnsureSubnet", "ManageUnifiedEngineeringObject", "ExchangeSystemDiagnosticsSettings", "ExportPlcType",
         "UploadStationFromPlc", "ScanAccessibleDevices", "ManageCommunicationConnection", "ManageTeamcenterDataset",
@@ -49,6 +52,8 @@ public sealed class ServedExampleRowsTests
         {
             string name = (string)entry!["currentName"]!;
             var args = calls["profiles"]![ToolUsageCatalog.ExampleSource(name, release)]![name]!["arguments"]!.DeepClone().AsObject();
+            if (MaintainedOverrides(calls, name, release) is { } overrides)
+                foreach (var field in overrides) args[field.Key] = field.Value?.DeepClone();
             if (ToolMetadata.Find(name)?.Operation != "UI" && (bool?)args["dryRun"] == false)
             {
                 args["dryRun"] = true;
@@ -139,7 +144,11 @@ public sealed class ServedExampleRowsTests
             case "CompareLibraries": Assert.Equal("<open global library name>", (string?)args["rightLibraryName"]); break;
             case "RenderPlcBlockDocument": Assert.Equal(@"C:\Examples\exports\Main.xml", (string?)args["filePath"]); break;
             case "DescribeService":
-                Assert.Equal("<exact service type suffix from the Siemens API reference>", (string?)args["serviceTypeSuffix"]); break;
+                bool software = release is "14sp1" or "15.1";
+                Assert.Equal(software ? "Software" : "Project", (string?)args["objectKind"]);
+                Assert.Equal(software ? "PLC_1" : "", (string?)args["objectPath"]);
+                Assert.Equal(software ? "ICompilable" : "<exact service type suffix from the Siemens API reference>", (string?)args["serviceTypeSuffix"]);
+                break;
             case "InstantiatePlcTemplates": Assert.Contains("{{Name}}", (string?)call["note"]); break;
             case "PlanProjectGeneration":
                 Assert.Equal(release, (string?)args["machine"]?["target"]?["release"]);

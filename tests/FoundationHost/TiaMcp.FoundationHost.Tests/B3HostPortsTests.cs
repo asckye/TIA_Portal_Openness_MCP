@@ -19,6 +19,7 @@ public sealed class B3HostPortsTests
         ["ListNetworkDomains"] = 16, ["ManageNetworkDomain"] = 16,
         ["ListTransferAreas"] = 15, ["ManageTransferArea"] = 15,
         ["ListCommunicationConnections"] = 21, ["ManageCommunicationConnection"] = 21,
+        ["ExportAlarmInstanceTexts"] = 17, ["ExportAlarmTextLists"] = 17,
         // GSD creation needs a HardwareCatalog TypeIdentifier (V18); the GSD:<file>/DAP/<id> form is not verified earlier (P8-81b H-05).
         ["CreateGsdDevice"] = 18
     };
@@ -76,7 +77,7 @@ public sealed class B3HostPortsTests
             UploadStationFromPlc
             """,
         [16] = """
-            ConnectProjectToWorkspace CreateVersionControlWorkspace ExchangePlcAlarmTextLists ExportAlarmInstanceTexts ExportAlarmTextLists
+            ConnectProjectToWorkspace CreateVersionControlWorkspace ExchangePlcAlarmTextLists
             GetDccObject GetPlcBlockFingerprints GetVersionControlStatus ImportAlarmTextLists ImportPlcAlarmInstanceTexts
             ImportTechnologyObject ImportTechnologyObjectsFromDirectory ListDccCharts ListNetworkDomains ListPlcSoftwareUnits
             ListVersionControlWorkspaces ManageDcbLibraries ManageDccChart ManageDeviceUsers ManageNetworkDomain ManagePlcCertificate
@@ -84,7 +85,8 @@ public sealed class B3HostPortsTests
             ManageSinumerikSafetyMode ManageWatchForceTableWebAccess SetPlcUnitObjectAccess SynchronizeVersionControlWorkspace
             """,
         [17] = """
-            ExchangePlcSupervisions ExchangeSystemDiagnosticsSettings ExchangeTestSuiteCase ExportAlarmClasses ExportPlcProDiagInfo
+            ExchangePlcSupervisions ExchangeSystemDiagnosticsSettings ExchangeTestSuiteCase ExportAlarmClasses ExportAlarmInstanceTexts
+            ExportAlarmTextLists ExportPlcProDiagInfo
             ExportSafetyPrintout ExportScadaData GetProjectUserManagement GetSafetyBlockSignatures ImportAlarmClasses
             ListSivarcBlockDefinitions ListTestSuiteCases ManageMultiuserSession ManagePlcSafety ManagePlcSupervision
             ManageProjectUserManagement ManageSivarcBlockDefinition ManageTestSuiteCase ManageUmcUsers ManageUnifiedCwcPackage

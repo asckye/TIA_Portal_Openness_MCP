@@ -204,7 +204,8 @@ internal sealed class FoundationV4Tool : McpServerTool
             if (!usage["operations"]!.AsArray().Any(row => (string?)row!["operation"] == operation)) return null;
             return TiaOpenness.Shared.ToolUsageCatalog
                 .Describe(name, key, "plc-foundation", tool.Description ?? "", schema, operation: operation)["example"] as JsonObject;
-        }, name => TiaOpenness.Shared.ToolUsageCatalog.IsRegistered(name, release)))
+        }, name => sharedSession ? EngineHostConfiguration.CurrentOrNull?.Catalog?.All.ContainsKey(name) == true
+            : TiaOpenness.Shared.ToolUsageCatalog.IsRegistered(name, release)))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
         if (body != null && (approval != null || write && !settings.Enabled))

@@ -308,7 +308,8 @@ public sealed class FoundationV4ContractsTests
     // TIA-TEST-2 adds the host-owned RunPlcTestLibrary; TIA-TEST-3 adds ExportPlcTestReport on every release.
     // UNIFY-1D1 adds ExportTechnologyObject on V14 SP1 and V15.1.
     // TIA-SAFE-4 adds the GetApprovalStatus tool on every release.
-    [InlineData("14sp1", 287)] [InlineData("15.1", 328)] [InlineData("16", 356)]
+    // VMFIX-15 moves the two standalone alarm XLSX exports from V16 to V17.
+    [InlineData("14sp1", 287)] [InlineData("15.1", 328)] [InlineData("16", 354)]
     [InlineData("17", 379)] [InlineData("18", 405)] [InlineData("19", 481)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
@@ -436,9 +437,20 @@ public sealed class FoundationV4ContractsTests
             var validation = new InputContract<JsonElement>(new InputSchema(tool.ProtocolTool.InputSchema), new InputBudget()).Read(args, "arguments");
             Assert.True(validation.IsValid, tool.ProtocolTool.Name + ": " + V4Json.Serialize(validation.Error));
             if (tool.ProtocolTool.Name == "BuildAndImportPlcArtifact")
-                Assert
-                    .Equal("UNSUPPORTED_CAPABILITY", (string?)Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())))["error"]
-                        ?["code"]);
+            {
+                Assert.Equal("udt", args.GetProperty("kind").GetString());
+                var preview = Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, args.GetRawText())));
+                Assert.True((bool?)preview["ok"], preview.ToJsonString());
+                Assert.True((bool?)preview["data"]?["dryRun"]);
+                Assert.Equal("udt", (string?)preview["data"]?["buildKind"]);
+
+                var fc = UsageArguments(tool.ProtocolTool.Name, "plc-foundation");
+                Assert.Equal("fc", (string?)fc["kind"]);
+                var refusal = Body(await tool.InvokeAsync(Request(tool.ProtocolTool.Name, fc.ToJsonString())));
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)refusal["error"]?["code"]);
+                Assert.Equal("rejected-before-operation", (string?)refusal["meta"]?["outcome"]);
+                Assert.Equal("not-started", (string?)refusal["meta"]?["execution"]);
+            }
             else
                 if (new[] {
                     "BuildPlcUdt", "BuildPlcGlobalDb", "BuildPlcTagTable", "BuildStructuredText", "BuildFlgNetCall", "BuildPlcFcBlock", "BuildPlcFbBlock",

@@ -20,7 +20,14 @@ namespace TiaMcp.Adapters.Contracts
                 && (!meta.TryGetValue("cleanupRequired", out var cleanup) || cleanup == null || cleanup is ICollection { Count: 0 });
         }
 
-        public static string FailureCode(Exception error)
+        public static string FailureCode(Exception error) => StepFailureCode(error) switch {
+            "NotFound" => "NOT_FOUND",
+            "OpennessError" or "ReadOrWriteFailed" => "NATIVE_OPERATION_FAILED",
+            var code => code
+        };
+
+        // Worker step evidence retains typed adapter statuses. Host lookup classification uses FailureCode.
+        public static string StepFailureCode(Exception error)
         {
             for (Exception? cause = error; cause != null; cause = cause.InnerException)
             {
@@ -32,10 +39,7 @@ namespace TiaMcp.Adapters.Contracts
                     TiaMcpServer.Siemens.PortalException { Code: TiaMcpServer.Siemens.PortalErrorCode.NotFound } => "NOT_FOUND",
                     _ => null
                 };
-                if (status != null) return status switch {
-                    "NotFound" => "NOT_FOUND", "OpennessError" or "ReadOrWriteFailed" => "NATIVE_OPERATION_FAILED",
-                    "InvalidState" => "PRECONDITION_FAILED", _ => status
-                };
+                if (status != null) return status == "InvalidState" ? "PRECONDITION_FAILED" : status;
             }
             return error.GetBaseException() switch {
                 FileNotFoundException or DirectoryNotFoundException => "NOT_FOUND",
@@ -49,7 +53,7 @@ namespace TiaMcp.Adapters.Contracts
         public static void RecordStepFailure(Exception error, Dictionary<string, object?> meta)
         {
             if (!ProvesNoMutation(meta)) return;
-            meta["v4FailureCode"] = FailureCode(error);
+            meta["v4FailureCode"] = StepFailureCode(error);
             error.Data["foundationKnownNoMutation"] = true;
             if (meta.TryGetValue("phase", out var phase)) error.Data["phase"] = phase;
             if (error.GetBaseException() is AdapterPreconditionException { IsArgument: false, Condition: string condition }

@@ -100,7 +100,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             catch (Exception error)
             {
                 meta["mayHaveChanged"] = MayHaveChanged || meta["mayHaveChanged"] is true;
-                meta["v4FailureCode"] = MutationEvidence.FailureCode(error);
+                meta["v4FailureCode"] = MutationEvidence.StepFailureCode(error);
                 throw;
             }
         }

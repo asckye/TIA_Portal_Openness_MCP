@@ -140,7 +140,7 @@ public sealed class ServedExamplesTests
         Assert.Equal(@"C:\Examples\exports", (string?)Args("ExportPlcType")["exportDirectory"]);
         foreach (string name in new[] { "UploadStationFromPlc", "ScanAccessibleDevices" })
             Assert.Equal("<exact PG/PC interface name from ListTransferRoutes>", (string?)Args(name)["pgPcInterface"]);
-        Assert.Equal("read", (string?)Args("GetDriveParameters")["source"]);
+        Assert.Equal(release is "20" or "21" ? "read" : "write", (string?)Args("GetDriveParameters")["source"]);
         Assert.Equal("Digital", (string?)Args("SetDeviceItemChannel")["channelType"]);
         Assert.Equal("Input", (string?)Args("SetDeviceItemChannel")["channelIoType"]);
         Assert.Equal("PROFINET", (string?)Args("EnsureSubnet")["subnetType"]);

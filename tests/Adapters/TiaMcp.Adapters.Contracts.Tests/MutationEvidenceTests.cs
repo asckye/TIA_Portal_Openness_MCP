@@ -26,7 +26,11 @@ public sealed class MutationEvidenceTests
         Assert.Equal(expected, MutationEvidence.FailureCode(new HardwareAddressingException(status, "native diagnostic")));
         Assert.Equal(expected, MutationEvidence.FailureCode(new PlcSoftwareException(status, "native diagnostic")));
         var inner = new InvalidOperationException("native context");
-        Assert.Equal(expected, MutationEvidence.FailureCode(new Exception("wrapper", new PlcSoftwareException(status, "native diagnostic", inner: inner))));
+        var wrapped = new Exception("wrapper", new PlcSoftwareException(status, "native diagnostic", inner: inner));
+        Assert.Equal(expected, MutationEvidence.FailureCode(wrapped));
+        var evidence = new Dictionary<string, object?> { ["mayHaveChanged"] = false };
+        MutationEvidence.RecordStepFailure(wrapped, evidence);
+        Assert.Equal(status, evidence["v4FailureCode"]);
         Assert.Equal("NATIVE_OPERATION_FAILED", MutationEvidence.FailureCode(new Exception("not found")));
     }
 

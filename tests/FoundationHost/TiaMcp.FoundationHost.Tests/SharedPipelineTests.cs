@@ -138,6 +138,25 @@ public sealed class SharedPipelineTests
     }
 
     [Fact]
+    public async Task Shared_refusal_recommends_only_tools_in_the_session_catalog()
+    {
+        using var scope = new Scope();
+        const string name = "GetSessionState";
+        var definition = FoundationTools.Definitions.Single(d => d.Name == name);
+        var tool = new FoundationV4Tool(new FoundationTool(definition, scope.Worker), "21", sharedSession: true);
+        scope.RegisterShared(tool);
+        Assert.NotNull(Host.CatalogView.Find(name));
+        Assert.Null(Host.CatalogView.Find("GetToolUsage"));
+        var result = await tool.InvokeAsync(Scope.Request(name, new JsonObject { ["unexpected"] = true }));
+        var body = result.StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.DoesNotContain(body["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "RECOVERY_GUIDANCE");
+        Assert.Equal(0, scope.Worker.FoundationCalls);
+    }
+
+    [Fact]
     public async Task Shared_read_inherits_transport_journal_without_write_audit()
     {
         using var scope = new Scope(); const string id = "abcdef0123456789abcdef0123456789";
