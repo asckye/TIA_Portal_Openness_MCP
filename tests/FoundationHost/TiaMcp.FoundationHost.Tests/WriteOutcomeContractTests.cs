@@ -132,15 +132,24 @@ public sealed class WriteOutcomeContractTests
     public void AutomationML_native_false_retains_returned_state_and_counts_through_the_host_catch()
     {
         var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.WriteRefusalTests.RefusedAutomationMlImport();
-        Assert.True(reply.OutcomeUnknown);
-        var error = new WorkerOperationException(reply.Message, -32603, "unknown", JsonSerializer.Serialize(reply));
-        var body = Host.HardwareContract.Run("ImportDeviceAml", () => throw error, true, true).StructuredContent!;
+        Assert.False(reply.OutcomeUnknown);
+        Assert.True(reply.MayHaveChanged);
+        Assert.Equal(false, reply.Meta["operationSuccess"]);
+        Assert.Equal(true, reply.Meta["apiCallSuccess"]);
+        var response = new Host.ResponseMessage { Message = reply.Message, Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() };
+        var body = Host.HardwareContract.Run("ImportDeviceAml", () => response, true, true).StructuredContent!;
+        Assert.Equal("failed", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("completed", (string?)body["meta"]?["execution"]);
+        Assert.Equal("partial", (string?)body["meta"]?["completeness"]);
         var evidence = body["error"]!["details"]!["evidence"]!;
-        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
         Assert.Equal(false, (bool?)evidence["nativeResult"]);
         Assert.Equal(1, (int?)evidence["deviceCountBefore"]);
         Assert.Equal(1, (int?)evidence["deviceCountAfter"]);
-        Assert.Contains("returned false", (string)evidence["nativeMessage"]!);
+        var message = (string)Assert.Single(evidence["logExcerpt"]!.AsArray())!;
+        Assert.StartsWith("CAx import returned false.", message);
+        Assert.InRange(System.Text.Encoding.UTF8.GetByteCount(message), 1, 4096);
+        Assert.DoesNotContain("end of native log", message);
     }
 
     [Theory, InlineData("ManagePlcUserGroup"), InlineData("DeleteEmptyPlcBlockGroup")]

@@ -143,13 +143,18 @@ public sealed class WriteRefusalTests
     public static HardwareAddressingReply RefusedAutomationMlImport()
     {
         var fixture = HardwareWriteFailureTests.NativeFixture("18");
-        fixture.Project.Services[typeof(Siemens.Engineering.Cax.CaxProvider)] = new Siemens.Engineering.Cax.CaxProvider();
+        var provider = new Siemens.Engineering.Cax.CaxProvider {
+            WriteLog = log => File.WriteAllText(log.FullName, "CAx import returned false. " + new string('x', 5000) + "end of native log")
+        };
+        fixture.Project.Services[typeof(Siemens.Engineering.Cax.CaxProvider)] = provider;
         var directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "aml-fixture-" + Guid.NewGuid().ToString("N")));
         try
         {
             var source = Path.Combine(directory.FullName, "device.aml");
             File.WriteAllText(source, """<CAEXFile SchemaVersion="2.15" FileName="device.aml"><InstanceHierarchy Name="Project"/></CAEXFile>""");
-            return fixture.Engine.ImportHardwareAml(source, Path.Combine(directory.FullName, "import.log"), confirmImport: true, dryRun: false);
+            var reply = fixture.Engine.ImportHardwareAml(source, Path.Combine(directory.FullName, "import.log"), confirmImport: true, dryRun: false);
+            Assert.Equal(1, provider.ImportCalls);
+            return reply;
         }
         finally { directory.Delete(true); }
     }

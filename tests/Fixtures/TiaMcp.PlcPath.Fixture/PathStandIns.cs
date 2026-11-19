@@ -71,13 +71,13 @@ namespace TiaMcp.Adapters.Native.Plc
     public interface IPlcOrganisationSession
     {
         public string ReleaseKey { get; }
-        void VerifyBinding(string tool);
-        PlcTypeGroup? GetPlcTypeGroupByPath(string path, string groupPath);
-        PlcSoftware? ResolvePlc(string path, bool writing);
-        Siemens.Engineering.HW.Features.SoftwareContainer? GetSoftwareContainer(string path);
-        void GetBlocksRecursive(PlcBlockGroup root, List<PlcBlock> result);
-        string PlcSoftwarePath(PlcSoftware? software);
-        HardwareAddressingReply RunHmiStepTool(string tool, Func<Dictionary<string, object?>, string> operation);
+        public void VerifyBinding(string tool);
+        public PlcTypeGroup? GetPlcTypeGroupByPath(string path, string groupPath);
+        public PlcSoftware? ResolvePlc(string path, bool writing);
+        public Siemens.Engineering.HW.Features.SoftwareContainer? GetSoftwareContainer(string path);
+        public void GetBlocksRecursive(PlcBlockGroup root, List<PlcBlock> result);
+        public string PlcSoftwarePath(PlcSoftware? software);
+        public HardwareAddressingReply RunHmiStepTool(string tool, Func<Dictionary<string, object?>, string> operation);
         public PlcBlock? GetBlock(string path, string blockPath);
         public PlcBlock GetBlockForRead(string path, string blockPath);
         public bool IsProjectNull();
