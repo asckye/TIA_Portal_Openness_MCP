@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- V4 tool results report host `meta.elapsedMs` on success and failure across all eight releases. Time spent waiting for a Workbench decision appears separately in `meta.approvalWaitMs`. Calls with timed worker replies also report the total worker processing time in `meta.workerElapsedMs`. After a call detaches, `GetCallResult` returns the original call’s timing.
+
 ### Fixed
 
 - `MovePlcBlockToGroup` creates missing groups before exporting and deleting the source. A failed move reports verified restoration or retains the target groups and blocks for inspection when recovery is uncertain.

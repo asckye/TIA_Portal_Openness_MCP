@@ -144,6 +144,23 @@ public sealed class ServerTests
     private static ChannelServer Server(Stream output,Func<ChannelRequest,ChannelResponse>? dispatch=null)
         =>new(Stream.Null,output,Identity,()=>new ChannelBinding(0,false),dispatch??(_=>ChannelResponse.Success("null")));
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Worker_measures_success_and_failure_replies(bool fail)
+    {
+        using var output = new MemoryStream();
+        var server = Server(output, _ => fail
+            ? ChannelResponse.Error(new ChannelFailureException("Fixture refusal", -32602, ChannelOutcome.RejectedBeforeNative))
+            : ChannelResponse.Success("{}"));
+        server.WriteHello();
+        server.Handle(Encoding.UTF8.GetBytes(Request()));
+        var frame = Encoding.UTF8.GetString(output.ToArray()).Split('\n', StringSplitOptions.RemoveEmptyEntries)[1];
+        var reply = System.Text.Json.Nodes.JsonNode.Parse(frame)!.AsObject();
+        Assert.True(reply.ContainsKey(fail ? "error" : "result"));
+        Assert.True((long?)reply["workerElapsedMs"] >= 0);
+    }
+
     private sealed class FailingOutput(bool fail) : MemoryStream
     {
         public override void Write(byte[] bytes,int offset,int count)

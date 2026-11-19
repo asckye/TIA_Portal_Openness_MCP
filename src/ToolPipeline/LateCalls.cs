@@ -93,6 +93,12 @@ public sealed class LateCalls
     }
     public CallToolResult? Read(string release, string id, UnsettledCalls unsettled)
     {
+        var result = ReadStored(release, id, unsettled);
+        TiaOpenness.Shared.ToolCallTiming.Active?.PreserveRetrievedResult(result?.StructuredContent);
+        return result;
+    }
+    private CallToolResult? ReadStored(string release, string id, UnsettledCalls unsettled)
+    {
         lock (gate)
         {
             entries.TryGetValue(id, out var entry);

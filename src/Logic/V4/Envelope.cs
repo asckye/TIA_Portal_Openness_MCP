@@ -63,10 +63,19 @@ namespace TiaMcp.Logic.V4
         [JsonPropertyOrder(8)] public Completeness Completeness { get; }
         [JsonPropertyOrder(9)] public Paging? Paging { get; }
         [JsonPropertyOrder(10)] public IReadOnlyList<Warning> Warnings { get; }
+        [JsonPropertyOrder(11), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public long? ElapsedMs { get; }
+        [JsonPropertyOrder(12), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public long? ApprovalWaitMs { get; }
+        [JsonPropertyOrder(13), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public long? WorkerElapsedMs { get; }
 
+        public Meta(DateTimeOffset timestamp, string? releaseKey, string tool, string requestId, Outcome outcome, Execution execution,
+            BehaviorPolicy behaviorPolicy, Completeness completeness, Paging? paging, IReadOnlyList<Warning> warnings)
+            : this(timestamp, releaseKey, tool, requestId, outcome, execution, behaviorPolicy, completeness, paging, warnings, null, null, null) { }
+
+        [JsonConstructor]
         public Meta(DateTimeOffset timestamp, string? releaseKey, string tool, string requestId,
             Outcome outcome, Execution execution, BehaviorPolicy behaviorPolicy,
-            Completeness completeness, Paging? paging, IReadOnlyList<Warning> warnings)
+            Completeness completeness, Paging? paging, IReadOnlyList<Warning> warnings,
+            long? elapsedMs = null, long? approvalWaitMs = null, long? workerElapsedMs = null)
         {
             Timestamp = timestamp.ToUniversalTime();
             ReleaseKey = releaseKey;
@@ -78,6 +87,10 @@ namespace TiaMcp.Logic.V4
             Completeness = completeness;
             Paging = paging;
             Warnings = V4Validation.List(warnings);
+            V4Validation.Require(!(elapsedMs < 0 || approvalWaitMs < 0 || workerElapsedMs < 0), "Durations must be nonnegative.");
+            ElapsedMs = elapsedMs;
+            ApprovalWaitMs = approvalWaitMs;
+            WorkerElapsedMs = workerElapsedMs;
             V4Validation.Meta(this);
         }
 

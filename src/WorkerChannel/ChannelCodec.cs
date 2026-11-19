@@ -106,7 +106,8 @@ namespace TiaMcp.WorkerChannel
             Raw(w, "params", args, RequestLimit);
         }, RequestLimit);
 
-        internal static byte[] Reply(long id, long before, long after, ChannelResponse response, ChannelProfile profile) => Encode(w =>
+        internal static byte[] Reply(long id, long before, long after, ChannelResponse response, ChannelProfile profile,
+            System.Diagnostics.Stopwatch? elapsed) => Encode(w =>
         {
             w.WriteNumber("id", id); w.WriteNumber("bindingEpochBefore", before); w.WriteNumber("bindingEpochAfter", after);
             if (response.Failure == null) Raw(w, "result", response.ResultJson, ResponseLimit);
@@ -119,6 +120,7 @@ namespace TiaMcp.WorkerChannel
                 if (profile == ChannelProfile.Studio) Raw(w, "rpc", failure.RpcErrorJson ?? "null", ResponseLimit);
                 w.WriteEndObject(); w.WriteEndObject();
             }
+            if (elapsed != null) w.WriteNumber("workerElapsedMs", elapsed.ElapsedMilliseconds);
         }, ResponseLimit);
 
         internal static ChannelResponse Response(JsonElement root, ChannelProfile profile)

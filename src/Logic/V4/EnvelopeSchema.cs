@@ -40,6 +40,8 @@ namespace TiaMcp.Logic.V4
                 ("behaviorPolicy", Choices("not-applicable", "current", "safe-v4")),
                 ("completeness", Choices("complete", "partial", "none", "unknown")),
                 ("paging", paging), ("warnings", new JsonObject { ["type"] = "array", ["items"] = warning }));
+            foreach (string name in new[] { "elapsedMs", "approvalWaitMs", "workerElapsedMs" })
+                meta["properties"]![name] = Describe(typeof(long));
             var root = Object(("schemaVersion", new JsonObject { ["type"] = "integer", ["const"] = 4 }),
                 ("ok", new JsonObject { ["type"] = "boolean" }), ("data", new JsonObject { ["type"] = new JsonArray("object", "null") }),
                 ("error", new JsonObject { ["oneOf"] = errors }), ("meta", meta));

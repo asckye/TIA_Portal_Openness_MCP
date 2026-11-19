@@ -70,7 +70,7 @@ namespace TiaMcp.Logic.V4
             }
             if (policy == meta.BehaviorPolicy && warnings.SequenceEqual(meta.Warnings)) return meta;
             return new Meta(meta.Timestamp, meta.ReleaseKey, meta.Tool, meta.RequestId, meta.Outcome, meta.Execution, policy, meta.Completeness, meta.Paging,
-                    warnings);
+                    warnings, meta.ElapsedMs, meta.ApprovalWaitMs, meta.WorkerElapsedMs);
         }
 
         public static BehaviorPolicy Released(string release, string family)

@@ -91,7 +91,7 @@ internal sealed partial class WorkerClient
                 process.BeginErrorReadLine();
                 channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
                     new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce)) {
-                    UnsettledRequests = UnsettledRequestIds };
+                    UnsettledRequests = UnsettledRequestIds, ObserveReplyTime = TiaOpenness.Shared.ToolCallTiming.RecordWorkerReply };
             }
         }
     }

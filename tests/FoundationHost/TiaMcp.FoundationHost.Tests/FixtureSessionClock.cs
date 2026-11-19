@@ -5,5 +5,7 @@ internal sealed class FixtureSessionClock : TimeProvider
     private readonly DateTimeOffset start = DateTimeOffset.UtcNow;
     private long ticks;
     public override DateTimeOffset GetUtcNow() => start.AddTicks(Interlocked.Read(ref ticks));
+    public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+    public override long GetTimestamp() => Interlocked.Read(ref ticks);
     internal void Advance(TimeSpan elapsed) => Interlocked.Add(ref ticks, elapsed.Ticks);
 }

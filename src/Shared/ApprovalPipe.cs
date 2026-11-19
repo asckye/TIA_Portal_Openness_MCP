@@ -107,12 +107,7 @@ namespace TiaOpenness.Shared
                         await pipe.ConnectAsync(250, limit.Token).ConfigureAwait(false);
                         connected = true;
                         if (!ApprovalPipe.ServerIsCurrentUser(pipe, ApprovalPipe.CurrentSid)) throw new IOException("Unexpected pipe owner.");
-                        request.Validate();
-                        await ApprovalFrames.Write(pipe, request, limit.Token).ConfigureAwait(false);
-                        var decision = await ApprovalFrames.Read<ApprovalDecision>(pipe, limit.Token).ConfigureAwait(false);
-                        // A mismatched, late, duplicate or malformed decision cannot release this call.
-                        reason = request.Deadline <= DateTimeOffset.UtcNow ? "timeout"
-                            : !limit.IsCancellationRequested && decision.Matches(request) ? decision.Decision == "granted" ? null : "denied" : "denied";
+                        reason = await RequestDecision(pipe, request, limit.Token).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException) /* swallow(privacy): cancellation before execution becomes a bounded approval refusal */ { reason = cancellation.IsCancellationRequested ? "cancelled" : connected ? "timeout" : "workbench-unavailable"; }
@@ -126,6 +121,20 @@ namespace TiaOpenness.Shared
                 reason == null ? "granted" : reason == "timeout" ? "timeout" : "denied", request.PlanHash, request.EffectiveActor); }
             catch (Exception ex) { Trace.TraceWarning("Approval decision audit unavailable: " + ex.GetType().Name); }
             return new ApprovalOutcome(request, false, reason);
+        }
+
+        internal static async Task<string?> RequestDecision(Stream pipe, PendingApproval request, CancellationToken token)
+        {
+            request.Validate();
+            ApprovalDecision decision;
+            using (ToolCallTiming.BeginApprovalWait())
+            {
+                await ApprovalFrames.Write(pipe, request, token).ConfigureAwait(false);
+                decision = await ApprovalFrames.Read<ApprovalDecision>(pipe, token).ConfigureAwait(false);
+            }
+            // A mismatched, late, duplicate or malformed decision cannot release this call.
+            return request.Deadline <= DateTimeOffset.UtcNow ? "timeout"
+                : !token.IsCancellationRequested && decision.Matches(request) ? decision.Decision == "granted" ? null : "denied" : "denied";
         }
     }
 }

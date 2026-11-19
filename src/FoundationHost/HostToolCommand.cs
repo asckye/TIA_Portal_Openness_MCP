@@ -21,7 +21,7 @@ internal static class HostToolCommand
                 Params = new global::ModelContextProtocol.Protocol.CallToolRequestParams { Name = name,
                     Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>((arguments["arguments"] ?? new JsonObject()).ToJsonString()) }
             };
-            result = (await selected.InvokeAsync(request)).StructuredContent;
+            result = (await HostSessionCall.Measure(TimeProvider.System, () => selected.InvokeAsync(request))).StructuredContent;
         }
         else if (command == "ToolMetadata")
         {

@@ -22,6 +22,7 @@ namespace TiaMcp.WorkerChannel
         private Exception? lastFault;
         public Exception? LastFault { get { lock (gate) return lastFault; } }
         public Func<IReadOnlyList<string>>? UnsettledRequests { get; set; }
+        public Action<long?>? ObserveReplyTime { get; set; }
         public bool Poisoned { get { lock (gate) return poisoned; } }
         public bool CanDisconnect { get { lock (gate) return verified && !poisoned && !disposed && pending == null; } }
         public bool CanCallIndependentRuntime {
@@ -93,6 +94,7 @@ namespace TiaMcp.WorkerChannel
                 call.Dispatched = true; // Write may partially succeed before it fails.
                 exchange = Exchange(bytes, call);
             }
+            bool draining = false;
             try
             {
                 // One budget covers both writing and receiving; progress never resets it.
@@ -105,12 +107,19 @@ namespace TiaMcp.WorkerChannel
                 return response.ResultJson;
             }
             catch (TimeoutException error) when (drainOnTimeout && profile == ChannelProfile.Foundation && BeginDrain(call))
-            { throw new ChannelCallRunningException(Reply(exchange), error.Message.Replace("Worker timed out; native outcome is unknown.",
-                "The client wait budget ended while the worker call is still running.")); }
+            {
+                draining = true;
+                throw new ChannelCallRunningException(Reply(exchange, call), error.Message.Replace("Worker timed out; native outcome is unknown.",
+                    "The client wait budget ended while the worker call is still running."));
+            }
             catch (ChannelFailureException ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
             catch (ChannelFailureException) { throw; } // An answered unknown result does not fault the transport.
             catch (Exception ex) { throw Poison(ex); }
-            finally { lock (gate) if (ReferenceEquals(pending, call) && !call.Running) pending = null; }
+            finally
+            {
+                lock (gate) if (ReferenceEquals(pending, call) && !call.Running) pending = null;
+                if (!draining) ReportReplyTime(call);
+            }
         }
 
         private bool BeginDrain(Pending call)
@@ -123,13 +132,21 @@ namespace TiaMcp.WorkerChannel
             }
         }
 
-        private async Task<string> Reply(Task<ChannelResponse> exchange)
+        private async Task<string> Reply(Task<ChannelResponse> exchange, Pending call)
         {
             ChannelResponse response;
             try { response = await exchange.ConfigureAwait(false); }
             catch (Exception error) { throw Poison(error); }
+            finally { ReportReplyTime(call); }
             if (response.Failure != null) throw response.Failure;
             return response.ResultJson;
+        }
+
+        private void ReportReplyTime(Pending call)
+        {
+            long? elapsed;
+            lock (gate) elapsed = call.WorkerElapsedMs;
+            ObserveReplyTime?.Invoke(elapsed);
         }
 
         private async Task<ChannelResponse> Exchange(byte[] bytes, Pending call)
@@ -196,10 +213,13 @@ namespace TiaMcp.WorkerChannel
                             else
                             {
                                 ChannelCodec.Version(root);
-                                ChannelCodec.Fields(root, "jsonrpc", "id", "bindingEpochBefore", "bindingEpochAfter", "result", "error");
+                                ChannelCodec.Fields(root, profile == ChannelProfile.Studio
+                                    ? new[] { "jsonrpc", "id", "bindingEpochBefore", "bindingEpochAfter", "result", "error" }
+                                    : new[] { "jsonrpc", "id", "bindingEpochBefore", "bindingEpochAfter", "result", "error", "workerElapsedMs" });
                                 if (pending == null || pending.Replied || ChannelCodec.Number(root, "id") != pending.Id)
                                     throw new IOException("Unknown, old or duplicate worker reply id.");
                                 pending.Answered = true;
+                                if (root.TryGetProperty("workerElapsedMs", out _)) pending.WorkerElapsedMs = ChannelCodec.Number(root, "workerElapsedMs");
                                 var response = ChannelCodec.Response(root, profile);
                                 long before = ChannelCodec.Number(root, "bindingEpochBefore"), after = ChannelCodec.Number(root, "bindingEpochAfter");
                                 var change = response.Failure == null ? pending.Change
@@ -302,6 +322,7 @@ namespace TiaMcp.WorkerChannel
             internal readonly bool ReadOnly;
             internal bool Dispatched, Replied, Answered, Written, Running, ProgressDropped;
             internal int Progress;
+            internal long? WorkerElapsedMs;
             internal readonly TaskCompletionSource<ChannelResponse> Completion =
                 new TaskCompletionSource<ChannelResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
             internal Pending(long id, long before, BindingChange change, bool readOnly) { Id = id; Before = before; Change = change; ReadOnly = readOnly; }

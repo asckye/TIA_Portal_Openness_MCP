@@ -16,6 +16,7 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using TiaMcp.Logic.V4;
+using TiaOpenness.Shared;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -187,14 +188,15 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var result = render(maximum);
             int WireLength(CallToolResult value) => ((TextContentBlock)value.Content[0]).Text.Length;
-            if (maximum.Returned < 2 || WireLength(result) <= McpServer.DefaultMaxResponseChars) return result;
+            int budget = McpServer.DefaultMaxResponseChars - ToolCallTiming.ReservedJsonChars;
+            if (maximum.Returned < 2 || WireLength(result) <= budget) return result;
             var best = render(slice(1));
             int low = 2, high = maximum.Returned - 1;
             while (low <= high)
             {
                 int middle = low + (high - low) / 2;
                 var candidate = render(slice(middle));
-                if (WireLength(candidate) <= McpServer.DefaultMaxResponseChars) { best = candidate; low = middle + 1; }
+                if (WireLength(candidate) <= budget) { best = candidate; low = middle + 1; }
                 else high = middle - 1;
             }
             return best;
@@ -229,7 +231,8 @@ namespace TiaMcpServer.ModelContextProtocol
             string full = text.Text ?? "";
             // 反向哨兵：没超阈值就在这里原样返回**同一个对象引用**，
             // 未超阈值的响应因此一字不变（含 StructuredContent、Meta、块类型）。
-            if (!force && full.Length <= limit) return result;
+            int timingChars = ToolCallTiming.Meta(result.StructuredContent) != null ? ToolCallTiming.ReservedJsonChars : 0;
+            if (!force && full.Length <= limit - timingChars) return result;
 
             // 原子：寄存 + 取头部在同一把锁里完成。分成两步的话，中间别的线程 Put 时
             // 的淘汰可能把我们刚存的挤掉，Slice 就拿到 Error != null、Text=""，
@@ -258,8 +261,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     var m = original.Meta;
                     var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ResponseExports.MaxSliceChars), page.NextOffset, null, null,
                         page.TotalLength, page.Eof, PagingUnit.Utf16);
-                    var pageMeta =
-                        new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.BehaviorPolicy, m.Completeness, paging, m.Warnings);
+                    var pageMeta = new Meta(m.Timestamp, m.ReleaseKey, m.Tool, m.RequestId, m.Outcome, m.Execution, m.BehaviorPolicy,
+                        m.Completeness, paging, m.Warnings, m.ElapsedMs, m.ApprovalWaitMs, m.WorkerElapsedMs);
                     var mapped = McpResult.From(Envelope.Create(data, original.Error, pageMeta));
                     return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                         Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };

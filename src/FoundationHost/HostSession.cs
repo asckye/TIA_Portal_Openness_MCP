@@ -266,7 +266,11 @@ internal sealed class HostSession : IHostSession
         }
     }
 
-    internal async ValueTask<CallToolResult> Invoke(McpServerTool inner, RequestContext<CallToolRequestParams> request, bool workbench, CancellationToken token)
+    internal ValueTask<CallToolResult> Invoke(McpServerTool inner, RequestContext<CallToolRequestParams> request, bool workbench, CancellationToken token)
+        => HostSessionCall.Measure(clock, () => InvokeOrDetach(inner, request, workbench, token));
+
+    private async ValueTask<CallToolResult> InvokeOrDetach(McpServerTool inner, RequestContext<CallToolRequestParams> request, bool workbench,
+        CancellationToken token)
     {
         lock (sync)
         {
@@ -289,17 +293,20 @@ internal sealed class HostSession : IHostSession
         using (call)
         using (call.Enter())
         {
-            CallToolResult? result = null;
             try
             {
-                result = await InvokeCore(inner, request, workbench, call.Token).ConfigureAwait(false);
+                var result = HostSessionCall.Stamp(await InvokeCore(inner, request, workbench, call.Token).ConfigureAwait(false));
                 call.Complete(result, unsettled);
                 return result;
             }
             catch
             {
-                if (call.Detached) call.Complete(FoundationV4Result.LateFailure(release, inner.ProtocolTool.Name,
-                    (string?)LateResults.Running?["requestId"] ?? Guid.NewGuid().ToString("N")), unsettled);
+                if (call.Detached)
+                {
+                    var failure = FoundationV4Result.LateFailure(release, inner.ProtocolTool.Name,
+                        (string?)LateResults.Running?["requestId"] ?? Guid.NewGuid().ToString("N"));
+                    call.Complete(HostSessionCall.Stamp(failure), unsettled);
+                }
                 throw;
             }
             finally

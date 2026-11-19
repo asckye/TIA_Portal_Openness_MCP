@@ -9,6 +9,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)OnlineTargetSettings.cs" Link="Shared/OnlineTargetSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApprovalProtocol.cs" Link="Shared/ApprovalProtocol.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApprovalPipe.cs" Link="Shared/ApprovalPipe.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolCallTiming.cs" Link="Shared/ToolCallTiming.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApprovalResult.cs" Link="Shared/ApprovalResult.cs" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
@@ -52,6 +53,7 @@ namespace TiaMcp.WorkerChannel
 
         public void Handle(byte[] bytes)
         {
+            var elapsed = profile == ChannelProfile.Studio ? null : Stopwatch.StartNew();
             if (Interlocked.CompareExchange(ref busy, 1, 0) != 0) throw Fault(new IOException("Concurrent worker dispatch."));
             try
             {
@@ -122,11 +124,12 @@ namespace TiaMcp.WorkerChannel
                             throw new IOException("Unexpected engine binding epoch change.");
                     }
                     byte[] reply;
-                    try { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, response, profile); }
+                    byte[] Reply(ChannelResponse value) => ChannelCodec.Reply(id, before.Epoch, after.Epoch, value, profile, elapsed);
+                    try { reply = Reply(response); }
                     catch (ChannelLimitException) when (profile != ChannelProfile.Studio && response.Spill != null) /* swallow(native-fallback): persist the complete result before emitting a bounded spill descriptor */
-                    { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, ChannelResponse.Success(response.Spill()), profile); }
+                    { reply = Reply(ChannelResponse.Success(response.Spill())); }
                     catch (ChannelLimitException) when (profile != ChannelProfile.Studio && response.OversizedResultJson != null) /* swallow(native-fallback): use the bounded worker refusal before emitting any response bytes */
-                    { reply = ChannelCodec.Reply(id, before.Epoch, after.Epoch, ChannelResponse.Success(response.OversizedResultJson), profile); }
+                    { reply = Reply(ChannelResponse.Success(response.OversizedResultJson)); }
                     Emit(reply);
                 }
             }

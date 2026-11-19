@@ -26,6 +26,88 @@ public sealed class ProtocolTests
     internal static readonly TimeSpan Budget = TestDeadlines.Hang;
 
     [Fact]
+    public async Task Reply_times_follow_the_matching_success_or_error_and_are_optional_on_older_workers()
+    {
+        using var wire = new Wire();
+        var times = new List<long?>();
+        wire.Client.ObserveReplyTime = times.Add;
+        await wire.Connect();
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(payload: "\"workerElapsedMs\":37,\"result\":42"));
+        Assert.Equal("42", await wire.Call());
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(2, payload:
+            "\"workerElapsedMs\":0,\"error\":{\"code\":-32603,\"message\":\"refused\",\"data\":{\"outcome\":\"ReadFailed\",\"evidence\":null}}"));
+        await Assert.ThrowsAsync<ChannelFailureException>(() => wire.Call());
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(3));
+        Assert.Equal("null", await wire.Call());
+        Assert.Equal(new long?[] { 37, 0, null }, times);
+    }
+
+    [Theory]
+    [InlineData(1, 37)]
+    [InlineData(2, null)]
+    public async Task A_channel_fault_only_observes_timing_from_the_matching_request(int replyId, int? expected)
+    {
+        using var wire = new Wire();
+        var times = new List<long?>();
+        wire.Client.ObserveReplyTime = times.Add;
+        await wire.Connect();
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(replyId, after: 2, payload: "\"workerElapsedMs\":37,\"result\":null"));
+        await Assert.ThrowsAsync<ChannelFaultException>(() => wire.Call());
+        Assert.True(wire.Client.Poisoned);
+        Assert.Equal((long?)expected, Assert.Single(times));
+    }
+
+    [Fact]
+    public async Task A_fault_reports_the_correlated_time_even_if_the_request_flush_is_still_pending()
+    {
+        using var wire = new Wire();
+        using var cancel = new CancellationTokenSource();
+        var flush = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var times = new List<long?>();
+        wire.Client.ObserveReplyTime = times.Add;
+        await wire.Connect();
+        wire.Output.FlushGate = flush.Task;
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(after: 2, payload: "\"workerElapsedMs\":37,\"result\":null"));
+        var call = wire.Call(token: cancel.Token);
+        try
+        {
+            await Eventually(() => wire.Client.Poisoned);
+            cancel.Cancel();
+            await Assert.ThrowsAsync<ChannelFaultException>(() => call.WaitAsync(Budget));
+            Assert.Equal(37, Assert.Single(times));
+        }
+        finally { flush.SetResult(); }
+    }
+
+    [Fact]
+    public async Task A_draining_call_reports_its_timing_once_when_the_late_reply_faults()
+    {
+        using var wire = new Wire();
+        var times = new List<long?>();
+        wire.Client.ObserveReplyTime = times.Add;
+        await wire.Connect();
+        var running = await Assert.ThrowsAsync<ChannelCallRunningException>(() => wire.Client.CallToolAsync(
+            "adapter.ReadState", "{}", BindingChange.None, true, TimeSpan.FromTicks(1), false, null, null, drainOnTimeout: true));
+        Assert.Empty(times);
+        wire.Input.Feed(Reply(after: 2, payload: "\"workerElapsedMs\":37,\"result\":null"));
+        await Assert.ThrowsAsync<ChannelFaultException>(() => running.Reply.WaitAsync(Budget));
+        Assert.Equal(37, Assert.Single(times));
+    }
+
+    [Theory]
+    [InlineData("-1")]
+    [InlineData("1.5")]
+    [InlineData("\"1\"")]
+    public async Task Worker_timing_requires_a_nonnegative_integer(string invalid)
+    {
+        using var wire = new Wire();
+        await wire.Connect();
+        wire.Output.OnWrite = _ => wire.Input.Feed(Reply(payload: "\"workerElapsedMs\":" + invalid + ",\"result\":null"));
+        await Assert.ThrowsAsync<ChannelFaultException>(() => wire.Call());
+        Assert.True(wire.Client.Poisoned);
+    }
+
+    [Fact]
     public async Task Answered_project_unknown_allows_independent_simulator_and_project_calls()
     {
         using var wire = new Wire(); await wire.Connect();
@@ -290,6 +372,8 @@ public sealed class ProtocolTests
     {
         internal readonly List<string> Writes=new();
         internal Action<string>? OnWrite;
+        internal Task? FlushGate;
+        public override Task FlushAsync(CancellationToken token) => FlushGate ?? base.FlushAsync(token);
         public override Task WriteAsync(byte[] buffer,int offset,int count,CancellationToken token)
         {
             string line=Encoding.UTF8.GetString(buffer,offset,count); Writes.Add(line); OnWrite?.Invoke(line); return Task.CompletedTask;

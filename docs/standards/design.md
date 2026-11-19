@@ -378,7 +378,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
  "meta": {"timestamp": "…", "releaseKey": "20", "tool": "CompileHmiDiagnostics", "requestId": "…",
           "outcome": "rejected-before-operation", "execution": "not-started",
           "behaviorPolicy": "current", "completeness": "none", "paging": null,
-          "warnings": [{"code": "UNVERIFIED_BEHAVIOR", "message": "…", "details": {}}]}}
+          "warnings": [{"code": "UNVERIFIED_BEHAVIOR", "message": "…", "details": {}}], "elapsedMs": 3}}
 ```
 
 | 字段 | 规则 |
@@ -392,7 +392,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 编码规则：
 
 - 无 BOM 的 UTF-8、无缩进，属性名 camelCase，按 `JsonPropertyOrder` 固定顺序输出（`schemaVersion, ok, data, error, meta`）。数字是有限值；同一对象不得有重复属性名；数组 MUST 存在（无值为 `[]`），元素不得为 null。
-- 信封、`meta` 和 `details` 中未知或不适用的字段 MUST 输出 `null`，不得省略（API-05）。
+- 信封、`meta` 和 `details` 中未知或不适用的字段 MUST 输出 `null`（API-05）。第 4.4 节的可选耗时字段仅在有对应测量时输出。
 - 协议层时间（`meta.timestamp`、`data.timestamp`、`createdUtc`、`expiresUtc` 等）MUST 是 UTC RFC 3339，固定七位小数并以 `Z` 结尾；读取方兼容 0–7 位小数；未指定时区的时间拒绝序列化。原生证据和数值 ticks 保持原有精度。
 - 枚举拼写：`outcome`、`execution`、`behaviorPolicy` 和状态词用 kebab-case；`completeness` 与 `paging.mode` 是单个小写单词；错误码和警告码用 UPPER_SNAKE；工具输入的选择值用 camelCase；Siemens 原生名称保持原样（API-34）。
 - 生产者由 `V4Validation` 按闭集校验每个发出的信封，包括审批、恢复提示等后加的装饰；`V4Json` 的严格读取端拒绝未知成员。跨版本的消费者用 `V4Json.DeserializeConsumer`，保留未知字段和诊断码。
@@ -409,6 +409,9 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | 字段 | 规则 |
 |---|---|
 | `timestamp` | 信封构造时刻（UTC）；大响应寄存后保留原信封的时间 |
+| `elapsedMs` | 成功与失败均返回非负整数毫秒，从宿主收到工具调用到构造响应按单调时钟计时，扣除等待 Workbench 审批决定的时间。`GetCallResult` 保留已完成调用的原始耗时，读取缺乏原始计时的运行中快照或旧结果时省略该字段 |
+| `approvalWaitMs` | 等待 Workbench 审批决定的非负整数毫秒，仅在调用实际等待时返回 |
+| `workerElapsedMs` | worker 从收到请求到构造回复的非负整数毫秒。多次派发时合计各次耗时。通道故障时，已匹配请求 ID 的回复仍可提供耗时。任一次派发缺少有效计时则省略该字段 |
 | `releaseKey` | 宿主进程的发布键；只有无法确定时才 MAY 为 null，不得猜测 |
 | `tool` | 实际执行的工具名（`CallTool` 规则见第 4.2 节） |
 | `requestId` | 服务器生成的关联 ID：审计调用 ID → 调用日志关联 ID → 新的 32 位小写 GUID；审批过的调用使用审批请求的 ID；批次为每个子项生成新 ID；不采用客户端提供的 ID |
