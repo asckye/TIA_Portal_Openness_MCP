@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-19T12:32:32.8889241+00:00",
+  "generatedAt": "2026-11-19T13:56:35.0549556+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "e18956453e46a183e033e414fc07309fe7ebd31752a6d8475f6bf6250c933df2",
+  "workerSha256": "63a1d89126e731f059d6d0ae0a9d646998fd35fccbaa480d1ae563fb50b7e38f",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -6773,7 +6773,7 @@
         "outputReleaseKey",
         "ladFcBlock"
       ],
-      "description": "[offline candidate; native unverified][OFFLINE] In-memory V21 LAD candidate generation. Each network contains exactly one call or rung. Rungs support contacts, edges, compares, OR, fan-out, coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins. Global instances only; Time PT; Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; no block resolution. Registered on V21 only. For unsupported timers, counters and math or library/system instructions and other unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. No symbol/type resolution; compile is the authority. V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcLadFcBlock\"), optionally operation or language.",
+      "description": "[offline candidate; native unverified][OFFLINE] In-memory V21 LAD candidate generation. Each network contains exactly one call or rung. Edge contacts are refused pending V21 verification. Rungs support contacts, compares, OR, fan-out, coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins. Global instances only; Time PT; Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; no block resolution. Registered on V21 only. For unsupported timers, counters and math or library/system instructions and other unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. No symbol/type resolution; compile is the authority. V21 candidate XML only. Target-installed Siemens XSD and TIA import validation have NOT RUN. Not import-ready; no lower-version compatibility or PLC program correctness is claimed. No file reads/writes, connection or worker calls. Supply a typed object/array with exact camelCase fields, never a JSON string. Existing Foundation budgets and output-release limits apply. Examples: GetToolUsage(toolName: \"BuildPlcLadFcBlock\"), optionally operation or language.",
       "example": "{\"outputReleaseKey\":\"21\",\"ladFcBlock\":{\"blockName\":\"FC_Lad\",\"blockNumber\":12,\"networks\":[{\"call\":{\"callName\":\"FC_Ready\",\"parameters\":[{\"name\":\"Ready\",\"section\":\"Output\",\"dataType\":\"Bool\",\"symbolPath\":[\"DB_Status\",\"Ready\"]}]}}]}}"
     },
     {
@@ -7401,7 +7401,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][EXECUTE] [v17-compile-safe-v1] Preview by default. Optional scope selects an exact block, group or V16–V21 unit with ICompilable; unavailable services refuse execution. Actual PLC compilation returns native counts and nested messages; no download. Nonempty safety password requires supplied V17+ SafetyAdministration API and service; never ignored. Examples: GetToolUsage(toolName: \"CompilePlcSoftware\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][EXECUTE] [v17-compile-safe-v1] Preview by default. Optional scope selects an exact block, group or V16–V21 unit with ICompilable; unavailable services refuse execution. TIA may compile a wider scope. Block and group results list compiledRoots. Actual PLC compilation returns native counts and nested messages; no download. Nonempty safety password requires supplied V17+ SafetyAdministration API and service; never ignored. Examples: GetToolUsage(toolName: \"CompilePlcSoftware\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"dryRun\":true,\"confirm\":false,\"scope\":\"software\",\"scopePath\":\"\",\"unitName\":\"\"}"
     },
     {
@@ -7423,7 +7423,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][EXECUTE] [v17-compile-safe-v1] Optional scope selects an exact block, group or V16-V21 standard unit with ICompilable; unavailable services refuse execution without software fallback. Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution. Examples: GetToolUsage(toolName: \"CompilePlcDiagnostics\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][EXECUTE] [v17-compile-safe-v1] Optional scope selects an exact block, group or V16-V21 standard unit with ICompilable; unavailable services refuse execution without software fallback. TIA may compile a wider scope. Block and group results list compiledRoots. Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution. Examples: GetToolUsage(toolName: \"CompilePlcDiagnostics\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"dryRun\":true,\"confirm\":false,\"scope\":\"software\",\"scopePath\":\"\",\"unitName\":\"\"}"
     },
     {

@@ -6829,7 +6829,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "8cd247e40496e6f2742bcfa49f008828c8234b0298cdf9178e023979b0739d09",
+      "descriptionSha256": "7a1dc0f9fd80da1023ce89120bb23a54bfd97c08d74c7728c37e7bd60c7bf3b1",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6894,7 +6894,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "0bb7b0cd0e2673a73d2d559eb5e392d6dda52c15907bfd690238ccfaaee2024a",
+      "descriptionSha256": "c698cd3d1cae625b0aff1b4b3a8b6abdc3fe7de36640f27473caebd680d62680",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19591,7 +19591,7 @@
           },
           "archiveName": {
             "default": "",
-            "description": "archiveName: file name of the library archive to write.",
+            "description": "archiveName: file name of the library archive to write. TIA writes this name without adding an extension.",
             "type": "string"
           },
           "destinationDirectory": {
@@ -27579,7 +27579,7 @@
             "type": "string"
           },
           "referenceDir": {
-            "description": "referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)",
+            "description": "referenceDir: provide manifest.json or XML in plc/blocks, plc/types, hmi/screens or hmi/tags. Preview lists planned files and SHA-256 hashes.",
             "type": "string"
           }
         },
