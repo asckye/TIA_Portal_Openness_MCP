@@ -50,6 +50,7 @@ internal sealed class FoundationV4Tool : McpServerTool
     private readonly Func<JsonObject>? readinessForTest;
     private readonly bool sharedSession;
     private readonly bool declaredPortInputAndPaging;
+    private readonly bool useHostReadiness;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -57,7 +58,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         Func<TiaOpenness.Shared.ApprovalSettings>? approvalSettings = null,
         Func<TiaOpenness.Shared.PendingApproval, TiaOpenness.Shared.ApprovalSettings,
             CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait = null,
-        Func<JsonObject>? readinessForTest = null, bool sharedSession = false)
+        Func<JsonObject>? readinessForTest = null, bool sharedSession = false, bool registered = false)
     {
         if (inner is OfflineXmlTool xmlTool) inner = xmlTool.ForRelease(release);
         else if (inner is OfflineCompositionTool compositionTool) inner = compositionTool.ForRelease(release);
@@ -74,6 +75,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         PlcSoftwareUnitSchema.Apply(schema, source.Name, release);
         if (inner is FoundationTool { Ported: true })
         {
+            useHostReadiness = registered && !ReleaseCatalogData.Releases[release].FoundationReadinessBoundary;
             declaredPortInputAndPaging = ReleaseCatalogData.DeclaredPortInputAndPaging(release);
             DeclaredHost.AssertV4Tool(source.Name);
             tool = new Tool { Name = source.Name, Title = source.Title,
@@ -348,10 +350,14 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(unavailable);
             if (!internalPrecheck && DeclaredHost.OnlinePlanRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()) is Error expired)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, expired, true));
-            if (tool.Name != "DisconnectPortal" && inner is FoundationTool nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null)
-                && (nativeTool.Ported && !ReleaseCatalogData.Releases[release].FoundationReadinessBoundary
-                    ? ReadinessGuard.NativeTarget(tool.Name, args, name => !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(name)) != null
-                    : nativeTool.RequiresTia))
+            // Registered V20/V21 ports use the engine session snapshot. Standalone Foundation tools keep their own worker requirements.
+            if (useHostReadiness && EngineHostConfiguration.CurrentOrNull != null)
+            {
+                if (await ReadinessGuard.Check(tool.Name, request, cancellationToken).ConfigureAwait(false) is { } refusal)
+                    return await Recorded(refusal);
+            }
+            else if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool
+                && (nativeTool.UsesProductionWorker || readinessForTest != null))
             {
                 await nativeTool.PrepareReadiness(cancellationToken).ConfigureAwait(false);
                 var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);

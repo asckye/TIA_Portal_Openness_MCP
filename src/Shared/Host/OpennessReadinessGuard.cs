@@ -39,24 +39,74 @@ namespace TiaMcpServer.Dispatch
             return !IsSafeWithoutTia(name);
         }
 
-        internal static string? NativeTarget(string name, IReadOnlyDictionary<string, JsonElement>? arguments,
-            Func<string, bool> requiresOpenness)
+        private static string? NativeTarget(string name, IReadOnlyDictionary<string, JsonElement>? arguments)
         {
-            if (arguments == null) return requiresOpenness(name) ? name : null;
+            if (arguments == null) return RequiresOpenness(name) ? name : null;
             if (name.Equals("CallTool", StringComparison.OrdinalIgnoreCase))
             {
                 if (!arguments.TryGetValue("name", out var target) || target.ValueKind != JsonValueKind.String) return null;
-                return requiresOpenness(target.GetString() ?? "") ? target.GetString() : null;
+                return RequiresOpenness(target.GetString() ?? "") ? target.GetString() : null;
             }
             if (name is "RunToolTransaction" or "RunReadOnlyToolBatch" or "ApplyToolBatch")
             {
                 if (!arguments.TryGetValue("operations", out var operations) || operations.ValueKind != JsonValueKind.Array) return null;
                 foreach (var item in operations.EnumerateArray())
                     if (item.ValueKind == JsonValueKind.Object && item.TryGetProperty("name", out var target)
-                        && target.ValueKind == JsonValueKind.String && requiresOpenness(target.GetString() ?? "")) return target.GetString();
+                        && target.ValueKind == JsonValueKind.String && RequiresOpenness(target.GetString() ?? "")) return target.GetString();
                 return null;
             }
-            return requiresOpenness(name) ? name : null;
+            return RequiresOpenness(name) ? name : null;
+        }
+
+        internal static async ValueTask<CallToolResult?> Check(string name, RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
+        {
+            var target = NativeTarget(name, request.Params?.Arguments);
+            if (target == null || OpennessReadiness.Ready) return null;
+            var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments
+                ?? new Dictionary<string, JsonElement>());
+            var admission = McpServer.ValidateInfrastructureExample(name,
+                JsonNode.Parse(arguments.GetRawText())!.AsObject());
+            if (admission != null && name == "CallTool" && arguments.TryGetProperty("name", out var targetName)
+                && targetName.ValueKind == JsonValueKind.String
+                    && (!arguments.TryGetProperty("arguments", out var supplied) || supplied.ValueKind == JsonValueKind.Object))
+                admission = McpServer.TargetInputError(targetName.GetString()!, new TiaMcp.Logic.V4.Inputs.ToolArguments(
+                    arguments.TryGetProperty("arguments", out var targetArguments) ? targetArguments : JsonSerializer.SerializeToElement(new { })),
+                        admission);
+            if (admission != null)
+                return McpServer.V4TargetReject(
+                    name == "CallTool" && admission.Details is InvalidArgumentDetails { Parameter: not "" }
+                        ? target : name, admission,
+                    McpServer.CurrentBehaviorTargets(name, arguments));
+#if TIA_ENGINE_HOST
+            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].MergeWorkerReadiness
+                && (string?)McpServer.Worker.Snapshot()["state"] == "NotStarted")
+            {
+                try
+                {
+                    if (McpServer.Worker is TiaMcp.FoundationHost.IEngineWorkerReadiness readiness)
+                        await readiness.PrepareReadiness(cancellationToken).ConfigureAwait(false);
+                    else await McpServer.Worker.Status(cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception failure)
+                { return McpServer.DiscloseTargets(McpServer.TargetFailure(name, failure, false), name, arguments); }
+                if (OpennessReadiness.Ready) return null;
+            }
+            // V20/V21 (P8-04j2): a ported capability refusal starts no native call, and the engine reported it before
+            // readiness. The bridge dispatches such a target so its own capability admission answers.
+            if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].MergeWorkerReadiness && name == "CallTool"
+                && arguments.TryGetProperty("arguments", out var portedArguments) && portedArguments.ValueKind == JsonValueKind.Object
+                && McpServer.PortedCapabilityRefusals.TryGetValue((McpServer.ReleaseKey, target), out var refuses) && refuses(portedArguments))
+                return null;
+#endif
+            var cause = OpennessReadiness.Cause ?? "TIA Openness initialization has not completed.";
+            var fix = OpennessReadiness.FixEn ?? "Run `tia doctor` to inspect the TIA Openness installation.";
+            var fixZh = OpennessReadiness.FixZh ?? Runtime.EnvironmentDoctor.DefaultFixZh;
+            var data = new JsonObject { ["environment"] = new JsonObject {
+                ["ready"] = false, ["cause"] = cause, ["recommendedFix"] = fix, ["recommendedFixZh"] = fixZh } };
+            var error = new Error(cause + " " + fix, new ResourceUnavailableDetails("tia-openness-environment"));
+            // The surrounding serialized-call audit records this refusal (request and end, no start) and shares its requestId.
+            var refusal = McpServer.V4Reject(name, error, data);
+            return McpServer.DiscloseTargets(refusal, name, arguments);
         }
 
         private sealed class GuardedTool : McpServerTool
@@ -65,57 +115,10 @@ namespace TiaMcpServer.Dispatch
             internal GuardedTool(McpServerTool inner) => this.inner = inner;
             public override Tool ProtocolTool => inner.ProtocolTool;
 
-            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
-                    default)
-            {
-                var target = NativeTarget(ProtocolTool.Name, request.Params?.Arguments, RequiresOpenness);
-                if (target == null || OpennessReadiness.Ready) return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
-                var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments
-                    ?? new Dictionary<string, JsonElement>());
-                var admission = McpServer.ValidateInfrastructureExample(ProtocolTool.Name,
-                    JsonNode.Parse(arguments.GetRawText())!.AsObject());
-                if (admission != null && ProtocolTool.Name == "CallTool" && arguments.TryGetProperty("name", out var targetName)
-                    && targetName.ValueKind == JsonValueKind.String
-                        && (!arguments.TryGetProperty("arguments", out var supplied) || supplied.ValueKind == JsonValueKind.Object))
-                    admission = McpServer.TargetInputError(targetName.GetString()!, new TiaMcp.Logic.V4.Inputs.ToolArguments(
-                        arguments.TryGetProperty("arguments", out var targetArguments) ? targetArguments : JsonSerializer.SerializeToElement(new { })),
-                            admission);
-                if (admission != null)
-                    return McpServer.V4TargetReject(
-                        ProtocolTool.Name == "CallTool" && admission.Details is InvalidArgumentDetails { Parameter: not "" }
-                            ? target : ProtocolTool.Name, admission,
-                        McpServer.CurrentBehaviorTargets(ProtocolTool.Name, arguments));
-#if TIA_ENGINE_HOST
-                if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].MergeWorkerReadiness
-                    && (string?)McpServer.Worker.Snapshot()["state"] == "NotStarted")
-                {
-                    try
-                    {
-                        if (McpServer.Worker is TiaMcp.FoundationHost.IEngineWorkerReadiness readiness)
-                            await readiness.PrepareReadiness(cancellationToken).ConfigureAwait(false);
-                        else await McpServer.Worker.Status(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception failure)
-                    { return McpServer.DiscloseTargets(McpServer.TargetFailure(ProtocolTool.Name, failure, false), ProtocolTool.Name, arguments); }
-                    if (OpennessReadiness.Ready) return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
-                }
-                // V20/V21 (P8-04j2): a ported capability refusal starts no native call, and the engine reported it before
-                // readiness. The bridge dispatches such a target so its own capability admission answers.
-                if (TiaMcp.FoundationHost.ReleaseCatalogData.Releases[McpServer.ReleaseKey].MergeWorkerReadiness && ProtocolTool.Name == "CallTool"
-                    && arguments.TryGetProperty("arguments", out var portedArguments) && portedArguments.ValueKind == JsonValueKind.Object
-                    && McpServer.PortedCapabilityRefusals.TryGetValue((McpServer.ReleaseKey, target), out var refuses) && refuses(portedArguments))
-                    return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
-#endif
-                var cause = OpennessReadiness.Cause ?? "TIA Openness initialization has not completed.";
-                var fix = OpennessReadiness.FixEn ?? "Run `tia doctor` to inspect the TIA Openness installation.";
-                var fixZh = OpennessReadiness.FixZh ?? Runtime.EnvironmentDoctor.DefaultFixZh;
-                var data = new JsonObject { ["environment"] = new JsonObject {
-                    ["ready"] = false, ["cause"] = cause, ["recommendedFix"] = fix, ["recommendedFixZh"] = fixZh } };
-                var error = new Error(cause + " " + fix, new ResourceUnavailableDetails("tia-openness-environment"));
-                // The surrounding serialized-call audit records this refusal (request and end, no start) and shares its requestId.
-                var refusal = McpServer.V4Reject(ProtocolTool.Name, error, data);
-                return McpServer.DiscloseTargets(refusal, ProtocolTool.Name, arguments);
-            }
+            public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
+                CancellationToken cancellationToken = default)
+                => await Check(ProtocolTool.Name, request, cancellationToken).ConfigureAwait(false)
+                    ?? await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
         }
     }
 }

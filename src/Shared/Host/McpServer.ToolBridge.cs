@@ -200,7 +200,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 return AuditBridgeResult(audit, fenced, disabled);
             }
             var error = ToolInvoker.Bind(name, arguments ?? EmptyArguments(), out var call);
-            if (error != null) return AuditBridgeResult(audit, BindingRefusal(name, arguments ?? EmptyArguments(), error), disabled);
+            if (error != null)
+            {
+                var rejected = BindingRefusal(name, arguments ?? EmptyArguments(), error);
+                return AuditBridgeResult(audit, rejected, disabled);
+            }
             if (string.Equals(name, "CallTool", StringComparison.Ordinal))
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
             bool issued = false;

@@ -327,7 +327,7 @@ internal static class LegacyHostToolRegistry
             Func<JsonObject>? readinessForTool = worker is IFoundationSessionWorker { Bundled: true } ? readiness : null;
             if (tools[i] is FoundationTool { Ported: true } ported) ported.RegisterCapabilityRefusal();
             wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, readinessForTest: readinessForTool,
-                sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
+                sharedSession: worker is IFoundationSessionWorker { SharedSession: true }, registered: true));
         });
         tools.Clear(); tools.AddRange(wrapped);
         CompatibilityTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
