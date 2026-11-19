@@ -308,7 +308,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 16 | F12 | current | NOT RUN | ExportPlcWatchTablesToDirectory, GetPlcWatchTableCurrentValuesReadOnly, ImportPlcWatchTableOffline, ListPlcForceTables, ManagePlcTableEntries, MonitorPlcWatchTableS7, PlanOnlineReadOnlyDataProvider, PlanOnlineReadOnlyMonitoring, ProbePlcMonitorOnlineCapabilities, TraceTagCause, TraceTagCauseLive |
 | 16 | F13 | current | NOT RUN | ConfigureMotionHardwareConnection, ExchangeMotionCamData, ExportTechnologyObjectsToDirectory, GetMotionAxisConfiguration, GetTechnologyObjectTree, ImportTechnologyObject, ImportTechnologyObjectsFromDirectory, ManageMotionAxis, ManageTechnologyObject |
 | 16 | F10 | current | NOT RUN | GetPlcBlockScopes |
-| 16 | F14 | current | NOT RUN | ExchangePlcAlarmTextLists, ExportAlarmInstanceTexts, ExportAlarmTextLists, ImportAlarmTextLists, ImportPlcAlarmInstanceTexts |
+| 16 | F14 | current | NOT RUN | ExchangePlcAlarmTextLists, ImportAlarmTextLists, ImportPlcAlarmInstanceTexts |
 | 16 | F15 | current | NOT RUN | ExportOpcUaInterface, GenerateOpcUaModelledInterface, GetPlcOpcUaConfiguration, ImportOpcUaInterface, ManageOpcUaInterface, SetOpcUaInterfaceEnabled |
 | 16 | F16 | current | NOT RUN | GetPlcChecksums, GetPlcObjectFingerprints, ListPlcSoftwareUnits, ManagePlcSoftwareUnit, SetPlcUnitObjectAccess |
 | 16 | F17 | current | NOT RUN | CompileDevice, CompileHmiDiagnostics |

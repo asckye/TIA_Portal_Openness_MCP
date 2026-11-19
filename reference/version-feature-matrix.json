@@ -4941,8 +4941,6 @@
         "l5": "NOT RUN",
         "entries": [
           "ExchangePlcAlarmTextLists",
-          "ExportAlarmInstanceTexts",
-          "ExportAlarmTextLists",
           "ImportAlarmTextLists",
           "ImportPlcAlarmInstanceTexts"
         ]

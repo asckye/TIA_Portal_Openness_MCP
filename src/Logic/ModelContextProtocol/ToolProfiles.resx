@@ -13725,24 +13725,6 @@
     },
     {
       "releaseKey": "16",
-      "entry": "ExportAlarmInstanceTexts",
-      "family": "F14",
-      "example": {
-        "softwarePath": "PLC_1",
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
-      }
-    },
-    {
-      "releaseKey": "16",
-      "entry": "ExportAlarmTextLists",
-      "family": "F14",
-      "example": {
-        "softwarePath": "PLC_1",
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
-      }
-    },
-    {
-      "releaseKey": "16",
       "entry": "ImportAlarmTextLists",
       "family": "F14",
       "example": {
@@ -72647,36 +72629,6 @@
           "filePath": "C:\\Examples\\exports\\AlarmTextLists.xlsx",
           "confirmImport": false,
           "dryRun": true
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
-        "name": "ExportAlarmInstanceTexts",
-        "currentName": "ExportAlarmInstanceTexts",
-        "sourceName": "ExportAlarmInstanceTexts",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmInstanceTexts.xlsx"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
-        "name": "ExportAlarmTextLists",
-        "currentName": "ExportAlarmTextLists",
-        "sourceName": "ExportAlarmTextLists",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\ExportAlarmTextLists.xlsx"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"

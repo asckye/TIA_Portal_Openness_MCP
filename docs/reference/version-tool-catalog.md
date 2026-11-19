@@ -350,8 +350,8 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ExchangeUnifiedScriptModules` | 19, 20, 21 |
 | `ExchangeUnifiedTags` | 19, 20, 21 |
 | `ExportAlarmClasses` | 17, 18, 19, 20, 21 |
-| `ExportAlarmInstanceTexts` | 16, 17, 18, 19, 20, 21 |
-| `ExportAlarmTextLists` | 16, 17, 18, 19, 20, 21 |
+| `ExportAlarmInstanceTexts` | 17, 18, 19, 20, 21 |
+| `ExportAlarmTextLists` | 17, 18, 19, 20, 21 |
 | `ExportOpcUaInterface` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ExportPlcBlockDocuments` | 20, 21 |
 | `ExportPlcBlocksDocuments` | 20, 21 |

@@ -632,7 +632,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 356,
+      "toolCount": 354,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -710,8 +710,6 @@
         "EnsureSubnet",
         "ExchangeMotionCamData",
         "ExchangePlcAlarmTextLists",
-        "ExportAlarmInstanceTexts",
-        "ExportAlarmTextLists",
         "ExportDeviceAml",
         "ExportHmiConnection",
         "ExportHmiProgram",
@@ -4945,7 +4943,6 @@
     {
       "name": "ExportAlarmInstanceTexts",
       "releases": [
-        "16",
         "17",
         "18",
         "19",
@@ -4958,7 +4955,6 @@
     {
       "name": "ExportAlarmTextLists",
       "releases": [
-        "16",
         "17",
         "18",
         "19",
