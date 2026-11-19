@@ -3151,7 +3151,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e489060be7d14044e0e7cbff2b59686aa60ea7915c5fe9e97692ed7c2b5cab5d",
+      "descriptionSha256": "fd0f71271bd20c670dd2bde3a39f387b13867b99e1d4f9c4920f64c7acba1b69",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -3183,7 +3183,7 @@
               "fb"
             ],
             "examples": [
-              "fc"
+              "udt"
             ],
             "type": "string"
           },
@@ -6283,7 +6283,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "54039653207b75865ceed619b0ced82c82551660aab8bea6d14bebfb3fab58eb",
+      "descriptionSha256": "d1289c621790871e94c17ac28f08a3a19f92579e3f4c0290541442d866402f90",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6324,14 +6324,14 @@
           "orderNumber": {
             "description": "Exact catalog article number or full OrderNumber TypeIdentifier, passed unchanged to preferredMlfb.",
             "examples": [
-              "6ES7 515-2AM02-0AB0"
+              "6ES7 511-1AK01-0AB0"
             ],
             "type": "string"
           },
           "version": {
             "description": "Exact catalog version; empty for a full TypeIdentifier, passed unchanged to preferredVersion.",
             "examples": [
-              "V2.9"
+              "V2.1"
             ],
             "type": "string"
           }
@@ -7236,7 +7236,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "0028e0ae70eb0bd0537be83f180f4f754f0bdb683370b104aa3f1c3738cb4f7b",
+      "descriptionSha256": "50365a497a41c57af9537a650e4fe88bc79edb3cb9442a0f2afd4069a0c30ff2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -8415,7 +8415,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "e697095e4b3559487907d9dca920b8faa26d5fb6411d14e6477f93a30a172f89",
+      "descriptionSha256": "a74fe10149a2851b2438638d000c73a4deaaecab9bffe2aa15223fc7c95174fd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -8451,7 +8451,7 @@
             "default": "",
             "description": "All capability words must match. Single words also match descriptions, ranked below tool names and aliases. Empty browses the catalog.",
             "examples": [
-              "watch table"
+              "GetProjectTree"
             ],
             "type": "string"
           }
@@ -9154,7 +9154,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "368108d9ed2b113e4ac86d1a945d5bb3a962f36af841bfe9d37ace0f1cdcebfb",
+      "descriptionSha256": "f6930a7a06c9c3f2ccf4396b083dcbfc474e383460eae5927f59f7ab72f42826",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -9278,7 +9278,7 @@
               "write"
             ],
             "examples": [
-              "read"
+              "write"
             ],
             "type": "string"
           }
@@ -17546,7 +17546,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f5b519eebf2bdaea49eb430f3442cd62098388b31dfc000f92dd429ab0ea7dbc",
+      "descriptionSha256": "c7d6670b7aeacadd37d907dac8cd57b35a807878a6d06359cb9933c7609f84ba",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17594,7 +17594,7 @@
             "default": "",
             "description": "version: module/firmware version, e.g. 'V1.1'. Leave empty to let TIA pick the default",
             "examples": [
-              "V2.2"
+              "V2.0"
             ],
             "type": "string"
           }

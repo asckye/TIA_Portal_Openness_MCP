@@ -4466,7 +4466,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e489060be7d14044e0e7cbff2b59686aa60ea7915c5fe9e97692ed7c2b5cab5d",
+      "descriptionSha256": "fd0f71271bd20c670dd2bde3a39f387b13867b99e1d4f9c4920f64c7acba1b69",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -4498,7 +4498,7 @@
               "fb"
             ],
             "examples": [
-              "fc"
+              "udt"
             ],
             "type": "string"
           },
@@ -14963,7 +14963,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "0028e0ae70eb0bd0537be83f180f4f754f0bdb683370b104aa3f1c3738cb4f7b",
+      "descriptionSha256": "50365a497a41c57af9537a650e4fe88bc79edb3cb9442a0f2afd4069a0c30ff2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20376,7 +20376,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "4547ab7d0e6e5a5529ed0d8d66842b60be871cd5b17158fbbc7975d30e0b8c23",
+      "descriptionSha256": "9b7070afc6cab1bd34a37f8b1d640ae36290ef8f94074dab7c99497d56eedbc0",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20396,6 +20396,13 @@
               }
             ],
             "description": "Exact device path segments: [group, ..., station], or [station] at the project root. The legacy string form is deprecated and will be removed in 5.0."
+          },
+          "itemPath": {
+            "description": "Exact device-item path segments within the station. Omit to prefer the CPU owner.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -38841,7 +38848,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "46d535a1e01a7d9c5576e8a8a6b94af53ee338f039ebaf74c991141c4185d185",
+      "descriptionSha256": "7d33d766d29e9573af49b862abef9eb0a0729d7b9ecdc57bc445206c9ca3af39",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -38871,6 +38878,13 @@
             "default": true,
             "description": "enable: true to permit remote PUT/GET access, false to forbid it.",
             "type": "boolean"
+          },
+          "itemPath": {
+            "description": "Exact device-item path segments within the station. Omit to prefer the CPU owner.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [

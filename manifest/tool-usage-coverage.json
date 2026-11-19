@@ -1,9 +1,9 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "4296958815bf0ab9f4d9b43aa8a9180cc6f8a3bb38d7aef830be510cb882b8cd",
+  "catalogSha256": "e5fa8aa25a4ac1cbb08c1472772b3650c560f8c84cad812a832cf9b5ce242aa8",
   "uniqueTools": 524,
   "documents": 89,
-  "versionToolPairs": 3259,
+  "versionToolPairs": 3257,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
@@ -2409,32 +2409,32 @@
             {
               "operation": "check",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.check is unavailable on TIA V14 SP1. V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence. Minimum release for this request is V19."
             },
             {
               "operation": "insert",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.insert is unavailable on TIA V14 SP1. V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence. Minimum release for this request is V19."
             },
             {
               "operation": "erase",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.erase is unavailable on TIA V14 SP1. V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence. Minimum release for this request is V15.1."
             },
             {
               "operation": "changeNumber",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.changeNumber is unavailable on TIA V14 SP1. V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence. Minimum release for this request is V15.1."
             },
             {
               "operation": "changeSize",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.changeSize is unavailable on TIA V14 SP1. V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence. Minimum release for this request is V15.1."
             },
             {
               "operation": "connectTechnologyObject",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.connectTechnologyObject is unavailable on TIA V14 SP1. V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence. Minimum release for this request is V19."
             }
           ]
         },
@@ -2497,7 +2497,7 @@
             {
               "operation": "retrieve",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageGlobalLibrary.retrieve is unavailable on TIA V14 SP1. Library archive/retrieve/SaveAs requires V15.1 or later. Minimum release for this request is V15.1."
             },
             {
               "operation": "save",
@@ -2507,7 +2507,7 @@
             {
               "operation": "saveAs",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageGlobalLibrary.saveAs is unavailable on TIA V14 SP1. Library archive/retrieve/SaveAs requires V15.1 or later. Minimum release for this request is V15.1."
             },
             {
               "operation": "close",
@@ -2517,7 +2517,7 @@
             {
               "operation": "archive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageGlobalLibrary.archive is unavailable on TIA V14 SP1. Library archive/retrieve/SaveAs requires V15.1 or later. Minimum release for this request is V15.1."
             }
           ]
         },
@@ -2557,7 +2557,7 @@
             {
               "operation": "changeType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageHardwareObject.changeType is unavailable on TIA V14 SP1. DeviceItem.ChangeType requires V18. Minimum release for this request is V18."
             },
             {
               "operation": "createSubnet",
@@ -2602,7 +2602,7 @@
             {
               "operation": "normalizeTypeIdentifier",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageHardwareUtilities.normalizeTypeIdentifier is unavailable on TIA V14 SP1. GetTypeIdentifierNormalized requires V17. Minimum release for this request is V17."
             },
             {
               "operation": "exportOpcUa",
@@ -2612,7 +2612,7 @@
             {
               "operation": "exportCardReaderPsc",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageHardwareUtilities.exportCardReaderPsc is unavailable on TIA V14 SP1. CardReaderPscProvider requires V15.1. Minimum release for this request is V15.1."
             }
           ]
         },
@@ -2716,7 +2716,7 @@
             {
               "operation": "compare",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryMasterCopy.compare is unavailable on TIA V14 SP1. Library comparison requires V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "delete",
@@ -2745,7 +2745,7 @@
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryType.update is unavailable on TIA V14 SP1. LibraryType.DoNotUse requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "delete",
@@ -2784,17 +2784,17 @@
             {
               "operation": "edit",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.edit is unavailable on TIA V14 SP1. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "release",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.release is unavailable on TIA V14 SP1. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setDefault",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.setDefault is unavailable on TIA V14 SP1. Library version SetAsDefault requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "deleteVersion",
@@ -2809,7 +2809,7 @@
             {
               "operation": "discard",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.discard is unavailable on TIA V14 SP1. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "findInstances",
@@ -2880,17 +2880,17 @@
             {
               "operation": "createMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.createMapping is unavailable on TIA V14 SP1. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "updateMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.updateMapping is unavailable on TIA V14 SP1. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.deleteMapping is unavailable on TIA V14 SP1. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "connect",
@@ -2905,7 +2905,7 @@
             {
               "operation": "connectIdent",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.connectIdent is unavailable on TIA V14 SP1. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -2959,7 +2959,7 @@
             {
               "operation": "renameGroup",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcExternalSources.renameGroup is unavailable on TIA V14 SP1. PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteGroup",
@@ -3140,7 +3140,7 @@
             {
               "operation": "rename",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcUserGroup.rename is unavailable on TIA V14 SP1. Renaming blocks user groups requires V21: the group Name has no public setter on this release. Minimum release for this request is V21."
             },
             {
               "operation": "deleteEmpty",
@@ -3273,7 +3273,7 @@
             {
               "operation": "write",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageStartdriveParameter.write is unavailable on TIA V14 SP1. V14 SP1 Startdrive is PilotAccess (not available for public use); writes are refused pending VM evidence. Minimum release for this request is V15.1."
             }
           ]
         },
@@ -3828,12 +3828,12 @@
             {
               "operation": "harmonizeProject",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "SynchronizeLibrary.harmonizeProject is unavailable on TIA V14 SP1. Library harmonization/cleanup requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "cleanUp",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "SynchronizeLibrary.cleanUp is unavailable on TIA V14 SP1. Library harmonization/cleanup requires V17 or later. Minimum release for this request is V17."
             }
           ]
         },
@@ -6592,32 +6592,32 @@
             {
               "operation": "activateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.activateFunction is unavailable on TIA V15.1. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "deactivateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.deactivateFunction is unavailable on TIA V15.1. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSIAxisType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setSIAxisType is unavailable on TIA V15.1. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setMotorCode",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setMotorCode is unavailable on TIA V15.1. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSimoGearMlfb",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setSimoGearMlfb is unavailable on TIA V15.1. DriveFunctionInterface.Commissioning.SetSimoGearMlfb requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "updateCheckSums",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.updateCheckSums is unavailable on TIA V15.1. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "setMotorType",
@@ -6637,7 +6637,7 @@
             {
               "operation": "setEquivalentCircuitDiagramData",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setEquivalentCircuitDiagramData is unavailable on TIA V15.1. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "setEncoder",
@@ -6652,7 +6652,7 @@
             {
               "operation": "setEncoderType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setEncoderType is unavailable on TIA V15.1. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "projectEncoderConfiguration",
@@ -6679,12 +6679,12 @@
             {
               "operation": "check",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.check is unavailable on TIA V15.1. The MainTelegram insertion overload requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "insert",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.insert is unavailable on TIA V15.1. The MainTelegram insertion overload requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "erase",
@@ -6704,7 +6704,7 @@
             {
               "operation": "connectTechnologyObject",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.connectTechnologyObject is unavailable on TIA V15.1. Telegram actor/sensor/encoder connections require V19; torque connections require V20. Minimum release for this request is V19."
             }
           ]
         },
@@ -6827,7 +6827,7 @@
             {
               "operation": "changeType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageHardwareObject.changeType is unavailable on TIA V15.1. DeviceItem.ChangeType requires V18. Minimum release for this request is V18."
             },
             {
               "operation": "createSubnet",
@@ -6872,7 +6872,7 @@
             {
               "operation": "normalizeTypeIdentifier",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageHardwareUtilities.normalizeTypeIdentifier is unavailable on TIA V15.1. GetTypeIdentifierNormalized requires V17. Minimum release for this request is V17."
             },
             {
               "operation": "exportOpcUa",
@@ -6986,7 +6986,7 @@
             {
               "operation": "compare",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryMasterCopy.compare is unavailable on TIA V15.1. Library comparison requires V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "delete",
@@ -7015,7 +7015,7 @@
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryType.update is unavailable on TIA V15.1. LibraryType.DoNotUse requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "delete",
@@ -7054,17 +7054,17 @@
             {
               "operation": "edit",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.edit is unavailable on TIA V15.1. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "release",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.release is unavailable on TIA V15.1. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setDefault",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.setDefault is unavailable on TIA V15.1. Library version SetAsDefault requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "deleteVersion",
@@ -7079,7 +7079,7 @@
             {
               "operation": "discard",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.discard is unavailable on TIA V15.1. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "findInstances",
@@ -7150,17 +7150,17 @@
             {
               "operation": "createMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.createMapping is unavailable on TIA V15.1. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "updateMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.updateMapping is unavailable on TIA V15.1. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.deleteMapping is unavailable on TIA V15.1. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "connect",
@@ -7175,7 +7175,7 @@
             {
               "operation": "connectIdent",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.connectIdent is unavailable on TIA V15.1. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -7281,17 +7281,17 @@
             {
               "operation": "createSnapshot",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.createSnapshot is unavailable on TIA V15.1. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadSnapshotAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadSnapshotAsActualValues is unavailable on TIA V15.1. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadStartValuesAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadStartValuesAsActualValues is unavailable on TIA V15.1. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "exportSnapshot",
@@ -7350,7 +7350,7 @@
             {
               "operation": "renameGroup",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcExternalSources.renameGroup is unavailable on TIA V15.1. PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteGroup",
@@ -7434,32 +7434,32 @@
             {
               "operation": "protectMasterSecret",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.protectMasterSecret is unavailable on TIA V15.1. PLC master secret requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "changeMasterSecret",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.changeMasterSecret is unavailable on TIA V15.1. PLC master secret requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "unprotectMasterSecret",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.unprotectMasterSecret is unavailable on TIA V15.1. PLC master secret requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "resetMasterSecret",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.resetMasterSecret is unavailable on TIA V15.1. PLC master secret requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "protectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.protectAllConfiguration is unavailable on TIA V15.1. All-configuration protection requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "unprotectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.unprotectAllConfiguration is unavailable on TIA V15.1. All-configuration protection requires V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -7522,7 +7522,7 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcTableEntries.read is unavailable on TIA V15.1. Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release. Minimum release for this request is V17."
             },
             {
               "operation": "createTable",
@@ -7537,12 +7537,12 @@
             {
               "operation": "deleteEntry",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcTableEntries.deleteEntry is unavailable on TIA V15.1. Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release. Minimum release for this request is V17."
             },
             {
               "operation": "deleteTable",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcTableEntries.deleteTable is unavailable on TIA V15.1. Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release. Minimum release for this request is V17."
             }
           ]
         },
@@ -7635,7 +7635,7 @@
             {
               "operation": "rename",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcUserGroup.rename is unavailable on TIA V15.1. Renaming blocks user groups requires V21: the group Name has no public setter on this release. Minimum release for this request is V21."
             },
             {
               "operation": "deleteEmpty",
@@ -7722,7 +7722,7 @@
             {
               "operation": "create",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageSivarcRule.create is unavailable on TIA V15.1. SiVArc rule Create(string) requires V16 or later; read/update/delete are available. Minimum release for this request is V16."
             },
             {
               "operation": "update",
@@ -8458,12 +8458,12 @@
             {
               "operation": "harmonizeProject",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "SynchronizeLibrary.harmonizeProject is unavailable on TIA V15.1. Library harmonization/cleanup requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "cleanUp",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "SynchronizeLibrary.cleanUp is unavailable on TIA V15.1. Library harmonization/cleanup requires V17 or later. Minimum release for this request is V17."
             }
           ]
         },
@@ -8560,8 +8560,8 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 356,
-      "checkedToolCount": 356,
+      "registeredToolCount": 354,
+      "checkedToolCount": 354,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 290,
@@ -9444,7 +9444,7 @@
             {
               "operation": "export",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ExchangePlcAlarmTextLists.export is unavailable on TIA V16. V16 terminates TIA when the PLC has no text lists. V17 added a defined error; requires V17 Minimum release for this request is V17."
             },
             {
               "operation": "import",
@@ -9452,28 +9452,6 @@
               "releaseProblem": null
             }
           ]
-        },
-        {
-          "toolName": "ExportAlarmInstanceTexts",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/libraries-and-alarms/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
-          ],
-          "operations": []
-        },
-        {
-          "toolName": "ExportAlarmTextLists",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "related-api-patterns",
-          "documents": [
-            "guides/skills/libraries-and-alarms/SKILL.md",
-            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/PlcAlarmTextListSnippets.cs"
-          ],
-          "operations": []
         },
         {
           "toolName": "ExportDeviceAml",
@@ -11351,7 +11329,7 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDcbLibraries.read is unavailable on TIA V16. Reading drive DCB libraries requires V18 or later; extension-library import is available from V16. Minimum release for this request is V18."
             },
             {
               "operation": "import",
@@ -11383,12 +11361,12 @@
             {
               "operation": "create",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDccChart.create is unavailable on TIA V16. The requested DCC chart creation overload requires V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDccChart.update is unavailable on TIA V16. DCC Statement properties and runtime sequence moves require V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "delete",
@@ -11418,7 +11396,7 @@
             {
               "operation": "showEditor",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDccChart.showEditor is unavailable on TIA V16. DriveControlChart.ShowDccEditor requires V18 or later. Minimum release for this request is V18."
             }
           ]
         },
@@ -11538,32 +11516,32 @@
             {
               "operation": "activateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.activateFunction is unavailable on TIA V16. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "deactivateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.deactivateFunction is unavailable on TIA V16. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSIAxisType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setSIAxisType is unavailable on TIA V16. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setMotorCode",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setMotorCode is unavailable on TIA V16. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSimoGearMlfb",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setSimoGearMlfb is unavailable on TIA V16. DriveFunctionInterface.Commissioning.SetSimoGearMlfb requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "updateCheckSums",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.updateCheckSums is unavailable on TIA V16. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "setMotorType",
@@ -11583,7 +11561,7 @@
             {
               "operation": "setEquivalentCircuitDiagramData",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setEquivalentCircuitDiagramData is unavailable on TIA V16. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "setEncoder",
@@ -11598,7 +11576,7 @@
             {
               "operation": "setEncoderType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setEncoderType is unavailable on TIA V16. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "projectEncoderConfiguration",
@@ -11625,12 +11603,12 @@
             {
               "operation": "check",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.check is unavailable on TIA V16. The MainTelegram insertion overload requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "insert",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.insert is unavailable on TIA V16. The MainTelegram insertion overload requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "erase",
@@ -11650,7 +11628,7 @@
             {
               "operation": "connectTechnologyObject",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.connectTechnologyObject is unavailable on TIA V16. Telegram actor/sensor/encoder connections require V19; torque connections require V20. Minimum release for this request is V19."
             }
           ]
         },
@@ -11773,7 +11751,7 @@
             {
               "operation": "changeType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageHardwareObject.changeType is unavailable on TIA V16. DeviceItem.ChangeType requires V18. Minimum release for this request is V18."
             },
             {
               "operation": "createSubnet",
@@ -11818,7 +11796,7 @@
             {
               "operation": "normalizeTypeIdentifier",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageHardwareUtilities.normalizeTypeIdentifier is unavailable on TIA V16. GetTypeIdentifierNormalized requires V17. Minimum release for this request is V17."
             },
             {
               "operation": "exportOpcUa",
@@ -11932,7 +11910,7 @@
             {
               "operation": "compare",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryMasterCopy.compare is unavailable on TIA V16. Library comparison requires V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "delete",
@@ -11961,7 +11939,7 @@
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryType.update is unavailable on TIA V16. LibraryType.DoNotUse requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "delete",
@@ -12000,17 +11978,17 @@
             {
               "operation": "edit",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.edit is unavailable on TIA V16. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "release",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.release is unavailable on TIA V16. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setDefault",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.setDefault is unavailable on TIA V16. Library version SetAsDefault requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "deleteVersion",
@@ -12025,7 +12003,7 @@
             {
               "operation": "discard",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.discard is unavailable on TIA V16. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "findInstances",
@@ -12096,17 +12074,17 @@
             {
               "operation": "createMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.createMapping is unavailable on TIA V16. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "updateMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.updateMapping is unavailable on TIA V16. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.deleteMapping is unavailable on TIA V16. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "connect",
@@ -12121,7 +12099,7 @@
             {
               "operation": "connectIdent",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.connectIdent is unavailable on TIA V16. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -12282,7 +12260,7 @@
             {
               "operation": "export",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcCertificate.export is unavailable on TIA V16. V16-V18 certificate export requires a .cer or .der output file. Minimum release for this request is V19."
             },
             {
               "operation": "delete",
@@ -12320,17 +12298,17 @@
             {
               "operation": "createSnapshot",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.createSnapshot is unavailable on TIA V16. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadSnapshotAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadSnapshotAsActualValues is unavailable on TIA V16. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadStartValuesAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadStartValuesAsActualValues is unavailable on TIA V16. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "exportSnapshot",
@@ -12389,7 +12367,7 @@
             {
               "operation": "renameGroup",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcExternalSources.renameGroup is unavailable on TIA V16. PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteGroup",
@@ -12473,32 +12451,32 @@
             {
               "operation": "protectMasterSecret",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.protectMasterSecret is unavailable on TIA V16. PLC master secret requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "changeMasterSecret",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.changeMasterSecret is unavailable on TIA V16. PLC master secret requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "unprotectMasterSecret",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.unprotectMasterSecret is unavailable on TIA V16. PLC master secret requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "resetMasterSecret",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.resetMasterSecret is unavailable on TIA V16. PLC master secret requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "protectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.protectAllConfiguration is unavailable on TIA V16. All-configuration protection requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "unprotectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.unprotectAllConfiguration is unavailable on TIA V16. All-configuration protection requires V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -12613,7 +12591,7 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcTableEntries.read is unavailable on TIA V16. Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release. Minimum release for this request is V17."
             },
             {
               "operation": "createTable",
@@ -12628,12 +12606,12 @@
             {
               "operation": "deleteEntry",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcTableEntries.deleteEntry is unavailable on TIA V16. Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release. Minimum release for this request is V17."
             },
             {
               "operation": "deleteTable",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcTableEntries.deleteTable is unavailable on TIA V16. Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release. Minimum release for this request is V17."
             }
           ]
         },
@@ -12726,7 +12704,7 @@
             {
               "operation": "rename",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcUserGroup.rename is unavailable on TIA V16. Renaming blocks user groups requires V21: the group Name has no public setter on this release. Minimum release for this request is V21."
             },
             {
               "operation": "deleteEmpty",
@@ -12863,17 +12841,17 @@
             {
               "operation": "archive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "retrieve",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "fAddressArchive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+              "releaseProblem": null
             }
           ]
         },
@@ -12890,12 +12868,12 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "set",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 16; see interpretation and the tool description."
+              "releaseProblem": null
             }
           ]
         },
@@ -13686,12 +13664,12 @@
             {
               "operation": "harmonizeProject",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "SynchronizeLibrary.harmonizeProject is unavailable on TIA V16. Library harmonization/cleanup requires V17 or later. Minimum release for this request is V17."
             },
             {
               "operation": "cleanUp",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "SynchronizeLibrary.cleanUp is unavailable on TIA V16. Library harmonization/cleanup requires V17 or later. Minimum release for this request is V17."
             }
           ]
         },
@@ -14771,7 +14749,7 @@
             {
               "operation": "importTestSets",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ExchangeTestSuiteCase.importTestSets is unavailable on TIA V17. Application test sets require V20 or later. Minimum release for this request is V20."
             }
           ]
         },
@@ -16787,7 +16765,7 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDcbLibraries.read is unavailable on TIA V17. Reading drive DCB libraries requires V18 or later; extension-library import is available from V16. Minimum release for this request is V18."
             },
             {
               "operation": "import",
@@ -16819,12 +16797,12 @@
             {
               "operation": "create",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDccChart.create is unavailable on TIA V17. The requested DCC chart creation overload requires V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDccChart.update is unavailable on TIA V17. DCC Statement properties and runtime sequence moves require V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "delete",
@@ -16854,7 +16832,7 @@
             {
               "operation": "showEditor",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDccChart.showEditor is unavailable on TIA V17. DriveControlChart.ShowDccEditor requires V18 or later. Minimum release for this request is V18."
             }
           ]
         },
@@ -16974,22 +16952,22 @@
             {
               "operation": "activateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.activateFunction is unavailable on TIA V17. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "deactivateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.deactivateFunction is unavailable on TIA V17. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSIAxisType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setSIAxisType is unavailable on TIA V17. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setMotorCode",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setMotorCode is unavailable on TIA V17. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSimoGearMlfb",
@@ -16999,7 +16977,7 @@
             {
               "operation": "updateCheckSums",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.updateCheckSums is unavailable on TIA V17. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "setMotorType",
@@ -17019,7 +16997,7 @@
             {
               "operation": "setEquivalentCircuitDiagramData",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setEquivalentCircuitDiagramData is unavailable on TIA V17. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "setEncoder",
@@ -17034,7 +17012,7 @@
             {
               "operation": "setEncoderType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setEncoderType is unavailable on TIA V17. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "projectEncoderConfiguration",
@@ -17061,12 +17039,12 @@
             {
               "operation": "check",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.check is unavailable on TIA V17. The MainTelegram insertion overload requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "insert",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.insert is unavailable on TIA V17. The MainTelegram insertion overload requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "erase",
@@ -17086,7 +17064,7 @@
             {
               "operation": "connectTechnologyObject",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.connectTechnologyObject is unavailable on TIA V17. Telegram actor/sensor/encoder connections require V19; torque connections require V20. Minimum release for this request is V19."
             }
           ]
         },
@@ -17209,7 +17187,7 @@
             {
               "operation": "changeType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageHardwareObject.changeType is unavailable on TIA V17. DeviceItem.ChangeType requires V18. Minimum release for this request is V18."
             },
             {
               "operation": "createSubnet",
@@ -17368,7 +17346,7 @@
             {
               "operation": "compare",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryMasterCopy.compare is unavailable on TIA V17. Library comparison requires V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "delete",
@@ -17397,7 +17375,7 @@
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryType.update is unavailable on TIA V17. LibraryType.DoNotUse requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "delete",
@@ -17436,12 +17414,12 @@
             {
               "operation": "edit",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.edit is unavailable on TIA V17. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "release",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.release is unavailable on TIA V17. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setDefault",
@@ -17461,7 +17439,7 @@
             {
               "operation": "discard",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.discard is unavailable on TIA V17. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "findInstances",
@@ -17532,17 +17510,17 @@
             {
               "operation": "createMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.createMapping is unavailable on TIA V17. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "updateMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.updateMapping is unavailable on TIA V17. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.deleteMapping is unavailable on TIA V17. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "connect",
@@ -17557,7 +17535,7 @@
             {
               "operation": "connectIdent",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.connectIdent is unavailable on TIA V17. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -17765,7 +17743,7 @@
             {
               "operation": "export",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcCertificate.export is unavailable on TIA V17. V16-V18 certificate export requires a .cer or .der output file. Minimum release for this request is V19."
             },
             {
               "operation": "delete",
@@ -17803,17 +17781,17 @@
             {
               "operation": "createSnapshot",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.createSnapshot is unavailable on TIA V17. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadSnapshotAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadSnapshotAsActualValues is unavailable on TIA V17. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadStartValuesAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadStartValuesAsActualValues is unavailable on TIA V17. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "exportSnapshot",
@@ -17872,7 +17850,7 @@
             {
               "operation": "renameGroup",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcExternalSources.renameGroup is unavailable on TIA V17. PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteGroup",
@@ -17976,12 +17954,12 @@
             {
               "operation": "protectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.protectAllConfiguration is unavailable on TIA V17. All-configuration protection requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "unprotectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.unprotectAllConfiguration is unavailable on TIA V17. All-configuration protection requires V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -18033,7 +18011,7 @@
             {
               "operation": "generateBaseId",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcSafety.generateBaseId is unavailable on V17; requires V21."
             },
             {
               "operation": "login",
@@ -18330,7 +18308,7 @@
             {
               "operation": "rename",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcUserGroup.rename is unavailable on TIA V17. Renaming blocks user groups requires V21: the group Name has no public setter on this release. Minimum release for this request is V21."
             },
             {
               "operation": "deleteEmpty",
@@ -18512,7 +18490,7 @@
             {
               "operation": "deleteDeviceRight",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageProjectUserManagement.deleteDeviceRight is unavailable on TIA V17. CustomDeviceFunctionRight.Delete requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "activateAnonymousUser",
@@ -18564,17 +18542,17 @@
             {
               "operation": "archive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "retrieve",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "fAddressArchive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+              "releaseProblem": "ManageSinumerikArchive.fAddressArchive is unavailable on TIA V17. CreateFAddressAssignmentArchive is absent on V17. Minimum release for this request is V16."
             }
           ]
         },
@@ -18591,12 +18569,12 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "set",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 17; see interpretation and the tool description."
+              "releaseProblem": null
             }
           ]
         },
@@ -18868,7 +18846,7 @@
             {
               "operation": "createOffline",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUmcUsers.createOffline is unavailable on TIA V17. Offline UMC creation and renaming require V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "importFromServer",
@@ -18878,7 +18856,7 @@
             {
               "operation": "rename",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUmcUsers.rename is unavailable on TIA V17. Offline UMC creation and renaming require V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "activate",
@@ -20617,7 +20595,7 @@
             {
               "operation": "exportInstructionData",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ExchangeCfcCharts.exportInstructionData is unavailable on TIA V18. ExportInstructionData requires V19 or later. Minimum release for this request is V19."
             }
           ]
         },
@@ -20762,7 +20740,7 @@
             {
               "operation": "importTestSets",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ExchangeTestSuiteCase.importTestSets is unavailable on TIA V18. Application test sets require V20 or later. Minimum release for this request is V20."
             }
           ]
         },
@@ -22605,22 +22583,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "add",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "change",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "remove",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             }
           ]
         },
@@ -23091,7 +23069,7 @@
             {
               "operation": "setDefault",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.setDefault is unavailable on TIA V18. DefaultWebPagesFeature requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "update",
@@ -23101,17 +23079,17 @@
             {
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.delete is unavailable on TIA V18. Telecontrol export/import requires V20; typed data point actions require V21. Minimum release for this request is V21."
             },
             {
               "operation": "export",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.export is unavailable on TIA V18. Telecontrol export/import requires V20; typed data point actions require V21. Minimum release for this request is V20."
             },
             {
               "operation": "import",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.import is unavailable on TIA V18. Telecontrol export/import requires V20; typed data point actions require V21. Minimum release for this request is V20."
             },
             {
               "operation": "setServiceGroupName",
@@ -23246,22 +23224,22 @@
             {
               "operation": "activateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.activateFunction is unavailable on TIA V18. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "deactivateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.deactivateFunction is unavailable on TIA V18. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSIAxisType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setSIAxisType is unavailable on TIA V18. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setMotorCode",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setMotorCode is unavailable on TIA V18. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSimoGearMlfb",
@@ -23271,7 +23249,7 @@
             {
               "operation": "updateCheckSums",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.updateCheckSums is unavailable on TIA V18. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "setMotorType",
@@ -23291,7 +23269,7 @@
             {
               "operation": "setEquivalentCircuitDiagramData",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setEquivalentCircuitDiagramData is unavailable on TIA V18. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "setEncoder",
@@ -23306,7 +23284,7 @@
             {
               "operation": "setEncoderType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setEncoderType is unavailable on TIA V18. The requested drive configuration/safety checksum function requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "projectEncoderConfiguration",
@@ -23333,12 +23311,12 @@
             {
               "operation": "check",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.check is unavailable on TIA V18. The MainTelegram insertion overload requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "insert",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.insert is unavailable on TIA V18. The MainTelegram insertion overload requires V19 or later. Minimum release for this request is V19."
             },
             {
               "operation": "erase",
@@ -23358,7 +23336,7 @@
             {
               "operation": "connectTechnologyObject",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveTelegrams.connectTechnologyObject is unavailable on TIA V18. Telegram actor/sensor/encoder connections require V19; torque connections require V20. Minimum release for this request is V19."
             }
           ]
         },
@@ -23669,7 +23647,7 @@
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryType.update is unavailable on TIA V18. LibraryType.DoNotUse requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "delete",
@@ -23708,12 +23686,12 @@
             {
               "operation": "edit",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.edit is unavailable on TIA V18. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "release",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.release is unavailable on TIA V18. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setDefault",
@@ -23733,7 +23711,7 @@
             {
               "operation": "discard",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.discard is unavailable on TIA V18. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "findInstances",
@@ -23804,17 +23782,17 @@
             {
               "operation": "createMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.createMapping is unavailable on TIA V18. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "updateMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.updateMapping is unavailable on TIA V18. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.deleteMapping is unavailable on TIA V18. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "connect",
@@ -23829,7 +23807,7 @@
             {
               "operation": "connectIdent",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.connectIdent is unavailable on TIA V18. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -24086,7 +24064,7 @@
             {
               "operation": "export",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcCertificate.export is unavailable on TIA V18. V16-V18 certificate export requires a .cer or .der output file. Minimum release for this request is V19."
             },
             {
               "operation": "delete",
@@ -24124,17 +24102,17 @@
             {
               "operation": "createSnapshot",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.createSnapshot is unavailable on TIA V18. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadSnapshotAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadSnapshotAsActualValues is unavailable on TIA V18. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadStartValuesAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadStartValuesAsActualValues is unavailable on TIA V18. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "exportSnapshot",
@@ -24193,7 +24171,7 @@
             {
               "operation": "renameGroup",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcExternalSources.renameGroup is unavailable on TIA V18. PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteGroup",
@@ -24297,12 +24275,12 @@
             {
               "operation": "protectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.protectAllConfiguration is unavailable on TIA V18. All-configuration protection requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "unprotectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.unprotectAllConfiguration is unavailable on TIA V18. All-configuration protection requires V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -24354,7 +24332,7 @@
             {
               "operation": "generateBaseId",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcSafety.generateBaseId is unavailable on V18; requires V21."
             },
             {
               "operation": "login",
@@ -24651,7 +24629,7 @@
             {
               "operation": "rename",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcUserGroup.rename is unavailable on TIA V18. Renaming blocks user groups requires V21: the group Name has no public setter on this release. Minimum release for this request is V21."
             },
             {
               "operation": "deleteEmpty",
@@ -24833,7 +24811,7 @@
             {
               "operation": "deleteDeviceRight",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageProjectUserManagement.deleteDeviceRight is unavailable on TIA V18. CustomDeviceFunctionRight.Delete requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "activateAnonymousUser",
@@ -24885,17 +24863,17 @@
             {
               "operation": "archive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "retrieve",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "fAddressArchive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": null
             }
           ]
         },
@@ -24912,12 +24890,12 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "set",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
+              "releaseProblem": null
             }
           ]
         },
@@ -25255,7 +25233,7 @@
             {
               "operation": "installAndGetIdentifier",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageTechnologyExtensions.installAndGetIdentifier is unavailable on TIA V18. InstallAndGetIdentifier requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "uninstall",
@@ -25419,7 +25397,7 @@
             {
               "operation": "createOffline",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUmcUsers.createOffline is unavailable on TIA V18. Offline UMC creation and renaming require V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "importFromServer",
@@ -25429,7 +25407,7 @@
             {
               "operation": "rename",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUmcUsers.rename is unavailable on TIA V18. Offline UMC creation and renaming require V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "activate",
@@ -27553,7 +27531,7 @@
             {
               "operation": "importTestSets",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ExchangeTestSuiteCase.importTestSets is unavailable on TIA V19. Application test sets require V20 or later. Minimum release for this request is V20."
             }
           ]
         },
@@ -29621,22 +29599,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "add",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "change",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "remove",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             }
           ]
         },
@@ -30107,7 +30085,7 @@
             {
               "operation": "setDefault",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.setDefault is unavailable on TIA V19. DefaultWebPagesFeature requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "update",
@@ -30117,17 +30095,17 @@
             {
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.delete is unavailable on TIA V19. Telecontrol export/import requires V20; typed data point actions require V21. Minimum release for this request is V21."
             },
             {
               "operation": "export",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.export is unavailable on TIA V19. Telecontrol export/import requires V20; typed data point actions require V21. Minimum release for this request is V20."
             },
             {
               "operation": "import",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.import is unavailable on TIA V19. Telecontrol export/import requires V20; typed data point actions require V21. Minimum release for this request is V20."
             },
             {
               "operation": "setServiceGroupName",
@@ -30262,22 +30240,22 @@
             {
               "operation": "activateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.activateFunction is unavailable on TIA V19. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "deactivateFunction",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.deactivateFunction is unavailable on TIA V19. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSIAxisType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setSIAxisType is unavailable on TIA V19. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setMotorCode",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveFunctions.setMotorCode is unavailable on TIA V19. The requested drive function requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setSimoGearMlfb",
@@ -30352,12 +30330,12 @@
             {
               "operation": "changeType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveHardwareModule.changeType is unavailable on TIA V19. DriveItemHardwareModule writes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "setPositionNumber",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveHardwareModule.setPositionNumber is unavailable on TIA V19. DriveItemHardwareModule writes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -30755,7 +30733,7 @@
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryType.update is unavailable on TIA V19. LibraryType.DoNotUse requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "delete",
@@ -30794,12 +30772,12 @@
             {
               "operation": "edit",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.edit is unavailable on TIA V19. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "release",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.release is unavailable on TIA V19. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "setDefault",
@@ -30819,7 +30797,7 @@
             {
               "operation": "discard",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageLibraryTypeVersion.discard is unavailable on TIA V19. Library version editing/release/discard requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "findInstances",
@@ -30890,17 +30868,17 @@
             {
               "operation": "createMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.createMapping is unavailable on TIA V19. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "updateMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.updateMapping is unavailable on TIA V19. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.deleteMapping is unavailable on TIA V19. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "connect",
@@ -30915,7 +30893,7 @@
             {
               "operation": "connectIdent",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.connectIdent is unavailable on TIA V19. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -31210,17 +31188,17 @@
             {
               "operation": "createSnapshot",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.createSnapshot is unavailable on TIA V19. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadSnapshotAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadSnapshotAsActualValues is unavailable on TIA V19. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadStartValuesAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadStartValuesAsActualValues is unavailable on TIA V19. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "exportSnapshot",
@@ -31279,7 +31257,7 @@
             {
               "operation": "renameGroup",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcExternalSources.renameGroup is unavailable on TIA V19. PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteGroup",
@@ -31383,12 +31361,12 @@
             {
               "operation": "protectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.protectAllConfiguration is unavailable on TIA V19. All-configuration protection requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "unprotectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.unprotectAllConfiguration is unavailable on TIA V19. All-configuration protection requires V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -31440,7 +31418,7 @@
             {
               "operation": "generateBaseId",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcSafety.generateBaseId is unavailable on V19; requires V21."
             },
             {
               "operation": "login",
@@ -31919,7 +31897,7 @@
             {
               "operation": "deleteDeviceRight",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageProjectUserManagement.deleteDeviceRight is unavailable on TIA V19. CustomDeviceFunctionRight.Delete requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "activateAnonymousUser",
@@ -31971,17 +31949,17 @@
             {
               "operation": "archive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "retrieve",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "fAddressArchive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": null
             }
           ]
         },
@@ -31998,12 +31976,12 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": null
             },
             {
               "operation": "set",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
+              "releaseProblem": null
             }
           ]
         },
@@ -32393,7 +32371,7 @@
             {
               "operation": "installAndGetIdentifier",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageTechnologyExtensions.installAndGetIdentifier is unavailable on TIA V19. InstallAndGetIdentifier requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "uninstall",
@@ -32557,7 +32535,7 @@
             {
               "operation": "createOffline",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUmcUsers.createOffline is unavailable on TIA V19. Offline UMC creation and renaming require V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "importFromServer",
@@ -32567,7 +32545,7 @@
             {
               "operation": "rename",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUmcUsers.rename is unavailable on TIA V19. Offline UMC creation and renaming require V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "activate",
@@ -37278,22 +37256,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 20; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "add",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 20; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "change",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 20; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "remove",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 20; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             }
           ]
         },
@@ -37764,7 +37742,7 @@
             {
               "operation": "setDefault",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.setDefault is unavailable on TIA V20. DefaultWebPagesFeature requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "update",
@@ -37774,7 +37752,7 @@
             {
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDeviceServiceObjects.delete is unavailable on TIA V20. Telecontrol export/import requires V20; typed data point actions require V21. Minimum release for this request is V21."
             },
             {
               "operation": "export",
@@ -38009,12 +37987,12 @@
             {
               "operation": "changeType",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveHardwareModule.changeType is unavailable on TIA V20. DriveItemHardwareModule writes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "setPositionNumber",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageDriveHardwareModule.setPositionNumber is unavailable on TIA V20. DriveItemHardwareModule writes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -38547,17 +38525,17 @@
             {
               "operation": "createMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.createMapping is unavailable on TIA V20. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "updateMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.updateMapping is unavailable on TIA V20. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteMapping",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.deleteMapping is unavailable on TIA V20. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             },
             {
               "operation": "connect",
@@ -38572,7 +38550,7 @@
             {
               "operation": "connectIdent",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageMotionAxis.connectIdent is unavailable on TIA V20. InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -38898,17 +38876,17 @@
             {
               "operation": "createSnapshot",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.createSnapshot is unavailable on TIA V20. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadSnapshotAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadSnapshotAsActualValues is unavailable on TIA V20. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "loadStartValuesAsActualValues",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcDataBlockSnapshot.loadStartValuesAsActualValues is unavailable on TIA V20. ValueService is available in V21 only; snapshot read/export use InterfaceSnapshot (15.1+). Minimum release for this request is V21."
             },
             {
               "operation": "exportSnapshot",
@@ -39008,7 +38986,7 @@
             {
               "operation": "renameGroup",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcExternalSources.renameGroup is unavailable on TIA V20. PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "deleteGroup",
@@ -39112,12 +39090,12 @@
             {
               "operation": "protectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.protectAllConfiguration is unavailable on TIA V20. All-configuration protection requires V21. Minimum release for this request is V21."
             },
             {
               "operation": "unprotectAllConfiguration",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcProtection.unprotectAllConfiguration is unavailable on TIA V20. All-configuration protection requires V21. Minimum release for this request is V21."
             }
           ]
         },
@@ -39169,7 +39147,7 @@
             {
               "operation": "generateBaseId",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManagePlcSafety.generateBaseId is unavailable on V20; requires V21."
             },
             {
               "operation": "login",
@@ -39746,22 +39724,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageSivarcBlockDefinition.read is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Minimum release for this request is V17."
             },
             {
               "operation": "create",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageSivarcBlockDefinition.create is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Minimum release for this request is V17."
             },
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageSivarcBlockDefinition.update is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Minimum release for this request is V17."
             },
             {
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageSivarcBlockDefinition.delete is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Minimum release for this request is V17."
             }
           ]
         },
@@ -40465,17 +40443,17 @@
             {
               "operation": "create",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUnifiedListEntries.create is unavailable on TIA V20. Unified list entry Create/Update/Delete is not exposed by the public API; use native file exchange. Unavailable on all supported releases."
             },
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUnifiedListEntries.update is unavailable on TIA V20. Unified list entry Create/Update/Delete is not exposed by the public API; use native file exchange. Unavailable on all supported releases."
             },
             {
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUnifiedListEntries.delete is unavailable on TIA V20. Unified list entry Create/Update/Delete is not exposed by the public API; use native file exchange. Unavailable on all supported releases."
             }
           ]
         },
@@ -41604,8 +41582,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "85adcdbf5e3f4eb9d180f0d247dd7fffa6274cc8704dc550a0a115fdb99175b2",
-      "runtimeSha256": "85adcdbf5e3f4eb9d180f0d247dd7fffa6274cc8704dc550a0a115fdb99175b2",
+      "sdkWorkerSha256": "389eb55e4f8e12cabc44eedda2199da744faa54a599f8e36f4d765c9d656f254",
+      "runtimeSha256": "389eb55e4f8e12cabc44eedda2199da744faa54a599f8e36f4d765c9d656f254",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -45145,22 +45123,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "add",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "change",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             },
             {
               "operation": "remove",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
+              "releaseProblem": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight."
             }
           ]
         },
@@ -48649,17 +48627,17 @@
             {
               "operation": "create",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUnifiedListEntries.create is unavailable on TIA V21. Unified list entry Create/Update/Delete is not exposed by the public API; use native file exchange. Unavailable on all supported releases."
             },
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUnifiedListEntries.update is unavailable on TIA V21. Unified list entry Create/Update/Delete is not exposed by the public API; use native file exchange. Unavailable on all supported releases."
             },
             {
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "ManageUnifiedListEntries.delete is unavailable on TIA V21. Unified list entry Create/Update/Delete is not exposed by the public API; use native file exchange. Unavailable on all supported releases."
             }
           ]
         },
@@ -49800,8 +49778,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "69f8f5e2386ba16fa7d00e11090cb65e27ee2940e8d20640c406c9ad2c74130a",
-      "runtimeSha256": "69f8f5e2386ba16fa7d00e11090cb65e27ee2940e8d20640c406c9ad2c74130a",
+      "sdkWorkerSha256": "70cd0d01846f94d490a5ee27bc5ef3a5cd4856757d49c93f6aa111a2767835ec",
+      "runtimeSha256": "70cd0d01846f94d490a5ee27bc5ef3a5cd4856757d49c93f6aa111a2767835ec",
       "workerModel": "foundation-host-plc-worker"
     }
   }
