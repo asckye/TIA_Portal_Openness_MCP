@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json.Nodes;
 using System.Security.Cryptography;
 using System.Text;
@@ -36,7 +37,8 @@ internal static class DocumentImportContract
         bool Hash(string value)=>value.Length==64 && value.All(c=>"0123456789abcdef".Contains(c));
         if(!Hash(Text("PlanHash")) || !Hash(Text("CodeSha256")) || (Text("ResourceSha256")!="" && !Hash(Text("ResourceSha256"))))
             throw new InvalidDataException("Invalid document hashes.");
-        if(Text("Release") is not ("20" or "21") || (Text("Release")=="20" && Text("ResourceSha256")=="") || Text("Kind")!="GlobalDB" || Text("Language")!="DB"
+        if(!OpennessApi.PlcDocuments.Includes(Text("Release")) || (Text("Release")=="20" && Text("ResourceSha256")=="")
+            || Text("Kind")!="GlobalDB" || Text("Language")!="DB"
                 || Text("NativeOptions")!="None" || Text("Policy")!="single-document-global-db-v1"
                 || Text("Validation")!="bounded-global-db-lexical-admission-not-Siemens-syntax-or-content-validity"
                 || Text("InstalledUpdate")!="unknown-not-inferred-from-major-version" || Text("Recovery")!="unknown-no-automatic-retry-or-rollback")

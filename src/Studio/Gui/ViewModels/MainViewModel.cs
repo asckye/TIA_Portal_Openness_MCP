@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -77,7 +78,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
     public bool ServiceOwnsRelease { get => Session.ServiceOwnsRelease; set => Session.ServiceOwnsRelease = value; }
     public bool CanSelectRelease => Session.CanSelectRelease;
     public bool Busy => Activity.Busy;
-    public bool VersionControlPageVisible => !OfflineDemo && SelectedReleaseKey is "16" or "17" or "18" or "19" or "20" or "21";
+    public bool VersionControlPageVisible => !OfflineDemo && OpennessApi.VersionControl.Includes(SelectedReleaseKey);
 
     public bool IsEngineeringPage => !_isConfigurationPage;
     public bool IsConfigurationPage

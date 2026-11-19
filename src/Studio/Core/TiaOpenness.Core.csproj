@@ -15,6 +15,7 @@
     <Compile Include="../../Logic/V4/Envelope.cs;../../Logic/V4/Error.cs;../../Logic/V4/Paging.cs;../../Logic/V4/Plan.cs;../../Logic/V4/ResultMapping.cs;../../Logic/V4/V4Json.cs;../../Logic/V4/V4Validation.cs;../../Logic/V4/ConsumerEnvelope.cs;../../Logic/V4/DiagnosticVocabulary.cs" LinkBase="V4" />
     <ProjectReference Include="../Contracts/TiaOpenness.Contracts.csproj" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.csproj" />
+    <ProjectReference Include="../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" Private="false" Condition="'$(TiaSharedAdapterPaths)' != 'true'" />
     <Compile Include="../../Logic/Siemens/TiaVersionCatalog.cs" Link="Versioning/TiaVersionCatalog.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../Shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" /></ItemGroup>

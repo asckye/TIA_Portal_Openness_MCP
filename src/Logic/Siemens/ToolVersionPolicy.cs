@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TiaMcp.Versioning;
 using TiaMcp.Adapters.Contracts;
 
@@ -10,7 +11,6 @@ namespace TiaMcpServer.Siemens
     // This table only removes known unavailable routes; it certifies no native call.
     internal static class ToolVersionPolicy
     {
-        private static readonly string[] V21Releases = ReleaseRange.Since("21");
         // V17 Siemens.Engineering.xml: SafetyAdministration.LoginToSafetyOfflineProgram(SecureString).
         private static readonly string[] SafetyPasswordReleases = ReleaseRange.Since("17");
 
@@ -31,13 +31,16 @@ namespace TiaMcpServer.Siemens
                 ["UploadDeviceParameters"] = "ParameterUploadProvider"
             };
 
+        private static readonly IReadOnlyDictionary<string, string[]> ToolReleases = V21Only.Keys
+            .ToDictionary(name => name, name => PortedFamilies.ToolReleases[name], StringComparer.OrdinalIgnoreCase);
+
         internal static string ToolProblem(string versionKey, string name)
         {
             TiaVersionDescriptor version;
             try { version = TiaVersionCatalog.Get(versionKey); }
             catch (ArgumentException) /* swallow(parse-fallback): an unknown release key returns the existing policy rejection */ { return "Unknown TIA release identity: " + versionKey + "."; }
             if (string.IsNullOrWhiteSpace(name)) return "A registered tool name is required.";
-            if (!Contains(V21Releases, version.Key) && V21Only.TryGetValue(name, out var api))
+            if (V21Only.TryGetValue(name, out var api) && !Contains(ToolReleases[name], version.Key))
                 return name + " requires the V21 " + api + " API; unavailable on " + version.DisplayName + ".";
             if (PortedFamilies.Contains(name) && !PortedFamilies.Available(version.Key, name))
                 return name + " has no supported API action on " + version.DisplayName + ".";
@@ -62,32 +65,51 @@ namespace TiaMcpServer.Siemens
             // normalization is safe: invalid direct spellings still fail native binding.
             string? action = argument("action");
             string[]? allowed = null;
-            string[]? v21Actions = null;
+            string[] gatedActions = Array.Empty<string>();
+            OpennessApi? requiredApi = null;
             string defaultAction = "read";
             if (name.Equals("ManageDcbLibraries", StringComparison.OrdinalIgnoreCase))
-            { allowed = new[] { "read", "import" }; v21Actions = Array.Empty<string>(); }
+                allowed = new[] { "read", "import" };
             if (name.Equals("ManageDriveHardwareModule", StringComparison.OrdinalIgnoreCase))
-            { allowed = new[] { "read", "changeType", "setPositionNumber" }; v21Actions = new[] { "changeType", "setPositionNumber" }; }
+            {
+                allowed = new[] { "read", "changeType", "setPositionNumber" };
+                requiredApi = OpennessApi.DriveHardwareChanges;
+                gatedActions = new[] { "changeType", "setPositionNumber" };
+            }
             if (name.Equals("ManagePlcProtection", StringComparison.OrdinalIgnoreCase))
-            { allowed = PlcProtectionLogic.Actions; v21Actions = new[] { "protectAllConfiguration", "unprotectAllConfiguration" }; }
+            {
+                allowed = PlcProtectionLogic.Actions;
+                requiredApi = OpennessApi.ProtectAllConfiguration;
+                gatedActions = new[] { "protectAllConfiguration", "unprotectAllConfiguration" };
+            }
             if (name.Equals("ManagePlcExternalSources", StringComparison.OrdinalIgnoreCase))
-            { allowed = ExternalSourceRules.ExternalSourceActions; v21Actions = new[] { "renameGroup" }; defaultAction = ""; }
+            {
+                allowed = ExternalSourceRules.ExternalSourceActions;
+                requiredApi = OpennessApi.ExternalSourceGroupRename;
+                gatedActions = new[] { "renameGroup" };
+                defaultAction = "";
+            }
             if (name.Equals("ManagePlcSafety", StringComparison.OrdinalIgnoreCase))
-            { allowed = SafetyLogic.Actions; v21Actions = new[] { "generateBaseId" }; }
+            {
+                allowed = SafetyLogic.Actions;
+                requiredApi = OpennessApi.SafetyBaseId;
+                gatedActions = new[] { "generateBaseId" };
+            }
             if (name.Equals("ManagePlcDocuments", StringComparison.OrdinalIgnoreCase))
             {
                 allowed = SoftwareUnitDeepLogic.DocumentActions; defaultAction = "";
                 var kind = argument("objectKind") ?? "document";
                 if (!Contains(SoftwareUnitDeepLogic.DocumentKinds, kind)) return name + ": unknown objectKind '" + kind + "'.";
-                v21Actions = kind.Equals("document", StringComparison.OrdinalIgnoreCase)
+                requiredApi = OpennessApi.PlcDocumentCreation;
+                gatedActions = kind.Equals("document", StringComparison.OrdinalIgnoreCase)
                     ? new[] { "createFromMasterCopy", "createFromLibraryType" } : Array.Empty<string>();
             }
             if (name.Equals("ManageSivarcBlockDefinition", StringComparison.OrdinalIgnoreCase))
             {
-                allowed = SivarcLogic.DefinitionActions; v21Actions = Array.Empty<string>();
+                allowed = SivarcLogic.DefinitionActions;
                 var kind = argument("kind") ?? "";
                 if (!Contains(SivarcLogic.DefinitionKinds, kind)) return name + ": unknown kind '" + kind + "'.";
-                if (!Contains(V21Releases, versionKey) && !Contains(new[] { "tagDefinition", "textDefinition" }, kind))
+                if (!OpennessApi.SivarcTagMembers.Includes(versionKey) && !Contains(new[] { "tagDefinition", "textDefinition" }, kind))
                     return name + ": kind '" + kind + "' requires the V21 TagMemberSetting / TagMember API.";
             }
             if (name.Equals("ManageDeviceServiceObjects", StringComparison.OrdinalIgnoreCase))
@@ -95,16 +117,24 @@ namespace TiaMcpServer.Siemens
                 var family = argument("family") ?? "";
                 if (!Contains(DeviceServiceObjectActions.ServiceObjectFamilies, family)) return name + ": unknown family '" + family + "'.";
                 if (family.Equals("webApplications", StringComparison.OrdinalIgnoreCase))
-                { allowed = DeviceServiceObjectActions.WebApplicationActions; v21Actions = allowed; }
+                {
+                    allowed = DeviceServiceObjectActions.WebApplicationActions;
+                    requiredApi = OpennessApi.DefaultWebPages;
+                    gatedActions = allowed;
+                }
                 else if (family.Equals("telecontrolDataPoints", StringComparison.OrdinalIgnoreCase))
-                { allowed = DeviceServiceObjectActions.TelecontrolActions; v21Actions = new[] { "read", "update", "delete" }; }
-                else { allowed = DeviceServiceObjectActions.CertificateServiceActions; v21Actions = Array.Empty<string>(); }
+                {
+                    allowed = DeviceServiceObjectActions.TelecontrolActions;
+                    requiredApi = OpennessApi.TelecontrolPoints;
+                    gatedActions = new[] { "read", "update", "delete" };
+                }
+                else allowed = DeviceServiceObjectActions.CertificateServiceActions;
             }
             if (allowed != null)
             {
                 action = action ?? defaultAction;
                 if (!Contains(allowed, action)) return name + ": unknown action '" + action + "'. Allowed: " + string.Join(", ", allowed) + ".";
-                if (!Contains(V21Releases, versionKey) && Contains(v21Actions!, action))
+                if (requiredApi != null && !requiredApi.Includes(versionKey) && Contains(gatedActions, action))
                     return name + "." + action + " is unavailable on " + TiaVersionCatalog.Get(versionKey).DisplayName + "; requires V21.";
             }
             return "";

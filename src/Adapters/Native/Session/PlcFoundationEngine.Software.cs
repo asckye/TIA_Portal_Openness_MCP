@@ -109,7 +109,7 @@ namespace TiaMcp.Adapters
         private IEnumerable<Located<PlcTagTable>> DeclarationTables(string plc, string table, string unitName, bool includeUnits)
         {
             if (includeUnits && unitName != "") throw new ArgumentException("unitName and includeUnits cannot be combined.");
-            if (includeUnits && ReleaseKey == "14sp1" || includeUnits && ReleaseKey == "15.1")
+            if (includeUnits && !OpennessApi.PlcUnits.Includes(ReleaseKey))
                 throw new NotSupportedException("includeUnits requires V16–V21.");
             if (unitName == "" && !includeUnits) return new[] { SelectTable(plc, table) };
             var software = Plc(plc);

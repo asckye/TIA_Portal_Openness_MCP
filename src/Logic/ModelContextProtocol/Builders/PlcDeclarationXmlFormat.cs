@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -37,7 +38,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "14sp1": return new PlcDeclarationXmlFormat(releaseKey, "V14 SP1", 2, false);
                 case "15.1": return new PlcDeclarationXmlFormat(releaseKey, "V15.1", 3, false);
                 case "16": case "17": return new PlcDeclarationXmlFormat(releaseKey, "V" + releaseKey, 4, false);
-                case "18": case "19": case "20": case "21": return new PlcDeclarationXmlFormat(releaseKey, "V" + releaseKey, 5, true);
+                case string key when OpennessApi.InterfaceSectionsV5.Includes(key):
+                    return new PlcDeclarationXmlFormat(releaseKey, "V" + releaseKey, 5, true);
                 default: throw new ArgumentException("Unsupported declaration output release: " + releaseKey, nameof(releaseKey));
             }
         }

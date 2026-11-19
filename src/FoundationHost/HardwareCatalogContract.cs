@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json.Nodes;
 
 namespace TiaMcp.FoundationHost;
@@ -37,7 +38,7 @@ internal static class HardwareCatalogContract
                 .GetValue<string>()!="Client enumeration and response only; the documented synchronous Find API has no server-side result limit or cancellation parameter.")
             throw new InvalidDataException("Invalid fixed catalog bounds and scope.");
         string release=meta["releaseKey"]?.GetValue<string>()??"";
-        if((release!="18" && release!="19" && release!="20" && release!="21") || meta["queryCount"]?.GetValue<int>()!=1 || meta["resultLimit"]?
+        if(!OpennessApi.HardwareCatalog.Includes(release) || meta["queryCount"]?.GetValue<int>()!=1 || meta["resultLimit"]?
                 .GetValue<int>()!=limit || meta["insertionCompatibilityChecked"]?.GetValue<bool>()!=false)
             throw new InvalidDataException("Invalid hardware catalog capability evidence.");
         bool truncated=meta["truncated"]?.GetValue<bool>()??throw new InvalidDataException("Missing catalog truncation flag.");

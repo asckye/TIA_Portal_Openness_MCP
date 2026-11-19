@@ -89,7 +89,7 @@ namespace TiaMcp.Adapters.Contracts
     public static class HmiCapabilities
     {
         public static string? Unsupported(string release, string tool)
-            => tool == "DescribeHmiScreenItem" && release != "19" && release != "20" && release != "21"
+            => tool == "DescribeHmiScreenItem" && !OpennessApi.UnifiedHmi.Includes(release)
                 ? "ScreenItems are exposed only by WinCC Unified on V19-V21; use ExportHmiScreen for classic screen content." : null;
     }
 }

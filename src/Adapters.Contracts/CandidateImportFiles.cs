@@ -58,7 +58,7 @@ namespace TiaMcp.Adapters.Contracts.Candidates
             {
                 if (documents)
                 {
-                    if (release != "20" && release != "21") CandidatePrimitives.Unsupported(release, "documents");
+                    if (!OpennessApi.PlcDocuments.Includes(release)) CandidatePrimitives.Unsupported(release, "documents");
                     if (!Regex.IsMatch(selected, @"^[A-Za-z_][A-Za-z0-9_]{0,127}$", RegexOptions.CultureInvariant)) CandidatePrimitives
                         .Invalid("document-name");
                 }

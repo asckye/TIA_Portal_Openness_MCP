@@ -12,6 +12,7 @@ using System.Text.Json.Nodes;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.FoundationHost;
 
@@ -105,9 +106,10 @@ internal static class FoundationTools
         var major = TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion;
         switch (definition.ResponseMember)
         {
-            case "HardwareCatalog": case "DeviceAdd": return major >= 18;
+            case "HardwareCatalog": case "DeviceAdd": return major >= OpennessApi.HardwareCatalog.FirstMajor;
             case "SpecialExport": return definition.Name != "ExportPlcWatchTable" || releaseKey != "14sp1";
-            case "DocumentExport": case "BatchDocumentExport": case "DocumentImport": case "BatchDocumentImport": return major >= 20;
+            case "DocumentExport": case "BatchDocumentExport": case "DocumentImport": case "BatchDocumentImport":
+                return major >= OpennessApi.PlcDocuments.FirstMajor;
         }
         return definition.Name != "ListPlcWatchTables" || releaseKey != "14sp1";
     }

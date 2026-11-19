@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,7 +24,7 @@ namespace TiaMcp.Versioning
         public string ApiVersion { get { return Key == "14sp1" ? "14.0.1.0" : Key == "15.1" ? "15.1.0.0" : Key + ".0.0.0"; } }
         public string ApiFolder { get { return Key == "14sp1" ? "V14 SP1" : "V" + Key; } }
         public string InstallFolder { get { return "Portal V" + (Key == "14sp1" ? "14" : Key == "15.1" ? "15_1" : Key); } }
-        public string ApiAssembly { get { return MajorVersion == 21 ? "Siemens.Engineering.Base.dll" : "Siemens.Engineering.dll"; } }
+        public string ApiAssembly { get { return Key == OpennessApi.SplitAssemblyRelease ? "Siemens.Engineering.Base.dll" : "Siemens.Engineering.dll"; } }
         public string FindApiDirectory(string root)
         {
             if (string.IsNullOrWhiteSpace(root)) return null;

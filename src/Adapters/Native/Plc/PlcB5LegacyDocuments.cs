@@ -166,7 +166,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 return null;
             }
 
-            if (Version < 20)
+            if (Version < OpennessApi.PlcDocuments.FirstMajor)
             {
                 return null;
             }
@@ -301,7 +301,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 return false;
             }
 
-            if (Version < 20)
+            if (Version < OpennessApi.PlcDocuments.FirstMajor)
             {
                 return false;
             }
@@ -496,7 +496,7 @@ namespace TiaMcp.Adapters.Native.Plc
             LastImportFromDocumentsStopped = false;
 
             if (IsProjectNull()) return null;
-            if (Version < 20) return null;
+            if (Version < OpennessApi.PlcDocuments.FirstMajor) return null;
             TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
                 _session.PlcSoftwarePath(_session.GetPlcSoftware(softwarePath)), true);
 

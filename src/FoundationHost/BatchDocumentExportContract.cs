@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json.Nodes;
 using System.Security.Cryptography;
 using System.Text;
@@ -25,7 +26,7 @@ internal static class BatchDocumentExportContract
         var dry=request["dryRun"]?.GetValue<bool>()??true;
         var release=Text(result,"ReleaseKey");var status=Text(result,"Status");var output=Text(result,"OutputDirectory");var group=Text(result,"GroupPath");
         var recursive=Flag(result,"Recursive");
-        if(release is not ("20" or "21") || Flag(result,"Executed")==dry || !Flag(result,"InventoryComplete")
+        if(!OpennessApi.PlcDocuments.Includes(release) || Flag(result,"Executed")==dry || !Flag(result,"InventoryComplete")
                 || Flag(result,"OutcomeUnknown")!=DocumentExportContract.RequiresReset(result)
                 || (dry?status is not ("planned" or "inconsistent"):status is not ("exported" or "failed")))
             throw new InvalidDataException("Batch document outcome conflicts.");
@@ -83,7 +84,8 @@ internal static class BatchDocumentExportContract
                 }
             }
             var name=Uri.UnescapeDataString(block.Split('/').Last());
-            if(item["Files"] is not JsonArray files || (files.Count!=2 && !((release is "20" or "21") && state is ("staged" or "exported") && files.Count==1))
+            if(item["Files"] is not JsonArray files || (files.Count!=2 && !(OpennessApi.PlcDocuments.Includes(release)
+                && state is ("staged" or "exported") && files.Count==1))
                 || files[0]?
                     .GetValue<string>()!=name+".s7dcl" || (files.Count==2 && files[1]?.GetValue<string>()!=name+".s7res"))
                 throw new InvalidDataException("Batch document file set conflicts.");

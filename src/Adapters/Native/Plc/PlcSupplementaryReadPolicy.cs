@@ -15,7 +15,7 @@ namespace TiaMcp.Adapters
         internal const string TechnologyRootScope =
             "ordinary PLC root top-level technology-object engineering metadata only; no user-group composition in this API; sub-level TOs, parameters and " +
             "live values excluded";
-        internal static string TechnologyReadScope(string key) => key=="19" || key=="20" || key=="21" ? TechnologyScope : TechnologyRootScope;
+        internal static string TechnologyReadScope(string key) => OpennessApi.TechnologyGroups.Includes(key) ? TechnologyScope : TechnologyRootScope;
         internal static void RequireRelease(string key,bool watch=false)
         {
             if(!ReleaseKeys.Contains(key))

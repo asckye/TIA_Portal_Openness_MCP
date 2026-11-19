@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json.Nodes;
 
 namespace TiaMcp.FoundationHost;
@@ -22,8 +23,8 @@ internal static class SpecialExportContract
         if(kind is not ("watch-table" or "technology-object") || Text("ExportOptions")!="None" ||
             release is not ("14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21")
                 || (kind=="watch-table" && release=="14sp1")) throw new InvalidDataException("Invalid special export scope.");
-        if(Text("Scope")!=(kind=="watch-table"?SupplementaryReadContract.WatchScope:release is "19" or "20" or "21"?SupplementaryReadContract.TechnologyScope
-                    :SupplementaryReadContract.TechnologyRootScope))
+        if (Text("Scope") != (kind == "watch-table" ? SupplementaryReadContract.WatchScope
+            : OpennessApi.TechnologyGroups.Includes(release) ? SupplementaryReadContract.TechnologyScope : SupplementaryReadContract.TechnologyRootScope))
             throw new InvalidDataException("Unexpected special export read scope.");
         if(evidence!="static-sdk-signature-verified" || Text("SemanticsEvidence")!="official-manual-source-candidate" ||
             (dryRun ? status is not ("planned" or "inconsistent") : status is not ("exported" or "failed"))

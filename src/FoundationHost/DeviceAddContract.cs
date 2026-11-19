@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json.Nodes;
 namespace TiaMcp.FoundationHost;
 internal static class DeviceAddContract
@@ -20,7 +21,7 @@ internal static class DeviceAddContract
             throw new InvalidDataException("Creation scalar bound exceeded.");
         TiaMcp.Adapters.MutationIdentityPolicy.AbsoluteFile(Text("ProjectFile"));
         bool dry=request["dryRun"]?.GetValue<bool>()??true;
-        if(Text("Release") is not ("18" or "19" or "20" or "21") || r["ProcessId"] is not JsonValue p || !p.TryGetValue<int>(out var pid)||pid<=0 || string
+        if(!OpennessApi.HardwareCatalog.Includes(Text("Release")) || r["ProcessId"] is not JsonValue p || !p.TryGetValue<int>(out var pid)||pid<=0 || string
                 .IsNullOrWhiteSpace(Text("ProjectFile")))
             throw new InvalidDataException("Invalid creation session.");
         if(Text("DeviceName")!=request["deviceName"]?.GetValue<string>() || Text("Family")!=(request["family"]?.GetValue<string>()??"S7-1500"))

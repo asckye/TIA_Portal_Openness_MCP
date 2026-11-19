@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,7 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                if (TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion < 20)
+                if (TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey).MajorVersion < OpennessApi.PlcDocuments.FirstMajor)
                 {
                     throw new McpException("ExportPlcBlockDocuments requires TIA Portal V20 or newer", McpErrorCode.InvalidParams);
                 }

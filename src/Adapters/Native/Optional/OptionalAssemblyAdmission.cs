@@ -10,7 +10,7 @@ internal static class OptionalAssemblyAdmission
     internal static HardwareAddressingReply Run(string release, string assembly, Func<HardwareAddressingReply> operation,
         Func<AssemblyName, Assembly>? load = null)
     {
-        if (release == "21")
+        if (release == OpennessApi.SplitAssemblyRelease)
         {
             try { (load ?? Assembly.Load)(OpennessAssemblyNames.Sibling(OpennessAssemblyNames.V21Core, assembly)); }
             catch (FileNotFoundException)

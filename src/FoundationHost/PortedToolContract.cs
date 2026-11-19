@@ -482,7 +482,8 @@ internal sealed partial class FoundationTool
               arguments.TryGetValue("view", out var editorView) ? editorView.GetString() ?? "" : "");
         if (engineeringUnavailable != null)
             return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName,
-                tool.Name == "ShowObjectInEditor" && portedRelease == "20" && scope == "device" ? engineeringUnavailable : null);
+                tool.Name == "ShowObjectInEditor" && portedRelease == OpennessApi.DeviceEditorRequiresViewRelease && scope == "device"
+                    ? engineeringUnavailable : null);
         if (LibraryCapabilities.Unsupported(portedRelease!, tool.Name, actionName,
             arguments.TryGetValue("sourceKind", out var sourceKind) ? sourceKind.GetString() ?? "" : "",
             arguments.TryGetValue("properties", out var libraryProperties) && libraryProperties.ValueKind == JsonValueKind.Object ? libraryProperties

@@ -15,8 +15,9 @@ namespace TiaMcp.Adapters.Contracts
             if (tool == "ManagePlcSoftwareUnit" && copyMode.Length != 0 && version < 20) return "Software-unit master-copy modes require V20.";
             if (tool == "ManagePlcBlockProtection" && version < 15) return "PlcBlockProtectionProvider requires V15.1.";
             if (tool == "ManagePlcUserGroup" && family == "watchTables" && version < 15) return "Watch-table user groups require V15.1.";
-            if (tool == "ManagePlcUserGroup" && family == "technology" && version < 19) return "Technological instance DB user groups require V19.";
-            if (tool == "ManagePlcUserGroup" && family == "externalSources" && action == "rename" && version < 21)
+            if (tool == "ManagePlcUserGroup" && family == "technology" && version < OpennessApi.TechnologyGroups.FirstMajor)
+                return "Technological instance DB user groups require V19.";
+            if (tool == "ManagePlcUserGroup" && family == "externalSources" && action == "rename" && version < OpennessApi.ExternalSourceGroupRename.FirstMajor)
                 return "PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21.";
             // API audit 2026-10-19 F20 (SDK DLL metadata): the user-group Name has a public setter from V21 for block, type and
             // watch-table groups and from V20 for tag-table groups; the rename is refused instead of a SetAttribute fallback.
@@ -27,8 +28,9 @@ namespace TiaMcp.Adapters.Contracts
             if (tool == "CreatePlcInstanceDb" && version < 15) return "CreateInstanceDB requires V15.1.";
             if (tool == "SetPlcProgram" && version < 18) return "UpdateProgram requires V18.";
             if (tool == "GetPlcCrossReferences" && version < 18) return "CrossReferenceService requires V18.";
-            if (tool == "ManagePlcExternalSources" && action == "renameGroup" && version < 21) return "PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21.";
-            if (!string.IsNullOrEmpty(unitName) && (version < 16 || unitKind == "safety" && version < 18))
+            if (tool == "ManagePlcExternalSources" && action == "renameGroup" && version < OpennessApi.ExternalSourceGroupRename.FirstMajor)
+                return "PLC_EXTERNAL_SOURCE_GROUP_RENAME requires V21.";
+            if (!string.IsNullOrEmpty(unitName) && (version < OpennessApi.PlcUnits.FirstMajor || unitKind == "safety" && version < 18))
                 return "The requested PLC unit scope is unavailable in this release.";
             if (tool == "ManagePlcExternalSources" && version < 17 && targetKind.Length != 0)
                 return "Generating into an explicit target group requires V17 or later.";

@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.IO;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace TiaMcp.Adapters
         }
         internal static void RequireRelease(string release)
         {
-            if(release!="20" && release!="21") throw new TiaMcp.Adapters.Contracts
+            if(!OpennessApi.PlcDocuments.Includes(release)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Document export preview is restricted by policy to exact V20/V21; older API applicability is not inferred.",
                     "export-plan",false);
         }

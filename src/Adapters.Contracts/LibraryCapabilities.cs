@@ -19,10 +19,10 @@ namespace TiaMcp.Adapters.Contracts
                 string structureConflictResolutionMode = "RetainStructure", string copyMode = "", string updatePathsMode = "")
         {
             if ((operation == "ManageLibraryMasterCopy" && copyMode != ""
-                || operation == "ManageLibraryTypeVersion" && updatePathsMode != "") && !EngineeringServicesCapabilities.AtLeast(release, "20"))
+                || operation == "ManageLibraryTypeVersion" && updatePathsMode != "") && !OpennessApi.LibraryCopyModes.Includes(release))
                 return "Library instantiation copyMode/updatePathsMode overloads require V20 or later.";
-            if (operation == "ManageLibraryTypeVersion" && (action == "edit" || action == "release" || action == "discard") && !EngineeringServicesCapabilities
-                    .AtLeast(release, "20"))
+            if (operation == "ManageLibraryTypeVersion" && (action == "edit" || action == "release" || action == "discard")
+                && !OpennessApi.LibraryVersionEditing.Includes(release))
                 return "Library version editing/release/discard requires V20 or later.";
             if (operation == "ManageLibraryTypeVersion" && action == "setDefault" && !EngineeringServicesCapabilities.AtLeast(release, "17"))
                 return "Library version SetAsDefault requires V17 or later.";
@@ -40,14 +40,15 @@ namespace TiaMcp.Adapters.Contracts
             if (operation == "ManageLibraryType" && properties != null)
                 foreach (var property in properties)
                 {
-                    if (property == "DoNotUse" && !EngineeringServicesCapabilities.AtLeast(release, "20")) return "LibraryType.DoNotUse requires V20 or later.";
+                    if (property == "DoNotUse" && !OpennessApi.LibraryDoNotUse.Includes(release))
+                        return "LibraryType.DoNotUse requires V20 or later.";
                     if (property == "SetForUpdate" && !EngineeringServicesCapabilities.AtLeast(release, "18"))
                         return "LibraryType.SetForUpdate requires V18 or later.";
                 }
             if ((operation == "CompareLibraryObjects" || operation == "ManageLibraryMasterCopy" && action == "compare")
                 && !EngineeringServicesCapabilities.AtLeast(release, "18"))
                 return "Library comparison requires V18 or later.";
-            if (operation == "ImportLibraryTypeDocuments" && !EngineeringServicesCapabilities.AtLeast(release, "20"))
+            if (operation == "ImportLibraryTypeDocuments" && !OpennessApi.LibraryDocuments.Includes(release))
                 return "Library document import requires V20 or later.";
             if (operation == "ImportMasterCopyFromGlobalLibrary" && !EngineeringServicesCapabilities.AtLeast(release, "19"))
                 return "Unified HMI master-copy import requires V19 or later.";

@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System.Text.Json.Nodes;
 namespace TiaMcp.FoundationHost;
 internal static class DocumentExportContract
@@ -23,7 +24,8 @@ internal static class DocumentExportContract
         bool Flag(string key)=>result[key] is JsonValue v && v.TryGetValue<bool>(out var b)?b:throw new InvalidDataException("Invalid document flag: "+key);
         foreach(var key in new[]{"ProjectFile","SoftwarePath","BlockPath","OutputDirectory"}) if(string.IsNullOrWhiteSpace(Text(key)) || Text(key).Length>4096)
             throw new InvalidDataException("Missing document identity.");
-        if(Text("ReleaseKey") is not ("20" or "21") || Text("Language") is not ("LAD" or "DB") || Text("Options")!="native-default-two-argument-overload"
+        if(!OpennessApi.PlcDocuments.Includes(Text("ReleaseKey")) || Text("Language") is not ("LAD" or "DB")
+            || Text("Options")!="native-default-two-argument-overload"
                 || Text("Evidence")!="official-manual-source-candidate; exact-sdk-build/native-acceptance-pending; no-cross-version-roundtrip-claim")
             throw new InvalidDataException("Unverified document scope.");
         var hash=Text("PlanHash"); if(hash.Length!=64 || hash.Any(c=>!"0123456789abcdef".Contains(c))) throw new InvalidDataException("Invalid document hash.");
@@ -33,7 +35,8 @@ internal static class DocumentExportContract
                 || (status=="failed"?string.IsNullOrWhiteSpace(Text("RecoveryDirectory")):Text("RecoveryDirectory")!=""))
             throw new InvalidDataException("Document status conflict.");
         var name=Uri.UnescapeDataString(Text("BlockPath").Split('/').Last());
-        if(result["Files"] is not JsonArray files || (files.Count!=2 && !((Text("ReleaseKey") is "20" or "21") && status=="exported" && files.Count==1))
+        if(result["Files"] is not JsonArray files || (files.Count!=2 && !(OpennessApi.PlcDocuments.Includes(Text("ReleaseKey"))
+            && status=="exported" && files.Count==1))
             || files[0]?
                 .GetValue<string>()!=name+".s7dcl" || (files.Count==2 && files[1]?.GetValue<string>()!=name+".s7res"))
             throw new InvalidDataException("Document pair conflict.");

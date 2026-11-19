@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Linq;
 using System.Text.Json.Nodes;
@@ -18,11 +19,11 @@ namespace TiaMcp.Logic.V4
                 || tool == "ListPlcTags" || tool == "ListPlcUserConstants" || tool == "ListPlcSystemConstants" || tool == "AnalyzePlcCrossReferences";
             if (!scoped) return true;
             if (parameter == "unitName" || parameter == "includeUnits")
-                return new[] { "16", "17", "18", "19", "20", "21" }.Contains(release, StringComparer.Ordinal);
+                return OpennessApi.PlcUnits.Includes(release);
             if (import && parameter == "swImportOptions")
                 return release != "14sp1" && tool != "ImportPlcTagTable" && tool != "ImportPlcTagTablesFromDirectory";
             if (import && parameter == "importOptions")
-                return new[] { "19", "20", "21" }.Contains(release, StringComparer.Ordinal);
+                return OpennessApi.CultureImportOptions.Includes(release);
             return true;
         }
 

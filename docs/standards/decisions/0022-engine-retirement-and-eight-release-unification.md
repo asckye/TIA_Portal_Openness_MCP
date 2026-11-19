@@ -35,3 +35,5 @@ ADR 0006 让 V20/V21 暂时以引擎 EXE 作为 worker，ADR 0009 决定按能�
 - 验证方式：八版契约与响应快照；交付包清单不含引擎文件；宿主拒绝 `--engine-*` 的测试；P8-04l2 完成后仓库中没有 `src/Engine`。
 
 2026-11-03 补记：P8-04l2 已由 Q2 取代，P8-04l3 已由 Q7 取消（维护者 2026-11-02 批准的代码精简），见[开发计划](../../plan/plan.md)。
+
+2026-11-19 补记：UNIFY-1E 将运行时判定原生 API 可用性的版本边界集中到 [OpennessApi](../../../src/Adapters.Contracts/OpennessApi.cs)，各项注明 SDK 成员或随附的 XSD。工具名册继续使用 `ReleaseRange`。新增面向 V20 或 V21 的源码分支由 [ReleaseKeyedSitesTests](../../../tests/Repository/TiaMcp.SourceContracts.Tests/ReleaseKeyedSitesTests.cs) 检查。仍待核对的是直接移植工具按版本选择的输入校验和分页规则（`DeclaredPortInputAndPaging`），以及等待实机证据的线程模型决策（U3）。

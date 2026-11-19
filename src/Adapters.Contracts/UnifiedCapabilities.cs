@@ -31,14 +31,14 @@ namespace TiaMcp.Adapters.Contracts
         }
         public static string? Unsupported(string release, UnifiedRequest request)
         {
-            if (release != "19" && release != "20" && release != "21")
+            if (!OpennessApi.UnifiedHmi.Includes(release))
                 return "WinCC Unified Openness requires V19 or later.";
             if (request.Operation == "SetUnifiedGlobalScript" && request.Action == "create" && !request.DryRun)
                 return "Script module creation is not yet verified on real TIA Portal. Create the module in TIA, then use action=update.";
             bool list = request.Operation == "ExportUnifiedEngineeringList" || request.Operation == "ImportUnifiedEngineeringList"
                 || request.Operation == "ManageUnifiedListEntries" || request.Operation == "ListUnifiedEngineeringObjects"
                 || request.Operation == "ManageUnifiedEngineeringObject";
-            if (list && request.Category == "graphicLists" && release != "21")
+            if (list && request.Category == "graphicLists" && !OpennessApi.UnifiedGraphicLists.Includes(release))
                 return "HmiSoftware.HmiGraphicLists is available in the V21 PublicAPI only.";
             if (request.Operation == "ManageUnifiedEngineeringObject")
             {
@@ -47,19 +47,19 @@ namespace TiaMcp.Adapters.Contracts
                 if ((request.Category == "graphicLists" || request.Category == "textLists") && request.Action == "create")
                     return "HmiGraphicListComposition/HmiTextListComposition expose no Create; import a list document with ImportUnifiedEngineeringList.";
             }
-            if (release == "19")
+            if (!OpennessApi.UnifiedTextLists.Includes(release))
             {
                 if (request.Operation == "ExportUnifiedEngineeringList" || request.Operation == "ImportUnifiedEngineeringList"
                     || request.Operation == "ManageUnifiedListEntries")
                     return "HmiUnified.TextGraphicList is not exposed by the V19 PublicAPI.";
                 if (list && (request.Category == "textLists" || request.Category == "systemTextLists"))
                     return "HmiTextLists/HmiSystemTextLists require the V20 PublicAPI.";
-                if (request.Operation == "GetUnifiedAuditSettings" && request.Category == "alarmAuditClasses")
-                    return "HmiSoftware.HmiAlarmAuditClass requires the V20 PublicAPI.";
-                if (request.Operation == "ManageUnifiedDynamization"
-                        && (request.DynamizationKind == "Expression" || request.DynamizationKind == "TagParameter"))
-                    return "ExpressionDynamization and TagParameterDynamization require the V20 PublicAPI.";
             }
+            if (request.Operation == "GetUnifiedAuditSettings" && request.Category == "alarmAuditClasses" && !OpennessApi.UnifiedAlarmAudit.Includes(release))
+                return "HmiSoftware.HmiAlarmAuditClass requires the V20 PublicAPI.";
+            if (request.Operation == "ManageUnifiedDynamization" && !OpennessApi.UnifiedExpressionDynamization.Includes(release)
+                && (request.DynamizationKind == "Expression" || request.DynamizationKind == "TagParameter"))
+                return "ExpressionDynamization and TagParameterDynamization require the V20 PublicAPI.";
             if (request.Operation == "ManageUnifiedListEntries" && request.Action != "read")
                 return "Unified list entry Create/Update/Delete is not exposed by the public API; use native file exchange.";
             if (request.Operation == "GetUnifiedRuntimeSettings" || request.Operation == "SetUnifiedRuntimeSettings")
@@ -78,8 +78,9 @@ namespace TiaMcp.Adapters.Contracts
                 foreach (var step in input.Items.Where(v => v.Kind == "object" && v.Properties.ContainsKey("property")))
                 {
                     var property = step.Properties["property"].Text;
-                    if (property == "HmiGraphicLists" && release != "21" || release == "19"
-                            && (property == "HmiTextLists" || property == "HmiSystemTextLists" || property == "HmiAlarmAuditClass"))
+                    if (property == "HmiGraphicLists" && !OpennessApi.UnifiedGraphicLists.Includes(release)
+                        || (property == "HmiTextLists" || property == "HmiSystemTextLists") && !OpennessApi.UnifiedTextLists.Includes(release)
+                        || property == "HmiAlarmAuditClass" && !OpennessApi.UnifiedAlarmAudit.Includes(release))
                         return "HmiSoftware." + property + " is not exposed by the V" + release + " PublicAPI.";
                 }
             return null;

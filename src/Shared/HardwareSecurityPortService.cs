@@ -38,7 +38,8 @@ internal sealed class HardwareSecurityPortService
     private ResponseMessage Run(HardwareSecurityRequest request, string devicePathJson, string itemPathJson)
     {
         if (request.Operation == "ManagePlcProtection" && (
-            (request.NormalizedAction is "protectAllConfiguration" or "unprotectAllConfiguration" && HardwareContract.ReleaseKey != "21")
+            (request.NormalizedAction is "protectAllConfiguration" or "unprotectAllConfiguration"
+                && !OpennessApi.ProtectAllConfiguration.Includes(HardwareContract.ReleaseKey))
             || (PlcProtectionRules.MasterSecretActions.Contains(request.NormalizedAction) && HardwareContract.ReleaseKey is "15.1" or "16")))
             return new ResponseMessage {
                 Message = "The requested PLC protection action is unavailable on this release.", Meta = new JsonObject {

@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace TiaMcp.Adapters
         }
         internal static void RequireRelease(string release)
         {
-            if(release!="18" && release!="19" && release!="20" && release!="21")
+            if(!OpennessApi.HardwareCatalog.Includes(release))
                 throw new NotSupportedException("Hardware catalog search requires release-specific API and manual evidence; this release is not enabled.");
         }
         internal static PlcHardwareCatalogSearchResult Search(string release,string keyword,int limit,Func<string,

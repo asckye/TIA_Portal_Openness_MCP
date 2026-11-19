@@ -13,7 +13,7 @@ public static class SecurityCapabilities
         {
             action = PlcProtectionRules.Actions.FirstOrDefault(candidate =>
                 string.Equals(candidate, action.Trim(), StringComparison.OrdinalIgnoreCase)) ?? action;
-            if (action is "protectAllConfiguration" or "unprotectAllConfiguration" && version < 21)
+            if (action is "protectAllConfiguration" or "unprotectAllConfiguration" && version < OpennessApi.ProtectAllConfiguration.FirstMajor)
                 return "All-configuration protection requires V21.";
             if (Array.IndexOf(PlcProtectionRules.MasterSecretActions, action) >= 0 && version < 17)
                 return "PLC master secret requires V17 or later.";

@@ -77,7 +77,7 @@ namespace TiaMcp.Adapters
             bool loggedOnHere=false;
             if(password.Length!=0)
             {
-                if(ReleaseKey=="21")
+                if(ReleaseKey==OpennessApi.SplitAssemblyRelease)
                 {
                     var assembly=typeof(Siemens.Engineering.Safety.SafetyAdministration).Assembly;
                     EngineeringAssemblyIdentity

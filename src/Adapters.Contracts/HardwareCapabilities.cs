@@ -14,7 +14,8 @@ namespace TiaMcp.Adapters.Contracts
             if ((name == "ManageHardwareObject" || name == "HardwareManageHardwareObject") && action == "changeType" && version < 18)
                 return "DeviceItem.ChangeType requires V18.";
             if ((name == "ListCommunicationConnections" || name == "ManageCommunicationConnection"
-                || name == "HardwareReadCommunicationConnections" || name == "HardwareManageCommunicationConnection") && version < 21)
+                || name == "HardwareReadCommunicationConnections" || name == "HardwareManageCommunicationConnection")
+                    && version < OpennessApi.CommunicationConnections.FirstMajor)
                 return "CommunicationConnections requires V21.";
             if ((name == "ListTransferAreas" || name == "ManageTransferArea" || name == "HardwareReadTransferAreas" || name == "HardwareManageTransferArea")
                     && version < 15)
@@ -26,15 +27,16 @@ namespace TiaMcp.Adapters.Contracts
                 return "System diagnostics settings require V17.";
             if ((name == "CreateHardwareCatalogDevice" || name == "HardwareCreateCatalogDevice" || name == "SearchHardwareCatalog"
                         || name == "HardwareLegacySearchHardwareCatalog")
-                    && version < 18)
+                    && version < OpennessApi.HardwareCatalog.FirstMajor)
                 return "HardwareCatalog requires V18.";
-            if ((name == "CreateGsdDevice" || name == "HardwareCreateGsdDevice") && version < 18)
+            if ((name == "CreateGsdDevice" || name == "HardwareCreateGsdDevice") && version < OpennessApi.HardwareCatalog.FirstMajor)
                 return "GSD device creation requires a HardwareCatalog TypeIdentifier (V18); the GSD:<file>/DAP/<id> identifier form is not verified for " +
                     "this release.";
             if (name == "ManageDeviceServiceObjects" || name == "HardwareManageDeviceServiceObjects")
             {
-                if (family == "webApplications" && version < 21) return "DefaultWebPagesFeature requires V21.";
-                if (family == "telecontrolDataPoints" && (version < 20 || version == 20 && action != "export" && action != "import"))
+                if (family == "webApplications" && version < OpennessApi.DefaultWebPages.FirstMajor) return "DefaultWebPagesFeature requires V21.";
+                if (family == "telecontrolDataPoints" && (version < OpennessApi.TelecontrolFiles.FirstMajor
+                    || version < OpennessApi.TelecontrolPoints.FirstMajor && action != "export" && action != "import"))
                     return "Telecontrol export/import requires V20; typed data point actions require V21.";
                 if (family == "certificateServices" && version < 18) return "CertificateManagementConfiguration requires V18.";
             }
@@ -49,7 +51,7 @@ namespace TiaMcp.Adapters.Contracts
                 && (extendedPositionNumber >= 0 || action == "create" && positionNumber >= 0))
                 return "Extended positions and explicit creation positions require V16.";
             if ((name == "ManageHardwareUtilities" || name == "HardwareManageHardwareUtilities") && action == "exportCardReaderPsc" && hasPassword
-                    && version < 20)
+                    && version < OpennessApi.EncryptedPscExport.FirstMajor)
                 return "Encrypted PSC export requires V20.";
             return null;
         }

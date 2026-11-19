@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -109,8 +110,8 @@ namespace TiaMcp.Logic.ModelContextProtocol
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             bool xml = file.Kind == "simaticml" || file.Kind == "tagtable" || file.Kind == "udt" && extension == ".xml";
             bool source = file.Kind == "scl" && extension == ".scl" || file.Kind == "udt" && (extension == ".scl" || extension == ".udt")
-                || file.Kind == "s7dcl" && extension == ".s7dcl" && (release == "20" || release == "21");
-            bool resource = file.Kind == "s7res" && extension == ".s7res" && (release == "20" || release == "21");
+                || file.Kind == "s7dcl" && extension == ".s7dcl" && OpennessApi.PlcDocuments.Includes(release);
+            bool resource = file.Kind == "s7res" && extension == ".s7res" && OpennessApi.PlcDocuments.Includes(release);
             if (!(xml && extension == ".xml") && !source && !resource)
                 throw new ArgumentException("Filename extension/kind is not supported on this release.", "files");
             if (string.IsNullOrWhiteSpace(file.Content) || file.Content.Length > MaximumFileBytes)

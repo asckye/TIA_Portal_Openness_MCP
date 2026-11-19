@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4.Inputs;
 using System;
@@ -32,7 +33,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 [Description("Caller-known installed Update number; -1 means unknown.")] int installedUpdate = -1)
         {
             if (tiaMajor == 0) tiaMajor = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion;
-            if (tiaMajor != 20 && tiaMajor != 21 || installedUpdate < -1) throw new ArgumentException("tiaMajor must be 20/21; installedUpdate >= -1.");
+            if (!OpennessApi.PlcDocuments.Includes(tiaMajor.ToString(System.Globalization.CultureInfo.InvariantCulture)) || installedUpdate < -1)
+                throw new ArgumentException("tiaMajor must be 20/21; installedUpdate >= -1.");
             var file = new FileInfo(filePath);
             if (!Path.IsPathRooted(filePath) || !file.Exists || !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) || file
                     .Length > 20 * 1024 * 1024)

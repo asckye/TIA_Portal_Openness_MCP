@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.IO;
 using System.Linq;
@@ -14,11 +15,11 @@ namespace TiaMcpServer.Siemens
     internal sealed class OpennessReleaseContract
     {
         internal string Key { get; }
-        internal string CoreAssemblyName => Key == "21" ? "Siemens.Engineering.Base" : "Siemens.Engineering";
+        internal string CoreAssemblyName => Key == OpennessApi.SplitAssemblyRelease ? "Siemens.Engineering.Base" : "Siemens.Engineering";
         // Recorded from authorized PublicAPI PE metadata, not from a candidate being admitted.
         internal AssemblyName CoreAssemblyIdentity => new AssemblyName(CoreAssemblyName +
             ", Version=" + (Key == "14sp1" ? "14.0.1.0" : Key == "15.1" ? "15.1.0.0" : Key + ".0.0.0") +
-            ", Culture=neutral, PublicKeyToken=" + (Key == "21" ? "29bfe5fdf4ba5d3b" : "d29ec89bac048f84"));
+            ", Culture=neutral, PublicKeyToken=" + (Key == OpennessApi.SplitAssemblyRelease ? "29bfe5fdf4ba5d3b" : "d29ec89bac048f84"));
         internal string SoftwareContainerType => Key == "14"
             ? "Siemens.Engineering.HW.ISoftwareContainer"
             : "Siemens.Engineering.HW.Features.SoftwareContainer";
@@ -59,7 +60,7 @@ namespace TiaMcpServer.Siemens
 
         internal string UnifiedCollection(string logicalName)
         {
-            if (!new[] { "19", "20", "21" }.Contains(Key))
+            if (!OpennessApi.UnifiedHmi.Includes(Key))
                 throw new NotSupportedException("No documented Unified API contract for " + Key + ".");
             if (!new[] { "Tags", "TagTables", "SystemTags", "Connections" }.Contains(logicalName))
                 throw new ArgumentException("Unknown Unified collection: " + logicalName);

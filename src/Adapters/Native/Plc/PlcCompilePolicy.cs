@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace TiaMcp.Adapters
         internal static string[] RequireScope(string release, string scope, string scopePath, string unitName)
         {
             var parts = Contracts.PlcCompileScope.Validate(scope, scopePath, unitName);
-            if ((scope == "unit" || unitName != "") && TiaVersionCatalog.Get(release).MajorVersion < 16)
+            if ((scope == "unit" || unitName != "") && TiaVersionCatalog.Get(release).MajorVersion < OpennessApi.PlcUnits.FirstMajor)
                 throw ScopeUnavailable("Software unit compile scopes require V16-V21.");
             return parts;
         }

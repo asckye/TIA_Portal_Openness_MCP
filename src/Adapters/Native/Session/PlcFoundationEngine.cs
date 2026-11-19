@@ -54,7 +54,7 @@ namespace TiaMcp.Adapters
             var contract = OpennessReleaseContract.For(releaseKey);
             contract = OpennessReleaseContract.For(releaseKey, contract.CoreAssemblyIdentity, selectedPublicApiDirectory);
             contract.RequireAssembly(typeof(TiaPortal).Assembly);
-            if (releaseKey == "21")
+            if (releaseKey == OpennessApi.SplitAssemblyRelease)
             {
                 var expected = new AssemblyName("Siemens.Engineering.Step7, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b");
                 var actual = typeof(PlcSoftware).Assembly;

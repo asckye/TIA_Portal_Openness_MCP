@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Contracts;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +28,7 @@ namespace TiaMcp.Adapters
         private static string Field(string text)=>text.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)+":"+text;
         internal static void ValidateOptions(PlcDocumentImportRequest r)
         {
-            if(r.Release!="20" && r.Release!="21") throw new TiaMcp.Adapters.Contracts
+            if(!OpennessApi.PlcDocuments.Includes(r.Release)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Document import requires exact release 20 or 21.","export-plan",false);
             if(r.Overwrite) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Only documented reject-existing ImportDocumentOptions.None is admitted.","export-plan",false);

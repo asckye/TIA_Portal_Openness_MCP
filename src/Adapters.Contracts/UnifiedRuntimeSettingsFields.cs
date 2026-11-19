@@ -92,16 +92,16 @@ public static class UnifiedRuntimeSettingsFields
     {
         if (!Known(field)) return null;
         bool available = true;
-        if (release == "19" || release == "20")
+        if (!OpennessApi.UnifiedRuntimeInputSettings.Includes(release))
             available &= field != "CentralInputHint" && field != "CentralPanning" && field != "CentralZooming"
                 && field != "HmiUnifiedTagSettings.TagOptimizationActive"
                 && !field.StartsWith("HmiExclusiveOperationSettings.", StringComparison.Ordinal);
-        if (release == "19")
+        if (!OpennessApi.UnifiedRuntimeFontSettings.Includes(release))
             available &= field != "EnableLanguageCompatibleFontFamilies" && field != "GeneralESIGCommentsStrategy"
                 && !field.StartsWith("TelemetryRuntimeSettings.", StringComparison.Ordinal)
                 && !field.StartsWith("HmiUpssRuntimeSettings.", StringComparison.Ordinal)
                 && !field.StartsWith("HmiUnifiedTagSettings.", StringComparison.Ordinal);
-        return available && (release == "19" || release == "20" || release == "21") ? null
+        return available && OpennessApi.UnifiedHmi.Includes(release) ? null
             : "HmiRuntimeSetting." + field + " is not exposed by the V" + release + " PublicAPI.";
     }
 }

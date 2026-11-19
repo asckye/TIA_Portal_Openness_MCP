@@ -1,0 +1,88 @@
+# One use of each fragment is allowed in the named source. Repeated lines represent distinct occurrences.
+# Approved runtime policies and real-machine guards (U3, U4, U6, VMFIX).
+Adapters.Contracts/CandidateImportFiles.cs|release == "20" && !exists
+Adapters.Contracts/NativeCrossReferenceConsent.cs|release == "18" || release == "19" || release == "20";
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (release == "20")
+Adapters/Native/Hardware/HardwareAml.cs|!dryRun && ReleaseKey != "21" ? HardwareEditAccess()
+Adapters/Native/Hardware/HardwareAml.cs|if (!dryRun && ReleaseKey == "21") HardwareWriteAdmission()
+Adapters/Native/Plc/PlcDocumentImportPolicy.cs|r.Release=="20" && !selected.Any
+Adapters/Native/Plc/PlcDocumentImportPolicy.cs|r.Release=="20" && paths.Length!=2
+FoundationHost/DocumentImportContract.cs|Text("Release")=="20" && Text("ResourceSha256")==""
+Adapters/Native/Session/PlcFoundationEngine.cs|throw new InvalidOperationException(releaseKey == "20" || releaseKey == "21"
+Adapters/Policy/PlcLifecyclePolicy.cs|release == "20" || release == "21" ? System.Threading.ApartmentState.MTA
+Adapters/Policy/PlcLifecyclePolicy.cs|throw new InvalidOperationException(release == "20" || release == "21"
+PlcWorker/Program.cs|if (options.ReleaseKey != "20" && options.ReleaseKey != "21") return Run(options)
+Studio/Bridge/Program.cs|return key == "20" || key == "21";
+ToolPipeline/ReleaseCatalogData.cs|DeclaredPortReleases = TiaMcp.Adapters.Contracts.ReleaseRange.Since("20")
+# Exact SDK identities in the API table.
+Adapters.Contracts/OpennessApi.cs|public const string SplitAssemblyRelease = "21";
+Adapters.Contracts/OpennessApi.cs|public const string DeviceEditorRequiresViewRelease = "20";
+# Exact release identities, file extensions, catalog entries and SDK fixture directories.
+Adapters.Contracts/ReleaseRange.cs|"14sp1", "15.1", "16", "17", "18", "19", "20", "21"
+Adapters.Contracts/SimaticMlImportWindow.cs|"16" or "17" or "18" or "19" or "20" or "21" => new Version
+Adapters/Native/Session/MutationIdentityPolicy.cs|&& releaseKey!="20" && releaseKey!="21")
+Adapters/Native/Session/MutationIdentityPolicy.cs|major!="19" && major!="20" && major!="21")
+Adapters/build/Test-AdapterInputs.cs|("V20", "20", "TIA_V20_PublicAPI/V20"), ("V21", "21", "TIA_V21_PublicAPI/V21/net48")
+FoundationHost/BatchImportContract.cs|"14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21"
+FoundationHost/ExternalSourceDeleteContract.cs|"14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21"
+FoundationHost/ExternalSourcePlanContract.cs|"14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21"
+FoundationHost/ExternalSourceWorkflowContract.cs|"14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21"
+FoundationHost/SpecialExportContract.cs|"14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21"
+FoundationHost/SupplementaryReadContract.cs|"14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21"
+Logic/Generation/GenerationProjectPath.cs|suffix != "19" && suffix != "20" && suffix != "21")
+Logic/Siemens/TiaVersionCatalog.cs|Foundation("20", "V20", 20)
+Logic/Siemens/TiaVersionCatalog.cs|Foundation("21", "V21", 21)
+Shared/BundleLayout.cs|{ "20", new Product("20", "TiaMcp.FoundationHost.exe", "--release-key") }
+Shared/BundleLayout.cs|{ "21", new Product("21", "TiaMcp.FoundationHost.exe", "--release-key") }
+Studio/Openness/V20/StudioRelease.cs|internal const string Key = "20";
+Studio/Openness/V21/StudioRelease.cs|internal const string Key = "21";
+# Explicit output formats (U7), builder defaults and validation fixtures.
+FoundationHost/OfflineBlockCompositionBuilders.cs|if (release != "21") throw new ArgumentException("Explicit output release 21 required.")
+FoundationHost/OfflineBlockCompositionBuilders.cs|OfflineCompositionBuilders.Build("BuildStructuredText", "21",
+FoundationHost/OfflineBlockCompositionBuilders.cs|["outputReleaseKey"] = "21",
+FoundationHost/OfflineBlockCompositionTools.cs|["enum"] = new JsonArray("21")
+FoundationHost/OfflineCompositionBuilders.cs|if (format == null && outputReleaseKey != "21")
+FoundationHost/OfflineCompositionTools.cs|supportsInnerOnly ? new JsonArray("21")
+FoundationHost/OfflineLadderBuilders.cs|if (release != "21") throw new ArgumentException("Explicit release 21 required.")
+FoundationHost/OfflineLadderBuilders.cs|if (toolName == "BuildFlgNetCall" && release != "21")
+FoundationHost/OfflineLadderTools.cs|["enum"] = new JsonArray("21")
+FoundationHost/OfflineLadderTools.cs|if (outputReleaseKey != "21") throw new ArgumentException("Explicit release 21 required.")
+FoundationHost/OfflineXmlBuilders.cs|if (format == null && !servingDefault && outputReleaseKey != "21")
+FoundationHost/OfflineXmlTools.cs|: new JsonArray("21")
+Logic/ModelContextProtocol/Builders/ClassicHmiTagTableXmlBuilder.cs|PlcDeclarationXmlFormat.ForRelease("21")
+Logic/ModelContextProtocol/Builders/ClassicHmiValidationFixture.cs|PlcDeclarationXmlFormat.ForRelease("21")
+Logic/ModelContextProtocol/Builders/ClassicHmiValidationFixture.cs|PlcDeclarationXmlFormat.ForRelease("21")
+Logic/ModelContextProtocol/Builders/FlgNetRungXmlBuilder.cs|FlgNetFormat() : this("21")
+Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs|string outputReleaseKey = "21"
+Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs|string outputReleaseKey = "21"
+Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs|string outputReleaseKey = "21"
+Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs|BuildTagTableForRelease(json, "21")
+Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs|ComposeLadFcBlockForRelease(json, "21")
+Logic/ModelContextProtocol/Builders/PlcFcBlockXmlComposer.cs|PlcDeclarationXmlFormat.ForRelease("21")
+Logic/ModelContextProtocol/Builders/PlcFcBlockXmlComposer.cs|format.ReleaseKey == "21" ? new XElement("SetENOAutomatically"
+Logic/ModelContextProtocol/Builders/PlcGlobalDbXmlBuilder.cs|string outputReleaseKey = "21"
+Logic/ModelContextProtocol/Builders/PlcGlobalDbXmlBuilder.cs|string outputReleaseKey = "21"
+Logic/ModelContextProtocol/Builders/PlcLadFcBlockXmlComposer.cs|string outputReleaseKey = "21"
+Logic/ModelContextProtocol/Builders/PlcLadFcBlockXmlComposer.cs|string outputReleaseKey = "21"
+Logic/ModelContextProtocol/Builders/PlcSymbolManifestBuilder.cs|PlcDeclarationXmlFormat.ForRelease("21")
+Logic/ModelContextProtocol/Builders/PlcSymbolManifestBuilder.cs|PlcDeclarationXmlFormat.ForRelease("21")
+Logic/ModelContextProtocol/Builders/PlcTagTableXmlBuilder.cs|BuildDocumentForRelease(tableName, tags, "21")
+Logic/ModelContextProtocol/Builders/PlcTagTableXmlBuilder.cs|BuildXmlForRelease(tableName, tags, "21")
+Logic/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs|string outputReleaseKey = "21"
+Logic/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs|string outputReleaseKey = "21"
+Logic/V4/Construction/ConstructionAdapter.cs|ConstructionJson.Require(outputReleaseKey == "21",
+Logic/V4/Construction/ConstructionAdapter.cs|ConstructionJson.Require(outputReleaseKey == "21",
+Logic/V4/Construction/ConstructionInput.cs|string outputReleaseKey = "21"
+Logic/V4/Construction/ConstructionJson.cs|string outputReleaseKey = "21"
+Logic/V4/Construction/FoundationConstructionValidation.Ladder.cs|string outputReleaseKey = "21"
+Logic/V4/Construction/FoundationConstructionValidation.Ladder.cs|string outputReleaseKey = "21"
+# Default arguments, fallback release keys and initial values.
+Adapters/Native/Plc/PlcCrossReferencePolicy.cs|?.Value ?? "21"
+Adapters/Native/Plc/PlcCrossReferencePolicy.cs|string release = "21"
+FoundationHost/HostCliOptions.cs|File.ReadAllText(marker).Trim() : "21"
+FoundationHost/PlcCrossReferenceAnalysis.cs|string release = "21"
+FoundationHost/PortedToolContract.cs|string release = "21"
+Logic/Siemens/CrossReferenceGuardLogic.cs|string release = "21"
+Studio/Gui/Configuration/ClientProfiles.cs|string releaseKey = "21"
+Studio/Gui/Configuration/ConfigCore.cs|string version = "21"
+ToolPipeline/EngineHostPipeline.cs|static string ReleaseKey = "21";

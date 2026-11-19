@@ -55,7 +55,7 @@ internal sealed class SafetyManagementService
             return Unsupported("The requested runtime group action requires V18 or later.");
         if (HardwareContract.ReleaseKey == "16" && request.Operation == "ManageSafetyGlobalSettings" && request.Action == "read")
             return Unsupported("GlobalSettings getters require V17 or later.");
-        if (HardwareContract.ReleaseKey != "21" && request.Action == "generateBaseId")
+        if (!OpennessApi.SafetyBaseId.Includes(HardwareContract.ReleaseKey) && request.Action == "generateBaseId")
             return Unsupported("SafetyBaseIdProvider requires V21.");
         if (request.Operation == "ManageSafetyGlobalSettings" && HardwareContract.ReleaseKey is "16" or "17"
             && request.Action == "update" && request.Scalars.Keys

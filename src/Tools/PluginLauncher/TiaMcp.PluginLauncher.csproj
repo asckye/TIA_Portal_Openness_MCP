@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="TiaMcp.ShippedTools.Tests" />
+    <ProjectReference Include="../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" Private="false" />
     <Compile Include="../../Logic/Siemens/TiaVersionCatalog.cs" Link="Versioning/TiaVersionCatalog.cs" />
     <Compile Include="../../Shared/BundleLayout.cs;../../Shared/OpennessEnvironment.cs;../../Shared/ProcessArguments.cs" LinkBase="Shared" />
     <Compile Include="../../Studio/Core/Environment/WorkbenchReleaseSelection.cs;../../Studio/Core/Environment/OpennessLocator.cs" LinkBase="Environment" />

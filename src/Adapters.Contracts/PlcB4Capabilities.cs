@@ -30,12 +30,13 @@ namespace TiaMcp.Adapters.Contracts
             }
             if (request.Operation == "ConfigureMotionHardwareConnection" && version < 15 && request.Aspect == "torque")
                 return "TorqueHardwareConnectionInterface requires V15.1.";
-            if (version < 19 && (request.Operation == "ManageTechnologyObject" || request.Operation == "ManageMotionAxis"
+            if (version < OpennessApi.TechnologyGroups.FirstMajor && (request.Operation == "ManageTechnologyObject" || request.Operation == "ManageMotionAxis"
                 || request.Operation == "GetMotionAxisConfiguration" || request.Operation == "ConfigureMotionHardwareConnection" || request
                     .Operation == "ExchangeMotionCamData")
                 && request.Path.Replace('\\', '/').Contains("/"))
                 return "Technology-object user groups require V19; use a root object on this release.";
-            if (version < 19 && (request.Operation == "GetTechnologyObjectTree" || request.Operation == "ImportTechnologyObject"
+            if (version < OpennessApi.TechnologyGroups.FirstMajor && (request.Operation == "GetTechnologyObjectTree"
+                || request.Operation == "ImportTechnologyObject"
                 || request.Operation == "ImportTechnologyObjectsFromDirectory") && request.GroupPath.Length != 0)
                 return "Technology-object user groups require V19; only the root group is available on this release.";
             return null;

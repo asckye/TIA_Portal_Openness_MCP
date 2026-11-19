@@ -14,13 +14,14 @@ namespace TiaMcp.Adapters.Contracts
 
         public static string? Unsupported(string release, string operation, string action, string itemType, string dynamizationType = "")
         {
-            if (release == "19" && operation == "EnsureUnifiedHmiDynamization")
+            if (OpennessApi.UnifiedHmi.Includes(release) && !OpennessApi.UnifiedExpressionDynamization.Includes(release)
+                && operation == "EnsureUnifiedHmiDynamization")
                 foreach (var name in new[] { "ExpressionDynamization", "TagParameterDynamization" })
                     if (string.Equals(dynamizationType, name, StringComparison.OrdinalIgnoreCase)
                         || string.Equals(dynamizationType, name.Replace("Dynamization", ""), StringComparison.OrdinalIgnoreCase)
                         || string.Equals(dynamizationType, "Siemens.Engineering.HmiUnified.UI.Dynamization." + name, StringComparison.OrdinalIgnoreCase))
                         return "The official V19 Unified API has no " + name + " dynamization type.";
-            if (release != "19" && release != "20") return null;
+            if (!OpennessApi.UnifiedHmi.Includes(release) || OpennessApi.UnifiedAlarmAndDiagnosisItems.Includes(release)) return null;
             if (operation != "EnsureUnifiedHmiScreenItem" && operation != "DescribeUnifiedScreenItemType"
                 && operation != "ApplyUnifiedHmiScreenDesign" && operation != "ApplyUnifiedHmiLayout"
                 && (operation != "ManageUnifiedScreenItem" || action != "create")) return null;

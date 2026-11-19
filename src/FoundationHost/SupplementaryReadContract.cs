@@ -25,7 +25,7 @@ internal static class SupplementaryReadContract
         var path=Text(source,"SoftwarePath"); var release=Text(source,"ReleaseKey"); var scope=Text(source,"Scope");
         if(source.Any(p=>p.Key is not ("SoftwarePath" or "ReleaseKey" or "Scope" or "Items")))
             throw new InvalidDataException("Unexpected supplementary read field.");
-        if(scope!=(tool=="ListPlcWatchTables"?WatchScope:release is "19" or "20" or "21"?TechnologyScope:TechnologyRootScope))
+        if(scope!=(tool=="ListPlcWatchTables"?WatchScope:OpennessApi.TechnologyGroups.Includes(release)?TechnologyScope:TechnologyRootScope))
             throw new InvalidDataException("Unexpected supplementary read scope.");
         if(release is not ("14sp1" or "15.1" or "16" or "17" or "18" or "19" or "20" or "21") || (tool=="ListPlcWatchTables" && release=="14sp1"))
             throw new InvalidDataException("Unsupported supplementary release.");

@@ -19,16 +19,17 @@ namespace TiaMcp.Adapters.Contracts
         {
             var sw = swImportOptions ?? Array.Empty<string>();
             var cultures = importOptions ?? Array.Empty<string>();
-            bool units = new[] { "16", "17", "18", "19", "20", "21" }.Contains(release, StringComparer.Ordinal);
+            bool units = OpennessApi.PlcUnits.Includes(release);
             if (unitName != "" && !units) return "unitName requires V16–V21.";
             if (sw.Distinct(StringComparer.Ordinal).Count() != sw.Length || cultures.Distinct(StringComparer.Ordinal).Count() != cultures.Length)
                 return "Import options must be unique explicit opt-ins.";
             if (sw.Length > 0 && (release == "14sp1" || kind == "TagTable" || kind == "documents"))
                 return "SWImportOptions require the V15.1–V21 block/type SimaticML import overload; tag tables and documents have no such overload.";
             foreach (var option in sw)
-                if (option != "IgnoreStructuralChanges" && option != "IgnoreMissingReferencedObjects" && !(option == "IgnoreUnitAttributes" && units))
+                if (option != "IgnoreStructuralChanges" && option != "IgnoreMissingReferencedObjects"
+                    && !(option == "IgnoreUnitAttributes" && OpennessApi.IgnoreUnitAttributes.Includes(release)))
                     return "Unsupported SWImportOptions member for release " + release + ": " + option;
-            if (cultures.Length > 0 && (!new[] { "19", "20", "21" }.Contains(release, StringComparer.Ordinal) || kind == "documents"))
+            if (cultures.Length > 0 && (!OpennessApi.CultureImportOptions.Includes(release) || kind == "documents"))
                 return "Culture ImportOptions require V19–V21 SimaticML import.";
             if (cultures.Any(option => option != "SkipInactiveCultures" && option != "ActivateInactiveCultures") || cultures.Length > 1)
                 return "Choose at most one culture ImportOptions member: SkipInactiveCultures or ActivateInactiveCultures.";
