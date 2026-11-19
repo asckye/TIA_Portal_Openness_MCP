@@ -13,8 +13,11 @@ using Data = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData;
 
 namespace TiaMcp.FoundationHost.Tests;
 
-public sealed class HostCatalogTests
+public sealed class HostCatalogTests : IDisposable
 {
+    private readonly string previousRelease = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
+    public void Dispose() => toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = previousRelease;
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
     [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void All_release_catalog_policy_fields_have_one_value(string release)

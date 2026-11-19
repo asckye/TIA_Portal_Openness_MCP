@@ -49,6 +49,7 @@ public sealed class LiveWatchVerdictTests
     [Theory, MemberData(nameof(Releases))]
     public void Missing_table_preserves_the_native_target_before_live_read(string release)
     {
+        using var scope = Host.HardwareContract.UseRelease(release);
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
         var catalog = new toolpipeline::TiaMcp.FoundationHost.FoundationCatalog(release,
             TiaMcp.FoundationHost.LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false));

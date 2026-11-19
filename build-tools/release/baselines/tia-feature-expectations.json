@@ -845,6 +845,7 @@
       "PROJECT_UMAC",
       "RELEASE",
       "SECURITY_DEVICE_SYSLOG",
+      "SECURITY_DEVICE_USERS",
       "TRACE",
       "WORKER_SESSION_LIFECYCLE"
     ]
@@ -866,6 +867,7 @@
     "defineConstants": [
       "HMI_UNIFIED",
       "RELEASE",
+      "SAFETY_V21",
       "TRACE"
     ]
   },

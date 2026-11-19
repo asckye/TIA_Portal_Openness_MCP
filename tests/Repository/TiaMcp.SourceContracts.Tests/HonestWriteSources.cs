@@ -127,7 +127,9 @@ public sealed class HonestWriteSources
         Assert.Contains("var value = enable!.GetValue<bool>(); meta[\"mayHaveChanged\"] = true; manager.EnableSystemLogging = value;", source,
             StringComparison.Ordinal);
         Assert.Contains("meta[\"mayHaveChanged\"] = true; manager.TransportProtocol =", source, StringComparison.Ordinal);
-        Assert.Contains("case \"createServer\": meta[\"mayHaveChanged\"] = true;", source, StringComparison.Ordinal);
+        Assert.Contains("case \"createServer\": EngineeringWriteJournal.Creating(() => _session.RequireHardwareService<SysLogConfigurationManager>(owner, "
+            + "\"itemPathJson\") .SysLogServerConfiguration.Find(serverAddress), serverAddress); meta[\"mayHaveChanged\"] = true; "
+            + "var created = manager.SysLogServerConfiguration.Create(serverAddress, (ushort)serverPort);", source, StringComparison.Ordinal);
         Assert.Contains("case \"deleteServer\": meta[\"mayHaveChanged\"] = true;", source, StringComparison.Ordinal);
         int updateEnd = source.IndexOf("case \"createServer\":", update, StringComparison.Ordinal);
         string branch = source[update..updateEnd];

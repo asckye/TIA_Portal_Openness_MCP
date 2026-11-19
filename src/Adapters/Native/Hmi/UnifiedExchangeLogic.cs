@@ -120,7 +120,8 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         internal static Dictionary<string, string> ExportFingerprint(Func<DirectoryInfo, object> export)
         {
-            var directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "tia-tag-probe-" + Guid.NewGuid().ToString("N")));
+            var directory = Directory.CreateDirectory(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory,
+                "tia-tag-probe-" + Guid.NewGuid().ToString("N")));
             try
             {
                 var files = VerifyNativeFiles(export(directory), directory);
