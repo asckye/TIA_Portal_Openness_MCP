@@ -247,13 +247,20 @@ public sealed class LadRungBoxBuilderTests
         Assert.True(input.IsValid, V4Json.Serialize(input.Error));
         var sequenceNetworks = XDocument.Parse(ConstructionAdapter.BuildCandidate(input.Value!, "21", contractProfile).Xml)
             .Descendants(Ns + "FlgNet").ToArray();
-        Assert.Equal(5, sequenceNetworks.Length);
-        Assert.Equal(new[] { "PContact", "RCoil" }, sequenceNetworks[1].Descendants(Ns + "Part").Select(p => (string?)p.Attribute("Name")));
-        Assert.Single(sequenceNetworks[1].Descendants(Ns + "Powerrail"));
-        for (int i = 0; i < flg.Length; i++) Assert.True(XNode.DeepEquals(flg[i], sequenceNetworks[i + 2]));
+        Assert.Equal(4, sequenceNetworks.Length);
+        Assert.DoesNotContain(sequenceNetworks.SelectMany(network => network.Descendants(Ns + "Part")),
+            part => (string?)part.Attribute("Name") is "PContact" or "NContact" or "RCoil");
+        Assert.Single(sequenceNetworks[0].Descendants(Ns + "Powerrail"));
+        for (int i = 0; i < flg.Length; i++) Assert.True(XNode.DeepEquals(flg[i], sequenceNetworks[i + 1]));
 
         // The main rung and three box networks still compose as the original four-network block.
-        var main = calls["profiles"]![profile]!["BuildPlcLadFcBlock"]!["operations"]!["rung"]!["arguments"]!["ladFcBlock"]!["networks"]![0]!;
+        var mainBlock = calls["profiles"]![profile]!["BuildPlcLadFcBlock"]!["operations"]!["rung"]!["arguments"]!["ladFcBlock"]!;
+        input = new ConstructionInput<LadFcBlockSpec>(contractProfile).Read(mainBlock.ToJsonString(), "ladFcBlock");
+        Assert.True(input.IsValid, V4Json.Serialize(input.Error));
+        var mainNetwork = Assert.Single(XDocument.Parse(ConstructionAdapter.BuildCandidate(input.Value!, "21", contractProfile).Xml)
+            .Descendants(Ns + "FlgNet"));
+        Assert.True(XNode.DeepEquals(mainNetwork, sequenceNetworks[0]));
+        var main = mainBlock["networks"]![0]!;
         var boxesWithMain = block.DeepClone();
         boxesWithMain["networks"]!.AsArray().Insert(0, main.DeepClone());
         var sequenceMain = step["arguments"]!["ladFcBlock"]!["networks"]![0]!;

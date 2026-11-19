@@ -49,8 +49,10 @@ internal static class V17CompileEnvelope
         string Wire(string name)=>McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(name)??name;
         var meta=(JsonObject)envelope[Wire("Meta")]!;
         meta["contractVersion"]="v17-compile-safe-v1";
-        meta["success"]=dryRun
-            || (result["ErrorCount"]!.GetValue<int>()==0 && !string.Equals(result["State"]!.GetValue<string>(),"Error",StringComparison.OrdinalIgnoreCase));
+        bool mismatch = !dryRun && (bool?)result["ScopeMismatch"] == true;
+        meta["success"]=dryRun || (!mismatch && result["ErrorCount"]!.GetValue<int>()==0
+            && !string.Equals(result["State"]!.GetValue<string>(),"Error",StringComparison.OrdinalIgnoreCase));
+        if (mismatch) meta["condition"] = "compile-scope-mismatch";
         meta["errorDetailCount"]=((JsonArray)result["Errors"]!).Count;
         meta["warningDetailCount"]=((JsonArray)result["Warnings"]!).Count;
         meta["offlineCheckScope"]=
@@ -61,6 +63,8 @@ internal static class V17CompileEnvelope
         if(result["Scope"]?.GetValue<string>() is string returnedScope && returnedScope!="software")
             foreach(var name in new[]{"Scope","ScopePath","UnitName","ResolvedObject","Compilable","ApplyBlocked"})
                 envelope[Wire(name)]=result[name]!.DeepClone();
+        if (result["Scope"]?.GetValue<string>() is "block" or "group")
+            envelope[Wire("CompiledRoots")] = result["CompiledRoots"]?.DeepClone() ?? new JsonArray();
         if(tool=="CompilePlcSoftware") envelope[Wire("Messages")]=result["Messages"]!.DeepClone();
         else
         {

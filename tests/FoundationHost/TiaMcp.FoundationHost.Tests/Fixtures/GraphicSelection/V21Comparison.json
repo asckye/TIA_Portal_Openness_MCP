@@ -1,0 +1,574 @@
+{
+  "beforePages": [
+    {
+      "timestamp": "2026-11-19T04:05:40.6609780Z",
+      "tool": "GetUnifiedGraphicSelection",
+      "success": true,
+      "mayHaveChanged": false,
+      "readOnly": true,
+      "softwarePath": "HMI_RT_1",
+      "screenPath": "/MCP_B6F_Screen",
+      "schemaVersion": 1,
+      "scope": {
+        "screenPath": "/MCP_B6F_Screen",
+        "itemNames": [
+          "MCP_B6F_Rect",
+          "MCP_B6F_Text"
+        ],
+        "tool": "GetUnifiedGraphicSelection",
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "AutomaticDipCoatingMachine",
+        "project": "AutomaticDipCoatingMachine"
+      },
+      "collectionId": "f65132d6f87b48aa939394aa2010a044",
+      "pageIndex": 0,
+      "pageCursor": "f65132d6f87b48aa939394aa2010a044:0",
+      "apiCallSuccess": true,
+      "dataComplete": false,
+      "readComplete": false,
+      "classificationComplete": true,
+      "readFailureCount": 1,
+      "classificationFailureCount": 0,
+      "traversalComplete": true,
+      "truncated": false,
+      "expectedCount": 3,
+      "countUnit": "evidence records (not tags or screens)",
+      "expectedCountReason": "known before traversal",
+      "actualCount": 3,
+      "cumulativeCount": 3,
+      "failureCount": 1,
+      "failures": [
+        {
+          "kind": "graphicSelectionSummary",
+          "path": "/Screens/MCP_B6F_Screen",
+          "status": "unsupported",
+          "code": "NativeGraphicGroupUnverified",
+          "reason": "This is a caller-defined exact-name selection. Native graphical-group membership, origin and transformed bounds are not established by the available engineering API adapter. ScreenGroups are screen folders. Empty or unavailable group metadata does not mean the objects are ungrouped.",
+          "expectedObjectCount": 2,
+          "actualObjectCount": 2,
+          "geometryComplete": true,
+          "nativeGroupVerified": false,
+          "nativeGroup": null,
+          "nativeGroupBounds": null,
+          "rawCoordinateEnvelope": {
+            "left": 24.0,
+            "top": 24.0,
+            "width": 328.0,
+            "height": 88.0,
+            "nativeGroupBounds": false
+          },
+          "coordinateCaveat": "Envelope of returned Left/Top/Width/Height only; coordinate-frame equivalence, transforms and rotation are unverified. This is not the editor's group bounding box."
+        }
+      ],
+      "nextCursor": null,
+      "elapsedMs": 562,
+      "consistency": "live read; not an atomic snapshot; do not edit the project during collection",
+      "budgetNote": "Time budget is checked between reads; a synchronous Openness call cannot be interrupted.",
+      "releaseCursor": "f65132d6f87b48aa939394aa2010a044",
+      "cursorPolicy": "ReleaseUnifiedReadCursor(releaseCursor) after persisting all pages. Active: 16 collections / 30 min idle. Completed: latest page only, 32 collections LRU / 10 min idle; may be evicted earlier for capacity. Expired cursors never silently restart.",
+      "records": [
+        {
+          "kind": "graphicObject",
+          "name": "MCP_B6F_Rect",
+          "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect",
+          "type": "Siemens.Engineering.HmiUnified.UI.Shapes.HmiRectangle",
+          "sampleStartedUtc": "2026-11-19T04:05:44.7548890Z",
+          "sampleFinishedUtc": "2026-11-19T04:05:45.0204933Z",
+          "fields": {
+            "Left": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Left",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.Int32",
+              "value": "24",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Left",
+              "access": "public property"
+            },
+            "Top": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Top",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.Int32",
+              "value": "72",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Top",
+              "access": "public property"
+            },
+            "Width": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Width",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.UInt32",
+              "value": "328",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Width",
+              "access": "public property"
+            },
+            "Height": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Height",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.UInt32",
+              "value": "40",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Height",
+              "access": "public property"
+            }
+          },
+          "owner": {
+            "status": "ok",
+            "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Parent",
+            "type": "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreen",
+            "meaning": "Engineering owner only; not proof of graphical-group membership.",
+            "name": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Parent/Name",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.String",
+              "value": "MCP_B6F_Screen",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Parent/Name",
+              "access": "public property"
+            }
+          },
+          "relationEvidence": [],
+          "relationCapabilities": [
+            {
+              "name": "Parent",
+              "type": "Siemens.Engineering.IEngineeringObject",
+              "readable": true,
+              "source": "public CLR property metadata"
+            },
+            {
+              "name": "Dynamizations",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            },
+            {
+              "name": "EventHandlers",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            },
+            {
+              "name": "PropertyEventHandlers",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            }
+          ],
+          "gaps": [],
+          "nativeGroupVerified": false,
+          "coordinateFrame": "unverified raw Openness geometry",
+          "attributeMetadataApiAvailable": true,
+          "compositionMetadataApiAvailable": true,
+          "geometryComplete": true,
+          "status": "ok"
+        },
+        {
+          "kind": "graphicObject",
+          "name": "MCP_B6F_Text",
+          "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text",
+          "type": "Siemens.Engineering.HmiUnified.UI.Shapes.HmiText",
+          "sampleStartedUtc": "2026-11-19T04:05:45.0362332Z",
+          "sampleFinishedUtc": "2026-11-19T04:05:45.2547677Z",
+          "fields": {
+            "Left": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Left",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.Int32",
+              "value": "24",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Left",
+              "access": "public property"
+            },
+            "Top": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Top",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.Int32",
+              "value": "24",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Top",
+              "access": "public property"
+            },
+            "Width": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Width",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.UInt32",
+              "value": "160",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Width",
+              "access": "public property"
+            },
+            "Height": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Height",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.UInt32",
+              "value": "40",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Height",
+              "access": "public property"
+            }
+          },
+          "owner": {
+            "status": "ok",
+            "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent",
+            "type": "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreen",
+            "meaning": "Engineering owner only; not proof of graphical-group membership.",
+            "name": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent/Name",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.String",
+              "value": "MCP_B6F_Screen",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent/Name",
+              "access": "public property"
+            }
+          },
+          "relationEvidence": [],
+          "relationCapabilities": [
+            {
+              "name": "Parent",
+              "type": "Siemens.Engineering.IEngineeringObject",
+              "readable": true,
+              "source": "public CLR property metadata"
+            },
+            {
+              "name": "Dynamizations",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            },
+            {
+              "name": "EventHandlers",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            },
+            {
+              "name": "PropertyEventHandlers",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            }
+          ],
+          "gaps": [],
+          "nativeGroupVerified": false,
+          "coordinateFrame": "unverified raw Openness geometry",
+          "attributeMetadataApiAvailable": true,
+          "compositionMetadataApiAvailable": true,
+          "geometryComplete": true,
+          "status": "ok"
+        },
+        {
+          "kind": "graphicSelectionSummary",
+          "path": "/Screens/MCP_B6F_Screen",
+          "status": "unsupported",
+          "code": "NativeGraphicGroupUnverified",
+          "reason": "This is a caller-defined exact-name selection. Native graphical-group membership, origin and transformed bounds are not established by the available engineering API adapter. ScreenGroups are screen folders. Empty or unavailable group metadata does not mean the objects are ungrouped.",
+          "expectedObjectCount": 2,
+          "actualObjectCount": 2,
+          "geometryComplete": true,
+          "nativeGroupVerified": false,
+          "nativeGroup": null,
+          "nativeGroupBounds": null,
+          "rawCoordinateEnvelope": {
+            "left": 24.0,
+            "top": 24.0,
+            "width": 328.0,
+            "height": 88.0,
+            "nativeGroupBounds": false
+          },
+          "coordinateCaveat": "Envelope of returned Left/Top/Width/Height only; coordinate-frame equivalence, transforms and rotation are unverified. This is not the editor's group bounding box."
+        }
+      ],
+      "operationSuccess": true,
+      "expectedObjectCount": 2,
+      "selectionKind": "caller-defined exact-name selection",
+      "nativeGroupVerified": false,
+      "operationId": "152789ff550d41f6bf71cb14e22c2e4d",
+      "diagnosticLog": "C:\\Users\\SIEMENS\\Desktop\\TIA_MCP_Delivery_v4.0.0-beta.6_20261118\\data\\logs\\studio\\TiaMcpServer.hmi-read-18152-20261119-022931-4538852-de216e7769154a09a87bb42b8517ab3f.log",
+      "phase": "after",
+      "lastAttemptedPath": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent/Name",
+      "lastCompletedPath": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent/Name",
+      "diagnosticLogError": null
+    }
+  ],
+  "afterPages": [
+    {
+      "timestamp": "2026-11-19T04:06:10.4424589Z",
+      "tool": "GetUnifiedGraphicSelection",
+      "success": true,
+      "mayHaveChanged": false,
+      "readOnly": true,
+      "softwarePath": "HMI_RT_1",
+      "screenPath": "/MCP_B6F_Screen",
+      "schemaVersion": 1,
+      "scope": {
+        "screenPath": "/MCP_B6F_Screen",
+        "itemNames": [
+          "MCP_B6F_Rect",
+          "MCP_B6F_Text"
+        ],
+        "tool": "GetUnifiedGraphicSelection",
+        "softwarePath": "HMI_RT_1",
+        "expectedProject": "AutomaticDipCoatingMachine",
+        "project": "AutomaticDipCoatingMachine"
+      },
+      "collectionId": "4e118444fbff4a929efa7590526dd271",
+      "pageIndex": 0,
+      "pageCursor": "4e118444fbff4a929efa7590526dd271:0",
+      "apiCallSuccess": true,
+      "dataComplete": false,
+      "readComplete": false,
+      "classificationComplete": true,
+      "readFailureCount": 1,
+      "classificationFailureCount": 0,
+      "traversalComplete": true,
+      "truncated": false,
+      "expectedCount": 3,
+      "countUnit": "evidence records (not tags or screens)",
+      "expectedCountReason": "known before traversal",
+      "actualCount": 3,
+      "cumulativeCount": 3,
+      "failureCount": 1,
+      "failures": [
+        {
+          "kind": "graphicSelectionSummary",
+          "path": "/Screens/MCP_B6F_Screen",
+          "status": "unsupported",
+          "code": "NativeGraphicGroupUnverified",
+          "reason": "This is a caller-defined exact-name selection. Native graphical-group membership, origin and transformed bounds are not established by the available engineering API adapter. ScreenGroups are screen folders. Empty or unavailable group metadata does not mean the objects are ungrouped.",
+          "expectedObjectCount": 2,
+          "actualObjectCount": 2,
+          "geometryComplete": true,
+          "nativeGroupVerified": false,
+          "nativeGroup": null,
+          "nativeGroupBounds": null,
+          "rawCoordinateEnvelope": {
+            "left": 24.0,
+            "top": 24.0,
+            "width": 316.0,
+            "height": 156.0,
+            "nativeGroupBounds": false
+          },
+          "coordinateCaveat": "Envelope of returned Left/Top/Width/Height only; coordinate-frame equivalence, transforms and rotation are unverified. This is not the editor's group bounding box."
+        }
+      ],
+      "nextCursor": null,
+      "elapsedMs": 477,
+      "consistency": "live read; not an atomic snapshot; do not edit the project during collection",
+      "budgetNote": "Time budget is checked between reads; a synchronous Openness call cannot be interrupted.",
+      "releaseCursor": "4e118444fbff4a929efa7590526dd271",
+      "cursorPolicy": "ReleaseUnifiedReadCursor(releaseCursor) after persisting all pages. Active: 16 collections / 30 min idle. Completed: latest page only, 32 collections LRU / 10 min idle; may be evicted earlier for capacity. Expired cursors never silently restart.",
+      "records": [
+        {
+          "kind": "graphicObject",
+          "name": "MCP_B6F_Rect",
+          "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect",
+          "type": "Siemens.Engineering.HmiUnified.UI.Shapes.HmiRectangle",
+          "sampleStartedUtc": "2026-11-19T04:06:14.0202672Z",
+          "sampleFinishedUtc": "2026-11-19T04:06:14.2550703Z",
+          "fields": {
+            "Left": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Left",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.Int32",
+              "value": "40",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Left",
+              "access": "public property"
+            },
+            "Top": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Top",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.Int32",
+              "value": "140",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Top",
+              "access": "public property"
+            },
+            "Width": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Width",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.UInt32",
+              "value": "300",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Width",
+              "access": "public property"
+            },
+            "Height": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Height",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.UInt32",
+              "value": "40",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Height",
+              "access": "public property"
+            }
+          },
+          "owner": {
+            "status": "ok",
+            "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Parent",
+            "type": "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreen",
+            "meaning": "Engineering owner only; not proof of graphical-group membership.",
+            "name": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Parent/Name",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.String",
+              "value": "MCP_B6F_Screen",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Rect/Parent/Name",
+              "access": "public property"
+            }
+          },
+          "relationEvidence": [],
+          "relationCapabilities": [
+            {
+              "name": "Parent",
+              "type": "Siemens.Engineering.IEngineeringObject",
+              "readable": true,
+              "source": "public CLR property metadata"
+            },
+            {
+              "name": "Dynamizations",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            },
+            {
+              "name": "EventHandlers",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            },
+            {
+              "name": "PropertyEventHandlers",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            }
+          ],
+          "gaps": [],
+          "nativeGroupVerified": false,
+          "coordinateFrame": "unverified raw Openness geometry",
+          "attributeMetadataApiAvailable": true,
+          "compositionMetadataApiAvailable": true,
+          "geometryComplete": true,
+          "status": "ok"
+        },
+        {
+          "kind": "graphicObject",
+          "name": "MCP_B6F_Text",
+          "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text",
+          "type": "Siemens.Engineering.HmiUnified.UI.Shapes.HmiText",
+          "sampleStartedUtc": "2026-11-19T04:06:14.2550703Z",
+          "sampleFinishedUtc": "2026-11-19T04:06:14.4576756Z",
+          "fields": {
+            "Left": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Left",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.Int32",
+              "value": "24",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Left",
+              "access": "public property"
+            },
+            "Top": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Top",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.Int32",
+              "value": "24",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Top",
+              "access": "public property"
+            },
+            "Width": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Width",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.UInt32",
+              "value": "160",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Width",
+              "access": "public property"
+            },
+            "Height": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Height",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.UInt32",
+              "value": "40",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Height",
+              "access": "public property"
+            }
+          },
+          "owner": {
+            "status": "ok",
+            "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent",
+            "type": "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreen",
+            "meaning": "Engineering owner only; not proof of graphical-group membership.",
+            "name": {
+              "path": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent/Name",
+              "kind": "value",
+              "status": "ok",
+              "type": "System.String",
+              "value": "MCP_B6F_Screen",
+              "evidence": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent/Name",
+              "access": "public property"
+            }
+          },
+          "relationEvidence": [],
+          "relationCapabilities": [
+            {
+              "name": "Parent",
+              "type": "Siemens.Engineering.IEngineeringObject",
+              "readable": true,
+              "source": "public CLR property metadata"
+            },
+            {
+              "name": "Dynamizations",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            },
+            {
+              "name": "EventHandlers",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            },
+            {
+              "name": "PropertyEventHandlers",
+              "source": "IEngineeringObject.GetCompositionInfos",
+              "contentsRead": false
+            }
+          ],
+          "gaps": [],
+          "nativeGroupVerified": false,
+          "coordinateFrame": "unverified raw Openness geometry",
+          "attributeMetadataApiAvailable": true,
+          "compositionMetadataApiAvailable": true,
+          "geometryComplete": true,
+          "status": "ok"
+        },
+        {
+          "kind": "graphicSelectionSummary",
+          "path": "/Screens/MCP_B6F_Screen",
+          "status": "unsupported",
+          "code": "NativeGraphicGroupUnverified",
+          "reason": "This is a caller-defined exact-name selection. Native graphical-group membership, origin and transformed bounds are not established by the available engineering API adapter. ScreenGroups are screen folders. Empty or unavailable group metadata does not mean the objects are ungrouped.",
+          "expectedObjectCount": 2,
+          "actualObjectCount": 2,
+          "geometryComplete": true,
+          "nativeGroupVerified": false,
+          "nativeGroup": null,
+          "nativeGroupBounds": null,
+          "rawCoordinateEnvelope": {
+            "left": 24.0,
+            "top": 24.0,
+            "width": 316.0,
+            "height": 156.0,
+            "nativeGroupBounds": false
+          },
+          "coordinateCaveat": "Envelope of returned Left/Top/Width/Height only; coordinate-frame equivalence, transforms and rotation are unverified. This is not the editor's group bounding box."
+        }
+      ],
+      "operationSuccess": true,
+      "expectedObjectCount": 2,
+      "selectionKind": "caller-defined exact-name selection",
+      "nativeGroupVerified": false,
+      "operationId": "3c147529b699478c88d902c0c7b91a96",
+      "diagnosticLog": "C:\\Users\\SIEMENS\\Desktop\\TIA_MCP_Delivery_v4.0.0-beta.6_20261118\\data\\logs\\studio\\TiaMcpServer.hmi-read-18152-20261119-022931-4538852-de216e7769154a09a87bb42b8517ab3f.log",
+      "phase": "after",
+      "lastAttemptedPath": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent/Name",
+      "lastCompletedPath": "/Screens/MCP_B6F_Screen/ScreenItems/MCP_B6F_Text/Parent/Name",
+      "diagnosticLogError": null
+    }
+  ]
+}

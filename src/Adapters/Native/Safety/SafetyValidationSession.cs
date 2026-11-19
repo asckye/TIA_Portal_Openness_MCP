@@ -26,11 +26,7 @@ internal sealed class SafetyValidationSession
             try { return action(meta); }
             finally { foreach (var pair in meta) values[pair.Key] = pair.Value; }
         }, true);
-    internal string[] GroupPath()
-    {
-        Require("group");
-        return _request.GroupPath;
-    }
+    internal void RequireValidGroupPath() => Require("group");
     internal SafetyValidationNativePlan Plan()
     {
         Require("plan");

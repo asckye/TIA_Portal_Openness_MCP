@@ -256,12 +256,13 @@ public partial class MainWindow
         }
         return response;
     }
-    private static WorkbenchControlResponse MissingWorkbenchProject(WorkbenchControlRequest request)
+    private WorkbenchControlResponse MissingWorkbenchProject(WorkbenchControlRequest request)
     {
         string? expected = request.Origin.BoundProjectFile;
         if (string.IsNullOrEmpty(expected)) return ControlResponse.Refuse(request, "workbench-no-project");
         var response = ControlResponse.Refuse(request, "workbench-project-not-selected", WorkbenchControlError.PreconditionFailed, "project");
         response.Refusal!.Expected = expected;
+        response.Refusal.SelectedSessionKey = _model.Panel?.SessionKey;
         return response;
     }
     private WorkbenchControlResponse? ControlProjectRefusal(WorkbenchControlRequest request)

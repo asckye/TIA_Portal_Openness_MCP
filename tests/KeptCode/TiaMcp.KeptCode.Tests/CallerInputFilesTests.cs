@@ -14,6 +14,17 @@ namespace TiaMcp.Engine.Tests
         public void Dispose() => Directory.Delete(root, true);
 
         [Fact]
+        public void Missing_seed_reference_directory_reports_the_expected_layout_at_file_admission()
+        {
+            var error = Assert.Throws<AdapterPreconditionException>(() =>
+                McpServer.ValidateCallerInputFiles("SeedProjectFromReference", Arguments("referenceDir", Path.Combine(root, "missing"))));
+            Assert.Equal("referenceDir", error.ParamName);
+            Assert.Equal("seed-reference-layout", error.Condition);
+            Assert.Contains("manifest.json", error.Message);
+            Assert.Contains("hmi/screens", error.Message);
+        }
+
+        [Fact]
         public void Hmi_import_reads_Unicode_filename_and_explains_an_escaped_tab()
         {
             const string fileName = "tagtable__默认变量表.xml";

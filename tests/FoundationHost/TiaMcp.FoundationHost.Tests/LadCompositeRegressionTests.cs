@@ -123,6 +123,69 @@ public sealed class LadCompositeRegressionTests
         return issues;
     }
 
+    private static void AssertPublishedRung(XElement[] networks)
+    {
+        var network = Assert.Single(networks);
+        var parts = network.Descendants(Ns + "Part").Select(part => (string?)part.Attribute("Name")).ToArray();
+        Assert.DoesNotContain(parts, name => name is "PContact" or "NContact" or "RCoil");
+        Assert.Equal(new[] { "Contact", "Contact", "Contact", "Contact", "Gt", "Lt", "Move", "Move", "O", "SCoil" },
+            parts.OrderBy(name => name, StringComparer.Ordinal));
+        Assert.Equal("operand", (string?)Assert.Single(network.Descendants(Ns + "Negated")).Attribute("Name"));
+        Assert.Single(network.Descendants(Ns + "Powerrail"));
+        Assert.Contains(network.Descendants(Ns + "Wire"), wire => wire.Elements(Ns + "NameCon")
+            .Select(pin => (string?)pin.Attribute("Name")).SequenceEqual(new[] { "eno", "en" }));
+    }
+
+    [Theory]
+    [InlineData("rising", "PContact")]
+    [InlineData("falling", "NContact")]
+    public async Task Public_builder_refuses_unverified_edge_contacts(string kind, string nativePart)
+    {
+        var block = Block(0);
+        var edge = Contact("Reset", kind);
+        edge["memory"] = Symbol("EdgeMem");
+        block["networks"]![0]!["rung"]!["series"] = new JsonArray(edge);
+        var input = new ConstructionInput<LadFcBlockSpec>(ConstructionProfile.Foundation).Read(block.ToJsonString(), "ladFcBlock");
+        Assert.True(input.IsValid);
+        var candidate = ConstructionAdapter.BuildCandidate(input.Value!, "21", ConstructionProfile.Foundation);
+        Assert.Contains(XDocument.Parse(candidate.Xml).Descendants(Ns + "Part"), part => (string?)part.Attribute("Name") == nativePart);
+
+        using var worker = new FakeWorker();
+        var tool = LegacyHostToolRegistry.Create(worker, "21", false).Single(t => t.ProtocolTool.Name == "BuildPlcLadFcBlock");
+        var args = new JsonObject { ["ladFcBlock"] = block, ["outputReleaseKey"] = "21" };
+        var result = await tool.InvokeAsync(new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
+            Params = new() { Name = tool.ProtocolTool.Name, Arguments = args.Deserialize<Dictionary<string, JsonElement>>() } });
+        var reply = result.StructuredContent!;
+        Assert.True(result.IsError, reply.ToJsonString());
+        Assert.Equal("PRECONDITION_FAILED", (string?)reply["error"]?["code"]);
+        Assert.Equal("edge-contact-unverified", (string?)reply["error"]?["details"]?["condition"]);
+        Assert.Null(reply["data"]?["xml"]);
+
+        using var engineWorker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", engineWorker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var engine = new toolpipeline::TiaMcpServer.ModelContextProtocol.XmlBuilderTools();
+        var full = engine.ComposePlcLadFcBlockXmlV4(input.Value!).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)full["error"]?["code"]);
+        Assert.Equal("edge-contact-unverified", (string?)full["error"]?["details"]?["condition"]);
+        Assert.Null(full["data"]?["xml"]);
+        Assert.Equal(0, engineWorker.Calls);
+    }
+
+    [Theory, InlineData("plc-foundation"), InlineData("full-engine")]
+    public void Maintained_rung_source_contains_only_the_verified_network(string profile)
+    {
+        var profiles = JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "reference/tool-examples/calls.json")))!["profiles"]!;
+        var args = profiles[profile]!["BuildPlcLadFcBlock"]!["operations"]!["rung"]!["arguments"]!;
+        var contract = profile == "full-engine" ? ConstructionProfile.FullEngine : ConstructionProfile.Foundation;
+        var input = new ConstructionInput<LadFcBlockSpec>(contract).Read(args["ladFcBlock"]!.ToJsonString(), "ladFcBlock");
+        Assert.True(input.IsValid, V4Json.Serialize(input.Error));
+        var candidate = ConstructionAdapter.BuildCandidate(input.Value!, "21", contract);
+        var networks = XDocument.Parse(candidate.Xml).Descendants(Ns + "FlgNet").ToArray();
+        AssertPublishedRung(networks);
+        Assert.All(networks, network => Assert.Empty(V21SchemaIssues(network)));
+    }
+
     [Theory, InlineData("rung"), InlineData("rung-boxes")]
     public async Task Maintained_operation_names_are_retrievable_and_return_executable_builder_arguments(string operation)
     {
@@ -147,9 +210,7 @@ public sealed class LadCompositeRegressionTests
         Assert.All(networks, network => Assert.Empty(V21SchemaIssues(network)));
         if (operation == "rung")
         {
-            Assert.Equal(2, networks.Length);
-            Assert.Equal(new[] { "PContact", "RCoil" }, networks[1].Descendants(Ns + "Part").Select(part => (string?)part.Attribute("Name")));
-            Assert.Single(networks[1].Descendants(Ns + "Powerrail"));
+            AssertPublishedRung(networks);
         }
     }
 }

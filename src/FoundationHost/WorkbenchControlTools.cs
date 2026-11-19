@@ -87,7 +87,9 @@ internal sealed class WorkbenchControlTool : McpServerTool
         try
         {
             var response = await client.Send(control, token).ConfigureAwait(false);
-            var result = Map(response, release, tool.Name, id, operation);
+            string? caller = operation == WorkbenchControlOperation.ReadState || response.Refusal?.Condition == "workbench-project-not-selected"
+                ? session.HostSessionKey : null;
+            var result = Map(response, release, tool.Name, id, operation, caller);
             if (operation == WorkbenchControlOperation.ReadState && response.Status == WorkbenchControlStatus.Done
                 && result.StructuredContent?["data"] is JsonObject data)
             {
@@ -96,7 +98,7 @@ internal sealed class WorkbenchControlTool : McpServerTool
                 var state = session.State(release);
                 var identity = state["binding"]?["identity"];
                 string? file = (string?)identity?["projectPath"];
-                data["session"] = new JsonObject { ["source"] = "shared-mcp-session", ["sessionKey"] = session.HostSessionKey,
+                data["session"] = new JsonObject { ["source"] = "shared-mcp-session", ["sessionKey"] = caller,
                     ["connected"] = state["connected"]?.DeepClone(), ["project"] = file == null ? null : new JsonObject {
                         ["name"] = (string?)identity?["projectName"] ?? Path.GetFileNameWithoutExtension(file), ["path"] = file },
                     ["sessionState"] = state };
@@ -116,7 +118,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
         return problem == null ? null : new Error(problem, new InvalidArgumentDetails("/fields", Array.Empty<string>()));
     }
 
-    internal static CallToolResult Map(WorkbenchControlResponse response, string release, string name, string id, WorkbenchControlOperation operation)
+    internal static CallToolResult Map(WorkbenchControlResponse response, string release, string name, string id, WorkbenchControlOperation operation,
+        string? callerSessionKey = null)
     {
         bool read = operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection;
         bool done = response.Status == WorkbenchControlStatus.Done;
@@ -148,9 +151,23 @@ internal sealed class WorkbenchControlTool : McpServerTool
             data.Remove("paging");
         }
         bool failed = response.Status == WorkbenchControlStatus.Failed && refusal?.Code != WorkbenchControlError.Timeout;
-        string message = refusal?.Condition == "workbench-project-not-selected"
-            ? "The requesting MCP session has a bound project. Select that project in the Workbench before opening this view."
-            : "Workbench control " + (failed ? "failed." : "was refused.");
+        string message = "Workbench control " + (failed ? "failed." : "was refused.");
+        if (callerSessionKey != null && (done && operation == WorkbenchControlOperation.ReadState || refusal?.Condition == "workbench-project-not-selected"))
+        {
+            string? selected = done ? response.Data?.Session?.SessionKey : refusal?.SelectedSessionKey;
+            bool matches = string.Equals(callerSessionKey, selected, StringComparison.Ordinal);
+            data["callerSessionKey"] = callerSessionKey;
+            data["selectedMatchesCaller"] = matches;
+            if (!matches || !done)
+            {
+                string guidance = matches
+                    ? "Open the bound project " + refusal?.Expected + " in the selected Workbench MCP session " + callerSessionKey + "."
+                    : "Select MCP session " + callerSessionKey + " in the Workbench"
+                        + (done ? "." : " and open its bound project " + refusal?.Expected + ".");
+                data["nextStep"] = guidance;
+                if (!done) message = guidance;
+            }
+        }
         var envelope = Envelope.Create(data, done ? null : new Error(message,
             details ?? new InternalErrorDetails(id)), new Meta(DateTimeOffset.UtcNow, release, name, id,
             done ? Outcome.Succeeded : failed ? Outcome.Failed : Outcome.RejectedBeforeOperation,

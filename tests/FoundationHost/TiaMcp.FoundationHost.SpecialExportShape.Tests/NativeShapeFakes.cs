@@ -133,6 +133,7 @@ namespace Siemens.Engineering.SW
 {
     public sealed partial class PlcSoftware : Siemens.Engineering.CompileServiceOwner
     {
+        public string Name { get; set; } = "PLC software";
         private readonly Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableSystemGroup watchGroup = new();
         public int WatchGroupReads { get; private set; }
         public Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableSystemGroup WatchAndForceTableGroup
@@ -147,14 +148,14 @@ namespace TiaMcp.Adapters
         internal Siemens.Engineering.SW.PlcSoftware Software { get; } = new();
         internal string ReleaseKey { get; set; } = "20";
         // Mirrors the shared selection rule: the exact path or the PLC's unique short name; anything else is refused.
-        private (Siemens.Engineering.SW.PlcSoftware Value, string ExactPath, object Context) ReadSelection(string softwarePath) =>
-            softwarePath is "devices/D/CPU" or "CPU" ? (Software, "devices/D/CPU", CompileDevice)
+        private (Siemens.Engineering.SW.PlcSoftware Value, string ExactPath, object Context, string Device, string Host) ReadSelection(string softwarePath) =>
+            softwarePath is "devices/D/CPU" or "CPU" ? (Software, "devices/D/CPU", CompileDevice, "D", "CPU")
                 : throw new ArgumentException("Software path not found.", nameof(softwarePath));
         private readonly FakeLifecycle lifecycle = new();
         private sealed class FakeLifecycle { public bool IsLocalSession => true; }
         private sealed class FakeProject { public FileInfo Path => new("project.ap20"); }
         private FakeProject Project() => new();
-        private void RequireTargetOffline((Siemens.Engineering.SW.PlcSoftware Value, string ExactPath, object Context) selected)
+        private void RequireTargetOffline((Siemens.Engineering.SW.PlcSoftware Value, string ExactPath, object Context, string Device, string Host) selected)
         { CompileEvents.Add("target-offline"); if (TargetOnline) throw new InvalidOperationException("PLC is online."); }
         private string[] CheckProjectOfflineProviders()
         { CompileEvents.Add("project-offline"); if (ProjectOnline) throw new InvalidOperationException("Project device is online."); return new[] { "HMI" }; }

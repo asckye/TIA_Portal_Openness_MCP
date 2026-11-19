@@ -117,24 +117,38 @@ namespace TiaMcp.Adapters
             PlcCompileResult response = scoped ?? new PlcCompileResult();
             response.Executed = true; response.ProjectFile = Project().Path.FullName; response.State = result.State.ToString();
             response.ErrorCount = result.ErrorCount; response.WarningCount = result.WarningCount; response.OfflineStateNotExposedByDevices = unobservedDevices;
-            PlcCompilePolicy.Classify(response,Messages(result.Messages,0));
+            var roots = new List<string>();
+            bool checkRoots = scope == "block" || scope == "group";
+            string blockName = scope == "block" ? parts.Last() : "";
+            PlcCompilePolicy.Classify(response, Messages(result.Messages, 0, checkRoots ? roots : null, blockName), scope == "block");
+            if (checkRoots)
+            {
+                scoped!.CompiledRoots = roots.Distinct(StringComparer.Ordinal).ToArray();
+                scoped.ScopeMismatch = PlcCompilePolicy.ScopeMismatch(scoped.CompiledRoots, selected.Device, selected.Host, () => selected.Value.Name);
+                if (scoped.ScopeMismatch) response.Errors = Array.Empty<string>();
+            }
             return response;
         }
-        private static IEnumerable<PlcDiagnostic> Messages(CompilerResultMessageComposition messages, int depth, string parentPath = "")
+        private static IEnumerable<PlcDiagnostic> Messages(CompilerResultMessageComposition messages, int depth, List<string>? roots,
+            string blockName, string parentPath = "", bool inBlock = false)
         {
             Depth(depth);
             foreach (var m in messages)
             {
                 var parts=new List<string> { "State="+m.State };
                 if(!string.IsNullOrWhiteSpace(m.Description)) parts.Add("Description="+m.Description);
-                string path = string.IsNullOrWhiteSpace(m.Path) ? parentPath : m.Path;
+                string nativePath = m.Path;
+                if (depth <= 1 && !string.IsNullOrWhiteSpace(nativePath)) roots?.Add(nativePath);
+                string path = string.IsNullOrWhiteSpace(nativePath) ? parentPath : nativePath;
+                bool block = inBlock || depth > 1 && PlcCompilePolicy.BlockLabel(nativePath, blockName);
                 if(!string.IsNullOrWhiteSpace(path)) parts.Add("Path="+path);
                 parts.Add("DateTime="+m.DateTime.ToString("O"));
                 parts.Add("ErrorCount="+m.ErrorCount);
                 parts.Add("WarningCount="+m.WarningCount);
                 yield return new PlcDiagnostic {
-                    State=m.State.ToString(),Description=m.Description ?? "",Formatted=string.Join("; ",parts),HasChildren=m.Messages.Count!=0 };
-                foreach (var child in Messages(m.Messages, depth + 1, path)) yield return child;
+                    InRequestedBlock=block, State=m.State.ToString(), Description=m.Description ?? "",
+                    Formatted=string.Join("; ",parts), HasChildren=m.Messages.Count!=0 };
+                foreach (var child in Messages(m.Messages, depth + 1, roots, blockName, path, block)) yield return child;
             }
         }
     }

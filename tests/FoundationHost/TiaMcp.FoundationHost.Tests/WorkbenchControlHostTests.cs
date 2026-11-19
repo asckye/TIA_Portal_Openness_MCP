@@ -85,9 +85,46 @@ public sealed class WorkbenchControlHostTests
         Assert.Equal("unknown-workbench-call", (string?)Assert.Single(data["session"]!["sessionState"]!["unsettled"]!.AsArray())!["requestId"]);
         Assert.False((bool?)data["selectedSession"]?["connected"]);
         Assert.Equal("other", (string?)data["selectedSession"]?["sessionKey"]);
+        Assert.Equal(new string('a', 32), (string?)data["callerSessionKey"]);
+        Assert.False((bool?)data["selectedMatchesCaller"]);
+        Assert.Contains(new string('a', 32), (string?)data["nextStep"]);
         var next = await Tool(0, worker, client).InvokeAsync(Request("ShowWorkbenchPage", Arguments(0)));
         Assert.True((bool?)next.StructuredContent?["ok"]);
         Assert.Equal(2, server.Requests);
+    }
+
+    [Fact]
+    public async Task State_recognises_the_selected_caller_session()
+    {
+        using var worker = new Worker();
+        string caller = new string('a', 32);
+        SharedSessionState.For(worker).HostSessionKey = () => caller;
+        using var server = new FakeServer { Reply = request => new() { RequestId = request.RequestId,
+            Status = WorkbenchControlStatus.Done, Workbench = new() { Version = "fixture" },
+            Data = new() { Session = new() { Source = WorkbenchSessionSource.SharedMcpSession, SessionKey = caller } } } };
+        var result = await Tool(5, worker, Client(server)).InvokeAsync(Request("GetWorkbenchState", new()));
+        var data = result.StructuredContent!["data"]!;
+        Assert.True((bool?)data["selectedMatchesCaller"]);
+        Assert.Equal(caller, (string?)data["callerSessionKey"]);
+        Assert.Null(data["nextStep"]);
+    }
+
+    [Theory, InlineData(true), InlineData(false)]
+    public async Task Project_selection_refusal_identifies_the_requesting_session_and_bound_project(bool selected)
+    {
+        using var worker = new Worker();
+        string caller = new string('a', 32);
+        SharedSessionState.For(worker).HostSessionKey = () => caller;
+        using var server = new FakeServer { Reply = request => new() { RequestId = request.RequestId,
+            Status = WorkbenchControlStatus.Refused, Workbench = new() { Version = "fixture" },
+            Refusal = new() { Code = WorkbenchControlError.PreconditionFailed, Target = "project", Expected = worker.Project,
+                Condition = "workbench-project-not-selected", SelectedSessionKey = selected ? caller : null } } };
+        var result = (await Tool(1, worker, Client(server)).InvokeAsync(Request(WorkbenchControlTools.Names[1], Arguments(1)))).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
+        Assert.Equal(caller, (string?)result["data"]?["callerSessionKey"]);
+        Assert.Equal(selected, (bool?)result["data"]?["selectedMatchesCaller"]);
+        Assert.Contains(caller, (string?)result["error"]?["message"]);
+        Assert.Contains(worker.Project, (string?)result["data"]?["nextStep"]);
     }
 
     // The in-test server consumes the actual framed request and returns framed

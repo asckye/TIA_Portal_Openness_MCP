@@ -275,6 +275,21 @@ namespace TiaMcp.Logic.V4.Construction
         public IReadOnlyList<LadNetwork> Networks { get; }
         public string? CommentZhCn { get; }
         public string? TitleZhCn { get; }
+        internal Error? EdgeContactRefusal()
+        {
+            // Inspect validated rung expressions, including nested OR paths and counter inputs.
+            static bool ContainsEdge(JsonElement node) => node.ValueKind switch
+            {
+                JsonValueKind.Object => node.TryGetProperty("kind", out var kind) && kind.GetString() is "rising" or "falling"
+                    || node.EnumerateObject().Any(p => ContainsEdge(p.Value)),
+                JsonValueKind.Array => node.EnumerateArray().Any(ContainsEdge),
+                _ => false
+            };
+            return Networks.Any(n => n.Rung != null && ContainsEdge(n.Rung.Json))
+                ? new Error("V21 import of rising and falling edge contacts is unverified. Use an exported donor block for this rung.",
+                    new PreconditionFailedDetails("edge-contact-unverified", null, "ladFcBlock")) : null;
+        }
+
         internal LadFcBlockSpec(JsonElement json) : base(json)
         {
             BlockName = json.GetProperty("blockName").GetString()!;

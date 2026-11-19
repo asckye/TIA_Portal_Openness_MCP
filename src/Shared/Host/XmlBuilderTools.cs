@@ -170,7 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "BuildFlgNetCall"),
                 Description("[L2][PLC-Builders][OFFLINE] Build one V21 FlgNet/v5 FC-call fragment from " +
-                    "{callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. For contacts, edges, compares, OR, " +
+                    "{callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. For contacts, compares, OR, " +
                     "fan-out, coils, MOVE, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use BuildPlcLadFcBlock rung networks on V21. " +
                     "For unsupported timers, counters and math or library/system instructions, and all " +
                     "general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. " +
@@ -246,11 +246,12 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "BuildPlcLadFcBlock"),
                 Description("[L2][PLC-Builders][OFFLINE] Compose a V21 LAD FC candidate from " +
                     "{blockName,blockNumber,inputs?,outputs?,networks:[{call|rung,titleZhCn?,commentZhCn?}]}. Exactly one call or rung per " +
-                    "network. Rung supports NO/NC, rising/falling edges with global memory, typed comparisons, OR groups, shared-prefix " +
+                    "network. Rung supports NO/NC, typed comparisons, OR groups, shared-prefix " +
                     "fan-out, coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins; " +
                     "global constants and indexed component paths. Time PT; Output/InOut pins require symbols. Known instruction names and " +
                     "the MC_ prefix are reserved; no block resolution. Local symbols must start " +
-                    "with a declared input/output. Limits: 64 networks, 256 parts per rung network, depth 16, strings 4096. No symbol/type " +
+                    "with a declared input/output. Edge contacts require a verified V21 export (edge-contact-unverified). " +
+                    "Limits: 64 networks, 256 parts per rung network, depth 16, strings 4096. No symbol/type " +
                     "resolution; compile is the authority. Returns XML only, no files, connection, import or worker. V21 only; native " +
                     "acceptance NOT RUN. For unsupported timers, counters and math or library/system instructions, author S7DCL text and import " +
                     "with ImportPlcBlocksDocuments, or start from an exported donor block.")]
@@ -259,8 +260,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "counters (CTU/CTD/CTUD) with global instances, and user FC/FB calls with named pins and optional ENO chains. " +
                 "Supply the structured value " +
                 "directly; exact camelCase fields, no null or JSON string encoding.")] LadFcBlockSpec ladFcBlock)
-            => OfflineContracts
-                .Run("BuildPlcLadFcBlock", () => ComposePlcLadFcBlockXml(ConstructionAdapter.ToBuilderJson(ladFcBlock)), writes: false, current: false);
+            => ladFcBlock.EdgeContactRefusal() is { } refusal ? McpServer.V4Reject("BuildPlcLadFcBlock", refusal)
+                : OfflineContracts.Run("BuildPlcLadFcBlock", () => ComposePlcLadFcBlockXml(ConstructionAdapter.ToBuilderJson(ladFcBlock)),
+                    writes: false, current: false);
 
         public ResponseXmlBuild ComposePlcLadFcBlockXml(
             [Description("ladFcBlockJson: JSON object with blockName, blockNumber, networks[] (each with " +

@@ -203,7 +203,8 @@ namespace TiaMcpServer.Siemens.Services
             string hmiSoftwarePath,
             string referenceDir,
             JsonObject? placeholders = null,
-            bool overwrite = false)
+            bool overwrite = false,
+            TiaMcp.Logic.V4.SeedReferenceLayout? layout = null)
         {
             var imported = new List<string>();
             var failed = new List<ImportFailure>();
@@ -218,72 +219,24 @@ namespace TiaMcpServer.Siemens.Services
                     return new ResponseSeed { Imported = imported, Failed = failed, Placeholders = placeholders };
                 }
 
-                if (string.IsNullOrWhiteSpace(referenceDir) || !Directory.Exists(referenceDir))
-                {
-                    failed.Add(new ImportFailure { Path = referenceDir, Error = "Reference directory not found" });
-                    return new ResponseSeed { Imported = imported, Failed = failed, Placeholders = placeholders };
-                }
-
-                var manifestPath = Path.Combine(referenceDir, "manifest.json");
-                JsonObject? manifest = null;
-                if (File.Exists(manifestPath))
-                {
-                    try
-                    {
-                        manifest = JsonNode.Parse(File.ReadAllText(manifestPath)) as JsonObject;
-                    }
-                    catch (Exception ex)
-                    {
-                        failed.Add(new ImportFailure { Path = manifestPath, Error = $"Failed to parse manifest.json: {ex.Message}" });
-                    }
-                }
-
-                string plcBlocksDir = Path.Combine(referenceDir, "plc", "blocks");
-                string plcTypesDir = Path.Combine(referenceDir, "plc", "types");
-                string hmiScreensDir = Path.Combine(referenceDir, "hmi", "screens");
-                string hmiTagsDir = Path.Combine(referenceDir, "hmi", "tags");
-
+                layout ??= TiaMcp.Logic.V4.SeedReferenceLayout.Read(referenceDir);
+                if (layout.ManifestError != null) failed.Add(new ImportFailure { Path = Path.Combine(referenceDir, "manifest.json"),
+                    Error = "Failed to parse manifest.json: " + layout.ManifestError });
+                var manifest = layout.Manifest;
                 var plcBlockGroupPath = manifest?["plcBlockGroupPath"]?.ToString() ?? "";
                 var plcTypeGroupPath = manifest?["plcTypeGroupPath"]?.ToString() ?? "";
                 var hmiScreenFolderPath = manifest?["hmiScreenFolderPath"]?.ToString() ?? "";
                 var hmiTagTableFolderPath = manifest?["hmiTagTableFolderPath"]?.ToString() ?? "";
 
-                if (manifest?["plcBlocksDir"] != null) plcBlocksDir = Path.Combine(referenceDir, manifest["plcBlocksDir"]!.ToString());
-                if (manifest?["plcTypesDir"] != null) plcTypesDir = Path.Combine(referenceDir, manifest["plcTypesDir"]!.ToString());
-                if (manifest?["hmiScreensDir"] != null) hmiScreensDir = Path.Combine(referenceDir, manifest["hmiScreensDir"]!.ToString());
-                if (manifest?["hmiTagTablesDir"] != null) hmiTagsDir = Path.Combine(referenceDir, manifest["hmiTagTablesDir"]!.ToString());
-
                 var tempDir = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-seed-" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
 
-                void CopyDirWithReplace(string srcDir, string dstDir)
-                {
-                    if (!Directory.Exists(srcDir)) return;
-                    Directory.CreateDirectory(dstDir);
-
-                    foreach (var file in Directory.EnumerateFiles(srcDir, "*.xml", SearchOption.TopDirectoryOnly))
-                    {
-                        var text = File.ReadAllText(file, Encoding.UTF8);
-                        foreach (var kv in placeholders)
-                        {
-                            var k = kv.Key;
-                            var v = kv.Value?.ToString() ?? "";
-                            text = text.Replace("{{" + k + "}}", v);
-                        }
-                        var outPath = Path.Combine(dstDir, Path.GetFileName(file));
-                        File.WriteAllText(outPath, text, Encoding.UTF8);
-                    }
-                }
+                layout.Stage(tempDir, placeholders);
 
                 var tempPlcBlocks = Path.Combine(tempDir, "plc", "blocks");
                 var tempPlcTypes = Path.Combine(tempDir, "plc", "types");
                 var tempHmiScreens = Path.Combine(tempDir, "hmi", "screens");
                 var tempHmiTags = Path.Combine(tempDir, "hmi", "tags");
-
-                CopyDirWithReplace(plcBlocksDir, tempPlcBlocks);
-                CopyDirWithReplace(plcTypesDir, tempPlcTypes);
-                CopyDirWithReplace(hmiScreensDir, tempHmiScreens);
-                CopyDirWithReplace(hmiTagsDir, tempHmiTags);
 
                 string[] PlcFiles(string directory) => Directory.Exists(directory)
                     ? Directory.EnumerateFiles(directory, "*.xml", SearchOption.TopDirectoryOnly).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToArray()

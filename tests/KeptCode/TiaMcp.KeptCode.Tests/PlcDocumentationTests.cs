@@ -157,6 +157,18 @@ END_FUNCTION_BLOCK
                 check(hb.Markdown.Contains("## FB 123 `DocFb` (LAD)"), "block headings demoted one level in the handbook");
                 check(hb.Markdown.Contains("- Failed: `") && hb.Markdown.Contains("broken.xml"), "failed document listed");
 
+                var negated = XDocument.Parse(LadFbXml);
+                var contact = negated.Descendants().Single(part => part.Name.LocalName == "Part" && (string?)part.Attribute("Name") == "Contact");
+                contact.Add(new XElement(contact.Name.Namespace + "Negated", new XAttribute("Name", "operand")));
+                Write("DocFb.xml", negated.ToString());
+                var closed = PlcDocumentationLogic.RenderFile(path).Markdown;
+                var closedHandbook = PlcDocumentationLogic.RenderHandbook(dir, false, OfflineAnalysisLogic.DefaultExtensions.ToArray(), "Test handbook");
+                foreach (var document in new[] { closed, closedHandbook.Markdown })
+                {
+                    check(document.Contains("Contact (normally closed)(#Trig)"), "listing marks the negated contact");
+                    check(document.Contains("P24[\"Contact (normally closed)\""), "Mermaid marks the negated contact");
+                }
+
                 // ---- lint: clean source
                 var clean = PlcDocumentationLogic.LintScl(GoodScl);
                 check(clean.Count(f => f.Severity == "error") == 0, "[sentinel] well-formed SCL has no errors: " + string.Join(" | ", clean.Select(f => f.Rule + "@" + f.Line + " " + f.Message)));

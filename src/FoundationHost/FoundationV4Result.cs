@@ -336,6 +336,17 @@ internal static class FoundationV4Result
         }
         bool mutation = IsMutation(definition, args);
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
+        if (definition.ResponseMember == "Compile")
+        {
+            bool mismatch = Flag(data, "scopeMismatch") == true;
+            data.Remove("scopeMismatch");
+            if (Text(data, "scope") is "block" or "group") data["compiledRoots"] ??= new JsonArray();
+            else data.Remove("compiledRoots");
+            if (!preview && mismatch)
+                return Wire(release, name, id, data, Outcome.Failed, Execution.Completed, Completeness.Complete,
+                    new Error("TIA returned compiler messages rooted outside the selected PLC. Inspect compiledRoots.",
+                        new PreconditionFailedDetails("compile-scope-mismatch", null, "softwarePath")), true);
+        }
         if (definition.ResponseMember == "BatchImport") return ImportCandidate(PlcBatchImportResultMapping.Result(data, release, name, id, preview));
         string? status = Text(data, "status");
         if (raw == null || mutation && (Flag(data, "executed") ?? Flag(data, "attempted")) == null

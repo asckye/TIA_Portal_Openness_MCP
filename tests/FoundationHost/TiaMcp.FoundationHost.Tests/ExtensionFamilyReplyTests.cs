@@ -43,6 +43,48 @@ public sealed class ExtensionFamilyReplyTests
         Assert.Equal("", (string?)values["nested"]!["text"]);
     }
 
+    [Fact]
+    public void Captured_V21_pages_pass_from_Get_to_Compare_with_their_raw_geometry()
+    {
+        using var release = Host.HardwareContract.UseRelease("21");
+        string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        var capture = JsonNode.Parse(File.ReadAllText(Path.Combine(root,
+            "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/GraphicSelection/V21Comparison.json")))!;
+        var pending = new Queue<JsonNode>(new[] { capture["beforePages"]![0]!, capture["afterPages"]![0]! });
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.GraphicSelectionService((operation, args) => {
+            Assert.EndsWith(".ExecuteUnified", operation);
+            Assert.Equal("GetUnifiedGraphicSelection", (string?)args["request"]?["Operation"]);
+            var metadata = pending.Dequeue().DeepClone();
+            metadata["extraWorkerField"] = "transport-only";
+            return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "Selection", ["Meta"] = metadata } };
+        }, () => "AutomaticDipCoatingMachine");
+        var tools = new Host.GraphicSelectionTools(service);
+        TiaMcp.Logic.V4.Domain.GraphicSelectionPage[] Read()
+        {
+            var result = tools.ReadUnifiedGraphicSelectionV4("HMI_RT_1", "AutomaticDipCoatingMachine", "/MCP_B6F_Screen",
+                new[] { "MCP_B6F_Rect", "MCP_B6F_Text" }).StructuredContent!;
+            Assert.True((bool?)result["ok"], result.ToJsonString());
+            var page = result["data"]!["page"]!.AsObject();
+            Assert.False(page.ContainsKey("extraWorkerField"));
+            Assert.False(string.IsNullOrEmpty((string?)page["diagnosticLog"]));
+            Assert.False(page.ContainsKey("mayHaveChanged"));
+            Assert.True(page.ContainsKey("nextCursor")); Assert.Null(page["nextCursor"]);
+            return TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.GraphicSelectionPage[]>(
+                new JsonArray(page.DeepClone()).ToJsonString());
+        }
+        var before = Read(); var after = Read();
+        TiaMcp.Logic.V4.Domain.DomainValidation.GraphicSelections(before, after);
+        var comparison = tools.CompareUnifiedGraphicSelectionsV4(before, after).StructuredContent!;
+        Assert.True((bool?)comparison["ok"], comparison.ToJsonString());
+        var data = comparison["data"]!;
+        Assert.Equal(1, (int?)data["changedObjectCount"]); Assert.Equal(2, (int?)data["actualCount"]);
+        var changed = Assert.Single(data["objects"]!.AsArray(), item => (bool)item!["changed"]!);
+        Assert.Equal(16, (int?)changed!["fields"]!["Left"]!["delta"]);
+        Assert.Equal(68, (int?)changed["fields"]!["Top"]!["delta"]);
+        Assert.Equal(-28, (int?)changed["fields"]!["Width"]!["delta"]);
+        Assert.Empty(pending);
+    }
+
     [Theory]
     [InlineData("19")]
     [InlineData("20")]

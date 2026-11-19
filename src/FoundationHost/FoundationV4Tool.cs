@@ -94,8 +94,12 @@ internal sealed class FoundationV4Tool : McpServerTool
             parameter = key;
             var contract = new ConstructionInput<T>(ConstructionProfile.Foundation);
             typedSchema = contract.Schema;
-            convert = value => { var input = contract.Read(value, key); return input.Error != null
-                ? (null, input.Error) : (ConstructionAdapter.ToBuilderJson(input.Value!), null); };
+            convert = value =>
+            {
+                var input = contract.Read(value, key);
+                var refusal = input.Error ?? (input.Value as LadFcBlockSpec)?.EdgeContactRefusal();
+                return refusal != null ? (null, refusal) : (ConstructionAdapter.ToBuilderJson(input.Value!), null);
+            };
         }
         switch (source.Name)
         {

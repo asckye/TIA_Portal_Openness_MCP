@@ -26,7 +26,19 @@ namespace TiaMcp.Adapters
                 throw new NotSupportedException("The supplied native PublicAPI for "+release
                         +" has no SafetyAdministration login API; password-based compilation is unavailable in this adapter. No password is ignored.");
         }
-        internal static void Classify(PlcCompileResult result,IEnumerable<PlcDiagnostic> diagnostics)
+        internal static bool ScopeMismatch(string[] roots, string device, string item, Func<string> readSoftwareName)
+        {
+            // The first two levels can contain localized categories alongside the PLC identity.
+            return roots.Length != 0 && !roots.Any(root => root == device || root == item)
+                && !roots.Contains(readSoftwareName(), StringComparer.Ordinal);
+        }
+
+        // Block labels include a type and number, e.g. "Main (OB1)". A group can have the same bare name.
+        internal static bool BlockLabel(string? path, string name) => name.Length > 0 && path != null
+            && path.StartsWith(name + " (", StringComparison.Ordinal) && path.EndsWith(")", StringComparison.Ordinal)
+            && char.IsLetter(path[name.Length + 2]) && char.IsDigit(path[path.Length - 2]);
+
+        internal static void Classify(PlcCompileResult result,IEnumerable<PlcDiagnostic> diagnostics, bool blockScope = false)
         {
             var raw=new List<string>(); var errors=new List<string>(); var warnings=new List<string>(); var info=new List<string>();
             foreach(var item in diagnostics)
@@ -43,6 +55,7 @@ namespace TiaMcp.Adapters
                 bool error=string.Equals(item.State,"Error",StringComparison.Ordinal);
                 bool warning=string.Equals(item.State,"Warning",StringComparison.Ordinal);
                 if((error || warning) && item.HasChildren && string.IsNullOrWhiteSpace(item.Description)) continue;
+                if (error && blockScope && !item.InRequestedBlock) continue;
                 var target=error ? errors : warning ? warnings : info;
                 if((error || warning || description.Length!=0) && !target.Contains(item.Formatted)) target.Add(item.Formatted);
             }

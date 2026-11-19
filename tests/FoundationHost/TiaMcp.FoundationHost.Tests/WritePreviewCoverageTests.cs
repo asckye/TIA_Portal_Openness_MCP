@@ -1407,6 +1407,74 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.Equal(0, worker.Calls);
     }
 
+    [Fact]
+    public void Seed_preview_and_apply_require_a_layout_and_bind_each_planned_file()
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        const string project = "C:/Projects/original.ap21";
+        var imports = new List<string>();
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) => {
+            Assert.Equal("plc-software.ExecutePlcOrganisation", operation);
+            var request = arguments["request"]!;
+            Assert.Equal("importBlockDirectory", (string?)request["Action"]);
+            string staged = Assert.Single(Directory.GetFiles((string)request["FilePath"]!, "*.xml"));
+            imports.Add(File.ReadAllText(staged));
+            return new JsonObject { ["Batch"] = new JsonObject { ["Imported"] = new JsonArray("MCPVerify_FC_LAD"), ["Failed"] = new JsonArray() } };
+        }, () => true, () => project);
+        var tool = new toolpipeline::TiaMcpServer.ModelContextProtocol.PlcReadModifyTools(service);
+        string repo = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        string fixture = Path.Combine(repo, "bin-build", "seed-plan-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(fixture, "reference");
+        JsonNode Call(bool preview = true, string hash = "") => tool.SeedProjectFromReferenceV4("PLC", "HMI", root, dryRun: preview,
+            expectedPlanHash: hash, expectedProjectFile: project).StructuredContent!;
+        Directory.CreateDirectory(root);
+        try
+        {
+            var empty = Call();
+            Assert.Equal("PRECONDITION_FAILED", (string?)empty["error"]?["code"]);
+            Assert.Equal("seed-reference-layout", (string?)empty["error"]?["details"]?["condition"]);
+            string unrelated = Path.Combine(root, "MCPVerify_FC_LAD.xml");
+            File.Copy(Path.Combine(repo, "templates/mcp-full-e2e-verify/plc/blocks/MCPVerify_FC_LAD.xml"), unrelated);
+            foreach (bool preview in new[] { true, false })
+            {
+                var error = Call(preview, new string('0', 64))["error"]!;
+                Assert.Equal("PRECONDITION_FAILED", (string?)error["code"]);
+                Assert.Equal("seed-reference-layout", (string?)error["details"]?["condition"]);
+                Assert.Equal("referenceDir", (string?)error["details"]?["parameter"]);
+                Assert.Contains("plc/blocks", (string?)error["message"]);
+            }
+            string manifest = Path.Combine(root, "manifest.json");
+            // Only the seed plan sees the override's bytes. The general caller snapshot covers the reference root.
+            File.WriteAllText(manifest, """{"plcBlocksDir":"../donors"}""");
+            var manifestOnly = Call();
+            Assert.True((bool?)manifestOnly["ok"], manifestOnly.ToJsonString());
+            Assert.Equal("manifest.json", (string?)Assert.Single(manifestOnly["data"]!["plannedFiles"]!.AsArray())!["name"]);
+            string directory = Directory.CreateDirectory(Path.Combine(fixture, "donors")).FullName;
+            string donor = Path.Combine(directory, "MCPVerify_FC_LAD.xml");
+            File.Copy(unrelated, donor);
+            var plan = Call()["data"]!;
+            var files = plan["plannedFiles"]!.AsArray();
+            Assert.Equal(new[] { "manifest.json", "../donors/MCPVerify_FC_LAD.xml" }, files.Select(file => (string?)file!["name"]));
+            Assert.Equal("plc/blocks/MCPVerify_FC_LAD.xml", (string?)files[1]!["destination"]);
+            string Hash(string path) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
+            Assert.Equal(new[] { Hash(manifest), Hash(donor) }, files.Select(file => (string?)file!["sha256"]));
+            File.AppendAllText(donor, "\n");
+            var stale = Call(false, (string)plan["planHash"]!);
+            Assert.Equal("PLAN_STALE", (string?)stale["error"]?["code"]);
+            var revised = Call()["data"]!;
+            Assert.NotEqual((string?)plan["planHash"], (string?)revised["planHash"]);
+            Assert.Empty(imports);
+            var applied = Call(false, (string)revised["planHash"]!);
+            Assert.True((bool?)applied["ok"], applied.ToJsonString());
+            Assert.True(JsonNode.DeepEquals(revised["plannedFiles"], applied["data"]?["plannedFiles"]));
+            Assert.Equal(File.ReadAllText(donor), Assert.Single(imports));
+            Assert.Equal(0, worker.Calls);
+        }
+        finally { Directory.Delete(fixture, true); }
+    }
+
     private sealed class PreviewInputFixture : IDisposable
     {
         private readonly string root = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
@@ -1432,7 +1500,14 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             foreach (string parameter in inputDirectories)
                 if (arguments.ContainsKey(parameter))
                 {
-                    File.Copy(xml, Path.Combine(root, "MCP_E2E_Tags.xml"), overwrite: true);
+                    if (tool == "SeedProjectFromReference")
+                    {
+                        string source = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                            "templates/mcp-full-e2e-verify/plc/blocks/MCPVerify_FC_LAD.xml");
+                        string blocks = Directory.CreateDirectory(Path.Combine(root, "plc", "blocks")).FullName;
+                        File.Copy(source, Path.Combine(blocks, Path.GetFileName(source)), overwrite: true);
+                    }
+                    else File.Copy(xml, Path.Combine(root, "MCP_E2E_Tags.xml"), overwrite: true);
                     arguments[parameter] = root;
                 }
         }

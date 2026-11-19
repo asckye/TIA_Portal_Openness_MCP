@@ -36,7 +36,7 @@ namespace TiaMcp.Adapters.Native.Safety
             => _session.CurrentProject!.GetService<SafetyValidationAssistant>()
                 ?? throw new PlcSoftwareException("NotSupportedOnVersion",
                     "SafetyValidationAssistant is not provided by this project (Safety Validation Assistant not installed / licensed, or no F-CPU).");
-        // groupPathJson walks ActivationTestGroups -> ActivationTestUserGroup.Groups; an empty path is the assistant root.
+        // The group path walks ActivationTestGroups -> ActivationTestUserGroup.Groups; an empty path is the assistant root.
         private static (ActivationTestComposition Tests, ActivationTestUserGroupComposition Groups, ActivationTestUserGroup
                 ? Group) ExactActivationTestScope(SafetyValidationAssistant sva, string[] groupPath)
         {
@@ -153,12 +153,12 @@ namespace TiaMcp.Adapters.Native.Safety
         }
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
-        public HardwareAddressingReply ReadSafetyActivationTests(string groupPathJson = "[]", string name = "", bool includeSafetyFunctions = false,
+        public HardwareAddressingReply ReadSafetyActivationTests(string[] path, string name = "", bool includeSafetyFunctions = false,
                 bool includeConditions = false, int offset = 0, int limit = 100)
             => _session.RunHmiStepTool("ListSafetyActivationTests", meta =>
             {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
-                var path = _session.GroupPath(); SafetyValidationPrimitives.ValidatePagination(offset, limit);
+                _session.RequireValidGroupPath(); SafetyValidationPrimitives.ValidatePagination(offset, limit);
                 var sva = RequireSafetyValidationAssistant();
                 var scope = ExactActivationTestScope(sva, path);
                 meta["groupPath"] = new HmiArray(path.Select(p => (object)p).ToArray());
@@ -187,7 +187,7 @@ namespace TiaMcp.Adapters.Native.Safety
                     + " read; nothing changed.";
             });
 
-        public HardwareAddressingReply ManageSafetyActivationTest(string name, string action = "read", string groupPathJson = "[]",
+        public HardwareAddressingReply ManageSafetyActivationTest(string name, string action, string[] path,
                 string evaluationDeviceName = "", string sourceName = "", string masterCopyPath = "", string libraryName = "", string newValue = "",
                 string filePath = "", string exportOptions = "", string documentInfoOptions = "", string importOptions = "", bool confirmDelete = false,
                 bool dryRun = true)
@@ -195,7 +195,7 @@ namespace TiaMcp.Adapters.Native.Safety
             {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var r = _session.Plan();
-                var path = _session.GroupPath();
+                _session.RequireValidGroupPath();
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var sva = RequireSafetyValidationAssistant();
                 var scope = ExactActivationTestScope(sva, path);
@@ -268,13 +268,13 @@ namespace TiaMcp.Adapters.Native.Safety
                 return "Activation test " + action + " executed and read back; no automatic save.";
             });
 
-        public HardwareAddressingReply ManageSafetyActivationTestGroup(string action = "read", string groupPathJson = "[]", string name = "",
+        public HardwareAddressingReply ManageSafetyActivationTestGroup(string action, string[] path, string name = "",
                 string masterCopyPath = "", string libraryName = "", string newName = "", bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageSafetyActivationTestGroup", meta =>
             {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var r = _session.Plan();
-                var path = _session.GroupPath();
+                _session.RequireValidGroupPath();
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var sva = RequireSafetyValidationAssistant();
                 var scope = ExactActivationTestScope(sva, path);
@@ -318,14 +318,14 @@ namespace TiaMcp.Adapters.Native.Safety
                 return "Activation test group " + action + " executed and read back; no automatic save.";
             });
 
-        public HardwareAddressingReply ManageSafetyFunction(string activationTest, string action = "read", string groupPathJson = "[]", string name = "",
+        public HardwareAddressingReply ManageSafetyFunction(string activationTest, string action, string[] path, string name = "",
                 string sourceName = "", string propertiesJson = "{}", string filePath = "", string exportOptions = "", string documentInfoOptions = "",
                 string importOptions = "", bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManageSafetyFunction", meta =>
             {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var r = _session.Plan();
-                var path = _session.GroupPath();
+                _session.RequireValidGroupPath();
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var sva = RequireSafetyValidationAssistant();
                 var test = ExactActivationTest(ExactActivationTestScope(sva, path).Tests, activationTest);
@@ -431,14 +431,14 @@ namespace TiaMcp.Adapters.Native.Safety
                 return "Safety function " + action + " executed and read back; no automatic save.";
             });
 
-        public HardwareAddressingReply ManageSafetyFunctionCondition(string activationTest, string safetyFunction, string action = "read",
-                string groupPathJson = "[]", int index = -1, string deviceName = "", string signalUsage = "", string signalName = "", string propertiesJson =
+        public HardwareAddressingReply ManageSafetyFunctionCondition(string activationTest, string safetyFunction, string action,
+                string[] path, int index = -1, string deviceName = "", string signalUsage = "", string signalName = "", string propertiesJson =
                 "{}", bool dryRun = true)
             => _session.RunHmiStepTool("ManageSafetyFunctionCondition", meta =>
             {
                 meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 var r = _session.Plan();
-                var path = _session.GroupPath();
+                _session.RequireValidGroupPath();
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var sva = RequireSafetyValidationAssistant();
                 var test = ExactActivationTest(ExactActivationTestScope(sva, path).Tests, activationTest);

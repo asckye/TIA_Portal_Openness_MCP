@@ -135,6 +135,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         // ------------------------------------------------------------------ FlgNet graph
 
+        internal static bool HasNegatedOperand(XElement part) => part.Elements().Any(e => e.Name.LocalName == "Negated"
+            && ((string?)e.Attribute("Name") == "operand" || e.Attribute("Name") == null));
+
         public static NetworkGraph ParseFlgNet(XElement flgNet)
         {
             var g = new NetworkGraph();
@@ -167,6 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             if (callInstance != null) instanceName = AccessLabel(callInstance);
                         }
                         var label = callName.Length > 0 ? name + " \"" + callName + "\"" : name;
+                        if (name == "Contact" && HasNegatedOperand(e)) label += " (normally closed)";
                         if (template.Count > 0) label += "<" + string.Join(",", template) + ">";
                         if (instanceName.Length > 0) label += " [" + instanceName + "]";
                         node = new GraphNode {

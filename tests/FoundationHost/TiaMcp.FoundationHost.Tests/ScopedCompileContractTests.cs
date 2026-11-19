@@ -43,6 +43,7 @@ public sealed class ScopedCompileContractTests
         internal JsonObject? Arguments;
         internal int Calls;
         internal bool ServiceAvailable = true;
+        internal bool ForeignRoots;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
             Assert.Equal("CompileSoftware", operation); Calls++; Arguments = arguments.DeepClone().AsObject();
@@ -58,7 +59,8 @@ public sealed class ScopedCompileContractTests
             string scope = (string?)arguments["scope"] ?? "software";
             if (scope != "software") result = new PlcScopedCompileResult { Scope = scope,
                 ScopePath = ObjectPathEncoding.NormalizePath((string)arguments["scopePath"]!), UnitName = (string?)arguments["unitName"] ?? "",
-                ResolvedObject = "devices/D/CPU/blocks/Group%2Fone/Main", Compilable = ServiceAvailable };
+                ResolvedObject = "devices/D/CPU/blocks/" + ObjectPathEncoding.NormalizePath((string)arguments["scopePath"]!), Compilable = ServiceAvailable,
+                CompiledRoots = dry ? Array.Empty<string>() : ForeignRoots ? new[] { "+S1", "+S1-K1" } : new[] { "D", "CPU" }, ScopeMismatch = ForeignRoots };
             result.ProjectFile = Project; result.Executed = !dry;
             if (!dry) { result.State = "Success"; result.ErrorCount = 0; result.WarningCount = 0; }
             return Task.FromResult(JsonSerializer.SerializeToNode(result, result.GetType()));
@@ -176,6 +178,30 @@ public sealed class ScopedCompileContractTests
         Assert.Equal("block", (string?)worker.Arguments?["scope"]); Assert.False(worker.Arguments!.ContainsKey("expectedPlanHash"));
         string text = response.StructuredContent!.ToJsonString(); Assert.Contains("devices/D/CPU/blocks/Group%2Fone/Main", text);
         Assert.Contains("compilable", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(dryRun ? Array.Empty<string>() : new[] { "D", "CPU" }, response.StructuredContent["data"]!["compiledRoots"]!.Deserialize<string[]>());
+    }
+
+    [Theory]
+    [InlineData("CompilePlcSoftware", "block")][InlineData("CompilePlcSoftware", "group")]
+    [InlineData("CompilePlcDiagnostics", "block")][InlineData("CompilePlcDiagnostics", "group")]
+    public async Task Executed_compile_reports_foreign_roots_even_when_native_counts_are_clean(string name, string scope)
+    {
+        using var worker = new Worker { ForeignRoots = true };
+        var args = new JsonObject { ["softwarePath"] = "devices/D/CPU", ["scope"] = scope,
+            ["scopePath"] = scope == "group" ? "Group%2fone" : "Group%2fone/Main", ["dryRun"] = false,
+            ["confirm"] = true, ["expectedProjectFile"] = Project };
+        var reply = (await Tool(name, worker).InvokeV4Async(Request(name, args), "21", "test", CancellationToken.None)).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)reply["error"]?["code"]);
+        Assert.Equal("compile-scope-mismatch", (string?)reply["error"]?["details"]?["condition"]);
+        Assert.True((bool?)reply["data"]?["executed"]); Assert.Equal(0, (int?)reply["data"]?["errorCount"]);
+        Assert.Equal(new[] { "+S1", "+S1-K1" }, reply["data"]!["compiledRoots"]!.Deserialize<string[]>());
+        Assert.Equal("completed", (string?)reply["meta"]?["execution"]); Assert.Equal(1, worker.Calls);
+        var raw = await worker.Call("CompileSoftware", args, CancellationToken.None);
+        var legacy = V17CompileEnvelope.Wrap(name, raw, false, args);
+        string Wire(string field) => McpJsonUtilities.DefaultOptions.PropertyNamingPolicy!.ConvertName(field);
+        Assert.False((bool?)legacy[Wire("Meta")]?["success"]);
+        Assert.Equal("compile-scope-mismatch", (string?)legacy[Wire("Meta")]?["condition"]);
+        Assert.Equal(new[] { "+S1", "+S1-K1" }, legacy[Wire("CompiledRoots")]!.Deserialize<string[]>());
     }
 
     [Theory]

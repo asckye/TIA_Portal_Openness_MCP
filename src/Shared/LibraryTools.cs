@@ -447,7 +447,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string destinationDirectory="",
             [Description("openMode: how to open the library - ReadOnly or ReadWrite.")] string openMode="ReadOnly",
             [Description("upgrade: true opens with an upgrade to the current TIA version when the file is older.")] bool upgrade=false,
-            [Description("archiveName: file name of the library archive to write.")] string archiveName="",
+            [Description("archiveName: file name of the library archive to write. TIA writes this name without adding an extension.")] string archiveName="",
             [Description("archiveMode: None | Compressed | DiscardRestorableData | DiscardRestorableDataAndCompressed.")] string archiveMode="Compressed",
             bool dryRun=true)
             => LibraryToolContract.Run("ManageGlobalLibrary", !dryRun && !(action == "list" || action == "infos"), true, () =>

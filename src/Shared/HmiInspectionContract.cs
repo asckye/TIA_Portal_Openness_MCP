@@ -139,7 +139,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, JsonSerializer.SerializeToNode(retained)!.AsObject(), error, outcome, completeness, writes, current, paging);
             }
             // GraphicSelectionPage[] accepts this complete page, including its scope.
-            if (tool == "GetUnifiedGraphicSelection") data["page"] = evidence.DeepClone();
+            if (tool == "GetUnifiedGraphicSelection")
+            {
+                var page = new JsonObject();
+                var properties = TiaMcp.Logic.V4.Domain.DomainSchemas.For(typeof(TiaMcp.Logic.V4.Domain.GraphicSelectionPage)).Json.GetProperty("properties");
+                foreach (var property in properties.EnumerateObject())
+                    if (evidence.TryGetPropertyValue(property.Name, out var value)) page[property.Name] = value?.DeepClone();
+                data["page"] = page;
+            }
             else
                 foreach (var pair in evidence)
                     if (pair.Key != "timestamp" && pair.Key != "tool" && pair.Key != "success") data[pair.Key] = pair.Value?.DeepClone();

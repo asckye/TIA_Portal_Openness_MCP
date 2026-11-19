@@ -62,20 +62,21 @@ public sealed partial class PlcFoundationEngine
         switch (request.Operation)
         {
             case "ListSafetyActivationTests": return adapter
-                .ReadSafetyActivationTests("[]", request.Name, request.IncludeSafetyFunctions, request.IncludeConditions, request.Offset, request.Limit);
+                .ReadSafetyActivationTests(request.GroupPath, request.Name, request.IncludeSafetyFunctions, request.IncludeConditions,
+                    request.Offset, request.Limit);
             case "ManageSafetyActivationTest": return adapter
-                .ManageSafetyActivationTest(request.Name, request.Action, "[]", request.EvaluationDeviceName, request.SourceName, request.MasterCopyPath,
-                    request.LibraryName, request.NewValue, request.FilePath, request.ExportOptions, request.DocumentInfoOptions, request.ImportOptions, request
-                    .ConfirmDelete, request.DryRun);
+                .ManageSafetyActivationTest(request.Name, request.Action, request.GroupPath, request.EvaluationDeviceName, request.SourceName,
+                    request.MasterCopyPath, request.LibraryName, request.NewValue, request.FilePath, request.ExportOptions,
+                    request.DocumentInfoOptions, request.ImportOptions, request.ConfirmDelete, request.DryRun);
             case "ManageSafetyActivationTestGroup": return adapter
-                .ManageSafetyActivationTestGroup(request.Action, "[]", request.Name, request.MasterCopyPath, request.LibraryName, request.NewName, request
-                    .ConfirmDelete, request.DryRun);
+                .ManageSafetyActivationTestGroup(request.Action, request.GroupPath, request.Name, request.MasterCopyPath, request.LibraryName,
+                    request.NewName, request.ConfirmDelete, request.DryRun);
             case "ManageSafetyFunction": return adapter
-                .ManageSafetyFunction(request.ActivationTest, request.Action, "[]", request.Name, request.SourceName, "{}", request.FilePath, request
-                    .ExportOptions, request.DocumentInfoOptions, request.ImportOptions, request.ConfirmDelete, request.DryRun);
+                .ManageSafetyFunction(request.ActivationTest, request.Action, request.GroupPath, request.Name, request.SourceName, "{}",
+                    request.FilePath, request.ExportOptions, request.DocumentInfoOptions, request.ImportOptions, request.ConfirmDelete, request.DryRun);
             case "ManageSafetyFunctionCondition": return adapter
-                .ManageSafetyFunctionCondition(request.ActivationTest, request.SafetyFunction, request.Action, "[]", request.Index, request.DeviceName, request
-                    .SignalUsage, request.SignalName, "{}", request.DryRun);
+                .ManageSafetyFunctionCondition(request.ActivationTest, request.SafetyFunction, request.Action, request.GroupPath, request.Index,
+                    request.DeviceName, request.SignalUsage, request.SignalName, "{}", request.DryRun);
         }
 #endif
         throw new NotSupportedException("Safety Validation Assistant requires V21.");

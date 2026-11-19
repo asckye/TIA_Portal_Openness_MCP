@@ -569,7 +569,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public CallToolResult SeedProjectFromReferenceV4(
             [Description("plcSoftwarePath: path in the project structure to the PLC software")] string plcSoftwarePath,
             [Description("hmiSoftwarePath: path in the project structure to the HMI software")] string hmiSoftwarePath,
-            [Description("referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)")] string referenceDir,
+            [Description("referenceDir: provide manifest.json or XML in plc/blocks, plc/types, hmi/screens or hmi/tags. " +
+                "Preview lists planned files and SHA-256 hashes.")] string referenceDir,
             [Description("placeholders: JsonObject key-values for replacement in XML, e.g. {\"PLC_NAME\":\"PLC_1\"}")] JsonObject? placeholders = null,
             [Description("overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them " +
                 "(Siemens.Engineering.ImportOptions.Override).")] bool overwrite =
@@ -579,22 +580,25 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => McpServer
-                .RunWritePreview("SeedProjectFromReference", dryRun, new { plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite }, () =>
-                    PlcToolContract
-                .Run("SeedProjectFromReference", true, true, () =>
-                    SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite)), expectedPlanHash, expectedProjectFile);
+        {
+            SeedReferenceLayout? layout = null;
+            return McpServer.RunWritePreview("SeedProjectFromReference", dryRun,
+                new { plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite },
+                () => PlcToolContract.Run("SeedProjectFromReference", true, true, () =>
+                    ApplySeed(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite, layout)),
+                expectedPlanHash, expectedProjectFile, plannedFiles: () => (layout = SeedReferenceLayout.Read(referenceDir)).PlannedFiles);
+        }
 
-        public ResponseSeed SeedProjectFromReference(
-            string plcSoftwarePath,
-            string hmiSoftwarePath,
-            string referenceDir,
-            JsonObject? placeholders = null,
-            bool overwrite = false)
+        public ResponseSeed SeedProjectFromReference(string plcSoftwarePath, string hmiSoftwarePath, string referenceDir,
+            JsonObject? placeholders = null, bool overwrite = false)
+            => ApplySeed(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite, null);
+
+        private ResponseSeed ApplySeed(string plcSoftwarePath, string hmiSoftwarePath, string referenceDir,
+            JsonObject? placeholders, bool overwrite, SeedReferenceLayout? layout)
         {
             try
             {
-                var res = _service.SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite);
+                var res = _service.SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders, overwrite, layout);
                 // envelope: legacy-existing-meta
                 res.Meta ??= new JsonObject();
                 res.Meta["timestamp"] = DateTime.Now;

@@ -136,6 +136,8 @@ namespace TiaOpenness.Shared
         public string? Expected { get; set; }
         public string? Actual { get; set; }
         public string? Stage { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? SelectedSessionKey { get; set; }
         public string? DiagnosticId { get; set; }
         public string? Resource { get; set; }
     }

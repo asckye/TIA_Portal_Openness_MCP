@@ -408,7 +408,7 @@
           "value": ""
         }
       },
-      "description": "Preview by default. Compile one exact software, block, group or V16–V21 standard unit through ICompilable; unavailable scoped services refuse execution. Existing offline, Safety and diagnostic behavior is retained."
+      "description": "Preview by default. Compile one exact software, block, group or V16–V21 standard unit through ICompilable; unavailable scoped services refuse execution. TIA may compile a wider scope. Block and group results list compiledRoots. Offline and Safety checks remain in effect."
     },
     "ExportPlcBlocks": {
       "method": "ExportBlocksV4",
@@ -605,7 +605,7 @@
           "value": ""
         }
       },
-      "description": "Preview by default. Compile one exact software, block, group or V16–V21 standard unit through ICompilable; unavailable scoped services refuse execution. Existing offline, Safety and diagnostic behavior is retained."
+      "description": "Preview by default. Compile one exact software, block, group or V16–V21 standard unit through ICompilable; unavailable scoped services refuse execution. TIA may compile a wider scope. Block and group results list compiledRoots. Offline and Safety checks remain in effect."
     },
     "GetSoftwareTree": {
       "method": "GetSoftwareTreeV4",
@@ -6789,7 +6789,7 @@
       "path": "src/Shared/LibraryTools.cs",
       "owner": "LibraryTools",
       "domain": "Library",
-      "signature": "public CallToolResult ManageGlobalLibraryV4(\n            [Description(\"action: the operation to perform - list | infos | create | open | openInfo | retrieve | save | saveAs | close | archive.\")] string action,\n            string libraryName=\"\",\n            string filePath=\"\",\n            string destinationDirectory=\"\",\n            [Description(\"openMode: how to open the library - ReadOnly or ReadWrite.\")] string openMode=\"ReadOnly\",\n            [Description(\"upgrade: true opens with an upgrade to the current TIA version when the file is older.\")] bool upgrade=false,\n            [Description(\"archiveName: file name of the library archive to write.\")] string archiveName=\"\",\n            [Description(\"archiveMode: None | Compressed | DiscardRestorableData | DiscardRestorableDataAndCompressed.\")] string archiveMode=\"Compressed\",\n            bool dryRun=true)",
+      "signature": "public CallToolResult ManageGlobalLibraryV4(\n            [Description(\"action: the operation to perform - list | infos | create | open | openInfo | retrieve | save | saveAs | close | archive.\")] string action,\n            string libraryName=\"\",\n            string filePath=\"\",\n            string destinationDirectory=\"\",\n            [Description(\"openMode: how to open the library - ReadOnly or ReadWrite.\")] string openMode=\"ReadOnly\",\n            [Description(\"upgrade: true opens with an upgrade to the current TIA version when the file is older.\")] bool upgrade=false,\n            [Description(\"archiveName: file name of the library archive to write. TIA writes this name without adding an extension.\")] string archiveName=\"\",\n            [Description(\"archiveMode: None | Compressed | DiscardRestorableData | DiscardRestorableDataAndCompressed.\")] string archiveMode=\"Compressed\",\n            bool dryRun=true)",
       "parameters": {
         "action": {
           "type": "string",
@@ -6826,7 +6826,7 @@
         "archiveName": {
           "type": "string",
           "default": "\"\"",
-          "description": "archiveName: file name of the library archive to write.",
+          "description": "archiveName: file name of the library archive to write. TIA writes this name without adding an extension.",
           "value": ""
         },
         "archiveMode": {
@@ -10522,7 +10522,7 @@
       "path": "src/Shared/PlcReadModifyTools.cs",
       "owner": "PlcReadModifyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult SeedProjectFromReferenceV4(\n            [Description(\"plcSoftwarePath: path in the project structure to the PLC software\")] string plcSoftwarePath,\n            [Description(\"hmiSoftwarePath: path in the project structure to the HMI software\")] string hmiSoftwarePath,\n            [Description(\"referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)\")] string referenceDir,\n            [Description(\"placeholders: JsonObject key-values for replacement in XML, e.g. {\\\"PLC_NAME\\\":\\\"PLC_1\\\"}\")] JsonObject? placeholders = null,\n            [Description(\"overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them \" +\n                \"(Siemens.Engineering.ImportOptions.Override).\")] bool overwrite =\n                false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult SeedProjectFromReferenceV4(\n            [Description(\"plcSoftwarePath: path in the project structure to the PLC software\")] string plcSoftwarePath,\n            [Description(\"hmiSoftwarePath: path in the project structure to the HMI software\")] string hmiSoftwarePath,\n            [Description(\"referenceDir: provide manifest.json or XML in plc/blocks, plc/types, hmi/screens or hmi/tags. \" +\n                \"Preview lists planned files and SHA-256 hashes.\")] string referenceDir,\n            [Description(\"placeholders: JsonObject key-values for replacement in XML, e.g. {\\\"PLC_NAME\\\":\\\"PLC_1\\\"}\")] JsonObject? placeholders = null,\n            [Description(\"overwrite: false (default) refuses existing PLC types and blocks of the same name before their import; true replaces them \" +\n                \"(Siemens.Engineering.ImportOptions.Override).\")] bool overwrite =\n                false,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "plcSoftwarePath": {
           "type": "string",
@@ -10537,7 +10537,7 @@
         "referenceDir": {
           "type": "string",
           "default": null,
-          "description": "referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)"
+          "description": "referenceDir: provide manifest.json or XML in plc/blocks, plc/types, hmi/screens or hmi/tags. Preview lists planned files and SHA-256 hashes."
         },
         "placeholders": {
           "type": "JsonObject?",
@@ -18917,7 +18917,7 @@
           "description": "flgNet: FlgNetCallSpec. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
         }
       },
-      "description": "[L2][PLC-Builders][OFFLINE] Build one V21 FlgNet/v5 FC-call fragment from {callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. For contacts, edges, compares, OR, fan-out, coils, MOVE, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use BuildPlcLadFcBlock rung networks on V21. For unsupported timers, counters and math or library/system instructions, and all general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. A bare fragment cannot be imported. Returns candidate XML in memory only; no files, connection or worker. Native acceptance NOT RUN."
+      "description": "[L2][PLC-Builders][OFFLINE] Build one V21 FlgNet/v5 FC-call fragment from {callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. For contacts, compares, OR, fan-out, coils, MOVE, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use BuildPlcLadFcBlock rung networks on V21. For unsupported timers, counters and math or library/system instructions, and all general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. A bare fragment cannot be imported. Returns candidate XML in memory only; no files, connection or worker. Native acceptance NOT RUN."
     },
     "BuildPlcFcBlock": {
       "method": "ComposePlcFcBlockXmlV4",
@@ -18960,7 +18960,7 @@
           "description": "ladFcBlock: LadFcBlockSpec with exactly one call or rung per network. Rung outputs include timers (TON/TOF/TP), counters (CTU/CTD/CTUD) with global instances, and user FC/FB calls with named pins and optional ENO chains. Supply the structured value directly; exact camelCase fields, no null or JSON string encoding."
         }
       },
-      "description": "[L2][PLC-Builders][OFFLINE] Compose a V21 LAD FC candidate from {blockName,blockNumber,inputs?,outputs?,networks:[{call|rung,titleZhCn?,commentZhCn?}]}. Exactly one call or rung per network. Rung supports NO/NC, rising/falling edges with global memory, typed comparisons, OR groups, shared-prefix fan-out, coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins; global constants and indexed component paths. Time PT; Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; no block resolution. Local symbols must start with a declared input/output. Limits: 64 networks, 256 parts per rung network, depth 16, strings 4096. No symbol/type resolution; compile is the authority. Returns XML only, no files, connection, import or worker. V21 only; native acceptance NOT RUN. For unsupported timers, counters and math or library/system instructions, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block."
+      "description": "[L2][PLC-Builders][OFFLINE] Compose a V21 LAD FC candidate from {blockName,blockNumber,inputs?,outputs?,networks:[{call|rung,titleZhCn?,commentZhCn?}]}. Exactly one call or rung per network. Rung supports NO/NC, typed comparisons, OR groups, shared-prefix fan-out, coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins; global constants and indexed component paths. Time PT; Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; no block resolution. Local symbols must start with a declared input/output. Edge contacts require a verified V21 export (edge-contact-unverified). Limits: 64 networks, 256 parts per rung network, depth 16, strings 4096. No symbol/type resolution; compile is the authority. Returns XML only, no files, connection, import or worker. V21 only; native acceptance NOT RUN. For unsupported timers, counters and math or library/system instructions, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block."
     },
     "ExportPlcTestReport": {
       "method": "ExportPlcTestReport",

@@ -212,8 +212,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string SymbolKind(XElement node)
         {
             if (node.Name.LocalName == "Call") return "";
-            bool negated = node.Elements()
-                .Any(e => e.Name.LocalName == "Negated" && ((string?)e.Attribute("Name") == "operand" || e.Attribute("Name") == null));
+            bool negated = PlcDocumentationLogic.HasNegatedOperand(node);
             return (string?)node.Attribute("Name") switch
             {
                 "Contact" => negated ? "contact-nc" : "contact-no",

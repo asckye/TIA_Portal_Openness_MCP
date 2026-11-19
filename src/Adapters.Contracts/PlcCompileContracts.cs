@@ -9,6 +9,7 @@ namespace TiaMcp.Adapters
         public string State { get; set; }="";
         public string Description { get; set; }="";
         public string Formatted { get; set; }="";
+        internal bool InRequestedBlock { get; set; }
         public bool HasChildren { get; set; }
     }
 }

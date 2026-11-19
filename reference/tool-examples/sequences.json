@@ -5417,10 +5417,6 @@
                 "datatype": "IEC_COUNTER"
               },
               {
-                "name": "EdgeMem",
-                "datatype": "Bool"
-              },
-              {
                 "name": "Start",
                 "datatype": "Bool"
               },
@@ -5626,38 +5622,6 @@
                 },
                 "titleZhCn": "条件与分支",
                 "commentZhCn": "MOVE 的第二段由前段 ENO 驱动。"
-              },
-              {
-                "rung": {
-                  "series": [
-                    {
-                      "kind": "rising",
-                      "operand": {
-                        "global": [
-                          "DB_LadDemo",
-                          "Reset"
-                        ]
-                      },
-                      "memory": {
-                        "global": [
-                          "DB_LadDemo",
-                          "EdgeMem"
-                        ]
-                      }
-                    }
-                  ],
-                  "outputs": [
-                    {
-                      "kind": "reset",
-                      "operand": {
-                        "global": [
-                          "DB_LadDemo",
-                          "Active"
-                        ]
-                      }
-                    }
-                  ]
-                }
               },
               {
                 "rung": {
@@ -5967,7 +5931,7 @@
           "inputPath": "<data.outputFile from completed ExportPlcBlock>",
           "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Block.html"
         },
-        "expect": "Render the export and compare each network, indexed path, edge memory and ENO connection against the generated candidate. Check timer Q/ET, counter reset/Q/CV, FB instance/named pins and call ENO; retain a provenance-tagged native export."
+        "expect": "Render the export and compare each network, indexed path and ENO connection against the generated candidate. Check timer Q/ET, counter reset/Q/CV, FB instance/named pins and call ENO; retain a provenance-tagged native export."
       },
       {
         "tool": "CleanupStagedImportFiles",

@@ -263,6 +263,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult TargetFailure(string tool, Exception error, bool issued, string? arguments = null)
         {
             error = TiaOpenness.Shared.HostFailurePolicy.Unwrap(error);
+            if (!issued && error is TiaMcp.Adapters.Contracts.AdapterPreconditionException { Condition: SeedReferenceLayout.Condition } layout)
+                return V4Reject(tool, new Error(layout.Message, new PreconditionFailedDetails(layout.Condition, null, layout.ParamName)));
 #if TIA_ENGINE_HOST
             if (TiaOpenness.Shared.HostFailurePolicy.Precondition(error) is { Condition: "worker-call-running" } running)
                 return V4Reject(tool, new Error(running.Message,
@@ -375,10 +377,13 @@ namespace TiaMcpServer.ModelContextProtocol
             return result;
         }
 
-        private static JsonObject WritePreviewPlan(string tool, object arguments, bool writing)
+        private static JsonObject WritePreviewPlan(string tool, object arguments, bool writing, Func<JsonArray>? plannedFiles)
         {
             var normalized = JsonSerializer.SerializeToNode(arguments)!.AsObject();
+            if (plannedFiles != null) CallerInputFiles.RefuseHumanSettingsTargets(normalized);
+            var seedFiles = plannedFiles?.Invoke();
             var inputs = CallerInputFiles.Snapshot(tool, normalized);
+            if (seedFiles != null) inputs.Add(new JsonObject { ["parameter"] = "referenceDir", ["plannedFiles"] = seedFiles.DeepClone() });
 #if TIA_ENGINE_HOST
             var identity = TiaMcp.FoundationHost.EngineHostConfiguration.Current.Worker.Binding?.DeepClone();
 #else
@@ -397,6 +402,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     "Normalized arguments, input file contents and cached target identity; the target is not verified. Native validation/readback occurs " +
                         "during execution."
                     };
+            if (seedFiles != null) plan["plannedFiles"] = seedFiles;
             if (writing)
             {
                 bool targetBound = PlanProjectFile(identity) != null;
@@ -467,11 +473,13 @@ namespace TiaMcpServer.ModelContextProtocol
                         expected: "Industrial Ethernet/PROFINET subnet type"));
         }
         private static CallToolResult? PrepareWritePreview(string tool, bool dryRun, object arguments, string expectedPlanHash,
-            bool writing, out JsonObject plan)
+            bool writing, out JsonObject plan, Func<JsonArray>? plannedFiles = null)
         {
             plan = null!;
             if (dryRun && WritePreviewArgumentRefusal(tool, arguments) is Error argumentRefusal) return V4Reject(tool, argumentRefusal);
-            try { plan = WritePreviewPlan(tool, arguments, writing); }
+            try { plan = WritePreviewPlan(tool, arguments, writing, plannedFiles); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) when (error.Condition == SeedReferenceLayout.Condition)
+            { return TargetFailure(tool, error, false); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {
                 return !dryRun && expectedPlanHash.Length > 0
@@ -508,9 +516,9 @@ namespace TiaMcpServer.ModelContextProtocol
             return null;
         }
         internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
-                string expectedProjectFile = "", bool writing = true)
+                string expectedProjectFile = "", bool writing = true, Func<JsonArray>? plannedFiles = null)
         {
-            if (PrepareWritePreview(tool, dryRun, arguments, expectedPlanHash, writing, out var plan) is CallToolResult rejected) return rejected;
+            if (PrepareWritePreview(tool, dryRun, arguments, expectedPlanHash, writing, out var plan, plannedFiles) is CallToolResult rejected) return rejected;
             if (dryRun && writing) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
             return WritePlanResult(execute(), plan, dryRun, writing);

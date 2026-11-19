@@ -59,6 +59,9 @@ namespace TiaMcp.Logic.V4
             foreach (var input in Inputs(tool, arguments))
             {
                 try { NativeInputPolicy.RequireReadable(input.Path, input.Parameter, input.Directory); }
+                catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) when (tool == "SeedProjectFromReference"
+                    && input.Parameter == "referenceDir" && (error.InnerException is DirectoryNotFoundException || File.Exists(input.Path)))
+                { throw SeedReferenceLayout.Missing(); }
                 catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) when (
                     arguments["dryRun"] is JsonValue dryRun && dryRun.TryGetValue<bool>(out var preview) && !preview
                     && TextArgument(arguments, "expectedPlanHash").Length > 0)

@@ -1,5 +1,6 @@
 extern alias toolpipeline;
 extern alias adaptertests;
+extern alias validationfixture;
 using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
 using System.Text.Json;
@@ -207,19 +208,58 @@ public sealed class PortedPortalAdmissionTests
         var body = (await tool.InvokeAsync(request)).StructuredContent!;
         Assert.True((bool?)body["ok"] == true, body.ToJsonString());
         Assert.True(JsonNode.DeepEquals(args["groupPath"], Assert.Single(worker.Requests)!["GroupPath"]));
+        Assert.True(JsonNode.DeepEquals(args["groupPath"], worker.AdapterPath));
+    }
+
+    [Theory]
+    [InlineData("ListSafetyActivationTests")]
+    [InlineData("ManageSafetyActivationTest")]
+    [InlineData("ManageSafetyActivationTestGroup")]
+    [InlineData("ManageSafetyFunction")]
+    [InlineData("ManageSafetyFunctionCondition")]
+    public void Safety_validation_uses_the_exact_nested_group_at_the_adapter(string tool)
+    {
+        using var worker = new SafetyPreviewWorker();
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.SafetyValidationService(
+            (operation, args) => worker.Call(operation, args, default).GetAwaiter().GetResult(), () => "fixture.ap21");
+        var path = new JsonArray("Line A", "Test/Group");
+        string group = path.ToJsonString();
+        _ = tool switch
+        {
+            "ListSafetyActivationTests" => service.ReadSafetyActivationTests(group),
+            "ManageSafetyActivationTest" => service.ManageSafetyActivationTest("AT", groupPathJson: group),
+            "ManageSafetyActivationTestGroup" => service.ManageSafetyActivationTestGroup(groupPathJson: group),
+            "ManageSafetyFunction" => service.ManageSafetyFunction("AT", groupPathJson: group),
+            _ => service.ManageSafetyFunctionCondition("AT", "SF", groupPathJson: group)
+        };
+        Assert.True(JsonNode.DeepEquals(path, worker.AdapterPath));
+        Assert.Empty(Assert.Single(worker.Requests)!["Faults"]!.AsObject());
+        if (tool == "ManageSafetyActivationTestGroup")
+        {
+            service.ManageSafetyActivationTestGroup("create", group, name: "Child", dryRun: false);
+            Assert.Equal(2, worker.Requests.Count);
+            Assert.False((bool?)worker.Requests[1]!["DryRun"]);
+            Assert.True((bool?)worker.Requests[1]!["Plan"]!["Writes"]);
+            Assert.True(JsonNode.DeepEquals(path, worker.AdapterPath));
+        }
     }
 
     private sealed class SafetyPreviewWorker : IFoundationWorker
     {
         internal List<JsonNode?> Requests = new();
+        internal JsonNode? AdapterPath;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
             if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject {
                 ["ProcessId"] = 123, ["IsAttached"] = true, ["ProjectFile"] = "C:/Fixture.ap21" });
             Assert.Equal("plc-safety.ExecuteSafetyValidation", operation);
             Requests.Add(arguments["request"]);
-            return Task.FromResult<JsonNode?>(new JsonObject { ["Message"] = "Safety preview", ["Meta"] = new JsonObject {
-                ["operationSuccess"] = true, ["mayHaveChanged"] = false, ["dryRun"] = true } });
+            var engine = new validationfixture::TiaMcp.Adapters.PlcFoundationEngine();
+            var reply = engine.ExecuteSafetyValidation(arguments["request"]!.Deserialize<SafetyValidationRequest>()!, (bool)arguments["dryRun"]!);
+            Assert.Equal(1, engine.NativeCalls);
+            var wire = JsonSerializer.SerializeToNode(reply)!;
+            AdapterPath = wire["Meta"]!["groupPath"];
+            return Task.FromResult<JsonNode?>(wire);
         }
         public void Dispose() { }
     }
