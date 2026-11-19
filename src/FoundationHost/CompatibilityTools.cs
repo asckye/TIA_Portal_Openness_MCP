@@ -51,7 +51,7 @@ internal static class CompatibilityTools
             var source = tools[index];
             if (source.ProtocolTool.Name is "ManagePlcTagDefinition" or "ManagePlcExternalSources")
             {
-                tools[index] = new AuditCallTool(new VersionPolicyTool(new ActionForwarder(source, roster, release)));
+                tools[index] = new AuditCallTool(new VersionPolicyTool(new ActionForwarder(source, roster, release, identity)));
                 continue;
             }
             if (!Mappings.TryGetValue(source.ProtocolTool.Name, out var mapping)) continue;
@@ -136,9 +136,11 @@ internal static class CompatibilityTools
         private readonly Tool tool;
         private readonly InputSchema inputSchema;
         private static readonly string[] ConfirmationFields = { "confirm", "expectedPlanHash", "expectedProjectFile" };
-        internal ActionForwarder(McpServerTool original, IReadOnlyDictionary<string, McpServerTool> roster, string release)
+        private readonly Func<JsonObject?>? identity;
+        internal ActionForwarder(McpServerTool original, IReadOnlyDictionary<string, McpServerTool> roster, string release,
+            Func<JsonObject?>? identity = null)
         {
-            this.original = original; this.roster = roster; this.release = release;
+            this.original = original; this.roster = roster; this.release = release; this.identity = identity;
             var source = original.ProtocolTool;
             var schema = JsonNode.Parse(source.InputSchema.GetRawText())!.AsObject();
             var properties = schema["properties"]!.AsObject();
@@ -226,6 +228,12 @@ internal static class CompatibilityTools
                 foreach (var field in ConfirmationFields) if (!adapted.ContainsKey(field)) Copy(field, field);
                 var targetTool = roster[target];
                 var supported = targetTool.ProtocolTool.InputSchema.GetProperty("properties");
+                if (action == "createGroup" && target == "ManagePlcUserGroup"
+                    && ConfirmationFields.Any(field => !supported.TryGetProperty(field, out _)))
+                {
+                    foreach (string field in ConfirmationFields) adapted.Remove(field);
+                    return await ReviewedAction(targetTool);
+                }
                 foreach (var field in adapted.Keys.Where(field => !supported.TryGetProperty(field, out _)).ToArray())
                 {
                     var value = adapted[field];
@@ -237,6 +245,12 @@ internal static class CompatibilityTools
                 }
                 return await Invoke(targetTool, adapted);
             }
+            if (tool.Name == "ManagePlcTagDefinition" && action == "update")
+            {
+                adapted = arguments.Where(pair => !ConfirmationFields.Contains(pair.Key, StringComparer.Ordinal))
+                    .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+                return await ReviewedAction(original);
+            }
             // Extra confirmation fields apply only to forwarded actions, never silently bypass identity checks on another route.
             if (ConfirmationFields.Any(field => arguments.TryGetValue(field, out var value) && value.ValueKind != JsonValueKind.Null
                 && (value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.String && value.GetString() != "")))
@@ -245,6 +259,42 @@ internal static class CompatibilityTools
             adapted = arguments.Where(pair => !ConfirmationFields.Contains(pair.Key, StringComparer.Ordinal))
                 .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
             return await Invoke(original, adapted);
+
+            async ValueTask<CallToolResult> ReviewedAction(McpServerTool destination)
+            {
+                bool dry = Flag("dryRun", true);
+                var binding = identity?.Invoke()?.DeepClone() as JsonObject;
+                string? project = (string?)binding?["projectPath"];
+                var deciding = JsonSerializer.SerializeToNode(adapted)!.AsObject();
+                deciding.Remove("dryRun");
+                var hash = PendingApproval.Hash(PendingApproval.Canonical(new JsonObject {
+                    ["release"] = release, ["tool"] = tool.Name, ["action"] = action, ["target"] = destination.ProtocolTool.Name,
+                    ["arguments"] = deciding, ["binding"] = binding, ["hostLifetime"] = CallJournalPayload.PlanHostLifetime }));
+                if (!dry)
+                {
+                    if (!Flag("confirm"))
+                        return Reject(new Error("Apply requires confirm=true.", new InvalidArgumentDetails("confirm", Array.Empty<string>())));
+                    if (string.IsNullOrEmpty(project)) return Reject(new Error("Bind the reviewed project before applying.", new ProjectNotBoundDetails()));
+                    if (!string.Equals(Text("expectedProjectFile").Replace('/', '\\'), project.Replace('/', '\\'), StringComparison.OrdinalIgnoreCase))
+                        return Reject(new Error("The project binding differs from the reviewed project.",
+                            new IdentityMismatchDetails("project-binding", null, null)));
+                    string reviewed = Text("expectedPlanHash");
+                    if (!PendingApproval.IsHash(reviewed))
+                        return Reject(new Error("Copy expectedPlanHash from the action preview.",
+                            new InvalidArgumentDetails("expectedPlanHash", Array.Empty<string>())));
+                    if (reviewed != hash)
+                        return Reject(new Error("The reviewed action or project binding changed. Preview again.", new PlanStaleDetails(reviewed, "action")));
+                }
+                var result = await Invoke(destination, adapted);
+                if (dry && result.StructuredContent is JsonObject body && (bool?)body["ok"] == true && body["data"] is JsonObject data)
+                {
+                    if (!JsonNode.DeepEquals(binding, identity?.Invoke()))
+                        return Reject(new Error("The project binding changed during preview.", new PlanStaleDetails(null, "binding")));
+                    data["planHash"] = hash; data["targetIdentity"] = binding?.DeepClone(); data["projectFile"] = project;
+                    result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(body) } };
+                }
+                return result;
+            }
 
             CallToolResult Reject(Error failure) => FoundationV4Result.Reject(release, tool.Name, Guid.NewGuid().ToString("N"), failure);
             async ValueTask<CallToolResult> Invoke(McpServerTool destination, Dictionary<string, JsonElement> values)

@@ -96,7 +96,7 @@ namespace TiaMcp.Adapters
                     if((directory.Attributes & FileAttributes.ReparsePoint)!=0) throw new IOException("Staging directory cannot be a link.");
                     var name=Uri.UnescapeDataString(item.BlockPath.Split('/').Last());
                     var reported=sources[i].Export(directory,name); exportReturned=true;
-                    item.Files=PlcDocumentExportPolicy.ValidatePair(directory,item.Files,reported,release=="21");
+                    item.Files=PlcDocumentExportPolicy.ValidatePair(directory,item.Files,reported,resourceOptional:true);
                     item.Status="staged";
                 }
                 // Revalidate all retained sets after the final callback, including the whole tree shape.
@@ -116,7 +116,8 @@ namespace TiaMcp.Adapters
                             .FullPath(System.IO.Path.Combine(stage.FullName,new DirectoryInfo(item.OutputDirectory).Name)));
                     if((directory.Attributes & FileAttributes.ReparsePoint)!=0) throw new IOException("Staged block directory became a link.");
                     PlcDocumentExportPolicy
-                        .ValidatePair(directory,item.Files,item.Files.Select(name=>System.IO.Path.Combine(directory.FullName,name)).ToArray(),release=="21");
+                        .ValidatePair(directory,item.Files,item.Files.Select(name=>System.IO.Path.Combine(directory.FullName,name)).ToArray(),
+                            resourceOptional:true);
                 }
                 PlcDocumentExportPolicy.Destination(output);
                 (move??((from,to)=>Directory.Move(from.FullName,to.FullName)))(stage,destination);

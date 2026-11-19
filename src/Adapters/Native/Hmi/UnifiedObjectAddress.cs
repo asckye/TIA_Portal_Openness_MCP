@@ -16,7 +16,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             EngineeringInputValidation.Path(json, path);
             return (HmiArray)path!;
         }
-        internal static object Resolve(object root, string json)
+        internal static object Resolve(object root, string json, string parameter = "objectPath")
         {
             object target = root;
             foreach (var node in Parse(json))
@@ -25,15 +25,17 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var property = target.GetType().GetProperty(step["property"]!.GetValue<string>(), BindingFlags.Instance | BindingFlags.Public);
                 if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0)
                     throw new NotSupportedException("Public property not available: " + step["property"]);
-                target = property.GetValue(target) ?? throw new InvalidOperationException("Null object at " + step);
+                target = property.GetValue(target) ?? throw new PlcSoftwareException("NotFound", "Null object at " + property.Name)
+                    { Data = { ["parameter"] = parameter } };
                 if (step.ContainsKey("name"))
                 {
                     var key = step.ContainsKey("key") ? step["key"]!.GetValue<string>() : "Name";
                     var name = step["name"]!.GetValue<string>();
                     var matches = PlcGroupOperations.Items(target).Where(item => string.Equals(
                         PlcGroupOperations.Get(item, key).ToString(), name, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
-                    if (matches.Length != 1) throw new InvalidOperationException(matches.Length == 0
-                        ? "Exact named object not found at " + step : "Ambiguous exact object at " + step);
+                    if (matches.Length != 1) throw new PlcSoftwareException(matches.Length == 0 ? "NotFound" : "Ambiguous",
+                        (matches.Length == 0 ? "Exact named object not found at " : "Ambiguous exact object at ") + property.Name + "/" + name)
+                        { Data = { ["parameter"] = parameter } };
                     target = matches[0];
                 }
             }

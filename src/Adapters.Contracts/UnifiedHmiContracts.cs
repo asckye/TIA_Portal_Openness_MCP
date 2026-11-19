@@ -43,8 +43,11 @@ namespace TiaMcp.Adapters.Contracts
 
         public static Dictionary<string, object?> Preview(UnifiedHmiRequest request)
         {
-            var plan = typeof(UnifiedHmiRequest).GetProperties().Where(p => p.Name != "Inputs" && p.Name != "IsReadOnly")
-                .ToDictionary(p => p.Name, p => p.GetValue(request), StringComparer.Ordinal);
+            var plan = request.Operation == "EnsureUnifiedHmiScreen"
+                ? new Dictionary<string, object?> { ["Operation"] = request.Operation, ["DryRun"] = request.DryRun,
+                    ["HmiSoftwarePath"] = request.HmiSoftwarePath, ["ScreenName"] = request.ScreenName, ["Width"] = request.Width, ["Height"] = request.Height }
+                : typeof(UnifiedHmiRequest).GetProperties().Where(p => p.Name != "Inputs" && p.Name != "IsReadOnly")
+                .ToDictionary(p => p.Name, p => (object?)p.GetValue(request), StringComparer.Ordinal);
             return new Dictionary<string, object?> {
                 ["Message"] = "Unified HMI preview; planned changes only. No native call or write was issued.",
                 ["Meta"] = new Dictionary<string, object?> { ["operationSuccess"] = true, ["dryRun"] = true,

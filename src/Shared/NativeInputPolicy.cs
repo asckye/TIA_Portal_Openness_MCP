@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using TiaMcp.Adapters.Contracts;
 
 namespace TiaOpenness.Shared
@@ -20,9 +21,12 @@ namespace TiaOpenness.Shared
             // A sharing violation or another I/O failure still happens before the native operation.
             catch (IOException error)
             {
-                throw new AdapterPreconditionException("The input file cannot be read now; another program may hold it open. Close it or pass a copy, then " +
-                    "retry.",
-                        parameter, false, error);
+                int code = error.HResult & 0xffff;
+                if (code == 123) throw new AdapterPreconditionException("Invalid file path. Check its separators and JSON escaping.", parameter, true, error);
+                string reason = code == 32 || code == 33
+                    ? "The input file cannot be read now; another program may hold it open. Close it or pass a copy, then retry."
+                    : "The input file could not be read. Verify its path and read permissions.";
+                throw new AdapterPreconditionException(reason, parameter, false, error);
             }
         }
 
@@ -36,18 +40,21 @@ namespace TiaOpenness.Shared
             });
 
         internal static FileStream OpenRead(string path, string parameter)
-            => Read(parameter, () => new FileStream(FullPath(path), FileMode.Open, FileAccess.Read, FileShare.Read));
+        {
+            if (path?.Any(char.IsControl) == true)
+                throw new AdapterPreconditionException("File paths cannot contain control characters. Check backslash escaping in the JSON path.", parameter);
+            return Read(parameter, () => new FileStream(FullPath(path), FileMode.Open, FileAccess.Read, FileShare.Read));
+        }
 
         internal static void RequireReadable(string path, string parameter, bool directory = false)
         {
             Read(parameter, () =>
             {
-                string full = FullPath(path);
                 if (directory)
                 {
-                    using (var entries = Directory.EnumerateFileSystemEntries(full).GetEnumerator()) entries.MoveNext();
+                    using (var entries = Directory.EnumerateFileSystemEntries(FullPath(path)).GetEnumerator()) entries.MoveNext();
                 }
-                else using (var stream = OpenRead(full, parameter)) { }
+                else using (var stream = OpenRead(path, parameter)) { }
                 return true;
             });
         }

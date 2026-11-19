@@ -6,6 +6,18 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class UnifiedContractsTests
 {
+    [Fact]
+    public void Screen_preview_contains_the_requested_screen_and_dimensions()
+    {
+        var preview = UnifiedHmiInputValidation.Preview(new UnifiedHmiRequest {
+            Operation = "EnsureUnifiedHmiScreen", DryRun = true, HmiSoftwarePath = "devices/HMI", ScreenName = "Main", Width = 800, Height = 600 });
+        var plan = JsonSerializer.SerializeToElement(preview).GetProperty("Meta").GetProperty("plannedChanges");
+        Assert.Equal(new[] { "Operation", "DryRun", "HmiSoftwarePath", "ScreenName", "Width", "Height" }, plan.EnumerateObject().Select(p => p.Name));
+        Assert.Equal("Main", plan.GetProperty("ScreenName").GetString());
+        Assert.Equal(800, plan.GetProperty("Width").GetInt32());
+        Assert.Equal(600, plan.GetProperty("Height").GetInt32());
+    }
+
     [Theory]
     [InlineData("update")]
     [InlineData("create")]

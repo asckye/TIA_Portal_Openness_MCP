@@ -12,17 +12,18 @@ namespace TiaMcp.Adapters.Native.Hmi
         public UnifiedEventsAdapter(IUnifiedSession session) => _session = session;
 
         public HmiMessage ManageUnifiedEvent(string softwarePath,string objectPathJson,string eventType,string action="read",string propertyName="",
-                string scriptPropertiesJson="{}",string expectedToken="",bool dryRun=true)
+                string scriptProperties="{}",string expectedToken="",bool dryRun=true)
             =>_session.RunHmiStepTool("ManageUnifiedEvent",meta=>{
                 UnifiedObjectAddress.Parse(objectPathJson);
-                var changes=UnifiedRequestValues.Parse(scriptPropertiesJson) as HmiObject
-                    ?? throw new ArgumentException("Script properties must be an object.");
-                if(!new[]{"read","create","update","delete"}.Contains(action))throw new ArgumentException("action must be read/create/update/delete.");
-                if(string.IsNullOrWhiteSpace(eventType))throw new ArgumentException("Exact event type required.");
+                var changes=UnifiedRequestValues.Parse(scriptProperties) as HmiObject
+                    ?? throw new ArgumentException("Script properties must be an object.", nameof(scriptProperties));
+                if (!new[] { "read", "create", "update", "delete" }.Contains(action))
+                    throw new ArgumentException("action must be read/create/update/delete.", nameof(action));
+                if(string.IsNullOrWhiteSpace(eventType))throw new ArgumentException("Exact event type required.", nameof(eventType));
                 if(changes.Any(x=>!new[]{"ScriptCode","GlobalDefinitionAreaScriptCode","Async"}.Contains(x.Key)))
-                    throw new ArgumentException("Only ScriptCode, GlobalDefinitionAreaScriptCode and Async may be edited.");
-                if(action!="update"&&changes.Count!=0)throw new ArgumentException("Script edits require a separate update action.");
-                if(action=="update"&&changes.Count==0)throw new ArgumentException("No script edits supplied.");
+                    throw new ArgumentException("Only ScriptCode, GlobalDefinitionAreaScriptCode and Async may be edited.", nameof(scriptProperties));
+                if(action!="update"&&changes.Count!=0)throw new ArgumentException("Script edits require a separate update action.", nameof(scriptProperties));
+                if(action=="update"&&changes.Count==0)throw new ArgumentException("No script edits supplied.", nameof(scriptProperties));
                 bool write=action!="read"&&!dryRun;using var access=write ? _session.AcquireHmiEditAccess() : null;
                 var target=UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath),objectPathJson);
                 var handlers=PlcGroupOperations.Get(target,propertyName=="" ? "EventHandlers" : "PropertyEventHandlers");

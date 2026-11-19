@@ -97,6 +97,12 @@ internal static class DocumentExportTests
             var optional=Run(optionalPath,false,optionalPlan.PlanHash,release:"21",export:(dir,name)=>{var file=Path.Combine(dir.FullName,name+".s7dcl");File.WriteAllText(file,"code");return new[]{file};},move:(from,to)=>Directory.Move(from.FullName,to.FullName));
             DocumentExportContract.Validate(Wire(optional),false);
             check(optional.Status=="exported" && optional.Files.Length==1,"V21 code-only native export accepted when optional comment resource is absent");
+            var v20Path=Path.Combine(root,"v20-no-comments"); var v20Plan=Run(v20Path);
+            var v20=Run(v20Path,false,v20Plan.PlanHash,export:(dir,name)=>{
+                var file=Path.Combine(dir.FullName,name+".s7dcl");File.WriteAllText(file,"code");return new[]{file};
+            },move:(from,to)=>Directory.Move(from.FullName,to.FullName));
+            DocumentExportContract.Validate(Wire(v20),false);
+            check(v20.Status=="exported" && v20.Files.SequenceEqual(new[]{"Block.s7dcl"}),"V20 verifies native code-only export");
             var request=new JsonObject { ["dryRun"]=true,["softwarePath"]="device/PLC",["blockPath"]="group/Block",["exportPath"]=plan.OutputDirectory,["preservePath"]=false };
             DocumentExportContract.ValidateRequest(request,Wire(plan));
             var bad=Wire(plan);bad["Language"]="SCL";Reject(()=>DocumentExportContract.Validate(bad,true),"Document forged language rejected");

@@ -315,12 +315,18 @@ namespace TiaMcpServer.ModelContextProtocol
             string? Text(JsonNode? value) => value is JsonValue scalar && scalar.TryGetValue<string>(out var text) ? text : null;
             parameter ??= Text(evidence?["parameter"]) ?? Text(evidence?["rejectedParameter"]);
             var target = parameter == null ? null : SessionCatalog()?.Find(tool, includeUnavailable: true);
-            if (parameter == null || target == null || !target.Tool.InputSchema.GetProperty("properties").TryGetProperty(parameter, out var member))
+            if (parameter == null || target == null)
                 return new InvalidArgumentDetails("", Array.Empty<string>());
+            var properties = target.Tool.InputSchema.GetProperty("properties");
+            var fields = parameter.Split(new[] { '/', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(field => field.Trim()).Where(field => properties.TryGetProperty(field, out _)).Distinct(StringComparer.Ordinal).ToArray();
+            if (fields.Length == 0) return new InvalidArgumentDetails("", Array.Empty<string>());
+            parameter = fields[0];
+            var member = properties.GetProperty(parameter);
             var allowed = member.TryGetProperty("enum", out var values)
                 ? values.EnumerateArray().Where(v => v.ValueKind == JsonValueKind.String).Select(v => v.GetString()!).ToArray()
                 : Array.Empty<string>();
-            return new InvalidArgumentDetails("/" + InvalidArgumentDetails.Segment(parameter), allowed,
+            return new InvalidArgumentDetails(parameter, allowed, fields,
                 expected: new InputSchema(target.Tool.InputSchema).ExpectedParameter(parameter));
         }
         internal static NotFoundDetails MissingTargetDetails(string tool, string? parameter = null, JsonObject? evidence = null)

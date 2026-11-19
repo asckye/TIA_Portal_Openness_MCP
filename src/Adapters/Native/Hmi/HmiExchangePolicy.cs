@@ -231,10 +231,16 @@ namespace TiaMcp.Adapters.Native.Hmi
                 EngineeringWriteJournal.Property(target, change.Property);
                 beforeWrite();
                 change.Property.SetValue(target, change.Value);
-                if (!Equals(change.Property.GetValue(target), change.Value))
+                var actual = change.Property.GetValue(target);
+                bool matches = change.Property.Name is "ScriptCode" or "GlobalDefinitionAreaScriptCode"
+                    && actual is string source && change.Value is string expected
+                    ? NormalizeScriptLines(source) == NormalizeScriptLines(expected) : Equals(actual, change.Value);
+                if (!matches)
                     throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ".");
             }
         }
+
+        private static string NormalizeScriptLines(string source) => source.Replace("\r\n", "\n").Replace('\r', '\n');
 
         internal static void UpdateScript(object script, string code, string? globals, bool? async, Action beforeWrite)
         {
@@ -316,13 +322,22 @@ namespace TiaMcp.Adapters.Native.Hmi
             => !string.IsNullOrWhiteSpace(address) || plcTagSymbol.StartsWith("%", StringComparison.Ordinal)
                 || Regex.IsMatch(plcTagSymbol, @"^(DB|IW|QW|ID|QD|IB|QB|MB|MW|MD)\d", RegexOptions.IgnoreCase);
 
+        private static string UnifiedTagAddress(string plcTagSymbol, string address) => string.IsNullOrWhiteSpace(address)
+            ? (UnifiedTagAbsolute(plcTagSymbol, address) ? plcTagSymbol : "") : address.Trim();
+
+        internal static bool UnifiedTagAddressMatches(string plcTagSymbol, string address, string readback)
+        {
+            string requested = UnifiedTagAddress(plcTagSymbol, address);
+            return requested.Length != 0 && string.Equals(requested, readback, StringComparison.OrdinalIgnoreCase);
+        }
+
         internal static HmiObject UnifiedTagBindingChanges(string connectionName, string plcTagSymbol, string hmiDataType, string address)
         {
             bool absolute = UnifiedTagAbsolute(plcTagSymbol, address);
             var changes = new HmiObject {
                 ["Connection"] = connectionName,
                 ["AccessMode"] = absolute ? "AbsoluteAccess" : "SymbolicAccess",
-                ["Address"] = absolute ? (string.IsNullOrWhiteSpace(address) ? plcTagSymbol : address.Trim()) : "",
+                ["Address"] = UnifiedTagAddress(plcTagSymbol, address),
                 ["PlcTag"] = absolute ? "" : plcTagSymbol.Replace("\"", string.Empty)
             };
             if (absolute) changes["DataType"] = hmiDataType.Length == 0 ? "Bool" : hmiDataType;

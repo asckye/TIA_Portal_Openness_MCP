@@ -47,8 +47,10 @@ internal sealed class DiscoveryFixture : IDisposable
     internal DiscoveryFixture(string release)
     {
         toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
-        var shared = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
+        IReadOnlyList<McpServerTool>? roster = null;
+        var shared = LegacyHostToolRegistry.Create(worker, release, false, usageRoster: () => roster!, hostPorts: false);
         pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, shared);
+        roster = pipeline.AllTools;
     }
     internal async Task<JsonNode> Call(string name, object args)
     {

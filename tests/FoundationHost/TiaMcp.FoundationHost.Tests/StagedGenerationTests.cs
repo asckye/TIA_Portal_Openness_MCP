@@ -31,6 +31,17 @@ public sealed class StagedGenerationTests
         Assert.True((bool?)applied["ok"], applied.ToJsonString());
         Assert.True(fixture.Worker.Writes > 0);
     }
+    [Theory, InlineData(false), InlineData(true)]
+    public void Bound_Unicode_project_plans_with_native_or_forward_separators(bool forward)
+    {
+        using var fixture = new Fixture("20", projectName: "项目1");
+        fixture.Planner.Machine.Target.Project.ProjectIdentity = forward ? fixture.Project : fixture.Project.Replace('/', '\\');
+        var plan = fixture.Plan();
+        Assert.NotEmpty(plan["steps"]!.AsArray());
+        Assert.Equal(fixture.Project, (string?)plan["target"]!["projectIdentity"]);
+        Assert.Equal(0, fixture.Worker.Writes);
+    }
+
     [Fact]
     public void Illegal_project_identity_fails_before_planning_or_writing()
     {
@@ -127,10 +138,11 @@ public sealed class StagedGenerationTests
         internal int PresetReads;
         internal static readonly string[] PresetReadNames = { "GetSessionState", "GetProjectTree", "GetSoftwareTree", "GetPlcBlockInfo",
             "GetPlcTypeInfo", "GetPlcObjectFingerprints", "ListPlcExternalSources", "ListPlcTagTables", "ListPlcTags" };
-        internal Fixture(string release, int maximumSteps = 10000, bool newProject = false, bool plcPreset = false)
+        internal Fixture(string release, int maximumSteps = 10000, bool newProject = false, bool plcPreset = false, string projectName = "Fixture")
         {
             this.plcPreset = plcPreset;
-            Release = release; Project = Path.Combine(Root, "project", "Fixture.ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release)).Replace('\\', '/');
+            Release = release;
+            Project = Path.Combine(Root, "project", projectName + ".ap" + (release == "14sp1" ? "14" : release == "15.1" ? "15_1" : release)).Replace('\\', '/');
             NewProject = newProject;
             BindingGeneration = "ee1d86cbdfd1483c9d772d68c251728a";
             if (newProject) Project = GenerationProjectPath.CreationFile(release, Path.Combine(Root, "project"), "Fixture");

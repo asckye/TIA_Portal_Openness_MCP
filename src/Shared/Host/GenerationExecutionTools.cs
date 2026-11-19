@@ -63,8 +63,13 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try { return operation(); }
             catch (GenerationCallRejectionException ex) { return McpServer.V4Reject(name, ex.Error, ex.Evidence); }
-            catch (GenerationValidationException ex) {
-                return McpServer.V4Reject(name, new Error(ex.Message, new InvalidArgumentDetails(ex.Errors.First().Path, Array.Empty<string>()))); }
+            catch (GenerationValidationException ex)
+            {
+                var first = ex.Errors.First();
+                var data = new JsonObject { ["validationErrors"] = new JsonArray(ex.Errors.Select(issue =>
+                    (JsonNode)new JsonObject { ["path"] = issue.Path, ["rule"] = issue.Rule, ["message"] = issue.Message }).ToArray()) };
+                return McpServer.V4Reject(name, new Error(first.Message, new InvalidArgumentDetails(first.Path, Array.Empty<string>())), data);
+            }
             catch (ArgumentException ex) {
                 return McpServer.V4Reject(name, new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "", Array.Empty<string>()))); }
             catch (GenerationPersistenceUnknownException ex)
@@ -175,7 +180,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 != GenerationProjectPath.CanonicalIdentity(before.Project))
                 throw new GenerationCallRejectionException(new Error(newProject ? "New-project planning requires a connected portal without a bound project."
                             : "Bind the intended existing project first and supply its exact project file.",
-                            new PreconditionFailedDetails("generation-project", before.Project)));
+                            new PreconditionFailedDetails("generation-project", before.Project,
+                                newProject ? null : "/machine/target/project/projectIdentity")));
             string project = newProject ? GenerationProjectPath.CreationFile(release, machine.Target.Project.Directory!, machine.Target.Project.Name!) : before
                 .Project;
             var options = new GenerationPlanningOptions {
@@ -198,13 +204,16 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var backup in result.Plan.Steps.Where(s => s.Tool == "ArchiveSavedProject"))
                 Directory.CreateDirectory(Path.GetDirectoryName(backup.Arguments["archivePath"].GetString()!)!);
             var pending = Pending(result.Plan, result.Plan.Steps, before.Binding, "preview", new ApprovalSettings(true, 120));
-            if (JsonSerializer.SerializeToUtf8Bytes(pending).Length > ApprovalFrames.MaximumBytes)
-                throw new ArgumentException("Plan exceeds the Workbench approval frame budget; split the machine.", "machine");
+            int approvalBytes = JsonSerializer.SerializeToUtf8Bytes(pending).Length;
+            if (approvalBytes > ApprovalFrames.MaximumBytes)
+                throw new GenerationCallRejectionException(new Error("The generated plan exceeds the Workbench approval frame budget. Split the machine.",
+                    new LimitExceededDetails("approval-frame", ApprovalFrames.MaximumBytes, approvalBytes)));
             lock (sync)
             {
                 foreach (var id in plans.Where(p => p.Value.Expires < now()).Select(p => p.Key).ToArray()) plans.Remove(id);
                 if (plans.Count >= 32 && !plans.ContainsKey(result.Plan.PlanId))
-                    throw new ArgumentException("Session plan limit reached; begin a new session.", "machine");
+                    throw new GenerationCallRejectionException(new Error("The session already holds 32 unexpired plans.",
+                            new LimitExceededDetails("session-plans", 32, plans.Count + 1)));
                 plans[result.Plan.PlanId] = new Stored(result, before.Binding, project, release, now().AddMinutes(10), before.Project, options.SoftwarePaths);
             }
             return McpServer.V4Result("PlanProjectGeneration", new JsonObject { ["plan"] = JsonNode.Parse(result.CanonicalPlan), ["expectedProject"] = project,

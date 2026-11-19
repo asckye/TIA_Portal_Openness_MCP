@@ -150,15 +150,13 @@ namespace TiaMcp.Adapters.Native.Hmi
             var accessMode = Attr("AccessMode");
             var symbol = Attr("PlcTag");
             var runtimeAddress = Attr("Address");
-            var requestedAddress = (address ?? string.Empty).Trim();
-            var requestedSymbol = NormalizeControllerTagName(plcTag ?? string.Empty);
+            plcTag ??= string.Empty;
+            var requestedSymbol = NormalizeControllerTagName(plcTag);
             var expectedConnection = (connectionName ?? string.Empty).Trim();
 
             var connectionOk = string.IsNullOrWhiteSpace(expectedConnection) ||
                 string.Equals(connection, expectedConnection, StringComparison.OrdinalIgnoreCase);
-            var absoluteOk = !string.IsNullOrWhiteSpace(requestedAddress) &&
-                connectionOk &&
-                string.Equals(runtimeAddress, requestedAddress, StringComparison.OrdinalIgnoreCase);
+            var absoluteOk = connectionOk && HmiExchangePolicy.UnifiedTagAddressMatches(plcTag, address, runtimeAddress);
             var symbolicOk = !string.IsNullOrWhiteSpace(requestedSymbol) &&
                 connectionOk &&
                 string.Equals(NormalizeControllerTagName(symbol), requestedSymbol, StringComparison.OrdinalIgnoreCase) &&

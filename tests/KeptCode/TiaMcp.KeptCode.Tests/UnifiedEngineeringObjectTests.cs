@@ -89,6 +89,29 @@ namespace TiaMcp.Engine.Tests
             public WriteRollbackTests.MultilingualText EventText { get; } = new();
             public void Delete() => owner.Remove(this);
         }
+        [Theory]
+        [InlineData("bad", "Tapped", "{}", "action")]
+        [InlineData("read", "", "{}", "eventType")]
+        [InlineData("update", "Tapped", "{}", "scriptProperties")]
+        [InlineData("update", "Tapped", "[]", "scriptProperties")]
+        public void Invalid_event_edit_names_the_argument_before_target_resolution(string action, string eventType, string properties, string parameter)
+        {
+            const string path = "[{\"property\":\"Screens\",\"name\":\"Main\"}]";
+            var previous = UnifiedRequestValues.Inputs;
+            UnifiedRequestValues.Inputs = new Dictionary<string, object?> {
+                [path] = new HmiArray(new HmiObject { ["property"] = "Screens", ["name"] = "Main" }) };
+            try
+            {
+                using var session = new Session(new Siemens.Engineering.HmiUnified.HmiSoftware());
+                var error = Assert.Throws<ArgumentException>(() =>
+                    new UnifiedEventsAdapter(session).ManageUnifiedEvent("HMI", path, eventType, action, scriptProperties: properties));
+                Assert.Equal(parameter, error.ParamName);
+                Assert.Equal(0, session.Resolves);
+                Assert.Equal(0, session.EditAccess);
+            }
+            finally { UnifiedRequestValues.Inputs = previous; }
+        }
+
         private sealed class Session(Siemens.Engineering.HmiUnified.HmiSoftware root) : IUnifiedSession, IDisposable
         {
             public int Resolves, EditAccess;

@@ -121,13 +121,13 @@ internal sealed partial class LegacyOptionalAdapter
         if (!new[] { "create", "update", "delete" }.Contains(_request.Action) || string.IsNullOrWhiteSpace(_request.Name))
             throw new ArgumentException("Exact name and create/update/delete required.");
         using var access = Edit(!_request.DryRun);
-        var collection = OptionalObjectAddress.Resolve(Rules(), raw);
+        var collection = OptionalObjectAddress.Resolve(Rules(), raw, "collectionPath");
         if (collection.GetType().Namespace != "Siemens.Engineering.SiVArc" || !collection.GetType().Name.EndsWith("Composition", StringComparison.Ordinal))
             throw new ArgumentException("Select a native SiVArc rule/folder/table collection.");
         var targetObject = Find(collection, _request.Name);
         if ((_request.Action == "create") == (targetObject != null))
             throw new PlcSoftwareException(_request.Action == "create" ? "AlreadyExists" : "NotFound", _request.Action == "create" ? "Object exists."
-                    : "Exact object not found.");
+                    : "Exact SiVArc rule not found: " + _request.Name) { Data = { ["parameter"] = "name" } };
         if (_request.Action == "delete") RequireEmpty(targetObject!);
         var type = targetObject?.GetType() ?? collection.GetType().GetMethod("Create", new[] { typeof(string) })?.ReturnType
             ?? throw new NotSupportedException("Native Create(string) unavailable.");
@@ -139,7 +139,8 @@ internal sealed partial class LegacyOptionalAdapter
         if (_request.Action == "delete")
         {
             Call(targetObject!, "Delete");
-            if (Find(OptionalObjectAddress.Resolve(Rules(), raw), _request.Name) != null) throw new InvalidOperationException("Rule remains after deletion.");
+            if (Find(OptionalObjectAddress.Resolve(Rules(), raw, "collectionPath"), _request.Name) != null)
+                throw new InvalidOperationException("Rule remains after deletion.");
             meta["verifiedAbsent"] = true;
             meta["verifiedOnFreshNavigation"] = true;
         }

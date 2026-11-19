@@ -8,7 +8,7 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
-        public PlcHardwareCatalogSearchResult SearchHardwareCatalog(string keyword,int limit=50)
+        public PlcHardwareCatalogSearchResult SearchHardwareCatalog(string keyword,int limit=50,int offset=0)
         {
             PlcHardwareCatalogPolicy.RequireRelease(ReleaseKey);
             PlcHardwareCatalogPolicy.Query(keyword,limit);
@@ -22,7 +22,7 @@ namespace TiaMcp.Adapters
                 ArticleNumber=NativeHardware.ArticleNumber(entry),CatalogPath=NativeHardware.CatalogPath(entry),Description=NativeHardware.Description(entry),
                 TypeIdentifier=NativeHardware.TypeIdentifier(entry),TypeIdentifierNormalized=NativeHardware.TypeIdentifierNormalized(entry),
                 TypeName=NativeHardware.TypeName(entry),Version=NativeHardware.Version(entry)
-            }));
+            }),offset);
 #else
             throw new NotSupportedException("This build has no verified typed hardware catalog API.");
 #endif

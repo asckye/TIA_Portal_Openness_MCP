@@ -227,6 +227,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetwork.TransferAreas.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareServices.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareDevices.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareDeviceTree.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareDevices.Catalog.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareModules.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareCatalogPolicy.cs" />

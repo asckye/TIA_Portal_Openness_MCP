@@ -162,7 +162,7 @@ namespace TiaMcpServer.Runtime
             int have = sz == "B" ? 1 : sz == "W" ? 2 : sz == "D" ? 4 : 1;
             if (type == "BOOL")
             {
-                item.Error = $"Type BOOL is only valid for bit addresses (e.g. DB1.DBX2.3), not '{item.Spec}'.";
+                if (sz != "X") item.Error = $"Type BOOL is only valid for bit addresses (e.g. DB1.DBX2.3), not '{item.Spec}'.";
                 return;
             }
             if (want != have)

@@ -168,7 +168,9 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var result = _tables.ExportPlcWatchTablesToDirectory(softwarePath, dir, regexName, tableKind, dryRun, expectedPlanHash,
                     confirm, expectedProjectFile);
-                result.Message = $"{(dryRun ? "Previewed" : "Exported")} {result.Imported?.Count() ?? 0} PLC {tableKind} tables to '{dir}'. "
+                int tableCount = dryRun && result.Meta?["items"] is JsonArray planned ? planned.Count : result.Imported?.Count() ?? 0;
+                string noun = tableCount == 1 ? "table" : "tables";
+                result.Message = $"{(dryRun ? "Previewed" : "Exported")} {tableCount} PLC {tableKind} {noun} to '{dir}'. "
                     + $"Failed={result.Failed?.Count() ?? 0}";
                 result.Meta ??= ResponseMeta.Basic(DateTime.Now, result.Failed == null || !result.Failed.Any());
                 return result;
@@ -221,7 +223,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _tables.ReadPlcWatchTableCurrentValuesReadOnly(softwarePath, watchTableName, maxEntries);
-                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
+                CompleteWatchRead(result);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)
@@ -578,13 +580,22 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _tables.MonitorWatchTableLiveS7(softwarePath, watchTableName, ip, rack, slot, expectModuleContains);
-                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
+                CompleteWatchRead(result);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)
             {
                 throw new McpException($"MonitorPlcWatchTableS7 failed: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
+        }
+
+        private static void CompleteWatchRead(ResponseJsonReport report)
+        {
+            var stamp = ResponseMeta.Basic(DateTime.Now, report.Ok == true);
+            if (report.Meta == null) report.Meta = stamp;
+            else foreach (var field in stamp) report.Meta[field.Key] ??= field.Value?.DeepClone();
+            if ((string?)report.Meta["status"] == "NotFound" && (string?)report.Meta["parameter"] == "watchTableName")
+                report.Meta["parameter"] = "/watchTableName";
         }
 
         [McpServerTool(Name = "ImportPlcWatchTableOffline"),

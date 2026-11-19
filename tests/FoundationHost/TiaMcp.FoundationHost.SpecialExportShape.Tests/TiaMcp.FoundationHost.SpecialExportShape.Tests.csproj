@@ -20,6 +20,7 @@
     <Compile Include="../../../src/Adapters/Native/Plc/WatchTechnologyPrimitives.cs" Link="WatchTechnologyPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.Compile.cs" Link="PlcFoundationEngine.Compile.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareDeviceTree.cs" Link="HardwareDeviceTree.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcCompilePolicy.cs" Link="PlcCompilePolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcUnitScope.cs" Link="PlcUnitScope.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />

@@ -127,13 +127,23 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'")] string deviceItemPath,
             [Description("ioType: Input, Output, Diagnosis or Substitute")] string ioType,
             [Description("startAddress: new start address as engine raw byte offset (%I2.0 -> 2)")] int startAddress,
-            [Description("dryRun: true (default) only previews the change; set false to actually write it")] bool dryRun = true)
-            => HardwareContract.Run("SetDeviceItemIoAddress", () =>
+            [Description("dryRun: true (default) only previews the change; set false to actually write it")] bool dryRun = true,
+            [Description("expectedPlanHash: copy planHash from the matching preview; required when dryRun=false.")] string expectedPlanHash = "",
+            [Description("expectedProjectFile: exact project file from the matching preview; required when dryRun=false.")] string expectedProjectFile = "")
+        {
+            const string tool = "SetDeviceItemIoAddress";
+            if (HardwareContract.AddressError(ioType, startAddress, false) is Error error) return HardwareContract.RejectAddress(error);
+            var preview = dryRun ? Invoke(true) : null;
+            if (preview?.IsError == true) return preview;
+            return McpServer.RunNativeWritePreview(tool, dryRun, new { deviceItemPath, ioType, startAddress },
+                () => preview!, () => Invoke(false), expectedPlanHash, expectedProjectFile);
+
+            CallToolResult Invoke(bool preview) => HardwareContract.Run(tool, () =>
             {
-                HardwareContract.Address(ioType, startAddress, false);
                 HardwareContract.RequireProject(_service.HasProject);
-                return SetDeviceItemIoAddress(deviceItemPath, ioType, startAddress, dryRun);
-            }, write: !dryRun, current: false);
+                return SetDeviceItemIoAddress(deviceItemPath, ioType, startAddress, preview);
+            }, write: !preview, current: false);
+        }
 
         public ResponseMessage SetDeviceItemIoAddress(
             [Description("deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'")] string deviceItemPath,
@@ -175,9 +185,9 @@ namespace TiaMcpServer.ModelContextProtocol
                             : string.Join(" / ", current.Select(x => x.IoType).Distinct());
                         var hints = current.Count == 0 ? _service.DescribeChildItemsWithAddresses(deviceItemPath) : new List<string>();
                         var childMessage = hints.Count == 0 ? "" : " Child items with addresses: " + string.Join("; ", hints);
-                        throw new McpException(
+                        throw new HardwareContract.InputFailureException(new Error(
                             $"Cannot change: '{deviceItemPath}' has no {ioType} addresses; the available types are {have}." + childMessage,
-                            McpErrorCode.InvalidParams);
+                            new InvalidArgumentDetails(nameof(ioType), Array.Empty<string>())));
                     }
 
                     var preview = match.StartAddress == startAddress
@@ -249,7 +259,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Meta = meta
                 };
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex) when (ex is not McpException && ex is not HardwareContract.InputFailureException)
             {
                 throw new McpException(
                     $"Unexpected error setting IO address of '{deviceItemPath}': {ex.Message}{McpHints.Recovery(ex)}",

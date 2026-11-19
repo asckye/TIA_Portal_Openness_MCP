@@ -292,6 +292,37 @@ internal static class FoundationV4Result
             data.Remove("previousOwnerRequests");
         }
         HostBehavior.ExportPreview(data);
+        if (definition.ResponseMember == "HardwareCatalog")
+        {
+            const int pageCharacters = 35000;
+            int offset = (int?)args["offset"] ?? 0;
+            var items = data["items"]!.AsArray();
+            int length = 0, count = 0;
+            foreach (var item in items)
+            {
+                int size = item!.ToJsonString().Length + 1;
+                if (length + size > pageCharacters) break;
+                length += size;
+                count++;
+            }
+            if (count == 0 && items.Count != 0)
+                return Reject(release, name, id, new Error("One hardware catalog entry exceeds the response page budget.",
+                    new LimitExceededDetails("catalog-entry", pageCharacters, items[0]!.ToJsonString().Length)));
+            var meta = data["meta"]!.AsObject();
+            bool clipped = count < items.Count;
+            bool more = clipped || count > 0 && (string?)meta["truncationReason"] is "result-limit" or "response-character-budget";
+            bool complete = !clipped && (bool?)meta["complete"] == true;
+            if (clipped)
+            {
+                while (items.Count > count) items.RemoveAt(items.Count - 1);
+                data["count"] = count;
+                meta["complete"] = false; meta["truncated"] = true; meta["truncationReason"] = "response-page";
+            }
+            int? next = more && offset + count < 1000 ? offset + count : null;
+            return Wire(release, name, id, data, Outcome.Succeeded, Execution.ReadOnly,
+                complete ? Completeness.Complete : Completeness.Partial, null, true,
+                paging: new Paging(PagingMode.Offset, offset, (int?)args["limit"] ?? 50, next, null, null, null, next == null));
+        }
         if (definition.ResponseMember == "BlockPage")
         {
             int offset = data["offset"]!.GetValue<int>(), limit = args["limit"]!.GetValue<int>();
@@ -312,6 +343,7 @@ internal static class FoundationV4Result
             return Failure(release, name, id, true, mutation, raw);
         Outcome outcome = HostBehavior.OperationOutcome(status != "failed", status == "outcome-unknown" || mutation && status == "unknown", false, mutation);
         Error? error = null;
+        Paging? previewPage = null;
         if (definition.ResponseMember == "BatchExport")
         {
             var items = data["items"]!.AsArray();
@@ -345,6 +377,28 @@ internal static class FoundationV4Result
                 : succeeded > 0 ? Outcome.Partial
                 : mapped.All(x => (string?)x!["result"]!["meta"]!["execution"] == "not-started") ? Outcome.RejectedBeforeOperation : Outcome.Failed;
             if (outcome == Outcome.Partial) error = new Error("Some batch items did not complete.", new PartialFailureDetails(succeeded, failed, skipped));
+            if (name == "ExportPlcTypes" && preview)
+            {
+                int offset = (int?)args["offset"] ?? 0, limit = (int?)args["limit"] ?? 32;
+                if (offset > mapped.Count) return Reject(release, name, id, Invalid("offset"));
+                var page = new JsonArray();
+                int characters = 0;
+                foreach (var row in mapped.Skip(offset).Take(limit))
+                {
+                    int size = row!.ToJsonString().Length + 1;
+                    if (characters + size > 35000)
+                    {
+                        if (page.Count == 0) return Reject(release, name, id, new Error("One type export preview row exceeds the response page budget.",
+                            new LimitExceededDetails("type-export-preview-row", 35000, size)));
+                        break;
+                    }
+                    page.Add(row.DeepClone());
+                    characters += size;
+                }
+                int end = offset + page.Count;
+                data["items"] = page;
+                previewPage = new Paging(PagingMode.Offset, offset, limit, end < mapped.Count ? end : null, null, null, mapped.Count, end == mapped.Count);
+            }
         }
         if (definition.ResponseMember == "Compile" && !preview
             && ((data["errorCount"]?.GetValue<int>() ?? 0) > 0 || Text(data, "state") == "Error" || data["errors"] is JsonArray { Count: > 0 }))
@@ -382,7 +436,7 @@ internal static class FoundationV4Result
             || definition.ResponseMember == "RuntimeQuery" || data["unavailableAttributes"] is JsonArray { Count: > 0 };
         return Wire(release, name, id, data, outcome, Execute(outcome, mutation && Flag(data, "executed") != false),
             outcome == Outcome.Unknown ? Completeness.Unknown : incomplete ? Completeness.Partial : Completeness.Complete,
-            error, true);
+            error, true, paging: previewPage);
     }
 
     internal static JsonObject ValidateBlockPage(JsonNode? raw, JsonObject args)

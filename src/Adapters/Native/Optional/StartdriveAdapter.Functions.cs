@@ -284,17 +284,24 @@ namespace TiaMcp.Adapters.Native.Optional
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var item = _session.ExactDriveItem(devicePathJson, itemPathJson);
                 meta["deviceItem"] = item.Name; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                Safe(meta, "moduleAccessPointHwIdentifiers", () => {
-                        var ap = item.GetService<ModuleAccessPoint>(); return ap == null ? null
-                            : new HmiArray(EngineeringGroupOperations.Items(ap.HwIdentifiers).Cast<HwIdentifier>().Select(h => (object)h.Identifier).ToArray());
-                    });
+                HmiArray? ModuleIdentifiers()
+                {
+                    var ap = item.GetService<ModuleAccessPoint>();
+                    return ap == null ? null
+                        : new HmiArray(EngineeringGroupOperations.Items(ap.HwIdentifiers).Cast<HwIdentifier>().Select(h => (object)h.Identifier).ToArray());
+                }
 #if !OPTIONAL_V21
+                if (action == "read")
+                    meta["moduleAccessPointHwIdentifiers"] = ModuleIdentifiers() ?? throw new PlcSoftwareException("NotSupportedOnVersion",
+                        "Device item '" + meta["deviceItem"] + "' does not provide a module access point.");
+                else Safe(meta, "moduleAccessPointHwIdentifiers", ModuleIdentifiers);
                 meta["hardwareModule"] = null; meta["hardwareModuleNote"] =
                     "DriveItemHardwareModule (component name / position / type identifier / ChangeType) is a V21 addition; absent on V20.";
                 if (action == "read") return "Module access point read; DriveItemHardwareModule is not available on V20.";
                 throw new PlcSoftwareException("NotSupportedOnVersion", "DriveItemHardwareModule." + (action == "changeType" ? "ChangeType" : "PositionNumber")
                         + " is a V21 addition; absent on V20.");
 #else
+                Safe(meta, "moduleAccessPointHwIdentifiers", ModuleIdentifiers);
                 var module = item.GetService<DriveItemHardwareModule>()
                     ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveItemHardwareModule not provided by device item '" + item.Name
                         + "' (drive components only).");

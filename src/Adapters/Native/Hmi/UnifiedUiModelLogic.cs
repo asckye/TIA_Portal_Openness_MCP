@@ -216,13 +216,13 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         // Validates nested propertiesJson: scalar and Color leaves need a public setter,
         // JSON objects descend into readable engineering sub-objects; interface Value reads its current runtime type.
-        internal static List<Edit> PrepareNested(Type type, UnifiedObject changes, string[]? path = null, int budget = 50, object? target = null, UnifiedObject
-                ? evidence = null)
+        internal static List<Edit> PrepareNested(Type type, UnifiedObject properties, string[]? path = null, int budget = 50,
+            object? target = null, UnifiedObject? evidence = null)
         {
             path ??= Array.Empty<string>();
             if (path.Length > 6) throw new ArgumentException("Nested property depth exceeds 6.");
             var result = new List<Edit>();
-            foreach (var change in changes)
+            foreach (var change in properties)
             {
                 if (change.Key == "Name" || change.Key == "Parent" || BackLinks.Contains(change.Key, StringComparer.OrdinalIgnoreCase))
                     throw new ArgumentException("Renaming/backlink edits excluded: " + change.Key);
@@ -246,11 +246,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                     throw new NotSupportedException("Public writable property unavailable (V20 may expose it only as a dynamic attribute): " + type.FullName
                         + "." + change.Key);
                 object? converted;
-                try { converted = ConvertField(target, type, changes, change.Key, property.PropertyType); }
-                catch (ArgumentException error)
+                try { converted = ConvertField(target, type, properties, change.Key, property.PropertyType); }
+                catch (Exception error) when (error is ArgumentException or FormatException or InvalidOperationException or OverflowException)
                 {
-                    if (evidence != null) evidence["conversionRefusal"] = error.Message;
-                    throw;
+                    var refusal = new ArgumentException(error.Message + " (" + change.Key + ")", nameof(properties));
+                    if (evidence != null) evidence["conversionRefusal"] = refusal.Message;
+                    throw refusal;
                 }
                 result.Add(new Edit { Path = path, Property = property, Value = converted });
                 if (result.Count > budget) throw new ArgumentException("At most " + budget + " leaf properties per request.");

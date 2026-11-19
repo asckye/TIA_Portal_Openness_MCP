@@ -232,6 +232,38 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         Assert.Equal("%M0.0", (string?)target.Arguments[valueField]);
     }
 
+    [Theory, InlineData("ManagePlcExternalSources", "createGroup"), InlineData("ManagePlcTagDefinition", "update")]
+    public async Task Reviewed_action_checks_binding_and_arguments_before_dispatch(string tool, string action)
+    {
+        var source = new ActionSpy(tool);
+        var destination = action == "createGroup" ? new ActionSpy("ManagePlcUserGroup") : source;
+        if (action == "createGroup")
+        {
+            var schema = JsonNode.Parse(destination.ProtocolTool.InputSchema.GetRawText())!.AsObject();
+            foreach (string key in new[] { "confirm", "expectedPlanHash", "expectedProjectFile" }) schema["properties"]!.AsObject().Remove(key);
+            destination.ProtocolTool.InputSchema = JsonSerializer.SerializeToElement(schema);
+        }
+        destination.Result.StructuredContent = new JsonObject { ["ok"] = true, ["data"] = new JsonObject() };
+        var binding = new JsonObject { ["processId"] = 17, ["projectPath"] = "C:/Projects/Demo.ap21" };
+        var forward = new CompatibilityTools.ActionForwarder(source,
+            new Dictionary<string, McpServerTool> { [destination.ProtocolTool.Name] = destination }, "21", () => binding);
+        var args = new JsonObject { ["action"] = action, ["softwarePath"] = "PLC", ["name"] = "Original", ["dryRun"] = true };
+        var preview = await forward.InvokeAsync(Request(tool, args));
+        string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
+        Assert.Equal(64, hash.Length);
+        args["confirm"] = true; args["dryRun"] = false; args["expectedPlanHash"] = hash;
+        args["expectedProjectFile"] = "C:/Projects/Other.ap21";
+        Assert.True((await forward.InvokeAsync(Request(tool, args))).IsError);
+        args["expectedProjectFile"] = binding["projectPath"]!.DeepClone(); args["name"] = "Changed";
+        var stale = await forward.InvokeAsync(Request(tool, args));
+        Assert.True(stale.IsError);
+        Assert.Equal(hash, (string?)stale.StructuredContent?["error"]?["details"]?["planHash"]);
+        Assert.Equal(1, destination.Calls);
+        args["name"] = "Original";
+        Assert.Same(destination.Result, await forward.InvokeAsync(Request(tool, args)));
+        Assert.Equal(2, destination.Calls);
+    }
+
     [Fact]
     public async Task Extra_creation_properties_refuse_before_any_dispatch_and_update_keeps_its_route()
     {

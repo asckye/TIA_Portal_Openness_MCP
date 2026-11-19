@@ -33,7 +33,8 @@ internal static class DocumentExportContract
                 || (status=="failed"?string.IsNullOrWhiteSpace(Text("RecoveryDirectory")):Text("RecoveryDirectory")!=""))
             throw new InvalidDataException("Document status conflict.");
         var name=Uri.UnescapeDataString(Text("BlockPath").Split('/').Last());
-        if(result["Files"] is not JsonArray files || (files.Count!=2 && !(Text("ReleaseKey")=="21" && status=="exported" && files.Count==1)) || files[0]?
+        if(result["Files"] is not JsonArray files || (files.Count!=2 && !((Text("ReleaseKey") is "20" or "21") && status=="exported" && files.Count==1))
+            || files[0]?
                 .GetValue<string>()!=name+".s7dcl" || (files.Count==2 && files[1]?.GetValue<string>()!=name+".s7res"))
             throw new InvalidDataException("Document pair conflict.");
         return result;

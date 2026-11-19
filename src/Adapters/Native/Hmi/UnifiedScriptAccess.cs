@@ -13,7 +13,11 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal static object Module(object hmi, string moduleName)
         {
             if (string.IsNullOrWhiteSpace(moduleName)) throw new ArgumentException("An exact moduleName is required.");
-            return MigrationRead.Named(Scripts(hmi), moduleName);
+            try { return MigrationRead.Named(Scripts(hmi), moduleName); }
+            catch (System.Collections.Generic.KeyNotFoundException)
+            {
+                throw new PlcSoftwareException("NotFound", "Script module not found: " + moduleName) { Data = { ["parameter"] = "moduleName" } };
+            }
         }
 
         internal static object Resolve(Func<string, object> resolveHmi, string objectPath, string softwarePath, bool collection)

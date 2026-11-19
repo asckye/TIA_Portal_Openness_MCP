@@ -14,6 +14,20 @@ using PortalCode = TiaMcpServer.Siemens.PortalErrorCode;
 public sealed class NotFoundTargetTests
 {
     [Theory]
+    [InlineData("ioType/startAddress")]
+    [InlineData("other, ioType, startAddress, ioType")]
+    public void Combined_parameters_keep_only_distinct_declared_fields(string parameters)
+    {
+        using var worker = new MetadataWorker();
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        var catalog = new Engine.FoundationCatalog("21", LegacyHostToolRegistry.Create(worker, "21", false, hostPorts: false));
+        using var session = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(contextWorker) { Catalog = catalog });
+        var details = Host.McpServer.ArgumentDetails("SetDeviceItemIoAddress", parameters);
+        Assert.Equal("/ioType", details.Parameter);
+        Assert.Equal(new[] { "/ioType", "/startAddress" }, details.Parameters);
+    }
+
+    [Theory]
     [InlineData("42")]
     [InlineData("true")]
     [InlineData("{}")]

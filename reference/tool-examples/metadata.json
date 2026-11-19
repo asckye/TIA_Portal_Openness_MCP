@@ -196,6 +196,10 @@
     ]
   },
   "toolNotes": {
+    "ManageCfcChartProtection": {
+      "input": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight.",
+      "releaseKeys": []
+    },
     "ManageStartdriveParameter": {
       "input": "devicePath and itemPath are arrays of names from GetProjectTree. Select the intended drive object from ListDriveObjects. parameter is the exact parameter name, including index.",
       "resultCases": [

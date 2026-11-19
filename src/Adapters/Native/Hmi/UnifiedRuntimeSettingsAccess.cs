@@ -20,6 +20,12 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             if (json == null || json.Length > 16384) throw new ArgumentException("Settings JSON must be at most 16 KiB.");
         }
+        internal static void RequirePreviewToken(bool dryRun, string previewToken)
+        {
+            if (!dryRun && string.IsNullOrWhiteSpace(previewToken))
+                throw new ArgumentException("Copy previewToken from the matching preview.", nameof(previewToken));
+        }
+
         internal static string[] Fields(string json)
         {
             CheckJson(json);
@@ -126,7 +132,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["failureCount"] = failures.Count; meta["apiCallSuccess"] = true; meta["dataComplete"] = failures.Count == 0;
             meta["operationSuccess"] = failures.Count == 0;
             meta["coverage"] = "Requested root or dotted nested scalar fields only. V20+: Telemetry, UPSS and tag settings; " +
-                "V21: TagOptimizationActive and exclusive operation. LanguageAndFonts, Windows auto-start and Runtime Manager are not covered.";
+                "V21: HmiUnifiedTagSettings.TagOptimizationActive and exclusive operation. " +
+                "LanguageAndFonts, Windows auto-start and Runtime Manager are not covered.";
         }
         private static object ConvertValue(object? node, Type type, string field)
         {
@@ -209,7 +216,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["persistence"] =
                 "No save, compile, download, Runtime restart or TIA close. Applied changes remain in the engineering project until separately saved/deployed.";
             meta["atomicity"] = "Captured public values are restored on failure; inspect rollbackCompleted and cleanupRequired.";
-            if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new ArgumentException("Preview previewToken is required before writing.");
+            RequirePreviewToken(dryRun, expectedToken);
             var settings = Settings(hmi, trace);
             var before = new HmiObject(); var desired = new HmiObject(); var requested = new HmiObject();
             var writes = new List<(string field, object owner, PropertyInfo p, object value)>();
@@ -227,7 +234,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 ["expectedProject"] = project, ["softwarePath"] = softwarePath, ["before"] = before.DeepClone(), ["requested"] = requested.DeepClone(),
                     ["proposed"] = desired.DeepClone()
             };
-            var token = HmiExactAccess.Token("UpdateUnifiedRuntimeSettings/v1", scope); meta["token"] = token;
+            var token = HmiExactAccess.Token("UpdateUnifiedRuntimeSettings/v1", scope); meta["token"] = token; meta["previewToken"] = token;
             meta["apiCallSuccess"] = true; meta["dataComplete"] = true; meta["actualCount"] = writes.Count;
             if (dryRun) {
                 meta["operationSuccess"] = true; meta["status"] = "Preview";

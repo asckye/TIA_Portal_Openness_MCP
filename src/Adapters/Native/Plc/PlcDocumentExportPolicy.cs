@@ -101,7 +101,7 @@ namespace TiaMcp.Adapters
                 if((stage.Attributes & FileAttributes.ReparsePoint)!=0) throw new IOException("Staging directory cannot be a link.");
                 var reported=export(stage,name);
                 exportReturned=true;
-                var published=ValidatePair(stage,files,reported,release=="21");
+                var published=ValidatePair(stage,files,reported,resourceOptional:true);
                 Destination(output);
                 (move??((from,to)=>Directory.Move(from.FullName,to.FullName)))(stage,destination);
                 result.Files=published; result.Status="exported";

@@ -198,7 +198,7 @@ public partial class MainWindow
                 if (page.Page == WorkbenchPage.VersionControl && !_model.VersionControlPageVisible)
                     return ControlResponse.Refuse(request, "vci-api-unavailable", WorkbenchControlError.UnsupportedCapability);
                 if (page.Page is WorkbenchPage.Blocks or WorkbenchPage.VersionControl && !HasProject)
-                    return ControlResponse.Refuse(request, "workbench-no-project");
+                    return MissingWorkbenchProject(request);
                 var previous = ControlPage;
                 Navigate(ShellPage(page.Page));
                 response = ControlResponse.Done(request, new() { Page = page.Page, PreviousPage = previous });
@@ -256,10 +256,18 @@ public partial class MainWindow
         }
         return response;
     }
+    private static WorkbenchControlResponse MissingWorkbenchProject(WorkbenchControlRequest request)
+    {
+        string? expected = request.Origin.BoundProjectFile;
+        if (string.IsNullOrEmpty(expected)) return ControlResponse.Refuse(request, "workbench-no-project");
+        var response = ControlResponse.Refuse(request, "workbench-project-not-selected", WorkbenchControlError.PreconditionFailed, "project");
+        response.Refusal!.Expected = expected;
+        return response;
+    }
     private WorkbenchControlResponse? ControlProjectRefusal(WorkbenchControlRequest request)
     {
-        if (!HasProject) return ControlResponse.Refuse(request, "workbench-no-project");
         string? expected = request.Origin.BoundProjectFile;
+        if (!HasProject) return MissingWorkbenchProject(request);
         try
         {
             if (expected != null && Path.IsPathFullyQualified(expected) && _controlProjectPath != null
@@ -305,7 +313,7 @@ public partial class MainWindow
     {
         if (!_prefills.CanChange(arguments.Form, request.Origin)) return ControlResponse.Refuse(request, "prefill-pending");
         if (arguments.Form is not (WorkbenchPrefillForm.InspectionRules or WorkbenchPrefillForm.ConnectProject) && !HasProject)
-            return ControlResponse.Refuse(request, "workbench-no-project");
+            return MissingWorkbenchProject(request);
         if (PrefillRegistry.Targets.Single(target => target.Form == arguments.Form).Executes == "mcp" && !_model.HasMcpPanel)
             return ControlResponse.Refuse(request, "shared-mcp-session-required");
         if (!PrefillRegistry.Valid(arguments)) return ControlResponse.Refuse(request, "prefill-field-invalid", WorkbenchControlError.InvalidArgument,

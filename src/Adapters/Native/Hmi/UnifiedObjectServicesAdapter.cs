@@ -167,7 +167,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                     throw new ArgumentException("action must be one of: read/create/update/delete (case-sensitive).");
                 bool write = action != "read" && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
-                var root = _session.ExactUnifiedRoot(softwarePath); var tag = UnifiedObjectAddress.Resolve(root, tagPathJson);
+                var root = _session.ExactUnifiedRoot(softwarePath); var tag = UnifiedObjectAddress.Resolve(root, tagPathJson, "tagPath");
                 if (tag.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiTags.HmiTag")
                     throw new ArgumentException("tagPathJson must identify one ordinary Unified tag.");
                 var collection = PlcGroupOperations.Get(tag, "LoggingTags");

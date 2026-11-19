@@ -248,5 +248,19 @@ public sealed class ConvertEngineeringTableToolTests
         Assert.Contains("%M0.0", File.ReadAllText(xml));
     }
 
+    [Fact]
+    public async Task Missing_output_parent_preserves_column_names_and_identifies_export_file()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21");
+        var result = Body(await fixture.Call("ConvertEngineeringTable", new { kind = "rows", direction = "toTable",
+            rows = new[] { new { Name = "One", Address = "%M1.0" } }, format = "csv",
+            exportFile = Path.Combine(fixture.Root, "missing", "rows.csv"), dryRun = false }));
+        Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
+        Assert.Equal("output-parent-missing", (string?)result["error"]?["details"]?["condition"]);
+        Assert.Equal("exportFile", (string?)result["error"]?["details"]?["parameter"]);
+        Assert.Contains("parent directory", (string?)result["error"]?["message"]);
+        Assert.Equal(new[] { "Name", "Address" }, result["data"]!["columns"]!.AsArray().Select(c => (string)c!));
+    }
+
     private static JsonObject Body(ModelContextProtocol.Protocol.CallToolResult result) => result.StructuredContent!.AsObject();
 }

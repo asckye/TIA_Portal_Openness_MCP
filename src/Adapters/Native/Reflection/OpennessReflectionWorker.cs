@@ -57,6 +57,7 @@ namespace TiaMcp.Adapters
                 reply.Failure.Evidence["mayHaveChanged"] = reply.MayHaveChanged;
                 reply.Failure.Evidence["status"] = StepFailureStatus.Of(error);
                 reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
+                if (StepFailureStatus.Parameter(error) is string parameter) reply.Failure.Evidence["parameter"] = parameter;
                 StepFailureStatus.RecordTarget(error, reply.Failure.Evidence);
             }
             return reply;

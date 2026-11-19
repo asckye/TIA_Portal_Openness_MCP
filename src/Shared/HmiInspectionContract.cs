@@ -18,10 +18,15 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var cause = exception;
                 while (cause.InnerException != null) cause = cause.InnerException;
-                Error? rejection = cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
-                    parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(portal)) : null;
+                string? parameter = cause.Data["parameter"] as string ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(cause);
+                Error? rejection = cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message, parameter: parameter) : null;
                 var retained = writes ? HostBehavior.WorkerReplyEvidence(tool, exception) : null;
-                return Result(tool, null, rejection ?? NativeFailureDiagnostics.FromException(Failure(writes, retained, tool), exception),
+                JsonObject? data = null;
+                if (tool == "ListObjectChildren" && rejection != null && cause is PortalException refusal)
+                    data = new JsonObject { ["evidence"] = new JsonObject {
+                        ["status"] = refusal.Code.ToString(), ["parameter"] = parameter,
+                        ["nativeMessage"] = HostBehavior.SafeDiagnostic(refusal.Message) } };
+                return Result(tool, data, rejection ?? NativeFailureDiagnostics.FromException(Failure(writes, retained, tool), exception),
                     rejection != null ? Outcome.RejectedBeforeOperation
                     : writes ? Outcome.Unknown : Outcome.ReadFailed, rejection != null ? Completeness.None : Completeness.Unknown, writes, current);
             }
@@ -41,9 +46,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI/reflection", null)
                 : status == "NativeCrashRiskBlocked" || status == "ACCESS_DENIED" ? new AccessDeniedDetails("reflection", null)
                 : status == "PRECONDITION_FAILED" ? new PreconditionFailedDetails("HMI/reflection admission", null) : null;
-            return details == null ? null
-                : new Error((status == "NotSupportedOnVersion" || status == "PRECONDITION_FAILED") && message != null ? message
-                    : "The request could not be admitted; inspect the retained evidence.", details);
+            if (details == null) return null;
+            if (tool == "ListObjectChildren")
+                return new Error(HostBehavior.SafeDiagnostic(message ?? evidence?["nativeMessage"]?.ToString())
+                    ?? "The collection could not be read. Check the target and collectionProperty.", details);
+            return new Error((status == "NotSupportedOnVersion" || status == "PRECONDITION_FAILED") && message != null ? message
+                : "The request could not be admitted; inspect the retained evidence.", details);
         }
 
         private static Error Failure(bool writes, IReadOnlyDictionary<string, JsonElement>? evidence = null, string? tool = null)

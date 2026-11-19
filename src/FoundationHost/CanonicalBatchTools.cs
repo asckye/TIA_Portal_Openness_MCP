@@ -74,6 +74,13 @@ internal static class CanonicalBatchTools
             var invalid = schema.Validate(JsonSerializer.SerializeToElement(args), "arguments");
             if (invalid != null) return Reject(invalid);
             bool dry = (bool?)args["dryRun"] ?? true;
+            Regex? filter = null;
+            if (args["regexName"] is JsonValue pattern && pattern.GetValue<string>().Length != 0)
+            {
+                try { filter = new Regex(pattern.GetValue<string>(), RegexOptions.IgnoreCase); }
+                catch (RegexParseException error) { return Reject(new Error($"Invalid regular expression at offset {error.Offset} ({error.Error}).",
+                    new InvalidArgumentDetails("regexName", Array.Empty<string>()))); }
+            }
             try
             {
                 var binding = identity();
@@ -83,7 +90,7 @@ internal static class CanonicalBatchTools
                 if (!dry && ((bool?)args["confirm"] != true || (string?)args["expectedProjectFile"] != project))
                     return Reject(new Error("Batch execution requires confirm=true and the preview's exact expectedProjectFile.",
                                 new InvalidArgumentDetails("expectedProjectFile", Array.Empty<string>())));
-                var plan = await Preview(args, binding, request, cancellationToken);
+                var plan = await Preview(args, binding, request, filter, cancellationToken);
                 if (dry || !(bool)plan["canApply"]!) return Result(plan, false);
                 string hash = (string)plan["planHash"]!;
                 if ((string?)args["expectedPlanHash"] != hash)
@@ -103,7 +110,7 @@ internal static class CanonicalBatchTools
                 try
                 {
                     var current = identity() ?? throw new InvalidOperationException("Project binding ended.");
-                    var checkedPlan = await Preview(args, current, request, cancellationToken);
+                    var checkedPlan = await Preview(args, current, request, filter, cancellationToken);
                     if ((string?)checkedPlan["planHash"] != hash || (bool?)checkedPlan["canApply"] != true)
                         return final =
                             Reject(new Error("Batch identity or item previews changed while awaiting approval.",
@@ -156,7 +163,8 @@ internal static class CanonicalBatchTools
             CallToolResult Reject(Error error) => FoundationV4Result.Reject(release, tool.Name, id, error, true);
         }
 
-        private async Task<JsonObject> Preview(JsonObject args, JsonObject binding, RequestContext<CallToolRequestParams> request, CancellationToken token)
+        private async Task<JsonObject> Preview(JsonObject args, JsonObject binding, RequestContext<CallToolRequestParams> request, Regex? filter,
+            CancellationToken token)
         {
             string Text(string key) => (string?)args[key] ?? "";
             var calls = new List<(string Tool, JsonObject Args)>();
@@ -178,9 +186,8 @@ internal static class CanonicalBatchTools
             }
             else if (tool.Name == "ImportPlcTagTablesFromDirectory")
             {
-                var regex = Text("regexName");
                 foreach (string file in Directory.EnumerateFiles(Path.GetFullPath(Text("dir")), "*.xml").Order(StringComparer.Ordinal))
-                    if (regex.Length == 0 || Regex.IsMatch(Path.GetFileNameWithoutExtension(file), regex, RegexOptions.IgnoreCase))
+                    if (filter == null || filter.IsMatch(Path.GetFileNameWithoutExtension(file)))
                         Import("ImportPlcTagTable", file, "folderPath", Text("folderPath"));
             }
             else if (tool.Name == "ExportTechnologyObjectsToDirectory")
@@ -199,8 +206,7 @@ internal static class CanonicalBatchTools
                 foreach (var entry in inventory)
                 {
                     string path = entry!.GetValue<string>();
-                    if (Text("regexName").Length != 0 && !Regex.IsMatch(Uri.UnescapeDataString(path.Split('/').Last()), Text("regexName"),
-                        RegexOptions.IgnoreCase)) continue;
+                    if (filter != null && !filter.IsMatch(Uri.UnescapeDataString(path.Split('/').Last()))) continue;
                     string output = ExportPath(Text("dir"), path);
                     var values = Common();
                     if (force)
@@ -240,6 +246,7 @@ internal static class CanonicalBatchTools
                 ["previewData"] = row["preview"]?["data"]?.DeepClone(), ["canonicalPlanHash"] = row["canonicalPlanHash"]!.DeepClone(), ["status"] =
                     row["status"]!.DeepClone() }).ToArray());
             var selector = args.DeepClone().AsObject();
+            if (exportRoot != null) selector["dir"] = exportRoot;
             foreach (var field in new[] { "dryRun", "confirm", "expectedPlanHash", "expectedProjectFile" }) selector.Remove(field);
             foreach (var property in tool.InputSchema.GetProperty("properties").EnumerateObject())
                 if (property.Name is not ("dryRun" or "confirm" or "expectedPlanHash" or "expectedProjectFile") && !selector.ContainsKey(property.Name)

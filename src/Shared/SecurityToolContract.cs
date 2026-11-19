@@ -107,6 +107,13 @@ namespace TiaMcpServer.ModelContextProtocol
             else
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(); }
 
+            if (tool == "ManagePlcCertificate" && (string?)data["phase"] == "get-certificate-template"
+                && error?.Details is NativeOperationFailedDetails details)
+            {
+                var context = $"Cannot read the {data["usage"]} certificate template on device item '{data["deviceItem"]}'.";
+                error = new Error(context + " " + error.Message, details, error.Innererror);
+            }
+
             bool incomplete = Incomplete(data);
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None
                 : outcome == Outcome.Unknown || outcome == Outcome.ReadFailed ? Completeness.Unknown

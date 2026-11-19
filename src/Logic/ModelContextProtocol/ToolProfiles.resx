@@ -7455,8 +7455,8 @@
       "family": "F23",
       "example": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       }
     },
@@ -7698,7 +7698,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       }
     },
     {
@@ -8310,11 +8310,9 @@
       "family": "F18",
       "example": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "attributeName": "Comment",
+        "value": "Example comment",
+        "dryRun": true
       }
     },
     {
@@ -9921,8 +9919,8 @@
       "family": "F23",
       "example": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       }
     },
@@ -10164,7 +10162,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       }
     },
     {
@@ -10968,11 +10966,9 @@
       "family": "F18",
       "example": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "attributeName": "Comment",
+        "value": "Example comment",
+        "dryRun": true
       }
     },
     {
@@ -12812,8 +12808,8 @@
       "family": "F23",
       "example": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       }
     },
@@ -13055,7 +13051,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       }
     },
     {
@@ -13972,11 +13968,9 @@
       "family": "F18",
       "example": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "attributeName": "Comment",
+        "value": "Example comment",
+        "dryRun": true
       }
     },
     {
@@ -14737,7 +14731,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
       }
     },
     {
@@ -14754,7 +14748,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
         "kind": "tagDefinition",
         "confirmDelete": false,
         "dryRun": true,
@@ -15997,8 +15991,8 @@
       "family": "F23",
       "example": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       }
     },
@@ -16240,7 +16234,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       }
     },
     {
@@ -17226,11 +17220,9 @@
       "family": "F18",
       "example": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "attributeName": "Comment",
+        "value": "Example comment",
+        "dryRun": true
       }
     },
     {
@@ -18017,7 +18009,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
       }
     },
     {
@@ -18034,7 +18026,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
         "kind": "tagDefinition",
         "confirmDelete": false,
         "dryRun": true,
@@ -18073,10 +18065,10 @@
       "example": {
         "category": "screens",
         "kind": "folder",
-        "path": "Examples",
+        "path": "MCP_Example",
         "confirmDelete": false,
         "dryRun": true,
-        "action": "read"
+        "action": "create"
       }
     },
     {
@@ -19531,8 +19523,8 @@
       "family": "F23",
       "example": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       }
     },
@@ -19774,7 +19766,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       }
     },
     {
@@ -20814,11 +20806,9 @@
       "family": "F18",
       "example": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "attributeName": "Comment",
+        "value": "Example comment",
+        "dryRun": true
       }
     },
     {
@@ -21642,7 +21632,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
       }
     },
     {
@@ -21659,7 +21649,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
         "kind": "tagDefinition",
         "confirmDelete": false,
         "dryRun": true,
@@ -21698,10 +21688,10 @@
       "example": {
         "category": "screens",
         "kind": "folder",
-        "path": "Examples",
+        "path": "MCP_Example",
         "confirmDelete": false,
         "dryRun": true,
-        "action": "read"
+        "action": "create"
       }
     },
     {
@@ -23283,8 +23273,8 @@
       "family": "F23",
       "example": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       }
     },
@@ -23971,7 +23961,10 @@
             "name": "ExampleLog"
           },
           {
-            "property": "LogDuration"
+            "property": "Settings"
+          },
+          {
+            "property": "LogTimePeriod"
           }
         ],
         "kind": "log",
@@ -24022,7 +24015,7 @@
         "dryRun": true,
         "objectPath": [],
         "properties": {
-          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          "AssignedHmiDevice": "HMI_RT_1"
         }
       }
     },
@@ -24506,7 +24499,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       }
     },
     {
@@ -25546,11 +25539,9 @@
       "family": "F18",
       "example": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "attributeName": "Comment",
+        "value": "Example comment",
+        "dryRun": true
       }
     },
     {
@@ -26374,7 +26365,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
       }
     },
     {
@@ -26391,7 +26382,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
         "kind": "tagDefinition",
         "confirmDelete": false,
         "dryRun": true,
@@ -26430,10 +26421,10 @@
       "example": {
         "category": "screens",
         "kind": "folder",
-        "path": "Examples",
+        "path": "MCP_Example",
         "confirmDelete": false,
         "dryRun": true,
-        "action": "read"
+        "action": "create"
       }
     },
     {
@@ -28156,8 +28147,8 @@
       "family": "F23",
       "example": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       }
     },
@@ -28856,7 +28847,10 @@
             "name": "ExampleLog"
           },
           {
-            "property": "LogDuration"
+            "property": "Settings"
+          },
+          {
+            "property": "LogTimePeriod"
           }
         ],
         "kind": "log",
@@ -28907,7 +28901,7 @@
         "dryRun": true,
         "objectPath": [],
         "properties": {
-          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          "AssignedHmiDevice": "HMI_RT_1"
         }
       }
     },
@@ -29418,7 +29412,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       }
     },
     {
@@ -30157,7 +30151,7 @@
       "entry": "ImportPlcBlocksDocuments",
       "family": "F10",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
         "dryRun": true,
@@ -30531,11 +30525,9 @@
       "family": "F18",
       "example": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "attributeName": "Comment",
+        "value": "Example comment",
+        "dryRun": true
       }
     },
     {
@@ -31375,7 +31367,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
       }
     },
     {
@@ -31392,7 +31384,7 @@
       "family": "F29",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
+        "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
         "kind": "tagDefinition",
         "confirmDelete": false,
         "dryRun": true,
@@ -31431,10 +31423,10 @@
       "example": {
         "category": "screens",
         "kind": "folder",
-        "path": "Examples",
+        "path": "MCP_Example",
         "confirmDelete": false,
         "dryRun": true,
-        "action": "read"
+        "action": "create"
       }
     },
     {
@@ -33248,8 +33240,8 @@
       "family": "F23",
       "example": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       }
     },
@@ -33960,7 +33952,10 @@
             "name": "ExampleLog"
           },
           {
-            "property": "LogDuration"
+            "property": "Settings"
+          },
+          {
+            "property": "LogTimePeriod"
           }
         ],
         "kind": "log",
@@ -34011,7 +34006,7 @@
         "dryRun": true,
         "objectPath": [],
         "properties": {
-          "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+          "AssignedHmiDevice": "HMI_RT_1"
         }
       }
     },
@@ -34522,7 +34517,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       }
     },
     {
@@ -35261,7 +35256,7 @@
       "entry": "ImportPlcBlocksDocuments",
       "family": "F10",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
         "dryRun": true,
@@ -35667,11 +35662,9 @@
       "family": "F18",
       "example": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "attributeName": "Comment",
+        "value": "Example comment",
+        "dryRun": true
       }
     },
     {
@@ -39624,7 +39617,7 @@
       "entry": "ImportPlcBlocksDocuments",
       "family": "FOUNDATION",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
         "dryRun": true,
@@ -40206,7 +40199,7 @@
       "entry": "ImportPlcBlocksDocuments",
       "family": "FOUNDATION",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
         "dryRun": true,
@@ -44901,7 +44894,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "dryRun": true,
@@ -45724,7 +45717,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -46010,7 +46003,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -46429,8 +46422,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -47083,7 +47076,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
@@ -47134,10 +47127,10 @@
         "arguments": {
           "category": "screens",
           "kind": "folder",
-          "path": "Examples",
+          "path": "MCP_Example",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "create"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -49121,11 +49114,9 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "attributeName": "Comment",
+          "value": "Example comment",
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -49379,7 +49370,10 @@
               "name": "ExampleLog"
             },
             {
-              "property": "LogDuration"
+              "property": "Settings"
+            },
+            {
+              "property": "LogTimePeriod"
             }
           ],
           "kind": "log",
@@ -49466,7 +49460,7 @@
           "dryRun": true,
           "objectPath": [],
           "properties": {
-            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+            "AssignedHmiDevice": "HMI_RT_1"
           }
         },
         "envelopeVersion": 4,
@@ -54647,7 +54641,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "dryRun": true,
@@ -55464,7 +55458,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -55750,7 +55744,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -56228,8 +56222,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -56944,7 +56938,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
@@ -56995,10 +56989,10 @@
         "arguments": {
           "category": "screens",
           "kind": "folder",
-          "path": "Examples",
+          "path": "MCP_Example",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "create"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -59000,11 +58994,9 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "attributeName": "Comment",
+          "value": "Example comment",
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -59258,7 +59250,10 @@
               "name": "ExampleLog"
             },
             {
-              "property": "LogDuration"
+              "property": "Settings"
+            },
+            {
+              "property": "LogTimePeriod"
             }
           ],
           "kind": "log",
@@ -59345,7 +59340,7 @@
           "dryRun": true,
           "objectPath": [],
           "properties": {
-            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+            "AssignedHmiDevice": "HMI_RT_1"
           }
         },
         "envelopeVersion": 4,
@@ -63087,7 +63082,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -63260,8 +63255,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -64857,11 +64852,9 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "attributeName": "Comment",
+          "value": "Example comment",
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -68908,7 +68901,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -69102,8 +69095,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -70928,11 +70921,9 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "attributeName": "Comment",
+          "value": "Example comment",
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -75280,7 +75271,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -75540,8 +75531,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -77515,11 +77506,9 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "attributeName": "Comment",
+          "value": "Example comment",
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -81905,7 +81894,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -82102,7 +82091,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -82362,8 +82351,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -82951,7 +82940,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
@@ -84492,11 +84481,9 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "attributeName": "Comment",
+          "value": "Example comment",
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -89094,7 +89081,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -89308,7 +89295,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -89685,8 +89672,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -90307,7 +90294,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
@@ -90358,10 +90345,10 @@
         "arguments": {
           "category": "screens",
           "kind": "folder",
-          "path": "Examples",
+          "path": "MCP_Example",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "create"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -91972,11 +91959,9 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "attributeName": "Comment",
+          "value": "Example comment",
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -97549,7 +97534,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -97835,7 +97820,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -98254,8 +98239,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -98876,7 +98861,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
@@ -98927,10 +98912,10 @@
         "arguments": {
           "category": "screens",
           "kind": "folder",
-          "path": "Examples",
+          "path": "MCP_Example",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "create"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -100842,11 +100827,9 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "attributeName": "Comment",
+          "value": "Example comment",
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -101100,7 +101083,10 @@
               "name": "ExampleLog"
             },
             {
-              "property": "LogDuration"
+              "property": "Settings"
+            },
+            {
+              "property": "LogTimePeriod"
             }
           ],
           "kind": "log",
@@ -101187,7 +101173,7 @@
           "dryRun": true,
           "objectPath": [],
           "properties": {
-            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+            "AssignedHmiDevice": "HMI_RT_1"
           }
         },
         "envelopeVersion": 4,
@@ -105168,7 +105154,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "regexName": ""
@@ -105802,7 +105788,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
         },
         "envelopeVersion": 4
       },
@@ -106037,7 +106023,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -106402,8 +106388,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -106924,7 +106910,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
@@ -106971,10 +106957,10 @@
         "arguments": {
           "category": "screens",
           "kind": "folder",
-          "path": "Examples",
+          "path": "MCP_Example",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "create"
         },
         "envelopeVersion": 4
       },
@@ -108150,8 +108136,8 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE"
+          "attributeName": "Comment",
+          "value": "Example comment"
         },
         "envelopeVersion": 4
       },
@@ -108362,7 +108348,10 @@
               "name": "ExampleLog"
             },
             {
-              "property": "LogDuration"
+              "property": "Settings"
+            },
+            {
+              "property": "LogTimePeriod"
             }
           ],
           "kind": "log",
@@ -108443,7 +108432,7 @@
           "dryRun": true,
           "objectPath": [],
           "properties": {
-            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+            "AssignedHmiDevice": "HMI_RT_1"
           }
         },
         "envelopeVersion": 4
@@ -112573,7 +112562,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "groupPath": "",
           "importPath": "C:\\Examples\\documents",
           "regexName": ""
@@ -113201,7 +113190,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;"
         },
         "envelopeVersion": 4
       },
@@ -113436,7 +113425,7 @@
           "confirmDelete": false,
           "dryRun": true,
           "action": "read",
-          "objectPath": "/Popup_1"
+          "objectPath": "Popup_1"
         },
         "envelopeVersion": 4
       },
@@ -113842,8 +113831,8 @@
         ],
         "arguments": {
           "folderKind": "types",
-          "folderPath": "",
-          "action": "read",
+          "folderPath": "MCP_Example",
+          "action": "create",
           "dryRun": true
         },
         "envelopeVersion": 4
@@ -114418,7 +114407,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
+          "blockPath": "&lt;exact FB or FC path from GetPlcBlockHierarchy&gt;",
           "kind": "tagDefinition",
           "confirmDelete": false,
           "dryRun": true,
@@ -114465,10 +114454,10 @@
         "arguments": {
           "category": "screens",
           "kind": "folder",
-          "path": "Examples",
+          "path": "MCP_Example",
           "confirmDelete": false,
           "dryRun": true,
-          "action": "read"
+          "action": "create"
         },
         "envelopeVersion": 4
       },
@@ -115660,8 +115649,8 @@
         ],
         "arguments": {
           "deviceItemPath": "PLC_1/CPU_1",
-          "attributeName": "Name",
-          "value": "TRUE"
+          "attributeName": "Comment",
+          "value": "Example comment"
         },
         "envelopeVersion": 4
       },
@@ -115872,7 +115861,10 @@
               "name": "ExampleLog"
             },
             {
-              "property": "LogDuration"
+              "property": "Settings"
+            },
+            {
+              "property": "LogTimePeriod"
             }
           ],
           "kind": "log",
@@ -115953,7 +115945,7 @@
           "dryRun": true,
           "objectPath": [],
           "properties": {
-            "&lt;exact supported field from this operation/read result&gt;": "&lt;value of that field's documented type&gt;"
+            "AssignedHmiDevice": "HMI_RT_1"
           }
         },
         "envelopeVersion": 4

@@ -36,7 +36,12 @@ namespace Siemens.Engineering.Compiler
 }
 namespace Siemens.Engineering.HW
 {
-    public sealed class DeviceItem : Siemens.Engineering.CompileServiceOwner { }
+    public class HardwareObject : Siemens.Engineering.CompileServiceOwner { public string Name { get; set; } = ""; }
+    public sealed class DeviceItem : HardwareObject
+    {
+        public List<HardwareObject> Items { get; } = new();
+        public List<DeviceItem> DeviceItems { get; } = new();
+    }
 }
 namespace Siemens.Engineering.Safety
 {

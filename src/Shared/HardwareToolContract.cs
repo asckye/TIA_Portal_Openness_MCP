@@ -29,7 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
             internal ReleaseScope(string? previous) { this.previous = previous; }
             public void Dispose() { Release.Value = previous; }
         }
-        private sealed class InputFailureException : Exception
+        internal sealed class InputFailureException : Exception
         {
             internal Error Error { get; }
             internal InputFailureException(Error error) { Error = error; }
@@ -85,14 +85,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new InputFailureException(McpServer.InvalidInput("destinationDevicePath/position"));
         }
 
-        internal static void Address(string ioType, int startAddress, bool allowNone)
+        internal static Error? AddressError(string ioType, int startAddress, bool allowNone)
         {
             var allowed = allowNone ? new[] { "None", "Input", "Output", "Diagnosis", "Substitute" }
                 : new[] { "Input", "Output", "Diagnosis", "Substitute" };
-            if (startAddress < 0 || !allowed.Contains(allowNone ? ioType : ioType?.Trim(),
-                allowNone ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase))
-                throw new InputFailureException(McpServer.InvalidInput("ioType/startAddress"));
+            if (startAddress < 0) return McpServer.InvalidInput("startAddress");
+            return allowed.Contains(allowNone ? ioType : ioType?.Trim(), allowNone ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
+                ? null : McpServer.InvalidInput("ioType");
         }
+
+        internal static void Address(string ioType, int startAddress, bool allowNone)
+        {
+            if (AddressError(ioType, startAddress, allowNone) is Error error) throw new InputFailureException(error);
+        }
+
+        internal static CallToolResult RejectAddress(Error error)
+            => Result("SetDeviceItemIoAddress", null, error, Outcome.RejectedBeforeOperation, current: false);
 
         internal static CallToolResult Run(string tool, Func<ResponseMessage> action, bool write, bool current)
         {
@@ -224,6 +232,11 @@ namespace TiaMcpServer.ModelContextProtocol
             Paging? paging = null;
             if (evidence["offset"] != null && evidence["limit"] != null && (evidence["total"] ?? evidence["expectedCount"]) != null)
                 paging = McpServer.OffsetPage((int)evidence["offset"]!, (int)evidence["limit"]!, (int)(evidence["total"] ?? evidence["expectedCount"])!);
+            if (tool == "SearchHardwareCatalog" && evidence["offset"] != null && evidence["limit"] != null)
+            {
+                int? next = (int?)evidence["nextOffset"];
+                paging = new Paging(PagingMode.Offset, (int)evidence["offset"]!, (int)evidence["limit"]!, next, null, null, null, next == null);
+            }
             return Result(tool, body, error, outcome, current, write,
                 outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.RejectedBeforeOperation ? Completeness.None
                 : incomplete || outcome == Outcome.Partial ? Completeness.Partial : outcome == Outcome.Succeeded ? Completeness.Complete : Completeness.None,

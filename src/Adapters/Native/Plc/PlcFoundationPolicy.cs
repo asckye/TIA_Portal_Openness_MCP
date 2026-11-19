@@ -95,9 +95,12 @@ namespace TiaMcp.Adapters
             return items.Any(item => string.Equals(name(item), selected, StringComparison.OrdinalIgnoreCase));
         }
 
-        internal static FileInfo XmlOutput(string path)
+        internal static FileInfo XmlOutput(string path, string parameter = "exportPath")
         {
             var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
+            if (file.Exists && parameter == "exportDirectory")
+                throw new AdapterPreconditionException("A file from a previous export already exists in the selected directory. "
+                    + "Choose a fresh exportDirectory; existing files are preserved.", parameter);
             if (!file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase) ||
                 file.Directory == null || !file.Directory.Exists || file.Exists)
                 throw new AdapterPreconditionException("Choose a new .xml file in an existing output directory; existing files are never overwritten.",

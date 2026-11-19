@@ -13,11 +13,14 @@ namespace TiaMcp.Adapters.Reflection
 
         public OpennessReflection(ReflectionSession session) => _session = session;
 
-        private static object? GetPropertyPathValue(object root, string propertyPath)
+        private static object? GetPropertyPathValue(object root, string propertyPath, string? parameter = null)
         {
             var read = PropertyPathReader.Read(root, propertyPath);
             if (!read.Success) throw new PlcSoftwareException("InvalidParams",
-                $"{read.Status}: segment='{read.Segment}', type='{read.ResolvedType}'. {read.Error}");
+                parameter == "collectionProperty"
+                    ? $"The collection path stopped at '{read.Segment}' ({read.Status}). Inspect its public properties with DescribeObject."
+                    : $"{read.Status}: segment='{read.Segment}', type='{read.ResolvedType}'. {read.Error}")
+                { Data = { ["parameter"] = parameter } };
             return read.Value;
         }
 
@@ -135,7 +138,7 @@ namespace TiaMcp.Adapters.Reflection
                     + "for objectKind=Block/Type also pass softwarePath." + (_session.PlcLookupPathsSuffix ?? string.Empty));
             }
 
-            var v = GetPropertyPathValue(o, collectionProperty);
+            var v = GetPropertyPathValue(o, collectionProperty, nameof(collectionProperty));
             if (v is not IEnumerable enumerable || v is string)
             {
                 return new OpennessObservation

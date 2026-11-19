@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Adapters
 {
@@ -43,6 +44,17 @@ namespace TiaMcp.Adapters
     {
         public string? Name { get; set; }
         public PlcBlockHierarchy[]? Groups { get; set; }
-        public PlcBlockDetails[]? Blocks { get; set; }
+        public PlcBlockHierarchyRow[]? Blocks { get; set; }
+    }
+}
+
+namespace TiaMcp.Adapters.Contracts
+{
+    public sealed class PlcBlockHierarchyRow
+    {
+        public string? Name { get; set; }
+        public string? TypeName { get; set; }
+        public string? ProgrammingLanguage { get; set; }
+        public int Number { get; set; }
     }
 }

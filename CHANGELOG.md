@@ -11,11 +11,24 @@
 - `GetSessionState` labels a cached binding and lists each unknown target call once. If the bound TIA process exits, its calls move to `settled` with outcome `process-exited`. `GetCallResult` explains that the write effect is still unknown. Unread writes keep their save warning and replay guard.
 - On V20, PLC group rename and device service refusals identify the missing API. On V20 and V21, `GenerateSivarc` checks HMI connections before preview or generation.
 - `GenerateSivarc` identifies a selected device that lacks HMI software. `SetUnifiedRuntimeSettings` reports each unknown change key as a JSON Pointer.
+- PLC watch-table reads report the missing table at `/watchTableName`. S7 monitor addresses accept an explicit BOOL on DB bits.
+- `GetDeviceItemTree` lists overlapping hardware children once. `GetPlcBlockHierarchy` returns each block's name, type, programming language and number.
+- Validation identifies declared fields in combined argument names, invalid tag-table import filters and Unified scalar or event edits. Named HMI object lookup errors include the requested step.
+- Unified button scripts accept readback with normalized line endings. Absolute HMI tag binding uses the same requested address for writing and verification when the caller supplies only `plcTag`.
+- Watch-table export plan hashes normalize the output directory spelling. Force-table previews report their planned table count.
+- Project generation accepts the bound Unicode project path with either Windows separator and identifies the failing field or plan limit.
+- Hardware I/O address writes and canonical PLC group creation and tag updates accept confirmation tied to a reviewed preview and project.
+- Unified runtime settings return the apply parameter `previewToken` alongside `token` and document the fully qualified V21 tag optimization field.
+- Large hardware catalog searches and PLC type export previews support paging. Oversized tool usage responses provide an index with individually retrievable examples.
+- V20 PLC document exports accept code-only native results. Tag-table export collisions identify the occupied destination, and program-directory imports accept either Windows separator in `expectedProjectFile`.
+- Library, certificate, drive and HMI lookup failures identify the requested object or prerequisite. Workbench navigation identifies the bound MCP project when the local Workbench has no selection.
+- Table conversion reports a missing output directory as `PRECONDITION_FAILED` and preserves the column names. HMI input paths distinguish a JSON control character from a sharing violation, and Unified screen previews list only the requested screen fields.
+- Corrected release-specific SiVArc, CFC, HMI, library, PLC import and network discovery examples returned by `GetToolUsage`.
 - V21 `ManageSivarcScreenLayout` previews both actions by default. Export preview leaves the output path untouched. Import preview lists the current screen items that the layout file would replace. Apply requires `allowRemoveScreenItems: true` when the screen contains items or its inventory cannot be read. The result reports item counts, removals and additions when both inventories are readable.
 - `CallTool` journal records now use the target operation and its preview arguments to report whether the call requested a write.
 - `GetPlcPutGetAccess` and `SetPlcPutGetAccess` recognize the documented Boolean attribute on CPU device items that expose it (V15.1–V21).
 - `GetPlcBlockFingerprints` and `GeneratePlcLoadableFile` report `PRECONDITION_FAILED` with condition `service-not-provided` when the CPU does not supply the registered service. The result identifies the CPU and the owners searched. Loadable-file previews check the service before the output path.
-- A missing parent directory for native adapter output returns `PRECONDITION_FAILED` with the path parameter. Host offline tools report `INVALID_ARGUMENT` for a caller-supplied output path whose parent is missing. A technology-object create rejected for an unavailable type/version reports `technology-type-version-unavailable` after verified rollback.
+- A missing parent directory for native adapter output returns `PRECONDITION_FAILED` with the path parameter. Other host offline tools report `INVALID_ARGUMENT` for a caller-supplied output path whose parent is missing. A technology-object create rejected for an unavailable type/version reports `technology-type-version-unavailable` after verified rollback.
 - `AnalyzeHmiTemplateReference` reads the items and PLC bindings in the shipped HMI screens, identifies empty screens and excludes alarm-class files from screen counts.
 - `ImportPlcBlockVerified` 在写入前拒绝过期的预览令牌，返回 `preview-stale` 和三个用于核对的哈希。普通块创建被拒后，若回读确认块不存在，返回原生原因；批次保留此前已导入的块。
 - 安全激活测试的预览接受组路径数组。未尝试上线时返回路由拒绝原因。已返回的 worker 调用遇到后续状态读取失败时保留原结果，并附状态警告。

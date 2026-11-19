@@ -135,6 +135,21 @@ namespace TiaOpenness.Shared
                 .Replace("{major}", release == "14sp1" ? "14" : release == "15.1" ? "15" : release))!.AsObject();
         }
 
+        public static void CompactExampleIndex(JsonObject usage)
+        {
+            if (usage["examples"] is not JsonArray examples || usage.ToJsonString().Length < 38000) return;
+            var index = new JsonArray();
+            foreach (var example in examples.OfType<JsonObject>())
+            {
+                var entry = new JsonObject();
+                foreach (var field in new[] { "id", "title", "language", "kind", "releaseMatches", "profileMatches", "available" })
+                    if (example[field] is JsonNode value) entry[field] = value.DeepClone();
+                index.Add(entry);
+            }
+            usage["examples"] = index;
+            usage["exampleRetrieval"] = "Pass exampleId to GetToolUsage for the complete example and its requirements.";
+        }
+
         private static void PreviewForm(JsonObject arguments)
         {
             if ((bool?)arguments["dryRun"] == false)

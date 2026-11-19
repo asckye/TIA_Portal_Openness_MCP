@@ -60,6 +60,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 var cause = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
                 if (cause is TiaOpenness.Shared.BundleResourceUnavailableException) throw;
                 if (cause is TiaOpenness.Shared.DataLocationIOException) throw;
+                if (cause is AdapterPreconditionException { Condition: "output-parent-missing" } missing
+                    && toolName == "ConvertEngineeringTable")
+                {
+                    ResponseMeta.Failed(meta);
+                    meta["status"] = "PreconditionFailed"; meta["precondition"] = missing.Condition;
+                    meta["parameter"] = missing.ParamName;
+                    const string reason = "The parent directory for exportFile does not exist. Select an existing output directory.";
+                    meta["refusal"] = reason;
+                    return new ResponseMessage { Message = reason, Meta = meta };
+                }
                 if (cause is TiaMcp.Adapters.Contracts.AdapterPreconditionException) throw;
                 meta["error"] = cause.ToString();
                 if (cause is ArgumentException || cause is JsonException)

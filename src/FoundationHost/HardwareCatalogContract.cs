@@ -6,8 +6,14 @@ internal static class HardwareCatalogContract
 {
     private static void Keys(JsonObject node,params string[] allowed)
     { if(node.Any(p=>!allowed.Contains(p.Key))) throw new InvalidDataException("Unexpected hardware catalog response field."); }
+    private static void ValidateOffset(int offset)
+    {
+        if (offset < 0 || offset >= 1000) throw new ArgumentOutOfRangeException(nameof(offset), "offset must be between 0 and 999.");
+    }
     internal static void ValidateArguments(JsonObject arguments)
     {
+        int offset = (int?)arguments["offset"] ?? 0;
+        ValidateOffset(offset);
         string query=arguments["keyword"]!.GetValue<string>();
         int limit=arguments["limit"]!.GetValue<int>();
         if(string.IsNullOrWhiteSpace(query) || query.Length>256 || query.Any(char.IsControl) || query.All(c=>char.IsWhiteSpace(c) || c=='*' || c=='?')

@@ -420,45 +420,6 @@ namespace TiaMcp.Adapters
             BuildDeviceItemTree(sb, root, new List<bool>(), 0, Math.Max(0, maxDepth));
             return sb.ToString();
         }
-        private static void BuildDeviceItemTree(StringBuilder sb, DeviceItem node, List<bool> ancestorStates, int depth, int maxDepth)
-        {
-            if (depth >= maxDepth) return;
-
-            // Hardware components (Items)
-            if (node.Items != null && node.Items.Count > 0)
-            {
-                var items = node.Items.ToList();
-                for (int i = 0; i < items.Count; i++)
-                {
-                    var it = items[i];
-                    var isLast = (i == items.Count - 1) && (node.DeviceItems == null || node.DeviceItems.Count == 0);
-                    sb.AppendLine($"{GetTreePrefixStatic(ancestorStates, isLast)}{it.Name} [Hardware Component]");
-                }
-            }
-
-            // Sub device items
-            if (node.DeviceItems != null && node.DeviceItems.Count > 0)
-            {
-                var children = node.DeviceItems.ToList();
-                for (int i = 0; i < children.Count; i++)
-                {
-                    var child = children[i];
-                    var isLast = i == children.Count - 1;
-                    sb.AppendLine($"{GetTreePrefixStatic(ancestorStates, isLast)}{child.Name} [DeviceItem]");
-                    BuildDeviceItemTree(sb, child, new List<bool>(ancestorStates) { isLast }, depth + 1, maxDepth);
-                }
-            }
-        }
-        private static string GetTreePrefixStatic(List<bool> ancestorStates, bool isLast)
-        {
-            var prefix = new StringBuilder();
-            for (int i = 0; i < ancestorStates.Count; i++)
-            {
-                prefix.Append(ancestorStates[i] ? "    " : "│   ");
-            }
-            prefix.Append(isLast ? "└── " : "├── ");
-            return prefix.ToString();
-        }
         private List<object?> HardwareBuildDeviceItemNetworkReadbackJson(string deviceItemPath)
         {
             var arr = new List<object?>();

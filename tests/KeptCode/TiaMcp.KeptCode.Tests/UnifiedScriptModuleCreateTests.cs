@@ -52,6 +52,15 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
         }
     }
 
+    [Fact]
+    public void Missing_script_module_reports_the_exact_name_and_parameter()
+    {
+        var error = Assert.Throws<PlcSoftwareException>(() => UnifiedScriptAccess.Module(software, "Missing"));
+        Assert.Equal("NotFound", error.Code);
+        Assert.Equal("moduleName", error.Data["parameter"]);
+        Assert.Contains("Missing", error.Message);
+    }
+
     [Theory]
     [InlineData("19")]
     [InlineData("20")]

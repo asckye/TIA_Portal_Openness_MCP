@@ -64,6 +64,25 @@ public sealed class HmiB3Tests
     }
     public sealed class Container { public InterfaceItem[] Interface { get; } = [new()]; }
 
+    [Fact]
+    public void Missing_named_step_reports_the_requested_path()
+    {
+        const string path = "[{\"property\":\"Interface\",\"key\":\"PropertyName\",\"name\":\"Missing\"}]";
+        var error = Assert.Throws<PlcSoftwareException>(() => Resolve(new Container(), path));
+        Assert.Equal("NotFound", error.Code);
+        Assert.Equal("objectPath", error.Data["parameter"]);
+        Assert.Contains("Interface/Missing", error.Message);
+        Assert.DoesNotContain("System.", error.Message);
+    }
+
+    [Fact]
+    public void Invalid_screen_item_scalar_identifies_the_property()
+    {
+        var error = Assert.Throws<ArgumentException>(() => UnifiedUiModelLogic.PrepareNested(typeof(Geometry), new HmiObject { ["Left"] = "wide" }));
+        Assert.Equal("properties", error.ParamName);
+        Assert.Contains("Left", error.Message);
+    }
+
     private static object Resolve(object root, string path)
     {
         var previous = UnifiedRequestValues.Decoder;

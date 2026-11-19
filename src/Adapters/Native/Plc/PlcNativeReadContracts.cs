@@ -179,8 +179,8 @@ namespace TiaMcp.Adapters
         {
             Depth(depth);
             return new PlcBlockHierarchy {
-                Name=group.Name, Blocks=group.Blocks.Select(b => new PlcBlockDetails {
-                    Name=b.Name, TypeName=b.GetType().Name, ProgrammingLanguage=Enum.GetName(typeof(ProgrammingLanguage),b.ProgrammingLanguage)
+                Name=group.Name, Blocks=group.Blocks.Select(b => new Contracts.PlcBlockHierarchyRow {
+                    Name=b.Name, TypeName=b.GetType().Name, ProgrammingLanguage=Enum.GetName(typeof(ProgrammingLanguage),b.ProgrammingLanguage), Number=b.Number
                 }).ToArray(), Groups=group.Groups.Select(g=>Hierarchy(g,depth+1)).ToArray() };
         }
     }

@@ -82,7 +82,11 @@ namespace TiaMcp.Adapters.Native.Security
                     var kind = (CertificateUsage)HmiScalar
                         .ConvertValue(HmiValues.Value(SecurityCatalog.RequireOneOf(usage, SecurityCatalog.CertificateUsages, "usage")),
                             typeof(CertificateUsage))!;
-                    meta["template"] = TemplateRow(store.GetCertificateTemplate(kind)); meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
+                    meta["usage"] = usage;
+                    meta["deviceItem"] = string.Join("/", itemPathJson.Length == 0 ? devicePathJson : itemPathJson);
+                    meta["phase"] = "get-certificate-template";
+                    meta["template"] = TemplateRow(store.GetCertificateTemplate(kind));
+                    meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
                     meta["catalogs"] = new HmiObject {
                         ["usages"] = new HmiArray(SecurityCatalog.CertificateUsages.Select(x => (object?)x).ToArray()), ["signatures"] =
                             new HmiArray(SecurityCatalog.SignatureAlgorithms.Select(x => (object?)x).ToArray()), ["subjectAlternativeNameTypes"] =

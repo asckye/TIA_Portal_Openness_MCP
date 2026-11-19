@@ -342,7 +342,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 string.Equals(x.Path, watchTableName, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(x.Name, watchTableName, StringComparison.OrdinalIgnoreCase)).Table;
             if (table == null)
-                return new PlcWatchReport { Ok = false, Message = $"Watch table '{watchTableName}' not found.", Data = data };
+                return new PlcWatchReport { Ok = false, Message = $"Watch table '{watchTableName}' not found.", Data = data,
+                    Meta = new Dictionary<string, object?> { ["status"] = "NotFound", ["mayHaveChanged"] = false,
+                        ["nativeMessage"] = "Watch table not found.", ["parameter"] = "watchTableName" } };
 
             // Extract entry rows (address + name + display format).
             var rows = new List<(string name, string address, string fmt)>();

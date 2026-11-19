@@ -456,20 +456,34 @@ namespace TiaMcpServer.ModelContextProtocol
                 "panels such as KTP700 Basic.")]
         public CallToolResult SearchHardwareCatalogV4(
             [Description("keyword: MLFB/order number/device/family text, e.g. 'KTP700', '6AV2123', '1211C DC/DC/DC', '6ES7211-1AE40'")] string keyword,
-            [Description("limit: maximum candidates to return")] int limit = 50)
+            [Description("limit: maximum candidates to return")] int limit = 50,
+            [Description("offset: continue with meta.paging.nextOffset for the same keyword.")] int offset = 0)
             => HardwareContract.Run("SearchHardwareCatalog", () =>
             {
-                return SearchHardwareCatalog(keyword, limit);
+                return SearchHardwareCatalog(keyword, limit, offset);
             }, write: false, current: false);
 
         public ResponseHardwareCatalogSearch SearchHardwareCatalog(
             [Description("keyword: MLFB/order number/device/family text, e.g. 'KTP700', '6AV2123', '1211C DC/DC/DC', '6ES7211-1AE40'")] string keyword,
-            [Description("limit: maximum candidates to return")] int limit = 50)
+            [Description("limit: maximum candidates to return")] int limit = 50,
+            [Description("offset: continue with meta.paging.nextOffset for the same keyword.")] int offset = 0)
         {
             try
             {
-                var items = _service.SearchHardwareCatalog(keyword, limit);
-                var success = items.Count > 0;
+                if (offset < 0 || offset >= 1000) throw new ArgumentOutOfRangeException(nameof(offset));
+                if (limit < 1 || limit > 100) throw new ArgumentOutOfRangeException(nameof(limit));
+                var candidates = _service.SearchHardwareCatalog(keyword, Math.Min(1000, offset + limit + 1));
+                var items = candidates.Skip(offset).Take(limit).ToList();
+                int width = 0;
+                int count = items.TakeWhile(item => (width += System.Text.Json.JsonSerializer.Serialize(item).Length + 1) <= 35000).Count();
+                if (count == 0 && items.Count != 0)
+                    throw new HardwareContract.InputFailureException(new Error("One catalog entry exceeds the response page budget.",
+                    new LimitExceededDetails("catalog-entry", 35000, width)));
+                items = items.Take(count).ToList();
+                var success = candidates.Count > 0 || offset > 0;
+                var meta = ResponseMeta.Basic(DateTime.Now, success);
+                meta["offset"] = offset; meta["limit"] = limit;
+                meta["nextOffset"] = offset + count < candidates.Count ? offset + count : (int?)null;
                 return new ResponseHardwareCatalogSearch
                 {
                     Message = $"Found {items.Count} hardware catalog candidate(s) for '{keyword}'",
@@ -477,14 +491,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     Count = items.Count,
                     Items = items,
                     Error = success ? null : $"No matching hardware catalog candidates for '{keyword}'",
-                    Meta = ResponseMeta.Basic(DateTime.Now, success)
+                    Meta = meta
                 };
             }
             catch (PortalException pex)
             {
                 throw new McpException($"Failed searching hardware catalog for '{keyword}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex) when (ex is not (McpException or HardwareContract.InputFailureException or ArgumentOutOfRangeException))
             {
                 throw new McpException($"Unexpected error searching hardware catalog: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }

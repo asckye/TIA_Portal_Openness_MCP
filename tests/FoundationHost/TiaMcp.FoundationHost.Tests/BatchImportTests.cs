@@ -51,6 +51,9 @@ internal static class BatchImportTests
             check(result.ImportedCount==3 && !result.NativeOutcomeUnknown && imports==3 && gates==3,
                     "Fake native callbacks verify all identities and gate every item");
             check(original.All(x=>File.ReadAllBytes(x.Key).SequenceEqual(x.Value)),"Input bytes stay unchanged throughout preview/apply");
+            var equivalentPath = Apply(preview);
+            equivalentPath.ExpectedProject = equivalentPath.ExpectedProject.Replace('/', '\\');
+            check(Run(equivalentPath).ImportedCount == 3, "Equivalent Windows separators identify the reviewed project");
             imports=0;var partial=Run(Apply(preview),import:(f,p)=>{if(++imports==2)throw new IOException("uncertain write");return new[]{p};});
             check(partial.ImportedCount==1 && partial.FailedCount==1 && partial.NativeOutcomeUnknown && partial.Items.Select(x=>x.Status)
                     .SequenceEqual(new[]{"imported","failed","not-attempted"}) && imports==2,

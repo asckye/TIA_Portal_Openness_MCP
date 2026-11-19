@@ -270,6 +270,28 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData((int)WorkbenchControlOperation.DisplayAtlas)]
+    [InlineData((int)WorkbenchControlOperation.DisplayBlock)]
+    [InlineData((int)WorkbenchControlOperation.DisplayLadder)]
+    public void Missing_workbench_selection_identifies_the_requesting_sessions_project(int operation)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, client) = Window(false);
+            try
+            {
+                var refusal = window.ApplyControl(Request((WorkbenchControlOperation)operation)).Refusal!;
+                Assert.Equal(WorkbenchControlError.PreconditionFailed, refusal.Code);
+                Assert.Equal("workbench-project-not-selected", refusal.Condition);
+                Assert.Equal(Project, refusal.Expected);
+                Assert.Null(refusal.Actual);
+                Assert.Empty(client.Calls);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
     public void Locating_keeps_checks_and_places_focus_on_the_page_title()
     {

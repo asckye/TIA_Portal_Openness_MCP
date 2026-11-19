@@ -5,6 +5,17 @@ using Xunit;
 
 public sealed class GoldenWireTests
 {
+    [Fact]
+    public void Hierarchy_block_row_contains_only_structure_and_number()
+    {
+        var hierarchy = new TiaMcp.Adapters.PlcBlockHierarchy {
+            Name = "Blocks", Blocks = [new() { Name = "FC_A", TypeName = "FC", ProgrammingLanguage = "SCL", Number = 7 }], Groups = [] };
+        var json = System.Text.Json.JsonSerializer.SerializeToElement(hierarchy);
+        var row = json.GetProperty("Blocks")[0];
+        Assert.Equal(new[] { "Name", "TypeName", "ProgrammingLanguage", "Number" }, row.EnumerateObject().Select(p => p.Name));
+        Assert.Equal(7, row.GetProperty("Number").GetInt32());
+    }
+
     [Theory]
     [InlineData("Failure")]
     [InlineData("PartialSuccess")]

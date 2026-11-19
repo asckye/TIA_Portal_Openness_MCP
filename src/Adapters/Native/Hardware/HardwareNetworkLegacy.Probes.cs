@@ -125,7 +125,7 @@ namespace TiaMcp.Adapters
                     }
                     catch (Exception ex)
                     {
-                        lines.Add("  " + serviceType.Name + ": ERROR " + HardwareExceptionDetail(ex));
+                        lines.Add("  " + serviceType.Name + ": unavailable (" + ex.GetBaseException().Message + ")");
                         continue;
                     }
 

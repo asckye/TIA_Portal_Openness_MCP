@@ -11,6 +11,39 @@ using Xunit;
 
 public sealed class NativeFailureDiagnosticsTests
 {
+    [Fact]
+    public void Missing_reflection_collection_retains_the_worker_reason_and_parameter()
+    {
+        using var fixture = new Fixture("21");
+        const string reason = "The collection path stopped at 'ScriptModules' (missing). Inspect its public properties with DescribeObject.";
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.ReflectionPortService((_, _) => new JsonObject {
+            ["Failure"] = new JsonObject { ["Code"] = "InvalidParams", ["Message"] = reason,
+                ["Evidence"] = new JsonObject { ["parameter"] = "collectionProperty" } }
+        }, () => "C:/Fixture.ap21");
+        var body = new Host.ReflectionTools(service).ListObjectChildrenV4("HmiScripts", "", "ScriptModules", "HMI").StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal("/collectionProperty", (string?)body["error"]?["details"]?["parameter"]);
+        Assert.Equal(reason, (string?)body["error"]?["message"]);
+        Assert.Equal("collectionProperty", (string?)body["data"]?["evidence"]?["parameter"]);
+    }
+
+    [Fact]
+    public void Certificate_template_failure_names_the_selected_usage_and_device_and_retains_the_sdk_reason()
+    {
+        using var release = Host.HardwareContract.UseRelease("20");
+        var result = Host.SecurityToolContract.MapResult("ManagePlcCertificate", new Host.ResponseMessage {
+            Message = "GetCertificateTemplate failed", Meta = new JsonObject {
+                ["phase"] = "get-certificate-template", ["usage"] = "WebServer", ["deviceItem"] = "PLC_A",
+                ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["nativeMessage"] = "Security configuration unavailable",
+                ["status"] = "ReadOrWriteFailed", ["apiCallSuccess"] = false }
+        }, true, false).StructuredContent!;
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)result["error"]?["code"]);
+        string message = (string)result["error"]!["message"]!;
+        Assert.Contains("WebServer", message);
+        Assert.Contains("PLC_A", message);
+        Assert.Contains("Security configuration unavailable", (string?)result["error"]?["details"]?["nativeMessage"]);
+    }
+
     [Theory]
     [InlineData("x", "Rejected x; exact xylophone unchanged.", "Rejected ••••; exact xylophone unchanged.")]
     [InlineData("x", "result=x; extra remains.", "result=••••; extra remains.")]

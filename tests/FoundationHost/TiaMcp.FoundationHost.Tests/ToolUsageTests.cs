@@ -12,6 +12,37 @@ internal static class ToolUsageTests
     internal static readonly string[] FirstReleases = { "14sp1", "15.1", "16", "17" };
     internal static readonly string[] LastReleases = { "18", "19", "20", "21" };
 
+    internal static readonly (string Name, string Operation)[] ReviewedExamples =
+    [
+        ("ListSivarcBlockDefinitions", ""), ("ManageSivarcBlockDefinition", ""), ("ImportPlcBlocksDocuments", ""),
+        ("SamplePlcLiveValuesS7", ""), ("SetDeviceItemAttribute", ""), ("ManageSivarcRuleContainer", ""),
+        ("ManageCfcChartProtection", ""), ("ManageClassicHmiScreenObject", ""), ("ManageLibraryFolder", ""),
+        ("ScanAccessibleDevices", "plcsim"), ("SetUnifiedLogDuration", ""), ("SetUnifiedPlantObject", ""), ("ShowObjectInEditor", ""),
+        ("BuildPlcLadFcBlock", "rung"), ("BuildPlcLadFcBlock", "rung-boxes"), ("ManagePlcExternalSources", ""), ("WritePlcSclSourceFile", "")
+    ];
+
+    internal static bool ReviewedExampleMatches(string name, string operation, JsonNode response, int length)
+    {
+        var usage = response["data"];
+        var args = usage?["example"]?["request"]?["params"]?["arguments"];
+        return name switch {
+            "ListSivarcBlockDefinitions" or "ManageSivarcBlockDefinition" => ((string?)args?["blockPath"])?.Contains("FB or FC") == true,
+            "ImportPlcBlocksDocuments" => (string?)args?["softwarePath"] == "devices/PLC_1/PLC_1",
+            "SamplePlcLiveValuesS7" => (string?)args?["items"]?[0] == "DB1.DBX0.0:BOOL",
+            "SetDeviceItemAttribute" => (string?)args?["attributeName"] == "Comment" && (bool?)args?["dryRun"] == true,
+            "ManageSivarcRuleContainer" or "ManageLibraryFolder" => (string?)args?["action"] == "create" && (bool?)args?["dryRun"] == true,
+            "ManageClassicHmiScreenObject" => (string?)args?["objectPath"] == "Popup_1",
+            "ScanAccessibleDevices" => (string?)args?["pgPcInterface"] == "PLCSIM",
+            "SetUnifiedLogDuration" => (string?)args?["durationPath"]?[2]?["property"] == "LogTimePeriod",
+            "SetUnifiedPlantObject" => (string?)args?["properties"]?["AssignedHmiDevice"] == "HMI_RT_1",
+            "ShowObjectInEditor" => (bool?)args?["dryRun"] == false,
+            "ManageCfcChartProtection" => usage?["example"]?["releaseProblem"] != null,
+            "BuildPlcLadFcBlock" => args?["ladFcBlock"]?["networks"]?[0]?["rung"]?["outputs"] is JsonArray { Count: > 0 }
+                && (string?)args?["ladFcBlock"]?["blockName"] == (operation == "rung" ? "FC_LadDemo" : "FC_LadBoxes"),
+            _ => length < 40000
+        };
+    }
+
     internal static async Task Run(IMcpServer server, Action<bool,string> check, IReadOnlyList<string> releases, bool catalogChecks)
     {
         // Old-release registries own their worker and tool instances. Collect their
@@ -44,6 +75,16 @@ internal static class ToolUsageTests
             var guide = roster.Single(t => t.ProtocolTool.Name == "GetToolUsage");
             async Task<CallToolResult> Call(string args) => await guide.InvokeAsync(new RequestContext<CallToolRequestParams>(server) {
                 Params = new CallToolRequestParams { Name = "GetToolUsage", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args) } });
+            foreach (var (name, operation) in ReviewedExamples)
+            {
+                if (!roster.Any(entry => entry.ProtocolTool.Name == name)) continue;
+                var result = await Call(JsonSerializer.Serialize(new { toolName = name, operation }));
+                var text = ((TextContentBlock)result.Content.Single()).Text;
+                var response = JsonNode.Parse(text)!;
+                check((bool?)response["ok"] == true, $"{release} retrieves {name} {operation}: {response["error"]}");
+                bool correct = ReviewedExampleMatches(name, operation, response, text.Length);
+                check(correct, $"{release} serves the reviewed {name} {operation} example ({text.Length} characters)");
+            }
             var commonLibrary = JsonNode
                 .Parse(((TextContentBlock)(await Call("{\"exampleId\":\"sequence/connect-project\",\"exampleKind\":\"sequence\"}")).Content.Single())
                     .Text)!["data"]!;

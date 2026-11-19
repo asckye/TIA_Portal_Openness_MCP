@@ -83,7 +83,8 @@ internal static class BatchDocumentExportContract
                 }
             }
             var name=Uri.UnescapeDataString(block.Split('/').Last());
-            if(item["Files"] is not JsonArray files || (files.Count!=2 && !(release=="21" && state is ("staged" or "exported") && files.Count==1)) || files[0]?
+            if(item["Files"] is not JsonArray files || (files.Count!=2 && !((release is "20" or "21") && state is ("staged" or "exported") && files.Count==1))
+                || files[0]?
                     .GetValue<string>()!=name+".s7dcl" || (files.Count==2 && files[1]?.GetValue<string>()!=name+".s7res"))
                 throw new InvalidDataException("Batch document file set conflicts.");
             fields.AddRange(new[]{block,directory,language,consistent.ToString(),name+".s7dcl",name+".s7res"});

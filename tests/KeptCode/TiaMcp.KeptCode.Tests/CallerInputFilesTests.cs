@@ -14,6 +14,19 @@ namespace TiaMcp.Engine.Tests
         public void Dispose() => Directory.Delete(root, true);
 
         [Fact]
+        public void Hmi_import_reads_Unicode_filename_and_explains_an_escaped_tab()
+        {
+            const string fileName = "tagtable__默认变量表.xml";
+            var path = Path.Combine(root, fileName);
+            File.WriteAllText(path, "<Document/>");
+            McpServer.ValidateCallerInputFiles("ImportHmiTagTable", Arguments("importPath", path));
+            var error = Assert.Throws<AdapterPreconditionException>(() =>
+                McpServer.ValidateCallerInputFiles("ImportHmiTagTable", Arguments("importPath", root + "\tagtable__默认变量表.xml")));
+            Assert.Equal("importPath", error.ParamName);
+            Assert.Contains("control characters", error.Message);
+        }
+
+        [Fact]
         public void Alarm_readback_compares_worksheet_data_and_ignores_package_timestamps()
         {
             var repo = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);

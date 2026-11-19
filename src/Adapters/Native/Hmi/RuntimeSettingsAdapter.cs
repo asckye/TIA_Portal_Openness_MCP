@@ -70,8 +70,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 string expectedToken = "")
             => RuntimeSettingsOperation("SetUnifiedRuntimeSettings", softwarePath, expectedProject, !dryRun,
                 () => {
-                    UnifiedRuntimeSettingsAccess.Changes(changesJson); if (!dryRun && string.IsNullOrWhiteSpace(expectedToken))
-                        throw new ArgumentException("Preview previewToken required.");
+                    UnifiedRuntimeSettingsAccess.Changes(changesJson);
+                    UnifiedRuntimeSettingsAccess.RequirePreviewToken(dryRun, expectedToken);
                 },
                 (hmi, meta, trace) => UnifiedRuntimeSettingsAccess.Update(hmi, expectedProject, softwarePath,
                     UnifiedRuntimeSettingsAccess.Changes(changesJson), dryRun, expectedToken, meta, trace));

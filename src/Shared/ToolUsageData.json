@@ -15513,7 +15513,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "/Popup_1"
+        "objectPath": "Popup_1"
       },
       "parameters": {
         "filePath": {
@@ -17312,8 +17312,8 @@
     "ManageLibraryFolder": {
       "arguments": {
         "folderKind": "types",
-        "folderPath": "",
-        "action": "read",
+        "folderPath": "MCP_Example",
+        "action": "create",
         "dryRun": true
       },
       "parameters": {
@@ -17326,7 +17326,9 @@
       },
       "operations": {
         "read": {
-          "arguments": {}
+          "arguments": {
+            "action": "read"
+          }
         },
         "create": {
           "arguments": {
@@ -20119,7 +20121,7 @@
     "ManageSivarcBlockDefinition": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
+        "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>",
         "kind": "tagDefinition",
         "confirmDelete": false,
         "dryRun": true,
@@ -20176,10 +20178,10 @@
       "arguments": {
         "category": "screens",
         "kind": "folder",
-        "path": "Examples",
+        "path": "MCP_Example",
         "confirmDelete": false,
         "dryRun": true,
-        "action": "read"
+        "action": "create"
       },
       "parameters": {
         "category": {
@@ -20200,7 +20202,9 @@
       },
       "operations": {
         "read": {
-          "arguments": {}
+          "arguments": {
+            "action": "read"
+          }
         },
         "create": {
           "arguments": {
@@ -23439,7 +23443,7 @@
     "ListSivarcBlockDefinitions": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
+        "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>"
       },
       "parameters": {
         "includeBlockParameters": {
@@ -24323,7 +24327,13 @@
           "exampleValue": 0
         }
       },
-      "operations": {},
+      "operations": {
+        "plcsim": {
+          "arguments": {
+            "pgPcInterface": "PLCSIM"
+          }
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "inline": true
     },
@@ -24430,8 +24440,8 @@
     "SetDeviceItemAttribute": {
       "arguments": {
         "deviceItemPath": "PLC_1/CPU_1",
-        "attributeName": "Name",
-        "value": "TRUE"
+        "attributeName": "Comment",
+        "value": "Example comment"
       },
       "parameters": {},
       "operations": {},
@@ -24587,7 +24597,10 @@
             "name": "ExampleLog"
           },
           {
-            "property": "LogDuration"
+            "property": "Settings"
+          },
+          {
+            "property": "LogTimePeriod"
           }
         ],
         "kind": "log",
@@ -25013,7 +25026,7 @@
         "dryRun": true,
         "objectPath": [],
         "properties": {
-          "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+          "AssignedHmiDevice": "HMI_RT_1"
         }
       },
       "parameters": {
@@ -25420,7 +25433,7 @@
     },
     "ImportPlcBlocksDocuments": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "groupPath": "",
         "importPath": "C:\\Examples\\documents",
         "regexName": ""
@@ -32274,7 +32287,7 @@
         },
         "ImportPlcBlocksDocuments": {
           "arguments": {
-            "softwarePath": "PLC_1",
+            "softwarePath": "devices/PLC_1/PLC_1",
             "groupPath": "",
             "importPath": "C:\\Examples\\documents",
             "dryRun": true,
@@ -32589,11 +32602,9 @@
         "SetDeviceItemAttribute": {
           "arguments": {
             "deviceItemPath": "PLC_1/CPU_1",
-            "attributeName": "Name",
-            "value": "TRUE",
-            "dryRun": false,
-            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+            "attributeName": "Comment",
+            "value": "Example comment",
+            "dryRun": true
           },
           "parameters": {},
           "operations": {},
@@ -39411,8 +39422,8 @@
         "ManageLibraryFolder": {
           "arguments": {
             "folderKind": "types",
-            "folderPath": "",
-            "action": "read",
+            "folderPath": "MCP_Example",
+            "action": "create",
             "dryRun": true
           },
           "parameters": {
@@ -39425,7 +39436,9 @@
           },
           "operations": {
             "read": {
-              "arguments": {}
+              "arguments": {
+                "action": "read"
+              }
             },
             "create": {
               "arguments": {
@@ -40964,7 +40977,7 @@
             "confirmDelete": false,
             "dryRun": true,
             "action": "read",
-            "objectPath": "/Popup_1"
+            "objectPath": "Popup_1"
           },
           "parameters": {
             "filePath": {
@@ -40975,6 +40988,10 @@
             },
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "objectPath": {
+              "meaning": "Select a relative popup path in the chosen Classic HMI.",
+              "requiresBinding": true
             }
           },
           "operations": {
@@ -44788,9 +44805,20 @@
             },
             "offset": {
               "exampleValue": 0
+            },
+            "pgPcInterface": {
+              "meaning": "Use the exact interface name or number reported by the scan service. PLCSIM is a V20 example.",
+              "requiresBinding": true,
+              "exampleValue": "PLCSIM"
             }
           },
-          "operations": {},
+          "operations": {
+            "plcsim": {
+              "arguments": {
+                "pgPcInterface": "PLCSIM"
+              }
+            }
+          },
           "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read with the exact PG/PC interface name passed. Other releases: input schema checked offline; native execution NOT RUN.",
           "inline": true
         },
@@ -44966,10 +44994,10 @@
           "arguments": {
             "category": "screens",
             "kind": "folder",
-            "path": "Examples",
+            "path": "MCP_Example",
             "confirmDelete": false,
             "dryRun": true,
-            "action": "read"
+            "action": "create"
           },
           "parameters": {
             "category": {
@@ -44990,7 +45018,9 @@
           },
           "operations": {
             "read": {
-              "arguments": {}
+              "arguments": {
+                "action": "read"
+              }
             },
             "create": {
               "arguments": {
@@ -45116,11 +45146,15 @@
         "ListSivarcBlockDefinitions": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "FC_1"
+            "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>"
           },
           "parameters": {
             "includeBlockParameters": {
               "exampleValue": true
+            },
+            "blockPath": {
+              "meaning": "Select an existing FB or FC. V20 blocks definition enumeration for every block type.",
+              "requiresBinding": true
             }
           },
           "operations": {},
@@ -45132,7 +45166,7 @@
         "ManageSivarcBlockDefinition": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "FC_1",
+            "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>",
             "kind": "tagDefinition",
             "confirmDelete": false,
             "dryRun": true,
@@ -45153,6 +45187,10 @@
               "exampleValue": {
                 "en-US": "Example"
               },
+              "requiresBinding": true
+            },
+            "blockPath": {
+              "meaning": "Select an existing FB or FC. V20 blocks definition enumeration for every block type.",
               "requiresBinding": true
             }
           },
@@ -46885,7 +46923,7 @@
               }
             }
           },
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "validation": "All protection actions, including read, return UNSUPPORTED_CAPABILITY on V18–V21 before dispatch. The example demonstrates the documented refusal on these releases.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Every protection action is guarded on V18-V21 before native calls, including an unknown chart with skipChartPreflight=true. No CompleteExport preflight is permitted."
         },
         "ListTestSuiteCases": {
@@ -47468,7 +47506,10 @@
                 "name": "ExampleLog"
               },
               {
-                "property": "LogDuration"
+                "property": "Settings"
+              },
+              {
+                "property": "LogTimePeriod"
               }
             ],
             "kind": "log",
@@ -47487,7 +47528,10 @@
                   "name": "ExampleLog"
                 },
                 {
-                  "property": "LogDuration"
+                  "property": "Settings"
+                },
+                {
+                  "property": "LogTimePeriod"
                 }
               ],
               "requiresBinding": true
@@ -47602,11 +47646,16 @@
             "dryRun": true,
             "objectPath": [],
             "properties": {
-              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              "AssignedHmiDevice": "HMI_RT_1"
             }
           },
           "parameters": {
             "properties": {
+              "meaning": "Bind AssignedHmiDevice to the exact Unified HMI name in the project.",
+              "requiresBinding": true
+            },
+            "plantPath": {
+              "meaning": "Use the exact plant object path from the project.",
               "requiresBinding": true
             }
           },
@@ -55462,7 +55511,7 @@
               }
             }
           },
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "validation": "All protection actions, including read, return UNSUPPORTED_CAPABILITY on V18–V21 before dispatch. The example demonstrates the documented refusal on these releases.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Every protection action is guarded on V18-V21 before native calls, including an unknown chart with skipChartPreflight=true. No CompleteExport preflight is permitted."
         },
         "ManageClassicHmiCycle": {
@@ -55632,7 +55681,7 @@
             "confirmDelete": false,
             "dryRun": true,
             "action": "read",
-            "objectPath": "/Popup_1"
+            "objectPath": "Popup_1"
           },
           "parameters": {
             "filePath": {
@@ -55643,6 +55692,10 @@
             },
             "exportOptions": {
               "exampleValue": "WithDefaults"
+            },
+            "objectPath": {
+              "meaning": "Select a relative popup path in the chosen Classic HMI.",
+              "requiresBinding": true
             }
           },
           "operations": {
@@ -57517,8 +57570,8 @@
         "ManageLibraryFolder": {
           "arguments": {
             "folderKind": "types",
-            "folderPath": "",
-            "action": "read",
+            "folderPath": "MCP_Example",
+            "action": "create",
             "dryRun": true
           },
           "parameters": {
@@ -57531,7 +57584,9 @@
           },
           "operations": {
             "read": {
-              "arguments": {}
+              "arguments": {
+                "action": "read"
+              }
             },
             "create": {
               "arguments": {
@@ -60478,7 +60533,7 @@
         "ManageSivarcBlockDefinition": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "FC_1",
+            "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>",
             "kind": "tagDefinition",
             "confirmDelete": false,
             "dryRun": true,
@@ -60499,6 +60554,10 @@
               "exampleValue": {
                 "en-US": "Example"
               },
+              "requiresBinding": true
+            },
+            "blockPath": {
+              "meaning": "Select an existing FB or FC. V20 blocks definition enumeration for every block type.",
               "requiresBinding": true
             }
           },
@@ -60535,10 +60594,10 @@
           "arguments": {
             "category": "screens",
             "kind": "folder",
-            "path": "Examples",
+            "path": "MCP_Example",
             "confirmDelete": false,
             "dryRun": true,
-            "action": "read"
+            "action": "create"
           },
           "parameters": {
             "category": {
@@ -60559,7 +60618,9 @@
           },
           "operations": {
             "read": {
-              "arguments": {}
+              "arguments": {
+                "action": "read"
+              }
             },
             "create": {
               "arguments": {
@@ -63979,11 +64040,15 @@
         "ListSivarcBlockDefinitions": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "FC_1"
+            "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>"
           },
           "parameters": {
             "includeBlockParameters": {
               "exampleValue": true
+            },
+            "blockPath": {
+              "meaning": "Select an existing FB or FC. V20 blocks definition enumeration for every block type.",
+              "requiresBinding": true
             }
           },
           "operations": {},
@@ -65024,9 +65089,20 @@
             },
             "offset": {
               "exampleValue": 0
+            },
+            "pgPcInterface": {
+              "meaning": "Use the exact interface name or number reported by the scan service. PLCSIM is a V20 example.",
+              "requiresBinding": true,
+              "exampleValue": "PLCSIM"
             }
           },
-          "operations": {},
+          "operations": {
+            "plcsim": {
+              "arguments": {
+                "pgPcInterface": "PLCSIM"
+              }
+            }
+          },
           "validation": "Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): read with the exact PG/PC interface name passed. Other releases: input schema checked offline; native execution NOT RUN.",
           "inline": true
         },
@@ -65160,11 +65236,9 @@
         "SetDeviceItemAttribute": {
           "arguments": {
             "deviceItemPath": "PLC_1/CPU_1",
-            "attributeName": "Name",
-            "value": "TRUE",
-            "dryRun": false,
-            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+            "attributeName": "Comment",
+            "value": "Example comment",
+            "dryRun": true
           },
           "parameters": {},
           "operations": {},
@@ -65357,7 +65431,10 @@
                 "name": "ExampleLog"
               },
               {
-                "property": "LogDuration"
+                "property": "Settings"
+              },
+              {
+                "property": "LogTimePeriod"
               }
             ],
             "kind": "log",
@@ -65376,7 +65453,10 @@
                   "name": "ExampleLog"
                 },
                 {
-                  "property": "LogDuration"
+                  "property": "Settings"
+                },
+                {
+                  "property": "LogTimePeriod"
                 }
               ],
               "requiresBinding": true
@@ -65826,11 +65906,16 @@
             "dryRun": true,
             "objectPath": [],
             "properties": {
-              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              "AssignedHmiDevice": "HMI_RT_1"
             }
           },
           "parameters": {
             "properties": {
+              "meaning": "Bind AssignedHmiDevice to the exact Unified HMI name in the project.",
+              "requiresBinding": true
+            },
+            "plantPath": {
+              "meaning": "Use the exact plant object path from the project.",
               "requiresBinding": true
             }
           },
@@ -66297,7 +66382,7 @@
         },
         "ImportPlcBlocksDocuments": {
           "arguments": {
-            "softwarePath": "PLC_1",
+            "softwarePath": "devices/PLC_1/PLC_1",
             "groupPath": "",
             "importPath": "C:\\Examples\\documents",
             "dryRun": true,
@@ -77194,6 +77279,10 @@
     ]
   },
   "toolNotes": {
+    "ManageCfcChartProtection": {
+      "input": "V18–V21 cannot safely enumerate native chart protection. Every action returns UNSUPPORTED_CAPABILITY before dispatch, including read and skipChartPreflight.",
+      "releaseKeys": []
+    },
     "ManageStartdriveParameter": {
       "input": "devicePath and itemPath are arrays of names from GetProjectTree. Select the intended drive object from ListDriveObjects. parameter is the exact parameter name, including index.",
       "resultCases": [

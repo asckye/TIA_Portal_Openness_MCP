@@ -96,6 +96,10 @@ public sealed class CanonicalBatchToolsTests
         var preview = await batch.InvokeAsync(Request(name, args));
         Assert.True((bool?)preview.StructuredContent?["ok"]);
         string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
+        var sameDirectory = args.DeepClone().AsObject();
+        sameDirectory["dir"] = Path.GetRelativePath(Environment.CurrentDirectory, files.Directory).Replace(Path.DirectorySeparatorChar, '/');
+        var equivalent = await batch.InvokeAsync(Request(name, sameDirectory));
+        Assert.Equal(hash, (string?)equivalent.StructuredContent?["data"]?["planHash"]);
         args["tableKind"] = "watch";
         var explicitWatch = await batch.InvokeAsync(Request(name, args));
         Assert.Equal(hash, (string?)explicitWatch.StructuredContent!["data"]!["planHash"]);
@@ -576,6 +580,19 @@ public sealed class CanonicalBatchToolsTests
         args["dryRun"] = false; args["confirm"] = true; args["expectedPlanHash"] = preview["planHash"]!.DeepClone(); args["expectedProjectFile"] =
             preview["expectedProjectFile"]!.DeepClone();
     }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Invalid_import_pattern_is_rejected_before_project_or_directory_access(bool dryRun)
+    {
+        const string name = "ImportPlcTagTablesFromDirectory";
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool>(), "21",
+            () => throw new InvalidOperationException("Unexpected binding lookup."));
+        var result = await batch.InvokeAsync(Request(name, new JsonObject { ["regexName"] = "[", ["dryRun"] = dryRun }));
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("/regexName", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+    }
+
     private static Tool Declaration(string name)
     {
         var properties = new JsonObject();

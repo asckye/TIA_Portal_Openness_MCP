@@ -49,8 +49,38 @@ public sealed class DeviceItemPathFailureTests
             "hardware-addressing.DescribeHardwareIoChildren" => new JsonArray("PLC_A/DI_1/DI_1 → Input 0(len 16)"),
             _ => throw new InvalidOperationException("Unexpected operation: " + operation)
         }, () => true, () => "C:/Fixture/Fixture.ap21");
-        AssertFailure(new AddressesTools(service).SetDeviceItemIoAddressV4("PLC_A/DI_1", "Input", 20),
-            "INVALID_ARGUMENT", "PLC_A/DI_1/DI_1 → Input 0(len 16)");
+        var result = new AddressesTools(service).SetDeviceItemIoAddressV4("PLC_A/DI_1", "Input", 20);
+        AssertFailure(result, "INVALID_ARGUMENT", "PLC_A/DI_1/DI_1 → Input 0(len 16)");
+        Assert.Equal("/ioType", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+    }
+
+    [Fact]
+    public void Io_address_preview_hash_binds_the_requested_address()
+    {
+        using var worker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var scope = pipeline.EnterSession();
+        int writes = 0;
+        var service = new AddressService((operation, args) => {
+            var before = new JsonObject { ["IoType"] = "Input", ["StartAddress"] = 0, ["Length"] = 4 };
+            if (operation == "hardware-addressing.ReadHardwareIoAddresses") return new JsonArray(before);
+            Assert.Equal("hardware-addressing.SetHardwareIoAddress", operation);
+            writes++;
+            Assert.Equal("C:/Projects/original.ap21", (string?)args["expectedProjectFile"]);
+            var after = before.DeepClone().AsObject();
+            after["StartAddress"] = args["startAddress"]!.DeepClone();
+            return new JsonObject { ["Ok"] = true, ["Message"] = "Address read back.", ["Before"] = before, ["After"] = after };
+        }, () => true, () => "C:/Projects/original.ap21");
+        var tools = new AddressesTools(service);
+        var preview = tools.SetDeviceItemIoAddressV4("PLC/DI", "Input", 2);
+        string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
+        Assert.Equal(64, hash.Length);
+        var stale = tools.SetDeviceItemIoAddressV4("PLC/DI", "Input", 4, false, hash, "C:/Projects/original.ap21");
+        Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent?["error"]?["code"]);
+        Assert.Equal(0, writes);
+        var applied = tools.SetDeviceItemIoAddressV4("PLC/DI", "Input", 2, false, hash, "C:/Projects/original.ap21");
+        Assert.True((bool?)applied.StructuredContent?["ok"], applied.StructuredContent?.ToJsonString());
+        Assert.Equal(1, writes);
     }
 
     private const string PutGetReason = "PUT/GET access has no VM-verified Openness attribute for this CPU.";

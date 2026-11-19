@@ -23,10 +23,11 @@ namespace TiaMcp.Adapters
                 throw new NotSupportedException("Hardware catalog search requires release-specific API and manual evidence; this release is not enabled.");
         }
         internal static PlcHardwareCatalogSearchResult Search(string release,string keyword,int limit,Func<string,
-                IEnumerable<PlcHardwareCatalogCandidate>> find)
+                IEnumerable<PlcHardwareCatalogCandidate>> find,int offset=0)
         {
             RequireRelease(release);
             var query=Query(keyword,limit);
+            if(offset<0 || offset>=MaximumEntries) throw new ArgumentOutOfRangeException(nameof(offset),"offset must be in the bounded catalog traversal.");
             var rows=new List<PlcHardwareCatalogCandidate>();
             var seen=new HashSet<string>(StringComparer.Ordinal);
             var visited=0; var characters=0; string? reason=null;
@@ -45,7 +46,7 @@ namespace TiaMcp.Adapters
                     if(fields.Any(s=>s!=null && s.Length>MaximumFieldCharacters)) { reason="field-character-budget"; break; }
                     if(string.IsNullOrWhiteSpace(entry.TypeIdentifier)) throw new InvalidOperationException("Catalog entry has no exact type identifier.");
                     // Preserve exact identifiers, including casing, whitespace and version. Never synthesize an insertion identifier.
-                    if(!seen.Add(entry.TypeIdentifier!)) continue;
+                    if(!seen.Add(entry.TypeIdentifier!) || seen.Count<=offset) continue;
                     if(rows.Count==limit) { reason="result-limit"; break; }
                     var size=fields.Sum(s=>s?.Length??0)+query.Length+32;
                     if(characters+size>MaximumCharacters) { reason="response-character-budget"; break; }

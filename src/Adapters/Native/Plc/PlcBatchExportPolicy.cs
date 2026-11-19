@@ -45,7 +45,8 @@ namespace TiaMcp.Adapters
                 ObjectPath=PlcExchangePolicy.ObjectPath(source.Path),
                 // Hash the full canonical path; never place a PLC name in a filesystem path.
                 // Prefix avoids reserved Windows devices; fixed ASCII avoids traversal/case collisions.
-                OutputFile=PlcFoundationPolicy.XmlOutput(Path.Combine(root.FullName,kind+"-"+Hash(source.Path)+".xml")).FullName,
+                OutputFile=PlcFoundationPolicy.XmlOutput(Path.Combine(root.FullName,kind+"-"+Hash(source.Path)+".xml"),
+                    kind == "tagTables" ? "exportDirectory" : "exportPath").FullName,
                 Status=source.Consistent ? "planned" : "inconsistent",XmlContent=source.Capability.Content,Warnings=source.Capability.Warnings
             }).ToArray();
             if(result.Items.Select(x=>x.OutputFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=sources.Length)

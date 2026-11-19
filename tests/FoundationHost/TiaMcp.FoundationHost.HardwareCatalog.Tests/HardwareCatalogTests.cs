@@ -6,6 +6,10 @@ internal static class HardwareCatalogTests
     {
         void Reject(Action action,string name) { try { action(); } catch(ArgumentException) { Check(true,name); return; } catch(InvalidOperationException) { Check(true,name); return; } catch(NotSupportedException) { Check(true,name); return; } throw new Exception("Expected rejection: "+name); }
         PlcHardwareCatalogCandidate Row(string id)=>new(){ TypeIdentifier=id,ArticleNumber="6ES7",Description="CPU",TypeIdentifierNormalized=id.Replace(" ",""),Version="V1.0" };
+        var repeated = new[] { Row("A"), Row("A"), Row("B"), Row("C"), Row("D") };
+        var second = PlcHardwareCatalogPolicy.Search("20", "CPU", 2, _ => repeated, offset: 2);
+        Check(second.Items.Select(item => item.TypeIdentifier).SequenceEqual(new[] { "C", "D" }), "offset counts distinct exact catalog identities");
+        Check((bool)second.Meta["complete"], "last offset page reports completion");
         var calls=0;
         PlcHardwareCatalogSearchResult Run(IEnumerable<PlcHardwareCatalogCandidate> rows,int limit=50)=>PlcHardwareCatalogPolicy.Search("19","  CPU  ",limit,q=> { Check(q=="CPU","trim literal query"); calls++; return rows; });
         foreach(var q in new[]{"", " ","* ?", "CPU\n",new string('x',257)}) Reject(()=>PlcHardwareCatalogPolicy.Query(q,50),"query bound");

@@ -161,15 +161,16 @@ namespace TiaMcp.Adapters
             var parts = PlcGroupOperations.Parts(typePath);
             var folder = EngineeringLibraryFolder(library, string.Join("/", parts.Take(parts.Length - 1)), "TypeFolder");
             return (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last())
-                    ?? throw new PlcSoftwareException("NotFound", "Exact library type not found: " + typePath));
+                    ?? throw new PlcSoftwareException("NotFound", "Exact library type not found: " + typePath) { Data = { ["parameter"] = "typePath" } });
         }
         private static LibraryTypeVersion ExactTypeVersion(LibraryType type, string version)
         {
             var matches = PlcGroupOperations.Items(type.Versions).Cast<LibraryTypeVersion>().Where(v => v.VersionNumber?.ToString() == version).Take(2)
                 .ToArray();
             if (matches.Length != 1)
-                throw new PlcSoftwareException("NotFound", "Expected exactly one version '" + version + "' on type '" + type.Name + "', found " + matches
-                    .Length + ".");
+                throw new PlcSoftwareException(matches.Length == 0 ? "NotFound" : "Ambiguous",
+                    "Expected exactly one version '" + version + "' on type '" + type.Name + "', found " + matches
+                    .Length + ".") { Data = { ["parameter"] = "version" } };
             return matches[0];
         }
         private MasterCopy ExactMasterCopy(string libraryName,string path) {

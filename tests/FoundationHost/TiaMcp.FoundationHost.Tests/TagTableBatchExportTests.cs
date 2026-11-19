@@ -10,6 +10,34 @@ using Xunit;
 
 public sealed class TagTableBatchExportTests
 {
+    [Fact]
+    public void Type_export_preview_pages_preserve_every_reviewed_result_and_the_full_inventory_hash()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21");
+        var inventory = Enumerable.Range(0, 81).Select(index => new PlcBatchExportSource { Path = "G/Type" + index.ToString("D3"),
+            Consistent = true }).ToArray();
+        var preview = PlcBatchExportPolicy.Run("types", "C:/project.ap21", "PLC", "G", true, fixture.Root, 128, true, "", inventory,
+            () => throw new InvalidOperationException("A preview cannot export."));
+        var raw = JsonSerializer.SerializeToNode(preview, preview.GetType())!.AsObject();
+        var validated = BatchExportContract.Validate(raw, true);
+        var definition = FoundationTools.Definitions.Single(d => d.Name == "ExportPlcTypes");
+        var paths = new List<string>();
+        int? offset = 0;
+        do
+        {
+            var args = new JsonObject { ["dryRun"] = true, ["offset"] = offset.Value, ["limit"] = 32 };
+            var result = FoundationV4Result.Worker("21", definition, Guid.NewGuid().ToString("N"), args, raw, validated);
+            var body = result.StructuredContent!;
+            Assert.True((bool?)body["ok"]);
+            Assert.True(((TextContentBlock)result.Content.Single()).Text.Length < 40000);
+            Assert.Equal(preview.InventoryHash, (string?)body["data"]!["inventoryHash"]);
+            Assert.Equal(81, (int?)body["meta"]!["paging"]!["total"]);
+            foreach (var item in body["data"]!["items"]!.AsArray()) paths.Add((string)item!["result"]!["data"]!["objectPath"]!);
+            offset = (int?)body["meta"]!["paging"]!["nextOffset"];
+        } while (offset != null);
+        Assert.Equal(inventory.Select(item => item.Path), paths);
+    }
+
     [Theory, MemberData(nameof(B3HostPortsTests.Releases), MemberType = typeof(B3HostPortsTests))]
     public async Task Usage_serves_the_registered_preview_and_execution_examples(string release)
     {
@@ -81,6 +109,11 @@ public sealed class TagTableBatchExportTests
             Assert.All(applied.Items, item => Assert.Equal("exported", item.Status));
             Assert.Equal(3, Directory.GetFiles(directory).Length);
             Assert.All(applied.Items, item => Assert.Equal(contents, File.ReadAllBytes(item.OutputFile)));
+            var collision = Assert.Throws<AdapterPreconditionException>(() => Run(true));
+            Assert.Equal("exportDirectory", collision.ParamName);
+            Assert.Contains("previous export", collision.Message);
+            Assert.All(applied.Items, item => Assert.Equal(contents, File.ReadAllBytes(item.OutputFile)));
+            Assert.Equal(3, exports);
         }
         finally { Directory.Delete(directory, true); }
     }

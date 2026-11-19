@@ -282,7 +282,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         const string conflict = "Output already exists; overwrite refused. Pass exportFile with a new file path.";
                         meta["nativeMessage"] = conflict; throw new IOException(conflict);
                     }
-                    var output = OfflineToolExecution.PlanOutput(exportFile, nameof(exportFile));
+                    var output = NativeFileOutput.Plan(exportFile, nameof(exportFile));
                     data["exportFile"] = output.FullName;
                     if (kind == "plcTagTable" && direction == "fromTable") data["nextStep"] = new JsonObject {
                         ["tool"] = "ImportPlcTagTable", ["requiresBinding"] = true,

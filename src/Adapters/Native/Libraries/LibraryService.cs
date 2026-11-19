@@ -42,14 +42,8 @@ namespace TiaMcp.Adapters
                 var library = ExactOpenEngineeringLibrary(libraryName);
                 if ((action == "edit" || action == "discard") && library is not ProjectLibrary)
                     throw new NotSupportedException("Library version edit/discard is supported only in the project library.");
-                var parts = PlcGroupOperations.Parts(typePath);
-                var folder = EngineeringLibraryFolder(library, string.Join("/", parts.Take(parts.Length - 1)), "TypeFolder");
-                var type =
-                    (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last())
-                        ?? throw new PlcSoftwareException("NotFound", "Exact library type not found."));
-                var matches = type.Versions.Where(v => v.VersionNumber.ToString() == version).Take(2).ToArray();
-                if (matches.Length != 1) throw new InvalidOperationException("Expected exactly one matching version, found " + matches.Length);
-                var selected = matches[0];
+                var type = ExactLibraryType(library, typePath);
+                var selected = ExactTypeVersion(type, version);
                 meta["before"] = HardwareScalarEvidence.Read(selected); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["typePath"] = typePath; meta["libraryName"] = libraryName; meta["action"] = action;
 #if LIBRARY_V20

@@ -44,8 +44,10 @@ namespace TiaMcp.Adapters
                     RequireTargetOffline(selected),unitName:unitName,stripVolatile:stripVolatile);
         }
         public PlcBatchExportResult ExportTypes(string softwarePath,string groupPath,string exportPath,bool recursive=false,int maxItems=128,
-                string expectedInventoryHash="",bool dryRun=true, string unitName = "", bool stripVolatile = false)
+                string expectedInventoryHash="",bool dryRun=true, string unitName = "", bool stripVolatile = false, int offset = 0, int limit = 32)
         {
+            // Preview paging is applied by the host after the full inventory and its hash are verified.
+            Contracts.Paging.PlcTypeExportPage.Validate(offset, limit, dryRun);
             var selected=ReadSelection(softwarePath);
             var unit=PlcUnitScope.Optional(selected.Value,unitName);
             TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,selected.ExactPath,true);

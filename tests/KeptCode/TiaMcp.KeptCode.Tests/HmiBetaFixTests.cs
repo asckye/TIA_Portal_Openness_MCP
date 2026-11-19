@@ -88,6 +88,36 @@ namespace TiaMcp.Adapters.Contracts.Tests
             public string DataType { get; set; } = "";
         }
 
+        public sealed class ScriptReadback
+        {
+            private string source = "";
+            public bool ChangeText;
+            public string ScriptCode
+            {
+                get => source;
+                set => source = value.Replace("\r\n", "\n").Replace("\n", "\r\n") + (ChangeText ? " " : "");
+            }
+        }
+
+        [Theory]
+        [InlineData("%M0.0", "", "%M0.0", true)]
+        [InlineData("%M0.0", "", "%M1.0", false)]
+        [InlineData("%M0.0", "%M1.0", "%M0.0", false)]
+        [InlineData("Ready", "", "", false)]
+        public void Absolute_binding_readback_verifies_the_address_that_was_selected(string plcTag, string address, string readback, bool verified)
+            => Assert.Equal(verified, HmiExchangePolicy.UnifiedTagAddressMatches(plcTag, address, readback));
+
+        [Fact]
+        public void Button_script_readback_allows_only_line_ending_changes()
+        {
+            var script = new ScriptReadback();
+            const string code = "let value = 1;\nreturn value;\n";
+            HmiExchangePolicy.UpdateScript(script, code, null, null, () => { });
+            Assert.Equal("let value = 1;\r\nreturn value;\r\n", script.ScriptCode);
+            script.ChangeText = true;
+            Assert.Throws<InvalidOperationException>(() => HmiExchangePolicy.UpdateScript(script, code, null, null, () => { }));
+        }
+
         public sealed class TagConnection
         {
             public string Name { get; set; } = "";
@@ -99,6 +129,7 @@ namespace TiaMcp.Adapters.Contracts.Tests
         [Theory]
         [InlineData("", "\"Db\".Ready", "SymbolicAccess", "", "Db.Ready", "Connection,AccessMode,Address,PlcTag")]
         [InlineData("%M0.0", "Ready", "AbsoluteAccess", "%M0.0", "", "Connection,AccessMode,Address,PlcTag,DataType")]
+        [InlineData("", "%M0.0", "AbsoluteAccess", "%M0.0", "", "Connection,AccessMode,Address,PlcTag,DataType")]
         public void Unified_tag_binding_never_writes_PlcName(string address, string symbol, string mode, string expectedAddress,
             string expectedTag, string expectedProperties)
         {

@@ -64,6 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             .Examples(release, ToolUsageCatalog.ExampleSource(toolName, release), methods.Keys, language, exampleId, name,
                                     exampleKind, schemaFor: SchemaFor)["examples"]!
                                 .DeepClone();
+                    if (exampleId.Length == 0) ToolUsageCatalog.CompactExampleIndex(usage);
                 }
                 else if (language.Length > 0 || exampleId.Length > 0 || exampleKind != "all")
                     usage = ToolUsageCatalog

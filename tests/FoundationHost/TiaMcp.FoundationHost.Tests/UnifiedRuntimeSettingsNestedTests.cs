@@ -22,6 +22,18 @@ public sealed class UnifiedRuntimeSettingsNestedTests : IDisposable
     }
 
     [Fact]
+    public void Preview_token_is_named_for_the_apply_parameter_and_preserves_the_legacy_alias()
+    {
+        var hmi = new Software();
+        const string changes = "{\"GMPEnabled\":true}";
+        var preview = Update(hmi, changes, true);
+        var token = Assert.IsType<string>(preview["previewToken"]);
+        Assert.NotEmpty(token);
+        Assert.Equal(preview["token"], token);
+        Assert.True((bool)Update(hmi, changes, false, token)["operationSuccess"]!);
+    }
+
+    [Fact]
     public void Nested_scalars_write_and_read_back_without_replacing_their_owners()
     {
         var hmi = new Software();
@@ -87,6 +99,7 @@ public sealed class UnifiedRuntimeSettingsNestedTests : IDisposable
         Assert.True((bool)meta["dataComplete"]!);
         Assert.Equal("Main", ((HmiObject)meta["settings"]!)["StartScreen"]!.Field("value"));
         Assert.Equal(0, hmi.RuntimeSettings.OwnerGetterCalls);
+        Assert.Contains("HmiUnifiedTagSettings.TagOptimizationActive", (string)meta["coverage"]!);
         Assert.Contains(((HmiArray)meta["capabilities"]!).Cast<HmiObject>(),
             row => (string?)row["field"] == "OpcUaServerRuntimeSettings.MaxSessionCount" && (bool)row["readable"]!);
         var error = Assert.Throws<TargetInvocationException>(() => typeof(ThrowingSettings)

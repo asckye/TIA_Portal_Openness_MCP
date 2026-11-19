@@ -148,7 +148,10 @@ internal sealed class WorkbenchControlTool : McpServerTool
             data.Remove("paging");
         }
         bool failed = response.Status == WorkbenchControlStatus.Failed && refusal?.Code != WorkbenchControlError.Timeout;
-        var envelope = Envelope.Create(data, done ? null : new Error("Workbench control " + (failed ? "failed." : "was refused."),
+        string message = refusal?.Condition == "workbench-project-not-selected"
+            ? "The requesting MCP session has a bound project. Select that project in the Workbench before opening this view."
+            : "Workbench control " + (failed ? "failed." : "was refused.");
+        var envelope = Envelope.Create(data, done ? null : new Error(message,
             details ?? new InternalErrorDetails(id)), new Meta(DateTimeOffset.UtcNow, release, name, id,
             done ? Outcome.Succeeded : failed ? Outcome.Failed : Outcome.RejectedBeforeOperation,
             failed ? Execution.Completed : done ? read ? Execution.ReadOnly : Execution.Completed : Execution.NotStarted, BehaviorPolicy.NotApplicable, done

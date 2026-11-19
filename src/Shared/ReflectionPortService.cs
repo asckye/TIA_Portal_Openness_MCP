@@ -43,8 +43,12 @@ namespace TiaMcpServer.Siemens.Services
                     }
                     throw error;
                 }
-                if (Enum.TryParse<PortalErrorCode>(code, out var nativeCode)) throw new PortalException(nativeCode, message,
-                    failure["Candidates"] == null ? null : JsonSerializer.Deserialize<string[]>(failure["Candidates"]!.ToJsonString()));
+                if (Enum.TryParse<PortalErrorCode>(code, out var nativeCode))
+                {
+                    var error = new PortalException(nativeCode, message, failure["Candidates"]?.Deserialize<string[]>());
+                    if (failure["Evidence"]?["parameter"] is JsonValue field) error.Data["parameter"] = field.GetValue<string>();
+                    throw error;
+                }
                 if (code == nameof(ArgumentException)) throw new ArgumentException(message);
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
                 if (code == nameof(FormatException)) throw new FormatException(message);

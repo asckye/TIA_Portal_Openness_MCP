@@ -25,7 +25,7 @@ namespace TiaMcp.Adapters.Native.Optional
             EngineeringInputValidation.Path(json, path, optional: true);
             return (HmiArray)path!;
         }
-        internal static object Resolve(object root, string json)
+        internal static object Resolve(object root, string json, string parameter = "objectPath")
         {
             object target = root;
             foreach (var node in Parse(json))
@@ -34,9 +34,15 @@ namespace TiaMcp.Adapters.Native.Optional
                 var property = target.GetType().GetProperty(step["property"]!.OptionalValue<string>(), BindingFlags.Instance | BindingFlags.Public);
                 if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0)
                     throw new NotSupportedException("Public property not available: " + step["property"]);
-                target = property.GetValue(target) ?? throw new InvalidOperationException("Null object at " + step);
-                if (step.ContainsKey("name")) target = EngineeringGroupOperations.Find(target, step["name"]!.OptionalValue<string>())
-                    ?? throw new PlcSoftwareException("NotFound", "Exact named object not found at " + step);
+                target = property.GetValue(target) ?? throw new PlcSoftwareException("NotFound", "Null object at " + property.Name)
+                    { Data = { ["parameter"] = parameter } };
+                if (step.ContainsKey("name"))
+                {
+                    var name = step["name"]!.OptionalValue<string>();
+                    target = EngineeringGroupOperations.Find(target, name)
+                        ?? throw new PlcSoftwareException("NotFound", "Exact named object not found at " + property.Name + "/" + name)
+                            { Data = { ["parameter"] = parameter } };
+                }
             }
             return target;
         }

@@ -1126,7 +1126,7 @@
       "path": "src/Engine/ModelContextProtocol/Tools/TypesTools.cs",
       "owner": "TypesTools",
       "domain": "PLC-Software",
-      "signature": "public Task<CallToolResult> ExportTypesV4(\n            IMcpServer server,\n            RequestContext<CallToolRequestParams> context,\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"exportPath: defines the path where to export the types\")] string exportPath,\n            [Description(\"regexName: defines the name or regular expression to find the block. Use empty string (default) to find all\")] string regexName = \"\",\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false, [Description(\"stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.\")] bool stripVolatile = false)",
+      "signature": "public Task<CallToolResult> ExportTypesV4(\n            IMcpServer server,\n            RequestContext<CallToolRequestParams> context,\n            [Description(\"softwarePath: defines the path in the project structure to the plc software\")] string softwarePath,\n            [Description(\"exportPath: defines the path where to export the types\")] string exportPath,\n            [Description(\"regexName: defines the name or regular expression to find the block. Use empty string (default) to find all\")] string regexName = \"\",\n            [Description(\"preservePath: preserves the path/structure of the plc software\")] bool preservePath = false, [Description(\"stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.\")] bool stripVolatile = false, [Description(\"Zero-based preview item offset.\")] int offset = 0, [Description(\"Maximum preview items per page.\")] int limit = 32)",
       "parameters": {
         "server": {
           "type": "IMcpServer",
@@ -1167,9 +1167,25 @@
           "default": "false",
           "description": "stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable.",
           "value": false
+        },
+        "offset": {
+          "type": "int",
+          "default": "0",
+          "description": "Zero-based preview item offset.",
+          "value": 0,
+          "minimum": 0,
+          "maximum": 256
+        },
+        "limit": {
+          "type": "int",
+          "default": "32",
+          "description": "Maximum preview items per page.",
+          "value": 32,
+          "minimum": 1,
+          "maximum": 32
         }
       },
-      "description": "[bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable."
+      "description": "[bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview items use offset and limit. The inventory hash and apply cover the entire selection. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. stripVolatile=true rewrites DocumentInfo (Created, installed products) to a fixed header so repeated exports of unchanged objects are byte-identical; the file stays importable."
     },
     "PlanArtifactImportOrder": {
       "method": "PlanArtifactImportOrderV4",
@@ -3238,7 +3254,7 @@
       "path": "src/Shared/HardwareAddressTools.cs",
       "owner": "AddressesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult SetDeviceItemIoAddressV4(\n            [Description(\"deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'\")] string deviceItemPath,\n            [Description(\"ioType: Input, Output, Diagnosis or Substitute\")] string ioType,\n            [Description(\"startAddress: new start address as engine raw byte offset (%I2.0 -> 2)\")] int startAddress,\n            [Description(\"dryRun: true (default) only previews the change; set false to actually write it\")] bool dryRun = true)",
+      "signature": "public CallToolResult SetDeviceItemIoAddressV4(\n            [Description(\"deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'\")] string deviceItemPath,\n            [Description(\"ioType: Input, Output, Diagnosis or Substitute\")] string ioType,\n            [Description(\"startAddress: new start address as engine raw byte offset (%I2.0 -> 2)\")] int startAddress,\n            [Description(\"dryRun: true (default) only previews the change; set false to actually write it\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: copy planHash from the matching preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file from the matching preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "deviceItemPath": {
           "type": "string",
@@ -3260,6 +3276,18 @@
           "default": "true",
           "description": "dryRun: true (default) only previews the change; set false to actually write it",
           "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedPlanHash: copy planHash from the matching preview; required when dryRun=false.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "expectedProjectFile: exact project file from the matching preview; required when dryRun=false.",
+          "value": ""
         }
       }
     },
@@ -3691,11 +3719,12 @@
       }
     },
     "SearchHardwareCatalog": {
+      "description": "[hardware-catalog-candidate] V18–21 only. Existing explicit attached portal and open bound project required. One literal query per page. Continue with meta.paging.nextOffset for the same keyword. Native Find has no server-side limit/cancellation. No insertion, compatibility probe, catalog repair or launch. V14 SP1–17 API absent; V18 native acceptance NOT RUN.",
       "method": "SearchHardwareCatalogV4",
       "path": "src/Shared/HardwareDevicesTools.cs",
       "owner": "HardwareDevicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult SearchHardwareCatalogV4(\n            [Description(\"keyword: MLFB/order number/device/family text, e.g. 'KTP700', '6AV2123', '1211C DC/DC/DC', '6ES7211-1AE40'\")] string keyword,\n            [Description(\"limit: maximum candidates to return\")] int limit = 50)",
+      "signature": "public CallToolResult SearchHardwareCatalogV4(\n            [Description(\"keyword: MLFB/order number/device/family text, e.g. 'KTP700', '6AV2123', '1211C DC/DC/DC', '6ES7211-1AE40'\")] string keyword,\n            [Description(\"limit: maximum candidates to return\")] int limit = 50,\n            [Description(\"offset: continue with meta.paging.nextOffset for the same keyword.\")] int offset = 0)",
       "parameters": {
         "keyword": {
           "type": "string",
@@ -3709,6 +3738,14 @@
           "value": 50,
           "minimum": 1,
           "maximum": 100
+        },
+        "offset": {
+          "type": "int",
+          "default": "0",
+          "description": "offset: continue with meta.paging.nextOffset for the same keyword.",
+          "value": 0,
+          "minimum": 0,
+          "maximum": 999
         }
       }
     },
@@ -12019,7 +12056,7 @@
           "value": null
         }
       },
-      "description": "[L2][HMI-Unified][READ] Read supported root scalars and nested runtime settings using exact dotted names, e.g. OpcUaServerRuntimeSettings.MaxSessionCount. Select 1..12 unique fields. V20+: Telemetry, UPSS and tag settings; V21: TagOptimizationActive and exclusive operation. Exact expectedProject and softwarePath required. fields is a string array, default [\"StartScreen\",\"ScreenResolution\"]. Returns per-field type/value, public setter availability and exact enum names in capabilities. Coverage is the requested fields only; LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. No save, compile, download or runtime restart. Native behaviorPolicy=current; V4 native acceptance is pending."
+      "description": "[L2][HMI-Unified][READ] Read supported root scalars and nested runtime settings using exact dotted names, e.g. OpcUaServerRuntimeSettings.MaxSessionCount. Select 1..12 unique fields. V20+: Telemetry, UPSS and tag settings; V21: HmiUnifiedTagSettings.TagOptimizationActive and exclusive operation. Exact expectedProject and softwarePath required. fields is a string array, default [\"StartScreen\",\"ScreenResolution\"]. Returns per-field type/value, public setter availability and exact enum names in capabilities. Coverage is the requested fields only; LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. No save, compile, download or runtime restart. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "SetUnifiedRuntimeSettings": {
       "method": "UpdateUnifiedRuntimeSettingsV4",
@@ -12065,7 +12102,7 @@
           "value": ""
         }
       },
-      "description": "[L2][HMI-Unified][WRITE] Update 1..12 supported root scalars or exact dotted nested fields using public leaf setters, e.g. MaxLoginRuntimeSettings.MaxLoginErrors. Nested objects are never replaced. V20+: Telemetry, UPSS and tag settings; V21: TagOptimizationActive and exclusive operation. LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. changes is an object, e.g. {\"StartScreen\":\"/Group/Main\",\"ScreenResolution\":\"SR_1920X1080\"}; use exact enum names from GetUnifiedRuntimeSettings. StartScreen MUST be a full readable screen path (old encoded input accepted): validates existence and unique name in the selected HMI before writing the API's name value. Default dryRun=true returns before/proposed/token and planHash. Every execution requires previewToken, expectedPlanHash and expectedProjectFile from the same preview. Integers must be JSON integers in the CLR type range; enum names are exact. Validates all fields before any write and verifies final readback. Captured values are restored on failure; inspect rollbackCompleted and cleanupRequired. Multi-field writes are not atomic. No save, compile, download, runtime restart or close. Unsupported fields are rejected. Native behaviorPolicy=current; V4 native acceptance is pending."
+      "description": "[L2][HMI-Unified][WRITE] Update 1..12 supported root scalars or exact dotted nested fields using public leaf setters, e.g. MaxLoginRuntimeSettings.MaxLoginErrors. Nested objects are never replaced. V20+: Telemetry, UPSS and tag settings; V21: HmiUnifiedTagSettings.TagOptimizationActive and exclusive operation. LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. changes is an object, e.g. {\"StartScreen\":\"/Group/Main\",\"ScreenResolution\":\"SR_1920X1080\"}; use exact enum names from GetUnifiedRuntimeSettings. StartScreen MUST be a full readable screen path (old encoded input accepted): validates existence and unique name in the selected HMI before writing the API's name value. Default dryRun=true returns before/proposed/previewToken and planHash. Every execution requires previewToken, expectedPlanHash and expectedProjectFile from the same preview. Integers must be JSON integers in the CLR type range; enum names are exact. Validates all fields before any write and verifies final readback. Captured values are restored on failure; inspect rollbackCompleted and cleanupRequired. Multi-field writes are not atomic. No save, compile, download, runtime restart or close. Unsupported fields are rejected. Native behaviorPolicy=current; V4 native acceptance is pending."
     },
     "ManagePlcSafety": {
       "method": "ManagePlcSafety",

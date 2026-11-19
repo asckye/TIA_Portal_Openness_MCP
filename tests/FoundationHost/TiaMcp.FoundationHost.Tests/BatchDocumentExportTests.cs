@@ -74,6 +74,17 @@ internal static class BatchDocumentExportTests
             var success=Run(output,dry:false,hash:plan.PlanHash,move:(from,to)=>Directory.Move(from.FullName,to.FullName));Validate(success,false);
             check(success.Status=="exported" && success.Items.All(x=>x.Status=="exported") && Directory.GetDirectories(output).Length==2 && native==2,"Batch document entire validated tree publishes once");
             Reject(()=>Run(output,dry:false,hash:plan.PlanHash,move:(from,to)=>Directory.Move(from.FullName,to.FullName)),"Batch document replay cannot overwrite published tree");
+            var codeDirectory = Path.Combine(root, "code-only");
+            var codeOnly = new[] { Source("group/A", callback: (directory, name) => {
+                var code = Path.Combine(directory.FullName, name + ".s7dcl");
+                File.WriteAllText(code, "code");
+                return new[] { code };
+            }) };
+            var codePlan = Run(codeDirectory, codeOnly);
+            var published = Run(codeDirectory, codeOnly, false, codePlan.PlanHash, move: (from, to) => Directory.Move(from.FullName, to.FullName));
+            Validate(published, false);
+            check(published.Status == "exported" && published.Items.Single().Files.SequenceEqual(new[] { "A.s7dcl" }),
+                "V20 batch document export publishes the validated code-only native result");
             foreach(var kind in new[]{"native","missing-resource","extra","empty","duplicate","escaped","publish","race","late-tamper","extra-tree"})
             {
                 var destination=Path.Combine(root,kind);int attempts=0;string? firstFile=null;

@@ -102,8 +102,8 @@ namespace TiaMcp.Logic.Generation
                     Package = new GenerationPlanPackage { Id = manifest.Id, Version = manifest.Version, Hash = package.ContentHash }, MachineHash = machineHash,
                     Target = new GenerationPlanTarget { Release = machine.Target.Release, Mode = machine.Target.Project.Mode,
                         ProjectIdentity = machine.Target.Project.Mode == "new" ? GenerationProjectPath
-                            .CreationFile(machine.Target.Release, machine.Target.Project.Directory!, machine.Target.Project.Name!) : machine.Target.Project
-                            .ProjectIdentity!,
+                            .CreationFile(machine.Target.Release, machine.Target.Project.Directory!, machine.Target.Project.Name!)
+                            : this.observed.ProjectIdentity,
                         SoftwarePath = machine.Target.Project.SoftwarePath }, Phases = Phases.ToList() };
                 expected.ProjectIdentity = plan.Target.ProjectIdentity;
                 foreach (var station in machine.Stations.OrderBy(s => s.Id, StringComparer.Ordinal))
