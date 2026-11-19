@@ -1,4 +1,5 @@
 extern alias toolpipeline;
+extern alias adaptertests;
 using TiaMcp.Engine.Tests.Shared;
 using System.Reflection;
 using System.Text.Json;
@@ -13,6 +14,46 @@ using Xunit;
 
 public sealed class PortedPortalAdmissionTests
 {
+    [Theory, InlineData(true), InlineData(false)]
+    public void Generation_on_a_device_without_HMI_software_identifies_the_device_precondition(bool dryRun)
+    {
+        var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.OptionalAuditRegressionTests.MissingGenerationConnection(dryRun, false);
+        var response = new Host.ResponseMessage { Message = reply.Message, Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() };
+        var body = Host.LibraryToolContract.Map("GenerateSivarc", response, !dryRun).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("hmi-software-missing", (string?)body["error"]?["details"]?["condition"]);
+        Assert.Contains("MCP_B5_HMI", (string?)body["error"]?["message"]);
+        Assert.False(reply.OutcomeUnknown);
+    }
+    [Theory, InlineData(true), InlineData(false)]
+    public void Missing_SiVArc_connection_refuses_both_preview_and_generation(bool dryRun)
+    {
+        var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.OptionalAuditRegressionTests.MissingGenerationConnection(dryRun);
+        Assert.False(reply.OutcomeUnknown);
+        var response = new Host.ResponseMessage { Message = reply.Message, Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() };
+        var body = Host.LibraryToolContract.Map("GenerateSivarc", response, !dryRun).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("missing-plc-connection", (string?)body["error"]?["details"]?["condition"]);
+        Assert.Contains("PLC_1", (string?)body["error"]?["message"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.False((bool?)body["data"]?["evidence"]?["mayHaveChanged"]);
+    }
+
+    [Theory]
+    [InlineData("ManageDeviceServiceObjects", "webApplications", "list", "DefaultWebPagesFeature requires V21")]
+    [InlineData("ManagePlcUserGroup", "blocks", "rename", "group Name has no public setter")]
+    public void V20_family_refusals_explain_the_unavailable_API(string name, string family, string action, string reason)
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "20");
+        var tool = PortedToolContract.Create(worker, "20").OfType<FoundationTool>().Single(item => item.ProtocolTool.Name == name);
+        var args = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(new JsonObject {
+            ["action"] = action, ["family"] = family, ["dryRun"] = true }.ToJsonString())!;
+        var body = tool.RefusePortedCapability(args)!.StructuredContent!;
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.Contains(reason, (string?)body["error"]?["message"]);
+    }
+
     [Theory]
     [InlineData("changeType")]
     [InlineData("createSubnet")]

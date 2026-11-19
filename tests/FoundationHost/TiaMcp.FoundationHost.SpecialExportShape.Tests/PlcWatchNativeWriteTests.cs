@@ -129,6 +129,28 @@ public sealed class PlcWatchNativeWriteTests
     }
 
     [Fact]
+    public void An_import_refused_before_insertion_clears_only_the_current_mutation_flag()
+    {
+        using var fixture = new Fixture();
+        var group = fixture.Group("G");
+        string file = fixture.Document("Watch", "T");
+        fixture.Session.ReportFailure = true;
+        group.StoredWatchTables.BeforeImport = () => throw new IOException("Native import refused.");
+        foreach (bool previous in new[] { false, true })
+        {
+            fixture.Adapter.MutationStarted = previous;
+            var result = fixture.Adapter.ImportPlcWatchTableOffline("PLC", file, "G", false);
+            Assert.Equal(previous, fixture.Adapter.MutationStarted);
+            Assert.False(result.MayHaveChanged);
+            Assert.False(result.OutcomeUnknown);
+            Assert.Equal("Native import refused.", result.Meta["nativeMessage"]);
+            Assert.Equal("restored", result.Meta["rollbackOutcome"]);
+            Assert.Empty(group.StoredWatchTables);
+        }
+        Assert.Equal(2, group.StoredWatchTables.ImportCalls);
+    }
+
+    [Fact]
     public void Every_validated_watch_name_is_registered_before_import_can_throw()
     {
         using var fixture = new Fixture(); var group = fixture.Group("G");

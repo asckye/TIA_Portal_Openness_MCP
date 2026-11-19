@@ -212,6 +212,7 @@ internal sealed partial class WorkerClient
         lock (stateSync)
         {
             hostProcessStartUtc = null; hostState = null; sharedStatus = null;
+            Unsettled.BindProcess(null, null);
             if (!SharedSession) HostSessionKey = new object();
         }
     }

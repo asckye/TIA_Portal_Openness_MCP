@@ -29,6 +29,25 @@ namespace TiaMcpServer.Siemens.Services
             return Dispatch(request, dryRun);
         }
 
+        internal static Error RuntimeSettingsError(string parameter, string message, string[] unknownNames)
+        {
+            string pointer = "/" + parameter;
+            var pointers = parameter == "changes" && unknownNames.Length > 0
+                ? new[] { pointer }.Concat(unknownNames.Select(key => pointer + "/" + InvalidArgumentDetails.Segment(key))).ToArray() : null;
+            return new Error(message, new InvalidArgumentDetails(pointer, Array.Empty<string>(), pointers));
+        }
+
+        // Free-map pointers are normally private. For this diagnostic reconstruct only the rejected setting names from the request keys.
+        internal static Error? UnknownRuntimeChangeError(string? tool, JsonElement args, Error error)
+        {
+            if (tool == "SetUnifiedRuntimeSettings" && error.Details is InvalidArgumentDetails { Parameter: "/changes" }
+                && args.ValueKind == JsonValueKind.Object && args.TryGetProperty("changes", out var changes) && changes.ValueKind == JsonValueKind.Object
+                && UnifiedRuntimeSettingsFields.Invalid(changes.EnumerateObject().Select(p => p.Name), out var unknown) == error.Message
+                && unknown.Length > 0)
+                return RuntimeSettingsError("changes", error.Message, unknown);
+            return null;
+        }
+
         // Direct tools and bridge binding share admission before schema, readiness and approval gates.
         internal static Error? ValidateNavigation(string tool, JsonElement schema, JsonElement args)
         {
@@ -45,11 +64,11 @@ namespace TiaMcpServer.Siemens.Services
                     && (parameter == "fields" ? settings.ValueKind == JsonValueKind.Array
                         && settings.EnumerateArray().All(v => v.ValueKind == JsonValueKind.String) : settings.ValueKind == JsonValueKind.Object))
                 {
-                    var details = new InvalidArgumentDetails("/" + parameter, Array.Empty<string>());
-                    if (UnifiedInputCodec.HasDuplicateKeys(settings)) return new Error("Duplicate runtime setting name.", details);
+                    if (UnifiedInputCodec.HasDuplicateKeys(settings))
+                        return new Error("Duplicate runtime setting name.", new InvalidArgumentDetails("/" + parameter, Array.Empty<string>()));
                     var input = UnifiedInputCodec.Decode(settings);
-                    if (UnifiedRuntimeSettingsFields.Invalid(parameter == "fields" ? input.Items.Select(v => v.Text) : input.Properties.Keys)
-                        is string invalidSettings) return new Error(invalidSettings, details);
+                    if (UnifiedRuntimeSettingsFields.Invalid(parameter == "fields" ? input.Items.Select(v => v.Text) : input.Properties.Keys,
+                        out var unknownNames) is string invalidSettings) return RuntimeSettingsError(parameter, invalidSettings, unknownNames);
                 }
             }
             if (args.TryGetProperty("expectedProject", out var expectedProject) && expectedProject.ValueKind == JsonValueKind.String

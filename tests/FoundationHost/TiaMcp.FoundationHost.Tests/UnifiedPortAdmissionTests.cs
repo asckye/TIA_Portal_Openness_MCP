@@ -14,6 +14,30 @@ using Xunit;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class UnifiedPortAdmissionTests
 {
+    [Fact]
+    public async Task Runtime_settings_name_each_unknown_key_without_echoing_change_values()
+    {
+        const string toolName = "SetUnifiedRuntimeSettings";
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "21");
+        var args = Arguments(toolName);
+        args["changes"] = new JsonObject { ["Bad/Field"] = "private-one", ["StartScreen"] = "private-two", ["Bad~Name"] = "private-three" };
+        var port = PortedToolContract.Create(worker, "21").OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == toolName);
+        var capability = port.RefusePortedCapability(JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString())!);
+        var registered = LegacyHostToolRegistry.Create(worker, "21", false).Single(t => t.ProtocolTool.Name == toolName);
+        var dispatched = await registered.InvokeAsync(Request(toolName, args));
+        foreach (var result in new[] { capability!, dispatched })
+        {
+            var error = result.StructuredContent!["error"]!;
+            Assert.Equal("Unknown runtime setting name.", (string?)error["message"]);
+            Assert.Equal("/changes", (string?)error["details"]?["parameter"]);
+            Assert.Equal(new[] { "/changes", "/changes/Bad~1Field", "/changes/Bad~0Name" },
+                error["details"]!["parameters"]!.AsArray().Select(node => (string?)node));
+            Assert.DoesNotContain("private-", result.StructuredContent.ToJsonString());
+        }
+        Assert.Equal(0, worker.Calls);
+    }
+
     [Theory]
     [InlineData("14sp1", false)]
     [InlineData("15.1", false)]

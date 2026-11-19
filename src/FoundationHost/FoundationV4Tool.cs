@@ -436,7 +436,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(dispatchFenced);
             if (ReplayRefusal() is { } queuedReplay) return await Recorded(queuedReplay);
             if (tool.Name is "SaveProject" or "SaveProjectCopy" && inner is FoundationTool saveTool)
-                unsettledBeforeSave = saveTool.Unsettled.ToJson();
+                unsettledBeforeSave = saveTool.Unsettled.SaveWarnings();
             if (await FoundationHostPorts.BeforeDispatchAsync().ConfigureAwait(false) is { } batchRefusal) return await Recorded(batchRefusal);
             if (!internalPrecheck && DeclaredHost.OnlinePlanRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()) is Error queuedExpiry)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, queuedExpiry, true));

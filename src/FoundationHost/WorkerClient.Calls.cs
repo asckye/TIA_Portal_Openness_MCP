@@ -8,6 +8,7 @@ using ReleaseCatalogData = toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogDat
 using UnsettledCalls = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls;
 using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
 using UnknownSettlement = toolpipeline::TiaMcp.FoundationHost.UnknownSettlement;
+using CallSettlement = toolpipeline::TiaMcp.FoundationHost.CallSettlement;
 using ResponseGuardTool = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
 #else
 using McpServer = TiaMcpServer.ModelContextProtocol.McpServer;
@@ -27,8 +28,8 @@ internal sealed partial class WorkerClient
     private string? secondaryProjectFile;
     private int? secondaryProcessId;
     private string? secondaryProcessStartUtc;
-    internal Func<int, (bool Gone, string? StartUtc)> SecondaryProcessObservation { get; set; } = ReadSecondaryProcess;
-    private static (bool Gone, string? StartUtc) ReadSecondaryProcess(int pid)
+    internal Func<int, (bool Gone, string? StartUtc)> SecondaryProcessObservation { get; set; } = ReadPortalProcess;
+    private static (bool Gone, string? StartUtc) ReadPortalProcess(int pid)
     {
         try
         {
@@ -39,6 +40,29 @@ internal sealed partial class WorkerClient
         catch (ArgumentException) { /* swallow(env-probe): no process exists with the recorded PID. */ return (true, null); }
         catch (Exception error) when (error is InvalidOperationException or System.ComponentModel.Win32Exception or System.Security.SecurityException)
         { /* swallow(env-probe): access failure cannot establish that the holding process is gone. */ return (false, null); }
+    }
+    private int? observedBindingPid;
+    internal int? ExitedBinding()
+    {
+        int? pid;
+        IReadOnlyList<CallSettlement> settlements;
+        lock (stateSync)
+        {
+            pid = attachedProcessId ?? (rebindPending ? rebindTarget?.ProcessId : null);
+            string? start = attachedProcessId.HasValue ? hostProcessStartUtc : rebindTarget?.ProcessStartUtc;
+            if (pid == null || start == null && observedBindingPid != pid || disconnecting) return null;
+            var observed = ReadPortalProcess(pid.Value);
+            if (!observed.Gone && (start == null || observed.StartUtc == null || observed.StartUtc == start)) return null;
+            settlements = Unsettled.SettleExitedProcess(pid.Value, start);
+        }
+        foreach (var settlement in settlements) LateResults.ObserveSettlement(settlement);
+        return pid;
+    }
+    private void RequireBindingProcess(string? operation)
+    {
+        if (!recovering && operation is ("Attach" or "BindProject" or "ConnectPortal" or "AttachOpenProject") && ExitedBinding() is int pid)
+            throw RecoveryRefusal("session-lost", $"The bound TIA process (PID {pid}) exited. Call DisconnectPortal first, "
+                + "then ConnectPortal with the intended processId and AttachOpenProject.");
     }
     private void ClearSecondaryRecord()
     {

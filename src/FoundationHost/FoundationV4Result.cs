@@ -2,8 +2,10 @@
 extern alias toolpipeline;
 using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
 using HostMcp = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using UnifiedInputAdmission = toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService;
 #else
 using HostMcp = TiaMcpServer.ModelContextProtocol.McpServer;
+using UnifiedInputAdmission = TiaMcpServer.Siemens.Services.UnifiedPortService;
 #endif
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -21,6 +23,7 @@ internal static class FoundationV4Result
         if (result.StructuredContent is not JsonObject body || (string?)body["error"]?["code"] != "INVALID_ARGUMENT") return result;
         var error = V4Json.Deserialize<Error>(body["error"]!.ToJsonString());
         var restricted = new InputSchema(schema).Restrict(error, arguments, body["data"] as JsonObject);
+        restricted = UnifiedInputAdmission.UnknownRuntimeChangeError((string?)body["meta"]?["tool"], arguments, error) ?? restricted;
         // Vault admission must identify the exact refused position, including caller-chosen map keys.
         if (error.Details is InvalidArgumentDetails { Expected: "declared credential parameter" } vaultPointer)
             restricted = new Error(restricted.Message, vaultPointer);

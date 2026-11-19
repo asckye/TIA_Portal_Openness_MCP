@@ -1,5 +1,4 @@
 using TiaMcp.Adapters.Contracts;
-using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Native.Plc;
 using System;
 using System.Collections;
@@ -319,10 +318,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["plantPath"]=plantPath; meta["plantObjectType"]=plantObjectType; meta["dryRun"]=dryRun; meta["mayHaveChanged"]=false;
                 if(target!=null) meta["before"]=UnifiedObjectAddress.Read(target);
                 if(dryRun) return "Plant view/node preview. Native CPM type compatibility is not validated until execution.";
-                if (action == "create") EngineeringWriteJournal.Creating(() => PlcGroupOperations.Find(collection, parts.Last()), plantPath);
                 meta["mayHaveChanged"]=true;
-                if(action=="create") target=plantObjectType=="" ? PlcGroupOperations.Call(collection,"Create",signature,parts.Last()) : PlcGroupOperations
-                    .Call(collection,"Create",signature,parts.Last(),plantObjectType);
+                if(action=="create") target=PlcGroupOperations.CreateNamed(collection, plantPath, parts.Last(), signature, plantObjectType);
                 if(action=="delete") {
                     PlcGroupOperations.Call(target!,"Delete",Type.EmptyTypes);
                     if(PlcGroupOperations.Find(collection,parts.Last())!=null) throw new InvalidOperationException("Plant object remains after delete.");

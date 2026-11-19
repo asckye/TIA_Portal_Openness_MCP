@@ -122,7 +122,7 @@ internal sealed partial class WorkerClient
             }
             else if (!ResetDisconnectedWorker("takeover"))
                 throw RecoveryRefusal("tia-held-by-session", "The holder's worker could not stop. Its TIA attachment could not be handed over.");
-            caller.Unsettled.ImportPreviousOwner(Unsettled.Snapshot().Select(call => call.RequestId));
+            caller.Unsettled.ImportPreviousOwner(Unsettled.Snapshot());
             lock (stateSync)
             {
                 takenOverBy = sessionKey;

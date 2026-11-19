@@ -1,4 +1,5 @@
 using TiaMcp.Adapters.Contracts;
+using TiaMcp.Logic.V4;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +16,14 @@ public sealed record SettlementTarget(string? ReadOperation, string Scope, strin
 
 public sealed record CallSettlement(string RequestId, string Tool, string Outcome, DateTimeOffset Utc)
 {
-    public JsonObject ToJson() => new() { ["requestId"] = RequestId, ["tool"] = Tool, ["outcome"] = Outcome, ["utc"] = Utc.ToString("O") };
+    public const string ProcessExited = "process-exited";
+    public JsonObject ToJson()
+    {
+        var row = new JsonObject { ["requestId"] = RequestId, ["tool"] = Tool, ["outcome"] = Outcome, ["utc"] = V4Json.Timestamp(Utc) };
+        if (Outcome == ProcessExited)
+            row["message"] = "The TIA process exited. The effect of the write is still unknown. Inspect the project before saving or repeating the write.";
+        return row;
+    }
 }
 
 public static class UnknownSettlement

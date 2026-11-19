@@ -9,6 +9,17 @@ namespace TiaMcp.Adapters.Contracts
     // Move admission and recovery: verify the export before deletion, restore after a failed target import.
     public static class PlcMovePolicy
     {
+        public static bool SettledByRestore(IReadOnlyDictionary<string, object?> evidence)
+        {
+            bool Flag(string key) => evidence.TryGetValue(key, out var value) && value is true;
+            bool Empty(string key) => !evidence.TryGetValue(key, out var value) || value == null
+                || value is System.Collections.ICollection { Count: 0 };
+            return Flag("restoreAttempted") && Flag("restored") && Flag("originalRetained")
+                && Empty("targetGroupsCreated") && Empty("cleanupRequired")
+                && !(evidence.TryGetValue("rollbackCompleted", out var completed) && completed is false)
+                && !Flag("writeOutcomeUnknown") && !Flag("unrestoredWrite") && !Flag("connectionUnavailable");
+        }
+
         public static void MergeEvidence(Exception error, IDictionary<string, object?> target)
         {
             var keys = new HashSet<string>(StringComparer.Ordinal);

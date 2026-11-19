@@ -186,7 +186,7 @@ internal sealed partial class FoundationTool : McpServerTool
     internal bool WorkerRecoveryNeeded => worker is WorkerClient { RecoveryNeeded: true };
     internal string? BoundProjectFile => (string?)SharedSessionState.For(worker).Identity?["projectPath"];
     private bool CachedSessionState => definition.Name == "GetSessionState"
-        && (Unsettled.Snapshot().Count > 0 || worker is WorkerClient { Disconnected: true }
+        && (Unsettled.Snapshot().Count > 0 || worker is WorkerClient client && client.ExitedBinding() != null || worker is WorkerClient { Disconnected: true }
             or WorkerClient { CallRunning: true } or WorkerClient { RecoveryNeeded: true });
     internal Task<IDisposable?> AcquireLane(CancellationToken token)
         => IsNative && definition.ResponseMember != "Disconnect" && !CachedSessionState

@@ -44,6 +44,7 @@ namespace TiaMcp.Adapters.Native.Plc
         internal PlcSoftware Software { get; } = new();
         internal Dictionary<string, object?> LastMeta { get; private set; } = new();
         internal int ExactCalls { get; private set; }
+        internal bool ReportFailure { get; set; }
         internal string ReleaseKey => "21";
         internal IEqualityComparer<object> ReferenceEqualityComparer => System.Collections.Generic.ReferenceEqualityComparer.Instance;
         internal PlcSoftware GetPlcSoftware(string path) => path == "PLC" ? Software : throw new ArgumentException("Unknown PLC.");
@@ -56,7 +57,8 @@ namespace TiaMcp.Adapters.Native.Plc
         internal HardwareAddressingReply RunHmiStepTool(string tool, Func<Dictionary<string, object?>, string> action)
         {
             var meta = new Dictionary<string, object?> { ["tool"] = tool }; LastMeta = meta;
-            string message = EngineeringWriteJournal.Run(meta, () => action(meta));
+            string message = ReportFailure ? EngineeringWriteJournal.RunReported(meta, () => action(meta), error => error.Message)
+                : EngineeringWriteJournal.Run(meta, () => action(meta));
             return new HardwareAddressingReply { Message = message, Meta = meta };
         }
         internal object ExactObjectUnder(object root, string path, string composition, string kind)

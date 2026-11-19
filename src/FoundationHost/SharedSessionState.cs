@@ -74,7 +74,8 @@ internal sealed class SharedSessionState
             ["releaseKey"] = release, ["isAttached"] = attached, ["processId"] = pid?.DeepClone(), ["projectFile"] = file?.DeepClone(),
             ["ownsProject"] = sameProject && (bool?)cached?["OwnsProject"] == true,
             ["isLocalSession"] = sameProject && (bool?)cached?["IsLocalSession"] == true,
-            ["identityStatus"] = attached ? "unverified-cached-pid" : "disconnected", ["runtimeConnectionStatus"] = "not-probed",
+            ["identityStatus"] = attached ? observed == null ? "cached" : "unverified-cached-pid" : "disconnected",
+            ["runtimeConnectionStatus"] = "not-probed",
             ["canDetachOnUncertainShutdown"] = !attached || ((bool?)cached?["CanDetachOnUncertainShutdown"] ?? true),
             ["sessionState"] = state, ["outputRoot"] = DataLocations.Current.OutputRoot,
             ["presets"] = System.Text.Json.JsonSerializer.SerializeToNode(
@@ -89,7 +90,7 @@ internal sealed class SharedSessionState
             identity["tiaMajorVersion"] ??= TiaMcp.Versioning.TiaVersionCatalog.Get(release).MajorVersion;
             if ((string?)identity["projectPath"] is string file) identity["projectName"] ??= Path.GetFileNameWithoutExtension(file);
         }
-        bool ended = (bool?)transport["disconnected"] == true;
+        bool ended = (bool?)transport["disconnected"] == true || worker is WorkerClient client && client.ExitedBinding() != null;
         bool connected = (bool?)transport["connected"] ?? (transport["binding"]?["processId"] != null
             || worker is WorkerClient { SharedSession: true } plc && (bool?)plc.SharedStatus?["session"]?["isConnected"] == true
             || worker is not IFoundationWorkerSupervisor && identity?["processId"] != null);

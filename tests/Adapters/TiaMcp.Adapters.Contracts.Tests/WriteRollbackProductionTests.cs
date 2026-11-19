@@ -10,6 +10,49 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class WriteRollbackProductionTests
     {
+        private sealed class PlantNodes : List<object>
+        {
+            public int Attempts { get; private set; }
+            public object Create(string name, string type)
+            {
+                Attempts++;
+                throw NativeRefusal("Unknown plant object type.");
+            }
+        }
+
+        private static Siemens.Engineering.EngineeringException NativeRefusal(string message)
+        {
+            var error = new Siemens.Engineering.EngineeringException(message);
+            error.MessageData.Text = message;
+            error.MessageData.DetailText = "";
+            return error;
+        }
+
+        [Fact]
+        public void A_refused_child_plant_node_create_verifies_absence_and_preserves_the_native_reason()
+        {
+            var nodes = new PlantNodes();
+            var step = HardwareWriteFailureTests.NativeFixture().Engine.RunHmiStep("ManageUnifiedPlantNode", meta => {
+                meta["mayHaveChanged"] = true;
+                PlcGroupOperations.CreateNamed(nodes, "/G/Node", "Node", new[] { typeof(string), typeof(string) }, "MCP_B5_Unknown");
+                return "Created.";
+            }, true);
+            Assert.Equal(1, nodes.Attempts);
+            Assert.Empty(nodes);
+            Assert.False(step.OutcomeUnknown);
+            Assert.False(step.MayHaveChanged);
+            Assert.Equal("restored", step.Meta["rollbackOutcome"]);
+            Assert.Equal("Unknown plant object type.", step.Meta["nativeMessage"]);
+            Assert.Equal("NATIVE_OPERATION_FAILED", step.Meta["v4FailureCode"]);
+        }
+
+        public static HardwareAddressingReply RefusedWatchImport()
+            => HardwareWriteFailureTests.NativeFixture().Engine.RunHmiStep("ImportPlcWatchTableOffline", meta => {
+                meta["mayHaveChanged"] = true;
+                TiaMcp.Adapters.Native.Engineering.EngineeringWriteJournal.Creating(() => null, "G/T");
+                throw NativeRefusal("Watch table import refused.");
+            }, true);
+
         public static HardwareAddressingReply LegacyFailure(string tool, string failure)
         {
             var fixture = HardwareWriteFailureTests.NativeFixture();

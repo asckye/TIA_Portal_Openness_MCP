@@ -18,12 +18,16 @@ namespace TiaMcp.Adapters.Contracts
             "ExchangeUnifiedScriptModules", "ImportUnifiedOpcUaAlarms", "SetUnifiedGlobalScript", "SetUnifiedRuntimeSettings"
         }.Contains(tool, StringComparer.Ordinal);
         public static string? InvalidRuntimeSettings(UnifiedRequest request)
+            => InvalidRuntimeSettings(request, out _);
+
+        public static string? InvalidRuntimeSettings(UnifiedRequest request, out string[] unknownNames)
         {
+            unknownNames = Array.Empty<string>();
             if (request.Operation != "GetUnifiedRuntimeSettings" && request.Operation != "SetUnifiedRuntimeSettings") return null;
             var raw = request.Operation == "GetUnifiedRuntimeSettings" ? request.FieldsJson : request.ChangesJson;
             if (!request.Inputs.TryGetValue(raw, out var input)) return null;
             if (input.Error != null) return input.Error;
-            return UnifiedRuntimeSettingsFields.Invalid(input.Kind == "array" ? input.Items.Select(v => v.Text) : input.Properties.Keys);
+            return UnifiedRuntimeSettingsFields.Invalid(input.Kind == "array" ? input.Items.Select(v => v.Text) : input.Properties.Keys, out unknownNames);
         }
         public static string? Unsupported(string release, UnifiedRequest request)
         {

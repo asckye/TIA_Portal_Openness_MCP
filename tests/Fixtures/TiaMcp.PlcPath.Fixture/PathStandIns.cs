@@ -10,7 +10,7 @@ namespace Siemens.Engineering
 }
 namespace Siemens.Engineering.SW.Blocks
 {
-    public sealed class NamedList<T> : List<T> where T : class
+    public class NamedList<T> : List<T> where T : class
     {
         public T? Find(string name) => this.SingleOrDefault(item => string.Equals(
             item.GetType().GetProperty("Name")!.GetValue(item), name));
@@ -19,9 +19,28 @@ namespace Siemens.Engineering.SW.Blocks
     {
         public string Name { get; set; } = "";
         public object? Parent { get; set; }
-        public NamedList<PlcBlockGroup> Groups { get; } = new();
-        public NamedList<PlcBlock> Blocks { get; } = new();
+        public Action<string>? OnCall { get; set; }
+        public Action<PlcBlock>? AfterImport { get; set; }
+        public GroupList Groups { get; }
+        public BlockList Blocks { get; }
+        public PlcBlockGroup() { Groups = new(this); Blocks = new(this); }
+        public void Delete()
+        {
+            OnCall?.Invoke("delete group " + Name);
+            ((PlcBlockGroup)Parent!).Groups.Remove(this);
+        }
     }
+    public sealed class GroupList(PlcBlockGroup parent) : NamedList<PlcBlockGroup>
+    {
+        public PlcBlockGroup Create(string name)
+        {
+            parent.OnCall?.Invoke("create " + name);
+            var group = new PlcBlockUserGroup { Name = name, Parent = parent, OnCall = parent.OnCall, AfterImport = parent.AfterImport };
+            Add(group);
+            return group;
+        }
+    }
+    public sealed class BlockList(PlcBlockGroup parent) : NamedList<PlcBlock> { public PlcBlockGroup Parent => parent; }
     public sealed class OB : PlcBlock { }
     public sealed class PlcBlockUserGroup : PlcBlockGroup { }
     public class PlcBlock
@@ -120,6 +139,8 @@ namespace TiaMcp.Adapters
             => new PlcOrganisationAdapter(new OrganisationSession(this)).DeletePlcBlock("PLC", path, false);
         public HardwareAddressingReply MovePlcBlockToGroup(string path, string group)
             => new PlcOrganisationAdapter(new OrganisationSession(this)).MoveBlockToGroup("PLC", path, group);
+        public HardwareAddressingReply ApplyMove(string path, string group, string recovery, string hash)
+            => new PlcOrganisationAdapter(new OrganisationSession(this)).MoveBlockToGroup("PLC", path, group, true, recovery, false, hash);
         private sealed partial class OrganisationSession : IPlcOrganisationSession
         {
             private readonly PlcFoundationEngine engine;
@@ -153,12 +174,30 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static object ExternalSources(object value) => PlcGroupOperations.Get(value, "ExternalSources");
         internal static object Parent(PlcBlock block) => block.Parent!;
         internal static string Language(PlcBlock block) => "LAD";
-        internal static void Delete(PlcBlock block) => block.Delete();
+        internal static void Delete(PlcBlock block)
+        {
+            ((PlcBlockGroup)block.Parent!).OnCall?.Invoke("delete " + block.Name);
+            block.Delete();
+        }
         internal static IEnumerable<PlcBlock> Blocks(PlcBlockGroup group) => group.Blocks;
         internal static void Export(PlcBlock block, FileInfo file, Siemens.Engineering.ExportOptions options)
-            => PlcBlockPrimitives.Export(block, file, options);
+        {
+            ((PlcBlockGroup)block.Parent!).OnCall?.Invoke("export " + block.Name);
+            PlcBlockPrimitives.Export(block, file, options);
+            var document = System.Xml.Linq.XDocument.Load(file.FullName);
+            document.Descendants("AttributeList").Single().Add(new System.Xml.Linq.XElement("Number", Number(block)),
+                new System.Xml.Linq.XElement("ProgrammingLanguage", Language(block)));
+            document.Save(file.FullName);
+        }
         internal static List<PlcBlock> Import(IEnumerable<PlcBlock> blocks, FileInfo file, Siemens.Engineering.ImportOptions options)
-            => throw new NotSupportedException("Move apply is outside this path fixture.");
+        {
+            var target = (BlockList)blocks;
+            target.Parent.OnCall?.Invoke("import " + target.Parent.Name);
+            var block = new PlcBlock { Name = System.Xml.Linq.XDocument.Load(file.FullName).Descendants("Name").Single().Value, Parent = target.Parent };
+            target.Add(block);
+            target.Parent.AfterImport?.Invoke(block);
+            return new() { block };
+        }
         internal static PlcBlockGroup BlockGroup(object plc) => ((PlcFoundationEngine.Software)plc).BlockGroup;
     }
 }
@@ -167,7 +206,7 @@ namespace TiaOpenness.Shared
     internal sealed class DataLocations
     {
         internal static DataLocations Current { get; } = new();
-        internal string RecoveryAttemptedPath => Path.GetTempPath();
+        internal string RecoveryAttemptedPath => AppContext.BaseDirectory;
     }
 }
 namespace TiaMcp.Adapters

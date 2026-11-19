@@ -12,7 +12,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
         internal static Dictionary<string, object?> Execute<T>(T root, string path, bool dryRun,
             Func<T, IEnumerable<T>> children, Func<T, string> name, Func<T, string, T> create, bool stripTypeRoot = true, Func<string, string[]>? pathParts =
-                null) where T : class
+                null, Func<T, bool>? emptyForUndo = null) where T : class
         {
             var parts = pathParts != null ? pathParts(path) : stripTypeRoot ? Parse(path) : PlcGroupOperations.Parts(path);
             T? current = root;
@@ -36,8 +36,22 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (dryRun) { current = null; continue; }
                     var parent = current!;
                     string target = prefix;
-                    EngineeringWriteJournal
-                        .Creating(() => children(parent).SingleOrDefault(g => string.Equals(name(g), part, StringComparison.OrdinalIgnoreCase)), target);
+                    T? FindForUndo()
+                    {
+                        var group = children(parent).SingleOrDefault(g => string.Equals(name(g), part, StringComparison.OrdinalIgnoreCase));
+                        if (emptyForUndo != null)
+                        {
+                            if (group == null) created.Remove(target);
+                            else
+                            {
+                                // A native Create can insert its group and then throw.
+                                if (!created.Contains(target)) created.Add(target);
+                                if (!emptyForUndo(group)) throw new InvalidOperationException("Cannot remove a nonempty PLC block group: " + target);
+                            }
+                        }
+                        return group;
+                    }
+                    EngineeringWriteJournal.Creating(FindForUndo, target);
                     current = create(parent, part);
                     created.Add(prefix);
                 }
@@ -46,6 +60,7 @@ namespace TiaMcp.Adapters.Native.Plc
             {
                 EngineeringWriteJournal.ObserveFailure(ex);
                 journal.Rollback(evidence);
+                if (emptyForUndo != null && created.Count > 0) evidence["targetGroupsCreated"] = created;
                 var failure = new PlcSoftwareException("OpennessError",
                     "Group creation failed at '" + prefix + "'. Inspect rollbackCompleted and cleanupRequired.", null, ex);
                 failure.Data["nativeResultEvidence"] = evidence;

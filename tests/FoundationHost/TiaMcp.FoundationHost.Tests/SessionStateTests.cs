@@ -250,6 +250,22 @@ public sealed class SessionStateTests
         }
     }
 
+    [Theory, MemberData(nameof(VerifiedImportOutcomeTests.Releases), MemberType = typeof(VerifiedImportOutcomeTests))]
+    public async Task Unsettled_state_retains_the_cached_binding_and_output_directory(string release)
+    {
+        using var worker = new CachedWorker();
+        var query = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker);
+        query.Unsettled.Record("target-id", "MovePlcBlockToGroup", null, DateTimeOffset.UtcNow);
+        var request = SharedPipelineTests.Scope.Request("GetSessionState", new());
+        var data = (await query.InvokeV4Async(request, release, "query", CancellationToken.None)).StructuredContent!["data"]!;
+        Assert.True((bool?)data["isAttached"]);
+        Assert.Equal(123, (int?)data["processId"]);
+        Assert.Equal("C:/fixture.ap21", (string?)data["projectFile"]);
+        Assert.Equal("cached", (string?)data["identityStatus"]);
+        Assert.Equal(TiaOpenness.Shared.DataLocations.Current.OutputRoot, (string?)data["outputRoot"]);
+        Assert.Equal("target-id", (string?)Assert.Single(data["sessionState"]!["unsettled"]!.AsArray())!["requestId"]);
+    }
+
     private sealed class CachedWorker : IFoundationSessionWorker
     {
         internal string IdentityText { get; set; } = "{\"processId\":123,\"projectPath\":\"C:/fixture.ap21\",\"generation\":3}";

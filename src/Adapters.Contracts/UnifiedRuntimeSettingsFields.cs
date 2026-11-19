@@ -65,7 +65,11 @@ public static class UnifiedRuntimeSettingsFields
     });
 
     public static string? Invalid(IEnumerable<string> fields)
+        => Invalid(fields, out _);
+
+    public static string? Invalid(IEnumerable<string> fields, out string[] unknownNames)
     {
+        unknownNames = Array.Empty<string>();
         var names = fields.ToArray();
         if (names.Length == 0) return "Select at least one runtime setting (1..12 fields).";
         if (names.Length > MaxFieldsPerCall) return "Too many runtime settings; select 1..12 fields.";
@@ -73,7 +77,11 @@ public static class UnifiedRuntimeSettingsFields
         foreach (var name in names)
         {
             if (!seen.Add(name)) return "Duplicate runtime setting name.";
-            if (!Known(name)) return "Unknown runtime setting name.";
+            if (!Known(name))
+            {
+                unknownNames = names.Where(field => !Known(field)).Distinct(StringComparer.Ordinal).ToArray();
+                return "Unknown runtime setting name.";
+            }
         }
         return null;
     }

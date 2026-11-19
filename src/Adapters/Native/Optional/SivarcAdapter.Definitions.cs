@@ -319,16 +319,40 @@ namespace TiaMcp.Adapters.Native.Optional
             });
 
         // ---- typed generation (GenerateSiVArc) ----------------------------------------------------------------------------------
-        /// <summary>Name of the Device that owns the PLC software at softwarePath (SoftwareContainer.Parent -> DeviceItem chain -> Device).</summary>
-        private string OwningDeviceName(string softwarePath)
+        /// <summary>SiVArc takes the owning device name. Unified connections identify their partner by the CPU device item name.</summary>
+        private (string Device, string Partner) GenerationPlc(string softwarePath)
         {
             var sc = _session.ResolveSoftwareContainerUncached(softwarePath)
                 ?? throw new PlcSoftwareException("NotFound", "Exact PLC software not found: " + softwarePath);
             IEngineeringObject? current = sc.Parent;
+            string partner = (current as DeviceItem)?.Name ?? "";
             while (current is DeviceItem item) current = item.Parent;
-            if (current is Device owner && !string.IsNullOrEmpty(owner.Name)) return owner.Name;
+            if (current is Device owner && !string.IsNullOrEmpty(owner.Name)) return (owner.Name, partner);
             throw new PlcSoftwareException("NotFound", "Owning device of PLC software " + softwarePath
                     + " not found (Sivarc.Generate needs the PLC device name).");
+        }
+
+        private static void CheckGenerationConnections(Device device, string[] partners, string parameter)
+        {
+            var connected = new List<string>();
+            bool hasHmiSoftware = false;
+            foreach (var root in device.DeviceItems)
+            foreach (var (item, _) in PlcFoundationEngine.HardwareTraverseDeviceItems(root, root.Name))
+            {
+                var software = ((IEngineeringServiceProvider)item).GetService<Siemens.Engineering.HW.Features.SoftwareContainer>()?.Software;
+                // Classic exposes connection names only. An empty composition proves absence, a name cannot identify a PLC.
+                if (software is Siemens.Engineering.Hmi.HmiTarget classic)
+                {
+                    hasHmiSoftware = true;
+                    if (classic.Connections.Count > 0) return;
+                }
+                else if (software is Siemens.Engineering.HmiUnified.HmiSoftware unified)
+                {
+                    hasHmiSoftware = true;
+                    connected.AddRange(unified.Connections.Select(connection => connection.Partner));
+                }
+            }
+            OptionalNativeOperations.RequireGenerationConnections(device.Name, partners, connected, hasHmiSoftware, parameter);
         }
 
         public HardwareAddressingReply GenerateSiVArc(string hmiDeviceName, string plcSoftwarePathsJson, string generationOptions, bool dryRun = true,
@@ -337,15 +361,16 @@ namespace TiaMcp.Adapters.Native.Optional
             {
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var device = _session.ExactEngineeringDevice(new[] { hmiDeviceName });
-                var extra = Logic.ParseNames(additionalHmiDeviceNamesJson, "additionalHmiDeviceNamesJson")
-                    .Select(n => _session.ExactEngineeringDevice(new[] { n }).Name).ToArray();
-                var devices = new[] { device.Name }.Concat(extra).ToArray();
+                var targets = new[] { device }.Concat(Logic.ParseNames(additionalHmiDeviceNamesJson, "additionalHmiDeviceNamesJson")
+                    .Select(n => _session.ExactEngineeringDevice(new[] { n }))).ToArray();
+                var devices = targets.Select(target => target.Name).ToArray();
                 if (devices.Distinct(StringComparer.Ordinal).Count() != devices.Length) throw new ArgumentException("HMI device names repeat.");
                 // Observed on TIA V21: Sivarc.Generate(deviceName, plcs, options) takes PLC *device* names - TIA answered
                 // "PLC device '+S1-K1' not found" for the PlcSoftware name, the CPU lives in device "ET 200SP station_1".
                 var plcPaths = OptionalSession.ExactNameList(plcSoftwarePathsJson);
                 var plcSoftwareNames = plcPaths.Select(p => _session.ExactPlcForEngineering(p, !dryRun).Name).ToArray();
-                var plcs = plcPaths.Select(p => OwningDeviceName(p)).ToArray();
+                var selectedPlcs = plcPaths.Select(GenerationPlc).ToArray();
+                var plcs = selectedPlcs.Select(plc => plc.Device).ToArray();
                 if (plcs.Distinct(StringComparer.Ordinal).Count() != plcs.Length)
                     throw new InvalidOperationException("Native PLC device names repeat (two PLC paths inside the same device).");
                 var sivarc = _session.RequireSivarc();
@@ -359,6 +384,9 @@ namespace TiaMcp.Adapters.Native.Optional
                 meta["generationOptions"] = options.ToString(); meta["nativeSignature"] = devices.Length > 1
                     ? "Sivarc.Generate(IEnumerable<string>, IEnumerable<string>, GenerationOptions)"
                     : "Sivarc.Generate(string, IEnumerable<string>, GenerationOptions)";
+                var partners = selectedPlcs.Select(plc => plc.Partner).ToArray();
+                for (int i = 0; i < targets.Length; i++)
+                    CheckGenerationConnections(targets[i], partners, i == 0 ? "hmiDeviceName" : "additionalHmiDeviceNames");
                 if (dryRun) return "SiVArc native generation preview; generation can create/update HMI objects according to rules and selected native options.";
                 meta["mayHaveChanged"] = true;
                 // Official SiVArc generation requires PLC device names and an existing HMI connection.

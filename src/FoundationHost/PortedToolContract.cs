@@ -427,15 +427,19 @@ internal sealed partial class FoundationTool
         if (HardwareCapabilities.Unsupported(portedRelease!, tool.Name, actionName, scope,
             arguments.TryGetValue("positionNumber", out var position) ? position.GetInt32() : -1,
             arguments.TryGetValue("extendedPositionNumber", out var extendedPosition) ? extendedPosition.GetInt32() : -1,
-            arguments.TryGetValue("password", out var password) && !string.IsNullOrEmpty(password.GetString())) != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            arguments.TryGetValue("password", out var password) && !string.IsNullOrEmpty(password.GetString())) is string hardwareReason)
+            return tool.Name == "ManageDeviceServiceObjects" ? CapabilityRefusal(hardwareReason)
+                : HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
         if (PlcSoftwareCapabilities.Unsupported(portedRelease!, tool.Name, actionName, scope,
             arguments.TryGetValue("unitName", out var unit) ? unit.GetString() ?? "" : "",
             arguments.TryGetValue("unitKind", out var unitKind) ? unitKind.GetString() ?? "unit" : "unit",
             arguments.TryGetValue("targetKind", out var targetKind) ? targetKind.GetString() ?? "" : "",
             arguments.TryGetValue("copyMode", out var copyMode) ? copyMode.GetString() ?? "" : "",
-            arguments.TryGetValue("generateOption", out var generateOption) ? generateOption.GetString() ?? "None" : "None") != null)
-            return HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+            arguments.TryGetValue("generateOption", out var generateOption) ? generateOption.GetString() ?? "None" : "None") is string softwareReason)
+            return tool.Name == "ManagePlcUserGroup" ? CapabilityRefusal(softwareReason)
+                : HardwareToolContract.Unsupported(tool.Name, portedRelease!, actionName);
+        CallToolResult CapabilityRefusal(string reason) => McpServer.V4TargetReject(tool.Name,
+            new Error(reason, new UnsupportedCapabilityDetails(portedRelease!, tool.Name, actionName)), current: true);
         string Text(string name) => arguments.TryGetValue(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString()! : "";
         string TextPath(string name) => arguments.TryGetValue(name, out var value) && value.ValueKind == JsonValueKind.Array
             ? string.Join("/", value.EnumerateArray().Select(segment => segment.GetString())) : Text(name);
@@ -491,9 +495,9 @@ internal sealed partial class FoundationTool
         {
             var unified = BindUnifiedRequest(tool.Name, portedMethod!, arguments);
             UnifiedPortService.DecodeInputs(unified);
-            if (UnifiedCapabilities.InvalidRuntimeSettings(unified) is string invalidSettings)
-                return McpServer.V4TargetReject(tool.Name, new Error(invalidSettings,
-                    new InvalidArgumentDetails(tool.Name == "GetUnifiedRuntimeSettings" ? "/fields" : "/changes", Array.Empty<string>())), current: true);
+            if (UnifiedCapabilities.InvalidRuntimeSettings(unified, out var unknownNames) is string invalidSettings)
+                return McpServer.V4TargetReject(tool.Name, UnifiedPortService.RuntimeSettingsError(
+                    tool.Name == "GetUnifiedRuntimeSettings" ? "fields" : "changes", invalidSettings, unknownNames), current: true);
             if (UnifiedCapabilities.Unsupported(portedRelease!, unified) is string unifiedReason)
                 return tool.Name is "SetUnifiedGlobalScript" or "ManageUnifiedEngineeringObject" or "GetUnifiedRuntimeSettings" or "SetUnifiedRuntimeSettings"
                     || UnifiedCapabilities.WritesRuntimeSettings(unified)

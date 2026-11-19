@@ -32,14 +32,27 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static string[] Parts(string path, bool rootAllowed = false)
             => TiaMcp.Adapters.Hardware.HardwarePath.Parts(path, rootAllowed);
         internal static object Call(object target, string method, Type[] types, params object[] args)
+            => Invoke(target, method, types, args, recordCreated: true);
+
+        private static object Invoke(object target, string method, Type[] types, object[] args, bool recordCreated)
         {
             var info = target.GetType().GetMethod(method, types)
                 ?? target.GetType().GetInterfaces().Where(i => i.FullName == "Siemens.Engineering.IEngineeringObject").Select(i => i.GetMethod(method, types))
                     .FirstOrDefault(m => m != null)
                 ?? throw new NotSupportedException(target.GetType().FullName + "." + method + " signature is unavailable.");
             EngineeringWriteJournal.BeforeCall(target, info, args);
-            try { var result = info.Invoke(target, args); EngineeringWriteJournal.CreatedResult(info, result, target); return result!; }
+            try
+            {
+                var result = info.Invoke(target, args);
+                if (recordCreated) EngineeringWriteJournal.CreatedResult(info, result, target);
+                return result!;
+            }
             catch (TargetInvocationException ex) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw(); throw; }
+        }
+        internal static object CreateNamed(object collection, string path, string name, Type[] signature, string type)
+        {
+            EngineeringWriteJournal.Creating(() => Find(collection, name), path);
+            return type.Length == 0 ? Call(collection, "Create", signature, name) : Call(collection, "Create", signature, name, type);
         }
         internal static object Group(object root, string path, string firstGroups = "Groups", Func<string, string[]>? pathParts = null)
         {
@@ -65,10 +78,13 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (collection.GetType().GetMethod("Create", new[] { typeof(string) }) == null)
                     throw new NotSupportedException("Native group Create(string) unavailable.");
                 // Wrap only the root, whose group property can differ for Unified HMI.
+                bool blockGroup = contents == "Blocks";
                 return PlcGroupCreation.Execute<object>(root, path, dryRun,
                     g => Items(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups")),
                     g => Get(g, "Name").ToString()!,
-                    (g, name) => Call(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups"), "Create", new[] { typeof(string) }, name), false, pathParts);
+                    (g, name) => Invoke(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups"), "Create", new[] { typeof(string) },
+                        new object[] { name }, recordCreated: !blockGroup), false, pathParts,
+                    blockGroup ? g => !Items(Get(g, "Blocks")).Any() && !Items(Get(g, "Groups")).Any() : null);
             }
             var parentPath = string.Join("/", parts.Take(parts.Length - 1));
             if (pathParts != null) parentPath = (path.StartsWith("/", StringComparison.Ordinal) ? "/" : "")

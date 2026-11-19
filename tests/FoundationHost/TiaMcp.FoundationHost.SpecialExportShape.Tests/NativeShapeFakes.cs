@@ -44,12 +44,14 @@ namespace Siemens.Engineering.SW.WatchAndForceTables
         public IList<PlcWatchTable> Import(FileInfo file, Siemens.Engineering.ImportOptions options)
         {
             ImportCalls++;
+            BeforeImport?.Invoke();
             var tables = System.Xml.Linq.XDocument.Load(file.FullName).Root!.Elements()
                 .Where(e => e.Name.LocalName == "SW.WatchAndForceTables.PlcWatchTable")
                 .Select(e => new PlcWatchTable { Name = (string)e.Element("AttributeList")!.Element("Name")! }).ToArray();
             foreach (var table in tables) { table.Deleting = () => Remove(table); Add(table); }
             AfterImport?.Invoke(tables); return tables;
         }
+        public Action? BeforeImport { get; set; }
     }
     public sealed class PlcForceTableComposition : List<PlcForceTable>
     {

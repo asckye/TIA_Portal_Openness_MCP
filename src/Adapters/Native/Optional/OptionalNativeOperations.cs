@@ -11,6 +11,20 @@ namespace TiaMcp.Adapters.Native.Optional;
 
 internal static class OptionalNativeOperations
 {
+    internal static void RequireGenerationConnections(string hmi, IEnumerable<string> plcPartners, IEnumerable<string> connections,
+        bool hasHmiSoftware, string hmiParameter)
+    {
+        if (!hasHmiSoftware)
+            throw AdapterPreconditionException.Failed($"Device '{hmi}' has no Classic or Unified HMI software for SiVArc generation.",
+                "hmi-software-missing", hmiParameter);
+        var available = new HashSet<string>(connections.Where(name => !string.IsNullOrWhiteSpace(name)), StringComparer.OrdinalIgnoreCase);
+        foreach (string plc in plcPartners)
+            if (!available.Contains(plc))
+                throw AdapterPreconditionException.Failed(
+                    $"HMI device '{hmi}' requires a connection to PLC '{plc}'. Configure it in TIA Portal before generation.",
+                    "missing-plc-connection", "plcSoftwarePaths");
+    }
+
     internal static (string Name, string Type)[]? ScreenItemRows(object screen)
     {
         try

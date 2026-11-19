@@ -165,6 +165,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         {
             string? tool = FoundationWorkerRequest.ToolName;
             if (tool != "ConnectPortal") RequireCurrentOwner();
+            RequireBindingProcess(tool);
             if (nativeEnabled && (tool == null || !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(tool)
                 || TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(tool).Name != "F04"))
                 await RecoverLostWorker(tool != "ConnectPortal", token);
@@ -322,6 +323,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             Interlocked.Increment(ref active);
         }
         string? startBeforeAttach = null;
+        bool observedBeforeAttach = false;
         Exception? channelFailureForStatus = null;
         int? hostAttachPid = null;
         bool sent = false;
@@ -346,6 +348,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             if (!nativeEnabled && !managed)
                 throw new InvalidOperationException("Native calls are disabled by --offline. Start a normal configured session to use Openness.");
             if (!managed && operation != "Attach") RequireCurrentOwner();
+            if (!managed) RequireBindingProcess(operation);
             if (!managed && operation == "Attach" && arguments["processId"] is JsonValue selected && selected.TryGetValue<int>(out int selectedPid))
             {
                 // takeOver is host admission metadata; the worker also receives the retained secondary context.
@@ -369,7 +372,12 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             if (!managed && Bundled && WorkerOperations.RequiresPortal(operation) && !attachedProcessId.HasValue)
                 throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(TiaOpenness.Shared.SessionBehavior.PortalRequired, "session", false);
             hostAttachPid = operation == "Attach" ? (int?)arguments["processId"] : null;
-            if (hostAttachPid.HasValue) startBeforeAttach = ProcessStartUtc(hostAttachPid.Value);
+            if (hostAttachPid.HasValue)
+            {
+                var observed = ReadPortalProcess(hostAttachPid.Value);
+                observedBeforeAttach = !observed.Gone;
+                startBeforeAttach = observed.StartUtc;
+            }
             EnsureProcess();
             requestIdAtEntry = channel!.LastRequestId;
             if (!WorkerOperations.IsIndependentRuntime(operation) || !channel!.CanCallIndependentRuntime)
@@ -461,13 +469,17 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             }
             if(operation=="Attach")
             {
-                if (result?["PreviousOwnerRequests"] is JsonArray previousRequests)
-                    Unsettled.ImportPreviousOwner(previousRequests.Select(value => value!.GetValue<string>()));
-                lock (stateSync) { attachedProcessId=arguments["processId"]!.GetValue<int>(); takenOverBy = null; sessionDisconnected = false; }
-                ClearHostBinding();
                 lock (stateSync)
-                    if (!Faulted && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value)) hostProcessStartUtc =
-                        startBeforeAttach;
+                {
+                    attachedProcessId = arguments["processId"]!.GetValue<int>(); takenOverBy = null; sessionDisconnected = false;
+                    ClearHostBinding();
+                    observedBindingPid = observedBeforeAttach ? attachedProcessId : null;
+                    if (!Faulted && startBeforeAttach != null && startBeforeAttach == ProcessStartUtc(attachedProcessId.Value))
+                        hostProcessStartUtc = startBeforeAttach;
+                    Unsettled.BindProcess(attachedProcessId, hostProcessStartUtc);
+                    if (result?["PreviousOwnerRequests"] is JsonArray previousRequests)
+                        Unsettled.ImportPreviousOwner(previousRequests.Select(value => value!.GetValue<string>()));
+                }
             }
             bool statusAvailable = true;
             if (change == BindingChange.MayAdvance && operation != "Disconnect" && channel.BindingEpoch > epochBefore)
@@ -484,6 +496,8 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                         UpdateApprovalIdentity(state);
                         CacheRuntimeState(state);
                         hostProcessStartUtc = !Faulted && attachedProcessId.HasValue ? ProcessStartUtc(attachedProcessId.Value) : null;
+                        observedBindingPid = attachedProcessId is int pid && (hostProcessStartUtc != null || !ReadPortalProcess(pid).Gone) ? pid : null;
+                        Unsettled.BindProcess(attachedProcessId, hostProcessStartUtc);
                         ownsPortal = (bool?)state["CanDetachOnUncertainShutdown"] == false || (bool?)state["OwnsPortal"] == true;
                     }
                 }, () => {

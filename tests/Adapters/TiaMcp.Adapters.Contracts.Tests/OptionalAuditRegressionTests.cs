@@ -84,6 +84,27 @@ public sealed class OptionalAuditRegressionTests
 
     private sealed record Node(string Name, bool Device, Node? Parent);
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("Other")]
+    public void Sivarc_requires_a_connection_to_each_requested_PLC(string available)
+    {
+        var refusal = Assert.Throws<AdapterPreconditionException>(() =>
+            OptionalNativeOperations.RequireGenerationConnections("MCP_B5_HMI", new[] { "PLC_1", "PLC_2" },
+                new[] { "PLC_1", available }, true, "hmiDeviceName"));
+        Assert.Equal("missing-plc-connection", refusal.Condition);
+        Assert.Contains("MCP_B5_HMI", refusal.Message);
+        Assert.Contains("PLC_2", refusal.Message);
+        OptionalNativeOperations.RequireGenerationConnections("MCP_B5_HMI", new[] { "PLC_1", "PLC_2" }, new[] { "plc_2", "PLC_1" }, true, "hmiDeviceName");
+    }
+
+    public static HardwareAddressingReply MissingGenerationConnection(bool dryRun, bool hasHmiSoftware = true)
+        => HardwareWriteFailureTests.NativeFixture().Engine.RunHmiStep("GenerateSivarc", meta => {
+            meta["dryRun"] = dryRun;
+            OptionalNativeOperations.RequireGenerationConnections("MCP_B5_HMI", new[] { "PLC_1" }, Array.Empty<string>(), hasHmiSoftware, "hmiDeviceName");
+            return "Generation passed the connection check.";
+        }, true);
+
     [Fact]
     public void Sivarc_generation_resolves_owning_device_when_software_name_differs()
     {

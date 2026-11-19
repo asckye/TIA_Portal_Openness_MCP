@@ -6,6 +6,11 @@
 
 ### Fixed
 
+- `MovePlcBlockToGroup` creates missing groups before exporting and deleting the source. A failed move reports verified restoration or retains the target groups and blocks for inspection when recovery is uncertain.
+- `ImportPlcWatchTableOffline` preserves the native import diagnostic and reports an unchanged project when readback confirms all attempted tables are absent.
+- `GetSessionState` labels a cached binding and lists each unknown target call once. If the bound TIA process exits, its calls move to `settled` with outcome `process-exited`. `GetCallResult` explains that the write effect is still unknown. Unread writes keep their save warning and replay guard.
+- On V20, PLC group rename and device service refusals identify the missing API. On V20 and V21, `GenerateSivarc` checks HMI connections before preview or generation.
+- `GenerateSivarc` identifies a selected device that lacks HMI software. `SetUnifiedRuntimeSettings` reports each unknown change key as a JSON Pointer.
 - V21 `ManageSivarcScreenLayout` previews both actions by default. Export preview leaves the output path untouched. Import preview lists the current screen items that the layout file would replace. Apply requires `allowRemoveScreenItems: true` when the screen contains items or its inventory cannot be read. The result reports item counts, removals and additions when both inventories are readable.
 - `CallTool` journal records now use the target operation and its preview arguments to report whether the call requested a write.
 - `GetPlcPutGetAccess` and `SetPlcPutGetAccess` recognize the documented Boolean attribute on CPU device items that expose it (V15.1–V21).

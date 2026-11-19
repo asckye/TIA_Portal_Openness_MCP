@@ -406,7 +406,9 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public HardwareAddressingReply ImportPlcWatchTableOffline(string softwarePath, string filePath, string groupPath = "", bool dryRun = true,
             string tableKind = "watch")
-            => _session.RunHmiStepTool("ImportPlcWatchTableOffline", meta => {
+        {
+            bool previousMutation = MutationStarted;
+            var reply = _session.RunHmiStepTool("ImportPlcWatchTableOffline", meta => {
                 var source = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (!source.Exists)
                     throw new FileNotFoundException("Table XML missing.", filePath);
                 var expectedNames = WatchTableImportValidation.ValidateNames(source.FullName, tableKind);
@@ -461,6 +463,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 return dryRun ? "Offline " + tableKind + " table import preview. No online monitoring or forcing."
                     : "Offline " + tableKind + " table configuration imported and read back without overwrite, save, online action or download.";
             });
+            if (MutationEvidence.ProvesNoMutation(reply.Meta)) MutationStarted = previousMutation;
+            return reply;
+        }
 
         // ---- tag table constants ----------------------------------------------------------------------------------------------------------
 

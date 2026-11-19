@@ -101,6 +101,7 @@ internal sealed partial class WorkerClient
         token.ThrowIfCancellationRequested();
         if (CallRunning || UnansweredRequest) throw Busy();
         if (disconnectAcknowledgement != null) return disconnectAcknowledgement.DeepClone();
+        ExitedBinding();
         ForgetSecondaryIfHolderGone();
         if (secondaryProjectFile != null)
             throw SecondaryHolderRefusal("CloseProject secondaryProjectFile must explicitly close it before DisconnectPortal.");

@@ -98,23 +98,31 @@ public sealed class LateCalls
             entries.TryGetValue(id, out var entry);
             if (entry == null)
             {
-                var unknown = unsettled.Snapshot().FirstOrDefault(call => call.RequestId == id && unsettled.IsUnread(id));
-                if (unknown == null) return null;
-                var meta = new Meta(unknown.Utc, release, unknown.Tool, id, Outcome.Unknown, Execution.Unknown,
+                if (!unsettled.IsUnread(id)) return null;
+                var unknown = unsettled.Snapshot().FirstOrDefault(call => call.RequestId == id);
+                var settlement = unsettled.Settlement(id);
+                if (unknown == null && settlement?.Outcome != CallSettlement.ProcessExited) return null;
+                var utc = unknown?.Utc ?? settlement!.Utc;
+                var meta = new Meta(utc, release, unknown?.Tool ?? settlement!.Tool, id, Outcome.Unknown, Execution.Unknown,
                     BehaviorPolicy.Current, Completeness.Unknown, null, new[] { new Warning(WarningCode.UnverifiedBehavior,
                         "Native behavior has not been verified on a real machine.", new Dictionary<string, System.Text.Json.JsonElement>()) });
-                var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new JsonObject(),
+                var data = new JsonObject();
+                if (settlement != null) data["settlement"] = settlement.ToJson();
+                var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(data,
                     new Error("The call has an unknown outcome. Inspect its target before repeating it.",
                         new OutcomeUnknownDetails("tool-call", new Dictionary<string, System.Text.Json.JsonElement>())), meta)))!.AsObject();
                 var result = new CallToolResult { StructuredContent = body };
                 unsettled.MarkRead(id);
-                return SummaryResult(OutcomeSummary(result, new JsonObject { ["sinceUtc"] = unknown.Utc.ToString("O") }));
+                return SummaryResult(OutcomeSummary(result, new JsonObject { ["sinceUtc"] = utc.ToString("O") }));
             }
             if (entry.Summary == null)
             {
                 var snapshot = (JsonObject)entry.Running.DeepClone();
                 return InProgress(release, (string)snapshot["tool"]!, DescribeRunning?.Invoke(snapshot) ?? snapshot);
             }
+            // An unknown result can arrive after its process already exited.
+            foreach (var alias in entry.Ids)
+                if (unsettled.Settlement(alias) is { Outcome: CallSettlement.ProcessExited } exited) ObserveSettlement(exited);
             entry.Read = true;
             if (entry.Digest != null && unreadWrites.TryGetValue(entry.Digest, out var guardedId) && entry.Ids.Contains(guardedId))
                 unreadWrites.Remove(entry.Digest);

@@ -135,14 +135,21 @@ namespace TiaMcpServer.Siemens.Services
             }
             catch (Exception error)
             {
-                var evidence = error.Data["nativeResultEvidence"] as JsonObject ?? new JsonObject();
+                var evidence = error.Data["nativeResultEvidence"] as JsonObject;
+                if (evidence == null && error is IWorkerFailureEvidence { EvidenceJson: string json })
+                {
+                    try { evidence = ((JsonNode.Parse(json) as JsonObject)?["Failure"] as JsonObject)?["Evidence"] as JsonObject; }
+                    catch (JsonException) { /* swallow(parse-fallback): keep the transport verdict when optional move evidence is malformed. */ }
+                }
+                evidence ??= new JsonObject();
                 error.Data["nativeResultEvidence"] = evidence;
                 bool? deleteStarted = (bool?)evidence["deleteStarted"];
                 bool noDelete = deleteStarted == false || deleteStarted != true && (dryRun || !dispatched
                     || error.Data["foundationKnownNoMutation"] is true || error.Data["foundationRequestSent"] is false);
                 if (noDelete)
                 {
-                    evidence["deleteStarted"] = false; evidence["nativeMutationIssued"] = false;
+                    evidence["deleteStarted"] = false;
+                    evidence["nativeMutationIssued"] ??= false;
                     evidence.Remove("recoveryExportPath");
                 }
                 else evidence["recoveryExportPath"] ??= recovery;

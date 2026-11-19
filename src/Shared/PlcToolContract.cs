@@ -72,7 +72,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         return Result(tool, null, readRefusal, Outcome.RejectedBeforeOperation, Completeness.None, current);
                     }
                     if (tool == "MovePlcBlockToGroup") moveEvidence ??= safeEvidence;
-                    if (tool == "MovePlcBlockToGroup" && (bool?)safeEvidence["deleteStarted"] == false)
+                    if (tool == "MovePlcBlockToGroup" && (bool?)safeEvidence["deleteStarted"] == false
+                        && (bool?)safeEvidence["mayHaveChanged"] != true && safeEvidence["cleanupRequired"] is not JsonArray { Count: > 0 })
                     {
                         ErrorDetails details = exception is PortalException { Code: PortalErrorCode.NotSupportedOnVersion }
                             || exception is NotSupportedException ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)

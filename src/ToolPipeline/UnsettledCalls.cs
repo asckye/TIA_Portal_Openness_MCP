@@ -10,7 +10,10 @@ using TiaMcp.Logic.V4;
 namespace TiaMcp.FoundationHost;
 
 public sealed record UnsettledCall(string RequestId, string Tool, string? Digest, DateTimeOffset Utc, bool FromPreviousOwner = false,
-    SettlementTarget? Target = null);
+    SettlementTarget? Target = null)
+{
+    internal (int? Id, string? StartUtc) Process { get; init; }
+}
 
 // Both host routes share this store. Unknown results record evidence without refusing another call.
 public sealed class UnsettledCalls
@@ -21,9 +24,10 @@ public sealed class UnsettledCalls
     private readonly HashSet<string> ids = new(StringComparer.Ordinal);
     private readonly HashSet<string> read = new(StringComparer.Ordinal);
     private readonly Dictionary<string, CallSettlement> settled = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, UnsettledCall> appliedWrites = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, UnsettledCall> guardedWrites = new(StringComparer.Ordinal);
     private string? projectFile;
     private string? lastRecoverySettlement;
+    private (int? Id, string? StartUtc) process;
     public static UnsettledCalls For(object worker) => Stores.GetValue(worker, _ => new UnsettledCalls());
 
     public void Record(string requestId, string tool, string? digest, DateTimeOffset utc, JsonObject? arguments = null)
@@ -32,7 +36,7 @@ public sealed class UnsettledCalls
         {
             if (settled.ContainsKey(requestId)) return;
             if (ids.Add(requestId)) calls.Add(new UnsettledCall(requestId, tool, digest, utc.ToUniversalTime(),
-                Target: arguments == null ? null : UnknownSettlement.Capture(tool, arguments)));
+                Target: arguments == null ? null : UnknownSettlement.Capture(tool, arguments)) { Process = process });
         }
         LateCalls.ObserveUnsettled(requestId);
     }
@@ -54,11 +58,38 @@ public sealed class UnsettledCalls
         }
     }
 
+    public void BindProcess(int? pid, string? startUtc) { lock (gate) process = (pid, startUtc); }
+
+    public IReadOnlyList<CallSettlement> SettleExitedProcess(int pid, string? startUtc)
+    {
+        lock (gate)
+        {
+            var exited = calls.Where(call => call.Process == (pid, startUtc)).ToArray();
+            var results = new List<CallSettlement>(exited.Length);
+            foreach (var call in exited)
+            {
+                read.Remove(call.RequestId);
+                results.Add(SettleCall(call, CallSettlement.ProcessExited));
+            }
+            return results;
+        }
+    }
+
     public void ImportPreviousOwner(IEnumerable<string> requestIds)
     {
         lock (gate)
-            foreach (string requestId in requestIds)
-                if (ids.Add(requestId)) calls.Add(new UnsettledCall(requestId, "previous-owner", null, DateTimeOffset.UtcNow, true));
+            foreach (string requestId in requestIds) AddPreviousOwner(requestId, process);
+    }
+
+    public void ImportPreviousOwner(IEnumerable<UnsettledCall> previous)
+    {
+        lock (gate)
+            foreach (var call in previous) AddPreviousOwner(call.RequestId, call.Process);
+    }
+
+    private void AddPreviousOwner(string requestId, (int? Id, string? StartUtc) owner)
+    {
+        if (ids.Add(requestId)) calls.Add(new UnsettledCall(requestId, "previous-owner", null, DateTimeOffset.UtcNow, true) { Process = owner });
     }
 
     public void Clear()
@@ -69,8 +100,9 @@ public sealed class UnsettledCalls
             ids.Clear();
             read.Clear();
             settled.Clear();
-            appliedWrites.Clear();
+            guardedWrites.Clear();
             projectFile = null;
+            process = default;
             lastRecoverySettlement = null;
         }
     }
@@ -82,7 +114,7 @@ public sealed class UnsettledCalls
         lock (gate)
         {
             if (projectFile != null && !string.Equals(projectFile, file, StringComparison.OrdinalIgnoreCase))
-            { calls.Clear(); ids.Clear(); read.Clear(); settled.Clear(); appliedWrites.Clear(); lastRecoverySettlement = null; }
+            { calls.Clear(); ids.Clear(); read.Clear(); settled.Clear(); guardedWrites.Clear(); lastRecoverySettlement = null; }
             projectFile = file;
         }
     }
@@ -108,14 +140,18 @@ public sealed class UnsettledCalls
         lock (gate)
         {
             var call = calls.FirstOrDefault(item => item.RequestId == requestId);
-            if (call == null) return settled.GetValueOrDefault(requestId);
-            var result = new CallSettlement(requestId, call.Tool, outcome, DateTimeOffset.UtcNow);
-            calls.Remove(call);
-            settled[requestId] = result;
-            if (outcome == "applied") appliedWrites[requestId] = call;
-            else { ids.Remove(requestId); read.Remove(requestId); }
-            return result;
+            return call == null ? settled.GetValueOrDefault(requestId) : SettleCall(call, outcome);
         }
+    }
+
+    private CallSettlement SettleCall(UnsettledCall call, string outcome)
+    {
+        var result = new CallSettlement(call.RequestId, call.Tool, outcome, DateTimeOffset.UtcNow);
+        calls.Remove(call);
+        settled[call.RequestId] = result;
+        if (outcome is "applied" or CallSettlement.ProcessExited) guardedWrites[call.RequestId] = call;
+        else { ids.Remove(call.RequestId); read.Remove(call.RequestId); }
+        return result;
     }
 
     public static bool HasUnknownOutcome(JsonNode body) => (string?)body["meta"]?["outcome"] == "unknown"
@@ -127,7 +163,7 @@ public sealed class UnsettledCalls
     public bool IsUnread(string requestId) { lock (gate) return ids.Contains(requestId) && !read.Contains(requestId); }
     public bool HasUnread(IEnumerable<string> ids)
     { lock (gate) return ids.Any(id => this.ids.Contains(id) && !read.Contains(id)); }
-    public void MarkRead(string requestId) { lock (gate) { read.Add(requestId); appliedWrites.Remove(requestId); } }
+    public void MarkRead(string requestId) { lock (gate) { read.Add(requestId); guardedWrites.Remove(requestId); } }
     public void Settle(string requestId)
     {
         lock (gate)
@@ -135,11 +171,22 @@ public sealed class UnsettledCalls
             calls.RemoveAll(call => call.RequestId == requestId);
             ids.Remove(requestId);
             read.Remove(requestId);
-            appliedWrites.Remove(requestId);
+            guardedWrites.Remove(requestId);
         }
     }
     public UnsettledCall? FindWrite(string digest)
-    { lock (gate) return calls.Concat(appliedWrites.Values).FirstOrDefault(call => call.Digest == digest && !read.Contains(call.RequestId)); }
+    { lock (gate) return calls.Concat(guardedWrites.Values).FirstOrDefault(call => call.Digest == digest && !read.Contains(call.RequestId)); }
+
+    public JsonArray SaveWarnings()
+    {
+        lock (gate)
+        {
+            var warnings = ToJson();
+            foreach (var id in guardedWrites.Keys)
+                if (settled[id].Outcome == CallSettlement.ProcessExited) warnings.Add(settled[id].ToJson());
+            return warnings;
+        }
+    }
 
     public static bool IsReviewedApply(JsonObject arguments) => !HostBehavior.IsPreview(arguments, true)
         && !string.IsNullOrWhiteSpace((string?)arguments["expectedPlanHash"] ?? (string?)arguments["expectedInventoryHash"]);
@@ -154,7 +201,7 @@ public sealed class UnsettledCalls
     public JsonNode WarnOnSave(string tool, JsonNode body, JsonArray? beforeSave = null)
     {
         if (tool is not ("SaveProject" or "SaveProjectCopy")) return body;
-        var unsettled = beforeSave is { Count: > 0 } ? beforeSave : ToJson();
+        var unsettled = beforeSave is { Count: > 0 } ? beforeSave : SaveWarnings();
         if (unsettled.Count == 0 || body["meta"]?["warnings"]?.AsArray().Any(w => (string?)w?["code"] == "UNSETTLED_CALLS") == true) return body;
         return EnvelopeMutation.AddWarning(body, new Warning(WarningCode.UnsettledCalls,
             "Earlier calls have an unknown outcome. Inspect their targets before saving or repeating them; never replay them automatically.",

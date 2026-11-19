@@ -163,13 +163,11 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 bool callToolDisabled = McpServer.ApprovalDisabled(ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
-                string? targetName = request?.Params?.Arguments != null && request.Params.Arguments.TryGetValue("name", out var target)
-                    && target.ValueKind == System.Text.Json.JsonValueKind.String ? target.GetString() : null;
                 using var bridgeNativeCalls = InvocationJournal.BeginNativeCallScope();
                 var bridgeResult = await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
                 return McpServer
                     .FinishApproval(McpServer
-                        .ObserveSessionOutcome(targetName ?? ProtocolTool.Name, bridgeResult, McpServer
+                        .ObserveSessionOutcome(ProtocolTool.Name, bridgeResult, McpServer
                             .ApprovalResultWrite(ProtocolTool.Name, System.Text.Json.JsonSerializer
                                 .Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())),
                             System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>())),

@@ -5,6 +5,25 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class MoveEvidenceTests
 {
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("restoreAttempted", false)]
+    [InlineData("restored", false)]
+    [InlineData("originalRetained", false)]
+    [InlineData("targetGroupsCreated", true)]
+    [InlineData("cleanupRequired", true)]
+    [InlineData("rollbackCompleted", false)]
+    [InlineData("writeOutcomeUnknown", true)]
+    [InlineData("unrestoredWrite", true)]
+    [InlineData("connectionUnavailable", true)]
+    public void Only_a_verified_restore_without_outstanding_effects_settles_a_move(string? key, bool flag)
+    {
+        var evidence = new Dictionary<string, object?> { ["restoreAttempted"] = true, ["restored"] = true, ["originalRetained"] = true,
+            ["mayHaveChanged"] = true, ["targetGroupsCreated"] = Array.Empty<string>(), ["cleanupRequired"] = new List<object?>() };
+        if (key != null) evidence[key] = key is "targetGroupsCreated" or "cleanupRequired" ? new[] { "G" } : flag;
+        Assert.Equal(key == null, PlcMovePolicy.SettledByRestore(evidence));
+    }
+
     [Fact]
     public void Outer_move_evidence_wins_over_nested_group_evidence()
     {

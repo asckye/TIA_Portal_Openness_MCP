@@ -242,6 +242,8 @@ namespace TiaMcp.Adapters
                 reply.MayHaveChanged = adapter.MutationStarted; reply.OutcomeUnknown = adapter.MutationStarted;
                 if (request.Operation == "MovePlcBlockToGroup") reply.Failure.Evidence["deleteStarted"] = adapter.MutationStarted;
                 PlcMovePolicy.MergeEvidence(error, reply.Failure.Evidence);
+                if (request.Operation == "MovePlcBlockToGroup" && PlcMovePolicy.SettledByRestore(reply.Failure.Evidence))
+                    reply.OutcomeUnknown = false;
             }
             reply.MayHaveChanged |= adapter.MutationStarted;
             return reply;
