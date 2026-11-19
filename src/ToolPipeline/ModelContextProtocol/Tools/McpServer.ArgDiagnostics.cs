@@ -14,13 +14,5 @@ namespace TiaMcpServer.ModelContextProtocol
             return WrapWithAuditCalls(WrapWithVersionPolicy(Dispatch.OpennessReadinessGuard.Wrap(guarded),
                 name => Siemens.ToolVersionPolicy.ToolProblem(ReleaseKey, name), ReleaseKey));
         }
-
-        internal static IList<McpServerTool> WrapToolsForRelease(IList<McpServerTool> tools, string release)
-        {
-            foreach (var tool in tools) AssertV4Tool(tool.ProtocolTool.Name);
-            var guarded = WrapWithSerializedCalls(WrapWithResponseGuard(tools.Select(tool => (McpServerTool)new SecretVaultTool(tool)).ToList()));
-            return WrapWithAuditCalls(WrapWithVersionPolicy(Dispatch.OpennessReadinessGuard.Wrap(guarded),
-                name => Siemens.ToolVersionPolicy.ToolProblem(release, name), release));
-        }
     }
 }

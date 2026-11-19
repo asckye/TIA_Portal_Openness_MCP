@@ -325,11 +325,7 @@ internal static class LegacyHostToolRegistry
         {
             // Gate only the bundled worker: an explicit --worker-exe fixture must reach its own dispatch path.
             Func<JsonObject>? readinessForTool = worker is IFoundationSessionWorker { Bundled: true } ? readiness : null;
-            if (tools[i] is FoundationTool { Ported: true } ported && ReleaseCatalogData.Releases[releaseKey].WrapPortedTools)
-            {
-                wrapped[i] = PortedToolContract.Wrap(ported);
-                return;
-            }
+            if (tools[i] is FoundationTool { Ported: true } ported) ported.RegisterCapabilityRefusal();
             wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, readinessForTest: readinessForTool,
                 sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });

@@ -95,8 +95,11 @@ public sealed class B1HostPortsTests
             (string[] files) => string.Join(",", files), new() { Name = "SharedArrayFixture" });
         var catalog = new toolpipeline::TiaMcp.FoundationHost.SharedToolCatalog(Host.McpServer.CatalogView,
             new[] { tool }, new HashSet<string>());
-        var invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog,
-            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker, new Host.ImportStagingHostLifetime(), new[] { tool });
+        var worker = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker;
+        using var lifetime = new Host.ImportStagingHostLifetime();
+        var invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, worker, lifetime, new[] { tool });
+        using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
         Assert.Null(invoker.Bind("SharedArrayFixture", new ToolArguments(JsonSerializer.SerializeToElement(
             new { files = new[] { "one.scl", "two.scl" } })), out var call));
         Assert.NotNull(call);

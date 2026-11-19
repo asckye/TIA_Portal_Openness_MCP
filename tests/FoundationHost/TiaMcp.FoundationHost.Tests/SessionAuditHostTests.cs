@@ -31,6 +31,8 @@ public sealed class SessionAuditHostTests
         var previous = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests;
         toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests = (card, _, _) => {
             cards.Add(card); return Task.FromResult(new ApprovalOutcome(card, false, null)); };
+        // This project links the Foundation journal and references the bridge journal from ToolPipeline.
+        TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(journal.Add);
         toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(journal.Add);
         try
         {
@@ -60,9 +62,36 @@ public sealed class SessionAuditHostTests
         }
         finally
         {
+            TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(null);
             toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(null);
             toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer.ApprovalWaitOverrideForTests = previous;
         }
+    }
+
+    [Fact]
+    public async Task Parked_download_reply_redacts_the_resolved_credential()
+    {
+        using var vault = new VaultFileScope();
+        vault.Vault.Set("plc1", Secret, vault.Audit);
+        using var targets = new OnlineTargetSettingsScope(null);
+        const string marker = "native fixture detail";
+        using var worker = new OnlinePortAdmissionTests.VaultOnlineWorker(diagnostic: marker + new string('x', 24000));
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker,
+            approvalWait: (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)));
+        var args = new JsonObject { ["softwarePath"] = "PLC_1", ["targetIpAddress"] = "192.0.2.10",
+            ["pgPcInterface"] = "PLCSIM", ["confirmPhysicalTarget"] = true, ["password"] = "vault:plc1", ["dryRun"] = true };
+        var preview = (await fixture.Call("DownloadPlc", args)).StructuredContent!;
+        args["expectedPlanHash"] = preview["data"]!["planHash"]!.DeepClone();
+        args["expectedProjectFile"] = "C:/Fixture/P.ap21";
+        args["dryRun"] = false;
+        var applied = (await fixture.Call("DownloadPlc", args)).StructuredContent!;
+        Assert.True((bool?)applied["ok"], applied.ToJsonString());
+        Assert.Equal(Secret, worker.Password);
+        using var session = fixture.EnterSession();
+        var handle = (string)applied["data"]!["export"]!["id"]!;
+        var payload = toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(handle)!.Content;
+        Assert.Contains(marker, payload);
+        Assert.DoesNotContain(Secret, payload);
     }
 
     [Fact]

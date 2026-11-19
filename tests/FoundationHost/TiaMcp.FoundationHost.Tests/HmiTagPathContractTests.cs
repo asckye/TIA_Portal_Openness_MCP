@@ -56,7 +56,7 @@ public sealed class HmiTagPathContractTests : IClassFixture<HmiTagPathContractTe
                 var worker = new PreviewWorker();
                 var catalog = new DeleteCatalog(release);
                 using var session = new Session(worker, release, catalog);
-                var tool = PortedToolContract.Wrap(new FoundationTool(worker, release, catalog.Method, "DeleteHmiTag"));
+                var tool = new UsageHintTool(new FoundationV4Tool(new FoundationTool(worker, release, catalog.Method, "DeleteHmiTag"), release));
                 entry = (worker, catalog, tool);
                 tools.Add(release, entry);
             }

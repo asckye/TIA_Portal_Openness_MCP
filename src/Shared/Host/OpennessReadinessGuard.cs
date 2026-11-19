@@ -39,23 +39,24 @@ namespace TiaMcpServer.Dispatch
             return !IsSafeWithoutTia(name);
         }
 
-        private static string? NativeTarget(string name, IReadOnlyDictionary<string, JsonElement>? arguments)
+        internal static string? NativeTarget(string name, IReadOnlyDictionary<string, JsonElement>? arguments,
+            Func<string, bool> requiresOpenness)
         {
-            if (arguments == null) return RequiresOpenness(name) ? name : null;
+            if (arguments == null) return requiresOpenness(name) ? name : null;
             if (name.Equals("CallTool", StringComparison.OrdinalIgnoreCase))
             {
                 if (!arguments.TryGetValue("name", out var target) || target.ValueKind != JsonValueKind.String) return null;
-                return RequiresOpenness(target.GetString() ?? "") ? target.GetString() : null;
+                return requiresOpenness(target.GetString() ?? "") ? target.GetString() : null;
             }
             if (name is "RunToolTransaction" or "RunReadOnlyToolBatch" or "ApplyToolBatch")
             {
                 if (!arguments.TryGetValue("operations", out var operations) || operations.ValueKind != JsonValueKind.Array) return null;
                 foreach (var item in operations.EnumerateArray())
                     if (item.ValueKind == JsonValueKind.Object && item.TryGetProperty("name", out var target)
-                        && target.ValueKind == JsonValueKind.String && RequiresOpenness(target.GetString() ?? "")) return target.GetString();
+                        && target.ValueKind == JsonValueKind.String && requiresOpenness(target.GetString() ?? "")) return target.GetString();
                 return null;
             }
-            return RequiresOpenness(name) ? name : null;
+            return requiresOpenness(name) ? name : null;
         }
 
         private sealed class GuardedTool : McpServerTool
@@ -67,7 +68,7 @@ namespace TiaMcpServer.Dispatch
             public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken =
                     default)
             {
-                var target = NativeTarget(ProtocolTool.Name, request.Params?.Arguments);
+                var target = NativeTarget(ProtocolTool.Name, request.Params?.Arguments, RequiresOpenness);
                 if (target == null || OpennessReadiness.Ready) return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
                 var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments
                     ?? new Dictionary<string, JsonElement>());

@@ -28,7 +28,8 @@ public sealed class B6TransactionRoutingTests
             // admission are exercised separately by PortedPortalAdmissionTests.
             var tools = Host.PortedToolDeclarations.Methods("21")
                 .Where(m => new[] { "CreatePlcTypeGroup", "ManageDeviceUserGroup" }.Contains(m.GetCustomAttribute<McpServerToolAttribute>()!.Name))
-                .Select(m => new FoundationTool(worker, "21", m, m.GetCustomAttribute<McpServerToolAttribute>()!.Name!).ValidatedTool()).ToArray();
+                .Select(m => new FoundationV4Tool(new FoundationTool(worker, "21", m, m.GetCustomAttribute<McpServerToolAttribute>()!.Name!), "21",
+                    () => new TiaOpenness.Shared.ApprovalSettings(false, 1))).ToArray();
             var invoker = new Engine.WorkerToolInvoker(catalog, worker, lifetime, tools);
             using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(worker) { Catalog = catalog, Invoker = invoker });
             using var release = Host.HardwareContract.UseRelease("21");

@@ -21,7 +21,6 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
     internal bool HasManifestCatalog { get; init; }
     internal bool SharedSession { get; init; } = true;
     internal bool MergeWorkerReadiness { get; init; }
-    internal bool WrapPortedTools { get; init; }
     internal bool ExtendedWorkerStatus { get; init; } = true;
     internal bool StartSupervisorOnRead { get; init; }
     internal bool NativeObservations { get; init; } = true;
@@ -30,6 +29,12 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
         "session.GetState", "session.ListPortalProcessProjects", "session.GetProjectTree", "session.ConnectPortal",
         "session.ValidateAutomationContext" };
     internal bool FoundationReadinessBoundary { get; init; } = true;
+
+    // Direct V20/V21 ports publish declaration errors, check caller files at the host and page at the client text limit.
+    // Earlier direct ports retain Foundation argument errors, worker-side file access and the worker channel size limit.
+    private static readonly string[] DeclaredPortReleases = TiaMcp.Adapters.Contracts.ReleaseRange.Since("20");
+    internal static bool DeclaredPortInputAndPaging(string release) => DeclaredPortReleases.Contains(release, StringComparer.Ordinal);
+
     private const string DiscoveryInstructions = ToolUsageCatalog.Instructions +
         " FindTools searches the complete release catalog, including tools omitted by the lite profile; CallTool invokes a discovered tool. " +
             "InitializeEnvironment reports the current connection and environment.";
@@ -71,7 +76,7 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
     private static ReleaseCatalogData Foundation(string release) => Presentation(release);
 
     private static ReleaseCatalogData Declared(string release) => Presentation(release) with
-        { MergeWorkerReadiness = true, WrapPortedTools = true, FoundationReadinessBoundary = false };
+        { MergeWorkerReadiness = true, FoundationReadinessBoundary = false };
 
     internal string ExampleProfile(string name) => ExampleProfiles.GetValueOrDefault(name, DefaultExampleProfile);
 

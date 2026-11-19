@@ -165,14 +165,13 @@ public sealed class PortedPortalAdmissionTests
             var invoker = new Engine.WorkerToolInvoker(catalog, contextWorker, lifetime, tools);
             using var context = Engine.EngineHostConfiguration.Enter(new Engine.EngineSessionContext(contextWorker) {
                 Catalog = catalog, Invoker = invoker });
-            var tool = combined ? Host.McpServer.WrapTools(new[] { invoker.CreateTool(catalog.All["ManageTechnologyObject"]) }).Single()
-                : tools.Single(t => t.ProtocolTool.Name == "ManageTechnologyObject");
+            var tool = tools.Single(t => t.ProtocolTool.Name == "ManageTechnologyObject");
             var args = new JsonObject { ["softwarePath"] = "PLC", ["objectPath"] = "Axis", ["action"] = "create",
                 ["typeIdentifier"] = type, ["version"] = version, ["dryRun"] = true };
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
                 Params = new() { Name = "ManageTechnologyObject",
                     Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
-            var body = (await tool.InvokeAsync(request)).StructuredContent!;
+            var body = (await Invoke(tool, request, combined)).StructuredContent!;
             if (refused)
             {
                 Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
@@ -323,8 +322,7 @@ public sealed class PortedPortalAdmissionTests
             else Assert.Null(validation);
             var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
                 Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
-            var entry = combined ? Host.McpServer.WrapTools(new[] { invoker.CreateTool(catalog.All[name]) }).Single() : tool;
-            var result = await entry.InvokeAsync(request);
+            var result = await Invoke(tool, request, combined);
             var body = result.StructuredContent!.AsObject();
             bool portalNeeded = name == "EnsureUnifiedHmiDynamization" && release == "20";
             Assert
@@ -334,6 +332,14 @@ public sealed class PortedPortalAdmissionTests
             Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
             Assert.Equal(portalNeeded ? 1 : 0, worker.Calls);
         }
+    }
+
+    private static async Task<CallToolResult> Invoke(McpServerTool tool, RequestContext<CallToolRequestParams> request, bool combined)
+    {
+        if (!combined) return await tool.InvokeAsync(request);
+        using var current = Host.McpServer.UseProgressRequest(request, CancellationToken.None);
+        return await Host.McpServer.CallToolAsync(tool.ProtocolTool.Name,
+            new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(request.Params!.Arguments)));
     }
 
     public static IEnumerable<object[]> Cases =>
@@ -370,8 +376,7 @@ public sealed class PortedPortalAdmissionTests
         Assert.Null(invoker.ValidateArguments(catalog.All[name], JsonSerializer.SerializeToElement(arguments), tool.ProtocolTool.InputSchema));
         var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
             Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
-        var entry = combined ? Host.McpServer.WrapTools(new[] { invoker.CreateTool(catalog.All[name]) }).Single() : tool;
-        var result = await entry.InvokeAsync(request);
+        var result = await Invoke(tool, request, combined);
         var body = result.StructuredContent!.AsObject();
         if (Environment.GetEnvironmentVariable("TIA_MCP_PORTAL_ADMISSION_EVIDENCE") is { Length: > 0 } directory)
         {

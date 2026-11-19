@@ -112,7 +112,7 @@ public sealed class BehaviorParityTests
         Assert.DoesNotContain("Private native text", body["error"]!.ToJsonString());
     }
     public static IEnumerable<object[]> Cases => BehaviorParityCases.All;
-    private sealed class Worker(string scenario) : IFoundationWorker
+    internal sealed class Worker(string scenario) : IFoundationWorker
     {
         internal int Previews, Writes;
         internal bool Followup;
@@ -303,7 +303,7 @@ public sealed class BehaviorParityTests
             Assert.True(JsonNode.DeepEquals(engine, foundation), scenario + " " + release + "\nengine=" + engine + "\nfoundation=" + foundation);
         }
     }
-    private sealed class LocalBatchWorker(TiaMcp.Engine.Tests.BatchReplacementPolicyTests.AdmissionFixture fixture) : IFoundationWorker
+    internal sealed class LocalBatchWorker(TiaMcp.Engine.Tests.BatchReplacementPolicyTests.AdmissionFixture fixture) : IFoundationWorker
     {
         public Task<JsonNode?> Call(string operation,JsonObject args,CancellationToken token)
         {

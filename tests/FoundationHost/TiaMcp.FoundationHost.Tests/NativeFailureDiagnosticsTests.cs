@@ -509,8 +509,8 @@ public sealed class NativeFailureDiagnosticsTests
             {
                 if (!TiaMcp.Adapters.Contracts.PortedFamilies.Available(release, entry.Name)) continue;
                 var inner = new FoundationTool(Worker, release, entry.Owner.GetMethod(entry.Method)!, entry.Name);
-                tools.Add(wrapped ? PortedToolContract.Wrap(inner)
-                    : new FoundationV4Tool(inner, release, () => new TiaOpenness.Shared.ApprovalSettings(false, 1)));
+                var target = new FoundationV4Tool(inner, release);
+                tools.Add(wrapped ? new UsageHintTool(target) : target);
             }
             tools.Add(new FoundationV4Tool(Host.DeclaredToolMetadata.CreateToolCore(
                 typeof(Host.EngineeringDiagnosticsTools).GetMethod("GetNativeInvocationLogV4")!, null,

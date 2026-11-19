@@ -102,7 +102,7 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
             var catalog = new HmiTagPathContractTests.DeleteCatalog(release);
             var context = new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker) { Catalog = catalog };
             using var session = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(context);
-            var registered = PortedToolContract.Wrap(new FoundationTool(sessionWorker, release, catalog.Method, "DeleteHmiTag"));
+            var registered = new UsageHintTool(new FoundationV4Tool(new FoundationTool(sessionWorker, release, catalog.Method, "DeleteHmiTag"), release));
             Assert.NotNull(catalog.Find("DeleteHmiTag"));
             Assert.Equal("DeleteHmiTag", registered.ProtocolTool.Name);
             Assert.Equal(otherRelease, toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey);

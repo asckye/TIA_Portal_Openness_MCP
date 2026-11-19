@@ -90,7 +90,7 @@ public sealed class OnlinePortAdmissionTests
         finally { Host.McpServer.ApprovalWaitOverrideForTests = previous; }
     }
 
-    internal sealed class VaultOnlineWorker(bool fail = false) : IFoundationWorker, Engine.IEngineWorker
+    internal sealed class VaultOnlineWorker(bool fail = false, string? diagnostic = null) : IFoundationWorker, Engine.IEngineWorker
     {
         internal int Calls;
         internal string? Password;
@@ -116,12 +116,14 @@ public sealed class OnlinePortAdmissionTests
             Password = request.Password;
             Requests.Add(request);
             if (Failure != null) throw Failure();
-            return Task.FromResult<JsonNode?>(new JsonObject { ["MayHaveChanged"] = !fail, ["OutcomeUnknown"] = false,
+            var result = new JsonObject { ["MayHaveChanged"] = !fail, ["OutcomeUnknown"] = false,
                 ["Value"] = new JsonObject { ["State"] = fail ? "Protected" : request.Operation == "DownloadPlc" ? "Success" : "Online",
                     ["IsOnline"] = !fail, ["Ok"] = !fail,
                     ["Message"] = fail ? "Synthetic authentication failed: " + Password : "Connected.",
                     ["Meta"] = new JsonObject { ["success"] = !fail, ["mayHaveChanged"] = !fail, ["writeOutcomeKnown"] = true,
-                        ["error"] = fail ? "Synthetic authentication failed: " + Password : null } } });
+                        ["error"] = fail ? "Synthetic authentication failed: " + Password : null } } };
+            if (diagnostic != null) result["Value"]!["Meta"]!["diagnostic"] = diagnostic + Password;
+            return Task.FromResult<JsonNode?>(result);
         }
         public void Dispose() { }
     }

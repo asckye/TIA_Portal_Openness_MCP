@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Ported tools on V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21 share a Workbench approval and result path. Replies now identify unverified native behavior according to each release’s verification record, including early refusals.
+- V19 now returns the V20/V21 argument diagnostics for Unified inputs that repeat an object key.
+- On V20 and V21, ported calls include recovery guidance from the Foundation host. A refused `SetUnifiedGlobalScript` create request also reports when Workbench approval is disabled. `ManagePlcExternalSources` reports `UNSUPPORTED_CAPABILITY` for unknown actions on both releases and for `renameGroup` on V20.
+
 ### Added
 
 - V4 tool results report host `meta.elapsedMs` on success and failure across all eight releases. Time spent waiting for a Workbench decision appears separately in `meta.approvalWaitMs`. Calls with timed worker replies also report the total worker processing time in `meta.workerElapsedMs`. After a call detaches, `GetCallResult` returns the original call’s timing.

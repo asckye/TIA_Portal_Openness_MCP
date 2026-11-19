@@ -1,5 +1,7 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias toolpipeline;
+using ResponseGuard = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
+using ReadinessGuard = toolpipeline::TiaMcpServer.Dispatch.OpennessReadinessGuard;
 using DeclaredHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
@@ -13,6 +15,8 @@ using UnifiedInputAdmission = toolpipeline::TiaMcpServer.Siemens.Services.Unifie
 using VaultArguments = toolpipeline::TiaMcpServer.ModelContextProtocol.SecretVaultArguments;
 using PresetProjectGuard = toolpipeline::TiaMcp.FoundationHost.PresetProjectGuard;
 #else
+using ResponseGuard = TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
+using ReadinessGuard = TiaMcpServer.Dispatch.OpennessReadinessGuard;
 using DeclaredHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using InvocationHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
@@ -45,6 +49,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         CancellationToken, Task<TiaOpenness.Shared.ApprovalOutcome>>? approvalWait;
     private readonly Func<JsonObject>? readinessForTest;
     private readonly bool sharedSession;
+    private readonly bool declaredPortInputAndPaging;
     private string? parameter;
     private Func<JsonElement, (string? Json, Error? Error)>? convert;
 
@@ -69,6 +74,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         PlcSoftwareUnitSchema.Apply(schema, source.Name, release);
         if (inner is FoundationTool { Ported: true })
         {
+            declaredPortInputAndPaging = ReleaseCatalogData.DeclaredPortInputAndPaging(release);
+            DeclaredHost.AssertV4Tool(source.Name);
             tool = new Tool { Name = source.Name, Title = source.Title,
                 Description = BehaviorCapabilities.Describe(release, source.Name, source.Description),
                 InputSchema = JsonSerializer.SerializeToElement(schema), OutputSchema = source.OutputSchema, Annotations = source.Annotations, Meta = source
@@ -246,11 +253,14 @@ internal sealed class FoundationV4Tool : McpServerTool
             }
             return null;
         }
-        async ValueTask<CallToolResult> Recorded(CallToolResult result)
+        async ValueTask<CallToolResult> Recorded(CallToolResult result, bool guardResponse = false)
         {
             if ((bool?)result.StructuredContent?["ok"] == true && PresetProjectGuard.AfterBinding(tool.Name) is { } bindingRefusal)
                 result = FoundationV4Result.Reject(release, tool.Name, id, bindingRefusal);
             if (vaultResolved) result = VaultArguments.Scrub(result);
+            if (guardResponse) result = DeclaredHost.ToolResult(ResponseGuard.Guard(result, tool.Name, args));
+            if (inner is FoundationTool { Ported: true })
+                result = DeclaredHost.DiscloseTargets(result, tool.Name, JsonSerializer.SerializeToElement(args));
             result = FoundationV4Result.RestrictArguments(result, tool.InputSchema, JsonSerializer.SerializeToElement(args));
             if (inner is FoundationTool artifactProducer)
                 artifactProducer.ControlSession
@@ -276,6 +286,17 @@ internal sealed class FoundationV4Tool : McpServerTool
         try
         {
             var argumentsInput = JsonSerializer.SerializeToElement(args);
+            var capabilityInput = argumentsInput;
+            if (inner is FoundationTool { Ported: true } declared)
+            {
+                if (args.TryGetValue("expectedProject", out var project) && project.ValueKind == JsonValueKind.String
+                    && HostBehavior.ExpectedProjectArgument(project.GetString()) is { } projectError)
+                    return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, projectError, true));
+                capabilityInput = declared.CapabilityInput(argumentsInput);
+                if ((declaredPortInputAndPaging || declared.HasDuplicateUnifiedInput(capabilityInput))
+                    && declared.ValidatePortedInput(capabilityInput) is { } declaredError)
+                    return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, declaredError, true));
+            }
             if (VaultArguments.Validate(tool.Name, argumentsInput) is { } vaultError)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, vaultError));
             if (PresetProjectGuard.Check(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject(),
@@ -283,9 +304,9 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, presetRefusal));
             if (tool.Name == "GetNativeInvocationLog" && TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.PagingError(argumentsInput) is { } paging)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, paging));
-            if (UnifiedInputAdmission.ValidateNavigation(tool.Name, tool.InputSchema, argumentsInput) is { } navigationError)
+            if (!declaredPortInputAndPaging
+                && UnifiedInputAdmission.ValidateNavigation(tool.Name, tool.InputSchema, argumentsInput) is { } navigationError)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, navigationError, inner is FoundationTool { IsNative: true }));
-            var capabilityInput = inner is FoundationTool { Ported: true } portedInput ? portedInput.CapabilityInput(argumentsInput) : argumentsInput;
             var validation =
                 new InputContract<ToolArguments>(new InputSchema(tool.InputSchema), tool.Name == "StageImportFiles"
                     ? new InputBudget(characters: 40 * 1024 * 1024, items: 4096) : new InputBudget())
@@ -327,8 +348,10 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(unavailable);
             if (!internalPrecheck && DeclaredHost.OnlinePlanRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()) is Error expired)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, expired, true));
-            if (tool.Name != "DisconnectPortal" && inner is FoundationTool { RequiresTia: true } nativeTool
-                    && (nativeTool.UsesProductionWorker || readinessForTest != null))
+            if (tool.Name != "DisconnectPortal" && inner is FoundationTool nativeTool && (nativeTool.UsesProductionWorker || readinessForTest != null)
+                && (nativeTool.Ported && !ReleaseCatalogData.Releases[release].FoundationReadinessBoundary
+                    ? ReadinessGuard.NativeTarget(tool.Name, args, name => !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(name)) != null
+                    : nativeTool.RequiresTia))
             {
                 await nativeTool.PrepareReadiness(cancellationToken).ConfigureAwait(false);
                 var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
@@ -356,6 +379,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                     vaultApproval && VaultArguments.NeedsUmcDestination(tool.Name, argumentsInput) && inner is FoundationTool umcTool
                         ? await umcTool.ReadUmcVaultDestination(cancellationToken, VaultArguments.TargetProject(tool.Name, argumentsInput))
                             .ConfigureAwait(false) : null);
+            if (declaredPortInputAndPaging && write && settings.Enabled)
+                CallerInputFiles.Validate(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject());
             TiaOpenness.Shared.PendingApproval? pending = null;
             TiaOpenness.Shared.ApprovalOutcome? approval = null;
             if ((write || vaultApproval) && inner is not GenerationTool { OwnsApproval: true })
@@ -416,10 +441,11 @@ internal sealed class FoundationV4Tool : McpServerTool
                 // Standalone boundaries own their worker or implementation; observation must not require a separate shared-host scope.
                 object? approvalSession = !sharedSession && EngineHostConfiguration.CurrentOrNull == null
                     ? (inner as FoundationTool)?.ApprovalSessionKey ?? inner : DeclaredHost.CurrentApprovalSession();
+                var wait = approvalWait ?? DeclaredHost.ApprovalWaitOverrideForTests;
                 approval = await TiaOpenness.Shared.ApprovalStatusBoard.Wait(approvalSession, pending,
-                    () => approvalWait == null
+                    () => wait == null
                         ? TiaOpenness.Shared.ApprovalClient.Wait(pending, settings, cancellationToken)
-                        : approvalWait(pending, settings, cancellationToken));
+                        : wait(pending, settings, cancellationToken));
                 capture(approval);
                 if (approval.Reason != null) return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     HostBehavior.Confirmation(approval.Reason, pending.PlanHash, id,
@@ -451,6 +477,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
                     new Error("Target changed while awaiting confirmation.", new ConfirmationRequiredDetails("denied", pending.PlanHash, id))));
             }
+            if (declaredPortInputAndPaging) CallerInputFiles.Validate(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject());
             using var vaultApprovalScope = VaultArguments.Approved(tool.Name, JsonSerializer.SerializeToElement(args), approval);
             var adapted = new Dictionary<string, JsonElement>(args, StringComparer.Ordinal);
             var vaultFailure = VaultArguments.Prepare(tool.Name, JsonSerializer.SerializeToElement(args),
@@ -471,7 +498,11 @@ internal sealed class FoundationV4Tool : McpServerTool
             try
             {
                 if (inner is not GenerationTool { OwnsApproval: true }) audit?.Start();
-                if (inner is FoundationTool foundation) return await Recorded(await foundation.InvokeV4Async(request, release, id, cancellationToken));
+                if (inner is FoundationTool foundation)
+                {
+                    var reply = await foundation.InvokeV4Async(request, release, id, cancellationToken);
+                    return await Recorded(reply, guardResponse: declaredPortInputAndPaging);
+                }
                 var result = await inner.InvokeAsync(request, cancellationToken);
                 JsonNode? body;
                 try
@@ -499,7 +530,11 @@ internal sealed class FoundationV4Tool : McpServerTool
         { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
             new Error(ex.Message, new PreconditionFailedDetails(ex.Condition, null)))); }
         catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
-        { return await Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
+        {
+            var data = declaredPortInputAndPaging ? new JsonObject {
+                ["evidence"] = JsonSerializer.SerializeToNode(HostBehavior.FailureEvidence(ex.GetType().Name, ex.Message)) } : null;
+            return await Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, data, ex));
+        }
         catch (WorkerOperationException ex) when (ex.Condition == "worker-call-running")
         { return await Recorded(FoundationV4Result.Failure(release, tool.Name, id, false, write, null, ex)); }
         catch (McpException ex) when (ex.ErrorCode == McpErrorCode.InvalidParams)

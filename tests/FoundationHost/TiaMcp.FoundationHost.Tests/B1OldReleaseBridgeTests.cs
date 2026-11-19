@@ -143,8 +143,7 @@ public sealed class B1OldReleaseBridgeTests
     public async Task RejectionKindsAreConsistentAcrossReleaseCatalogs(string release)
     {
         using var worker = new ForbiddenWorker();
-        var shared = release is "20" or "21" ? Array.Empty<McpServerTool>()
-            : LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
+        var shared = LegacyHostToolRegistry.Create(worker, release, false, hostPorts: false);
         using var pipeline = new Pipeline(release, new BoundWorker(), shared);
         var names = TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(release)
             .Select(row => (string)row!["currentName"]!).ToHashSet(StringComparer.Ordinal);

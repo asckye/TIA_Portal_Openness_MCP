@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using TiaOpenness.Shared;
@@ -58,16 +59,6 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         internal const string InvocationHostTag = "foundation";
-
-        private static bool UseDeclaredReleasePolicy
-            => UsesDeclaredReleasePolicy(ReleaseKey);
-
-        private static bool UsesDeclaredReleasePolicy(string release)
-#if TIA_ENGINE_HOST
-            => TiaMcp.FoundationHost.ReleaseCatalogData.Releases[release].WrapPortedTools;
-#else
-            => TiaMcp.Versioning.TiaVersionCatalog.Get(release).EngineOutputDirectory != null;
-#endif
 
         internal static string VersionToolProblem(string name)
             => VersionToolProblem(ReleaseKey, name);
@@ -153,22 +144,39 @@ namespace TiaMcpServer.ModelContextProtocol
             if (defaultError != null) return V4Reject(name, defaultError);
             if (TiaMcp.FoundationHost.PresetProjectGuard.Check(name,
                 JsonNode.Parse(arguments.Value.Json.GetRawText())!.AsObject()) is { } presetRefusal) return V4Reject(name, presetRefusal);
-            if (CatalogView.Find(name)?.Execution == "foundation" && (!TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(name)
-                || TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(name)
-                || TiaMcp.Adapters.Contracts.PortedFamilies.CompatibilityTargets.ContainsKey(name)
-                || !UseDeclaredReleasePolicy
-                    && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name != "F04"))
+            if (CatalogView.Find(name)?.Execution == "foundation")
             {
-
                 var input = arguments ?? EmptyArguments();
+                bool runtimeChannel = PortedFamilies.Contains(name) && PortedFamilies.ForTool(name).Name == "F04";
+                bool bridgeValidates = runtimeChannel || TiaMcp.FoundationHost.ReleaseCatalogData.DeclaredPortInputAndPaging(ReleaseKey)
+                    && PortedFamilies.IsMigratedDeclaration(name) && !PortedFamilies.UsesFoundationCandidate(name)
+                    && !PortedFamilies.CompatibilityTargets.ContainsKey(name);
+                if (bridgeValidates && GenerationFenceRefusal(name, input.Json.GetRawText()) is { } activeRun)
+                    return FinishRefusal(() => { RecordCallRejection(name, input, activeRun); return activeRun; });
                 var rejected = ToolInvoker.Bind(name, input, out _);
                 if (rejected != null)
                 {
+                    if (bridgeValidates)
+                        return FinishRefusal(() => BindingRefusal(name, input, rejected));
                     var fields = TargetInputError(name, input, rejected);
                     if (!ReferenceEquals(fields, rejected))
                         return FinishApproval(V4TargetReject(name, fields, CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name }))),
                                 null);
                     return (await BridgeWait.On(ToolInvoker.InvokeAsync(name, input, ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result;
+                }
+                // Runtime-channel declarations admit caller files at CallTool before the target can request approval.
+                if (runtimeChannel)
+                {
+                    try { ValidateCallerInputFiles(name, input.Json.GetRawText()); }
+                    catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException fileError)
+                    { return FinishRefusal(() => TargetFailure(name, fileError, false, input.Json.GetRawText())); }
+                }
+                CallToolResult FinishRefusal(Func<CallToolResult> refusal)
+                {
+                    var json = input.Json.GetRawText();
+                    using var rejectedAudit = AuditInvocation.Begin(ApprovalWrite(name, json), InvocationHostTag, ReleaseKey, name,
+                        Meta.Correlate(InvocationJournal.CorrelationId));
+                    return AuditBridgeResult(rejectedAudit, refusal(), McpApprovalContext.Value && ApprovalDisabled(name, json));
                 }
                 var previous = FoundationBeforeDispatch;
                 FoundationBeforeDispatch = beforeDispatch;
@@ -192,17 +200,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return AuditBridgeResult(audit, fenced, disabled);
             }
             var error = ToolInvoker.Bind(name, arguments ?? EmptyArguments(), out var call);
-            if (error != null)
-            {
-                error = TargetInputError(name, arguments ?? EmptyArguments(), error);
-                string target = error.Details is InvalidArgumentDetails { Parameter: not "" } && CatalogView.Find(name) != null ? name : "CallTool";
-                var rejected = V4TargetReject(target, error, current: CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name })));
-                RecordCallRejection(name, arguments ?? EmptyArguments(), rejected);
-                return AuditBridgeResult(audit, rejected, disabled);
-            }
-            if (PortedAdmissionRefusals.TryGetValue((ReleaseKey, name), out var admission)
-                && admission((arguments ?? EmptyArguments()).Json) is { } targetRefusal)
-                return AuditBridgeResult(audit, targetRefusal, disabled);
+            if (error != null) return AuditBridgeResult(audit, BindingRefusal(name, arguments ?? EmptyArguments(), error), disabled);
             if (string.Equals(name, "CallTool", StringComparison.Ordinal))
                 return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
             bool issued = false;
@@ -240,6 +238,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 new CancelledDetails("tool-queue")), CurrentBehaviorTargets(name, (arguments ?? EmptyArguments()).Json)), disabled); }
             catch (Exception ex)
             { return AuditBridgeResult(audit, TargetFailure(name, ex, issued, (arguments ?? EmptyArguments()).Json.GetRawText()), disabled); }
+        }
+
+        private static CallToolResult BindingRefusal(string name, ToolArguments input, Error error)
+        {
+            error = TargetInputError(name, input, error);
+            string target = error.Details is InvalidArgumentDetails { Parameter: not "" } && CatalogView.Find(name) != null ? name : "CallTool";
+            var rejected = V4TargetReject(target, error, current: CurrentBehaviorTargets("CallTool", JsonSerializer.SerializeToElement(new { name })));
+            RecordCallRejection(name, input, rejected);
+            return rejected;
         }
 
         private static CallToolResult AuditBridgeResult(TiaOpenness.Shared.AuditInvocation? audit, CallToolResult result, bool disabled = false)
@@ -334,8 +341,6 @@ namespace TiaMcpServer.ModelContextProtocol
             var pointer = ArgumentDetails(tool, parameter, evidence).Parameter;
             return new NotFoundDetails(pointer.Length == 0 ? null : pointer);
         }
-        internal static readonly System.Collections.Concurrent.ConcurrentDictionary<(string Release, string Tool),
-            Func<JsonElement, CallToolResult?>> PortedAdmissionRefusals = new();
         private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<object, OnlinePlanLifetime> OnlinePlans =
             new System.Runtime.CompilerServices.ConditionalWeakTable<object, OnlinePlanLifetime>();
         private static readonly object DefaultOnlinePlanSession = new object();

@@ -48,13 +48,9 @@ internal static class ToolUsageTests
 
     internal static async Task Run(IMcpServer server, Action<bool,string> check, IReadOnlyList<string> releases, bool catalogChecks)
     {
-        // Old-release registries own their worker and tool instances. Collect their
-        // rows separately, then publish in the original release/row order. The
-        // V20/V21 bridge changes static host state and must remain serial.
-        var independent = releases.Where(release => release is not ("20" or "21")).ToArray();
         // Schema export has process-wide initialization. Preserve serial registry
         // construction, including cold starts, and overlap only usage retrieval.
-        var fixtures = independent.Select(release =>
+        var fixtures = releases.Select(release =>
         {
             var worker = new FakeWorker();
             return (Release: release, Worker: worker, Roster: LegacyHostToolRegistry.Create(worker, release, true));
@@ -65,16 +61,11 @@ internal static class ToolUsageTests
             await RunRelease(fixture.Release, (passed, message) => results.Add((passed, message)), fixture.Worker, fixture.Roster);
             return results;
         })));
-        int index = 0;
-        foreach (var release in releases)
-            if (release is "20" or "21") await RunRelease(release, check);
-            else foreach (var row in rows[index++]) check(row.Passed, row.Message);
+        foreach (var result in rows)
+            foreach (var row in result) check(row.Passed, row.Message);
 
-        async Task RunRelease(string release, Action<bool,string> check, FakeWorker? preparedWorker = null, IReadOnlyList<McpServerTool>? preparedRoster = null)
+        async Task RunRelease(string release, Action<bool,string> check, FakeWorker worker, IReadOnlyList<McpServerTool> roster)
         {
-            using var engineScope = release is "20" or "21" ? EngineHostParity.EnterScope() : null;
-            var worker = preparedWorker ?? new FakeWorker();
-            var roster = preparedRoster ?? LegacyHostToolRegistry.Create(worker, release, true);
             var guide = roster.Single(t => t.ProtocolTool.Name == "GetToolUsage");
             async Task<CallToolResult> Call(string args) => await guide.InvokeAsync(new RequestContext<CallToolRequestParams>(server) {
                 Params = new CallToolRequestParams { Name = "GetToolUsage", Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args) } });

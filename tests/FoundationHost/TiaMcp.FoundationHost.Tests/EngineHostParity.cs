@@ -1,6 +1,9 @@
 extern alias toolpipeline;
 extern alias enginefixture;
 using System.Reflection;
+using ModelContextProtocol.Server;
+using TiaMcp.FoundationHost;
+using BatchFixture = TiaMcp.Engine.Tests.BatchReplacementPolicyTests.AdmissionFixture;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -14,20 +17,28 @@ using IEngineWorker = toolpipeline::TiaMcp.FoundationHost.IEngineWorker;
 using EngineReply = toolpipeline::TiaMcp.FoundationHost.EngineReply;
 using EngineFixture = enginefixture::TiaMcp.Engine.Tests.BehaviorParityEngine;
 
-internal static class EngineHostParity
+internal sealed class EngineHostParity
 {
+    private readonly FoundationFixture? port;
+    private EngineHostParity(FoundationFixture? port = null) => this.port = port;
+
     internal static IDisposable EnterScope() => new Scope(false, true);
     internal static string Run(string scenario, bool plcWorker = false)
-        => Execute(() => EngineFixture.Run(scenario), true, plcWorker, readUnknownResult: scenario == "unknown");
-    internal static string RunPrecondition(string tool, string message, string? parameter, bool argument, bool wrapped, bool typed, string arguments)
-        => Execute(() => EngineFixture.RunPrecondition(tool, message, parameter, argument, wrapped, typed, arguments), false);
-    private static string Execute(Func<string> run, bool approvalContext, bool plcWorker = false, bool readUnknownResult = false)
     {
-        EngineFixture.ExternalHost = () => new Scope(approvalContext, plcWorker: plcWorker);
+        using var port = plcWorker ? new FoundationFixture(scenario) : null;
+        var result = new EngineHostParity(port).Execute(() => EngineFixture.Run(scenario), true, plcWorker, readUnknownResult: scenario == "unknown");
+        return port?.Measure(result) ?? result;
+    }
+    internal static string RunPrecondition(string tool, string message, string? parameter, bool argument, bool wrapped, bool typed, string arguments)
+        => new EngineHostParity().Execute(() => EngineFixture.RunPrecondition(tool, message, parameter, argument, wrapped, typed, arguments), false);
+    private string Execute(Func<string> run, bool approvalContext, bool plcWorker = false, bool readUnknownResult = false)
+    {
+        EngineFixture.ExternalHost = () => new Scope(approvalContext, port: port);
         EngineFixture.ExternalCall = (name, args) =>
         {
             // The shared-adapter route dispatches through the MCP request that carries the
             // call, as every served request does; the engine-host route does not use it.
+            args = port?.Arguments(name, args) ?? args;
             using var request = plcWorker ? HostMcp.UseProgressRequest(new global::ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(
                 DispatchProxy.Create<global::ModelContextProtocol.Server.IMcpServer, WorkerRobustnessTests.ServerProxy>())
                 { Params = new CallToolRequestParams { Name = name } }, CancellationToken.None) : null;
@@ -51,7 +62,7 @@ internal static class EngineHostParity
         public IReadOnlyList<Descriptor> Lite => All.Values.ToArray();
         public Descriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var value) ? value : null;
         public JsonArray BehaviorCapabilities { get; }
-        internal Catalog(string release, bool complete = false, bool plcWorker = false)
+        internal Catalog(string release, bool complete = false)
         {
             var all = JsonSerializer.Deserialize<Descriptor[]>(EngineFixture.CatalogJson(), global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!
                 .ToDictionary(d => d.Name, StringComparer.OrdinalIgnoreCase);
@@ -63,11 +74,6 @@ internal static class EngineHostParity
                     toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata.Create(name, method, _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
                     all.Add(name, descriptor);
                 }
-            if (plcWorker)
-                all = all.ToDictionary(pair => pair.Key, pair => pair.Value.Execution == "worker"
-                    ? new Descriptor(pair.Value.Name, pair.Value.RawDescription, pair.Value.Tool, pair.Value.Classification,
-                        pair.Value.Signature, pair.Value.Parameters, pair.Value.DryRun, pair.Value.CandidateFamily, "foundation")
-                    : pair.Value, StringComparer.OrdinalIgnoreCase);
             All = all;
             BehaviorCapabilities = TiaMcp.Logic.V4.BehaviorCapabilities.Table(typeof(Catalog).Assembly, release);
         }
@@ -78,18 +84,17 @@ internal static class EngineHostParity
         private readonly toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime lifetime = new();
         private readonly bool context;
         private readonly bool approvalContext;
-        internal Scope(bool approvalContext, bool complete = false, bool plcWorker = false)
+        internal Scope(bool approvalContext, bool complete = false, FoundationFixture? port = null)
         {
             var type = typeof(EngineFixture).Assembly.GetType("TiaMcpServer.ModelContextProtocol.McpServer")!;
             string release = (string)type.GetProperty("ReleaseKey", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null)!;
             toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
-            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker = new Worker();
-            var catalog = new Catalog(release, complete, plcWorker);
-            // Shared-adapter route: each probe is wrapped exactly like a V20/V21 ported shared tool
-            // (PortedToolContract.Wrap: McpServer.WrapTools over the validated declaration).
-            var invoker = new Invoker(catalog, toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker, lifetime,
-                plcWorker ? catalog.All.Values.Where(tool => tool.Execution == "foundation").Select(tool => HostMcp.WrapTools(new global::ModelContextProtocol.Server.McpServerTool[] {
-                    new toolpipeline::TiaMcpServer.ModelContextProtocol.InfrastructureInputTool(new SharedProbe(tool), tool) }).Single()).ToArray() : null);
+            var worker = new Worker(port?.Worker);
+            toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Worker = worker;
+            var declared = new Catalog(release, complete);
+            var shared = port?.Tools(release, declared) ?? Array.Empty<McpServerTool>();
+            CatalogView catalog = port == null ? declared : new toolpipeline::TiaMcp.FoundationHost.SharedToolCatalog(declared, shared, new HashSet<string>());
+            var invoker = new Invoker(catalog, worker, lifetime, shared);
             if (EngineFixture.ExternalStagingStore is ImportStagingStore store)
                 invoker.SetLocalTarget(typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools),
                     new toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools(store));
@@ -107,20 +112,65 @@ internal static class EngineHostParity
         }
     }
 
-    private sealed class SharedProbe(Descriptor descriptor) : global::ModelContextProtocol.Server.McpServerTool
+    // Drive the same scenarios through CallTool and the actual Foundation boundary.
+    // Only the Siemens worker and the Workbench decision are supplied by the fixture.
+    private sealed class FoundationFixture : IDisposable
     {
-        public override Tool ProtocolTool => descriptor.Tool;
-        public override ValueTask<CallToolResult> InvokeAsync(global::ModelContextProtocol.Server.RequestContext<CallToolRequestParams> request, CancellationToken token = default)
+        private readonly string scenario;
+        private readonly BehaviorParityTests.Worker native;
+        private readonly BatchFixture? batch;
+        internal IFoundationWorker Worker { get; }
+
+        internal FoundationFixture(string scenario)
         {
-            var args = JsonSerializer.SerializeToNode(request.Params!.Arguments)!.AsObject();
-            var reply = EngineFixture.InvokeBody("fixture", descriptor.Name, args.ToJsonString(), HostMcp.IsReadOnlyApprovalPreview);
-            if (reply.NativeCallIssued) toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.NativeCallStarted();
-            return ValueTask.FromResult(JsonSerializer.Deserialize<CallToolResult>(reply.Result, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions)!);
+            this.scenario = scenario.EndsWith("-disabled", StringComparison.Ordinal) ? scenario[..^9] : scenario;
+            native = new BehaviorParityTests.Worker(this.scenario);
+            if (scenario.StartsWith("disabled-", StringComparison.Ordinal))
+            {
+                batch = new BatchFixture(scenario[(scenario.StartsWith("disabled-program-", StringComparison.Ordinal) ? 17 : 15)..],
+                    scenario.StartsWith("disabled-program-", StringComparison.Ordinal));
+            }
+            Worker = batch == null ? native : new BehaviorParityTests.LocalBatchWorker(batch);
         }
+
+        internal McpServerTool[] Tools(string release, Catalog declared) => FoundationTools.Definitions
+            .Where(d => declared.Find(d.Name)?.Execution == "worker")
+            .Select(d => (McpServerTool)new UsageHintTool(new FoundationV4Tool(new FoundationTool(d, Worker), release, sharedSession: true))).ToArray();
+
+        internal JsonObject Arguments(string name, JsonObject args)
+        {
+            if (batch != null && name is "ImportPlcProgramFromDirectory" or "ImportPlcBlocksFromDirectory") return batch.Arguments();
+            if (name == "ListPlcTags" && (scenario.StartsWith("blocked-export", StringComparison.Ordinal) || scenario == "typed-export-refusal"))
+                native.Followup = true;
+            if (name is "ImportPlcBlock" or "ImportPlcType" or "ImportPlcTagTable" or "CompilePlcSoftware")
+            {
+                args["dryRun"] = false;
+                args["confirm"] = true;
+                args["expectedProjectFile"] = "C:/fixture.ap19";
+            }
+            return args;
+        }
+
+        internal string Measure(string report)
+        {
+            var result = JsonNode.Parse(report)!.AsObject();
+            if (batch != null) result["calls"] = JsonSerializer.SerializeToNode(batch.Calls);
+            else if (!scenario.StartsWith("staging-", StringComparison.Ordinal))
+            {
+                result["writes"] = native.Writes;
+                result["previews"] = native.Previews;
+            }
+            return result.ToJsonString();
+        }
+
+        public void Dispose() { Worker.Dispose(); batch?.Dispose(); }
     }
 
-    private sealed class Worker : IEngineWorker
+    private sealed class Worker(IFoundationWorker? foundation = null) : IEngineWorker
     {
+        public toolpipeline::TiaMcp.FoundationHost.UnsettledCalls Unsettled
+            => toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For((object?)foundation ?? this);
+        public toolpipeline::TiaMcp.FoundationHost.LateCalls LateResults => toolpipeline::TiaMcp.FoundationHost.LateCalls.For((object?)foundation ?? this);
         public bool Faulted => false;
         public JsonNode? Binding => null;
         public object SessionKey { get; } = new();

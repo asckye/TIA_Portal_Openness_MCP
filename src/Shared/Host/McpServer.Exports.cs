@@ -102,15 +102,19 @@ namespace TiaMcpServer.ModelContextProtocol
             CancellationToken cancellationToken = default)
         {
             var result = await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            return Guard(result, ProtocolTool?.Name ?? "(unknown)", request?.Params?.Arguments);
+        }
+
+        internal static CallToolResult Guard(CallToolResult result, string name, IReadOnlyDictionary<string, JsonElement>? arguments)
+        {
             try
             {
-                string name = ProtocolTool?.Name ?? "(unknown)";
-                string? forwarded = ForwardedToolName(name, request?.Params?.Arguments);
+                string? forwarded = ForwardedToolName(name, arguments);
                 // CallTool 转发到分页工具时同样要放行 —— 否则 GetExport 的那一页
                 // 会被再寄存一次，模型拿到的是「一个句柄的句柄」，越翻越远。
                 if (forwarded != null && McpServer.IsExportTool(forwarded)) return result;
 
-                string target = DescribeTarget(request?.Params?.Arguments);
+                string target = DescribeTarget(arguments);
                 if (forwarded != null) target = ("→" + forwarded + " " + target).Trim();
                 return Shrink(result, forwarded ?? name, target);
             }

@@ -79,11 +79,8 @@ namespace TiaMcp.FoundationHost
             if (catalog.All.ContainsKey(name) && publicArguments.EnumerateObject().Any(property => !properties.TryGetProperty(property.Name, out _))
                 && new InputSchema(tool.Tool.InputSchema).Validate(publicArguments, "arguments") is { } malformed)
                 return malformed;
-            string problem = ReleaseCatalogData.Releases[McpServer.ReleaseKey].WrapPortedTools && tool.Execution == "foundation"
-                && (!TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                || TiaMcp.Adapters.Contracts.PortedFamilies.Available(McpServer.ReleaseKey, name)) ? "" : McpServer
-                    .VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value) ? value.ToString()
-                : tool.Parameters.FirstOrDefault(p => p.Name == key)?.DefaultText);
+            string problem = McpServer.VersionCallProblem(name, key => arguments.Json.TryGetProperty(key, out var value)
+                ? value.ToString() : tool.Parameters.FirstOrDefault(p => p.Name == key)?.DefaultText);
             if (problem.Length == 0 && !catalog.All.ContainsKey(name)) problem = "Tool is not available in this release.";
             if (problem.Length != 0) return new Error(problem, new UnsupportedCapabilityDetails(McpServer.ReleaseKey, name, null));
             var error = ValidateArguments(tool, publicArguments, tool.Tool.InputSchema);
@@ -104,6 +101,10 @@ namespace TiaMcp.FoundationHost
 
         private static Type? ParameterType(string name) => typeof(TypedToolInput).Assembly.GetType(name) ?? Type.GetType(name);
         public Error? ValidateArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema, bool typedFamiliesOnly = false)
+            => ValidateToolArguments(tool, arguments, schema, catalog, typedFamiliesOnly);
+
+        internal static Error? ValidateToolArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema,
+            IToolCatalogView? catalog = null, bool typedFamiliesOnly = false)
         {
             var presetError = ParameterPresets.Refusal(tool.Name, JsonNode.Parse(arguments.GetRawText())!.AsObject(),
                 CanonicalParameterTool.PresetNames(tool), EngineHostConfiguration.CurrentOrNull?.Presets ?? ParameterPresets.Empty);
@@ -127,7 +128,7 @@ namespace TiaMcp.FoundationHost
             {
                 if (input.ValueKind != JsonValueKind.Object || !input.TryGetProperty("name", out var name) || name.ValueKind != JsonValueKind.String
                     || !input.TryGetProperty("arguments", out var args) || args.ValueKind != JsonValueKind.Object) return null;
-                var target = catalog.Find(name.GetString()!, true);
+                var target = catalog?.Find(name.GetString()!, true);
                 return target == null ? null : Families(target, args);
             }
             Error? family = null;

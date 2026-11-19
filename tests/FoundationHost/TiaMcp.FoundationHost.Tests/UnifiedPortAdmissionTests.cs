@@ -474,7 +474,7 @@ public sealed class UnifiedPortAdmissionTests
         using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
             new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(sessionWorker) { Catalog = catalog,
                 Invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, sessionWorker, lifetime) });
-        var tool = new FoundationTool(worker, "21", Method(name), name).ValidatedTool();
+        var tool = new FoundationV4Tool(new FoundationTool(worker, "21", Method(name), name), "21");
         var arguments = Arguments(name);
         arguments["softwarePath"] = "HMI";
         arguments["expectedProject"] = "Project_A";

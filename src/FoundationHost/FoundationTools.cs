@@ -236,20 +236,6 @@ internal sealed partial class FoundationTool : McpServerTool
                 : worker.Call(operation, arguments, CancellationToken.None)).ConfigureAwait(false);
         return settlement == null ? body : UnknownSettlement.Decorate(body, settlement);
     }
-    private async ValueTask<CallToolResult> SettlePortedResult(CallToolResult result, IReadOnlyDictionary<string, JsonElement> arguments)
-    {
-        // The FoundationV4 wrapper owns settlement on these releases, after the port has returned.
-        if (!ReleaseCatalogData.Releases[portedRelease!].WrapPortedTools) return result;
-        if (result.StructuredContent is not { } body || !UnsettledCalls.HasUnknownOutcome(body)) return result;
-        var values = JsonSerializer.SerializeToNode(arguments)!.AsObject();
-        if (TiaMcp.Logic.V4.HostBehavior.IsPreview(values, true) || UnknownSettlement.Capture(tool.Name, values) == null) return result;
-        Unsettled.ObserveProjectAfterCall(BoundProjectFile);
-        Unsettled.Record((string)body["meta"]!["requestId"]!, tool.Name,
-            WriteDigest.ForOutcome(tool.Name, values, BoundProjectFile), DateTimeOffset.UtcNow, values);
-        body = await SettleUnknown(body).ConfigureAwait(false);
-        return new CallToolResult { IsError = result.IsError, StructuredContent = body,
-            Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };
-    }
     internal void ValidateApplyArguments(IReadOnlyDictionary<string, JsonElement> arguments)
     { if (portedMethod == null) ReadArguments(arguments, new JsonObject()); }
     private void ReadArguments(IReadOnlyDictionary<string, JsonElement>? arguments, JsonObject values)

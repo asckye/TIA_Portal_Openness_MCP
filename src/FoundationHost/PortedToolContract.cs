@@ -13,6 +13,7 @@ using TiaMcp.Logic.V4;
 using toolpipeline::TiaMcpServer.ModelContextProtocol;
 using toolpipeline::TiaMcpServer.Siemens.Services;
 using OptionalPorts = toolpipeline::TiaMcp.Shared;
+using WorkerToolInvoker = toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker;
 #else
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens.Services;
@@ -54,28 +55,6 @@ internal static class PortedToolContract
                 && family.Available(release))
             .Select(family => new PortedFamilies.Family(family.Name, family.OperationPrefix, family.Releases,
                 TiaMcp.PlcWorker.WorkerOperations.FamilyTools(family), family.Actions));
-    internal static McpServerTool Wrap(FoundationTool tool)
-    {
-        // The readiness guard of a bridged call asks whether this target refuses its arguments by capability (P8-04j2).
-        // The answer depends only on the release, the tool and the arguments, so any registered instance answers it.
-        McpServer.PortedCapabilityRefusals[(tool.Release, tool.ProtocolTool.Name)] = tool.RefusesByCapability;
-        if (tool.ProtocolTool.Name == "DownloadPlc")
-            McpServer.PortedAdmissionRefusals[(tool.Release, tool.ProtocolTool.Name)] = tool.AdmissionRefusal;
-        return new ArgumentResultTool(tool.CapabilityAdmission(McpServer.WrapToolsForRelease(new[] { tool.ValidatedTool() }, tool.Release).Single()));
-    }
-
-    private sealed class ArgumentResultTool(McpServerTool inner) : McpServerTool
-    {
-        public override Tool ProtocolTool => inner.ProtocolTool;
-        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
-            CancellationToken cancellationToken = default)
-        {
-            var result = await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
-            return FoundationV4Result.RestrictArguments(result, ProtocolTool.InputSchema,
-                JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>()));
-        }
-    }
-
     // The primary module operation comes first; previews and fallback reads are
     // also part of the wiring. Pure builders do not read session state.
     internal static string[] WiredOperations(string tool, string release = "21") => tool switch
@@ -245,7 +224,6 @@ internal sealed partial class FoundationTool
     private readonly string? portedRelease;
     private readonly ToolDescriptor? portedDescriptor;
     internal bool Ported => portedMethod != null;
-    internal string Release => portedRelease!;
 
     internal FoundationTool(IFoundationWorker worker, string release, MethodInfo method, string name)
     {
@@ -260,8 +238,6 @@ internal sealed partial class FoundationTool
             descriptor.Parameters.Select(p => new Argument(p.Name, p.FriendlyType, p.Required)).ToArray(), PortedFamilies.ForTool(name).Name);
     }
 
-    internal McpServerTool ValidatedTool() => new InfrastructureInputTool(this, portedDescriptor!);
-    internal McpServerTool CapabilityAdmission(McpServerTool inner) => new CapabilityTool(this, inner);
     internal JsonElement CapabilityInput(JsonElement arguments)
     {
         // A missing online address is refused by the target policy after capability admission. Validate every other field first.
@@ -275,48 +251,19 @@ internal sealed partial class FoundationTool
         }
         return arguments;
     }
-    // The same admission as CapabilityTool: only valid arguments reach the capability check.
-    internal bool RefusesByCapability(JsonElement arguments) => AdmissionRefusal(arguments) != null;
-    internal CallToolResult? AdmissionRefusal(JsonElement arguments)
-        => McpServer.ToolInvoker.ValidateArguments(portedDescriptor!, CapabilityInput(arguments), tool.InputSchema) == null
-            ? RefusePortedCapability(arguments.EnumerateObject()
-                .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal)) : null;
+    internal void RegisterCapabilityRefusal()
+        => McpServer.PortedCapabilityRefusals[(portedRelease!, tool.Name)] = RefusesByCapability;
 
-    private sealed class CapabilityTool(FoundationTool owner, McpServerTool inner) : McpServerTool
-    {
-        public override Tool ProtocolTool => inner.ProtocolTool;
-        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
-            CancellationToken cancellationToken = default)
-        {
-            var arguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
-            var input = JsonSerializer.SerializeToElement(arguments);
-            if (arguments.TryGetValue("expectedProject", out var expectedProject) && expectedProject.ValueKind == JsonValueKind.String
-                && HostBehavior.ExpectedProjectArgument(expectedProject.GetString()) is { } projectError)
-                return McpServer.V4TargetReject(owner.tool.Name, projectError, current: true);
-            if (UnifiedPortService.ValidateNavigation(owner.tool.Name, ProtocolTool.InputSchema, input) is { } navigationError)
-            {
-                var rejected = McpServer.V4TargetReject(owner.tool.Name, navigationError, current: true);
-                McpServer.RecordAdmissionProjection(request, rejected);
-                return rejected;
-            }
-            // Other invalid input still goes through the existing wrapper so its
-            // behaviour disclosure and raw rejection payload remain unchanged.
-            var validation = McpServer.ToolInvoker.ValidateArguments(owner.portedDescriptor!, owner.CapabilityInput(input), ProtocolTool.InputSchema);
-            if (validation != null && PortedFamilies.ForTool(owner.tool.Name).Name is "F27" or "F28"
-                && UnifiedInputCodec.HasDuplicateKeys(input))
-            {
-                var rejected = McpServer.V4TargetReject(owner.tool.Name, validation, current: true);
-                McpServer.RecordAdmissionProjection(request, rejected);
-                return rejected;
-            }
-            if (validation == null && owner.RefusePortedCapability(arguments) is { } refusal)
-            {
-                McpServer.RecordAdmissionProjection(request, refusal);
-                return refusal;
-            }
-            return owner.ParkWorkerResult(await inner.InvokeAsync(request, cancellationToken), owner.tool.Name);
-        }
-    }
+    internal bool HasDuplicateUnifiedInput(JsonElement arguments)
+        => PortedFamilies.ForTool(tool.Name).Name is "F27" or "F28" && UnifiedInputCodec.HasDuplicateKeys(arguments);
+
+    internal Error? ValidatePortedInput(JsonElement arguments)
+        => WorkerToolInvoker.ValidateToolArguments(portedDescriptor!, arguments, tool.InputSchema);
+
+    // The bridge's readiness guard must defer to a capability refusal only for valid input.
+    internal bool RefusesByCapability(JsonElement arguments)
+        => ValidatePortedInput(CapabilityInput(arguments)) == null && RefusePortedCapability(arguments.EnumerateObject()
+            .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal)) != null;
 
     private static readonly IReadOnlyDictionary<string, string> UnifiedParameters = new Dictionary<string, string>(StringComparer.Ordinal)
     {
@@ -739,8 +686,8 @@ internal sealed partial class FoundationTool
             if (claimsNotStarted && workerFailure != null && priorMutation)
             {
                 workerFailure.Data["foundationPriorMutation"] = true;
-                return await SettlePortedResult(FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                    true, true, lastReply, workerFailure), arguments).ConfigureAwait(false);
+                return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                    true, true, lastReply, workerFailure);
             }
             if (claimsNotStarted && workerFailure?.Data["workerReadTimeout"] is true)
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
@@ -754,8 +701,8 @@ internal sealed partial class FoundationTool
                 body["data"]!["earlierMutationMayHaveChanged"] = true;
                 result.Content = new[] { new TextContentBlock { Text = body.ToJsonString() } };
             }
-            return await SettlePortedResult(FoundationV4Result.ReconcileWorker(result, nativeDiagnostics, tool.Name,
-                priorMutation ? null : workerFailure), arguments).ConfigureAwait(false);
+            return FoundationV4Result.ReconcileWorker(result, nativeDiagnostics, tool.Name,
+                priorMutation ? null : workerFailure);
         }
         catch (TargetInvocationException error) when (error.InnerException != null)
         {
@@ -764,12 +711,12 @@ internal sealed partial class FoundationTool
                 if (tool.Name == "SetUnifiedGlobalScript" && (string?)lastReply!["meta"]?["outcome"] == "unknown")
                 {
                     var facts = HostBehavior.ScriptImportEvidence(lastReply["error"]?["details"]?["evidence"] as JsonObject ?? new JsonObject());
-                    return await SettlePortedResult(FoundationV4Result.UnknownScriptImport(portedRelease!, Meta.Correlate(InvocationJournal.CorrelationId),
-                        facts, priorMutation), arguments).ConfigureAwait(false);
+                    return FoundationV4Result.UnknownScriptImport(portedRelease!, Meta.Correlate(InvocationJournal.CorrelationId),
+                        facts, priorMutation);
                 }
-                return await SettlePortedResult(FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
+                return FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
                     StructuredContent = lastReply.DeepClone(), Content = new[] { new TextContentBlock { Text = lastReply.ToJsonString() } } },
-                    nativeDiagnostics), arguments).ConfigureAwait(false);
+                    nativeDiagnostics);
             }
             var cause = workerFailure ?? error.InnerException;
             bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
@@ -793,8 +740,8 @@ internal sealed partial class FoundationTool
             var result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                 operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
                     : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, lastReply?["Failure"] != null ? lastReply : null, cause);
-            return await SettlePortedResult(FoundationV4Result.ReconcileWorker(result, nativeDiagnostics, tool.Name,
-                priorMutation ? null : workerFailure), arguments).ConfigureAwait(false);
+            return FoundationV4Result.ReconcileWorker(result, nativeDiagnostics, tool.Name,
+                priorMutation ? null : workerFailure);
         }
     }
 }
