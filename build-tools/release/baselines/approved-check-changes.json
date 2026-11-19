@@ -5773,6 +5773,28 @@
           "identifier": "FoundationProcessLeaseTests/Takeover_data_reaches_the_connect_result_without_a_new_warning( string state ):d82f4946b1d1cb48829a5791a842462ae6de0be5204efe68b3b9c09b1768efb7:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-14",
+      "maintainerDate": "2026-11-19",
+      "reason": "VMFIX-14 approved change: ImportDeviceAml native false is now a returned failure mapped to failed (not OUTCOME_UNKNOWN), on the spec-approved list; standing approval of recommended options (2026-11-17)",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WriteOutcomeContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WriteOutcomeContractTests/AutomationML_native_false_retains_returned_state_and_counts_through_the_host_catch( ):6690ca01ed0466b98083ec58ceb86c4609111b1b8d2b2bdf3849d626efe37292:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WriteOutcomeContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WriteOutcomeContractTests/AutomationML_native_false_retains_returned_state_and_counts_through_the_host_catch( ):d5cbfadf9264876a0893e6c6b179f0d86ef0c64662ee5b507e9fe0da34c5b780:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WriteOutcomeContractTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WriteOutcomeContractTests/AutomationML_native_false_retains_returned_state_and_counts_through_the_host_catch( ):e6d7d9329a85d1980e8b139adac6d65b9f7732ac6f22ecefc3c531d707c65775:1"
+        }
+      ]
     }
   ]
 }
