@@ -10241,7 +10241,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ac839914f3eb77eaefdf930cc10df481cb4f8bd775d280147c45016cef0c6f7a",
+      "descriptionSha256": "ad937787077b24bca069a98bb108a99dc733db4011e5f737a671194fc66f63ba",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -10279,9 +10279,23 @@
             "description": "Exact foundation argument: groupPath",
             "type": "string"
           },
+          "limit": {
+            "default": 32,
+            "description": "Exact foundation argument: limit",
+            "maximum": 32,
+            "minimum": 1,
+            "type": "integer"
+          },
           "maxItems": {
             "default": 128,
             "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Exact foundation argument: offset",
+            "maximum": 256,
+            "minimum": 0,
             "type": "integer"
           },
           "recursive": {
@@ -27448,7 +27462,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "2e589c822e3d99aab4bb415473efcba51df6256a4f15653bd7e0a580414081f1",
+      "descriptionSha256": "7b0beef5a407d6bc146b3fcc18208e6f843a83195339bda6876e7547c7ea06ac",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -27461,6 +27475,13 @@
             "description": "Exact foundation argument: limit",
             "maximum": 100,
             "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Exact foundation argument: offset",
+            "maximum": 999,
+            "minimum": 0,
             "type": "integer"
           }
         },
@@ -27819,6 +27840,16 @@
             "default": true,
             "description": "dryRun: true (default) only previews the change; set false to actually write it",
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "expectedPlanHash: copy planHash from the matching preview; required when dryRun=false.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "expectedProjectFile: exact project file from the matching preview; required when dryRun=false.",
+            "type": "string"
           },
           "ioType": {
             "description": "ioType: Input, Output, Diagnosis or Substitute",

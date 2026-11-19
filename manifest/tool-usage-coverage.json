@@ -1,6 +1,6 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "25bd12dadcdea653e2319a61ddaa2e671a73867c1dae8b988fd98226a6535ee9",
+  "catalogSha256": "8a262085dd1d78fb2a0be2ff2a02c776dfcaae85346d6f8b529c9cc4ff6ee47c",
   "uniqueTools": 524,
   "documents": 89,
   "versionToolPairs": 3259,
@@ -22605,22 +22605,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
             },
             {
               "operation": "add",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
             },
             {
               "operation": "change",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
             },
             {
               "operation": "remove",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 18; see interpretation and the tool description."
             }
           ]
         },
@@ -29621,22 +29621,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
             },
             {
               "operation": "add",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
             },
             {
               "operation": "change",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
             },
             {
               "operation": "remove",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 19; see interpretation and the tool description."
             }
           ]
         },
@@ -37278,22 +37278,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 20; see interpretation and the tool description."
             },
             {
               "operation": "add",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 20; see interpretation and the tool description."
             },
             {
               "operation": "change",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 20; see interpretation and the tool description."
             },
             {
               "operation": "remove",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 20; see interpretation and the tool description."
             }
           ]
         },
@@ -41604,8 +41604,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "a7803c38df2d4bb99b614c0ae4441f89392baca635b5eff82117c20f790fa293",
-      "runtimeSha256": "a7803c38df2d4bb99b614c0ae4441f89392baca635b5eff82117c20f790fa293",
+      "sdkWorkerSha256": "c55cf9b28980cc08307f898dbd91b7d875f1c05d46ffee57600acdae68119447",
+      "runtimeSha256": "c55cf9b28980cc08307f898dbd91b7d875f1c05d46ffee57600acdae68119447",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -45145,22 +45145,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
             },
             {
               "operation": "add",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
             },
             {
               "operation": "change",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
             },
             {
               "operation": "remove",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "releaseProblem": "This registered wrapper has no native implementation for release 21; see interpretation and the tool description."
             }
           ]
         },
@@ -49800,8 +49800,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "1d71f88dde163600e9a670afe36a66340f6c0956748239ade46c89c11e9636b4",
-      "runtimeSha256": "1d71f88dde163600e9a670afe36a66340f6c0956748239ade46c89c11e9636b4",
+      "sdkWorkerSha256": "418acf7c1bb90533b4f92b35b30067ee78968037d21b838e9cfe51b2a497ba57",
+      "runtimeSha256": "418acf7c1bb90533b4f92b35b30067ee78968037d21b838e9cfe51b2a497ba57",
       "workerModel": "foundation-host-plc-worker"
     }
   }

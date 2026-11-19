@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-18T23:36:54.6049482+00:00",
+  "generatedAt": "2026-11-19T01:46:48.7407698+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "559ca13c3a553af327a6c5520f98e4e948e62ae0a360e07816122fdcb1bb217f",
+  "workerSha256": "aa17c41af4b341f72d0a72cffc550c85a1ac8bf63d32a9899269c9c69d2ff5ce",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2915,
+    "parameters": 2920,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 690,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 173,
     "enumHints": 271,
-    "defaultHints": 1677,
+    "defaultHints": 1682,
     "examplesCurated": 524,
     "recipes": 54
   },
@@ -190,7 +190,7 @@
         "dryRun"
       ],
       "description": "[L2][Library][WRITE] Read/create/rename/delete exact types or masterCopies folder. Empty-folder deletion only, no recursive deletion or save. Default preview. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageLibraryFolder\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"folderKind\":\"types\",\"folderPath\":\"\",\"action\":\"read\",\"dryRun\":true}"
+      "example": "{\"folderKind\":\"types\",\"folderPath\":\"MCP_Example\",\"action\":\"create\",\"dryRun\":true}"
     },
     {
       "name": "ManageIoSystem",
@@ -747,7 +747,7 @@
         "exportOptions"
       ],
       "description": "[L2][HMI-Classic][WRITE] Classic WinCC screen objects beyond plain screens: objectKind popup (ScreenPopup: read / export / delete, objectPath folder/.../name), template (ScreenTemplate: read / export / delete), slidein (ScreenSlidein addressed by SlideinType Top/Bottom/Left/Right: read / export; no native Delete), overview (ScreenOverview: read / export / import) and globalElements (ScreenGlobalElements: read / export / import). export defaults to WithDefaults and writes a NEW absolute XML file and hashes it; import (objectPath = target folder for popups / templates, importOptions None/Override) uses ScreenPopupComposition / ScreenTemplateComposition / ScreenSlideinComposition.Import or HmiTarget.ImportScreenOverview / ImportScreenGlobalElements and returns the imported names. Deletion and Override import need confirmDelete=true besides dryRun=false; every delete is verified by Find. No save/compile/download; Plain screen and tag-table deletion and single-tag XML exchange are outside the 4.0 tool surface; use ExportHmiScreen for classic screen content. Examples: GetToolUsage(toolName: \"ManageClassicHmiScreenObject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\",\"objectKind\":\"popup\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"objectPath\":\"/Popup_1\"}"
+      "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\",\"objectKind\":\"popup\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"objectPath\":\"Popup_1\"}"
     },
     {
       "name": "ManageClassicHmiGraphic",
@@ -2240,7 +2240,7 @@
         "expectedProjectFile"
       ],
       "description": "[PLC foundation; native unverified][WRITE] [batch-document-import-candidate] Exact V20/V21 ordered manifest of 1..16 admitted ordinary GlobalDB document sets. Reuses single document grammar and None-only native calls; all code/resource pairs remain locked. Whole-manifest hashes, complete collision inventory and exact project/group confirmation. Stop on first uncertainty, retain succeeded/failed/not-attempted evidence, inspect an unknown target before repeating that call. GetSessionState lists unsettled request IDs; no folder guessing, overwrite, culture activation, compile, save, retry or rollback. Native acceptance NOT RUN. Examples: GetToolUsage(toolName: \"ImportPlcBlocksDocuments\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"dryRun\":true,\"confirm\":false,\"fileNamesWithoutExtension\":[\"\\u003Cexact document basename from the import directory\\u003E\"]}"
+      "example": "{\"softwarePath\":\"devices/PLC_1/PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"dryRun\":true,\"confirm\":false,\"fileNamesWithoutExtension\":[\"\\u003Cexact document basename from the import directory\\u003E\"]}"
     },
     {
       "name": "ListHmiScreens",
@@ -2534,7 +2534,7 @@
         "includeBlockParameters"
       ],
       "description": "[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before SivarcDataProvider access; all block types are refused on V20 because definition access can crash TIA Portal V20; works on V21; blockPath Group/Subgroup/Name as GetSoftwareTree shows it, or the bare name for a root block) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListSivarcBlockDefinitions\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"\\u003Cexact FB or FC path from GetPlcBlockHierarchy\\u003E\"}"
     },
     {
       "name": "ListSafetyActivationTests",
@@ -2891,7 +2891,7 @@
         "texts"
       ],
       "description": "[L2][PLC-Software][WRITE] One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. All block-definition reads and writes are refused with UNSUPPORTED_CAPABILITY on V20 before native access because SivarcDataProvider definition access can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcBlockDefinition\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"\\u003Cexact FB or FC path from GetPlcBlockHierarchy\\u003E\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
     },
     {
       "name": "SetUnifiedHmiRuntimeState",
@@ -3114,7 +3114,9 @@
         "deviceItemPath",
         "ioType",
         "startAddress",
-        "dryRun"
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
       "description": "[L2][Hardware][WRITE] Preview or change the I/O START ADDRESS of one device item (e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong value does NOT fail compilation — the program silently reads a different module. Read back with GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are rejected by TIA and reported back with the reason. Documented Address.StartAddress restrictions: changing one IO type can also move the other IO type of the same module, PLC tags are not rewired, and the PLC must be offline; the result lists every address row of the item before and after the write. Examples: GetToolUsage(toolName: \"SetDeviceItemIoAddress\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"ioType\":\"Input\",\"startAddress\":1,\"dryRun\":true}"
@@ -3158,7 +3160,7 @@
         "expectedProjectFile"
       ],
       "description": "[L2][Hardware][WRITE]Set one exact DeviceItem attribute by name with type coercion and detailed error return. Use GetDeviceItemInfo/GetDeviceItemNetworkInfo first. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"SetDeviceItemAttribute\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"attributeName\":\"Name\",\"value\":\"TRUE\",\"dryRun\":true}"
+      "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"attributeName\":\"Comment\",\"value\":\"Example comment\",\"dryRun\":true}"
     },
     {
       "name": "SetUnifiedLogDuration",
@@ -3181,7 +3183,7 @@
         "durationPath"
       ],
       "description": "[L2][HMI-Unified][WRITE] Set native LogDuration or SegmentDuration at exact nested object path. Normalized components; default preview, returns native readback; does not assert independent conversion equality. Examples: GetToolUsage(toolName: \"SetUnifiedLogDuration\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"durationPath\":[{\"property\":\"DataLogs\",\"name\":\"ExampleLog\"},{\"property\":\"LogDuration\"}],\"kind\":\"log\",\"days\":1,\"hours\":1,\"minutes\":1,\"seconds\":1,\"hundredNanoseconds\":1,\"dryRun\":true}"
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"durationPath\":[{\"property\":\"DataLogs\",\"name\":\"ExampleLog\"},{\"property\":\"Settings\"},{\"property\":\"LogTimePeriod\"}],\"kind\":\"log\",\"days\":1,\"hours\":1,\"minutes\":1,\"seconds\":1,\"hundredNanoseconds\":1,\"dryRun\":true}"
     },
     {
       "name": "SetDeviceAddress",
@@ -3233,9 +3235,10 @@
       "returnType": "CallToolResult",
       "parameters": [
         "keyword",
-        "limit"
+        "limit",
+        "offset"
       ],
-      "description": "[PLC foundation; native unverified][READ] [hardware-catalog-candidate] V18–21 only. Existing explicit attached portal and open bound project required. One literal query, bounded client traversal/results with explicit truncation. Native Find has no server-side limit/cancellation. No insertion, compatibility probe, catalog repair or launch. V14 SP1–17 API absent; V18 native acceptance NOT RUN. Examples: GetToolUsage(toolName: \"SearchHardwareCatalog\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][READ] [hardware-catalog-candidate] V18–21 only. Existing explicit attached portal and open bound project required. One literal query per page. Continue with meta.paging.nextOffset for the same keyword. Native Find has no server-side limit/cancellation. No insertion, compatibility probe, catalog repair or launch. V14 SP1–17 API absent; V18 native acceptance NOT RUN. Examples: GetToolUsage(toolName: \"SearchHardwareCatalog\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"keyword\":\"1513\"}"
     },
     {
@@ -3519,7 +3522,7 @@
         "properties"
       ],
       "description": "[L2][HMI-Unified][WRITE] Public scalar CPM interface/member properties at exact plant path and property-only JSON address. Default preview, checks readback, no implicit save/compile/download. Examples: GetToolUsage(toolName: \"SetUnifiedPlantObject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"plantPath\":\"/Plant_1\",\"dryRun\":true,\"objectPath\":[],\"properties\":{\"\\u003Cexact supported field from this operation/read result\\u003E\":\"\\u003Cvalue of that field\\u0027s documented type\\u003E\"}}"
+      "example": "{\"plantPath\":\"/Plant_1\",\"dryRun\":true,\"objectPath\":[],\"properties\":{\"AssignedHmiDevice\":\"HMI_RT_1\"}}"
     },
     {
       "name": "InitializeSimotionScripting",
@@ -4037,7 +4040,7 @@
         "expectedProjectFile",
         "changes"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Update 1..12 supported root scalars or exact dotted nested fields using public leaf setters, e.g. MaxLoginRuntimeSettings.MaxLoginErrors. Nested objects are never replaced. V20+: Telemetry, UPSS and tag settings; V21: TagOptimizationActive and exclusive operation. LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. changes is an object, e.g. {\"StartScreen\":\"/Group/Main\",\"ScreenResolution\":\"SR_1920X1080\"}; use exact enum names from GetUnifiedRuntimeSettings. StartScreen MUST be a full readable screen path (old encoded input accepted): validates existence and unique name in the selected HMI before writing the API's name value. Default dryRun=true returns before/proposed/token and planHash. Every execution requires previewToken, expectedPlanHash and expectedProjectFile from the same preview. Integers must be JSON integers in the CLR type range; enum names are exact. Validates all fields before any write and verifies final readback. Captured values are restored on failure; inspect rollbackCompleted and cleanupRequired. Multi-field writes are not atomic. No save, compile, download, runtime restart or close. Unsupported fields are rejected. Examples: GetToolUsage(toolName: \"SetUnifiedRuntimeSettings\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Unified][WRITE] Update 1..12 supported root scalars or exact dotted nested fields using public leaf setters, e.g. MaxLoginRuntimeSettings.MaxLoginErrors. Nested objects are never replaced. V20+: Telemetry, UPSS and tag settings; V21: HmiUnifiedTagSettings.TagOptimizationActive and exclusive operation. LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. changes is an object, e.g. {\"StartScreen\":\"/Group/Main\",\"ScreenResolution\":\"SR_1920X1080\"}; use exact enum names from GetUnifiedRuntimeSettings. StartScreen MUST be a full readable screen path (old encoded input accepted): validates existence and unique name in the selected HMI before writing the API's name value. Default dryRun=true returns before/proposed/previewToken and planHash. Every execution requires previewToken, expectedPlanHash and expectedProjectFile from the same preview. Integers must be JSON integers in the CLR type range; enum names are exact. Validates all fields before any write and verifies final readback. Captured values are restored on failure; inspect rollbackCompleted and cleanupRequired. Multi-field writes are not atomic. No save, compile, download, runtime restart or close. Unsupported fields are rejected. Examples: GetToolUsage(toolName: \"SetUnifiedRuntimeSettings\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"changes\":{\"MaxLoginRuntimeSettings.MaxLoginErrors\":5},\"dryRun\":true}"
     },
     {
@@ -4759,7 +4762,7 @@
         "dryRun"
       ],
       "description": "[L2][HMI][WRITE] SiVArc rule folders and rule tables of one family: kind folder (*RuleFolderComposition.Create / Delete, empty folders only) or table (*RuleTableComposition.Create(name), createFromType with typePath + typeVersion of a *RuleTableType in the project or an open global library (libraryName), Delete of non-default tables). path is Folder/Sub/Name relative to the family's system folder; read returns the typed row. delete needs confirmDelete=true when dryRun=false. Default preview; real edits need the SiVArc licence; never generates or saves. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcRuleContainer\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"category\":\"screens\",\"kind\":\"folder\",\"path\":\"Examples\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
+      "example": "{\"category\":\"screens\",\"kind\":\"folder\",\"path\":\"MCP_Example\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"create\"}"
     },
     {
       "name": "ManageSivarcRule",
@@ -8818,7 +8821,7 @@
         "expectedProject",
         "fields"
       ],
-      "description": "[L2][HMI-Unified][READ] Read supported root scalars and nested runtime settings using exact dotted names, e.g. OpcUaServerRuntimeSettings.MaxSessionCount. Select 1..12 unique fields. V20+: Telemetry, UPSS and tag settings; V21: TagOptimizationActive and exclusive operation. Exact expectedProject and softwarePath required. fields is a string array, default [\"StartScreen\",\"ScreenResolution\"]. Returns per-field type/value, public setter availability and exact enum names in capabilities. Coverage is the requested fields only; LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. No save, compile, download or runtime restart. Examples: GetToolUsage(toolName: \"GetUnifiedRuntimeSettings\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Unified][READ] Read supported root scalars and nested runtime settings using exact dotted names, e.g. OpcUaServerRuntimeSettings.MaxSessionCount. Select 1..12 unique fields. V20+: Telemetry, UPSS and tag settings; V21: HmiUnifiedTagSettings.TagOptimizationActive and exclusive operation. Exact expectedProject and softwarePath required. fields is a string array, default [\"StartScreen\",\"ScreenResolution\"]. Returns per-field type/value, public setter availability and exact enum names in capabilities. Coverage is the requested fields only; LanguageAndFonts, Windows auto-start and Runtime Manager are not covered. No save, compile, download or runtime restart. Examples: GetToolUsage(toolName: \"GetUnifiedRuntimeSettings\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"fields\":[\"OpcUaServerRuntimeSettings.ActAsOPCServer\",\"MaxLoginRuntimeSettings.MaxLoginErrors\"]}"
     },
     {
@@ -9477,11 +9480,13 @@
         "dryRun",
         "unitName",
         "stripVolatile",
+        "offset",
+        "limit",
         "confirm",
         "expectedProjectFile",
         "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Examples: GetToolUsage(toolName: \"ExportPlcTypes\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][FILE] [bounded-batch-xml-v1] Exact ordinary standard PLC/group scope; exportPath must be an existing directory. Complete bounded inventory, recursive opt-in. Preview items use offset and limit. The inventory hash and apply cover the entire selection. Preview first; execution requires inventory hash, confirmation and exact project. Original XML numbers/symbols unchanged; no overwrite or retry; partial outcomes retained. Native unverified. Exports use ExportOptions.None: TIA writes only modified and non-default values plus what a later import needs. Optional unitName selects an exact standard software unit on V16–V21; group paths are relative to its root. Root behavior is unchanged when absent. Examples: GetToolUsage(toolName: \"ExportPlcTypes\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"exportDirectory\":\"C:\\\\TIA_MCP\\\\exports\",\"dryRun\":true,\"confirm\":false,\"stripVolatile\":true}"
     },
     {
