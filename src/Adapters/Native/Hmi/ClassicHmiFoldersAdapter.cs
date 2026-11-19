@@ -248,12 +248,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (action == "read") return "Slide-in screen read; export it for its content.";
                     return Export((f, o) => slidein.Export(f, o), "Slide-in screen " + objectPath);
                 }
-                var parts = PlcGroupOperations.Parts(objectPath, true);
-                string folderPath = action == "import" ? objectPath : string.Join("/", parts.Take(Math.Max(0, parts.Length - 1)));
+                var parts = EngineeringInputValidation.HmiFolderParts(objectPath);
+                var folderParts = action == "import" ? parts : parts.Take(parts.Length - 1).ToArray();
                 string name = action == "import" ? "" : parts.Last();
                 if (objectKind == "popup")
                 {
-                    ScreenPopupFolder folder = ExactPopupFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath));
+                    ScreenPopupFolder folder = ExactPopupFolder(hmi, folderParts);
                     ScreenPopupComposition popups = folder.ScreenPopups;
                     meta["folder"] = folder.Name;
                     if (action == "import") return Import((f, o) => popups.Import(f, o), "Pop-up screen", popups, "Hmi.Screen.ScreenPopup");
@@ -263,12 +263,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (action == "export") return Export((f, o) => popup.Export(f, o), "Pop-up screen " + name);
                     if (!writing) return "Pop-up screen deletion preview; no changes.";
                     meta["mayHaveChanged"] = true; popup.Delete(); meta["apiCallSuccess"] = true;
-                    if (ExactPopupFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath)).ScreenPopups.Find(name) != null)
+                    if (ExactPopupFolder(hmi, folderParts).ScreenPopups.Find(name) != null)
                         throw new InvalidOperationException("Pop-up screen remains after Delete.");
                     meta["verifiedAbsent"] = true;
                     return "Pop-up screen deleted and absence verified; project not saved.";
                 }
-                ScreenTemplateFolder templateFolder = ExactTemplateFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath));
+                ScreenTemplateFolder templateFolder = ExactTemplateFolder(hmi, folderParts);
                 ScreenTemplateComposition templates = templateFolder.ScreenTemplates;
                 meta["folder"] = templateFolder.Name;
                 if (action == "import") return Import((f, o) => templates.Import(f, o), "Screen template", templates, "Hmi.Screen.ScreenTemplate");
@@ -278,7 +278,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (action == "export") return Export((f, o) => template.Export(f, o), "Screen template " + name);
                 if (!writing) return "Screen template deletion preview; no changes.";
                 meta["mayHaveChanged"] = true; template.Delete(); meta["apiCallSuccess"] = true;
-                if (ExactTemplateFolder(hmi, EngineeringInputValidation.HmiFolderParts(folderPath)).ScreenTemplates.Find(name) != null)
+                if (ExactTemplateFolder(hmi, folderParts).ScreenTemplates.Find(name) != null)
                     throw new InvalidOperationException("Screen template remains after Delete.");
                 meta["verifiedAbsent"] = true;
                 return "Screen template deleted and absence verified; project not saved.";

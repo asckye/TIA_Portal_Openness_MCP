@@ -156,13 +156,6 @@ namespace TiaMcp.Adapters
             }
             return string.Join("/", names);
         }
-        private static LibraryType ExactLibraryType(object library, string typePath)
-        {
-            var parts = PlcGroupOperations.Parts(typePath);
-            var folder = EngineeringLibraryFolder(library, string.Join("/", parts.Take(parts.Length - 1)), "TypeFolder");
-            return (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last())
-                    ?? throw new PlcSoftwareException("NotFound", "Exact library type not found: " + typePath) { Data = { ["parameter"] = "typePath" } });
-        }
         private static LibraryTypeVersion ExactTypeVersion(LibraryType type, string version)
         {
             var matches = PlcGroupOperations.Items(type.Versions).Cast<LibraryTypeVersion>().Where(v => v.VersionNumber?.ToString() == version).Take(2)

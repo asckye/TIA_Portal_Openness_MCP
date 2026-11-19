@@ -26,12 +26,15 @@ internal static class ToolUsageTests
         var usage = response["data"];
         var args = usage?["example"]?["request"]?["params"]?["arguments"];
         return name switch {
-            "ListSivarcBlockDefinitions" or "ManageSivarcBlockDefinition" => ((string?)args?["blockPath"])?.Contains("FB or FC") == true,
+            "ListSivarcBlockDefinitions" or "ManageSivarcBlockDefinition" => (string?)args?["blockPath"] == "FC_1"
+                && (bool?)usage?["parameterSources"]?["blockPath"]?["requiresBinding"] == true
+                && ((string?)usage?["parameterSources"]?["blockPath"]?["meaning"])?.Contains("FB or FC") == true,
             "ImportPlcBlocksDocuments" => (string?)args?["softwarePath"] == "devices/PLC_1/PLC_1",
             "SamplePlcLiveValuesS7" => (string?)args?["items"]?[0] == "DB1.DBX0.0:BOOL",
             "SetDeviceItemAttribute" => (string?)args?["attributeName"] == "Comment" && (bool?)args?["dryRun"] == true,
             "ManageSivarcRuleContainer" or "ManageLibraryFolder" => (string?)args?["action"] == "create" && (bool?)args?["dryRun"] == true,
-            "ManageClassicHmiScreenObject" => (string?)args?["objectPath"] == "Popup_1",
+            "ManageClassicHmiScreenObject" => (string?)args?["objectPath"] == "/Popup_1"
+                && (bool?)usage?["parameterSources"]?["objectPath"]?["requiresBinding"] == true,
             "ScanAccessibleDevices" => (string?)args?["pgPcInterface"] == "PLCSIM",
             "SetUnifiedLogDuration" => (string?)args?["durationPath"]?[2]?["property"] == "LogTimePeriod",
             "SetUnifiedPlantObject" => (string?)args?["properties"]?["AssignedHmiDevice"] == "HMI_RT_1",

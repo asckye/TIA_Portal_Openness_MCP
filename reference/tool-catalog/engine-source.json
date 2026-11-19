@@ -19664,6 +19664,7 @@
     "SeedProjectFromReference": "Preset by the server: expectedProjectFile, plcSoftwarePath. Equal normalized values are accepted; different values are refused.",
     "SetDeviceAddress": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused. PLC software presets on mixed tools follow the target selector.",
     "SetDeviceItemAttribute": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
+    "SetDeviceItemIoAddress": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
     "SetOpcUaInterfaceEnabled": "Preset by the server: expectedProjectFile, softwarePath. Equal normalized values are accepted; different values are refused.",
     "SetPlcCpuSettings": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
     "SetPlcProgram": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",

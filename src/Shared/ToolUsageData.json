@@ -15513,7 +15513,7 @@
         "confirmDelete": false,
         "dryRun": true,
         "action": "read",
-        "objectPath": "Popup_1"
+        "objectPath": "/Popup_1"
       },
       "parameters": {
         "filePath": {
@@ -15537,7 +15537,8 @@
         "import": {
           "arguments": {
             "action": "import",
-            "filePath": "C:\\Examples\\exports\\Main.xml"
+            "filePath": "C:\\Examples\\exports\\Main.xml",
+            "objectPath": "/"
           }
         },
         "delete": {
@@ -20121,7 +20122,7 @@
     "ManageSivarcBlockDefinition": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>",
+        "blockPath": "FC_1",
         "kind": "tagDefinition",
         "confirmDelete": false,
         "dryRun": true,
@@ -23443,7 +23444,7 @@
     "ListSivarcBlockDefinitions": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>"
+        "blockPath": "FC_1"
       },
       "parameters": {
         "includeBlockParameters": {
@@ -40977,7 +40978,7 @@
             "confirmDelete": false,
             "dryRun": true,
             "action": "read",
-            "objectPath": "Popup_1"
+            "objectPath": "/Popup_1"
           },
           "parameters": {
             "filePath": {
@@ -40990,7 +40991,7 @@
               "exampleValue": "WithDefaults"
             },
             "objectPath": {
-              "meaning": "Select a relative popup path in the chosen Classic HMI.",
+              "meaning": "Bind the absolute popup path in the selected Classic HMI. Import uses the destination folder path.",
               "requiresBinding": true
             }
           },
@@ -41008,7 +41009,8 @@
             "import": {
               "arguments": {
                 "action": "import",
-                "filePath": "C:\\Examples\\exports\\Main.xml"
+                "filePath": "C:\\Examples\\exports\\Main.xml",
+                "objectPath": "/"
               }
             },
             "delete": {
@@ -45146,7 +45148,7 @@
         "ListSivarcBlockDefinitions": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>"
+            "blockPath": "FC_1"
           },
           "parameters": {
             "includeBlockParameters": {
@@ -45166,7 +45168,7 @@
         "ManageSivarcBlockDefinition": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>",
+            "blockPath": "FC_1",
             "kind": "tagDefinition",
             "confirmDelete": false,
             "dryRun": true,
@@ -55681,7 +55683,7 @@
             "confirmDelete": false,
             "dryRun": true,
             "action": "read",
-            "objectPath": "Popup_1"
+            "objectPath": "/Popup_1"
           },
           "parameters": {
             "filePath": {
@@ -55694,7 +55696,7 @@
               "exampleValue": "WithDefaults"
             },
             "objectPath": {
-              "meaning": "Select a relative popup path in the chosen Classic HMI.",
+              "meaning": "Bind the absolute popup path in the selected Classic HMI. Import uses the destination folder path.",
               "requiresBinding": true
             }
           },
@@ -55712,7 +55714,8 @@
             "import": {
               "arguments": {
                 "action": "import",
-                "filePath": "C:\\Examples\\exports\\Main.xml"
+                "filePath": "C:\\Examples\\exports\\Main.xml",
+                "objectPath": "/"
               }
             },
             "delete": {
@@ -60533,7 +60536,7 @@
         "ManageSivarcBlockDefinition": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>",
+            "blockPath": "FC_1",
             "kind": "tagDefinition",
             "confirmDelete": false,
             "dryRun": true,
@@ -64040,7 +64043,7 @@
         "ListSivarcBlockDefinitions": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "<exact FB or FC path from GetPlcBlockHierarchy>"
+            "blockPath": "FC_1"
           },
           "parameters": {
             "includeBlockParameters": {

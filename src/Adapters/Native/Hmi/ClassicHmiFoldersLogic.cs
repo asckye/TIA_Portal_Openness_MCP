@@ -57,7 +57,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 // the target folder; empty = the system folder (slide-ins always import into the system folder)
                 if (objectKind == "slidein")
                     Refuse(objectPath, "objectPath", "does not apply to slide-in import (the slide-in system folder is the only target).");
-                else if (!string.IsNullOrEmpty(objectPath)) TiaMcp.Adapters.Hardware.HardwarePath.Parts(objectPath);
+                else EngineeringInputValidation.HmiFolderParts(objectPath);
             }
             else
             {
@@ -66,7 +66,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     RequireOneOf(objectPath, SlideinTypes, "objectPath (slide-ins are addressed by SlideinType)"); if (action == "delete")
                         throw new ArgumentException("Slide-in screens cannot be deleted (no native Delete).");
                 }
-                else TiaMcp.Adapters.Hardware.HardwarePath.Parts(objectPath);
+                else if (EngineeringInputValidation.HmiFolderParts(objectPath).Length == 0)
+                    throw new ArgumentException("Select an exact popup or template in the folder.", nameof(objectPath));
             }
             if (action == "export" || action == "import") RequireAbsoluteFile(filePath, "filePath"); else
                 Refuse(filePath, "filePath", "applies to export / import only.");

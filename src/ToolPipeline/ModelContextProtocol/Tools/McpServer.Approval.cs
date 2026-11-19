@@ -52,10 +52,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!unknown && name is not ("SaveProject" or "SaveProjectCopy" or "CallTool")) return result;
             if ((string?)body["meta"]?["outcome"] == "unknown" && body["data"] is JsonObject data) data.Remove("recovery");
             var args = JsonNode.Parse(arguments)!.AsObject();
-            bool dispatcher = ToolTaxonomy.DispatchesTargets(name);
+            // The test library calls worker services directly. Its run owns the outcome of the first uncertain case.
+            bool targetTracksOutcome = ToolTaxonomy.DispatchesTargets(name) && name != "RunPlcTestLibrary";
             bool mutation = write || ToolTaxonomy.OperationOf(name, null).Operation is "FILE" or "EXECUTE";
             bool isPreview = preview || HostBehavior.IsPreview(args, TryDryRunDefault(name, out bool defaultPreview) && defaultPreview);
-            if (unknown && !dispatcher && mutation && !isPreview && !IsReadOnlyApprovalPreview)
+            if (unknown && !targetTracksOutcome && mutation && !isPreview && !IsReadOnlyApprovalPreview)
             {
                 string? project = (string?)Worker.Binding?["identity"]?["projectPath"] ?? (string?)Worker.Binding?["projectPath"];
                 string? digest = TiaMcp.FoundationHost.WriteDigest.ForOutcome(name, args, project);

@@ -190,7 +190,7 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var station in machine.Stations) options.SoftwarePaths[station.Id] = machine.Target.Project.SoftwarePath ?? station.Id;
             var observed = newProject ? new ProjectModel { ProjectIdentity = project } : Observe(machine, before.Project, options);
             LoadOwnership(project, release, observed, options);
-            var result = GenerationPlanner.Build(package, machineJson, observed, options);
+            var result = GenerationPlanner.Build(package, machineJson, observed, options, useBoundProjectIdentity: true);
             result.Plan.PlanId = "gen-"
                 + Digest(CanonicalJson.Hash(JsonSerializer.SerializeToElement(new { plannerId = result.Plan.PlanId, binding = before.Binding })));
             foreach (var record in result.Plan.Steps.Where(s => s.Tool == "PublishGenerationRecord")) record.Arguments["planId"] = JsonSerializer

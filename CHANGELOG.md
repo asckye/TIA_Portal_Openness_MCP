@@ -8,7 +8,7 @@
 
 - `MovePlcBlockToGroup` creates missing groups before exporting and deleting the source. A failed move reports verified restoration or retains the target groups and blocks for inspection when recovery is uncertain.
 - `ImportPlcWatchTableOffline` preserves the native import diagnostic and reports an unchanged project when readback confirms all attempted tables are absent.
-- `GetSessionState` labels a cached binding and lists each unknown target call once. If the bound TIA process exits, its calls move to `settled` with outcome `process-exited`. `GetCallResult` explains that the write effect is still unknown. Unread writes keep their save warning and replay guard.
+- `GetSessionState` keeps the identity status of the bound process when a write outcome becomes unknown. It lists each unknown target call once, including a PLC test-library run that stopped on an uncertain case. If the bound TIA process exits, its calls move to `settled` with outcome `process-exited`. `GetCallResult` explains that the write effect is still unknown. Unread writes keep their save warning and replay guard.
 - On V20, PLC group rename and device service refusals identify the missing API. On V20 and V21, `GenerateSivarc` checks HMI connections before preview or generation.
 - `GenerateSivarc` identifies a selected device that lacks HMI software. `SetUnifiedRuntimeSettings` reports each unknown change key as a JSON Pointer.
 - PLC watch-table reads report the missing table at `/watchTableName`. S7 monitor addresses accept an explicit BOOL on DB bits.
@@ -16,14 +16,14 @@
 - Validation identifies declared fields in combined argument names, invalid tag-table import filters and Unified scalar or event edits. Named HMI object lookup errors include the requested step.
 - Unified button scripts accept readback with normalized line endings. Absolute HMI tag binding uses the same requested address for writing and verification when the caller supplies only `plcTag`.
 - Watch-table export plan hashes normalize the output directory spelling. Force-table previews report their planned table count.
-- Project generation accepts the bound Unicode project path with either Windows separator and identifies the failing field or plan limit.
+- Project generation accepts the bound Unicode project path with either Windows separator and identifies the failing field or plan limit. Offline planning preserves the submitted spelling of an existing project path.
 - Hardware I/O address writes and canonical PLC group creation and tag updates accept confirmation tied to a reviewed preview and project.
 - Unified runtime settings return the apply parameter `previewToken` alongside `token` and document the fully qualified V21 tag optimization field.
 - Large hardware catalog searches and PLC type export previews support paging. Oversized tool usage responses provide an index with individually retrievable examples.
 - V20 PLC document exports accept code-only native results. Tag-table export collisions identify the occupied destination, and program-directory imports accept either Windows separator in `expectedProjectFile`.
 - Library, certificate, drive and HMI lookup failures identify the requested object or prerequisite. Workbench navigation identifies the bound MCP project when the local Workbench has no selection.
 - Table conversion reports a missing output directory as `PRECONDITION_FAILED` and preserves the column names. HMI input paths distinguish a JSON control character from a sharing violation, and Unified screen previews list only the requested screen fields.
-- Corrected release-specific SiVArc, CFC, HMI, library, PLC import and network discovery examples returned by `GetToolUsage`.
+- Corrected release-specific SiVArc, CFC, HMI, library, PLC import and network discovery examples returned by `GetToolUsage`. The SiVArc definition examples show a root FC to bind. Classic HMI popup and template operations accept absolute paths such as `/Popup_1` and import into the folder named by the path.
 - V21 `ManageSivarcScreenLayout` previews both actions by default. Export preview leaves the output path untouched. Import preview lists the current screen items that the layout file would replace. Apply requires `allowRemoveScreenItems: true` when the screen contains items or its inventory cannot be read. The result reports item counts, removals and additions when both inventories are readable.
 - `CallTool` journal records now use the target operation and its preview arguments to report whether the call requested a write.
 - `GetPlcPutGetAccess` and `SetPlcPutGetAccess` recognize the documented Boolean attribute on CPU device items that expose it (V15.1–V21).

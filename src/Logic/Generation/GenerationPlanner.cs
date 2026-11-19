@@ -18,8 +18,12 @@ namespace TiaMcp.Logic.Generation
 
         public static GenerationPlanningResult Build(StandardPackage package, string machineJson, ProjectModel? observed, GenerationPlanningOptions options,
             IEnumerable<StandardPackage>? inheritedPackages = null)
-            => new Expansion(EffectiveGenerationPackage.Resolve(package, inheritedPackages ?? Array.Empty<StandardPackage>()), machineJson, observed, options)
-                .Build();
+            => Build(package, machineJson, observed, options, useBoundProjectIdentity: false, inheritedPackages);
+
+        public static GenerationPlanningResult Build(StandardPackage package, string machineJson, ProjectModel? observed, GenerationPlanningOptions options,
+            bool useBoundProjectIdentity, IEnumerable<StandardPackage>? inheritedPackages = null)
+            => new Expansion(EffectiveGenerationPackage.Resolve(package, inheritedPackages ?? Array.Empty<StandardPackage>()),
+                machineJson, observed, options, useBoundProjectIdentity).Build();
 
         private sealed class Entry
         {
@@ -63,7 +67,8 @@ namespace TiaMcp.Logic.Generation
             private readonly List<GenerationArtifact> artifacts = new List<GenerationArtifact>();
             private readonly GenerationPlan plan;
 
-            internal Expansion(StandardPackage package, string machineJson, ProjectModel? observed, GenerationPlanningOptions options)
+            internal Expansion(StandardPackage package, string machineJson, ProjectModel? observed, GenerationPlanningOptions options,
+                bool useBoundProjectIdentity)
             {
                 this.package = package;
                 manifest = package.Manifest;
@@ -103,7 +108,7 @@ namespace TiaMcp.Logic.Generation
                     Target = new GenerationPlanTarget { Release = machine.Target.Release, Mode = machine.Target.Project.Mode,
                         ProjectIdentity = machine.Target.Project.Mode == "new" ? GenerationProjectPath
                             .CreationFile(machine.Target.Release, machine.Target.Project.Directory!, machine.Target.Project.Name!)
-                            : this.observed.ProjectIdentity,
+                            : useBoundProjectIdentity ? this.observed.ProjectIdentity : machine.Target.Project.ProjectIdentity!,
                         SoftwarePath = machine.Target.Project.SoftwarePath }, Phases = Phases.ToList() };
                 expected.ProjectIdentity = plan.Target.ProjectIdentity;
                 foreach (var station in machine.Stations.OrderBy(s => s.Id, StringComparer.Ordinal))

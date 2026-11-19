@@ -70,11 +70,12 @@ internal sealed class SharedSessionState
         if (!attached) { pid = null; file = null; }
         bool sameProject = pid != null && file != null && JsonNode.DeepEquals(pid, cached?["ProcessId"])
             && JsonNode.DeepEquals(file, cached?["ProjectFile"]);
+        string? identityStatus = JsonNode.DeepEquals(pid, cached?["ProcessId"]) ? (string?)cached?["IdentityStatus"] : null;
         return new JsonObject {
             ["releaseKey"] = release, ["isAttached"] = attached, ["processId"] = pid?.DeepClone(), ["projectFile"] = file?.DeepClone(),
             ["ownsProject"] = sameProject && (bool?)cached?["OwnsProject"] == true,
             ["isLocalSession"] = sameProject && (bool?)cached?["IsLocalSession"] == true,
-            ["identityStatus"] = attached ? observed == null ? "cached" : "unverified-cached-pid" : "disconnected",
+            ["identityStatus"] = attached ? identityStatus ?? "cached" : "disconnected",
             ["runtimeConnectionStatus"] = "not-probed",
             ["canDetachOnUncertainShutdown"] = !attached || ((bool?)cached?["CanDetachOnUncertainShutdown"] ?? true),
             ["sessionState"] = state, ["outputRoot"] = DataLocations.Current.OutputRoot,

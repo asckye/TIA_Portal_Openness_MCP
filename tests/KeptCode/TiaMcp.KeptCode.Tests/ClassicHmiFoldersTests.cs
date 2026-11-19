@@ -33,6 +33,13 @@ namespace TiaMcp.Engine.Tests
             // ---- screen objects ----
             bool O(string kind, string path, string action, string file = "", string options = "None", bool confirm = false, bool dryRun = true) => ClassicHmiFoldersLogic.ValidateObjectRequest(kind, path, action, file, options, confirm, dryRun);
             check(!O("popup", "Folder/Popup_1", "read") && !O("popup", "Popup_1", "export", xml, dryRun: false), "hmi objects: read / export never write the project");
+            check(!O("popup", "/Popup_1", "read") && !O("template", "/A%2FB/Template", "export", xml),
+                "hmi objects: canonical popup and escaped template paths select objects");
+            check(O("popup", "/", "import", xml, dryRun: false) && O("template", "/A%2FB", "import", xml, dryRun: false),
+                "hmi objects: imports accept canonical root and nested folders");
+            check(Fails<ArgumentException>(() => O("popup", "/", "delete", confirm: true, dryRun: false))
+                && Fails<ArgumentException>(() => O("template", "/Folder/../Item", "read")),
+                "hmi objects: the folder root and traversal cannot select an object");
             check(O("popup", "Popup_1", "delete", confirm: true, dryRun: false) && !O("popup", "Popup_1", "delete", confirm: true), "hmi objects: popup delete writes only for real");
             check(O("template", "Folder", "import", xml, "None", dryRun: false) && O("template", "", "import", xml, "Override", true, false), "hmi objects: template import into a folder or the system folder");
             check(!O("slidein", "Top", "read") && !O("slidein", "Left", "export", xml, dryRun: false) && O("slidein", "", "import", xml, dryRun: false), "hmi objects: slide-in by SlideinType, import into the system folder");

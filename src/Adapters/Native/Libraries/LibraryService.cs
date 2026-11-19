@@ -21,6 +21,15 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
+        private static LibraryType ExactLibraryType(object library, string typePath)
+        {
+            var parts = PlcGroupOperations.Parts(typePath);
+            var folder = EngineeringLibraryFolder(library, string.Join("/", parts.Take(parts.Length - 1)), "TypeFolder");
+            return (LibraryType)(PlcGroupOperations.Find(PlcGroupOperations.Get(folder, "Types"), parts.Last())
+                    ?? throw new PlcSoftwareException("NotFound", "Exact library type not found. Requested path: " + typePath)
+                        { Data = { ["parameter"] = "typePath" } });
+        }
+
         public HardwareAddressingReply ManageLibraryTypeVersion(string typePath, string version, string action, string libraryName = "",
             string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true,
             string targetGroupPath = "", string updatePathsMode = "")

@@ -231,11 +231,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 EngineeringWriteJournal.Property(target, change.Property);
                 beforeWrite();
                 change.Property.SetValue(target, change.Value);
-                var actual = change.Property.GetValue(target);
-                bool matches = change.Property.Name is "ScriptCode" or "GlobalDefinitionAreaScriptCode"
-                    && actual is string source && change.Value is string expected
-                    ? NormalizeScriptLines(source) == NormalizeScriptLines(expected) : Equals(actual, change.Value);
-                if (!matches)
+                if (change.Property.Name is "ScriptCode" or "GlobalDefinitionAreaScriptCode" && change.Value is string expected)
+                {
+                    if (change.Property.GetValue(target) is not string actual || NormalizeScriptLines(actual) != NormalizeScriptLines(expected))
+                        throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ".");
+                }
+                else if (!Equals(change.Property.GetValue(target), change.Value))
                     throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ".");
             }
         }
