@@ -5508,6 +5508,58 @@
           "identifier": "SharedWorkerRegressionTests/Worker_readiness_probe_uses_the_owned_candidate_lane( string release ):08c2c341ad2ade8bd66f8721efcec4f73ab3f0636395323081876a1cb36a2476"
         }
       ]
+    },
+    {
+      "task": "UNIFY-1D2",
+      "maintainerDate": "2026-11-19",
+      "reason": "Retired engine output layout: four expectation groups approved 2026-11-19 (bundle-root discovery, executable routing, retired catalog property, doctor sibling lookup) and the catalog/CLI rows of the approved 2026-11-17 Part D list; every case retained",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HostCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.HostCatalogTests/Release_identity_has_one_host_kind_and_no_retired_presentation_properties( ):0d1145538d83708a47855829df456f5f8c13b042121ac72f8ba645b0a09a3ab9:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/EcosystemTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.EcosystemRepositoryRootTests/Guidance_uses_the_chosen_root_without_requiring_the_python_bridge( string anchor ):0b5a04f223abe779f2cae4f1e6ed6dfb09ff1d5519cbdc875780899f610b92d4:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/EngineBundleLayoutTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.EngineBundleLayoutTests/Development_routing_keeps_the_formal_configuration( string configuration , string bin , string release ):3b97efacf144476e817133dd7c11857656b3727cb35ad7fcd980c32b07fadf5c:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/EngineBundleLayoutTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.EngineBundleLayoutTests/Development_routing_keeps_the_formal_configuration( string configuration , string bin , string release ):d7299a039608dd0ff3f937e9e76c254e73cfca7c458059d564edc3c3cbe799e6:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaVersionCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.TiaVersionCatalogTests/Run( Action \u003C bool , string \u003E check ):430506111302aeb81debd7de4cbd828933593157307362e9ed84efca10f98cc1:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaVersionCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.TiaVersionCatalogTests/Run( Action \u003C bool , string \u003E check ):607b5f736541ba028993f19380d33860e85436dcda9660a6332df448c218be22:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaVersionCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.TiaVersionCatalogTests/Run( Action \u003C bool , string \u003E check ):8c5174f8527a5b3953c89d335faa7b4779033d421cc323ce98cf81275e1db7fc:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaVersionCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.TiaVersionCatalogTests/Run( Action \u003C bool , string \u003E check ):a28a74906b63c3be3d4b242434fd6521bcda413a50ea75dc601da9620e0a77b3:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaVersionCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.TiaVersionCatalogTests/Run( Action \u003C bool , string \u003E check ):c0420868dc6be80417281b909bbde114ee1da415fd8f4431a98d134a53457388:1"
+        }
+      ]
     }
   ]
 }
