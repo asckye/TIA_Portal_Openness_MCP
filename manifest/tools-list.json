@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-20T06:27:20.7855996+00:00",
+  "generatedAt": "2026-11-20T10:17:03.7356006+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "a5888122031674fa9e940a75b92068a38eb050ffdd6fb9ebc5aac70643bd880e",
+  "workerSha256": "c5272977bec99d2eb408248734abb573f67324b856984f290e5a57fafe5f4a3c",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2922,
+    "parameters": 2926,
     "parametersUndocumented": 846,
     "parametersFromVocabulary": 690,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 173,
     "enumHints": 271,
-    "defaultHints": 1682,
+    "defaultHints": 1686,
     "examplesCurated": 524,
     "recipes": 54
   },
@@ -1480,9 +1480,11 @@
         "interfaceName",
         "action",
         "interfaceType",
-        "dryRun"
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][Category:PLC-OpcUA][WRITE] Read or delete ONE OPC UA server interface, SIMATIC interface or reference namespace of a PLC (ServerInterfaceGroup.ServerInterfaces / SimaticInterfaces / ReferenceNamespaces, native Delete with readback). Use it to remove an interface that blocks compilation (an empty server interface makes the whole PLC fail with 'The OPC UA server interface ... is empty or does not contain unique nodes'). Default preview; dryRun=false deletes; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"action\":\"read\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ManageOpcUaInterface\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Category:PLC-OpcUA][WRITE] Read or delete ONE OPC UA server interface, SIMATIC interface or reference namespace of a PLC (ServerInterfaceGroup.ServerInterfaces / SimaticInterfaces / ReferenceNamespaces, native Delete with readback). Use it to remove an interface that blocks compilation (an empty server interface makes the whole PLC fail with 'The OPC UA server interface ... is empty or does not contain unique nodes'). Preview delete first. Apply with dryRun=false, its planHash as expectedPlanHash and the bound expectedProjectFile. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"action\":\"read\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ManageOpcUaInterface\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"action\":\"read\",\"dryRun\":true}"
     },
     {
@@ -2533,7 +2535,7 @@
         "blockPath",
         "includeBlockParameters"
       ],
-      "description": "[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before SivarcDataProvider access; all block types are refused on V20 because definition access can crash TIA Portal V20; works on V21; blockPath Group/Subgroup/Name as GetSoftwareTree shows it, or the bare name for a root block) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListSivarcBlockDefinitions\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before SivarcDataProvider access; available from V21 because definition access on earlier releases can crash TIA Portal; blockPath Group/Subgroup/Name as GetSoftwareTree shows it, or the bare name for a root block) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ListSivarcBlockDefinitions\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\"}"
     },
     {
@@ -2890,7 +2892,7 @@
         "properties",
         "texts"
       ],
-      "description": "[L2][PLC-Software][WRITE] One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. All block-definition reads and writes are refused with UNSUPPORTED_CAPABILITY on V20 before native access because SivarcDataProvider definition access can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcBlockDefinition\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][WRITE] One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. Available from V21 because accessing SivarcDataProvider definitions on earlier releases can crash TIA Portal. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcBlockDefinition\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"FC_1\",\"kind\":\"tagDefinition\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\",\"name\":\"Example_1\"}"
     },
     {
@@ -3823,7 +3825,7 @@
         "softwarePath",
         "dryRun"
       ],
-      "description": "[L2][PLC-Software][WRITE] Upgrade the SiVArc definitions of one PLC (SivarcDefinitionsUpgrader.Upgrade on the PlcSoftware: legacy SIVARCCOND / SIVARCTEXT functions become tag / text definitions in the block plug-ins). Returns warningCount and the recursive feedback messages. Default preview; NotSupported without the SiVArc option; never saves. Both preview and execution are refused with UNSUPPORTED_CAPABILITY on V20 before native access because the per-block SiVArc definition subsystem can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"UpgradeSivarcDefinitions\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][WRITE] Upgrade the SiVArc definitions of one PLC (SivarcDefinitionsUpgrader.Upgrade on the PlcSoftware: legacy SIVARCCOND / SIVARCTEXT functions become tag / text definitions in the block plug-ins). Returns warningCount and the recursive feedback messages. Default preview; NotSupported without the SiVArc option; never saves. Available from V21 because accessing the SiVArc definition subsystem on earlier releases can crash TIA Portal. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"UpgradeSivarcDefinitions\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"dryRun\":true}"
     },
     {
@@ -3921,7 +3923,7 @@
         "files",
         "dryRun"
       ],
-      "description": "[L1][PLC-Software][FILE] Stage caller text under the installed bundle staging/session directory next to runtime; ASCII SCL/UDT source, UTF-8 without BOM S7DCL/S7RES, or UTF-8 Document XML. S7DCL supports Unicode block identifiers and requires ASCII whitespace. files: fileName, kind, content. Kinds scl, simaticml, tagtable, udt (s7dcl/s7res only V20/V21; V20 document imports require pairs, V21 resources are optional). Preview defaults true; apply dryRun=false is approved and audited. 4 MiB/file, 128 files/32 MiB/session; safe filenames, no overwrite. Returns directory, paths and SHA-256. Import and generation are separate calls; list/cleanup before ending the session. Examples: GetToolUsage(toolName: \"StageImportFiles\"), optionally operation or language.",
+      "description": "[L1][PLC-Software][FILE] Stage caller text under the installed bundle staging/session directory next to runtime; ASCII SCL/UDT source, UTF-8 without BOM S7DCL/S7RES, or UTF-8 Document XML. S7DCL supports Unicode block identifiers and requires ASCII whitespace. files: fileName, kind, content. Kinds scl, simaticml, tagtable, udt (s7dcl/s7res only V20/V21; resources are optional on both releases). Preview defaults true; apply dryRun=false is approved and audited. 4 MiB/file, 128 files/32 MiB/session; safe filenames, no overwrite. Returns directory, paths and SHA-256. Import and generation are separate calls; list/cleanup before ending the session. Examples: GetToolUsage(toolName: \"StageImportFiles\"), optionally operation or language.",
       "example": "{\"files\":[{\"fileName\":\"FC_Add.scl\",\"kind\":\"scl\",\"content\":\"FUNCTION \\u0022FC_Add\\u0022 : Int\\nVAR_INPUT\\n    A : Int;\\n    B : Int;\\nEND_VAR\\nBEGIN\\n    #FC_Add := #A \\u002B #B;\\nEND_FUNCTION\\n\"}],\"dryRun\":true}"
     },
     {
@@ -4980,7 +4982,7 @@
         "libraryName",
         "maxResults"
       ],
-      "description": "[L2][HMI][READ] Resolve a SiVArc expression (Block.DB.SymbolicName & HmiApplication.Type & LibraryObject.FolderPath ...) for every instance of one code block in the compiled PLC call structure: Sivarc.GetExpressionResolver(codeBlock, hmiDeviceItem, libraryItem).Resolve(expression). devicePath / itemPath name the HMI device item, libraryItemKind masterCopy | libraryType with libraryItemPath (project library or open global library via libraryName). Rows: instanceName, callPath, result (paged by maxResults). Requires a compiled PLC and the SiVArc option; read-only. Refused with UNSUPPORTED_CAPABILITY on V20 before native access because the per-block SiVArc definition subsystem can crash TIA Portal V20; works on V21. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ResolveSivarcExpression\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][READ] Resolve a SiVArc expression (Block.DB.SymbolicName & HmiApplication.Type & LibraryObject.FolderPath ...) for every instance of one code block in the compiled PLC call structure: Sivarc.GetExpressionResolver(codeBlock, hmiDeviceItem, libraryItem).Resolve(expression). devicePath / itemPath name the HMI device item, libraryItemKind masterCopy | libraryType with libraryItemPath (project library or open global library via libraryName). Rows: instanceName, callPath, result (paged by maxResults). Requires a compiled PLC and the SiVArc option; read-only. Available from V21 because accessing the SiVArc definition subsystem on earlier releases can crash TIA Portal. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ResolveSivarcExpression\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact device item from GetProjectTree\\u003E\"],\"libraryItemKind\":\"masterCopy\",\"libraryItemPath\":\"MasterCopies/FB_Motor\",\"expression\":\"\\u003CSiVArc expression for the selected rule context\\u003E\"}"
     },
     {
@@ -5411,7 +5413,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. V20 requires .s7res; V21 optional. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Syntax/content validity and native acceptance NOT RUN. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. Include .s7res when produced. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Syntax/content validity and native acceptance NOT RUN. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"DB_Flags\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
     },
     {
@@ -6412,7 +6414,7 @@
         "plcName",
         "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Automatic creation/configuration is refused until CommunicationDriver and InitialAddress are verified; use ManageUnifiedEngineeringObject with explicit documented properties. Partner/Station/Node are readback only; DriverProperties are never guessed.  Create or verify the PLC↔HMI communication connection (HMI_Connection_1 by default). Requires: ConnectPortal + OpenProject + both PLC and Unified HMI devices. Must exist before PLC-backed HMI tags can exchange data. Call before EnsureUnifiedHmiTag with plcTag binding. UNIFIED PANELS ONLY: on Classic/Comfort/Basic panels (KTP Basic, TP/KTP Comfort) this connection cannot be created via Openness (CommunicationConnections service is not exposed); if the project needs end-to-end HMI automation, use a WinCC Unified panel instead of a classic one. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiConnection\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Automatic creation/configuration is refused until CommunicationDriver and InitialAddress are verified; create the connection in TIA Portal (Devices & networks), then verify it here. Partner/Station/Node are readback only; DriverProperties are never guessed.  Verify the PLC↔HMI communication connection (HMI_Connection_1 by default). Requires: ConnectPortal + OpenProject + both PLC and Unified HMI devices. Must exist before PLC-backed HMI tags can exchange data. Call before EnsureUnifiedHmiTag with plcTag binding. UNIFIED PANELS ONLY: on Classic/Comfort/Basic panels (KTP Basic, TP/KTP Comfort) this connection cannot be created via Openness (CommunicationConnections service is not exposed); if the project needs end-to-end HMI automation, use a WinCC Unified panel instead of a classic one. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiConnection\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"dryRun\":true}"
     },
     {
@@ -7599,11 +7601,13 @@
       "parameters": [
         "dryRun",
         "secondaryProjectFile",
+        "discardChanges",
+        "expectedPlanHash",
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Close only an unmodified project/local session opened by this worker. No implicit save, discard, commit or TIA termination. Close secondaryProjectFile only when this session records that exact secondary project (V15.1–V21); never saves it. Recovery retains its path, holding TIA PID and process start time. Close on another TIA refuses and keeps the record. On the same holding process, require IsPrimary=false; an absent exact path clears the record with data.secondaryProjectGone=true, including previews, and Executed=false. A confirmed exited or replaced holder clears the record. Close it explicitly before primary close or disconnect while the holder is alive. Examples: GetToolUsage(toolName: \"CloseProject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"dryRun\":true,\"confirm\":false}"
+      "description": "[PLC foundation; native unverified][SESSION] [v17-project-safe-v1] Close a project opened by this worker. By default a modified project is refused. To discard unsaved changes, preview with discardChanges=true from the session holding the binding. The worker must have started the portal and own the ordinary primary project. Review data.projectFile, data.isModified and data.planHash. Apply with dryRun=false, confirm=true, expectedProjectFile and expectedPlanHash from that preview. Discard always requires Workbench approval. Then DisconnectPortal can release the portal. Use discardChanges=false for secondaryProjectFile. Close secondaryProjectFile only when this session records that exact secondary project (V15.1–V21); never saves it. Recovery retains its path, holding TIA PID and process start time. Close on another TIA refuses and keeps the record. On the same holding process, require IsPrimary=false; an absent exact path clears the record with data.secondaryProjectGone=true, including previews, and Executed=false. A confirmed exited or replaced holder clears the record. Close it explicitly before primary close or disconnect while the holder is alive. Examples: GetToolUsage(toolName: \"CloseProject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"dryRun\":true,\"confirm\":false,\"discardChanges\":false}"
     },
     {
       "name": "ClearExportHandles",
@@ -9131,7 +9135,7 @@
         "dryRun",
         "additionalHmiDeviceNames"
       ],
-      "description": "[L2][HMI][WRITE] Native SiVArc generation (typed Sivarc.Generate) for one exact HMI device plus optional additionalHmiDeviceNames (multi-device overload) and explicit PLC paths. generationOptions are official GenerationOptions flags joined with | (AllTags|FullGeneration; None = project settings). Default preview; can create/replace HMI objects according to rules. plcSoftwarePaths names the PLC software; the native call is tried with the software names and then with the owning device names (SiVArc only knows PLCs connected to the HMI device - the 2.7.39 real project without an HMI connection answered 'PLC device not found' for both). Returns the typed SivarcGenerationResult with recursive feedback messages. No automatic save/compile/download. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GenerateSivarc\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][WRITE] Native SiVArc generation (typed Sivarc.Generate) for one exact HMI device plus optional additionalHmiDeviceNames (multi-device overload) and explicit PLC paths. generationOptions are official GenerationOptions flags joined with | (AllTags|FullGeneration; None = project settings). Default preview; can create/replace HMI objects according to rules. plcSoftwarePaths selects the PLCs. When partners are readable, each HMI needs a connection to at least one selected PLC CPU item. unverifiedHmiDeviceNames lists HMIs whose partners could not be verified. Generation uses the owning PLC device names. Returns the typed SivarcGenerationResult with recursive feedback messages. No automatic save/compile/download. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"GenerateSivarc\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"hmiDeviceName\":\"HMI_1\",\"plcSoftwarePaths\":[\"PLC_1\"],\"generationOptions\":\"None\",\"dryRun\":true}"
     },
     {
@@ -9623,7 +9627,7 @@
         "expectedProjectFile",
         "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [batch-document-export-candidate] Exact V20/V21 ordinary LAD/DB groups only. Complete bounded inventory; recursive opt-in; unsupported/protected members refuse entire batch. exportPath MUST be a NEW tree under an existing parent, with path-hashed block directories. V20 resources required, V21 optional. Preview then exact project/hash confirmation. preservePath=true refused. One non-overwrite tree publication, retain partial staging and stop on failure; no replay. SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Examples: GetToolUsage(toolName: \"ExportPlcBlocksDocuments\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][FILE] [batch-document-export-candidate] Exact V20/V21 ordinary LAD/DB groups only. Complete bounded inventory; recursive opt-in; unsupported/protected members refuse entire batch. exportPath MUST be a NEW tree under an existing parent, with path-hashed block directories. Files include .s7dcl and .s7res when produced. Preview then exact project/hash confirmation. preservePath=true refused. One non-overwrite tree publication, retain partial staging and stop on failure; no replay. SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Examples: GetToolUsage(toolName: \"ExportPlcBlocksDocuments\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false,\"groupPath\":\"\\u003Cexact caller-selected block group containing the intended LAD or DB blocks\\u003E\"}"
     },
     {
@@ -9672,7 +9676,7 @@
         "expectedProjectFile",
         "exportDirectory"
       ],
-      "description": "[PLC foundation; native unverified][FILE] [document-export-candidate] Exact V20/V21 only; ordinary LAD/DB single block. exportPath MUST be a NEW directory under an existing parent; publishes .s7dcl plus required V20 or optional V21 .s7res together without overwrite. preservePath=true refused. Native default two-argument overload; no language override, cross-version roundtrip or full-format claim. Preview first, exact project/plan hash and confirmation for apply. Exact SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Examples: GetToolUsage(toolName: \"ExportPlcBlockDocuments\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[PLC foundation; native unverified][FILE] [document-export-candidate] Exact V20/V21 only; ordinary LAD/DB single block. exportPath MUST be a NEW directory under an existing parent; publishes .s7dcl and .s7res when produced, together without overwrite. preservePath=true refused. Native default two-argument overload; no language override, cross-version roundtrip or full-format claim. Preview first, exact project/plan hash and confirmation for apply. Exact SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Examples: GetToolUsage(toolName: \"ExportPlcBlockDocuments\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
@@ -9747,7 +9751,7 @@
       "method": "GetApprovalStatus",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L0][Diagnostics][READ] Read this session's pending approvals and latest 16 decisions without contacting TIA. Reports approval settings, always-confirmed online writes and configured online targets. Approval is decided only by a person in the Workbench; this tool cannot approve, deny or change settings. Examples: GetToolUsage(toolName: \"GetApprovalStatus\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L0][Diagnostics][READ] Read this session's pending approvals and latest 16 decisions without contacting TIA. Reports approval settings, operations that always require confirmation and configured online targets. Approval is decided only by a person in the Workbench; this tool cannot approve, deny or change settings. Examples: GetToolUsage(toolName: \"GetApprovalStatus\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{}"
     },
     {

@@ -12022,12 +12022,12 @@
     },
     {
       "annotations": {
-        "destructiveHint": false,
+        "destructiveHint": true,
         "idempotentHint": false,
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e5a7835ae6c912633b696c1d79ac53432ec1c871249b6b3f0e9fcc54a6b4d2b7",
+      "descriptionSha256": "12635d8da654be485cfa11bc0582692c92075e479a2ddb6af47fee3fd50a160b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12036,10 +12036,20 @@
             "description": "Exact foundation argument: confirm",
             "type": "boolean"
           },
+          "discardChanges": {
+            "default": false,
+            "description": "Explicitly close the owned primary project without saving unsaved changes.",
+            "type": "boolean"
+          },
           "dryRun": {
             "default": true,
             "description": "Exact foundation argument: dryRun",
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Copy data.planHash from the matching discard preview for apply.",
+            "type": "string"
           },
           "expectedProjectFile": {
             "default": "",
@@ -18996,7 +19006,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a2a8deb38cb0caf1a4fdfd3c2974e5cfa6e8b15442ab55bebc3c2720cc7639af",
+      "descriptionSha256": "d3d100dc68c9088dbf830e850b6f64f9d72e6387673f47e0038bf38e0520390f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19235,7 +19245,7 @@
           },
           "requireVerifiedBinding": {
             "default": true,
-            "description": "requireVerifiedBinding: stable public generation should keep this true. Set false only for intentional internal HMI-only tags used by local validation/probes.",
+            "description": "Require verified binding readback. plcName and plcTag are required regardless of this setting.",
             "type": "boolean"
           },
           "tagName": {
@@ -20357,7 +20367,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "f4d2b65f9206f9b454ba7bb9f5991eaf1d1e165865bfd40033b8a9ee772afc80",
+      "descriptionSha256": "8e20bb3336ed6694b2082f9b0f9f8b782524f80ae3a4eb94b90ed78f1750659b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20500,7 +20510,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "dd8a8a5d2315aebcc56f90e65e0238d7600161af1f594d8b11d51c6cf9443181",
+      "descriptionSha256": "54352ac103996db9a120a44bf687dd841545e00121d93439b2e121f38279522b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21861,7 +21871,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d2308b2ba5489503211ac735597fac0beca2312df8c11d6f9a08f6f3bfa4b6a9",
+      "descriptionSha256": "be65923b6323be6883e8fc9ffaf616dd7785cd010419ed9de4113629943149ae",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21910,7 +21920,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "1962fbbe2f391fb84525d44ee8d8ff45cba3493fa192d0e7aae32b75cdc324e3",
+      "descriptionSha256": "3ab5959f367e3b64e5f79889cfca26c7a4e523ee172e28ef939ca5b60cbe82a8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -26507,7 +26517,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "729216b704c4bb0180c1d9bb13b5dd006c63694ad9d440e73e666440a46bd6c3",
+      "descriptionSha256": "672096427634f7c525aeaccb41ed1a4d768dbd95b4277d1013c1480c2c5bd911",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -29560,12 +29570,12 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "80adfd916395926dc60c9e344f328d61a82fa1cd18f6b647acc716ee7887fa2a",
+      "descriptionSha256": "a988c40ffa6569f9a8454102b61bb822e8c9941f66ce9ad1a4a8f10b161d6921",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "blockPath": {
-            "description": "blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. V20 refused (TIA V20 crash); works on V21.",
+            "description": "blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.",
             "type": "string"
           },
           "includeBlockParameters": {
@@ -33779,7 +33789,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "33a684f0d77dc66db9f70a5793002a2536acc5aa7aafdd7773f50da665054e23",
+      "descriptionSha256": "97f2211a89299743911c96cff03703ef8daeda4e4746b87783adb0bee91a2225",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -33797,11 +33807,21 @@
           },
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews; false deletes",
+            "description": "true previews deletion.",
             "examples": [
               true
             ],
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "planHash from the delete preview.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact project file bound to the delete preview.",
+            "type": "string"
           },
           "interfaceName": {
             "description": "interfaceName: exact name as shown in GetPlcOpcUaConfiguration",
@@ -36529,7 +36549,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b31cd7846e99b79e8a379d68870c2fcdf2f4b39ec109398d3d078836d7732bc7",
+      "descriptionSha256": "ef3de542f6b6c0808e0787ce99f36ab12137206d22b8a35da14da375f56dea70",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -36545,7 +36565,7 @@
             "type": "string"
           },
           "blockPath": {
-            "description": "blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. V20 refused (TIA V20 crash); works on V21.",
+            "description": "blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.",
             "type": "string"
           },
           "confirmDelete": {
@@ -41304,12 +41324,12 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "f2c0b75d35c35d80f218da88f942e2ced4dc74e51ba73487258ed354c5c1ee8d",
+      "descriptionSha256": "2eeda8ae2d278edd21cce1d2b7cdd465c5ba8e0dd1fb5f66d70fdafe6f69bc1d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "blockPath": {
-            "description": "blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. V20 refused (TIA V20 crash); works on V21.",
+            "description": "blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.",
             "type": "string"
           },
           "devicePath": {
@@ -44044,7 +44064,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "10f3b0d59dabb76df140c252a5b02260b75ad980994d9e16b192a522aac86c91",
+      "descriptionSha256": "bfbe2d38ab6819e20a216770d99616da54f94b86c1a5a1c73367964517c4d45b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -44372,7 +44392,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1affa7054435001b4bc0d785bbe15fae351c428b2c21feaa94f2cd254b396f25",
+      "descriptionSha256": "e67c2083f420443cd741bd7a73492578bb8e3f3735437871cee635742f49651d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -44382,7 +44402,7 @@
             "type": "boolean"
           },
           "softwarePath": {
-            "description": "softwarePath: PLC path from GetProjectTree. V20 refused (TIA V20 crash); works on V21.",
+            "description": "softwarePath: PLC path from GetProjectTree. Available from V21. Definition access is disabled on V17 through V20.",
             "type": "string"
           }
         },

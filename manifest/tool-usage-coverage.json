@@ -3,7 +3,7 @@
   "catalogSha256": "d274bd5bc8d84fcc860677fb38b16e4212fe999488fdebcbc095baf19ee4ab4b",
   "uniqueTools": 524,
   "documents": 89,
-  "versionToolPairs": 3257,
+  "versionToolPairs": 3247,
   "offlineCallExecutions": 76,
   "indexedExampleBlocksOrMethods": 384,
   "programmingExamples": 25,
@@ -13774,11 +13774,11 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 379,
-      "checkedToolCount": 379,
+      "registeredToolCount": 377,
+      "checkedToolCount": 377,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 365,
+      "operationExampleCount": 361,
       "programmingExampleCount": 25,
       "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
@@ -16442,14 +16442,6 @@
           "operations": []
         },
         {
-          "toolName": "ListSivarcBlockDefinitions",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "ListSivarcRules",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -18579,35 +18571,6 @@
           ]
         },
         {
-          "toolName": "ManageSivarcBlockDefinition",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "create",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
           "toolName": "ManageSivarcRule",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -19655,11 +19618,11 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 405,
-      "checkedToolCount": 405,
+      "registeredToolCount": 403,
+      "checkedToolCount": 403,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 441,
+      "operationExampleCount": 437,
       "programmingExampleCount": 25,
       "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
@@ -22472,14 +22435,6 @@
           "operations": []
         },
         {
-          "toolName": "ListSivarcBlockDefinitions",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "ListSivarcRules",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -24900,35 +24855,6 @@
           ]
         },
         {
-          "toolName": "ManageSivarcBlockDefinition",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "create",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
           "toolName": "ManageSivarcRule",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -26233,11 +26159,11 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 481,
-      "checkedToolCount": 481,
+      "registeredToolCount": 479,
+      "checkedToolCount": 479,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 503,
+      "operationExampleCount": 499,
       "programmingExampleCount": 25,
       "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 0,
@@ -29448,14 +29374,6 @@
           "operations": []
         },
         {
-          "toolName": "ListSivarcBlockDefinitions",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "ListSivarcRules",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -31986,35 +31904,6 @@
           ]
         },
         {
-          "toolName": "ManageSivarcBlockDefinition",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "create",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
-            }
-          ]
-        },
-        {
           "toolName": "ManageSivarcRule",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -33770,11 +33659,11 @@
     },
     "20": {
       "releaseKey": "20",
-      "registeredToolCount": 504,
-      "checkedToolCount": 504,
+      "registeredToolCount": 500,
+      "checkedToolCount": 500,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": true,
-      "operationExampleCount": 517,
+      "operationExampleCount": 513,
       "programmingExampleCount": 25,
       "callSequenceCount": 54,
       "offlineBuilderExamplesExecuted": 2,
@@ -37105,14 +36994,6 @@
           "operations": []
         },
         {
-          "toolName": "ListSivarcBlockDefinitions",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "ListSivarcRules",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -39715,35 +39596,6 @@
           ]
         },
         {
-          "toolName": "ManageSivarcBlockDefinition",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": [
-            {
-              "operation": "read",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSivarcBlockDefinition.read is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Supported releases: V17, V18, V19, V21."
-            },
-            {
-              "operation": "create",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSivarcBlockDefinition.create is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Supported releases: V17, V18, V19, V21."
-            },
-            {
-              "operation": "update",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSivarcBlockDefinition.update is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Supported releases: V17, V18, V19, V21."
-            },
-            {
-              "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSivarcBlockDefinition.delete is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Supported releases: V17, V18, V19, V21."
-            }
-          ]
-        },
-        {
           "toolName": "ManageSivarcRule",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -40904,14 +40756,6 @@
           "operations": []
         },
         {
-          "toolName": "ResolveSivarcExpression",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "RestartOpennessWorker",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -41468,14 +41312,6 @@
           "operations": []
         },
         {
-          "toolName": "UpgradeSivarcDefinitions",
-          "usageProfile": "plc-foundation",
-          "exampleKind": "parameterized-call-example",
-          "relationship": "no-direct-official-example",
-          "documents": [],
-          "operations": []
-        },
-        {
           "toolName": "UploadStationFromPlc",
           "usageProfile": "plc-foundation",
           "exampleKind": "parameterized-call-example",
@@ -41582,8 +41418,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "990ac42917bcfd5acf6e964e957f21f6760989cc8589ee83f1e7c3c43719e1e6",
-      "runtimeSha256": "990ac42917bcfd5acf6e964e957f21f6760989cc8589ee83f1e7c3c43719e1e6",
+      "sdkWorkerSha256": "19fa3bba9da373a4db1ff229cb44fd43f1d6faf163b8549f39a50c1d0f0d3188",
+      "runtimeSha256": "19fa3bba9da373a4db1ff229cb44fd43f1d6faf163b8549f39a50c1d0f0d3188",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -49778,8 +49614,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "57d605550692c062fb47fecfe0cb9b1ba2a885808bec360f140ae4fb63f29351",
-      "runtimeSha256": "57d605550692c062fb47fecfe0cb9b1ba2a885808bec360f140ae4fb63f29351",
+      "sdkWorkerSha256": "ca879b27f77610f1df888465c6e90fc72dc1e3993e31213b4e089b1799091d73",
+      "runtimeSha256": "ca879b27f77610f1df888465c6e90fc72dc1e3993e31213b4e089b1799091d73",
       "workerModel": "foundation-host-plc-worker"
     }
   }

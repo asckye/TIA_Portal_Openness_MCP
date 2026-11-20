@@ -146,9 +146,7 @@
       "entries": [
         "GenerateSivarc",
         "GetSivarcRuleTree",
-        "ListSivarcBlockDefinitions",
         "ListSivarcRules",
-        "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageSivarcRuleContainer",
         "ManageSivarcTableRule"
@@ -6381,12 +6379,12 @@
     },
     {
       "annotations": {
-        "destructiveHint": false,
+        "destructiveHint": true,
         "idempotentHint": false,
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e5a7835ae6c912633b696c1d79ac53432ec1c871249b6b3f0e9fcc54a6b4d2b7",
+      "descriptionSha256": "12635d8da654be485cfa11bc0582692c92075e479a2ddb6af47fee3fd50a160b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6395,10 +6393,20 @@
             "description": "Exact foundation argument: confirm",
             "type": "boolean"
           },
+          "discardChanges": {
+            "default": false,
+            "description": "Explicitly close the owned primary project without saving unsaved changes.",
+            "type": "boolean"
+          },
           "dryRun": {
             "default": true,
             "description": "Exact foundation argument: dryRun",
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Copy data.planHash from the matching discard preview for apply.",
+            "type": "string"
           },
           "expectedProjectFile": {
             "default": "",
@@ -11222,7 +11230,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d2308b2ba5489503211ac735597fac0beca2312df8c11d6f9a08f6f3bfa4b6a9",
+      "descriptionSha256": "be65923b6323be6883e8fc9ffaf616dd7785cd010419ed9de4113629943149ae",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11271,7 +11279,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "1962fbbe2f391fb84525d44ee8d8ff45cba3493fa192d0e7aae32b75cdc324e3",
+      "descriptionSha256": "3ab5959f367e3b64e5f79889cfca26c7a4e523ee172e28ef939ca5b60cbe82a8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -17411,40 +17419,6 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "80adfd916395926dc60c9e344f328d61a82fa1cd18f6b647acc716ee7887fa2a",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "blockPath": {
-            "description": "blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. V20 refused (TIA V20 crash); works on V21.",
-            "type": "string"
-          },
-          "includeBlockParameters": {
-            "default": true,
-            "description": "includeBlockParameters: true also returns block parameters.",
-            "type": "boolean"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "blockPath"
-        ],
-        "type": "object"
-      },
-      "name": "ListSivarcBlockDefinitions",
-      "outputSchemaSha256": "bdb806480fd874285783070e82f1081361c23d82a247c73d890f893c92e2d464"
-    },
-    {
-      "annotations": {
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false,
-        "readOnlyHint": true
-      },
       "descriptionSha256": "c0066df5786902ee770e60d51b7107e87a1629c05c636fbe6a3f9054590ce4f3",
       "inputSchema": {
         "additionalProperties": false,
@@ -20986,7 +20960,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "33a684f0d77dc66db9f70a5793002a2536acc5aa7aafdd7773f50da665054e23",
+      "descriptionSha256": "97f2211a89299743911c96cff03703ef8daeda4e4746b87783adb0bee91a2225",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21004,11 +20978,21 @@
           },
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews; false deletes",
+            "description": "true previews deletion.",
             "examples": [
               true
             ],
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "planHash from the delete preview.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact project file bound to the delete preview.",
+            "type": "string"
           },
           "interfaceName": {
             "description": "interfaceName: exact name as shown in GetPlcOpcUaConfiguration",
@@ -23194,101 +23178,6 @@
         "type": "object"
       },
       "name": "ManageSinumerikSafetyMode",
-      "outputSchemaSha256": "bdb806480fd874285783070e82f1081361c23d82a247c73d890f893c92e2d464"
-    },
-    {
-      "annotations": {
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false,
-        "readOnlyHint": false
-      },
-      "descriptionSha256": "b31cd7846e99b79e8a379d68870c2fcdf2f4b39ec109398d3d078836d7732bc7",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "action": {
-            "default": "read",
-            "description": "action: the operation to perform - read | create | update | delete.",
-            "enum": [
-              "read",
-              "create",
-              "update",
-              "delete"
-            ],
-            "type": "string"
-          },
-          "blockPath": {
-            "description": "blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. V20 refused (TIA V20 crash); works on V21.",
-            "type": "string"
-          },
-          "confirmDelete": {
-            "default": false,
-            "description": "confirmDelete: must be true together with dryRun=false to delete; keep false until the user agreed to that deletion.",
-            "type": "boolean"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "kind": {
-            "description": "kind: tagDefinition | textDefinition | tagMemberSettings | commonParameters | blockParameter.",
-            "enum": [
-              "tagDefinition",
-              "textDefinition",
-              "tagMemberSettings",
-              "commonParameters",
-              "blockParameter"
-            ],
-            "type": "string"
-          },
-          "name": {
-            "default": "",
-            "description": "name: exact name of the object (case-sensitive).",
-            "type": "string"
-          },
-          "properties": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "minLength": 0,
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "object"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          },
-          "texts": {
-            "additionalProperties": {
-              "minLength": 0,
-              "type": "string"
-            },
-            "description": "texts: JSON object language tag -> text.",
-            "type": "object"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "blockPath",
-          "kind"
-        ],
-        "type": "object"
-      },
-      "name": "ManageSivarcBlockDefinition",
       "outputSchemaSha256": "bdb806480fd874285783070e82f1081361c23d82a247c73d890f893c92e2d464"
     },
     {
@@ -28532,7 +28421,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "10f3b0d59dabb76df140c252a5b02260b75ad980994d9e16b192a522aac86c91",
+      "descriptionSha256": "bfbe2d38ab6819e20a216770d99616da54f94b86c1a5a1c73367964517c4d45b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

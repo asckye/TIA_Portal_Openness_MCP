@@ -5685,12 +5685,12 @@
     },
     {
       "annotations": {
-        "destructiveHint": false,
+        "destructiveHint": true,
         "idempotentHint": false,
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e5a7835ae6c912633b696c1d79ac53432ec1c871249b6b3f0e9fcc54a6b4d2b7",
+      "descriptionSha256": "12635d8da654be485cfa11bc0582692c92075e479a2ddb6af47fee3fd50a160b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -5699,10 +5699,20 @@
             "description": "Exact foundation argument: confirm",
             "type": "boolean"
           },
+          "discardChanges": {
+            "default": false,
+            "description": "Explicitly close the owned primary project without saving unsaved changes.",
+            "type": "boolean"
+          },
           "dryRun": {
             "default": true,
             "description": "Exact foundation argument: dryRun",
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Copy data.planHash from the matching discard preview for apply.",
+            "type": "string"
           },
           "expectedProjectFile": {
             "default": "",
@@ -9480,7 +9490,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d2308b2ba5489503211ac735597fac0beca2312df8c11d6f9a08f6f3bfa4b6a9",
+      "descriptionSha256": "be65923b6323be6883e8fc9ffaf616dd7785cd010419ed9de4113629943149ae",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -9529,7 +9539,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "1962fbbe2f391fb84525d44ee8d8ff45cba3493fa192d0e7aae32b75cdc324e3",
+      "descriptionSha256": "3ab5959f367e3b64e5f79889cfca26c7a4e523ee172e28ef939ca5b60cbe82a8",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -17201,7 +17211,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "33a684f0d77dc66db9f70a5793002a2536acc5aa7aafdd7773f50da665054e23",
+      "descriptionSha256": "97f2211a89299743911c96cff03703ef8daeda4e4746b87783adb0bee91a2225",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -17219,11 +17229,21 @@
           },
           "dryRun": {
             "default": true,
-            "description": "dryRun: true (default) previews; false deletes",
+            "description": "true previews deletion.",
             "examples": [
               true
             ],
             "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "planHash from the delete preview.",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact project file bound to the delete preview.",
+            "type": "string"
           },
           "interfaceName": {
             "description": "interfaceName: exact name as shown in GetPlcOpcUaConfiguration",
@@ -22276,7 +22296,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "10f3b0d59dabb76df140c252a5b02260b75ad980994d9e16b192a522aac86c91",
+      "descriptionSha256": "bfbe2d38ab6819e20a216770d99616da54f94b86c1a5a1c73367964517c4d45b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
