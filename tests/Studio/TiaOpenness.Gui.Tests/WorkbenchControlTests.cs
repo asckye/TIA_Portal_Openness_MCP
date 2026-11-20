@@ -93,7 +93,12 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
                 Assert.Equal(docked ? Visibility.Collapsed : Visibility.Visible, ((Grid)window.FindName("DrawerOverlay")).Visibility);
                 var navigation = window.ApplyControl(Request());
                 if (docked) Assert.Equal(WorkbenchControlStatus.Done, navigation.Status);
-                else Assert.Equal("workbench-modal-open", navigation.Refusal?.Condition);
+                else
+                {
+                    Assert.Equal(WorkbenchControlStatus.Done, navigation.Status);
+                    Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("DrawerOverlay")).Visibility);
+                    Assert.Null(typeof(MainWindow).GetField("_drawer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window));
+                }
             }
             finally { window.Close(); }
         });

@@ -51,6 +51,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Gui.Tests.ResponsivenessTests"] = "Reader throttling, latency measurement and bounded lock recovery.",
             ["TiaOpenness.Gui.Tests.ResponsivenessHarness"] = "Opt-in dispatcher p95/max latency and idle CPU thresholds.",
             ["TiaOpenness.Gui.Tests.WorkbenchControlLoadTests"] = "Continuous dispatcher and control pressure; functional completion checks.",
+            ["TiaOpenness.Gui.Tests.WorkbenchControlOverlayTests"] = "Keyboard focus, traversal and preview input in workbench overlays.",
             ["TiaOpenness.Gui.Tests.ApprovalServiceTests"] = "Pipe connection and approval delivery protected by hang guards.",
             ["TiaOpenness.Gui.Tests.WorkbenchControlPipeTests"] = "Pipe connection and response protected by hang guards.",
             ["TiaOpenness.Gui.Tests.WorkbenchControlTests"] = "Blocked-dispatcher ordering and pipe deadlines.",
@@ -311,6 +312,13 @@ namespace TiaMcp.Engine.Tests.Shared
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlLoadTests"] = new[] {
                 "Continuous_control_queue_applies_requests_and_keeps_reads_available"
+            },
+            ["TiaOpenness.Gui.Tests.WorkbenchControlOverlayTests"] = new[] {
+                "Frozen_state_follows_recent_input_and_clears_after_the_operator_is_idle",
+                "Palette_traps_focus_blocks_control_and_restores_its_invoker_on_escape",
+                "Existing_modals_suppress_the_palette_shortcut",
+                "Every_palette_item_only_navigates_locates_or_sets_appearance",
+                "Session_escape_returns_focus_and_AI_navigation_closes_the_non_modal_flyout"
             },
             ["TiaOpenness.Gui.Tests.ApprovalServiceTests"] = new[] {
                 "Workbench_v2_write_stays_pending_until_the_same_approval_card_is_decided",

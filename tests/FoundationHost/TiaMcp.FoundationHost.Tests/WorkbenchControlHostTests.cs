@@ -109,6 +109,35 @@ public sealed class WorkbenchControlHostTests
         Assert.Null(data["nextStep"]);
     }
 
+    [Theory]
+    [InlineData("command-palette", "command palette")]
+    [InlineData("call-drawer", "call details")]
+    [InlineData("options", "options panel")]
+    [InlineData("unknown-blocker", "until Workbench control is available")]
+    [InlineData("approvals", "Approvals")]
+    [InlineData("settings", "Settings")]
+    [InlineData("dialog", "dialog")]
+    [InlineData("confirmation-sheet", "confirmation")]
+    [InlineData("control-disabled", "disabled")]
+    [InlineData("busy", "operation")]
+    [InlineData("user-active", "interacting")]
+    public async Task State_reports_the_blocker_and_preserves_session_selection_guidance(string blocker, string guidance)
+    {
+        using var worker = new Worker();
+        string caller = new string('a', 32);
+        SharedSessionState.For(worker).HostSessionKey = () => caller;
+        using var server = new FakeServer { Reply = request => new() { RequestId = request.RequestId,
+            Status = WorkbenchControlStatus.Done, Workbench = new() { Version = "fixture" },
+            Data = new() { Workbench = new() { Version = "fixture", BlockedBy = blocker },
+                Session = new() { Source = WorkbenchSessionSource.SharedMcpSession, SessionKey = "other" } } } };
+        var result = await Tool(5, worker, Client(server)).InvokeAsync(Request("GetWorkbenchState", new()));
+        var data = result.StructuredContent!["data"]!;
+        Assert.Equal(blocker, (string?)data["workbench"]?["blockedBy"]);
+        Assert.Contains(guidance, (string?)data["nextStep"]);
+        Assert.Contains(caller, (string?)data["nextStep"]);
+        Assert.False((bool?)data["selectedMatchesCaller"]);
+    }
+
     [Theory, InlineData(true), InlineData(false)]
     public async Task Project_selection_refusal_identifies_the_requesting_session_and_bound_project(bool selected)
     {

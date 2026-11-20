@@ -125,6 +125,8 @@ namespace TiaOpenness.Shared
         [JsonRequired] public string Version { get; set; } = "";
         [JsonRequired] public int[] Contracts { get; set; } = new[] { 1 };
         public bool? ControlEnabled { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? BlockedBy { get; set; }
     }
     internal sealed class WorkbenchControlRefusal
     {

@@ -1,0 +1,62 @@
+<UserControl x:Class="TiaOpenness.Gui.Controls.CommandPalette"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization"
+    Focusable="False" IsTabStop="False" AutomationProperties.Name="{l:Tr Shell.CommandPalette}" PreviewKeyDown="OnPaletteKey">
+  <Grid Background="{DynamicResource Ant.colorBgMask}" MouseLeftButtonDown="OnBackdrop">
+    <Border Width="490" VerticalAlignment="Top" Margin="0,64,0,0" CornerRadius="12" Padding="12"
+        Background="{DynamicResource Primer.window}" BorderBrush="{DynamicResource Primer.inputBorder}" BorderThickness="1">
+      <StackPanel>
+        <DockPanel MinHeight="44">
+          <Button x:Name="Dismiss" DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Center"
+              Style="{StaticResource Primer.IdeToolButton}" Content="{l:Tr Overlay.Close}"
+              AutomationProperties.Name="{l:Tr Overlay.Close}" Click="OnDismiss"/>
+          <Grid>
+            <TextBox x:Name="SearchBox" VerticalAlignment="Center" Style="{StaticResource Primer.Input}"
+                AutomationProperties.Name="{l:Tr Shell.CommandPalette}" AutomationProperties.LabeledBy="{Binding ElementName=SearchHint}"
+                ToolTip="{l:Tr Shell.CommandPalette}" TextChanged="OnSearch"/>
+            <TextBlock x:Name="SearchHint" Text="{l:Tr Shell.CommandPalette}" IsHitTestVisible="False" VerticalAlignment="Center" Margin="12,0">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+                  <Setter Property="Visibility" Value="Collapsed"/>
+                  <Style.Triggers><DataTrigger Binding="{Binding Text,ElementName=SearchBox}" Value="">
+                    <Setter Property="Visibility" Value="Visible"/>
+                  </DataTrigger></Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </Grid>
+        </DockPanel>
+        <ListBox x:Name="ResultList" ItemsSource="{Binding Results}" MaxHeight="300" SelectedIndex="0"
+            Style="{StaticResource Primer.VirtualList}" AutomationProperties.Name="{l:Tr Overlay.Results}"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+          <ListBox.ItemContainerStyle>
+            <Style TargetType="ListBoxItem" BasedOn="{StaticResource Primer.TableItem}">
+              <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
+              <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+              <EventSetter Event="MouseLeftButtonUp" Handler="OnChoose"/>
+            </Style>
+          </ListBox.ItemContainerStyle>
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <DockPanel LastChildFill="True" Margin="8,0">
+                <TextBlock DockPanel.Dock="Right" MaxWidth="200" Margin="12,0,0,0" Text="{Binding Detail}"
+                    ToolTip="{Binding Detail}" TextTrimming="CharacterEllipsis" Style="{StaticResource Primer.Muted}"/>
+                <TextBlock Text="{Binding Title}" ToolTip="{Binding Title}" TextTrimming="CharacterEllipsis" Style="{StaticResource Primer.Text}"/>
+              </DockPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Text="{l:Tr Overlay.NoResults}" Margin="8">
+          <TextBlock.Style>
+            <Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+              <Setter Property="Visibility" Value="Collapsed"/>
+              <Style.Triggers><DataTrigger Binding="{Binding HasItems,ElementName=ResultList}" Value="False">
+                <Setter Property="Visibility" Value="Visible"/>
+              </DataTrigger></Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

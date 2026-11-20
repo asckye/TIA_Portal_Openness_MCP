@@ -35,6 +35,35 @@ public partial class MainWindow
     internal Func<DateTimeOffset> ControlNow { get; set; } = () => DateTimeOffset.UtcNow;
     private INotifyPropertyChanged? _controlFeatures, _controlJournal;
     private string? _controlDetailRequestId;
+    private Controls.ModalPane? _controlCallDrawer;
+    private bool _controlOpenedOptions;
+    private static readonly DependencyPropertyDescriptor OptionsVisibility =
+        DependencyPropertyDescriptor.FromProperty(UIElement.VisibilityProperty, typeof(Grid));
+    private readonly DispatcherTimer _inputIdleTimer = new() { Interval = TimeSpan.FromMilliseconds(150) };
+
+    static MainWindow()
+    {
+        // An owned dialog can open without activating the owner, and pipe readers use a frozen snapshot.
+        EventManager.RegisterClassHandler(typeof(Window), SizeChangedEvent, new SizeChangedEventHandler(OnControlDialogSized));
+    }
+
+    private static void OnControlDialogSized(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not Window { Owner: MainWindow owner } dialog || e.PreviousSize != default) return;
+        owner.QueueControlSnapshot();
+        dialog.IsVisibleChanged -= owner.OnControlWindowChanged;
+        dialog.IsVisibleChanged += owner.OnControlWindowChanged;
+        dialog.Closed -= owner.OnControlDialogClosed;
+        dialog.Closed += owner.OnControlDialogClosed;
+    }
+
+    private void OnControlDialogClosed(object? sender, EventArgs e)
+    {
+        var dialog = (Window)sender!;
+        dialog.IsVisibleChanged -= OnControlWindowChanged;
+        dialog.Closed -= OnControlDialogClosed;
+        QueueControlSnapshot();
+    }
 
     private void InitializeControl()
     {
@@ -49,12 +78,17 @@ public partial class MainWindow
         SettingsContent.ControlEnabledChanged += OnControlEnabledChanged;
         OperationsContent.ClearPrefillRequested += OnClearFieldPrefill;
         BlocksContent.ClearPrefillRequested += OnClearFieldPrefill;
-        PreviewMouseDown += OnControlMouseDown;
-        PreviewMouseUp += OnControlMouseUp;
+        PreviewMouseDown += OnControlMouseButton;
+        PreviewMouseUp += OnControlMouseButton;
         PreviewMouseMove += OnControlMouseMove;
         PreviewMouseWheel += OnControlMouseWheel;
         PreviewKeyDown += OnControlKeyDown;
         _controlHintTimer.Tick += OnControlHintTick;
+        _inputIdleTimer.Tick += OnInputIdleTick;
+        IsEnabledChanged += OnControlWindowChanged;
+        ApprovalsContent.ConfirmationSheet.IsVisibleChanged += OnControlWindowChanged;
+        foreach (var panel in ControlOptionsPanels())
+            OptionsVisibility.AddValueChanged(panel, OnControlOptionsChanged);
         Loc.Current.LanguageChanged += OnControlLanguageChanged;
         if (!_loadExistingConfiguration || _model.OfflineDemo) return;
         try
@@ -159,9 +193,36 @@ public partial class MainWindow
         => new() { Path = row.Path, Name = row.Name, Kind = row.Kind, Number = row.Info.Number ?? 0 };
     private WorkbenchDevice? ControlDevice => _model.Engineering.SelectedDevice is { } device
         ? new() { Id = device.Id, DisplayName = device.DisplayName ?? device.Name } : null;
+    private Grid[] ControlOptionsPanels() =>
+        [OperationsContent.Options.OptionsOverlay, BlocksContent.Options.OptionsOverlay, VersionControlContent.Options.OptionsOverlay];
+
+    private void OnControlOptionsChanged(object? sender, EventArgs e)
+    {
+        // Prefill owns one opening of the operations panel. A later human opening gets the normal modal guard.
+        if (sender == OperationsContent.Options.OptionsOverlay) _controlOpenedOptions = false;
+        QueueControlSnapshot();
+    }
+    private (string Condition, string Reason)? ControlBlocker()
+    {
+        if (!App.Settings.WorkbenchControlEnabled) return ("workbench-control-disabled", "control-disabled");
+        if (!IsEnabled || OwnedWindows.OfType<Window>().Any(window => window.IsVisible)) return ("workbench-modal-open", "dialog");
+        if (OverlayHost.Visibility == Visibility.Visible) return ("workbench-modal-open", "command-palette");
+        if (ApprovalsContent.ConfirmationSheet.IsVisible) return ("workbench-modal-open", "confirmation-sheet");
+        if (_page == "Approvals") return ("workbench-modal-open", "approvals");
+        if (_page == "Settings") return ("workbench-modal-open", "settings");
+        if (_drawer != null && (_controlCallDrawer == null || _drawerFocus != _controlCallDrawer))
+            return ("workbench-modal-open", "call-drawer");
+        if ((OperationsContent.OptionsOpen && !_controlOpenedOptions) || BlocksContent.OptionsOpen || VersionControlContent.OptionsOpen)
+            return ("workbench-modal-open", "options");
+        if (ControlGuard.HumanActive) return ("workbench-user-active", "user-active");
+        if (_model.Busy) return ("workbench-busy", "busy");
+        return null;
+    }
+
     private WorkbenchSnapshot CaptureControlSnapshot()
     {
         var info = ControlResponse.Info; info.ControlEnabled = App.Settings.WorkbenchControlEnabled;
+        info.BlockedBy = ControlBlocker()?.Reason;
         return new WorkbenchSnapshot(new()
         {
             Workbench = info, Page = ControlPage, Release = _model.SelectedReleaseKey, Device = ControlDevice,
@@ -183,12 +244,7 @@ public partial class MainWindow
         if (_controlClosing) return ControlResponse.Refuse(request, "workbench-closing");
         if (request.Operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection)
             return ControlResponse.Done(request, ControlSurface.Snapshot.Read(request.Arguments));
-        if (!App.Settings.WorkbenchControlEnabled) return ControlResponse.Refuse(request, "workbench-control-disabled");
-        if (!IsEnabled || _page is "Settings" or "Approvals" || _drawer != null
-            || OwnedWindows.OfType<Window>().Any(window => window.IsVisible))
-            return ControlResponse.Refuse(request, "workbench-modal-open");
-        if (ControlGuard.HumanActive) return ControlResponse.Refuse(request, "workbench-user-active");
-        if (_model.Busy) return ControlResponse.Refuse(request, "workbench-busy");
+        if (ControlBlocker() is { } blocker) return ControlResponse.Refuse(request, blocker.Condition);
         WorkbenchControlResponse response;
         switch (request.Arguments)
         {
@@ -238,6 +294,9 @@ public partial class MainWindow
                 var target = Features.Calls.First(row => row.Record.JournalKey == matches[0].JournalKey);
                 CallsContent.LocateControlCall(target);
                 Features.OpenCall(target);
+                // Navigate closes this exact modal on the next successful control navigation.
+                // A drawer opened later by the operator has a different focus scope.
+                _controlCallDrawer = _drawerFocus;
                 response = ControlResponse.Done(request, new() { Page = WorkbenchPage.Calls, RequestId = call.RequestId,
                     Tool = matches[0].Tool, Result = matches[0].Result.ToString().ToLowerInvariant() });
                 break;
@@ -248,6 +307,7 @@ public partial class MainWindow
         }
         if (response.Status == WorkbenchControlStatus.Done)
         {
+            CloseSessionPopover(false);
             ControlGuard.UiChanged(); _lastControl = request; _lastControlUtc = ControlNow();
             _controlHintTimer.Start(); UpdateControlHint();
             if (ControlStatus.Visibility == Visibility.Visible) Controls.AccessibleStatus.Announce(ControlStatus);
@@ -364,12 +424,12 @@ public partial class MainWindow
         _prefills.Set(arguments, request.Origin);
         Navigate(arguments.Form is WorkbenchPrefillForm.InspectionRules or WorkbenchPrefillForm.ConnectProject
             or WorkbenchPrefillForm.ExportBlocks or WorkbenchPrefillForm.ImportBlocks ? "Engineering" : "Blocks");
-        if (arguments.Form == WorkbenchPrefillForm.InspectionRules && arguments.Mode == WorkbenchPrefillMode.Set)
-            OperationsContent.ShowControlInspectionRules();
         if (arguments.Mode == WorkbenchPrefillMode.Set)
         {
+            if (arguments.Form == WorkbenchPrefillForm.InspectionRules) OperationsContent.ShowControlInspectionRules();
             if (arguments.Form == WorkbenchPrefillForm.ConnectProject) OperationsContent.ShowProjectOptions();
             if (arguments.Form is WorkbenchPrefillForm.ExportBlocks or WorkbenchPrefillForm.ImportBlocks) OperationsContent.ShowTransferOptions();
+            _controlOpenedOptions = OperationsContent.OptionsOpen;
         }
         UpdateControlPrefill();
         return ControlResponse.Done(request, new() { Form = arguments.Form, Page = ControlPage,
@@ -405,19 +465,42 @@ public partial class MainWindow
     private void OnConfirmControlPrefill(object sender, RoutedEventArgs e) => ConfirmControlPrefill();
     private void ConfirmControlPrefill() { _prefillRestore.Clear(); _prefills.ClearByHuman(); UpdateControlPrefill(); QueueControlSnapshot(); }
     private void OnControlEnabledChanged(object? sender, EventArgs e) => QueueControlSnapshot();
-    private void OnControlMouseDown(object sender, MouseButtonEventArgs e) {
-        if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true; ControlGuard.HumanInput(); }
-    private void OnControlMouseUp(object sender, MouseButtonEventArgs e) {
-        if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true; ControlGuard.HumanInput(); }
-    private void OnControlMouseMove(object sender, MouseEventArgs e) => ControlGuard.MouseMove();
-    private void OnControlMouseWheel(object sender, MouseWheelEventArgs e) => ControlGuard.HumanInput();
+    private void OnControlWindowChanged(object sender, DependencyPropertyChangedEventArgs e) => QueueControlSnapshot();
+    private void TrackControlInput()
+    {
+        if (_inputIdleTimer.IsEnabled || !ControlGuard.HumanActive) return;
+        QueueControlSnapshot();
+        _inputIdleTimer.Start();
+    }
+    private void OnInputIdleTick(object? sender, EventArgs e)
+    {
+        if (ControlGuard.HumanActive) return;
+        _inputIdleTimer.Stop();
+        QueueControlSnapshot();
+    }
+    private void RecordHumanInput()
+    {
+        ControlGuard.HumanInput();
+        TrackControlInput();
+    }
+    private void OnControlMouseButton(object sender, MouseButtonEventArgs e)
+    {
+        if (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject)) e.Handled = true;
+        RecordHumanInput();
+    }
+    private void OnControlMouseMove(object sender, MouseEventArgs e)
+    {
+        ControlGuard.MouseMove();
+        TrackControlInput();
+    }
+    private void OnControlMouseWheel(object sender, MouseWheelEventArgs e) => RecordHumanInput();
     private void OnControlKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key is Key.Enter or Key.Space && (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject) || ControlGuard.ClickGuardActive)) e.Handled =
             true;
         if (ControlGuard.ClickGuardActive && (e.Key == Key.System || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))) e.Handled = true;
         if (ControlGuard.ClickGuardActive && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.B) e.Handled = true;
-        ControlGuard.HumanInput();
+        RecordHumanInput();
     }
     private void OnControlHintTick(object? sender, EventArgs e) => UpdateControlHint();
     private void OnControlLanguageChanged(object? sender, EventArgs e) { UpdateControlHint(); UpdateControlPrefill(); UpdateControlDetail(); }
@@ -455,6 +538,14 @@ public partial class MainWindow
     private void DisposeControl()
     {
         _controlClosing = true; _controlServer?.Dispose(); _controlHintTimer.Stop();
+        _inputIdleTimer.Stop();
+        _inputIdleTimer.Tick -= OnInputIdleTick;
+        IsEnabledChanged -= OnControlWindowChanged;
+        ApprovalsContent.ConfirmationSheet.IsVisibleChanged -= OnControlWindowChanged;
+        foreach (var panel in ControlOptionsPanels())
+            OptionsVisibility.RemoveValueChanged(panel, OnControlOptionsChanged);
+        CloseSessionPopover(false);
+        if (_paletteFocus != null) CloseCommandPalette();
         _controlHintTimer.Tick -= OnControlHintTick;
         Loc.Current.LanguageChanged -= OnControlLanguageChanged;
         foreach (var source in new INotifyPropertyChanged[] { _model, _model.Session, _model.Engineering, _model.Activity })
@@ -468,7 +559,7 @@ public partial class MainWindow
         SettingsContent.ControlEnabledChanged -= OnControlEnabledChanged;
         OperationsContent.ClearPrefillRequested -= OnClearFieldPrefill;
         BlocksContent.ClearPrefillRequested -= OnClearFieldPrefill;
-        PreviewMouseDown -= OnControlMouseDown; PreviewMouseUp -= OnControlMouseUp;
+        PreviewMouseDown -= OnControlMouseButton; PreviewMouseUp -= OnControlMouseButton;
         PreviewMouseMove -= OnControlMouseMove; PreviewMouseWheel -= OnControlMouseWheel; PreviewKeyDown -= OnControlKeyDown;
     }
 }

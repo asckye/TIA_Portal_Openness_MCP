@@ -168,6 +168,24 @@ internal sealed class WorkbenchControlTool : McpServerTool
                 if (!done) message = guidance;
             }
         }
+        if (done && operation == WorkbenchControlOperation.ReadState && response.Data?.Workbench?.BlockedBy is { } blocker)
+        {
+            string guidance = blocker switch
+            {
+                "control-disabled" => "Workbench control is disabled. Ask the operator whether to enable it in Settings.",
+                "command-palette" => "Wait for the operator to close the command palette.",
+                "call-drawer" => "Wait for the operator to close call details.",
+                "options" => "Wait for the operator to close the options panel.",
+                "dialog" => "Wait for the operator to close the Workbench dialog.",
+                "approvals" => "Wait for the operator to leave the Approvals page.",
+                "settings" => "Wait for the operator to leave Settings.",
+                "confirmation-sheet" => "Wait for the operator to finish the confirmation.",
+                "user-active" => "Wait until the operator has finished interacting with the Workbench.",
+                "busy" => "Wait for the current Workbench operation to finish.",
+                _ => "Wait until Workbench control is available."
+            };
+            data["nextStep"] = data["nextStep"] is JsonValue next ? guidance + " " + next.GetValue<string>() : guidance;
+        }
         var envelope = Envelope.Create(data, done ? null : new Error(message,
             details ?? new InternalErrorDetails(id)), new Meta(DateTimeOffset.UtcNow, release, name, id,
             done ? Outcome.Succeeded : failed ? Outcome.Failed : Outcome.RejectedBeforeOperation,
