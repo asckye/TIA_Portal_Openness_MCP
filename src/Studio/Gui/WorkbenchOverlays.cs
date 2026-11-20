@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation;
 using System.Windows.Input;
 using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Localization;
@@ -38,9 +39,10 @@ public partial class MainWindow
         {
             if ((string)rail.Tag == "Agent")
             {
-                Page("Approvals", Loc.Current["Shell.Approvals"], Loc.Current["Rail.Agent"]);
+                Page("Approvals", Loc.Current["Shell.ApprovalsPill"], Loc.Current["Rail.Agent"]);
                 Page("Calls", Loc.Current["Shell.Calls"], Loc.Current["Rail.Agent"]);
             }
+            else if (rail == SettingsButton) Page("Settings", Loc.Current["Palette.Settings"], AutomationProperties.GetAcceleratorKey(rail));
             else Page((string)rail.Tag, (string)rail.Content, System.Windows.Automation.AutomationProperties.GetAcceleratorKey(rail));
         }
         Page("VersionControl", Loc.Current["Shell.VersionControl"], Loc.Current["Rail.Project"]);

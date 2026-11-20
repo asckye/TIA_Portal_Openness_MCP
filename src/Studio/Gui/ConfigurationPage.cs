@@ -82,13 +82,15 @@ public partial class MainWindow
     }
     private void OnMcpLanguageChanged(object? sender, EventArgs e) => UpdateMcpStatus();
     /// <summary>The shell shows service and project state; connection details belong to MCP &amp; clients.</summary>
+    private string ProjectFileName => Path.GetFileName(_model.Session.OpenProjectFile) is { Length: > 0 } name ? name : _model.Session.ProjectName;
+
     private void UpdateMcpStatus()
     {
         var state = Configuration?.ServiceStateKey ?? "Config.Idle";
-        var version = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
+        var release = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey);
         var status = state == "Config.Local" ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state];
         McpStatusText.Text = Loc.Current.T("Shell.McpStatus", status);
-        SessionStatus.Text = Loc.Current.T("Shell.ProjectStatus", version, HasProject ? _model.Session.ProjectName : Loc.Current["Blocks.Empty.Title"]);
+        SessionStatus.Text = release.DisplayName + " · " + release.OwnerApartment + "   " + (HasProject ? ProjectFileName : Loc.Current["Blocks.Empty.Title"]);
         McpStatusText.ToolTip = McpStatusText.Text;
         SessionStatus.ToolTip = SessionStatus.Text;
         McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Primer.accent" : "Primer.textMuted");

@@ -85,7 +85,8 @@ public partial class MainWindow
 
     private void OnShellSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        bool paneHadFocus = ProjectTree.IsKeyboardFocusWithin || SettingsContent.SectionList.IsKeyboardFocusWithin;
+        bool paneHadFocus = ProjectTree.IsKeyboardFocusWithin || ApprovalsContent.RequestListPane.IsKeyboardFocusWithin
+            || SettingsContent.SectionList.IsKeyboardFocusWithin;
         UpdateLeftPane();
         if (paneHadFocus && !Controls.Ux.GetLeftPaneOpen(Root)) LeftPaneToggle.Focus();
         if ((_drawer == "CallDetail" || DetailDocked) && DetailDocked != CanDockDetail) OpenDrawer("CallDetail");
@@ -96,14 +97,14 @@ public partial class MainWindow
 
     private void UpdateLeftPane()
     {
-        LeftPaneToggle.IsEnabled = _page is "Engineering" or "VersionControl" or "Settings";
+        LeftPaneToggle.IsEnabled = _page is "Engineering" or "VersionControl" or "Approvals" or "Settings";
         if (!NarrowContent || !LeftPaneToggle.IsEnabled) _leftPaneFlyoutOpen = false;
         bool open = NarrowContent ? _leftPaneFlyoutOpen : App.Settings.LeftPaneOpen;
         int column = _leftPaneFlyoutOpen ? 1 : 0;
         Grid.SetColumn(ProjectTree, column);
+        Grid.SetColumn(ApprovalsContent.RequestListPane, column);
         Grid.SetColumn((Border)SettingsContent.SectionList.Parent, column);
         Controls.Ux.SetLeftPaneOpen(Root, open);
-        LeftPaneToggle.SetResourceReference(Controls.Ux.IconProperty, open ? "Icon.MenuFold" : "Icon.MenuUnfold");
     }
 
     private void OnLeftPaneToggle(object sender, RoutedEventArgs e)
@@ -124,6 +125,7 @@ public partial class MainWindow
             ((ListBoxItem)SettingsContent.SectionList.SelectedItem).Focus();
             return;
         }
+        if (_page == "Approvals") { ApprovalsContent.RequestList.Focus(); return; }
         if (ProjectTree.Content is UIElement content && content.Focus()) return;
         if (!ProjectTree.HasContent || !ProjectTree.MoveFocus(new TraversalRequest(FocusNavigationDirection.First))) ProjectTree.Focus();
     }
@@ -181,8 +183,10 @@ public partial class MainWindow
     {
         if (_featuresDisposed) return;
         var index = AuditIndex;
-        AuditHead.Text = index.HasValue ? Loc.Current.T("Shell.AuditHead", index)
-            + (index == _verifiedHead && Features.HasVerification && !Features.VerificationBroken ? " ✓" : "") : "";
+        AuditHead.Visibility = index.HasValue ? Visibility.Visible : Visibility.Collapsed;
+        string verified = index.HasValue && index == _verifiedHead && Features.HasVerification && !Features.VerificationBroken ? " ✓" : "";
+        AuditHead.Text = index.HasValue ? $"Audit #{index}{verified}" : "";
+        AuditHead.Tag = index.HasValue ? Loc.Current.T("Shell.AuditHead", index) + verified : "";
     }
 
     private void OnShellSessionChanged(object? sender, PropertyChangedEventArgs e)
@@ -226,21 +230,31 @@ public partial class MainWindow
         RailVersion.Text = MainViewModel.AppVersion;
         var result = _model.Engineering.LastCompile;
         CompileStatus.Visibility = result == null ? Visibility.Collapsed : Visibility.Visible;
-        CompileStatus.Text = result == null ? "" : Loc.Current.T("Shell.CompileCounts", result.ErrorCount, result.WarningCount);
+        if (result != null)
+        {
+            CompileStatus.Text = $"{result.ErrorCount} Err · {result.WarningCount} Warn";
+            CompileWarningMarker.PositionStart = CompileStatus.Text.IndexOf('·');
+            CompileStatus.Tag = Loc.Current.T("Shell.CompileCounts", result.ErrorCount, result.WarningCount);
+            CompileErrorDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, result.ErrorCount > 0 ? "Ant.colorError" : "Primer.ok");
+        }
+        else CompileStatus.Text = "";
         var panel = _model.Panel;
         ParticipantStatus.Visibility = panel?.Attached == true ? Visibility.Visible : Visibility.Collapsed;
-        ClientStatus.Text = panel?.Participants ?? "";
-        TiaProcessStatus.Text = Loc.Current.T("Shell.TiaProcessStatus", _model.Session.IsConnected ? _model.Session.ProcessId.ToString() : "—");
+        ClientStatus.Text = panel?.ClientStatus ?? "";
+        McpStatusButton.Visibility = ParticipantStatus.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        TiaProcessStatus.Text = Loc.Current.T("Shell.TiaProcessStatus", _model.Session.ProcessId.ToString());
+        TiaProcessStatus.Visibility = _model.Session.IsConnected && _model.Session.ProcessId > 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateAuditHead();
         UpdateLeftPane();
         BlocksContent.Visibility = _page == "Engineering" && HasProject ? Visibility.Visible : Visibility.Collapsed;
-        CurrentPageTitle.Text = Loc.Current[_page switch
+        string crumb = Loc.Current[_page switch
         {
             "Approvals" => "Shell.Approvals", "Settings" => "Shell.Settings",
-            "Clients" => "Rail.Clients", "Mcp" => "Desktop.Configuration", "VersionControl" => "Shell.VersionControl",
-            "Calls" => "Shell.Calls", "Audit" => "Shell.Audit", "Environment" => "Shell.Environment", "Log" => "Shell.Logs",
+            "Clients" => "Shell.Clients", "Mcp" => "Desktop.Configuration", "VersionControl" => "Shell.Engineering",
+            "Calls" => "Shell.Approvals", "Audit" => "Shell.Audit", "Environment" => "Shell.Environment", "Log" => "Shell.Logs",
             _ => "Shell.Engineering",
         }];
+        CurrentPageTitle.Text = HasProject && _page is ("Engineering" or "VersionControl") ? crumb + " · " + ProjectFileName : crumb;
         Title = CurrentPageTitle.Text + " – " + Loc.Current["App.Title"];
         UpdateSafetyBanner();
         if (_drawer != null || DetailDocked)
@@ -249,7 +263,7 @@ public partial class MainWindow
             DrawerTitle.SetResourceReference(TextBlock.FontFamilyProperty, "Ui.FontMono");
         }
         Features.Release = _model.SelectedReleaseKey;
-        UpdateFeatureToast();
+        UpdateFeatureToastText();
     }
 
     private LocalizedText? PageUnavailable(string page)
@@ -278,7 +292,7 @@ public partial class MainWindow
             _approvalToast = null;
             _featureTitle = LocalizedText.Key("Shell.PageUnavailable");
             _featureFeedback = reason;
-            UpdateFeatureToast(); Toast.Visibility = Visibility.Visible;
+            UpdateFeatureToast(ToastKind.Warning);
             Controls.AccessibleStatus.Announce(ToastMessage);
             return;
         }
@@ -353,6 +367,12 @@ public partial class MainWindow
     }
 
     internal void OpenSettings() => Navigate("Settings");
+    private void OnCompileStatus(object sender, RoutedEventArgs e)
+    {
+        NavigateGuarded("Engineering");
+        if (_page == "Engineering") BlocksContent.ShowCompileTab();
+    }
+
     private void OnMcpStatus(object sender, RoutedEventArgs e) => NavigateGuarded("Mcp");
     private void OnProjectStatus(object sender, RoutedEventArgs e) => ToggleSessionPopover();
     private void OnApprovalStatus(object sender, RoutedEventArgs e)
@@ -411,6 +431,9 @@ public partial class MainWindow
         Features.Export();
     }
     private void OnDismissToast(object sender, RoutedEventArgs e) { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
-    private void OnToastClick(object sender, RoutedEventArgs e) {
-        Toast.Visibility = Visibility.Collapsed; if (_approvalToast != null) Navigate("Approvals"); else Navigate("Environment"); }
+    private void OnToastClick(object sender, RoutedEventArgs e)
+    {
+        Toast.Visibility = Visibility.Collapsed;
+        Navigate(_approvalToast != null ? "Approvals" : "Environment");
+    }
 }

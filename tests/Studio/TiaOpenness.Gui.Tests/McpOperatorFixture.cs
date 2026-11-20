@@ -47,7 +47,8 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     {
         Directory.CreateDirectory(Path.Combine(Root, "run", "hosts"));
         using var current = Process.GetCurrentProcess();
-        Host = new(current.Id, current.StartTime.ToUniversalTime().Ticks, release, "fixture", Path.Combine(Root, "run", "hosts", "host.json"));
+        Host = new(current.Id, current.StartTime.ToUniversalTime().Ticks, release, "fixture", Path.Combine(Root, "run", "hosts", "host.json"))
+            { Transport = "stdio" };
         state = new() { ["sessionKey"] = Key, ["releaseKey"] = release, ["revision"] = 1L, ["owner"] = "mcp",
             ["participants"] = new JsonObject { ["mcpClient"] = "fixture AI", ["mcpClientVerified"] = false, ["workbench"] = 0 },
             ["worker"] = new JsonObject { ["pid"] = 123, ["generation"] = 1, ["state"] = "idle" },
@@ -60,7 +61,7 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     private void Publish()
     {
         var json = new JsonObject { ["version"] = 1, ["releaseKey"] = Host.ReleaseKey, ["pid"] = Host.Pid, ["startTicks"] = Host.StartTicks,
-            ["pipeName"] = Host.PipeName, ["sessions"] = new JsonArray(state.DeepClone()) }.ToJsonString();
+            ["pipeName"] = Host.PipeName, ["transport"] = Host.Transport, ["sessions"] = new JsonArray(state.DeepClone()) }.ToJsonString();
         var temporary = Host.RegistrationPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         File.WriteAllText(temporary, json);
         for (int attempt = 0; ; attempt++)

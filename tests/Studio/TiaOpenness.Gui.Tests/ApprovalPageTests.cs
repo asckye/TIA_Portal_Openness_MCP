@@ -63,7 +63,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             using var fixture = new Fixture(ApprovalRisk.Destructive);
             var reject = fixture.Button("DenyRequest");
             Assert.True(reject.IsDefault); Assert.False(reject.IsCancel);
-            Assert.Equal(44, reject.ActualHeight);
+            Assert.Equal(32, reject.ActualHeight);
             Assert.Same(Application.Current.FindResource("Primer.primaryBg"), reject.Background);
             Assert.Equal(Loc.Current["Approval.ApproveDelete"], fixture.Button("ApproveRequest").Content);
             RaiseKey(fixture.Button("ApproveRequest"), Keyboard.PreviewKeyDownEvent, Key.Enter);
@@ -84,6 +84,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             var cancel = fixture.Button("CancelDestructive");
             Open();
             Assert.True(cancel.IsDefault); Assert.True(cancel.IsCancel);
+            Assert.Equal(36, cancel.ActualHeight); Assert.Equal(36, confirm.ActualHeight);
             Assert.Same(cancel, Keyboard.FocusedElement);
             Assert.False(confirm.IsDefault); Assert.False(confirm.IsCancel);
             Assert.True(AutomationProperties.GetIsDialog(sheet));
@@ -132,7 +133,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                 UnifiedDesktopTests.ClickControl(fixture.Button("ApproveRequest")); WpfContext.Drain();
                 var confirm = fixture.Button("ConfirmDestructive");
                 var label = DesktopCapture.Descendants<AccessText>(confirm).Single();
-                Assert.Same(Application.Current.FindResource("Primer.destructiveText"), label.Foreground);
+                Assert.Same(Application.Current.FindResource("Primer.onPrimary"), label.Foreground);
                 CheckContrast(confirm);
                 void CheckContrast(Button button)
                 {
@@ -203,7 +204,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
         {
             using var fixture = new Fixture();
             var feedback = new List<string>();
-            fixture.Model.Feedback += (_, text) => feedback.Add(text.Resolve());
+            fixture.Model.Feedback += (_, result) => feedback.Add(result.Message.Resolve());
             fixture.View.FocusRequest("first"); WpfContext.Drain();
             Assert.Same(fixture.View.FindName("RequestTitle"), Keyboard.FocusedElement);
             Assert.DoesNotContain("fixture-private-key", fixture.Model.SelectedRequest!.Parameters);
@@ -293,7 +294,12 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                     window.Navigate("Approvals");
                     var host = WorkbenchRenderTests.CreateHost(window, width, height);
                     var view = (ApprovalsDrawer)window.FindName("ApprovalsContent");
-                    Assert.Equal(320, ((Border)view.FindName("RequestListPane")).ActualWidth);
+                    if (width == 1024)
+                    {
+                        Assert.Equal(Visibility.Collapsed, view.RequestListPane.Visibility);
+                        UnifiedDesktopTests.ClickControl(window.LeftPaneToggle); host.UpdateLayout();
+                    }
+                    Assert.Equal(262, view.RequestListPane.ActualWidth);
                     var caption = (TextBlock)view.FindName("CountdownCaption");
                     Assert.Equal(120, caption.ActualWidth); Assert.Equal(TextWrapping.Wrap, caption.TextWrapping);
                     var probe = new TextBlock { Text = caption.Text, FontFamily = caption.FontFamily, FontSize = caption.FontSize, TextWrapping = TextWrapping.Wrap };
@@ -304,8 +310,9 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                     var approve = (Button)view.FindName("ApproveRequest"); var reject = (Button)view.FindName("DenyRequest");
                     var selectedItem = (ListBoxItem)((ListBox)view.FindName("RequestList")).ItemContainerGenerator.ContainerFromIndex(0);
                     Assert.Contains(window.Features.SelectedRequest!.Risk, AutomationProperties.GetName(selectedItem));
-                    Assert.Equal(approve.ActualWidth, reject.ActualWidth, 3);
-                    Assert.Equal(44, approve.ActualHeight); Assert.Equal(44, reject.ActualHeight);
+                    Assert.True(reject.TranslatePoint(new Point(), host).X + reject.ActualWidth <= approve.TranslatePoint(new Point(), host).X);
+                    Assert.Equal(risk == ApprovalRisk.Destructive ? "Danger" : "Primary", Ux.GetVariant(approve));
+                    Assert.Equal(32, approve.ActualHeight); Assert.Equal(32, reject.ActualHeight);
                     foreach (var button in new[] { approve, reject })
                     {
                         var origin = button.TranslatePoint(new Point(), host);

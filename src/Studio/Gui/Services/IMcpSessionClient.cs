@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace TiaOpenness.Gui.Services;
 
-public sealed record OperatorHost(int Pid, long StartTicks, string ReleaseKey, string PipeName, string RegistrationPath);
+public sealed record OperatorHost(int Pid, long StartTicks, string ReleaseKey, string PipeName, string RegistrationPath)
+{
+    public string? Transport { get; init; }
+}
 public sealed record OperatorSession(OperatorHost Host, string SessionKey, JsonObject State)
 {
     public string DisplayName => SessionKey[..8] + " · " + ((string?)State["participants"]?["mcpClient"] ?? "MCP") + " (unverified)";
@@ -15,6 +18,7 @@ public sealed record OperatorSession(OperatorHost Host, string SessionKey, JsonO
 public interface IMcpSessionClient : IAsyncDisposable
 {
     public string? SessionKey { get; }
+    public string? Transport => null;
     public JsonObject? State { get; }
     public JsonObject? ToolSchema(string tool);
     public event EventHandler<JsonObject>? StateChanged;

@@ -41,6 +41,7 @@ public sealed partial class BlocksView : UserControl, IDisposable
         Atlas?.Dispose();
         Atlas = new AtlasPresentation(Model, service);
     }
+    internal void ShowCompileTab() => Model.Engineering.Document = ProjectDocument.Compile;
     internal void HideOptions() => Options.Hide();
     internal bool OptionsOpen => Options.IsOpen;
     internal event EventHandler? ControlSelectionChanged;

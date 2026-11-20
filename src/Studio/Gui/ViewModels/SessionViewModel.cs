@@ -25,6 +25,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     private bool _serviceOwnsRelease;
     private string _projectPath = string.Empty;
     private string _projectName = string.Empty;
+    private string _openProjectFile = string.Empty;
     private string? _opennessVersion;
     private bool _useMock;
     private bool _headless;
@@ -86,7 +87,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         Raise(nameof(CanSelectRelease));
         if (state == null || (string?)state["worker"]?["state"] == "disconnected")
         {
-            IsConnected = false; ProjectName = ""; _loadedSharedBinding = null; SetOpennessVersion(null);
+            IsConnected = false; OpenProjectFile = ""; ProjectName = ""; _loadedSharedBinding = null; SetOpennessVersion(null);
             return;
         }
         ProcessId = (int?)state["binding"]?["processId"] ?? 0;
@@ -94,6 +95,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         string file = (string?)state["binding"]?["projectFile"] ?? "";
         project.ExpectedProjectFile = file;
         SetOpennessVersion((string?)state["releaseKey"]);
+        OpenProjectFile = file;
         if (file.Length == 0) { ProjectName = ""; _loadedSharedBinding = null; return; }
         ProjectPath = file; ProjectName = System.IO.Path.GetFileNameWithoutExtension(file);
         string binding = project.Session.SessionKey + ":" + state["binding"]?["bindingEpoch"] + ":" + file;
@@ -118,6 +120,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     }
 
     public string ProjectName { get => _projectName; private set => Set(ref _projectName, value); }
+    internal string OpenProjectFile { get => _openProjectFile; private set => Set(ref _openProjectFile, value); }
     public string BoundProjectFile => (_client as McpProjectClient)?.ExpectedProjectFile ?? ProjectPath;
 
     public bool IsConnected
@@ -190,6 +193,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         }
         await _client.DisconnectAsync();
         IsConnected = false;
+        OpenProjectFile = string.Empty;
         ProjectName = string.Empty;
         SetOpennessVersion(null);
         _activity.SetStatus("Status.NotConnected");
@@ -223,7 +227,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         // Attaching to a running TIA inherits whatever project it already had open.
         if (adoptOpenProject && state.OpenProject is not null)
         {
-            ProjectPath = state.OpenProject.Path ?? string.Empty;
+            OpenProjectFile = ProjectPath = state.OpenProject.Path ?? string.Empty;
             ProjectName = state.OpenProject.Name ?? string.Empty;
             _activity.AppendLocalized("Log.Attached", state.OpenProject.Name);
             await _loadProject(ProjectName);
@@ -251,6 +255,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         }
 
         var project = await _client.OpenProjectAsync(ProjectPath);
+        OpenProjectFile = project.Path ?? ProjectPath;
         ProjectName = project.Name ?? string.Empty;
         _activity.AppendLocalized("Log.Opened", project.Name, project.Path);
         _activity.SetStatus("Status.ProjectOpen", project.Name);

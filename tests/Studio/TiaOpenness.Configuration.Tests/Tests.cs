@@ -246,7 +246,7 @@ namespace TiaMcpConfigurator
                         (() => Content("RailEngineering"), "Project", "项目"),
                         (() => Content("RailMcp"), "MCP", "MCP"),
                         (() => Content("RailClients"), "Clients", "客户端"),
-                        (() => Content("SettingsButton"), "Settings", "设置"),
+                        (() => Content("SettingsButton"), "Prefs", "设置"),
                         (() => Content("CheckUpdate"), "Check updates", "检查更新"),
                         (() => Content("RunUpdate"), "Update service…", "更新服务…"),
                         (() => Content("OpenReleases"), "Open", "打开"),
@@ -346,19 +346,20 @@ namespace TiaMcpConfigurator
                 port.Text = "8766";
                 Loc.Current.Language = AppLanguage.Chinese;
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                Assert(((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP"
+                Assert(((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP 服务"
                     && ((System.Windows.Controls.Button)clients.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "空闲", "Chinese page updates title, action and service state");
                 Assert(port.Text == "8766" && ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text == "192.0.2.10"
                     && choices.SelectedItems.Count == 1 && (string)versions.SelectedValue == "21", "language switch preserves the port, address, client and version");
                 ((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked = true;
-                Assert(((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP"
+                Assert(((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP 服务"
                     && (string)((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).ToolTip == "同一台电脑，一次完成"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "stdio", "Chinese local mode is localized");
                 Loc.Current.Language = AppLanguage.English;
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                 Assert(((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked == true
-                    && ((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP", "switching language preserves the selected transport");
+                    && ((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP Server",
+                    "switching language preserves the selected transport");
                 ((System.Windows.Controls.RadioButton)form.FindName("RemoteNav")).IsChecked = true;
                 // Synthetic screenshot fixture only; the shipping view always uses ClientProfiles.All().
                 string capture = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS");

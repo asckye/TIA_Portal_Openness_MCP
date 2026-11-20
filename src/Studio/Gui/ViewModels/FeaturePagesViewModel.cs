@@ -14,6 +14,9 @@ namespace TiaOpenness.Gui.ViewModels;
 
 public enum FeatureTone { Normal, Muted, Accent, Warning, Success, Unchecked }
 
+public enum ToastKind { Success, Approval, Warning }
+public readonly record struct FeatureFeedback(LocalizedText Message, ToastKind Kind = ToastKind.Success);
+
 public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
 {
     private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
@@ -68,7 +71,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public IEnvironmentCheckService Environment { get; }
     public IDiagnosticBundleService Diagnostics { get; }
     public event EventHandler<string>? DrawerRequested;
-    public event EventHandler<LocalizedText>? Feedback;
+    public event EventHandler<FeatureFeedback>? Feedback;
 
     public bool OnApprovalsPage => _drawerVisible;
     public bool OnCallsPage => _callsVisible;
@@ -120,11 +123,11 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         _pausedCalls = FollowLatest ? Journal.Calls.ToArray() : null; RefreshCalls(); Notify(nameof(FollowLatest), nameof(FollowLabel)); }
     public void OpenApprovals() => DrawerRequested?.Invoke(this, "Approvals");
     public void OpenCall(CallRow row) { _selectedCall = row.Record.JournalKey; Raise(nameof(SelectedCall)); DrawerRequested?.Invoke(this, "CallDetail"); }
-    public void Decide(ApprovalRow row, bool approve) => Run(() =>
+    public void Decide(ApprovalRow row, bool approve) => RunFeedback(() =>
     {
         bool accepted = approve ? Approvals.Approve(row.Request.Id) : Approvals.Deny(row.Request.Id);
-        return accepted ? approve ? LocalizedText.Key("Approval.ApprovedToast") : LocalizedText.Key("Approval.RejectedToast", row.Summary)
-            : LocalizedText.Key("Approval.NoLongerPending");
+        if (!accepted) return new(LocalizedText.Key("Approval.NoLongerPending"), ToastKind.Warning);
+        return new(approve ? LocalizedText.Key("Approval.ApprovedToast") : LocalizedText.Key("Approval.RejectedToast", row.Summary));
     });
 
     public IReadOnlyList<AuditRow> AuditRows => _auditRows;
@@ -168,7 +171,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             _verifiedEvents = Audit.Events;
             _auditBreak = null; RefreshAudit(); NotifyVerification();
         }
-        catch (Exception ex) { Feedback?.Invoke(this, LocalizedText.Literal(ex.Message)); }
+        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Warning)); }
         finally { _verifying = false; Notify(nameof(Verifying)); }
     }
     public AuditRow? JumpToBreak()
@@ -186,7 +189,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     internal async Task SetRetentionAsync(int value, bool size)
     {
         try { await Task.Run(() => { if (size) Audit.FileSizeMb = value; else Audit.Copies = value; }); }
-        catch (Exception ex) { Feedback?.Invoke(this, LocalizedText.Literal(ex.Message)); }
+        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Warning)); }
     }
 
     public IReadOnlyList<EnvironmentGroupRow> EnvironmentGroups => _groups;
@@ -226,10 +229,11 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public void Copy(string text) => Run(() => { CopyText(text); return LocalizedText.Empty; });
     public void Export() =>
         Run(() => { string message = Diagnostics.Export(); return message.Length == 0 ? LocalizedText.Empty : LocalizedText.Key(message); });
-    public void Run(Func<LocalizedText> action)
+    public void Run(Func<LocalizedText> action) => RunFeedback(() => new(action()));
+    private void RunFeedback(Func<FeatureFeedback> action)
     {
-        try { var result = action(); if (result.Resolve().Length > 0) Feedback?.Invoke(this, result); }
-        catch (Exception ex) { Feedback?.Invoke(this, LocalizedText.Literal(ex.Message)); }
+        try { var result = action(); if (result.Message.Resolve().Length > 0) Feedback?.Invoke(this, result); }
+        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Warning)); }
     }
     internal static FeatureTone CheckTone(IReadOnlyList<EnvironmentCheck> rows) => rows.Any(r => r.Status == CheckStatus.Checking) ? FeatureTone.Accent
         : rows.Any(r => r.Status is CheckStatus.Warn or CheckStatus.Fail) ? FeatureTone.Warning

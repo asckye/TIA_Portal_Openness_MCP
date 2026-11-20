@@ -74,7 +74,11 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(FontWeights.Normal, value.FontWeight);
                         Assert.Equal(TextAlignment.Right, value.TextAlignment);
                     }
-                    Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, ((Border)window.FindName("CallsCountBadge")).Visibility);
+                    window.Navigate("Calls"); host.UpdateLayout();
+                    var callsCount = DesktopCapture.Descendants<Border>(window.CallsContent).Single(b => b.Name == "CallsCountBadge");
+                    Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, callsCount.Visibility);
+                    Assert.Equal(window.Features.CallStatTotal, callsCount.Tag);
+                    window.Navigate("Mcp"); host.UpdateLayout();
                     var clientPane = (FrameworkElement)window.Configuration.Clients.FindName("ClientPane");
                     if (state.Page == "Mcp")
                     {
@@ -84,8 +88,9 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     }
                     string serviceStatus = state.Local ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state.Running ? "Config.Running" : "Config.Idle"];
                     Assert.Equal(Loc.Current.T("Shell.McpStatus", serviceStatus), ((TextBlock)window.FindName("McpStatusText")).Text);
-                    var release = TiaMcp.Versioning.TiaVersionCatalog.Get(((MainViewModel)window.DataContext).SelectedReleaseKey).DisplayName;
-                    Assert.Equal(Loc.Current.T("Shell.ProjectStatus", release, Loc.Current["Blocks.Empty.Title"]), ((TextBlock)window.FindName("SessionStatus")).Text);
+                    var release = TiaMcp.Versioning.TiaVersionCatalog.Get(((MainViewModel)window.DataContext).SelectedReleaseKey);
+                    Assert.Equal(release.DisplayName + " · " + release.OwnerApartment + "   " + Loc.Current["Blocks.Empty.Title"],
+                        ((TextBlock)window.FindName("SessionStatus")).Text);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
                     if (state.Name == "mcp-zh-light")
@@ -100,12 +105,12 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                             Assert.Equal(48, element.ActualHeight);
                             var item = (RadioButton)element;
                             var icon = (Border)item.Template.FindName("GlyphBox", item);
-                            Assert.Equal(18, icon.ActualWidth);
-                            Assert.Equal(18, icon.ActualHeight);
+                            Assert.Equal(17, icon.ActualWidth);
+                            Assert.Equal(17, icon.ActualHeight);
                             metrics.Add($"{name}: {point.X},{point.Y} {element.ActualWidth}x{element.ActualHeight}");
                         }
                         foreach (string name in new[] { "MinimizeWindowButton", "MaximizeWindowButton", "CloseWindowButton" })
-                            Assert.Equal(46, ((FrameworkElement)window.FindName(name)).ActualWidth);
+                            Assert.Equal(24, ((FrameworkElement)window.FindName(name)).ActualWidth);
                         var log = (TiaOpenness.Gui.Controls.WorkbenchLogView)window.Configuration.FindName("ActivityLog");
                         log.BringIntoView(); WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain();
                         metrics.Add($"Log: {log.ActualWidth}, padding {log.Padding}, document padding {log.Document.PagePadding}, page width {log.Document.PageWidth}");
@@ -393,23 +398,26 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     {
                         window.Navigate(page); Settle();
                         var title = (TextBlock)window.FindName("CurrentPageTitle");
-                        Assert.Equal(17, title.FontSize); Assert.Equal(FontWeights.SemiBold, title.FontWeight);
+                        Assert.Equal(12, title.FontSize); Assert.Equal(FontWeights.Normal, title.FontWeight);
                         Assert.Equal(title.Text + " – " + Loc.Current["App.Title"], window.Title);
                         if (page == "Approvals")
                         {
                             var agent = (RadioButton)window.FindName("RailAgent");
-                            var calls = (Border)window.FindName("CallsCountBadge");
+                            var calls = DesktopCapture.Descendants<Border>(window.ApprovalsContent).Single(b => b.Name == "CallsCountBadge");
+                            var callsPill = DesktopCapture.Descendants<RadioButton>(window.ApprovalsContent)
+                                .Single(item => Equals(item.CommandParameter, "Calls"));
                             var pending = (Button)window.FindName("PendingBadge");
                             var bar = (Border)agent.Template.FindName("Bar", agent);
                             var icon = (Border)agent.Template.FindName("GlyphBox", agent);
-                            Rect Bounds(FrameworkElement element) => element.TransformToAncestor(sider).TransformBounds(new Rect(element.RenderSize));
+                            Rect Bounds(FrameworkElement element) => element.TransformToAncestor(host).TransformBounds(new Rect(element.RenderSize));
                             Assert.True(agent.IsChecked); Assert.Equal(Visibility.Visible, bar.Visibility);
                             foreach (var badge in new FrameworkElement[] { calls, pending })
                             {
                                 Assert.Equal(Visibility.Visible, badge.Visibility);
                                 var bounds = Bounds(badge);
                                 Assert.True(bounds.Width > 0 && bounds.Height > 0);
-                                Assert.True(new Rect(sider.RenderSize).Contains(bounds));
+                                var owner = badge == calls ? (FrameworkElement)callsPill : sider;
+                                Assert.True(Bounds(owner).Contains(bounds));
                                 Assert.False(bounds.IntersectsWith(Bounds(bar)));
                                 Assert.False(bounds.IntersectsWith(Bounds(icon)));
                             }

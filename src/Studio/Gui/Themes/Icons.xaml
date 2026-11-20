@@ -52,4 +52,34 @@
   <!-- Ant Empty (simple): an open tray. -->
   <PathGeometry x:Key="Icon.Empty" Figures="M1.5,9.5 L4,4.5 L12,4.5 L14.5,9.5 L14.5,13.5 L1.5,13.5 Z M1.5,9.5 L5.5,9.5 L6.5,11 L9.5,11 L10.5,9.5 L14.5,9.5" />
 
+  <PathGeometry x:Key="Icon.WorkbenchLayers"
+    Figures="M12 2 L3 7 12 12 21 7 Z M3 17 L12 22 21 17 M3 12 L12 17 21 12"/>
+  <PathGeometry x:Key="Icon.WorkbenchPane"
+    Figures="M5 3 H19 Q21 3 21 5 V19 Q21 21 19 21 H5 Q3 21 3 19 V5 Q3 3 5 3 Z M9 3 V21"/>
+  <PathGeometry x:Key="Icon.WorkbenchProject"
+    Figures="M22 19 A2 2 0 0 1 20 21 H4 A2 2 0 0 1 2 19 V5 A2 2 0 0 1 4 3 H9 L11 6 H20 A2 2 0 0 1 22 8 Z"/>
+  <PathGeometry x:Key="Icon.WorkbenchAgent"
+    Figures="M12 22 S20 18 20 12 V5 L12 2 4 5 V12 C4 18 12 22 12 22 Z M9 12 L11 14 15 10"/>
+  <PathGeometry x:Key="Icon.WorkbenchMcp"
+    Figures="M4 3 H20 Q22 3 22 5 V8 Q22 10 20 10 H4 Q2 10 2 8 V5 Q2 3 4 3 Z M4 14 H20 Q22 14 22 16 V19 Q22 21 20 21 H4 Q2 21 2 19 V16 Q2 14 4 14 Z M5 6.5 H7 M5 17.5 H7"/>
+  <PathGeometry x:Key="Icon.WorkbenchClients"
+    Figures="M5 4 H19 Q21 4 21 6 V14 Q21 16 19 16 H5 Q3 16 3 14 V6 Q3 4 5 4 Z M8 20 H16 M12 16 V20"/>
+  <PathGeometry x:Key="Icon.WorkbenchDoctor"
+    Figures="M22 12 H18 L15 21 9 3 6 12 H2"/>
+  <PathGeometry x:Key="Icon.WorkbenchAudit"
+    Figures="M14 2 H6 Q4 2 4 4 V20 Q4 22 6 22 H18 Q20 22 20 20 V8 Z M14 2 V8 H20 M9 15 L11 17 15 13"/>
+  <PathGeometry x:Key="Icon.WorkbenchLogs"
+    Figures="M4 6 H20 M4 12 H20 M4 18 H14"/>
+  <PathGeometry x:Key="Icon.WorkbenchSettings"
+    Figures="M15 12 A3 3 0 1 1 9 12 A3 3 0 1 1 15 12 Z
+      M19.4 15 a1.65 1.65 0 0 0 .33 1.82 l.06.06 a2 2 0 0 1 -2.83 2.83 l-.06-.06 a1.65 1.65 0 0 0 -1.82-.33 1.65
+      1.65 0 0 0 -1 1.51 V21 a2 2 0 0 1 -4 0 v-.09 a1.65 1.65 0 0 0 -1-1.51 1.65 1.65 0 0 0 -1.82.33 l-.06.06 a2 2
+      0 0 1 -2.83-2.83 l.06-.06 a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0 -1.51-1 H3 a2 2 0 0 1 0-4 h.09 a1.65
+      1.65 0 0 0 1.51-1 1.65 1.65 0 0 0 -.33-1.82 l-.06-.06 a2 2 0 0 1 2.83-2.83 l.06.06 a1.65 1.65 0 0 0 1.82.33
+      h.09 a1.65 1.65 0 0 0 1-1.51 V3 a2 2 0 0 1 4 0 v.09 a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33
+      l.06-.06 a2 2 0 0 1 2.83 2.83 l-.06.06 a1.65 1.65 0 0 0 -.33 1.82 v.09 a1.65 1.65 0 0 0 1.51 1 H21 a2 2 0 0
+      1 0 4 h-.09 a1.65 1.65 0 0 0 -1.51 1z"/>
+  <PathGeometry x:Key="Icon.WorkbenchSun" Figures="M17 12 A5 5 0 1 1 7 12 A5 5 0 1 1 17 12 Z M12 1 V3 M12 21 V23 M1 12 H3 M21 12 H23
+    M4.22 4.22 L5.64 5.64 M18.36 18.36 L19.78 19.78 M4.22 19.78 L5.64 18.36 M18.36 5.64 L19.78 4.22"/>
+  <PathGeometry x:Key="Icon.WorkbenchMoon" Figures="M21 12.79 A9 9 0 1 1 11.21 3 A7 7 0 0 0 21 12.79 Z"/>
 </ResourceDictionary>

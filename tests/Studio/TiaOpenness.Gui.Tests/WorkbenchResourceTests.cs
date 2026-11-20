@@ -17,7 +17,7 @@ public sealed class WorkbenchResourceTests(WpfContext wpf)
         {
             Assert.Equal(36d, Assert.IsType<double>(Application.Current.FindResource("Ui.RowHeight")));
             Assert.Equal(32d, Assert.IsType<double>(Application.Current.FindResource("Ui.ControlHeight")));
-            Assert.Equal(44d, Assert.IsType<double>(Application.Current.FindResource("Ui.ControlHeight.Large")));
+            Assert.Equal(36d, Assert.IsType<double>(Application.Current.FindResource("Ui.ControlHeight.Large")));
         });
     }
 

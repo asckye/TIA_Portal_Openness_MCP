@@ -40,6 +40,32 @@ public sealed class McpPanelTests(WpfContext wpf)
         => await client.AttachAsync(Assert.Single(await client.DiscoverAsync(host.Host.ReleaseKey)));
 
     [Fact]
+    public async Task Status_identifies_the_attached_client_and_reports_the_bound_portal_process()
+    {
+        await using var host = new McpOperatorFixture();
+        await host.Notify(state => state["binding"] = new JsonObject { ["processId"] = 2468 });
+        var client = host.Client();
+        await Attach(client, host);
+        wpf.Run(() =>
+        {
+            var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
+            var window = new MainWindow(model, false, FeaturePageFixtures.Approvals(false));
+            try
+            {
+                WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+                Assert.Equal(Visibility.Visible, window.ParticipantStatus.Visibility);
+                Assert.Equal("fixture AI (stdio) " + Localization.Loc.Current["Session.Unverified"], window.ClientStatus.Text);
+                Assert.Equal(Visibility.Visible, window.TiaProcessStatus.Visibility);
+                Assert.Contains("2468", window.TiaProcessStatus.Text);
+                Assert.DoesNotContain("123", window.TiaProcessStatus.Text);
+                WpfContext.Complete(model.Session.ApplySharedStateAsync(null));
+                Assert.Equal(Visibility.Collapsed, window.TiaProcessStatus.Visibility);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Receipt_label_keeps_the_middle_dot_separator()
         => Assert.Equal("ListPlcBlocks · result", new McpProjectClient.Receipt("ListPlcBlocks", "result", "{}").Label);
 

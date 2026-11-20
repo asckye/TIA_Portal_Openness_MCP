@@ -1,7 +1,9 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui;
@@ -34,7 +36,7 @@ public partial class MainWindow : Window
             _approvalToast = null;
             _featureTitle = Localization.LocalizedText.Key("Shell.BusyTitle");
             _featureFeedback = Localization.LocalizedText.Key("Shell.BusyClose", _model.Activity.Status);
-            UpdateFeatureToast(); Toast.Visibility = Visibility.Visible;
+            UpdateFeatureToast(ToastKind.Warning);
             Controls.AccessibleStatus.Announce(ToastTitle);
         };
         Loaded += async (_, _) => {
@@ -84,6 +86,90 @@ public partial class MainWindow : Window
             // Post a fresh close after the current Closing event has returned.
             Dispatcher.BeginInvoke(new Action(Close));
         }
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        ((HwndSource)PresentationSource.FromVisual(this)).AddHook(CaptionHitTest);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MouseTracking
+    {
+        public uint Size, Flags;
+        public IntPtr Window;
+        public uint HoverTime;
+    }
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool TrackMouseEvent(ref MouseTracking tracking);
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern IntPtr DefWindowProcW(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
+
+    private bool OverMaximizeButton(IntPtr lParam)
+    {
+        long coordinates = lParam.ToInt64();
+        var screen = new Point((short)coordinates, (short)(coordinates >> 16));
+        return MaximizeWindowButton.IsEnabled && !ShellModalOpen
+            && new Rect(MaximizeWindowButton.RenderSize).Contains(MaximizeWindowButton.PointFromScreen(screen));
+    }
+
+    private void TrackMaximizePointer(IntPtr hwnd)
+    {
+        if (MaximizeWindowButton.Tag != null) return;
+        const uint leave = 0x2, nonClient = 0x10;
+        var tracking = new MouseTracking { Size = (uint)Marshal.SizeOf<MouseTracking>(), Flags = leave | nonClient, Window = hwnd };
+        TrackMouseEvent(ref tracking);
+        MaximizeWindowButton.Tag = "MouseOver";
+    }
+
+    private IntPtr CaptionHitTest(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        const int hitMaxButton = 9, ncHitTest = 0x0084, ncMouseMove = 0x00A0, ncMouseLeave = 0x02A2;
+        const int ncButtonDown = 0x00A1, ncButtonUp = 0x00A2, ncButtonDoubleClick = 0x00A3, cancelMode = 0x001F;
+        switch (message)
+        {
+            case ncHitTest when OverMaximizeButton(lParam):
+                handled = true;
+                return hitMaxButton;
+            case ncMouseMove when wParam == hitMaxButton:
+                if (OverMaximizeButton(lParam)) TrackMaximizePointer(hwnd);
+                else MaximizeWindowButton.Tag = null;
+                handled = true;
+                // Windows still receives the hover messages that drive the Snap Layouts flyout.
+                return DefWindowProcW(hwnd, message, wParam, lParam);
+            case ncMouseLeave when MaximizeWindowButton.Tag != null:
+                MaximizeWindowButton.Tag = null;
+                handled = true;
+                return DefWindowProcW(hwnd, message, wParam, lParam);
+            case ncMouseMove:
+            case cancelMode:
+                if (MaximizeWindowButton.Tag != null) MaximizeWindowButton.Tag = null;
+                break;
+            case ncButtonDown or ncButtonDoubleClick when wParam == hitMaxButton:
+                handled = true;
+                if (OverMaximizeButton(lParam))
+                {
+                    TrackMaximizePointer(hwnd);
+                    MaximizeWindowButton.Tag = "Pressed";
+                }
+                break;
+            case ncButtonUp when wParam == hitMaxButton:
+                handled = true;
+                if (!OverMaximizeButton(lParam)) MaximizeWindowButton.Tag = null;
+                else if (MaximizeWindowButton.Tag is "Pressed")
+                {
+                    MaximizeWindowButton.Tag = "MouseOver";
+                    MaximizeWindowButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, MaximizeWindowButton));
+                }
+                break;
+        }
+        return IntPtr.Zero;
     }
 
     private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

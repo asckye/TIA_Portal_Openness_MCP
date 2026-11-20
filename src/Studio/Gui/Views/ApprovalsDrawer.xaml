@@ -5,8 +5,8 @@
       <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource Pages.AgentTabs}"/>
     </Border>
     <Grid Grid.Row="1" x:Name="PageBody">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="320"/><ColumnDefinition/></Grid.ColumnDefinitions>
-      <Border x:Name="RequestListPane" Style="{StaticResource Primer.ApprovalListPane}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+      <Border x:Name="RequestListPane" Width="262" Panel.ZIndex="2" HorizontalAlignment="Left" Style="{StaticResource Primer.ApprovalListPane}">
         <DockPanel>
           <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeSubBar}">
             <StackPanel Orientation="Horizontal">
@@ -116,10 +116,10 @@
       </ScrollViewer>
         <Border Grid.Row="1" Padding="24,16" Style="{StaticResource Primer.ApprovalDecisionPane}"
           Visibility="{Binding SelectedRequest.Pending, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
-          <Grid x:Name="DecisionArea" DataContext="{Binding SelectedRequest}" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
-            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="8"/><ColumnDefinition/></Grid.ColumnDefinitions>
-            <Button x:Name="DenyRequest" AutomationProperties.Name="{l:Tr Approval.Deny}" Content="{l:Tr Approval.Deny}" Style="{StaticResource Primer.Answer}" MinHeight="44" IsDefault="{Binding Destructive}" IsCancel="False" IsEnabled="{Binding CanDecide}" Click="OnDeny"/>
-            <Button x:Name="ApproveRequest" Grid.Column="2" AutomationProperties.Name="{Binding ApproveLabel}" Content="{Binding ApproveLabel}" Style="{StaticResource Primer.Answer}" MinHeight="44" IsDefault="False" IsCancel="False" IsEnabled="{Binding CanDecide}" Click="OnApprove"/>
+          <Grid x:Name="DecisionArea" HorizontalAlignment="Right" MaxWidth="440" DataContext="{Binding SelectedRequest}" Visibility="{Binding Pending, Converter={StaticResource BoolToVisibility}}">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" MaxWidth="210"/><ColumnDefinition Width="8"/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <Button x:Name="DenyRequest" AutomationProperties.Name="{l:Tr Approval.Deny}" Content="{l:Tr Approval.Deny}" Style="{StaticResource Primer.DenyRequest}" MinHeight="32" IsDefault="{Binding Destructive}" IsCancel="False" IsEnabled="{Binding CanDecide}" Click="OnDeny"/>
+            <Button x:Name="ApproveRequest" Grid.Column="2" AutomationProperties.Name="{Binding ApproveLabel}" Content="{Binding ApproveLabel}" Style="{StaticResource Primer.ApproveRequest}" MinHeight="32" IsDefault="False" IsCancel="False" IsEnabled="{Binding CanDecide}" Click="OnApprove"/>
           </Grid>
         </Border>
       </Grid>
@@ -138,8 +138,8 @@
           <TextBlock Text="{Binding ConfirmationTitle}" FontSize="{DynamicResource Ui.FontSize.DialogTitle}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,8"/>
           <TextBlock Text="{Binding ConfirmationConsequence}" TextWrapping="Wrap" Margin="0,0,0,20"/>
           <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="8"/><ColumnDefinition/></Grid.ColumnDefinitions>
-            <Button x:Name="CancelDestructive" AutomationProperties.Name="{l:Tr Approval.Cancel}" Content="{l:Tr Approval.Cancel}" Style="{StaticResource Primer.Answer}" MinHeight="44" IsDefault="True" IsCancel="True" Click="OnCancelDestructive"/>
-            <Button x:Name="ConfirmDestructive" Grid.Column="2" AutomationProperties.Name="{Binding ConfirmationAccessible}" Content="{Binding ConfirmationAction}" Style="{StaticResource Primer.ApprovalConfirm}" MinHeight="44" IsDefault="False" IsCancel="False" Click="OnConfirmDestructive"/>
+            <Button x:Name="CancelDestructive" AutomationProperties.Name="{l:Tr Approval.Cancel}" Content="{l:Tr Approval.Cancel}" Style="{StaticResource Primer.Button.Primary.Large}" MinHeight="36" IsDefault="True" IsCancel="True" Click="OnCancelDestructive"/>
+            <Button x:Name="ConfirmDestructive" Grid.Column="2" AutomationProperties.Name="{Binding ConfirmationAccessible}" Content="{Binding ConfirmationAction}" Style="{StaticResource Primer.ApprovalConfirm}" MinHeight="36" IsDefault="False" IsCancel="False" Click="OnConfirmDestructive"/>
           </Grid>
         </StackPanel>
       </Border>

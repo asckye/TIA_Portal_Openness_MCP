@@ -174,7 +174,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 Loc.Current.Language = nextLanguage;
                 FlushBindings();
                 Assert.Equal(Loc.Current["Config.ChooseClients"], Text("ClientInstructions"));
-                Assert.Equal("MCP", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
+                Assert.Equal(Loc.Current.IsChinese ? "MCP 服务" : "MCP Server", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
                 Assert.Equal(Loc.Current["Config.LocalTitle"], ((RadioButton)page.FindName("LocalNav")).ToolTip);
                 Assert.Equal(Loc.Current["Config.NoSelection"], Text("LinkClient"));
                 Assert.Equal(Loc.Current["Config.Local"], Text("LinkState"));
@@ -194,10 +194,10 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                     Assert.False(page.Resources.Contains("Primer.bg"));
                     Assert.Same(Application.Current.FindResource("Primer.card"), ((Border)page.FindName("InstallationCard")).Background);
                     Assert.Same(Application.Current.FindResource("Ui.Font"), page.FontFamily);
-                    Assert.Equal("MCP", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
+                    Assert.Equal(Loc.Current.IsChinese ? "MCP 服务" : "MCP Server", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
                     Assert.Equal(Loc.Current["Config.RemoteTitle"], ((RadioButton)page.FindName("RemoteNav")).ToolTip);
                     window.Navigate("Clients");
-                    Assert.Equal(language == AppLanguage.Chinese ? "客户端" : "Clients", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
+                    Assert.Equal(language == AppLanguage.Chinese ? "AI 客户端配置" : "AI Clients", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
                     Assert.Equal(Loc.Current["Config.Write"], ((Button)clients.FindName("SaveClient")).Content);
                     Assert.Equal(Loc.Current.T("Mcp.ClientCounts", 2, 1), Text("ClientSelection"));
                     Assert.Equal(Loc.Current.T("Config.Selected", 2), Text("LinkClient"));

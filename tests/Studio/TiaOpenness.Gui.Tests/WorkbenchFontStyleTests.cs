@@ -167,7 +167,7 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
     [InlineData(1044)]
     [InlineData(1200)]
     [InlineData(1366)]
-    public void Approval_choices_have_equal_secondary_cells_and_wrap_plain_labels(int width)
+    public void Approval_choices_distinguish_primary_from_secondary_and_wrap_plain_labels(int width)
     {
         foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
             wpf.RunWithLanguage(language, () =>
@@ -196,13 +196,13 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                         Layout();
                         var approve = Descendants<Button>(host).Single(button => button.Name == "ApproveRequest" && ((ApprovalRow)button.DataContext).Pending);
                         var deny = Descendants<Button>(host).Single(button => button.Name == "DenyRequest" && ((ApprovalRow)button.DataContext).Pending);
-                        Assert.Same(Application.Current.FindResource("Primer.pill"), approve.Background);
-                        Assert.Same(approve.Style, deny.Style);
-                        Assert.Same(Application.Current.FindResource("Primer.Secondary"), approve.Style.BasedOn);
+                        Assert.Same(Application.Current.FindResource("Primer.primaryBg"), approve.Background);
+                        Assert.Same(Application.Current.FindResource("Primer.card"), deny.Background);
+                        Assert.Same(Application.Current.FindResource("Primer.Answer"), approve.Style.BasedOn);
                         foreach (var button in new[] { deny, approve })
                         {
                             Assert.False(button.IsDefault); Assert.False(button.IsCancel);
-                            Assert.Equal("", Ux.GetVariant(button));
+                            Assert.Equal(button == approve ? "Primary" : "", Ux.GetVariant(button));
                             Assert.Empty(Descendants<AccessText>(button));
                             Assert.DoesNotContain('_', Assert.IsType<string>(button.Content));
                         }
@@ -210,7 +210,7 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                         double original = approve.ActualHeight;
                         approve.Content = "A_long_label -> != " + string.Join(" ", Enumerable.Repeat("Maple Mono approval", 8));
                         Layout();
-                        Assert.Equal(deny.ActualWidth, approve.ActualWidth, precision: 4);
+                        Assert.True(deny.TranslatePoint(new Point(), host).X + deny.ActualWidth <= approve.TranslatePoint(new Point(), host).X);
                         Assert.Equal(deny.ActualHeight, approve.ActualHeight, precision: 4);
                         Assert.True(approve.ActualHeight > original);
                         var label = Assert.Single(Descendants<TextBlock>(approve));

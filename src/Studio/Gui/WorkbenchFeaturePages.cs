@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Shapes;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.Services.Stubs;
@@ -59,10 +60,10 @@ public partial class MainWindow
     }
 
     private void OnFeatureDrawer(object? sender, string drawer) => OpenDrawer(drawer);
-    private void OnFeatureFeedback(object? sender, LocalizedText message)
+    private void OnFeatureFeedback(object? sender, FeatureFeedback feedback)
     {
-        _approvalToast = null; _featureFeedback = message; _featureTitle = LocalizedText.Key("Shell.Diagnostics");
-        UpdateFeatureToast(); Toast.Visibility = Visibility.Visible;
+        _approvalToast = null; _featureFeedback = feedback.Message; _featureTitle = LocalizedText.Key("Shell.Diagnostics");
+        UpdateFeatureToast(feedback.Kind);
         Controls.AccessibleStatus.Announce(ToastMessage);
     }
     private void OnNewApproval(object? sender, ApprovalRequest request)
@@ -72,7 +73,7 @@ public partial class MainWindow
         _approvalToast = request;
         if (request.Actor == "workbench" && request.OperatorCallId != null && _model.Panel?.Attached == true)
         { OpenDrawer("Approvals"); ApprovalsContent.FocusRequest(request.Id); }
-        UpdateFeatureToast(); Toast.Visibility = Visibility.Visible;
+        UpdateFeatureToast(ToastKind.Approval);
         System.Windows.Automation.AutomationProperties.SetLiveSetting(ToastTitle, System.Windows.Automation.AutomationLiveSetting.Assertive);
         Controls.AccessibleStatus.Announce(ToastTitle);
         if (WindowState == WindowState.Minimized)
@@ -88,7 +89,20 @@ public partial class MainWindow
             catch (Exception ex) { System.Diagnostics.Trace.TraceWarning("Approval notification failed: {0}", ex.Message); }
         }
     }
-    private void UpdateFeatureToast()
+    private void UpdateFeatureToast(ToastKind kind)
+    {
+        ToastDot.SetResourceReference(Shape.FillProperty, kind switch
+        {
+            ToastKind.Approval => "Primer.accent",
+            ToastKind.Warning => "Primer.warn",
+            ToastKind.Success => "Primer.ok",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        });
+        UpdateFeatureToastText();
+        Toast.Visibility = Visibility.Visible;
+    }
+
+    private void UpdateFeatureToastText()
     {
         ToastTitle.Text = _approvalToast == null ? _featureTitle.Resolve() : Loc.Current.T("Approval.ToastTitle", _approvalToast.Operations.Count);
         ToastMessage.Text = _approvalToast == null ? _featureFeedback.Resolve() : Loc.Current["Approval.ToastHelp"];

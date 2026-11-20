@@ -95,7 +95,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
 
     /// <summary>Shown at the foot of the sidebar, from the assembly the app was built as.</summary>
     public static string AppVersion { get; } =
-        "v" + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
+        "v" + (Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
+            ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
 
     // The views are one choice, so they are one field with a bindable face each; independent
     // bools would let all of them be false and show nothing at all.

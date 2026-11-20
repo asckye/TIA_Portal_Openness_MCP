@@ -28,6 +28,9 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
     public OperatorSession? Selected { get => selected; set { if (Set(ref selected, value)) Attach.RaiseCanExecuteChanged(); } }
     public bool Attached => client.SessionKey != null;
     public string? SessionKey => client.SessionKey;
+    public string ClientStatus => state?["participants"]?["mcpClient"] is JsonValue name
+        ? name + (client.Transport is { Length: > 0 } transport ? " (" + transport + ")" : "") + " " + Loc.Current["Session.Unverified"]
+        : "";
     public string Participants => ((string?)state?["participants"]?["mcpClient"] ?? "MCP") + " · " + Loc.Current["Session.Unverified"]
         + " · Workbench: " + ((int?)state?["participants"]?["workbench"] ?? 0);
     public string Status => state == null || !Attached ? Loc.Current["Session.SelectHint"] :

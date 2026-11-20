@@ -59,29 +59,29 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
 
     [Theory]
     [InlineData("Light",
-        "#F8FAFD #FFFFFF #F3F6FA #E2EAF4 #DBDDE0 #EBECEE #EAEFF6 #7B8797 #E5ECF4 #D8E2EE #FFFFFF #0F172A " +
-        "#475569 #57657A #7B8797 #1D4ED8 #FFFFFF #2563EB #9A5504 #FFF4E5 #0E7A50 #E8F7F0 #EFF6FF #1D4ED8 " +
-        "#1D4ED8 #F6F8FC #0F172A #0E7A50 #C81E1E #FFFFFF #FFFFFF #FFF4E5 #1D4ED8 #FFFFFF #0F172A #0F172A " +
-        "#2563EB #1D4ED8 #1E40AF #1E40AF #E2EAF4 #FFFFFF #DCE3EC #C81E1E #FEF2F2 #C81E1E #DC2626 #B91C1C " +
-        "#991B1B #9A5504 #0E7A50 #E5ECF4 #F3F6FA #8B97A8 #4D0F172A #F20F172A #FFFFFF #1F0F172A #380F172A Transparent")]
+        "#F8FAFD #FFFFFF #F3F6FA #EBEBED #DBDCDF #EBEBED #EAEFF6 #7B8797 #EAEFF6 #F2F2F3 #FFFFFF #0F172A #475569 #57657A " +
+        "#7B8797 #1D4ED8 #FFFFFF #2563EB #9A5504 #F8EEE6 #0E7A50 #E8F2EC #EFF6FF #1D4ED8 #1D4ED8 #F6F8FC #0F172A #0E7A50 " +
+        "#B91C1C #FFFFFF #FFFFFF #FFF4E5 #1D4ED8 #FFFFFF #0F172A #0F172A #2563EB #1D4ED8 #1E40AF #1E40AF #EBEBED #FFFFFF " +
+        "#DBDCDF #DC2626 #FCEBEB #DC2626 #DC2626 #B91C1C #991B1B #9A5504 #0E7A50 #EAEFF6 #F3F6FA #8B97A8 #0F172A #FFFFFF " +
+        "#0F172A #EAECF0 #EFF1F5 Transparent")]
     [InlineData("Dark",
-        "#141B26 #1B2332 #101620 #222E42 #363F4F #2A3242 #232E40 #6D7D94 #1D2736 #263347 #1B2332 #F1F5F9 " +
-        "#94A3B8 #8B9BB2 #6D7D94 #60A5FA #0B0F15 #2563EB #FBBF24 #2D220E #34D399 #0F2920 #13233E #60A5FA " +
-        "#60A5FA #0C1017 #E6EDF7 #34D399 #F87171 #FFFFFF #0B0F15 #2D220E #60A5FA #0B0F15 #F1F5FA #F1F5FA " +
-        "#2563EB #1D4ED8 #1E40AF #93C5FD #222E42 #FFFFFF #263244 #F87171 #31151B #F87171 #DC2626 #B91C1C " +
-        "#991B1B #D97706 #10B981 #1D2736 #1A2332 #6B7B91 #AD070A0F #F51E293B #FFFFFF #1FFFFFFF #99000000 Transparent")]
+        "#141B26 #1B2332 #101620 #222E42 #363F4F #2A3242 #232E40 #6D7D94 #232E40 #272F3D #1B2332 #F1F5F9 #94A3B8 #8B9BB2 " +
+        "#6D7D94 #7BB4FF #0B0F15 #2563EB #FBBF24 #2D220E #34D399 #0F2920 #132139 #60A5FA #60A5FA #0C1017 #F1F5F9 #6EE7B7 " +
+        "#FDA4AF #FFFFFF #0B0F15 #2D220E #60A5FA #0B0F15 #F1F5FA #F1F5FA #2563EB #1D4ED8 #1E40AF #93C5FD #2F3745 #FFFFFF " +
+        "#363F4F #FB7185 #362C3C #FB7185 #E11D48 #B91C1C #991B1B #D97706 #10B981 #232E40 #1A2332 #6B7B91 #070A0F #1B2332 " +
+        "#F1F5F9 #0D1219 #0F141C Transparent")]
     [InlineData("Light.Petrol",
-        "#F8FAFD #FFFFFF #F3F6FA #E2EAF4 #DBDDE0 #EBECEE #EAEFF6 #7B8797 #E5ECF4 #D8E2EE #FFFFFF #0F172A " +
-        "#475569 #57657A #7B8797 #0B656E #FFFFFF #0E7C86 #9A5504 #FFF4E5 #0E7A50 #E8F7F0 #EBF7F8 #0B656E " +
-        "#0B656E #F6F8FC #0F172A #0E7A50 #C81E1E #FFFFFF #FFFFFF #FFF4E5 #0B656E #FFFFFF #0F172A #0F172A " +
-        "#0E7C86 #0B656E #084F56 #084F56 #E2EAF4 #FFFFFF #DCE3EC #C81E1E #FEF2F2 #C81E1E #DC2626 #B91C1C " +
-        "#991B1B #9A5504 #0E7A50 #E5ECF4 #F3F6FA #8B97A8 #4D0F172A #F20F172A #FFFFFF #1F0F172A #380F172A Transparent")]
+        "#F8FAFD #FFFFFF #F3F6FA #EBEBED #DBDCDF #EBEBED #EAEFF6 #7B8797 #EAEFF6 #F2F2F3 #FFFFFF #0F172A #475569 #57657A " +
+        "#7B8797 #0B656E #FFFFFF #0E7C86 #9A5504 #F8EEE6 #0E7A50 #E8F2EC #EBF7F8 #0B656E #0B656E #F6F8FC #0F172A #0E7A50 " +
+        "#B91C1C #FFFFFF #FFFFFF #FFF4E5 #0B656E #FFFFFF #0F172A #0F172A #0E7C86 #0B656E #084F56 #084F56 #EBEBED #FFFFFF " +
+        "#DBDCDF #DC2626 #FCEBEB #DC2626 #DC2626 #B91C1C #991B1B #9A5504 #0E7A50 #EAEFF6 #F3F6FA #8B97A8 #0F172A #FFFFFF " +
+        "#0F172A #EAECF0 #EFF1F5 Transparent")]
     [InlineData("Dark.Petrol",
-        "#141B26 #1B2332 #101620 #222E42 #363F4F #2A3242 #232E40 #6D7D94 #1D2736 #263347 #1B2332 #F1F5F9 " +
-        "#94A3B8 #8B9BB2 #6D7D94 #2DD4BF #0B0F15 #0E7C86 #FBBF24 #2D220E #34D399 #0F2920 #0F2A2E #2DD4BF " +
-        "#2DD4BF #0C1017 #E6EDF7 #34D399 #F87171 #FFFFFF #0B0F15 #2D220E #2DD4BF #0B0F15 #F1F5FA #F1F5FA " +
-        "#0E7C86 #0B656E #084F56 #5EEAD4 #222E42 #FFFFFF #263244 #F87171 #31151B #F87171 #DC2626 #B91C1C " +
-        "#991B1B #D97706 #10B981 #1D2736 #1A2332 #6B7B91 #AD070A0F #F51E293B #FFFFFF #1FFFFFFF #99000000 Transparent")]
+        "#141B26 #1B2332 #101620 #222E42 #363F4F #2A3242 #232E40 #6D7D94 #232E40 #272F3D #1B2332 #F1F5F9 #94A3B8 #8B9BB2 " +
+        "#6D7D94 #5EEAD4 #0B0F15 #0E7C86 #FBBF24 #2D220E #34D399 #0F2920 #0C2A2C #2DD4BF #2DD4BF #0C1017 #F1F5F9 #6EE7B7 " +
+        "#FDA4AF #FFFFFF #0B0F15 #2D220E #2DD4BF #0B0F15 #F1F5FA #F1F5FA #0E7C86 #0B656E #084F56 #5EEAD4 #2F3745 #FFFFFF " +
+        "#363F4F #FB7185 #362C3C #FB7185 #E11D48 #B91C1C #991B1B #D97706 #10B981 #232E40 #1A2332 #6B7B91 #070A0F #1B2332 " +
+        "#F1F5F9 #0D1219 #0F141C Transparent")]
     public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, string colors)
     {
         wpf.Run(() =>
@@ -90,7 +90,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText", "Ant.colorPrimary", "Ant.colorPrimaryHover", "Ant.colorPrimaryActive", "Ant.colorLinkHover", "Ant.controlItemBgActiveHover", "Ant.colorWhite", "Ant.colorBorder", "Ant.colorError", "Ant.colorErrorBg", "Ant.colorErrorBorder", "Ant.colorErrorSolid", "Ant.colorErrorSolidHover", "Ant.colorErrorSolidActive", "Ant.colorWarningBorder", "Ant.colorSuccessBorder", "Ant.colorFillSecondary", "Ant.colorBgContainerDisabled", "Ant.colorTextDisabled", "Ant.colorBgMask", "Ant.colorBgSpotlight", "Ant.colorTextLightSolid", "Ant.boxShadowKey", "Ant.boxShadowUmbra", "Ant.boxShadowAmbient"];
             string[] expected = colors.Split(' ');
             bool light = theme.StartsWith("Light", StringComparison.Ordinal);
-            Assert.Equal(keys.Length + 20, palette.Count);
+            Assert.Equal(keys.Length + 50, palette.Count);
             Assert.Equal(light ? "#FFB91C1C" : "#FFFCA5A5",
                 ((SolidColorBrush)palette["Primer.destructiveText"]).Color.ToString());
             Assert.Equal(Colors.White, ((SolidColorBrush)palette["Primer.onPrimary"]).Color);

@@ -77,23 +77,7 @@ public partial class ApprovalsDrawer : UserControl
         CountdownCaption.ClearValue(System.Windows.Automation.AutomationProperties.NameProperty);
         System.Windows.Automation.AutomationProperties.SetLiveSetting(CountdownCaption, System.Windows.Automation.AutomationLiveSetting.Off);
         if (_row != null) { _row.CountdownThreshold += OnCountdownThreshold; _row.PropertyChanged += OnRowChanged; }
-        UpdateDecisionStyle();
         DetailScroll?.ScrollToTop();
-    }
-    private void UpdateDecisionStyle()
-    {
-        if (DenyRequest == null) return;
-        if (_row?.Destructive == true)
-        {
-            Ux.SetVariant(DenyRequest, "Primary");
-            DenyRequest.SetResourceReference(BackgroundProperty, "Primer.primaryBg");
-            DenyRequest.SetResourceReference(ForegroundProperty, "Primer.onPrimary");
-            ApproveRequest.SetResourceReference(ForegroundProperty, "Primer.destructiveText");
-        }
-        else {
-            DenyRequest.ClearValue(Ux.VariantProperty); DenyRequest.ClearValue(BackgroundProperty); DenyRequest.ClearValue(ForegroundProperty); ApproveRequest
-                .ClearValue(ForegroundProperty);
-        }
     }
     private void OnRowChanged(object? sender, PropertyChangedEventArgs e)
     { if (e.PropertyName == nameof(ApprovalRow.CanDecide) && _confirming is { CanDecide: false }) CloseConfirmation(); }
@@ -112,7 +96,7 @@ public partial class ApprovalsDrawer : UserControl
     }
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        SelectRow(); UpdateDecisionStyle();
+        SelectRow();
         _owner = Window.GetWindow(this);
         if (_owner != null) _owner.KeyDown += OnEscape;
     }

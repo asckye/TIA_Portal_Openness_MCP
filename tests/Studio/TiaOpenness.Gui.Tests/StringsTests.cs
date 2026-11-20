@@ -66,8 +66,17 @@ public class StringsTests(WpfContext wpf)
     {
         Assert.Equal("一页连接 TIA 与 AI", Strings.Chinese["Config.RemoteTitle"]);
         Assert.Equal("同一台电脑，一次完成", Strings.Chinese["Config.LocalTitle"]);
-        Assert.Equal("Settings", Strings.English["Shell.Settings"]);
+        Assert.Equal("Settings & Safety", Strings.English["Shell.Settings"]);
         Assert.Equal("写操作审批", Strings.Chinese["Settings.Approval"]);
+    }
+
+    [Fact]
+    public void Handoff_sample_identifiers_never_ship_in_markup_or_copy()
+    {
+        var sources = SourceScan.Markup.Select(file => file.Text).Concat(Strings.Catalogue.SelectMany(entry => new[] { entry.En, entry.Zh }));
+        foreach (var text in sources)
+            foreach (var sample in new[] { "Line04_Packaging", "req-9041", "192.168.10.21", "Intel I225-V", "CPU 1515F", "FB_ConveyorCtrl" })
+                Assert.DoesNotContain(sample, text, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

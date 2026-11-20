@@ -38,6 +38,7 @@ public sealed class McpSessionClient : IMcpSessionClient
     private CancellationTokenSource requests = new();
     private readonly SemaphoreSlim closing = new(1);
     private int disposed;
+    public string? Transport => attachedHost?.Transport;
     public string? SessionKey { get; private set; }
     public JsonObject? State { get { lock (sync) return (JsonObject?)state?.DeepClone(); } }
     public JsonObject? ToolSchema(string tool)
@@ -90,7 +91,8 @@ public sealed class McpSessionClient : IMcpSessionClient
                 using var stream = OpenRegistration(file);
                 var record = JsonNode.Parse(stream)!;
                 if ((int?)record?["version"] != 1 || (string?)record["releaseKey"] != release) continue;
-                host = new((int)record["pid"]!, (long)record["startTicks"]!, release, (string)record["pipeName"]!, file);
+                host = new((int)record["pid"]!, (long)record["startTicks"]!, release, (string)record["pipeName"]!, file)
+                    { Transport = (string?)record["transport"] };
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or ArgumentException)
             { Trace.TraceInformation("Operator registration ignored: {0}", error.GetType().Name); }

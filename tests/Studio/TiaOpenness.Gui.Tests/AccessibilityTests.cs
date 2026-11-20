@@ -45,13 +45,22 @@ public sealed class AccessibilityTests(WpfContext wpf)
     }
 
     [Fact]
-    public void Every_text_size_token_is_at_least_twelve_effective_pixels()
+    public void Every_text_size_uses_a_design_ramp_resource()
     {
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
         var sizes = SourceScan.Markup.SelectMany(file => XDocument.Parse(file.Text).Descendants())
             .Where(element => ((string?)element.Attribute(x + "Key"))?.StartsWith("Ui.FontSize.", StringComparison.Ordinal) == true).ToArray();
         Assert.NotEmpty(sizes);
-        Assert.All(sizes, size => Assert.True((double)size >= 12, (string?)size.Attribute(x + "Key")));
+        double[] ramp = [9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 15.5, 18];
+        Assert.Equal(ramp, sizes.Select(size => (double)size).Distinct().Order());
+        foreach (var file in SourceScan.Markup)
+        {
+            var attributes = XDocument.Parse(file.Text).Descendants().SelectMany(element => element.Attributes()
+                .Where(a => a.Name.LocalName.EndsWith("FontSize", StringComparison.Ordinal)
+                    || (a.Name == "Value" && ((string?)element.Attribute("Property"))?.EndsWith("FontSize", StringComparison.Ordinal) == true)));
+            Assert.All(attributes, a => Assert.Matches(@"^\{(?:Dynamic|Static)Resource Ui\.FontSize\.[\w.]+\}$", a.Value));
+        }
+        foreach (var file in SourceScan.Code) Assert.DoesNotMatch(@"\bFontSize\s*=\s*\d", file.Text);
     }
 
     [Fact]
@@ -113,6 +122,10 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 Check("textFaint", surface, 4.5);
             Check("accent", "accentSoft", 4.5); Check("accent", "rail", 4.5);
             foreach (string kind in new[] { "Ob", "Fb", "Fc", "Db", "Fs" }) Check("blk" + kind + "Fg", "blk" + kind + "Bg", 4.5);
+            foreach (string client in new[] { "Claude", "Codex", "Gemini", "Cursor", "VSCode", "OpenCode", "Qwen", "Kimi", "Yuanbao", "Neutral" })
+                Check("client" + client + "Fg", "client" + client + "Bg", 4.5);
+            foreach (string syntax in new[] { "Keyword", "Comment", "String", "Number", "Variable" }) Check("syntax" + syntax, "codeBg", 4.5);
+            Check("diffGreen", "diffAddBg", 4.5); Check("diffRed", "diffDelBg", 4.5);
             Check("ok", "okBg", 4.5); Check("warn", "warnBg", 4.5); Check("destructiveText", "Ant.colorErrorBg", 4.5);
             Check("primaryText", "primaryBg", 4.5); Check("warningText", "warn", 4.5);
             Check("destructiveText", "pill", 4.5); Check("destructiveText", "pillHover", 4.5);
@@ -380,10 +393,12 @@ public sealed class AccessibilityTests(WpfContext wpf)
         {
             "Approvals" => "Shell.Approvals", "Settings" => "Shell.Settings",
             "Mcp" => "Desktop.Configuration", "Engineering" => "Shell.Engineering", "Blocks" => "Shell.Engineering",
-            "VersionControl" => "Shell.VersionControl", "Calls" => "Shell.Calls", "Audit" => "Shell.Audit",
+            "VersionControl" => "Shell.Engineering", "Calls" => "Shell.Approvals", "Audit" => "Shell.Audit",
             "Environment" => "Shell.Environment", _ => "Shell.Logs",
         };
-        Assert.Equal(Loc.Current[title], ((TextBlock)window.FindName("CurrentPageTitle")).Text);
+        var expected = Loc.Current[title];
+        if (page is "Engineering" or "Blocks" or "VersionControl") expected += " · Conveyor_Line_04.ap14";
+        Assert.Equal(expected, ((TextBlock)window.FindName("CurrentPageTitle")).Text);
     }
     private static void Escape(UIElement element) => element.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice,
         PresentationSource.FromVisual(element), 0, Key.Escape) { RoutedEvent = Keyboard.PreviewKeyDownEvent });

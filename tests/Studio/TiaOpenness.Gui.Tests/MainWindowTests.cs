@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -101,6 +102,94 @@ public class MainWindowTests(WpfContext wpf)
     private static IReadOnlyList<RadioButton> Group(DependencyObject root, string name)
         => Descendants<RadioButton>(root).Where(r => r.GroupName == name).ToList();
 
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern IntPtr SendMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
+
+    [Fact]
+    public void Window_chrome_returns_the_native_maximize_hit_for_Snap_Layouts()
+    {
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false);
+            try
+            {
+                WpfContext.ShowWindow(window); window.UpdateLayout();
+                var hwnd = new System.Windows.Interop.WindowInteropHelper(window).Handle;
+                int Hit(FrameworkElement element)
+                {
+                    var screen = element.PointToScreen(new Point(element.ActualWidth / 2, element.ActualHeight / 2));
+                    return (int)SendMessage(hwnd, 0x0084, IntPtr.Zero, ((int)screen.Y << 16) | (ushort)(int)screen.X);
+                }
+                Assert.Equal(9, Hit(window.MaximizeWindowButton));
+                Assert.NotEqual(9, Hit(window.MinimizeWindowButton));
+                Assert.NotEqual(9, Hit(window.CloseWindowButton));
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Native_caption_click_paints_hover_and_press_and_toggles_maximize_once_on_release(bool highContrast)
+    {
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false);
+            var themes = ThemeManager.Current;
+            var previous = themes.HighContrastOverride;
+            try
+            {
+                themes.HighContrastOverride = highContrast;
+                WpfContext.ShowWindow(window);
+                var button = window.MaximizeWindowButton;
+                var hwnd = new System.Windows.Interop.WindowInteropHelper(window).Handle;
+                int clicks = 0;
+                button.Click += (_, _) => clicks++;
+                void Send(int message, int hit)
+                {
+                    window.UpdateLayout();
+                    var screen = button.PointToScreen(new Point(button.ActualWidth / 2, button.ActualHeight / 2));
+                    SendMessage(hwnd, message, hit, ((int)screen.Y << 16) | (ushort)(int)screen.X);
+                }
+
+                var surface = (Border)button.Template.FindName("Surface", button);
+                var normalFill = button.Background;
+                Send(0x00A0, 9);
+                Assert.Same(button.FindResource("Primer.pillHover"), button.Background);
+                Assert.Same(button.Background, surface.Background);
+                if (highContrast)
+                {
+                    Assert.Same(button.FindResource("Primer.hcOutline"), surface.BorderBrush);
+                    Assert.Equal(new Thickness(2), surface.BorderThickness);
+                }
+                Send(0x00A1, 9);
+                Assert.Same(button.FindResource(highContrast ? "Primer.primaryBg" : "Primer.cardSel"), button.Background);
+                Assert.Same(button.Background, surface.Background);
+                Assert.Equal(WindowState.Normal, window.WindowState);
+                Send(0x00A2, 9);
+                Assert.Equal(WindowState.Maximized, window.WindowState);
+                Assert.Equal(1, clicks);
+
+                Send(0x00A1, 9);
+                Assert.Equal(WindowState.Maximized, window.WindowState);
+                Send(0x00A2, 9);
+                Assert.Equal(WindowState.Normal, window.WindowState);
+                Assert.Equal(2, clicks);
+
+                Send(0x00A1, 9);
+                Send(0x02A2, 0);
+                Assert.Same(normalFill, button.Background);
+                Send(0x00A2, 9);
+                Assert.Same(normalFill, button.Background);
+                Assert.Equal(WindowState.Normal, window.WindowState);
+                Assert.Equal(2, clicks);
+            }
+            finally { themes.HighContrastOverride = previous; window.Close(); }
+        });
+    }
+
     [Fact]
     public void Loads_lays_out_and_renders_without_throwing()
     {
@@ -124,7 +213,7 @@ public class MainWindowTests(WpfContext wpf)
             foreach (var name in new[] { "MinimizeWindowButton", "MaximizeWindowButton", "CloseWindowButton" })
             {
                 var button = (Button)window.FindName(name);
-                Assert.Equal(46, button.ActualWidth); Assert.Equal(38, button.ActualHeight);
+                Assert.Equal(24, button.ActualWidth); Assert.Equal(24, button.ActualHeight);
             }
             Assert.Equal(26, ((Border)window.FindName("IdeStatusBar")).MinHeight);
             foreach (string name in new[] { "SessionStatusButton", "McpStatusButton", "ApprovalStatusButton" })
@@ -180,18 +269,29 @@ public class MainWindowTests(WpfContext wpf)
                 model.Engineering.Compile.Execute(null); WpfContext.Drain();
                 Assert.NotNull(model.Engineering.LastCompile);
                 Assert.Equal(Visibility.Visible, compile.Visibility);
-                Assert.Equal(Loc.Current.T("Shell.CompileCounts", 0, 0), compile.Text);
+                Assert.Equal("0 Err · 0 Warn", compile.Text);
+                Assert.Equal(Loc.Current.T("Shell.CompileCounts", 0, 0), compile.Tag);
+                window.Navigate("Calls");
+                UnifiedDesktopTests.ClickControl(window.CompileStatusButton);
+                Assert.Equal("Engineering", window.CurrentPage);
+                Assert.Equal(ViewModels.ProjectDocument.Compile, model.Engineering.Document);
 
                 var head = (TextBlock)window.FindName("AuditHead");
-                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1239), head.Text);
+                Assert.Equal("Audit #1239", head.Text);
+                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1239), head.Tag);
+                UnifiedDesktopTests.ClickControl(window.AuditHeadButton);
+                Assert.Equal("Audit", window.CurrentPage);
                 WpfContext.Complete(window.Features.VerifyAsync());
-                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1239) + " ✓", head.Text);
+                Assert.Equal("Audit #1239 ✓", head.Text);
+                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1239) + " ✓", head.Tag);
                 audit.Events = audit.Events.Append(audit.Events[0] with { Index = 1240 }).ToArray();
                 window.Navigate("Calls");
-                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1240), head.Text);
+                Assert.Equal("Audit #1240", head.Text);
+                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1240), head.Tag);
                 audit.Broken = true;
                 WpfContext.Complete(window.Features.VerifyAsync());
-                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1240), head.Text);
+                Assert.Equal("Audit #1240", head.Text);
+                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1240), head.Tag);
             }
             finally { window.Close(); }
         });
