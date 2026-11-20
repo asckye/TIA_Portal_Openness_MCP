@@ -57,7 +57,8 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Gui.Tests.McpPanelTests"] = "Real session expiry and bounded command completion.",
             ["TiaOpenness.Gui.Tests.WorkbenchMcpPrefillTests"] = "Bounded command completion polling.",
             ["TiaOpenness.Gui.Tests.NetworkHelperTests"] = "Synthetic helper process exit within sixty seconds.",
-            ["TiaOpenness.Gui.Tests.UnifiedDesktopTests"] = "Asynchronous approval persistence protected by a hang guard and WPF keyboard input requiring exclusive focus.",
+            ["TiaOpenness.Gui.Tests.UnifiedDesktopTests"] =
+                "Asynchronous approval persistence protected by a hang guard and WPF keyboard input requiring exclusive focus.",
             ["TiaOpenness.Gui.Tests.VciPanelTests"] = "Preview command admission protected by a hang guard.",
             ["TiaMcp.ShippedTools.Tests.WriteGuardPortTests"] = "Cold hook startup/decision within fifteen/twenty seconds.",
             ["TiaMcp.Updater.Tests.UpdaterTests"] = "Synthetic launcher/installed-process startup and exit bounds.",
