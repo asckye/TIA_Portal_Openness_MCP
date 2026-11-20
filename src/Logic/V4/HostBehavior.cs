@@ -409,8 +409,8 @@ namespace TiaMcp.Logic.V4
             }
             foreach (string key in new[] { "nativeMessage", "phase", "nativeResult", "errorCount", "warningCount", "deviceCountBefore",
                 "deviceCountAfter", "tagCountBefore", "tagCountAfter", "countBefore", "countAfter", "readbackFailed", "writeReturned",
-                "connectionUnavailable", "portalLost", "restored", "exportsIssued", "queryRefusals", "mapped", "mappedAfterFailure", "failed",
-                "status", "importReturned", "logFileMissing" })
+                "connectionUnavailable", "portalLost", "restored", "exportsIssued", "queryRefusals", "mapped", "mappedAfterFailure",
+                "synchronized", "unconfirmed", "failed", "status", "importReturned", "logFileMissing" })
                 if (source[key] is JsonValue scalar)
                 {
                     if (scalar.TryGetValue<string>(out var raw)) retained[key] = Diagnostic(raw);
@@ -559,7 +559,7 @@ namespace TiaMcp.Logic.V4
                 "AlreadyExists" or "ALREADY_EXISTS" =>
                     new Error(message ?? "The requested object already exists.", new AlreadyExistsDetails(resolveMissingTarget?.Invoke(parameter).Target)),
                 "NotSupported" or "NotSupportedOnVersion" or "UNSUPPORTED_CAPABILITY" =>
-                    UnsupportedCapabilityDetails.ErrorFor(release, tool, (string?)evidence["action"], message),
+                    UnsupportedCapabilityDetails.ErrorFor(release, tool, (string?)evidence["action"], message, (string?)evidence["unsupportedBy"]),
                 _ => null
             };
             if (refusal != null && evidence.ContainsKey("nativeMessage")) evidence["nativeMessage"] = message;
@@ -574,7 +574,7 @@ namespace TiaMcp.Logic.V4
             string? nativeMessage = SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? SafeDiagnostic(message);
             if (nativeMessage == null) return refusal;
             return refusal.Details is UnsupportedCapabilityDetails capability
-                ? UnsupportedCapabilityDetails.ErrorFor(release, tool, capability.Action, nativeMessage)
+                ? UnsupportedCapabilityDetails.ErrorFor(release, tool, capability.Action, nativeMessage, (string?)evidence["unsupportedBy"])
                 : new Error(nativeMessage, refusal.Details);
         }
 

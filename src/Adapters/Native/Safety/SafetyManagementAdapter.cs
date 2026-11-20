@@ -43,7 +43,7 @@ namespace TiaMcp.Adapters.Native.Safety
 
         private SafetyAdministration RequireSafetyAdministration(string softwarePath, PlcSoftware plc)
             => _session.ResolvePlcService<SafetyAdministration>(softwarePath, plc)
-               ?? throw new PlcSoftwareException("NotSupportedOnVersion",
+               ?? throw StepFailureStatus.UnsupportedByTarget(
                        "SafetyAdministration unavailable: not an S7-1200/1500 F-CPU or Safety option not installed.");
 
         // Documented dynamic attributes are read one by one; a missing value is reported as null with its native reason.
@@ -570,7 +570,7 @@ namespace TiaMcp.Adapters.Native.Safety
                 _session.ExactPlcForEngineering(softwarePath, false);
                 var cpu = SafetyCpuItem(softwarePath);
                 var service = cpu.GetService<SafetyPrintout>()
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyPrintout unavailable on " + cpu.Name
+                    ?? throw StepFailureStatus.UnsupportedByTarget("SafetyPrintout unavailable on " + cpu.Name
                         + ": not an S7-1200/1500 F-CPU or Safety option not installed.");
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false; meta["filePath"] = file.FullName;
                 meta["printer"] = request.Printer; meta["option"] = request.Option; meta["documentLayout"] = request.Layout; meta["cpu"] = cpu.Name;

@@ -118,6 +118,40 @@ public sealed class WriteReadbackTests
         if (result == "fresh") Assert.Equal("Auditor", reply.Meta["after"]);
     }
 
+    [Theory]
+    [InlineData("absent"), InlineData("disposed-entry"), InlineData("disposed-then-present"), InlineData("present")]
+    [InlineData("refresh-failed"), InlineData("name-unreadable"), InlineData("delete-failed"), InlineData("connection-lost")]
+    public void Umac_deletion_verifies_the_exact_name_on_a_fresh_composition(string scenario)
+    {
+        bool deleted = false;
+        int refreshes = 0;
+        var reply = MutationEvidenceTests.RunStep("17", "ManageProjectUserManagement", meta => {
+            meta["mayHaveChanged"] = true;
+            return ProjectUmacDeletion.Run(meta, "role", "Auditor", () => {
+                if (scenario == "delete-failed") throw new IOException("Delete interrupted.");
+                deleted = true;
+            }, () => {
+                Assert.True(deleted);
+                refreshes++;
+                return scenario switch {
+                    "refresh-failed" => throw new EngineeringObjectDisposedException(),
+                    "disposed-entry" => new[] { "disposed", "Other" },
+                    "disposed-then-present" => new[] { "disposed", "Auditor" },
+                    "present" => new[] { "Auditor" },
+                    _ => new[] { "Other" }
+                };
+            }, role => role == "disposed" ? throw new EngineeringObjectDisposedException()
+                : scenario == "name-unreadable" ? throw new IOException("Name unavailable.")
+                : scenario == "connection-lost" ? throw new ObjectDisposedException("session") : role);
+        });
+        Assert.Equal(scenario == "delete-failed" ? 0 : 1, refreshes);
+        Assert.Equal(deleted, reply.Meta.ContainsKey("writeReturned"));
+        Assert.Equal(scenario is "absent" or "disposed-entry", reply.Meta.TryGetValue("verifiedAbsent", out var absent) && absent is true);
+        Assert.Equal(scenario is "refresh-failed" or "name-unreadable", reply.Meta.ContainsKey("readbackFailed"));
+        Assert.Equal(scenario is "present" or "disposed-then-present" or "delete-failed" or "connection-lost", reply.OutcomeUnknown);
+        if (scenario is "present" or "disposed-then-present") Assert.Contains("still present", (string?)reply.Meta["nativeMessage"]);
+    }
+
     [Fact]
     public void Archive_refreshes_previously_absent_directory_and_has_only_file_effects()
     {

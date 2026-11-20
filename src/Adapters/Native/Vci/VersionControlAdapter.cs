@@ -299,10 +299,10 @@ namespace TiaMcp.Adapters.Native.Vci
             bool dryRun = true,
             bool changedOnly = true)
         {
-            var attempts = new VciSyncAttempts();
+            var attempts = new VciSyncAttempts(LegacyXmlExport);
             var selection = new VciSyncSelection();
             var lines = new List<string>();
-            int ok = 0, failed = 0;
+            int failed = 0;
             try
             {
                 SynchronizationMode mode;
@@ -350,7 +350,7 @@ namespace TiaMcp.Adapters.Native.Vci
 
                 HmiObject Evidence()
                 {
-                    var meta = selection.Evidence(dryRun, ok, failed);
+                    var meta = selection.Evidence(dryRun, attempts.Synchronized, failed);
                     meta["workspaceName"] = wsName;
                     meta["rootPath"] = wsRoot;
                     attempts.AddEvidence(meta);
@@ -387,11 +387,10 @@ namespace TiaMcp.Adapters.Native.Vci
                 {
                     var mo = failed == 0 ? target.Object : FindCurrent(target.Path);
                     string? failure = attempts.Synchronize(wsRoot, target.Path, () => PortVci.Synchronize(mo, mode),
-                        () => { current = null; return FindCurrent(target.Path); }, ReadStatus, target.ProbeFailed, out var statusAfter);
+                        () => { current = null; return FindCurrent(target.Path); }, ReadStatus, target.ProbeFailed, out var statusAfter, mode.ToString());
                     string name = target.Path.Stem;
                     if (failure == null)
                     {
-                        ok++;
                         lines.Add(name + " | synchronized");
                     }
                     else
@@ -405,7 +404,7 @@ namespace TiaMcp.Adapters.Native.Vci
 
                 string summary = string.Format(
                     "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {4} already equal (skipped).",
-                    wsName, mode, ok, failed, selection.SkippedEqual);
+                    wsName, mode, attempts.Synchronized, failed, selection.SkippedEqual);
                 if (failed == 0) summary += " The text files are updated — `git add -A && git commit` from that folder.";
                 summary = selection.Summary(summary) + " Folder: " + wsRoot;
                 var resultMeta = Evidence();

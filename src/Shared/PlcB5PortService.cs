@@ -64,6 +64,7 @@ namespace TiaMcpServer.Siemens.Services
                         throw AdapterPreconditionException.Failed(message, (string?)evidence["condition"] ?? "generation-admission", parameter ?? "outputPath");
                 }
                 var nativeFailure = new PortalException(PortalErrorCode.OpennessError, message);
+                nativeFailure.Data["foundationRequestSent"] = true;
                 nativeFailure.Data["foundationKnownNoMutation"] = (bool?)reply["MayHaveChanged"] == false
                     && (!writes || (bool?)reply["OutcomeUnknown"] == false);
                 throw nativeFailure;

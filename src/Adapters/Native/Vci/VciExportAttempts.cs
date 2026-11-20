@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Adapters.Native.Vci;
@@ -9,6 +10,7 @@ internal sealed class VciExportAttempts
 {
     internal int Issued { get; private set; }
     internal int Unconfirmed { get; private set; }
+    internal bool MappingProbeFailed { get; private set; }
     internal int MappedAfterFailure { get; private set; }
     internal int UnsupportedContainers { get; private set; }
     internal int QueryRefusals { get; private set; }
@@ -34,8 +36,10 @@ internal sealed class VciExportAttempts
         }
     }
 
-    internal bool Export(Action write, Func<bool> freshMapping, Action<string> report)
+    internal bool Export(Action write, Func<bool> freshMapping, Action<string> report,
+        Func<(string Name, long Length, DateTime Modified)[]?>? snapshot = null)
     {
+        var before = snapshot?.Invoke();
         Issued++;
         Unconfirmed++;
         try { write(); }
@@ -43,11 +47,20 @@ internal sealed class VciExportAttempts
         {
             NativeMessage = Diagnostic(error);
             report("FAILED: " + NativeMessage);
-            if (freshMapping())
+            bool mapped;
+            try { mapped = freshMapping(); }
+            catch (Exception probeError)
+            {
+                MappingProbeFailed = true;
+                report("mapping lookup failed after export: " + Diagnostic(probeError));
+                return false;
+            }
+            if (mapped)
             {
                 MappedAfterFailure++; Unconfirmed--;
                 report("mapping present after failed export; inspect workspace files");
             }
+            else if (before != null && snapshot!() is { } after && before.SequenceEqual(after)) Unconfirmed--;
             return false;
         }
         Unconfirmed--;

@@ -68,6 +68,54 @@ public sealed class VciSyncTests
         finally { workspace.Delete(true); }
     }
 
+    [Theory]
+    [InlineData("status-and-selection-read", false)]
+    [InlineData("added", true)]
+    [InlineData("timestamp", true)]
+    [InlineData("absent", false)]
+    [InlineData("other-directory", true)]
+    [InlineData("over-cap", true)]
+    [InlineData("null-stem", true)]
+    [InlineData("unknown-stem", true)]
+    [InlineData("reacquire-failed", true)]
+    [InlineData("modern", true)]
+    [InlineData("reverse", true)]
+    public void Only_a_legacy_project_export_with_two_failed_status_reads_can_use_file_proof(string scenario, bool unknown)
+    {
+        var root = Directory.CreateTempSubdirectory();
+        try
+        {
+            var blocks = root.CreateSubdirectory("Blocks");
+            var other = root.CreateSubdirectory("Other");
+            string xml = Path.Combine(blocks.FullName, "Motor.xml");
+            if (scenario is "status-and-selection-read" or "timestamp") File.WriteAllText(xml, "<Document/>");
+            if (scenario == "over-cap")
+                for (int i = 0; i < 10000; i++) File.WriteAllText(Path.Combine(other.FullName, i + ".xml"), "");
+            var target = VciSyncTarget.Capture(scenario == "null-stem" ? null! : scenario == "unknown-stem" ? "?" : "Motor", () => blocks.FullName);
+            var selection = new VciSyncSelection();
+            string Status() => throw new IOException("The file is deleted");
+            Assert.True(selection.Include(Status, false, out bool probeFailed));
+            var attempts = new VciSyncAttempts(legacyXml: scenario != "modern");
+            void Write()
+            {
+                if (scenario == "added") File.WriteAllText(xml, "<Document/>");
+                if (scenario == "timestamp") File.SetLastWriteTimeUtc(xml, File.GetLastWriteTimeUtc(xml).AddMinutes(1));
+                if (scenario == "other-directory") File.WriteAllText(Path.Combine(other.FullName, "Motor.xml"), "<Document/>");
+                throw new IOException("Export refused");
+            }
+            Assert.Equal("Export refused", attempts.Synchronize(root.FullName, target, Write,
+                () => scenario == "reacquire-failed" ? throw new IOException("Workspace unavailable") : "Motor", _ => Status(), probeFailed,
+                out var after, scenario == "reverse" ? "WorkspaceToProject" : "ProjectToWorkspace"));
+            Assert.Null(after);
+            var meta = selection.Evidence(false, failed: 1);
+            attempts.AddEvidence(meta);
+            Assert.Equal(unknown ? 1 : 0, meta["unconfirmed"]);
+            Assert.Equal(unknown, meta["mayHaveChanged"]);
+            Assert.Equal(unknown, Worker(meta).OutcomeUnknown);
+        }
+        finally { root.Delete(true); }
+    }
+
     private static VersionControlResult Worker(Dictionary<string, object?> meta)
         => VersionControlAdapter.WithWriteOutcome(new VersionControlRequest { Operation = "SynchronizeVersionControlWorkspace", DryRun = false },
             new VersionControlResult { Meta = meta });
@@ -173,6 +221,25 @@ public sealed class VciSyncTests
             Assert.True(Worker(meta).OutcomeUnknown);
         }
         finally { root.Delete(true); }
+    }
+
+    private sealed class UnreadableNativeFailure : Exception
+    {
+        public override string Message => throw new IOException("Native diagnostic unavailable");
+    }
+
+    [Fact]
+    public void An_interrupted_failure_probe_keeps_the_issued_write_unconfirmed()
+    {
+        var attempts = new VciSyncAttempts();
+        var target = VciSyncTarget.Capture("Motor", () => "");
+        var error = Assert.Throws<IOException>(() => attempts.Synchronize("", target,
+            () => throw new UnreadableNativeFailure(), () => "Motor", _ => "Unequal", false, out _));
+        var reply = Worker(attempts.Interrupted(error));
+        Assert.Equal(1, reply.Meta["exportsIssued"]);
+        Assert.Equal(1, reply.Meta["unconfirmed"]);
+        Assert.True(reply.MayHaveChanged);
+        Assert.True(reply.OutcomeUnknown);
     }
 
     public static VersionControlResult InterruptedSync()

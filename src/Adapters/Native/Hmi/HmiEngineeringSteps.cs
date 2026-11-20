@@ -65,28 +65,24 @@ namespace TiaMcp.Adapters
                 EngineeringPlcSession.RecordExportFailure(error);
                 meta["error"] = error.ToString();
                 meta["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
-                meta["nativeMessage"] = error.GetBaseException().Message;
                 meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
                 meta["status"] = StepFailureStatus.Of(error);
                 meta["parameter"] = StepFailureStatus.Parameter(error);
                 StepFailureStatus.RecordTarget(error, meta);
                 if (tool == "ManagePlcCertificate" && meta.TryGetValue("phase", out var phase) && Equals(phase, "get-certificate-template"))
                 {
-                    var messages = new List<string?>();
-                    for (Exception? cause = error; cause != null; cause = cause.InnerException)
-                    {
-                        messages.Add(cause.Message);
-                        if (cause is Siemens.Engineering.EngineeringException native) RecordEngineeringDetails(native, meta, messages);
-                    }
-                    string chain = NativeFailureText.Compose(null, null, messages);
-                    if (chain.Length != 0) meta["nativeMessage"] = chain;
+                    if (!meta.ContainsKey("nativeMessage")) CertificateDiagnostic(error, meta);
                 }
-                else if (error.GetBaseException() is Siemens.Engineering.EngineeringException engineering)
+                else
                 {
-                    var messages = new List<string?>();
-                    RecordEngineeringDetails(engineering, meta, messages);
-                    string details = NativeFailureText.Compose(null, null, messages);
-                    if (details.Length != 0) meta["nativeMessage"] = details;
+                    meta["nativeMessage"] = error.GetBaseException().Message;
+                    if (error.GetBaseException() is Siemens.Engineering.EngineeringException engineering)
+                    {
+                        var messages = new List<string?>();
+                        RecordEngineeringDetails(engineering, meta, messages);
+                        string details = NativeFailureText.Compose(null, null, messages);
+                        if (details.Length != 0) meta["nativeMessage"] = details;
+                    }
                 }
                 if (meta["status"] as string == "ReadOrWriteFailed") EngineeringCredentialRules.TryRecordRefusal(error, meta);
                 if (HmiReadSafety.ConnectionUnavailable(error)) RecordHmiFault(meta);
@@ -102,6 +98,42 @@ namespace TiaMcp.Adapters
             if (reply.OutcomeUnknown) { meta["writeOutcomeUnknown"] = true; }
             return reply;
         }
+        private static bool CertificateDiagnostic(Exception error, Dictionary<string, object?> meta)
+        {
+            var messages = new List<string?>();
+            for (Exception? cause = error; cause != null; cause = cause.InnerException)
+            {
+                messages.Add(cause.Message);
+                if (cause is Siemens.Engineering.EngineeringException native) RecordEngineeringDetails(native, meta, messages);
+            }
+            string chain = NativeFailureText.Compose(null, null, messages);
+            meta["nativeMessage"] = chain;
+            return chain != NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
+        }
+
+        internal static T ReadCertificateTemplate<T>(Dictionary<string, object?> meta, Func<T> read,
+            Func<string?> firmware, Func<bool> globalStore, Func<int> count)
+        {
+            try { return read(); }
+            catch (Exception error)
+            {
+                if (!CertificateDiagnostic(error, meta))
+                {
+                    void Fact(string key, Func<object?> probe)
+                    {
+                        try { meta[key] = probe(); }
+                        catch (Exception failure) { meta[key + "Error"] = NativeFailureText.Compose(failure.Message, null, Array.Empty<string>()); }
+                    }
+                    Fact("firmwareVersion", firmware);
+                    Fact("enableGlobalCertificatesStore", () => globalStore());
+                    Fact("certificateCount", () => count());
+                    const string hint = "TIA returned no further reason. This is known on S7-1500 FW V2.9 with TIA V17–V20. Check the certificate manager.";
+                    meta["nativeMessage"] = (meta["nativeMessage"] + " " + hint).TrimStart();
+                }
+                throw;
+            }
+        }
+
         private static void RecordEngineeringDetails(Siemens.Engineering.EngineeringException engineering,
             Dictionary<string, object?> meta, List<string?> messages)
         {

@@ -159,7 +159,7 @@ public sealed class WriteRefusalTests
         finally { directory.Delete(true); }
     }
 
-    [Theory, InlineData("queryRefused"), InlineData("success"), InlineData("mappingExists"), InlineData("absent"), InlineData("findThrows")]
+    [Theory, InlineData("queryRefused"), InlineData("success"), InlineData("mappingExists"), InlineData("absent"), InlineData("absent-unchanged"), InlineData("findThrows")]
     public void Workspace_export_tracks_native_dispatch_and_fresh_Find_after_a_throw(string result)
     {
         var attempts = new VciExportAttempts();
@@ -177,8 +177,19 @@ public sealed class WriteRefusalTests
             return result == "mappingExists";
         }
         if (result == "queryRefused") attempts.QueryRefused(new InvalidOperationException("Unsupported format"));
-        else if (result == "findThrows") Assert.Throws<IOException>(() => attempts.Export(Write, Find, details.Add));
+        else if (result == "findThrows") Assert.False(attempts.Export(Write, Find, details.Add));
+        else if (result == "absent-unchanged")
+        {
+            var workspace = Directory.CreateTempSubdirectory();
+            try
+            {
+                var target = VciSyncTarget.Capture("Motor", () => workspace.FullName);
+                Assert.False(attempts.Export(Write, Find, details.Add, () => target.Snapshot(workspace.FullName, checkWorkspaceWhenEmpty: true)));
+            }
+            finally { workspace.Delete(true); }
+        }
         else Assert.Equal(result == "success", attempts.Export(Write, Find, details.Add));
+        Assert.Equal(result == "findThrows", attempts.MappingProbeFailed);
         Assert.Equal(result == "queryRefused" ? 1 : 0, attempts.QueryRefusals);
         Assert.Equal(result == "queryRefused" ? 0 : 1, attempts.Issued);
         Assert.Equal(result is "absent" or "findThrows" ? 1 : 0, attempts.Unconfirmed);

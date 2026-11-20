@@ -269,7 +269,8 @@ internal static class FoundationV4Result
             return Reject(release, name, id, UnsupportedCapabilityDetails.ErrorFor(release, name, null,
                 HostBehavior.SafeDiagnostic(unavailable.Message)), true);
         if (worker is { Outcome: "rejected-before-operation", ExceptionType: nameof(NotSupportedException) })
-            return Reject(release, name, id, UnsupportedCapabilityDetails.ErrorFor(release, name, null, HostBehavior.SafeDiagnostic(worker.Message)), true);
+            return Reject(release, name, id, UnsupportedCapabilityDetails.ErrorFor(release, name, null, HostBehavior.SafeDiagnostic(worker.Message),
+                (string?)data?["evidence"]?["unsupportedBy"]), true);
         exception ??= new InvalidOperationException();
         string? condition = worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition;
         if ((!dispatched || worker?.KnownNoMutation == true) && condition == TiaMcp.Adapters.Contracts.PlcImportOptionPolicy.UnsupportedCondition)

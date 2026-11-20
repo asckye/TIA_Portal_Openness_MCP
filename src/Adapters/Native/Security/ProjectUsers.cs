@@ -29,6 +29,31 @@ internal static class ProjectRoleCreation
     }
 }
 
+internal static class ProjectUmacDeletion
+{
+    internal static string Run<T>(Dictionary<string, object?> meta, string target, string name, Action delete,
+        Func<IEnumerable<T>> fresh, Func<T, string> readName)
+    {
+        delete();
+        meta["writeReturned"] = true;
+        meta["apiCallSuccess"] = true;
+        bool Present()
+        {
+            foreach (var item in fresh())
+            {
+                try { if (string.Equals(readName(item), name, StringComparison.Ordinal)) return true; }
+                catch (Exception error) when (HmiReadPolicy.DisposedObjectOnly(error))
+                { /* swallow(probe-optional): A deleted entry can leave a disposed proxy in the refreshed composition. */ }
+            }
+            return false;
+        }
+        if (!ReadbackStep.TryRead(meta, "findDeletedMember", Present, out bool present)) return ReadbackStep.Message;
+        if (present) throw new InvalidOperationException("Delete returned but " + target + " is still present.");
+        meta["verifiedAbsent"] = true;
+        return "UMAC " + target + " deleted and verified absent; no save.";
+    }
+}
+
 #if SECURITY_UMAC
 internal sealed class ProjectUsers
 {
@@ -150,7 +175,9 @@ internal sealed class ProjectUsers
                     switch (action)
                     {
                         case "createUser": projectUsers.Create(name, secure!); break;
-                        case "deleteUser": user!.Delete(); break;
+                        case "deleteUser":
+                            return ProjectUmacDeletion.Run(meta, request.Target, name, () => user!.Delete(),
+                                () => _session.RequireUmac().ProjectUsers.Cast<ProjectUser>(), item => item.Name);
                         case "setUserPassword":
                             if (!EngineeringCredentialRules.TrySetPassword(() => user!.SetPassword(secure!), meta))
                                 return EngineeringCredentialRules.PasswordPolicyRefusal;
@@ -164,7 +191,9 @@ internal sealed class ProjectUsers
                             return ProjectRoleCreation.Run(meta, () => customRoles.Create(name, comment),
                                 () => HardwareGroupOperations.Items(_session.RequireUmac().CustomRoles).Cast<CustomRole>()
                                     .Where(r => r.Name == name).Take(2).Cast<object>().ToArray(), _session.UmacRow);
-                        case "deleteRole": customRole!.Delete(); break;
+                        case "deleteRole":
+                            return ProjectUmacDeletion.Run(meta, request.Target, name, () => customRole!.Delete(),
+                                () => _session.RequireUmac().CustomRoles.Cast<CustomRole>(), item => item.Name);
                         case "assignEngineeringRight": engineeringRights!.Add(engineeringRight!); break;
                         case "unassignEngineeringRight": if (!engineeringRights!.Remove(engineeringRight!))
                             throw new InvalidOperationException("EngineeringFunctionRightAssociation.Remove returned false; the right was not assigned.");
@@ -174,7 +203,8 @@ internal sealed class ProjectUsers
                         case "createDeviceRight": deviceRights.Create(name, group, comment); break;
                         case "deleteDeviceRight":
 #if SECURITY_DEVICE_RIGHT_DELETE
-                            ((CustomDeviceFunctionRight)existing!).Delete(); break;
+                            return ProjectUmacDeletion.Run(meta, request.Target, name, () => ((CustomDeviceFunctionRight)existing!).Delete(),
+                                () => _session.RequireUmac().CustomDeviceFunctionRights.Cast<CustomDeviceFunctionRight>(), item => item.Name);
 #else
                             throw new NotSupportedException("CustomDeviceFunctionRight.Delete requires V20 or later.");
 #endif
@@ -183,10 +213,6 @@ internal sealed class ProjectUsers
                 finally { secure?.Dispose(); }
                 meta["apiCallSuccess"] = true;
                 var readback = _session.FindOrdinal(collection, name, request.Target);
-                if (request.Deletes) {
-                    if (readback != null) throw new InvalidOperationException("Delete returned but " + request.Target + " is still present.");
-                    meta["verifiedAbsent"] = true; return "UMAC " + request.Target + " deleted and verified absent; no save.";
-                }
                 if (readback == null) throw new InvalidOperationException("Native call returned but " + request.Target + " cannot be read back.");
                 var after = _session.UmacRow(readback); meta["after"] = after;
                 bool verified = action switch

@@ -210,6 +210,39 @@ public sealed class WriteOutcomeContractTests
         }
     }
 
+    [Theory]
+    [InlineData("ConnectProjectToWorkspace", 13, 15, "PARTIAL_FAILURE")]
+    [InlineData("ConnectProjectToWorkspace", 0, 2, "NATIVE_OPERATION_FAILED")]
+    [InlineData("SynchronizeVersionControlWorkspace", 0, 13, "NATIVE_OPERATION_FAILED")]
+    public void V17_confirmed_export_failures_keep_the_VCI_verdict(string tool, int mappingsAfterFailure, int failed, string code)
+    {
+        using var release = Host.HardwareContract.UseRelease("17");
+        var reply = new Host.ResponseStringList { Meta = new JsonObject {
+            ["success"] = false, ["apiCallSuccess"] = false, ["mapped"] = 0, ["synchronized"] = 0,
+            ["exportsIssued"] = failed, ["failed"] = failed, ["mappedAfterFailure"] = mappingsAfterFailure,
+            ["unconfirmed"] = 0, ["writeOutcomeUnknown"] = false, ["mayHaveChanged"] = mappingsAfterFailure > 0,
+            ["nativeMessage"] = "The file is deleted"
+        } };
+        var body = Host.LibraryToolContract.Map(tool, reply, true).StructuredContent!;
+        Assert.Equal(code, (string?)body["error"]?["code"]);
+        Assert.Equal(mappingsAfterFailure > 0 ? "partial" : "failed", (string?)body["meta"]?["outcome"]);
+        Assert.Contains("The file is deleted", (string?)body["error"]?["message"]);
+        Assert.Equal(failed, (int?)body["data"]?["evidence"]?["failed"]);
+    }
+
+    [Fact]
+    public void Unconfirmed_sync_counts_survive_in_the_unknown_error()
+    {
+        var reply = new Host.ResponseStringList { Meta = new JsonObject {
+            ["success"] = false, ["synchronized"] = 2, ["unconfirmed"] = 1, ["failed"] = 1, ["exportsIssued"] = 3,
+            ["mayHaveChanged"] = true, ["writeOutcomeUnknown"] = true
+        } };
+        var body = Host.LibraryToolContract.Map("SynchronizeVersionControlWorkspace", reply, true).StructuredContent!;
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Equal(2, (int?)body["error"]?["details"]?["evidence"]?["synchronized"]);
+        Assert.Equal(1, (int?)body["error"]?["details"]?["evidence"]?["unconfirmed"]);
+    }
+
     [Fact]
     public void Interrupted_sync_after_issue_remains_unknown()
     {

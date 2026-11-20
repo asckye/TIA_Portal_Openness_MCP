@@ -90,6 +90,33 @@ public sealed class NativeFailureTextTests
             reply.Meta["nativeMessage"]);
     }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public void Certificate_template_failure_probes_device_facts_only_when_TIA_supplies_no_detail(bool hasDetail)
+    {
+        var engine = new PlcFoundationEngine("17");
+        engine.ConfigureFixture();
+        var error = new Siemens.Engineering.EngineeringException("Error when calling GetCertificateTemplate");
+        error.MessageData.Text = error.Message;
+        error.MessageData.DetailText = hasDetail ? "Unsupported usage" : "";
+        int probes = 0;
+        var reply = engine.RunHmiStep("ManagePlcCertificate", meta => {
+            meta["phase"] = "get-certificate-template";
+            return PlcFoundationEngine.ReadCertificateTemplate<string>(meta, () => throw error,
+                () => { probes++; return "V2.9"; }, () => { probes++; return false; }, () => { probes++; return 3; });
+        }, false);
+        Assert.Equal(hasDetail ? 0 : 3, probes);
+        if (hasDetail) Assert.Equal(error.Message + "; Unsupported usage", reply.Meta["nativeMessage"]);
+        else
+        {
+            Assert.Equal("V2.9", reply.Meta["firmwareVersion"]);
+            Assert.Equal(false, reply.Meta["enableGlobalCertificatesStore"]);
+            Assert.Equal(3, reply.Meta["certificateCount"]);
+            Assert.Contains("TIA returned no further reason", (string?)reply.Meta["nativeMessage"]);
+            Assert.Contains("S7-1500 FW V2.9", (string?)reply.Meta["nativeMessage"]);
+            Assert.Contains("certificate manager", (string?)reply.Meta["nativeMessage"]);
+        }
+    }
+
     [Fact]
     public void Compose_retains_distinct_reasons_in_one_line()
         => Assert.Equal("Error when calling method; ExclusiveAccess is not supported; Inner reason",

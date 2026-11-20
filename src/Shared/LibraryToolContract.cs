@@ -130,8 +130,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     .KnownRefusalWithMessage(evidence, success, HardwareContract.ReleaseKey, tool, nativeMessage, field => McpServer
                         .MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
-            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
-            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
             else if (tool is ("ConnectProjectToWorkspace" or "SynchronizeVersionControlWorkspace") && writes && success == false
                 && evidence["exportsIssued"] != null && Flag(evidence, "writeOutcomeUnknown") == false && evidence["v4Rejection"] == null)
             {
@@ -150,6 +148,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else { outcome = Outcome.Failed; error = NativeFailure(diagnostic); }
             }
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
             else if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
             {
                 outcome = Outcome.Unknown;

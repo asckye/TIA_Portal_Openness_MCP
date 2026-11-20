@@ -436,7 +436,7 @@ namespace TiaMcp.Adapters
                 meta["readOnlyAttributes"] = new List<object?>(readOnly.Select(n => (object)n).ToArray()); meta["unlistedAttributes"] = new List<object
                     ?>(unknown.Select(n => (object)n).ToArray());
                 if (readOnly.Length > 0)
-                    throw new NotSupportedException("Attribute(s) are not writable on this channel per GetAttributeInfos: " + string.Join(", ", readOnly)
+                    throw StepFailureStatus.UnsupportedByTarget("Attribute(s) are not writable on this channel per GetAttributeInfos: " + string.Join(", ", readOnly)
                         + ". Nothing was written.");
                 if (dryRun) return "Channel attribute write preview; nothing changed"
                     + (unknown.Length > 0 ? " (attributes not listed by GetAttributeInfos are attempted as-is: " + string.Join(", ", unknown) + ")" : "") + ".";

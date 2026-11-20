@@ -10,6 +10,12 @@ namespace TiaMcp.Adapters.Native.Vci;
 
 internal sealed partial class VersionControlAdapter
 {
+#if STUDIO_VCI && !STUDIO_VCI_MODERN
+    internal static bool LegacyXmlExport => true;
+#else
+    internal static bool LegacyXmlExport => false;
+#endif
+
     internal static T Select<T>(IReadOnlyList<T> workspaces, string name, Func<T, string> readName) where T : class
     {
         if (workspaces.Count == 0)

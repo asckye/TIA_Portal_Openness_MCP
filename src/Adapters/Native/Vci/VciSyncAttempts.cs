@@ -80,13 +80,13 @@ internal sealed class VciSyncTarget
             && string.Equals(directory, AbsoluteDirectory(readDirectory(mapping)), PathComparison));
     }
 
-    internal (string Name, long Length, DateTime Modified)[]? Snapshot(string workspaceRoot)
+    internal (string Name, long Length, DateTime Modified)[]? Snapshot(string workspaceRoot, bool checkWorkspaceWhenEmpty = false)
     {
         try
         {
             string? root = AbsoluteDirectory(workspaceRoot);
             if (root == null || directory == null || !directory.StartsWith(root, PathComparison)
-                || string.IsNullOrEmpty(Stem) || Stem.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return null;
+                || string.IsNullOrEmpty(Stem) || Stem == "?" || Stem.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return null;
             var folder = new DirectoryInfo(directory);
             for (var parent = folder; parent != null; parent = parent.Parent)
             {
@@ -94,40 +94,77 @@ internal sealed class VciSyncTarget
                 if ((parent.Attributes & FileAttributes.ReparsePoint) != 0) return null;
             }
             // FileNameWithoutExtension can contain dots and the export can have multiple companion files.
-            return folder.EnumerateFiles(Stem + "*").Where(file => file.Name.StartsWith(Stem, StringComparison.OrdinalIgnoreCase))
+            var files = folder.EnumerateFiles(Stem + "*").Where(file => file.Name.StartsWith(Stem, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(file => file.Name, StringComparer.Ordinal)
                 .Select(file => (file.Name, file.Length, file.LastWriteTimeUtc)).ToArray();
+            return checkWorkspaceWhenEmpty && files.Length == 0 ? WorkspaceSnapshot(root) : files;
         }
         catch (Exception) /* swallow(probe-optional): An unreadable file snapshot leaves the export unconfirmed. */
         { return null; }
+    }
+
+    // A missing legacy XML file is only evidence if the export did not write elsewhere in this workspace.
+    private static (string Name, long Length, DateTime Modified)[]? WorkspaceSnapshot(string root)
+    {
+        var entries = new List<(string Name, long Length, DateTime Modified)>();
+        var pending = new Stack<DirectoryInfo>();
+        var workspace = new DirectoryInfo(root);
+        if ((workspace.Attributes & FileAttributes.ReparsePoint) != 0) return null;
+        pending.Push(workspace);
+        while (pending.Count > 0)
+        {
+            foreach (var entry in pending.Pop().EnumerateFileSystemInfos())
+            {
+                if (entries.Count >= 10000 || (entry.Attributes & FileAttributes.ReparsePoint) != 0) return null;
+                entries.Add((entry.FullName, entry is FileInfo file ? file.Length : -1, entry.LastWriteTimeUtc));
+                if (entry is DirectoryInfo directory) pending.Push(directory);
+            }
+        }
+        return entries.OrderBy(entry => entry.Name, StringComparer.Ordinal).ToArray();
     }
 }
 
 internal sealed class VciSyncAttempts
 {
+    private readonly bool legacyXml;
     private int issued;
     private int unconfirmed;
     private string? nativeMessage;
+    internal int Synchronized { get; private set; }
+
+    internal VciSyncAttempts(bool legacyXml = false) => this.legacyXml = legacyXml;
 
     internal static string Diagnostic(Exception error) =>
         NativeFailureText.Compose(error.GetBaseException().Message, null, Array.Empty<string>());
 
     internal string? Synchronize<T>(string workspaceRoot, VciSyncTarget target, Action write, Func<T> reacquireMapping, Func<T, string> readStatus,
-        bool selectionProbeFailed, out string? statusAfter)
+        bool selectionProbeFailed, out string? statusAfter, string mode = "ProjectToWorkspace")
     {
-        var before = target.Snapshot(workspaceRoot);
+        bool legacyExport = legacyXml && mode == "ProjectToWorkspace";
+        var before = target.Snapshot(workspaceRoot, legacyExport);
         statusAfter = null;
         issued++;
-        try { write(); return null; }
+        unconfirmed++;
+        try { write(); Synchronized++; unconfirmed--; return null; }
         catch (Exception error)
         {
             string failure = Diagnostic(error);
             nativeMessage ??= failure;
-            var after = target.Snapshot(workspaceRoot);
-            try { statusAfter = readStatus(reacquireMapping()); }
-            catch (Exception) { /* swallow(probe-optional): An unreadable status cannot confirm the failed export. */ }
-            if (selectionProbeFailed || string.IsNullOrEmpty(statusAfter) || string.Equals(statusAfter, "Equal", StringComparison.OrdinalIgnoreCase)
-                || before == null || after == null || !before.SequenceEqual(after)) unconfirmed++;
+            var after = target.Snapshot(workspaceRoot, legacyExport);
+            bool mappingFound = false;
+            bool bothStatusReadsFailed = false;
+            try
+            {
+                var fresh = reacquireMapping();
+                mappingFound = true;
+                statusAfter = readStatus(fresh);
+            }
+            catch (Exception) /* swallow(probe-optional): Only two failed status reads on a known legacy mapping permit file-only verification. */
+            { bothStatusReadsFailed = mappingFound && selectionProbeFailed; }
+            bool statusConfirmsFailure = !selectionProbeFailed && !string.IsNullOrEmpty(statusAfter)
+                && !string.Equals(statusAfter, "Equal", StringComparison.OrdinalIgnoreCase);
+            if ((statusConfirmsFailure || legacyExport && bothStatusReadsFailed)
+                && before != null && after != null && before.SequenceEqual(after)) unconfirmed--;
             return failure;
         }
     }
@@ -135,9 +172,10 @@ internal sealed class VciSyncAttempts
     internal void AddEvidence(HmiObject meta, Exception? interrupted = null)
     {
         meta["exportsIssued"] = issued;
-        meta["mayHaveChanged"] = issued > 0;
+        meta["synchronized"] = Synchronized;
+        meta["mayHaveChanged"] = Synchronized > 0 || unconfirmed > 0;
         meta["unconfirmed"] = unconfirmed;
-        meta["writeOutcomeUnknown"] = interrupted == null ? unconfirmed > 0 : issued > 0;
+        meta["writeOutcomeUnknown"] = unconfirmed > 0 || interrupted != null && Synchronized > 0;
         meta["nativeMessage"] = nativeMessage ?? (interrupted == null ? null : Diagnostic(interrupted));
     }
 

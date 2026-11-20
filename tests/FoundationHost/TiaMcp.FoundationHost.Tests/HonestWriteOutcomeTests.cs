@@ -1,3 +1,4 @@
+extern alias adaptertests;
 extern alias toolpipeline;
 extern alias foundationhost;
 using System.Text.Json;
@@ -91,6 +92,114 @@ public sealed class HonestWriteOutcomeTests
             throw new Foundation.WorkerOperationException("Native import refused.", -32603, outcome) { Data = { ["foundationRequestSent"] = true } };
         }
         public void Dispose() { }
+    }
+
+    [Theory]
+    [InlineData("SetDeviceItemChannel", "17", null, true, "ChannelAddress is not writable on this channel per GetAttributeInfos.")]
+    [InlineData("SetDeviceItemChannel", "17", null, false, "Channel API unavailable in the installed SDK.")]
+    [InlineData("ExchangeMotionCamData", "17", "export", true, "Selected object is not a service provider.")]
+    [InlineData("ExchangeMotionCamData", "14sp1", "export", false, "Official service unavailable in installed API: CamDataSupport")]
+    [InlineData("ManagePlcSafety", "17", "read", true, "SafetyAdministration unavailable: not an S7-1200/1500 F-CPU or Safety option not installed.")]
+    [InlineData("ManagePlcSafety", "17", "generateBaseId", false, "SafetyBaseIdProvider requires V21.")]
+    [InlineData("ExportSafetyPrintout", "17", "export", true, "SafetyPrintout unavailable: not an S7-1200/1500 F-CPU or Safety option not installed.")]
+    [InlineData("ExportSafetyPrintout", "16", "export", false, "The requested Safety operation is unavailable on this release.")]
+    [InlineData("ManageSinumerikSafetyMode", "17", "read", true, "The selected device has no SafetyModeProvider.")]
+    [InlineData("ManageSinumerikSafetyMode", "21", "read", false, "SafetyModeProvider is absent from the selected release's SDK.")]
+    public void Capability_refusals_keep_their_origin_through_the_tool_contract(string tool, string release, string? action, bool target, string reason)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.MutationEvidenceTests.RunStep(release, tool, meta => {
+            if (action != null) meta["action"] = action;
+            throw target ? StepFailureStatus.UnsupportedByTarget(reason) : new NotSupportedException(reason);
+        });
+        Assert.Equal("NotSupportedOnVersion", reply.Meta["status"]);
+        Assert.Equal(target, reply.Meta.TryGetValue("unsupportedBy", out var origin) && Equals(origin, "target"));
+        var response = new Host.ResponseMessage { Message = reply.Message, Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() };
+        var body = (tool switch {
+            "SetDeviceItemChannel" => Host.HardwareToolContract.MapResult(tool, response, false, true),
+            "ExchangeMotionCamData" => Host.ClassicMotionToolContract.Map(tool, response, false, true),
+            "ManageSinumerikSafetyMode" => Host.OptionalPackageContract.Map(tool, response, true),
+            _ => Host.SecurityToolContract.MapResult(tool, response, false, true)
+        }).StructuredContent!;
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.Equal(target ? tool + " cannot run on the selected object: " + reason
+            : CapabilityMessage(release, action == null ? tool : tool + "." + action, reason), (string?)body["error"]?["message"]);
+        Assert.Equal(release, (string?)body["error"]?["details"]?["releaseKey"]);
+        Assert.Equal(tool, (string?)body["error"]?["details"]?["capability"]);
+        Assert.Equal(action, (string?)body["error"]?["details"]?["action"]);
+    }
+
+    [Fact]
+    public void Wrapped_dispatch_marker_preserves_an_unconfirmed_exchange_write()
+    {
+        var native = new IOException("Reply interrupted.") { Data = { ["foundationRequestSent"] = true } };
+        var body = Body(Host.PlcExchangeContract.Run("ImportProjectTexts", () => throw new TargetInvocationException(native), true, true));
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Equal("unknown", (string?)body["meta"]?["execution"]);
+    }
+
+    [Theory]
+    [InlineData(false, false, "PRECONDITION_FAILED", "not-started")]
+    [InlineData(true, false, "OUTCOME_UNKNOWN", "unknown")]
+    [InlineData(true, true, "PRECONDITION_FAILED", "not-started")]
+    public void Exchange_OpennessError_write_uses_dispatch_and_mutation_evidence(bool sent, bool knownNoMutation, string code, string execution)
+    {
+        using var scope = EngineHostParity.EnterScope();
+        var failure = new TiaMcpServer.Siemens.PortalException(TiaMcpServer.Siemens.PortalErrorCode.OpennessError, "Text import failed.");
+        failure.Data["foundationRequestSent"] = sent;
+        if (knownNoMutation) failure.Data["foundationKnownNoMutation"] = true;
+        var body = Body(Host.PlcExchangeContract.Run("ImportProjectTexts", () => throw failure, true, true));
+        Assert.Equal(code, (string?)body["error"]?["code"]);
+        Assert.Equal(execution, (string?)body["meta"]?["execution"]);
+    }
+
+    [Fact]
+    public void Exchange_portal_release_gap_keeps_its_original_message()
+    {
+        using var scope = EngineHostParity.EnterScope();
+        var failure = new TiaMcpServer.Siemens.PortalException(TiaMcpServer.Siemens.PortalErrorCode.NotSupportedOnVersion, "Native diagnostic.");
+        var body = Body(Host.PlcExchangeContract.Run("ImportProjectTexts", () => throw failure, true, true));
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.Equal($"ImportProjectTexts is unavailable on TIA V{Host.McpServer.ReleaseKey}.", (string?)body["error"]?["message"]);
+    }
+
+    [Fact]
+    public void Failed_Plcsim_scenario_with_version_status_keeps_its_native_failure_code()
+    {
+        var response = new { ok = false, status = "NotSupportedOnVersion", steps = new[] { new { ok = false } } };
+        var body = Body(Host.RuntimeToolContract.Map("RunPlcSimAdvancedTestScenario", response, false, true));
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("failed", (string?)body["meta"]?["outcome"]);
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void B5_native_write_failure_keeps_dispatch_and_requires_explicit_unchanged_evidence(bool proved)
+    {
+        using var release = Host.HardwareContract.UseRelease("17");
+        var service = new Services.PlcB5PortService((_, _) => {
+            var result = new JsonObject { ["Failure"] = new JsonObject { ["Code"] = "OpennessError", ["Message"] = "Import refused." } };
+            if (proved) { result["MayHaveChanged"] = false; result["OutcomeUnknown"] = false; }
+            return result;
+        }, () => "fixture.ap17");
+        var failure = Assert.Throws<TiaMcpServer.Siemens.PortalException>(() => service.ImportAlarmClasses("PLC", "alarms.dat"));
+        Assert.Equal(true, failure.Data["foundationRequestSent"]);
+        Assert.Equal(proved, failure.Data["foundationKnownNoMutation"]);
+        var body = Body(Host.EngineeringToolContract.Run("ImportAlarmClasses", true, () => throw new TargetInvocationException(failure)));
+        Assert.Equal(proved ? "NATIVE_OPERATION_FAILED" : "OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.DoesNotContain("before its write", (string?)body["error"]?["message"]);
+    }
+
+    [Fact]
+    public void Missing_Umc_user_is_refused_by_name_before_delete()
+    {
+        var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.MutationEvidenceTests.RunStep("17", "ManageUmcUsers", meta => {
+            meta["action"] = "delete";
+            throw new PlcSoftwareException("NotFound", "Exact UMC user not found in the project: Operator") { Data = { ["parameter"] = "name" } };
+        });
+        var response = new Host.ResponseMessage { Message = reply.Message, Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() };
+        var body = Host.SecurityToolContract.MapResult("ManageUmcUsers", response, false, true).StructuredContent!;
+        Assert.Equal("NOT_FOUND", (string?)body["error"]?["code"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
     }
 
     public static IEnumerable<object[]> RetrievalRefusals()

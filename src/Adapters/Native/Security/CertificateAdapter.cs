@@ -69,6 +69,9 @@ namespace TiaMcp.Adapters.Native.Security
                         meta["enableGlobalCertificatesStoreError"] = ex.GetBaseException().Message; }
                     return "Public certificate metadata listed; no private key exported.";
                 }
+                CertificateTemplate ReadTemplate(CertificateUsage kind) => PlcFoundationEngine.ReadCertificateTemplate(meta,
+                    () => store.GetCertificateTemplate(kind), () => item.GetAttribute("FirmwareVersion")?.ToString(),
+                    () => manager.EnableGlobalCertificatesStore, () => store.Certificates.Count());
                 Certificate? certificate = null;
                 if (action != "create" && action != "import" && action != "unassign" && action != "template")
                 {
@@ -85,7 +88,7 @@ namespace TiaMcp.Adapters.Native.Security
                     meta["usage"] = usage;
                     meta["deviceItem"] = string.Join("/", itemPathJson.Length == 0 ? devicePathJson : itemPathJson);
                     meta["phase"] = "get-certificate-template";
-                    meta["template"] = TemplateRow(store.GetCertificateTemplate(kind));
+                    meta["template"] = TemplateRow(ReadTemplate(kind));
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
                     meta["catalogs"] = new HmiObject {
                         ["usages"] = new HmiArray(SecurityCatalog.CertificateUsages.Select(x => (object?)x).ToArray()), ["signatures"] =
@@ -102,7 +105,7 @@ namespace TiaMcp.Adapters.Native.Security
                     meta["phase"] = "get-certificate-template";
                     meta["usage"] = usage;
                     meta["deviceItem"] = string.Join("/", itemPathJson.Length == 0 ? devicePathJson : itemPathJson);
-                    var template = store.GetCertificateTemplate(kind);
+                    var template = ReadTemplate(kind);
                     meta["phase"] = "prepare-certificate";
                     var changes = Properties();
                     _session.Validate("template");

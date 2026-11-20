@@ -183,7 +183,7 @@ internal sealed class OptionalProductsAdapter
                 var device = _session.ExactEngineeringHardware(devicePathJson, Array.Empty<string>()) as Device
                     ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
                 var provider = InvocationJournal.Native("SinumerikSafety.GetService", () => device.GetService<SafetyModeProvider>())
-                    ?? throw new NotSupportedException("The selected device has no SafetyModeProvider.");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("The selected device has no SafetyModeProvider.");
                 meta["before"] = provider.CurrentMode.ToString(); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["preconditions"] =
                     "NCU PLC must be offline; the native API checks configuration eligibility. Switching affects safety/telegram configuration and requires " +

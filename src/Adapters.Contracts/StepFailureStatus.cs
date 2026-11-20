@@ -6,6 +6,9 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class StepFailureStatus
     {
+        public static NotSupportedException UnsupportedByTarget(string reason)
+            => new NotSupportedException(reason) { Data = { ["unsupportedBy"] = "target" } };
+
         public static void RecordTarget(Exception error, IDictionary<string, object?> meta)
         {
             if (!meta.TryGetValue("mayHaveChanged", out var changed) || changed is not false
@@ -13,6 +16,7 @@ namespace TiaMcp.Adapters.Contracts
             var cause = error.GetBaseException();
             if (cause is AdapterPreconditionException { Condition: "output-parent-missing" or "service-not-provided" })
                 EngineeringCredentialRules.TryRecordRefusal(cause, meta);
+            if (cause.Data["unsupportedBy"] as string == "target") meta["unsupportedBy"] = "target";
             if (cause.Data["target"] is not string target) return;
             meta["target"] = target;
             meta["candidates"] = cause.Data["candidates"];

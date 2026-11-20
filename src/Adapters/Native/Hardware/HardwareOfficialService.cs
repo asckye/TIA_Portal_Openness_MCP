@@ -25,10 +25,10 @@ namespace TiaMcp.Adapters.Hardware
             }
             if(type==null || !typeof(IEngineeringService).IsAssignableFrom(type))
                 throw new NotSupportedException("Official service unavailable in installed API: "+typeName);
-            if(owner is not IEngineeringServiceProvider) throw new NotSupportedException("Selected object is not a service provider.");
+            if(owner is not IEngineeringServiceProvider) throw StepFailureStatus.UnsupportedByTarget("Selected object is not a service provider.");
             try {
                 return typeof(IEngineeringServiceProvider).GetMethod("GetService")!.MakeGenericMethod(type).Invoke(owner,null)
-                    ?? throw new NotSupportedException("Service is unsupported on selected object: "+typeName);
+                    ?? throw StepFailureStatus.UnsupportedByTarget("Service is unsupported on selected object: "+typeName);
             }
             catch(TargetInvocationException ex) {System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw();throw;}
         }

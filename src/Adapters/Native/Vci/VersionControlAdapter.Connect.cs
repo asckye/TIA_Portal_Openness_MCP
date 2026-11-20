@@ -190,7 +190,8 @@ namespace TiaMcp.Adapters.Native.Vci
             bool walkTrace = false)
         {
             var attempts = new VciExportAttempts();
-            int mapped = 0;
+            int mapped = 0, failed = 0;
+            bool MayHaveChanged() => (!dryRun && mapped > 0) || attempts.MappedAfterFailure > 0 || attempts.Unconfirmed > 0;
             var lines = new List<string>();
             try
             {
@@ -206,7 +207,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 // unsupported object is a normal part of the sweep, re-acquire the handle after every failure.
                 Workspace ReAcquire() => ReAcquireWorkspace(wsName);
 
-                int already = 0, failed = 0, unsupported = 0, visited = 0;
+                int already = 0, unsupported = 0, visited = 0;
                 bool truncated = false;
                 var ungroupedDevices = new List<VcNode>();
                 void Note(VcNode reported) {
@@ -221,7 +222,7 @@ namespace TiaMcp.Adapters.Native.Vci
                     Descendable = true,
                 });
 
-                while (stack.Count > 0)
+                while (stack.Count > 0 && !attempts.MappingProbeFailed)
                 {
                     if (visited >= maxObjects) { truncated = true; break; }
                     var node = stack.Pop();
@@ -291,9 +292,11 @@ namespace TiaMcp.Adapters.Native.Vci
                         }
                         else
                         {
+                            var target = LegacyXmlExport ? VciSyncTarget.Capture(flatName, () => wsRootPath) : null;
                             if (attempts.Export(() => PortVci.Export(ws, node.Obj, VciExportPolicy.RootDirectory(), flatName, fmt),
                                 () => { ws = ReAcquire(); return PortVci.Find(PortVci.MappedObjects(ws), node.Obj) != null; },
-                                detail => lines.Add(node.Label + " | " + detail)))
+                                detail => lines.Add(node.Label + " | " + detail),
+                                target == null ? null : () => target.Snapshot(wsRootPath, checkWorkspaceWhenEmpty: true)))
                             {
                                 mapped++;
                                 lines.Add(node.Label + " | mapped | format=" + fmt + " | dir=<root> | file=" + flatName);
@@ -329,7 +332,7 @@ namespace TiaMcp.Adapters.Native.Vci
                     if (walkTrace) Console.Error.WriteLine("[VCI-walk]     children=" + kids.Count);
                     foreach (var kid in kids) stack.Push(kid);
                 }
-                if (!truncated)
+                if (!truncated && !attempts.MappingProbeFailed)
                     foreach (var device in ungroupedDevices.Where(d => !d.Reported))
                     {
                         unsupported++;
@@ -337,8 +340,8 @@ namespace TiaMcp.Adapters.Native.Vci
                     }
 
                 unsupported += attempts.UnsupportedContainers;
-                failed += attempts.QueryRefusals;
-                bool unsupportedOnly = !dryRun && attempts.Issued == 0 && unsupported > 0 && failed == 0;
+                int totalFailed = failed + attempts.QueryRefusals;
+                bool unsupportedOnly = !dryRun && attempts.Issued == 0 && unsupported > 0 && totalFailed == 0;
                 string head = dryRun
                     ? string.Format("DRY RUN - nothing was mapped. {0} object(s) would be mapped into workspace '{1}' ({2}); " +
                                     "{3} already mapped, {4} not supported by VCI, {5} tree nodes visited.{6} " +
@@ -349,29 +352,34 @@ namespace TiaMcp.Adapters.Native.Vci
                                     "{5} not supported by VCI, {6} tree nodes visited.{7} " +
                                     "Next: SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace', dryRun=false), then git commit. " +
                                     "Save the project to persist the mappings.",
-                                    wsName, wsRootPath, mapped, already, failed, unsupported, visited,
+                                    wsName, wsRootPath, mapped, already, totalFailed, unsupported, visited,
                                     truncated ? " ** stopped at maxObjects - raise maxObjects for full coverage **" : "");
 
-                return new VersionControlResult
+                var result = new VersionControlResult
                 {
                     Message = head,
                     Items = lines,
                     Meta = new HmiObject {
-                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = failed == 0 && !unsupportedOnly,
+                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = totalFailed == 0 && !unsupportedOnly,
                             ["workspaceName"] = wsName, ["rootPath"] = wsRootPath, ["dryRun"] = dryRun, ["visited"] = visited,
                             ["mapped"] = mapped, ["alreadyMapped"] = already,
-                            ["unsupported"] = unsupported, ["failed"] = failed, ["truncated"] = truncated,
+                            ["unsupported"] = unsupported, ["failed"] = totalFailed, ["truncated"] = truncated,
                             ["nativeMessage"] = attempts.NativeMessage, ["exportsIssued"] = attempts.Issued,
                             ["queryRefusals"] = attempts.QueryRefusals, ["mappedAfterFailure"] = attempts.MappedAfterFailure,
-                            ["mayHaveChanged"] = attempts.Issued > 0, ["writeOutcomeUnknown"] = attempts.Unconfirmed > 0
+                            ["unconfirmed"] = attempts.Unconfirmed,
+                            ["mayHaveChanged"] = MayHaveChanged(), ["writeOutcomeUnknown"] = attempts.Unconfirmed > 0
                     },
                 };
+                if (attempts.MappingProbeFailed) result.Meta["dataComplete"] = false;
+                return result;
             }
             catch (Exception ex)
             {
                 var meta = FailureEvidence(ex, attempts.Issued > 0);
+                meta["mayHaveChanged"] = MayHaveChanged();
+                meta["unconfirmed"] = attempts.Unconfirmed;
                 meta["exportsIssued"] = attempts.Issued; meta["mapped"] = mapped; meta["mappedAfterFailure"] = attempts.MappedAfterFailure;
-                meta["queryRefusals"] = attempts.QueryRefusals; meta["failed"] = attempts.QueryRefusals + 1;
+                meta["queryRefusals"] = attempts.QueryRefusals; meta["failed"] = failed + attempts.QueryRefusals + 1;
                 meta["writeOutcomeUnknown"] = attempts.Unconfirmed > 0;
                 meta["nativeMessage"] = attempts.NativeMessage ?? Flatten(ex.GetBaseException().Message);
                 return new VersionControlResult

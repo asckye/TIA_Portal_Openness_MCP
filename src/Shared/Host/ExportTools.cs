@@ -308,7 +308,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "InvalidParams": return new Error(InvalidInput("").Message, ArgumentDetails(tool, null, data));
                 case "NotFound": return new Error("The exact target was not found.", MissingTargetDetails(tool, evidence: data));
                 case "NotSupportedOnVersion": return UnsupportedCapabilityDetails.ErrorFor(ReleaseKey, tool, (string?)data["action"],
-                    HostBehavior.SafeDiagnostic((string?)data["nativeMessage"]));
+                    HostBehavior.SafeDiagnostic((string?)data["nativeMessage"]), (string?)data["unsupportedBy"]);
                 default
                     : return new Error("The operation did not succeed; inspect the retained evidence.", new PreconditionFailedDetails("native-exchange", null));
             }
@@ -340,7 +340,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Error? error = null;
             for (Exception? cause = exception; cause != null; cause = cause.InnerException)
             {
-                if (cause is PortalException portal)
+                if (cause is PortalException portal && (!write || portal.Code != PortalErrorCode.OpennessError))
                 {
                     var evidence = portal.Code == PortalErrorCode.NotFound ? (JsonObject)data.DeepClone() : new JsonObject();
                     evidence["status"] = portal.Code.ToString();
@@ -351,7 +351,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (cause is global::ModelContextProtocol.McpException mcp && mcp.ErrorCode == global::ModelContextProtocol.McpErrorCode.InvalidParams) error =
                     InvalidInput("");
                 if (cause is NotSupportedException) error =
-                    UnsupportedCapabilityDetails.ErrorFor(ReleaseKey, tool, null, HostBehavior.SafeDiagnostic(cause.Message));
+                    UnsupportedCapabilityDetails.ErrorFor(ReleaseKey, tool, null, HostBehavior.SafeDiagnostic(cause.Message),
+                        cause.Data["unsupportedBy"] as string);
                 if (cause is FileNotFoundException || cause is DirectoryNotFoundException) error =
                     new Error("The input file or directory was not found.", MissingTargetDetails(tool, evidence: data));
             }
@@ -366,7 +367,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (write)
             {
                 var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception,
-                    dispatched: exception.Data["foundationRequestSent"] is true, readOnly: false);
+                    dispatched: TiaOpenness.Shared.HostFailurePolicy.WorkerMark(exception, "foundationRequestSent", true), readOnly: false);
                 if (kind == TiaOpenness.Shared.HostFailureKind.Unknown)
                 {
                     data["executionEvidence"]!["stage"] = "native-exchange";
@@ -374,7 +375,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         new OutcomeUnknownDetails("native-exchange", Evidence(data))), Outcome.Unknown, Execution.Unknown,
                         Completeness.Unknown, current: current, writes: true);
                 }
-                return Reject(tool, new Error("The operation was rejected before its write.",
+                return Reject(tool, new Error("The operation did not complete.",
                     new PreconditionFailedDetails("native-exchange", null)), data, current, write);
             }
             return Result(tool, data, new Error("The native read did not complete.", new NativeOperationFailedDetails(null, null, Evidence(data))),

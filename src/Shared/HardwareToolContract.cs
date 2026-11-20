@@ -129,7 +129,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams } invalidArguments
                         ? new Error(HostBehavior.SafeDiagnostic(invalidArguments.Message) ?? "The hardware arguments are invalid.",
                             new InvalidArgumentDetails("", Array.Empty<string>()))
-                    : cause is NotSupportedException ? UnsupportedCapabilityDetails.ErrorFor(ReleaseKey, tool, null, HostBehavior.SafeDiagnostic(cause.Message))
+                    : cause is NotSupportedException ? UnsupportedCapabilityDetails.ErrorFor(ReleaseKey, tool, null, HostBehavior.SafeDiagnostic(cause.Message),
+                        cause.Data["unsupportedBy"] as string)
                     : null;
                 if (error != null && !write) return Result(tool, null, error, Outcome.RejectedBeforeOperation, current);
                 if (tool == "ImportDeviceAml" && write && HostBehavior.WorkerReplyEvidence(tool, ex) is { } retained)

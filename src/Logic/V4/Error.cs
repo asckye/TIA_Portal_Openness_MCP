@@ -385,6 +385,13 @@ namespace TiaMcp.Logic.V4
         public static Error ErrorFor(string release, string tool, string? action, string? reason)
             => new Error(MessageFor(release, tool, action, reason), new UnsupportedCapabilityDetails(release, tool, action));
 
+        public static Error TargetErrorFor(string release, string tool, string? action, string? reason)
+            => new Error(tool + " cannot run on the selected object" + (string.IsNullOrEmpty(reason) ? "." : ": " + reason),
+                new UnsupportedCapabilityDetails(release, tool, action));
+
+        public static Error ErrorFor(string release, string tool, string? action, string? reason, string? unsupportedBy)
+            => unsupportedBy == "target" ? TargetErrorFor(release, tool, action, reason) : ErrorFor(release, tool, action, reason);
+
         public UnsupportedCapabilityDetails(string? releaseKey, string? capability, string? action)
         {
             ReleaseKey = releaseKey;

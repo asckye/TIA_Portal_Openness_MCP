@@ -395,7 +395,8 @@ namespace TiaMcp.Adapters.Native.Security
                         throw new InvalidOperationException("UMC " + kind + " already exists in the project: " + name
                             + " (offline creation of an existing name throws EngineeringTargetInvocationException natively).");
                     if (!request.Creates && existing == null)
-                        throw new PortalException(PortalErrorCode.NotFound, "Exact UMC " + kind + " not found in the project: " + name);
+                        throw new PlcSoftwareException("NotFound", "Exact UMC " + kind + " not found in the project: " + name)
+                            { Data = { ["parameter"] = "name" } };
                     if (existing != null) meta["before"] = UmcMemberRow(existing);
                     Role? role = request.NeedsRole ? _session.ExactUmacRole(umac, roleName) : null;
                     if (role != null) meta["role"] = new HmiObject { ["name"] = role.Name, ["roleClass"] = role.GetType().Name };
