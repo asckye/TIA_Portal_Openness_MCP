@@ -386,6 +386,16 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Space_on_Connect_returns_the_keyboard_selected_PID",
                 "Modal_Cancel_returns_no_PID_and_restores_the_owners_keyboard_focus"
             },
+            ["TiaOpenness.Gui.Tests.ProjectPageInteractionTests"] = new[] {
+                "A_slow_block_load_keeps_the_device_focused_and_only_disables_block_checkboxes",
+                "Activating_a_plc_from_the_narrow_vci_flyout_keeps_focus_through_the_load",
+                "Arrows_browse_plcs_tags_and_version_control_and_only_activation_opens_them",
+                "Expanding_a_plc_loads_only_its_blocks_and_tree_nodes_open_the_existing_documents",
+                "Tags_wait_for_the_target_plc_blocks_and_exclude_competing_operations"
+            },
+            ["TiaOpenness.Gui.Tests.RemoteConfigurationTests"] = new[] {
+                "Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection"
+            },
             ["TiaOpenness.Gui.Tests.WorkbenchApprovalConfirmationTests"] = new[] {
                 "Enter_is_inert_and_cancel_or_escape_preserves_approval_and_reopening_clears_input"
             },

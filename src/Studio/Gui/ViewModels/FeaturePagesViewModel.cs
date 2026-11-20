@@ -173,7 +173,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     }
     public AuditRow? JumpToBreak()
     {
-        var broken = Audit.Events.TakeLast(AuditLogService.PageSize).FirstOrDefault(e => e.Index == BreakIndex && (_verification?.Chain == null || e.Chain == _verification.Chain));
+        var broken = Audit.Events.TakeLast(AuditLogService.PageSize)
+            .FirstOrDefault(e => e.Index == BreakIndex && (_verification?.Chain == null || e.Chain == _verification.Chain));
         if (broken == null) return null;
         _auditBreak = (broken.Chain, broken.Index);
         if (_auditSearch.Length != 0) { _auditSearch = ""; Raise(nameof(AuditSearch)); }
@@ -292,7 +293,12 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         {
             if (_auditVisible && Changed(Audit, nameof(IAuditLogService.Events)))
             {
-                if (_verification != null && !ReferenceEquals(_verifiedEvents, Audit.Events)) { _verification = null; _auditBreak = null; NotifyVerification(); }
+                if (_verification != null && !ReferenceEquals(_verifiedEvents, Audit.Events))
+                {
+                    _verification = null;
+                    _auditBreak = null;
+                    NotifyVerification();
+                }
                 RefreshAudit();
             }
             if (Changed(Audit, nameof(IAuditLogService.TotalCount))) Raise(nameof(AuditCount));
@@ -304,7 +310,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
             RefreshEnvironmentSelection();
             Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
-                    nameof(EnvironmentAttentionCount), nameof(EnvironmentCheckCount), nameof(EnvironmentPassedCount), nameof(EnvironmentPendingCount), nameof(LogTail));
+                nameof(EnvironmentAttentionCount), nameof(EnvironmentCheckCount), nameof(EnvironmentPassedCount),
+                nameof(EnvironmentPendingCount), nameof(LogTail));
         }
         if (_dirty.ContainsKey(Diagnostics)) Notify(nameof(DiagnosticCanStart), nameof(DiagnosticIdle), nameof(DiagnosticRunning),
             nameof(DiagnosticDone), nameof(DiagnosticLabel), nameof(DiagnosticTone), nameof(DiagnosticStep), nameof(DiagnosticPercent), nameof(DiagnosticPath));
@@ -320,8 +327,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         RefreshEnvironmentSelection();
         RefreshCalls(); RefreshAudit(languageChanged: true);
         Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
-                nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting),
-            nameof(PendingCount), nameof(WaitingLabel), nameof(RequestsEmptyTitle), nameof(ApprovalsTabLabel), nameof(CallsTabLabel), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
+            nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting),
+            nameof(PendingCount), nameof(WaitingLabel), nameof(RequestsEmptyTitle), nameof(ApprovalsTabLabel),
+            nameof(CallsTabLabel), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
         NotifyVerification();
     });
     private void Dispatch(Action action)
@@ -365,7 +373,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         string search = Search.Trim();
         var next = records.Where(c => (!WriteOnly || c.IsWrite) && (!FailOnly || c.Result is CallResult.Failed or CallResult.Partial or CallResult.Unknown)
                 && (!ReleaseOnly || c.Release == Release) && (!HumanOnly || c.Actor == "workbench")
-                && (!AiOnly || c.Actor == "mcp") && (c.Tool.Contains(search, StringComparison.OrdinalIgnoreCase) || c.Target.Contains(search, StringComparison.OrdinalIgnoreCase)))
+                && (!AiOnly || c.Actor == "mcp")
+                && (c.Tool.Contains(search, StringComparison.OrdinalIgnoreCase) || c.Target.Contains(search, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(c => c.Result == CallResult.Pending ? 0 : 1).ThenByDescending(c => c.Time).Select(c => _callCache[c.JournalKey]).ToArray();
         Sync(_calls, next);
         if ((previousCount == 0) != (_calls.Count == 0)) Raise(nameof(CallsEmpty));

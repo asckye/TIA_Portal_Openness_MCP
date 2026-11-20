@@ -51,7 +51,7 @@ public partial class SessionPopover : UserControl
         var panel = _model.Panel;
         var release = TiaVersionCatalog.Get(session.SelectedReleaseKey);
         // Both the bridge and the shared worker use the release's Openness owner apartment.
-        Release.Text = session.IsConnected ? release.DisplayName + " · " + (release.Key is "20" or "21" ? "MTA" : "STA") : "—";
+        Release.Text = session.IsConnected ? release.DisplayName + " · " + release.OwnerApartment : "—";
         Project.Text = session.IsConnected && session.ProjectName.Length > 0 ? session.ProjectName : "—";
         var device = _model.Engineering.SelectedDevice;
         Plc.Text = session.IsConnected && device is { Category: "Plc" } ? device.DisplayName ?? device.Name : "—";

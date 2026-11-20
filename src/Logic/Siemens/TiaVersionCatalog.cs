@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.IO;
+using System.Threading;
 
 namespace TiaMcp.Versioning
 {
@@ -18,6 +19,10 @@ namespace TiaMcp.Versioning
         public string Key { get; private set; }
         public string DisplayName { get; private set; }
         public int MajorVersion { get; private set; }
+        public ApartmentState OwnerApartment
+        {
+            get { return MajorVersion == 20 || MajorVersion == 21 ? ApartmentState.MTA : ApartmentState.STA; }
+        }
         public bool IsRunnable { get; private set; }
         public string RuntimeDirectory { get; private set; }
         public string HostKind { get { return "foundation"; } }
