@@ -1,4 +1,5 @@
 extern alias adaptertests;
+extern alias foundationhost;
 extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,6 +11,9 @@ using TiaMcp.WorkerChannel;
 using TiaMcpServer.ModelContextProtocol;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Fixture = adaptertests::TiaMcp.Adapters.Contracts.Tests.MutationEvidenceTests;
+using TypeImportFixture = adaptertests::TiaMcp.Adapters.Contracts.Tests.ScopedImportOutcomeTests;
+using NativeException = adaptertests::Siemens.Engineering.EngineeringException;
+using Foundation = foundationhost::TiaMcp.FoundationHost;
 using Xunit;
 
 public sealed class VerifiedImportOutcomeTests
@@ -251,6 +255,77 @@ public sealed class VerifiedImportOutcomeTests
             Assert.Equal(status == "unknown" ? "OUTCOME_UNKNOWN" : "NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
             Assert.Equal(reason, (string?)body["data"]?["evidence"]?["nativeMessage"]);
         }
+    }
+
+    [Theory]
+    [InlineData(true, "NATIVE_OPERATION_FAILED", "failed", "completed")]
+    [InlineData(false, "OUTCOME_UNKNOWN", "unknown", "unknown")]
+    public async Task Type_import_reports_the_native_failure_only_after_verified_absence(
+        bool readable, string code, string outcome, string execution)
+    {
+        const string tool = "ImportPlcType";
+        string path = Path.Combine(Path.GetTempPath(), $"Motor-{Guid.NewGuid():N}.xml");
+        using var worker = new RefusedTypeImportWorker(readable);
+        var definition = Foundation.FoundationTools.Definitions.Single(d => d.Name == tool);
+        var host = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(definition, worker), "18", () => new(false, 1));
+        try
+        {
+            TypeImportFixture.Document("SW.Types.PlcStruct").Save(path);
+            var request = SharedPipelineTests.Scope.Request(tool, new JsonObject {
+                ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = path, ["dryRun"] = false,
+                ["confirm"] = true, ["expectedProjectFile"] = "C:/fixture.ap18" });
+            var result = await host.InvokeAsync(request);
+            var body = result.StructuredContent!;
+            Assert.Equal(new[] { "import", "read:Motor" }, worker.Calls);
+            Assert.True(result.IsError);
+            Assert.Equal(code, (string?)body["error"]?["code"]);
+            Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
+            Assert.Equal(execution, (string?)body["meta"]?["execution"]);
+            var evidence = body["data"]!["evidence"]!;
+            Assert.Equal(RefusedTypeImportWorker.NativeMessage, (string?)evidence["nativeMessage"]);
+            if (readable)
+            {
+                Assert.True((bool?)evidence["verifiedAbsent"]);
+                Assert.False((bool?)evidence["mayHaveChanged"]);
+                Assert.Equal(RefusedTypeImportWorker.NativeMessage, (string?)body["error"]?["message"]);
+                Assert.Equal(RefusedTypeImportWorker.NativeMessage, (string?)body["error"]?["details"]?["nativeMessage"]);
+            }
+        }
+        finally { File.Delete(path); }
+    }
+
+    private sealed class RefusedTypeImportWorker(bool readable) : Foundation.IFoundationWorker
+    {
+        internal const string NativeMessage = "TIA refused the Motor type definition.";
+        internal readonly List<string> Calls = new();
+
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            Assert.Equal("ImportTypes", operation);
+            Assert.False((bool?)arguments["dryRun"]);
+            try
+            {
+                TypeImportFixture.ImportNewType((string)arguments["importPath"]!, () => {
+                    Calls.Add("import");
+                    var error = new NativeException("Import failed.");
+                    error.MessageData.Text = NativeMessage;
+                    error.MessageData.DetailText = "";
+                    throw error;
+                }, name => {
+                    Calls.Add("read:" + name);
+                    return readable ? false : throw new IOException("Type readback unavailable.");
+                });
+            }
+            catch (NativeException error)
+            {
+                var failure = WorkerFailurePolicy.Classify(error, enteredOperation: true, readOnly: false);
+                throw Foundation.WorkerOperationException.FromChannelFailure(
+                    new ChannelFailureException(error.Message, failure.Code, failure.Outcome, WorkerJson.Evidence(error)));
+            }
+            throw new InvalidOperationException("The native import was expected to throw.");
+        }
+
+        public void Dispose() { }
     }
 
     [Fact]

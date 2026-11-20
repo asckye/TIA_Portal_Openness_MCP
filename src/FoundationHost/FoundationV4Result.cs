@@ -247,7 +247,7 @@ internal static class FoundationV4Result
             HostBehavior.SanitizeEvidence(retained);
             data ??= new JsonObject();
             data["evidence"] = retained;
-            if (name == "ImportPlcBlock" && worker.KnownNoMutation && retained is JsonObject importEvidence
+            if (name is ("ImportPlcBlock" or "ImportPlcType") && worker.KnownNoMutation && retained is JsonObject importEvidence
                 && (bool?)importEvidence["verifiedAbsent"] == true && (bool?)importEvidence["mayHaveChanged"] == false)
                 return Wire(release, name, id, data, Outcome.Failed, Execution.Completed, Completeness.Complete,
                     HostBehavior.UnchangedNativeError(importEvidence), true);

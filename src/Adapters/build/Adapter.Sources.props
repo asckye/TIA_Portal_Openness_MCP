@@ -171,6 +171,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSourceFileOutput.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.DocumentImport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.Manage.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.Selection.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.Global.cs" />
@@ -277,6 +278,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcSecondaryProjects.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcFoundationEngine.ProjectSelection.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcFoundationEngine.Software.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcFoundationEngine.Software.Import.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcFoundationEngine.Compile.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcFoundationPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Session/PlcDisconnectPolicy.cs" />

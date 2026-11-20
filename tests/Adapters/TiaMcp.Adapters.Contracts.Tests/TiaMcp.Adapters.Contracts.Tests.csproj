@@ -81,6 +81,7 @@
     <Compile Include="../../../src/Logic/Siemens/ProjectBindingIdentity.cs" Link="Session/ProjectBindingIdentity.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="Session/TiaVersionCatalog.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcFoundationPolicy.cs" Link="Session/PlcFoundationPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.Software.Import.cs" />
     <Compile Include="../../../src/Shared/NativeInputPolicy.cs" Link="Shared/NativeInputPolicy.cs" />
     <Compile Include="../../../src/Shared/DataLocations.cs" Link="Shared/DataLocations.cs" />
     <Compile Include="../../../src/Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="../../../src/Adapters/Native/Reflection/ReflectionScreenTraversal.cs" Link="Reflection/ReflectionScreenTraversal.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryService.Selection.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryPolicy.cs" Link="Libraries/LibraryPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Libraries/LibraryService.DocumentImport.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryArchive.cs" />
     <Compile Include="../../../src/Adapters/Native/Security/ProjectUsers.cs" />
     <Compile Include="../../../src/Adapters/Native/Security/DeviceUsersAdapter.cs" />

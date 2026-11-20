@@ -91,9 +91,9 @@ namespace TiaMcp.Adapters
                     meta["mayHaveChanged"] = true;
                     var result = PlcGroupOperations.Call(project, "ImportProjectTexts", signature, file, updateSourceLanguage);
                     meta["nativeResult"] = HardwareScalarEvidence.Read(result);
-                    PlcSoftwareValues.RecordNativeResult(meta, PlcGroupOperations.Get(result, "State"), meta["nativeResult"]);
-                    meta["apiCallSuccess"] = true; meta["operationSuccess"] = TiaMcp.Adapters.Contracts.NativeResultStates
-                        .Succeeded(meta["nativeResultState"]?.ToString()); meta["dataComplete"] = false;
+                    var state = PlcGroupOperations.Get(result, "State");
+                    PlcSoftwareValues.RecordNativeResult(meta, state, meta["nativeResult"]);
+                    meta["apiCallSuccess"] = true; meta["operationSuccess"] = NativeResultStates.Succeeded(state); meta["dataComplete"] = false;
                 }
                 return dryRun ? "Native project text import preview; file contents not applied."
                     : "Native import completed; translated text changes require separate export/readback verification. No explicit save/compile/download.";

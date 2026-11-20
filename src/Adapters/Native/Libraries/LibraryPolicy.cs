@@ -12,6 +12,9 @@ namespace TiaMcp.Adapters.Libraries
         internal static bool CanUseDocumentImportCountProof(string importOptions, string createOptions, bool hasTargetEnvironment)
             => importOptions == "None" && createOptions == "None" && !hasTargetEnvironment;
 
+        internal static bool CanUseDocumentImportEnvironmentProof(string importOptions, string createOptions)
+            => importOptions == "None" && createOptions == "None";
+
         // Siemens V20/V21, "Creating new type from document" / "Updating type
         // from document": project library only, and basename must be unambiguous.
         internal static void ValidateDocumentImportScope(int major, bool projectLibrary,

@@ -7,6 +7,18 @@ namespace TiaMcp.SourceContracts.Tests;
 public sealed class HonestWriteSources
 {
     [Fact]
+    public void Project_text_import_records_and_classifies_the_returned_state_enum()
+    {
+        string source = Read("src/Adapters/Native/Engineering/EngineeringServices.cs");
+        int call = source.IndexOf("var result = PlcGroupOperations.Call(project, \"ImportProjectTexts\"", StringComparison.Ordinal);
+        Assert.True(call >= 0);
+        string import = source[call..source.IndexOf("return dryRun", call, StringComparison.Ordinal)];
+        Assert.Contains("var state = PlcGroupOperations.Get(result, \"State\");", import, StringComparison.Ordinal);
+        Assert.Contains("PlcSoftwareValues.RecordNativeResult(meta, state,", import, StringComparison.Ordinal);
+        Assert.Contains("meta[\"operationSuccess\"] = NativeResultStates.Succeeded(state);", import, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Alarm_exports_read_engineering_detail_messages()
     {
         string source = Read("src/Adapters/Native/Plc/PlcB5Alarms.cs");
@@ -104,12 +116,12 @@ public sealed class HonestWriteSources
     }
 
     [Fact]
-    public void Aml_import_uses_admission_without_exclusive_access_only_on_v21()
+    public void Aml_import_uses_admission_without_exclusive_access_for_the_transfer_result_overload()
     {
         string source = Read("src/Adapters/Native/Hardware/HardwareAml.cs");
         source = source[source.IndexOf("public HardwareAddressingReply ImportHardwareAml", StringComparison.Ordinal)..];
-        Assert.Contains("using var exclusive = !dryRun && ReleaseKey != \"21\" ? HardwareEditAccess() : null;", source, StringComparison.Ordinal);
-        Assert.Contains("if (!dryRun && ReleaseKey == \"21\") HardwareWriteAdmission();", source, StringComparison.Ordinal);
+        Assert.Contains("#if PLC_CAX_TRANSFER_RESULT if (!dryRun) HardwareWriteAdmission(); #else", source, StringComparison.Ordinal);
+        Assert.Contains("#else using var exclusive = !dryRun ? HardwareEditAccess() : null; #endif", source, StringComparison.Ordinal);
         Assert.Equal(1, source.Split("HardwareEditAccess()", StringSplitOptions.None).Length - 1);
         Assert.Contains("cax.Import(source, option)", source, StringComparison.Ordinal);
         Assert.Contains("cax.Import(source, log, option)", source, StringComparison.Ordinal);

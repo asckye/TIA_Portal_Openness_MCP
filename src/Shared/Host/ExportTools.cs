@@ -362,8 +362,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, new Error("The worker reply was lost; inspect state before another write.",
                     new OutcomeUnknownDetails("native-exchange", Evidence(data))), Outcome.Unknown, Execution.Unknown,
                     Completeness.Unknown, current: current, writes: write);
-            if (error != null || write) return Reject(tool, error ?? new Error("The operation was rejected before its write.",
-                new PreconditionFailedDetails("native-exchange", null)), data, current, write);
+            if (error != null) return Reject(tool, error, data, current, write);
+            if (write)
+            {
+                var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception,
+                    dispatched: exception.Data["foundationRequestSent"] is true, readOnly: false);
+                if (kind == TiaOpenness.Shared.HostFailureKind.Unknown)
+                {
+                    data["executionEvidence"]!["stage"] = "native-exchange";
+                    return Result(tool, data, new Error("The worker could not confirm the write. Inspect the target before retrying.",
+                        new OutcomeUnknownDetails("native-exchange", Evidence(data))), Outcome.Unknown, Execution.Unknown,
+                        Completeness.Unknown, current: current, writes: true);
+                }
+                return Reject(tool, new Error("The operation was rejected before its write.",
+                    new PreconditionFailedDetails("native-exchange", null)), data, current, write);
+            }
             return Result(tool, data, new Error("The native read did not complete.", new NativeOperationFailedDetails(null, null, Evidence(data))),
                 Outcome.ReadFailed, Execution.ReadOnly, Completeness.None, current: current, writes: write);
         }

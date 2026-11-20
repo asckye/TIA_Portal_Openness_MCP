@@ -87,8 +87,11 @@ namespace TiaMcp.Adapters
                 var source = HardwareAmlPolicy.InputFile(filePath);
                 var log = HardwareAmlPolicy.Plan(logFilePath, nameof(logFilePath));
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false;
-                using var exclusive = !dryRun && ReleaseKey != "21" ? HardwareEditAccess() : null;
-                if (!dryRun && ReleaseKey == "21") HardwareWriteAdmission();
+#if PLC_CAX_TRANSFER_RESULT
+                if (!dryRun) HardwareWriteAdmission();
+#else
+                using var exclusive = !dryRun ? HardwareEditAccess() : null;
+#endif
                 var cax = project!.GetService<CaxProvider>() ?? throw new NotSupportedException("CaxProvider unavailable for this project.");
                 meta["importOption"] = option.ToString();
                 meta["sourceFile"] = HardwareAmlPolicy.Verify(source); meta["plannedLogFile"] = log.FullName;

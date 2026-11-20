@@ -1,4 +1,5 @@
 extern alias toolpipeline;
+extern alias foundationhost;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
@@ -8,10 +9,90 @@ using TiaMcp.PlcWorker;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
+using System.Reflection;
 using Services = toolpipeline::TiaMcpServer.Siemens.Services;
+using Foundation = foundationhost::TiaMcp.FoundationHost;
 
 public sealed class HonestWriteOutcomeTests
 {
+    [Theory]
+    [InlineData(true, false, "OUTCOME_UNKNOWN", "unknown")]
+    [InlineData(true, true, "PRECONDITION_FAILED", "not-started")]
+    [InlineData(false, false, "PRECONDITION_FAILED", "not-started")]
+    public void Exchange_write_exception_requires_dispatch_and_no_refusal_proof_for_unknown(bool sent, bool known, string code, string execution)
+    {
+        using var scope = EngineHostParity.EnterScope();
+        var failure = new InvalidOperationException("Text import did not return.");
+        failure.Data["foundationRequestSent"] = sent;
+        if (known) failure.Data["foundationKnownNoMutation"] = true;
+        var body = Body(Host.PlcExchangeContract.Run("ImportProjectTexts", () => throw failure, true, true));
+        Assert.Equal(code, (string?)body["error"]?["code"]);
+        Assert.Equal(execution, (string?)body["meta"]?["execution"]);
+        if (execution == "unknown") Assert.Equal("native-exchange", (string?)body["data"]?["executionEvidence"]?["stage"]);
+    }
+
+    [Theory, InlineData("file", "NOT_FOUND"), InlineData("argument", "INVALID_ARGUMENT"),
+        InlineData("unsupported", "UNSUPPORTED_CAPABILITY"), InlineData("admission", "PRECONDITION_FAILED")]
+    public void Sent_exchange_write_preserves_typed_refusals(string kind, string code)
+    {
+        using var scope = EngineHostParity.EnterScope();
+        Exception failure = kind switch {
+            "file" => new FileNotFoundException("Input was not found."),
+            "argument" => new ArgumentException("Invalid input.", "filePath"),
+            "unsupported" => new NotSupportedException("Unavailable for this release."),
+            _ => new AdapterPreconditionException("Text import refused.", "filePath", false)
+        };
+        failure.Data["foundationRequestSent"] = true;
+        var body = Body(Host.PlcExchangeContract.Run("ImportProjectTexts", () => throw failure, true, true));
+        Assert.Equal(code, (string?)body["error"]?["code"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+    }
+
+    [Theory, InlineData("rejected-before-operation"), InlineData("unknown")]
+    public async Task Ported_text_import_tracks_only_the_unconfirmed_worker_write_as_unsettled(string outcome)
+    {
+        const string tool = "ImportProjectTexts";
+        using var contextWorker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(contextWorker, "18");
+        using var worker = new ProjectTextWorker(outcome);
+        var method = typeof(Host.EngineeringServicesTools).GetMethod(nameof(Host.EngineeringServicesTools.ImportProjectTextsV4))!;
+        var registered = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(worker, "18", method, tool), "18", () => new(false, 1));
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
+            Params = new() { Name = tool, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                """{"filePath":"C:/fixture/texts.xlsx","updateSourceLanguage":false,"dryRun":false}""") } };
+        var body = Body(await registered.InvokeAsync(request));
+        Assert.Equal(1, worker.Imports);
+        Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
+        var unsettled = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot();
+        if (outcome == "unknown")
+        {
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+            Assert.Equal((string?)body["meta"]?["requestId"], Assert.Single(unsettled).RequestId);
+        }
+        else
+        {
+            Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Assert.Empty(unsettled);
+        }
+    }
+
+    private sealed class ProjectTextWorker(string outcome) : Foundation.IFoundationWorker
+    {
+        internal int Imports;
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject {
+                ["ProcessId"] = 18, ["IsAttached"] = true, ["ProjectFile"] = "C:/fixture.ap18" });
+            Assert.Equal("engineering-services.ExecuteEngineeringServices", operation);
+            Assert.Equal("ImportProjectTexts", (string?)arguments["request"]?["Operation"]);
+            Imports++;
+            throw new Foundation.WorkerOperationException("Native import refused.", -32603, outcome) { Data = { ["foundationRequestSent"] = true } };
+        }
+        public void Dispose() { }
+    }
+
     public static IEnumerable<object[]> RetrievalRefusals()
         => new[] { "15.1", "16", "17", "18", "19", "20", "21" }.SelectMany(release =>
             new[] { "AlreadyExists", "InvalidParams", "NotFound", "PreconditionFailed" }.SelectMany(status =>

@@ -9,6 +9,20 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class CaxTransferResultTests
 {
+    [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Transfer_result_import_passes_write_admission_and_runs_outside_exclusive_access(string release)
+    {
+        var result = new Cax.TransferResult(Cax.TransferResultState.Warning, 0, 1, []);
+        var provider = new Cax.CaxProvider(result);
+        using (provider.ExclusiveAccess())
+            Assert.Throws<InvalidOperationException>(() => Import(release, provider));
+
+        var reply = Import(release, provider);
+        Assert.Equal(1, provider.ImportCalls);
+        Assert.Equal("Warning", reply.Meta["nativeResult"]);
+        Assert.True(reply.MayHaveChanged);
+    }
+
     [Theory]
     [InlineData("19")]
     [InlineData("20")]
@@ -90,6 +104,13 @@ public sealed class CaxTransferResultTests
     private static HardwareAddressingReply Import(string release, Cax.TransferResult result)
     {
         var provider = new Cax.CaxProvider(result);
+        var reply = Import(release, provider);
+        Assert.Equal(1, provider.ImportCalls);
+        return reply;
+    }
+
+    private static HardwareAddressingReply Import(string release, Cax.CaxProvider provider)
+    {
         var engine = new CaxEngine(release, provider);
         string directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "cax-" + Guid.NewGuid().ToString("N"))).FullName;
         string source = Path.Combine(directory, "input.aml");
@@ -97,7 +118,7 @@ public sealed class CaxTransferResultTests
         {
             File.WriteAllText(source, """<CAEXFile SchemaVersion="2.15" FileName="input.aml"><InstanceHierarchy Name="Project"/></CAEXFile>""");
             var reply = engine.ImportHardwareAml(source, Path.Combine(directory, "import.log"), confirmImport: true, dryRun: false);
-            Assert.Equal(1, provider.ImportCalls);
+            Assert.Equal(1, engine.WriteAdmissions);
             return reply;
         }
         finally

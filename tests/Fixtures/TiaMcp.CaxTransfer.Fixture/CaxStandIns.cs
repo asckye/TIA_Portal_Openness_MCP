@@ -13,8 +13,19 @@ namespace Siemens.Engineering.Cax
     public sealed class CaxProvider(TransferResult result)
     {
         public int ImportCalls { get; private set; }
+        private bool exclusiveHeld;
+        public IDisposable ExclusiveAccess()
+        {
+            exclusiveHeld = true;
+            return new Access(this);
+        }
+        private sealed class Access(CaxProvider provider) : IDisposable
+        {
+            public void Dispose() => provider.exclusiveHeld = false;
+        }
         public TransferResult Import(FileInfo source, CaxImportOptions option)
         {
+            if (exclusiveHeld) throw new InvalidOperationException("Action is not supported within ExclusiveAccess.");
             ImportCalls++;
             return result;
         }
@@ -43,8 +54,9 @@ namespace TiaMcp.Adapters
         private string ReleaseKey => release;
         private void Check() { }
         private bool HardwareProjectMissing() => false;
-        private IDisposable? HardwareEditAccess() => null;
-        private void HardwareWriteAdmission() { }
+        public int WriteAdmissions { get; private set; }
+        private IDisposable HardwareEditAccess() => provider.ExclusiveAccess();
+        private void HardwareWriteAdmission() => WriteAdmissions++;
         private IEnumerable<Device> EnumerateAllDevices() => Array.Empty<Device>();
         private Device? HardwareLegacyDevice(string path) => throw new NotSupportedException();
 
