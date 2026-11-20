@@ -16,6 +16,11 @@ internal static partial class ReleaseCommands
         {
             case "generate-catalogs": outputs = CatalogGenerator.Generate(root, prepareSources: options.Has("Check") ? null : prepared => CatalogJson.Write(root, prepared, false)); break;
             case "generate-tool-capability-matrix": return ToolCapabilityMatrixGenerator.Run(root, options);
+            case "generate-real-machine-status":
+                var check = options.Has("Check");
+                var input = !check && options.Get("Input") is { } directory ? Path.GetFullPath(directory) : null;
+                outputs = RealMachineStatusGenerator.Generate(root, input, checkManifest: check);
+                break;
             case "generate-tool-counts": outputs = ToolCountGenerator.Generate(root); break;
             case "generate-tool-usage":
                 var usage = ToolUsageGenerator.Generate(root);

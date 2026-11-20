@@ -38,15 +38,15 @@ internal static class ToolCountGenerator
                 path == "docs/releases/v4.0.0.md"), path));
     }
 
-    internal static string Replace(string text, string block, string path)
+    internal static string Replace(string text, string block, string path, string startMarker = Begin, string endMarker = End)
     {
-        var begin = text.IndexOf(Begin, StringComparison.Ordinal);
-        var end = text.IndexOf(End, StringComparison.Ordinal);
+        var begin = text.IndexOf(startMarker, StringComparison.Ordinal);
+        var end = text.IndexOf(endMarker, StringComparison.Ordinal);
         CatalogJson.Require(begin >= 0 && end > begin &&
-            text.IndexOf(Begin, begin + Begin.Length, StringComparison.Ordinal) < 0 &&
-            text.IndexOf(End, end + End.Length, StringComparison.Ordinal) < 0,
-            "Expected exactly one tool-count block: " + path);
-        return text[..begin] + Begin + "\n" + block + "\n" + text[end..];
+            text.IndexOf(startMarker, begin + startMarker.Length, StringComparison.Ordinal) < 0 &&
+            text.IndexOf(endMarker, end + endMarker.Length, StringComparison.Ordinal) < 0,
+            "Expected exactly one " + startMarker + " block: " + path);
+        return text[..begin] + startMarker + "\n" + block + "\n" + text[end..];
     }
 
     private static string Render(CatalogData data, Dictionary<string, int> lite, bool chinese, bool history)

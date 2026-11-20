@@ -1,5 +1,7 @@
 # 真机验收与历史证据
 
+[逐工具真机状态表](real-machine-status.md)列出八个 TIA 版本的候选提交、测试记录和结果。
+
 当前构建、离线功能与协议检查由 `merge-check` 和 `prepare` 记录在 `bin-build/merge-check/`、`bin-build/prepared/`；这些检查不等于连接真实 TIA 工程或在线 PLC 的验收。历史版本与现场结果在下方单列，不能推广为当前版本通过。
 
 ## 预发布例外

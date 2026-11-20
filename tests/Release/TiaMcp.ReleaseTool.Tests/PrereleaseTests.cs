@@ -150,7 +150,14 @@ public sealed class PrereleaseTests
     [Fact]
     public void NotVerifiedSectionComesFromTheLedgerAndTheChecklist()
     {
-        var block = PrereleaseNotes.Generate(Ledger, Checklist);
+        var status = RealMachineStatusGenerator.Read(Root);
+        var block = PrereleaseNotes.DraftBlock(Ledger, Checklist, status);
+        foreach (var key in CatalogJson.Keys)
+        {
+            var s = status.Summarize(key);
+            var release = RealMachineStatusGenerator.Label(key);
+            Assert.Contains($"Real-machine records: {s.Recorded}/{s.Registered} tools on {release} (candidate {s.Latest?.Commit})", block);
+        }
         Assert.StartsWith(PrereleaseNotes.Begin + "\n" + PrereleaseNotes.Heading + "\n", block, StringComparison.Ordinal);
         Assert.EndsWith(PrereleaseNotes.End + "\n", block, StringComparison.Ordinal);
         // One running item number across the ledger rows, the behavior summary and the checklist items (the report form asks for it).
@@ -166,8 +173,9 @@ public sealed class PrereleaseTests
         Assert.DoesNotContain("\n9. ", block, StringComparison.Ordinal);
         Assert.DoesNotContain("old", block, StringComparison.Ordinal);
         Assert.DoesNotContain("**14sp1**", block, StringComparison.Ordinal);
-        Assert.Throws<ReleaseException>(() => PrereleaseNotes.Generate(Ledger.Replace("## V20/V21 host + worker acceptance (P6-54)", "## Renamed", StringComparison.Ordinal), Checklist));
-        Assert.Throws<ReleaseException>(() => PrereleaseNotes.Generate(Ledger, "no sections"));
+        var renamed = Ledger.Replace("## V20/V21 host + worker acceptance (P6-54)", "## Renamed", StringComparison.Ordinal);
+        Assert.Throws<ReleaseException>(() => PrereleaseNotes.DraftBlock(renamed, Checklist, status));
+        Assert.Throws<ReleaseException>(() => PrereleaseNotes.DraftBlock(Ledger, "no sections", status));
     }
 
     [Fact]
@@ -198,6 +206,43 @@ public sealed class PrereleaseTests
     {
         Assert.Null(PrereleaseNotes.CurrentError(Root, "4.0.0-beta.6"));
         Assert.Throws<ReleaseException>(() => PrereleaseNotes.Outputs(Root, "4.0.0"));
+        var frozen = PrereleaseNotes.Outputs(Root, "4.0.0-beta.6")[PrereleaseNotes.NotesPath("4.0.0-beta.6")];
+        Assert.DoesNotContain("Real-machine records:", frozen);
+        Assert.DoesNotContain("d89d0152", frozen);
+        Assert.DoesNotContain("9a4274f2", frozen);
+    }
+
+    [Fact]
+    public void PublicationRecordFreezesOnlyThePublishedVersionAndDraftReadsTheManifest()
+    {
+        using var tree = new StaticTree();
+        const string published = "4.0.0-beta.2", draft = "4.0.0-rc.1";
+        var publishedPath = PrereleaseNotes.NotesPath(published);
+        tree.Copy("manifest/publication-v" + published + ".json");
+        tree.Copy(publishedPath);
+        var original = File.ReadAllBytes(Path.Combine(tree.Root, publishedPath));
+        Assert.Equal(0, CatalogJson.Write(tree.Root, PrereleaseNotes.Outputs(tree.Root, published), false));
+        Assert.Equal(original, File.ReadAllBytes(Path.Combine(tree.Root, publishedPath)));
+        Assert.Null(PrereleaseNotes.CurrentError(tree.Root, published));
+
+        tree.Write(PrereleaseNotes.LedgerPath, Ledger);
+        tree.Write(PrereleaseNotes.ChecklistPath, Checklist);
+        tree.Copy(RealMachineStatusGenerator.Roster);
+        tree.Copy(RealMachineStatusGenerator.Manifest);
+        var draftPath = PrereleaseNotes.NotesPath(draft);
+        tree.Write(draftPath, $"# Draft\n\n{PrereleaseNotes.Begin}\nstale\n{PrereleaseNotes.End}\n");
+        var draftNotes = PrereleaseNotes.Outputs(tree.Root, draft);
+        var table = RealMachineStatusGenerator.Read(tree.Root);
+        foreach (var key in CatalogJson.Keys)
+        {
+            var s = table.Summarize(key);
+            var release = RealMachineStatusGenerator.Label(key);
+            Assert.Contains($"Real-machine records: {s.Recorded}/{s.Registered} tools on {release} (candidate {s.Latest?.Commit})", draftNotes[draftPath]);
+        }
+        Assert.Equal(0, CatalogJson.Write(tree.Root, draftNotes, false));
+        Assert.Null(PrereleaseNotes.CurrentError(tree.Root, draft));
+        Assert.Null(PrereleaseNotes.CurrentError(tree.Root, published));
+        Assert.Equal(original, File.ReadAllBytes(Path.Combine(tree.Root, publishedPath)));
     }
 
     [Fact]

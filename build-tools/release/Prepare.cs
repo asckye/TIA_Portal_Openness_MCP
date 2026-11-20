@@ -93,6 +93,10 @@ internal static class Prepare
         return WithRunEnvironment(context, () => RequireUnchanged(root, before, options.Has("BuildOnly")), environment =>
         {
             RequireVulnerabilityScan(root, options, context.Logs);
+            var check = Options.Parse(["-Root", root, "-Check"], Program.BooleanOptions);
+            var counts = Timed("generate-tool-counts", () => ReleaseCommands.GeneratorCommand("generate-tool-counts", check));
+            var status = Timed("generate-real-machine-status", () => ReleaseCommands.GeneratorCommand("generate-real-machine-status", check));
+            if (counts != 0 || status != 0) throw new ReleaseException("Stale generated tool counts or real-machine status.");
             new PrepareBuild(context, environment).Run();
             RequireUnchanged(root, before, options.Has("BuildOnly"));
             Timed("stage", () => Stage(context, tracked, environment));

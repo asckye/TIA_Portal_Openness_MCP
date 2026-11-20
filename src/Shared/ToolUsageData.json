@@ -12447,7 +12447,7 @@
     "CreateVersionControlWorkspace": {
       "arguments": {
         "workspaceName": "Engineering",
-        "folderPath": ""
+        "folderPath": "C:/Examples/VCI/Engineering"
       },
       "parameters": {},
       "operations": {},
@@ -14216,7 +14216,7 @@
     "GetPlcTagTableConstants": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "<exact table path from ListPlcTagTables>"
       },
       "parameters": {
         "kind": {
@@ -22201,7 +22201,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -25375,7 +25376,7 @@
     },
     "ExportPlcBlocksDocuments": {
       "arguments": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "<exact softwarePath from GetProjectTree>",
         "exportPath": "C:\\Examples\\exports",
         "regexName": "FB_.*"
       },
@@ -29235,7 +29236,59 @@
           }
         }
       ],
+      "ListDccCharts": [
+        {
+          "releases": [
+            "16",
+            "17"
+          ],
+          "arguments": {
+            "includeBlocks": false,
+            "includePins": false,
+            "includeLibraries": false
+          }
+        }
+      ],
+      "InvokeService": [
+        {
+          "releases": [
+            "16"
+          ],
+          "arguments": {
+            "objectKind": "Block",
+            "objectPath": "<exact block path from GetPlcBlockHierarchy>",
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "serviceTypeSuffix": "FingerprintProvider",
+            "methodName": "ToString"
+          }
+        }
+      ],
+      "CreateHardwareCatalogDevice": [
+        {
+          "releases": [
+            "18"
+          ],
+          "arguments": {
+            "keyword": "OrderNumber:6AV2 124-0GC01-0AX0/17.0.0.0",
+            "deviceName": "ExamplePanel"
+          }
+        }
+      ],
       "InvokeObject": [
+        {
+          "releases": [
+            "16"
+          ],
+          "arguments": {
+            "objectKind": "Block",
+            "objectPath": "<exact block path from GetPlcBlockHierarchy>",
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
+            "methodName": "GetAttribute",
+            "args": [
+              "Name"
+            ]
+          }
+        },
         {
           "releases": [
             "14sp1",
@@ -32403,7 +32456,7 @@
           "resultReading": [
             "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session."
           ],
-          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. RECOVERY_GUIDANCE explains refused inputs.",
+          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. For a refused StageImportFiles call, read RECOVERY_GUIDANCE and GetToolUsage(toolName=\"StageImportFiles\") before correcting its inputs.",
           "execution": {
             "arguments": {
               "dryRun": false
@@ -32420,7 +32473,7 @@
             "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session.",
             "Returns the newest 200 batches with totalBatches, returnedBatches and truncated. Unreadable folders are unknown with a reason; only known manifest fields are disclosed. A damaged primary can use a valid companion (reason manifest-invalid)."
           ],
-          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. RECOVERY_GUIDANCE explains refused inputs."
+          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. For a refused ListStagedImportFiles call, read RECOVERY_GUIDANCE and GetToolUsage(toolName=\"ListStagedImportFiles\") before correcting its inputs."
         },
         "CleanupStagedImportFiles": {
           "arguments": {
@@ -32439,7 +32492,7 @@
             "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session.",
             "Another live or uninspectable host owner is refused before approval. Cleanup verifies length and SHA-256 under an exclusive file handle; changed, locked or unknown content remains in unknownEntries. IO before deletion is not-started; failure after deletion is partial with counts for this batch."
           ],
-          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. RECOVERY_GUIDANCE explains refused inputs.",
+          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. For a refused CleanupStagedImportFiles call, read RECOVERY_GUIDANCE and GetToolUsage(toolName=\"CleanupStagedImportFiles\") before correcting its inputs.",
           "execution": {
             "arguments": {
               "dryRun": false
@@ -32469,7 +32522,7 @@
         },
         "ExportPlcBlocksDocuments": {
           "arguments": {
-            "softwarePath": "PLC_1",
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
             "exportDirectory": "C:\\Examples\\exports",
             "dryRun": true,
             "confirm": false,
@@ -32729,7 +32782,7 @@
             "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. behaviorPolicy=current; existing native behavior has not switched to safe-v4.",
             "P6-35 behavior family P6-DEVICE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
           ],
-          "note": "Compatibility forwarder. keyword -> preferredMlfb unchanged; preferredVersion empty. keyword must be a full exact OrderNumber identifier; preferredText does not rank or guess. Default dryRun=true. Same canonical preview, approval, diagnostics and result. Execution also requires dryRun=false, confirm=true, expectedPlanHash from this preview and exact expectedProjectFile."
+          "note": "Compatibility forwarder. keyword -> preferredMlfb unchanged; preferredVersion empty. keyword must be a full exact OrderNumber identifier; preferredText does not rank or guess. Default dryRun=true. Same canonical preview, approval, diagnostics and result. Execution also requires dryRun=false, confirm=true, expectedPlanHash from this preview and exact expectedProjectFile. On V18 copy the complete typeIdentifier from the matching SearchHardwareCatalog row, including the panel version."
         },
         "ListDevices": {
           "arguments": {},
@@ -34186,10 +34239,10 @@
         },
         "PrefillWorkbenchForm": {
           "arguments": {
-            "form": "inspectionRules",
+            "form": "blockFilter",
             "mode": "set",
             "fields": {
-              "namePattern": "^FB_"
+              "filter": "Motor"
             }
           },
           "parameters": {
@@ -34251,7 +34304,7 @@
             }
           },
           "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
-          "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+          "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries. For the blockFilter form, pass a fields object with the single string filter. Review the pending filter in the Workbench.",
           "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
         },
         "ApplyToolBatch": {
@@ -34314,7 +34367,7 @@
             }
           },
           "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Use the token from a preview with confirm=true on each child that requires it. Only the preview token is sent to ApplyToolBatch.",
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility.",
             "Plan-bound items fill missing or empty expectedPlanHash and expectedProjectFile from their own stored preview; caller values and confirmation flags are preserved.",
@@ -34393,7 +34446,8 @@
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility.",
             "If the result is parked, data.continuation gives a GetExportContent call and arguments. Concatenate data.text across meta.paging.nextOffset pages until complete=true before parsing the original response. data.export identifies its byte length and SHA-256. Export handles are scoped to this MCP session and may expire or be evicted."
-          ]
+          ],
+          "note": "For a refused target call, use its registered name in GetToolUsage, for example GetToolUsage(toolName=\"AnalyzePlcReferences\") for this example."
         },
         "CheckProductUpdate": {
           "arguments": {},
@@ -34699,7 +34753,8 @@
                   "softwarePath": "PLC_1",
                   "action": "createGroup",
                   "name": "ExampleSources",
-                  "dryRun": true
+                  "dryRun": true,
+                  "confirm": true
                 }
               }
             ]
@@ -34973,7 +35028,8 @@
           ],
           "notes": [
             "V19-V21 Unified alarms: first preview each identical single-alarm call and bind its data.planHash plus exact expectedProjectFile in operations; then PreviewToolBatch with 1..50 ordered calls. ApplyToolBatch consumes this batch previewToken. Bind classes/tags/cultures using the Unified readers and active project languages. No items or parameterTags parameter."
-          ]
+          ],
+          "note": "Set confirm=true on each child write that requires confirmation at apply. Preview preserves the child flags."
         },
         "PreviewToolCall": {
           "arguments": {
@@ -34988,7 +35044,8 @@
           "inline": true,
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
-          ]
+          ],
+          "note": "For a refused target call, use its registered name in GetToolUsage, for example GetToolUsage(toolName=\"AnalyzePlcReferences\") for this example."
         },
         "RestartOpennessWorker": {
           "arguments": {
@@ -37236,7 +37293,7 @@
         "GetPlcTagTableConstants": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "tablePath": "Default tag table"
+            "tablePath": "<exact table path from ListPlcTagTables>"
           },
           "parameters": {
             "kind": {
@@ -37256,7 +37313,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Select the table path from ListPlcTagTables on the bound PLC. The default table name depends on the project language."
         },
         "GetPlcBlockEditCapabilities": {
           "arguments": {
@@ -37356,7 +37414,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true,
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. The UDT example applies through V20. FC and FB builders require V21.",
           "resultReading": [
             "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
             "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21).",
@@ -39254,7 +39312,8 @@
           "arguments": {
             "sourceKind": "block",
             "sourcePath": "Examples/Example_1",
-            "dryRun": true
+            "dryRun": true,
+            "softwarePath": "<exact softwarePath from GetProjectTree>"
           },
           "parameters": {
             "softwarePath": {
@@ -43254,7 +43313,7 @@
         "CreateVersionControlWorkspace": {
           "arguments": {
             "workspaceName": "Engineering",
-            "folderPath": "",
+            "folderPath": "C:/Examples/VCI/Engineering",
             "dryRun": false,
             "expectedProjectFile": "C:/Examples/Project.ap{extension}",
             "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -43265,7 +43324,7 @@
           "resultReading": [
             "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
           ],
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Choose an existing local workspace directory on the TIA machine and preview its exact path.",
           "notes": [
             "Native workspace-language selection at creation and workspace/user-group deletion/creation are not exposed in 4.0."
           ]
@@ -46207,7 +46266,8 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "notes": [
             "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
-          ]
+          ],
+          "note": "On V16 and V17 request the chart tree with includeBlocks, includePins and includeLibraries set to false."
         },
         "ManageDccChart": {
           "arguments": {
@@ -49661,7 +49721,7 @@
             "Read ok and meta.outcome/execution/completeness; data.evidence retains native verdicts and readback. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. behaviorPolicy=current; existing native behavior has not switched to safe-v4.",
             "P6-35 behavior family P6-DEVICE is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
           ],
-          "note": "Compatibility forwarder. keyword -> preferredMlfb unchanged; preferredVersion empty. keyword must be a full exact OrderNumber identifier; preferredText does not rank or guess. Default dryRun=true. Same canonical preview, approval, diagnostics and result. Execution also requires dryRun=false, confirm=true, expectedPlanHash from this preview and exact expectedProjectFile."
+          "note": "Compatibility forwarder. keyword -> preferredMlfb unchanged; preferredVersion empty. keyword must be a full exact OrderNumber identifier; preferredText does not rank or guess. Default dryRun=true. Same canonical preview, approval, diagnostics and result. Execution also requires dryRun=false, confirm=true, expectedPlanHash from this preview and exact expectedProjectFile. On V18 copy the complete typeIdentifier from the matching SearchHardwareCatalog row, including the panel version."
         },
         "AnalyzeGlobalLibraryPackage": {
           "arguments": {
@@ -49799,7 +49859,7 @@
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Use the token from a preview with confirm=true on each child that requires it. Only the preview token is sent to ApplyToolBatch.",
           "notes": [
             "V19-V21: use PreviewToolBatch unifiedAlarms after binding each alarm call to its own single-tool preview planHash and project file. ApplyToolBatch stops at the first failed alarm; earlier calls stay, the failed call uses its own DES-3 rollback, and later calls are NOT_EXECUTED. Read per-item envelopes and cleanupRequired; inspect the project before repeating a failed write."
           ],
@@ -50244,7 +50304,8 @@
           "inline": true,
           "resultReading": [
             "If the result is parked, data.continuation gives a GetExportContent call and arguments. Concatenate data.text across meta.paging.nextOffset pages until complete=true before parsing the original response. data.export identifies its byte length and SHA-256. Export handles are scoped to this MCP session and may expire or be evicted."
-          ]
+          ],
+          "note": "For a refused target call, use its registered name in GetToolUsage, for example GetToolUsage(toolName=\"AnalyzePlcReferences\") for this example."
         },
         "CheckDownloadReadiness": {
           "arguments": {
@@ -51088,7 +51149,8 @@
           "arguments": {
             "sourceKind": "block",
             "sourcePath": "Examples/Example_1",
-            "dryRun": true
+            "dryRun": true,
+            "softwarePath": "<exact softwarePath from GetProjectTree>"
           },
           "parameters": {
             "softwarePath": {
@@ -51208,7 +51270,7 @@
         "CreateVersionControlWorkspace": {
           "arguments": {
             "workspaceName": "Engineering",
-            "folderPath": "",
+            "folderPath": "C:/Examples/VCI/Engineering",
             "dryRun": false,
             "expectedProjectFile": "C:/Examples/Project.ap{extension}",
             "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -51219,7 +51281,7 @@
           "resultReading": [
             "P6-35 behavior family P6-FALLBACK is current for release key(s) 20, 21; L5 is NOT RUN. This is the registered current behavior, not safe-v4. Treat meta.behaviorPolicy=current and UNVERIFIED_BEHAVIOR as an explicit warning; do not infer that offline/schema checks prove native acceptance."
           ],
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Choose an existing local workspace directory on the TIA machine and preview its exact path.",
           "notes": [
             "Native workspace-language selection at creation and workspace/user-group deletion/creation are not exposed in 4.0."
           ]
@@ -53878,7 +53940,7 @@
         "GetPlcTagTableConstants": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "tablePath": "Default tag table"
+            "tablePath": "<exact table path from ListPlcTagTables>"
           },
           "parameters": {
             "kind": {
@@ -53898,7 +53960,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "Select the table path from ListPlcTagTables on the bound PLC. The default table name depends on the project language."
         },
         "GetPlcTypeInfo": {
           "arguments": {
@@ -62932,7 +62995,8 @@
                   "softwarePath": "PLC_1",
                   "action": "createGroup",
                   "name": "ExampleSources",
-                  "dryRun": true
+                  "dryRun": true,
+                  "confirm": true
                 }
               }
             ]
@@ -63203,7 +63267,8 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "notes": [
             "V19-V21 Unified alarms: first preview each identical single-alarm call and bind its data.planHash plus exact expectedProjectFile in operations; then PreviewToolBatch with 1..50 ordered calls. ApplyToolBatch consumes this batch previewToken. Bind classes/tags/cultures using the Unified readers and active project languages. No items or parameterTags parameter."
-          ]
+          ],
+          "note": "Set confirm=true on each child write that requires confirmation at apply. Preview preserves the child flags."
         },
         "PreviewToolCall": {
           "arguments": {
@@ -63215,7 +63280,8 @@
           "parameters": {},
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "inline": true
+          "inline": true,
+          "note": "For a refused target call, use its registered name in GetToolUsage, for example GetToolUsage(toolName=\"AnalyzePlcReferences\") for this example."
         },
         "ProbeGlobalLibrary": {
           "arguments": {
@@ -63416,7 +63482,8 @@
             }
           },
           "operations": {},
-          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
+          "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+          "note": "On V16 and V17 request the chart tree with includeBlocks, includePins and includeLibraries set to false."
         },
         "GetDccObject": {
           "arguments": {
@@ -66492,7 +66559,7 @@
         },
         "ExportPlcBlocksDocuments": {
           "arguments": {
-            "softwarePath": "PLC_1",
+            "softwarePath": "<exact softwarePath from GetProjectTree>",
             "exportDirectory": "C:\\Examples\\exports",
             "dryRun": true,
             "confirm": false,
@@ -67610,7 +67677,7 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true,
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. The UDT example applies through V20. FC and FB builders require V21.",
           "resultReading": [
             "overwrite=false (default) refuses an existing object of the same name before the import (PRECONDITION_FAILED, nothing imported); pass overwrite=true to replace it with ImportOptions.Override.",
             "The SimaticML Engineering version is never rewritten. A file outside the release's documented import window is refused before any native call (up to V18: not newer than the release; V19: V16-V19; V20: V17-V20; V21: V18-V21).",
@@ -67840,7 +67907,7 @@
           "resultReading": [
             "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session."
           ],
-          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. RECOVERY_GUIDANCE explains refused inputs.",
+          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. For a refused StageImportFiles call, read RECOVERY_GUIDANCE and GetToolUsage(toolName=\"StageImportFiles\") before correcting its inputs.",
           "execution": {
             "arguments": {
               "dryRun": false
@@ -67857,7 +67924,7 @@
             "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session.",
             "Returns the newest 200 batches with totalBatches, returnedBatches and truncated. Unreadable folders are unknown with a reason; only known manifest fields are disclosed. A damaged primary can use a valid companion (reason manifest-invalid)."
           ],
-          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. RECOVERY_GUIDANCE explains refused inputs."
+          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. For a refused ListStagedImportFiles call, read RECOVERY_GUIDANCE and GetToolUsage(toolName=\"ListStagedImportFiles\") before correcting its inputs."
         },
         "CleanupStagedImportFiles": {
           "arguments": {
@@ -67876,7 +67943,7 @@
             "Paths belong to the TIA machine. ListStagedImportFiles shows every session under bundle/staging with sessionId, mcpSessionId, hostInstanceId, ownerState (current/live-other/ended/unknown), currentSession, files, bytes and identified. Closed or expired MCP sessions and restarted hosts leave cleanable batches after the usual approval; live-other and unknown owners are refused. Unknown manifests cannot be deleted. Cleanup preview lists unknownEntries; apply removes only staging-owned leaves and retains extra content with folderRetained=true and a STAGING_FOLDER_RETAINED warning with details.unknownEntries. Quotas remain per session.",
             "Another live or uninspectable host owner is refused before approval. Cleanup verifies length and SHA-256 under an exclusive file handle; changed, locked or unknown content remains in unknownEntries. IO before deletion is not-started; failure after deletion is partial with counts for this batch."
           ],
-          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. RECOVERY_GUIDANCE explains refused inputs.",
+          "note": "Stage/cleanup are FILE writes: preview then dryRun=false; invalid names/content/quota fail before approval. Workbench approval is enabled by default and audit uses the same requestId. For a refused CleanupStagedImportFiles call, read RECOVERY_GUIDANCE and GetToolUsage(toolName=\"CleanupStagedImportFiles\") before correcting its inputs.",
           "execution": {
             "arguments": {
               "dryRun": false
@@ -68473,10 +68540,10 @@
         },
         "PrefillWorkbenchForm": {
           "arguments": {
-            "form": "inspectionRules",
+            "form": "blockFilter",
             "mode": "set",
             "fields": {
-              "namePattern": "^FB_"
+              "filter": "Motor"
             }
           },
           "parameters": {
@@ -68538,7 +68605,7 @@
             }
           },
           "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
-          "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
+          "note": "Allowed forms: inspectionRules fields={namePattern}, blockFilter fields={filter}, blockSelection fields={softwarePath,blockPaths}, connectProject fields={projectPath}, exportBlocks fields={outputDirectory,format}, importBlocks fields={paths,overwrite}. Project paths must be absolute .ap*/.als* paths; paths and outputDirectory must be absolute (format only, no existence probe). format is SimaticMl or Source; paths contains 1..256 entries, each path <=4096 characters. Each object is closed; strings/regex <=256 where specified, selection <=256 blocks. clear requires fields={}. The originating session may update or clear its pending form; another origin gets prefill-pending. A person can keep values or clear back to the original values. Success never executes a form or grants approval. The three MCP forms require the shared MCP panel; the human execution command uses preview/apply and the normal Workbench approval. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries. For the blockFilter form, pass a fields object with the single string filter. Review the pending filter in the Workbench.",
           "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
         },
         "ListStandardPackages": {
@@ -71019,9 +71086,9 @@
     {
       "id": "sequence/plc-builder",
       "topic": "plc-builder",
-      "purpose": "Build a UDT / tag table / global DB / FC / FB from structured JSON in one call (dry run first).",
+      "purpose": "Build, preview and import a global DB from a structured declaration on V20 or V21.",
       "preconditions": "connect-project done.",
-      "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see BuildAndImportPlcArtifact's example). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
+      "notes": "V20 and V21 support udt, tagtable and globaldb. V21 also supports fc and fb; the json shape is the BuildPlc* structure (see BuildAndImportPlcArtifact's example). Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-CLOSE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write.",
       "releaseKeys": [
         "20",
         "21"
@@ -71034,40 +71101,18 @@
           "tool": "BuildAndImportPlcArtifact",
           "arguments": {
             "softwarePath": "PLC_1",
-            "kind": "fc",
+            "kind": "globaldb",
             "dryRun": true,
             "spec": {
-              "blockName": "FC_DryRun",
-              "blockNumber": 12,
-              "inputs": [
+              "dbName": "DB_Status",
+              "dbNumber": 10,
+              "staticMembers": [
                 {
-                  "name": "Start",
-                  "datatype": "Bool"
+                  "name": "Ready",
+                  "datatype": "Bool",
+                  "startValue": "FALSE"
                 }
-              ],
-              "outputs": [
-                {
-                  "name": "Run",
-                  "datatype": "Bool"
-                }
-              ],
-              "structuredText": {
-                "operations": [
-                  {
-                    "op": "if",
-                    "condition": "Start"
-                  },
-                  {
-                    "op": "assign",
-                    "target": "Run",
-                    "indent": 2,
-                    "literalValue": "TRUE"
-                  },
-                  {
-                    "op": "endif"
-                  }
-                ]
-              }
+              ]
             }
           },
           "expect": "Inspect ok, error and meta.outcome/execution/completeness; WrittenFiles / Discovered* clean, Failed empty"
@@ -71076,41 +71121,19 @@
           "tool": "BuildAndImportPlcArtifact",
           "arguments": {
             "softwarePath": "PLC_1",
-            "kind": "fc",
+            "kind": "globaldb",
             "dryRun": false,
             "compileAfter": true,
             "spec": {
-              "blockName": "FC_DryRun",
-              "blockNumber": 12,
-              "inputs": [
+              "dbName": "DB_Status",
+              "dbNumber": 10,
+              "staticMembers": [
                 {
-                  "name": "Start",
-                  "datatype": "Bool"
+                  "name": "Ready",
+                  "datatype": "Bool",
+                  "startValue": "FALSE"
                 }
-              ],
-              "outputs": [
-                {
-                  "name": "Run",
-                  "datatype": "Bool"
-                }
-              ],
-              "structuredText": {
-                "operations": [
-                  {
-                    "op": "if",
-                    "condition": "Start"
-                  },
-                  {
-                    "op": "assign",
-                    "target": "Run",
-                    "indent": 2,
-                    "literalValue": "TRUE"
-                  },
-                  {
-                    "op": "endif"
-                  }
-                ]
-              }
+              ]
             }
           },
           "expect": "Inspect ok, error and meta.outcome/execution/completeness; Compile.ErrorCount 0"
@@ -71129,7 +71152,7 @@
           "arguments": {
             "kind": "plcBlock",
             "softwarePath": "<exact softwarePath from GetProjectTree>",
-            "objectPath": "FC_DryRun",
+            "objectPath": "DB_Status",
             "dryRun": false
           },
           "expect": "After a successful write and compile/readback, show the result to the engineer watching TIA Portal. Skip this UI-only step when TIA runs without user interface. No approval or project change; use the exact written object path from readback (MIN-ESCAPE). Do not open an old object after a preview-only, refused or unknown write."

@@ -7028,7 +7028,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -7427,7 +7428,8 @@
       "example": {
         "sourceKind": "block",
         "sourcePath": "Examples/Example_1",
-        "dryRun": true
+        "dryRun": true,
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
       }
     },
     {
@@ -7973,7 +7975,7 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
       }
     },
     {
@@ -9492,7 +9494,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -9891,7 +9894,8 @@
       "example": {
         "sourceKind": "block",
         "sourcePath": "Examples/Example_1",
-        "dryRun": true
+        "dryRun": true,
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
       }
     },
     {
@@ -10460,7 +10464,7 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
       }
     },
     {
@@ -12132,7 +12136,7 @@
       "family": "F33",
       "example": {
         "workspaceName": "Engineering",
-        "folderPath": "",
+        "folderPath": "C:/Examples/VCI/Engineering",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -12372,7 +12376,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -12780,7 +12785,8 @@
       "example": {
         "sourceKind": "block",
         "sourcePath": "Examples/Example_1",
-        "dryRun": true
+        "dryRun": true,
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
       }
     },
     {
@@ -13349,7 +13355,7 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
       }
     },
     {
@@ -15264,7 +15270,7 @@
       "family": "F33",
       "example": {
         "workspaceName": "Engineering",
-        "folderPath": "",
+        "folderPath": "C:/Examples/VCI/Engineering",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -15504,7 +15510,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -15922,7 +15929,8 @@
       "example": {
         "sourceKind": "block",
         "sourcePath": "Examples/Example_1",
-        "dryRun": true
+        "dryRun": true,
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
       }
     },
     {
@@ -16491,7 +16499,7 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
       }
     },
     {
@@ -18699,7 +18707,7 @@
       "family": "F33",
       "example": {
         "workspaceName": "Engineering",
-        "folderPath": "",
+        "folderPath": "C:/Examples/VCI/Engineering",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -18970,7 +18978,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -19431,7 +19440,8 @@
       "example": {
         "sourceKind": "block",
         "sourcePath": "Examples/Example_1",
-        "dryRun": true
+        "dryRun": true,
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
       }
     },
     {
@@ -20010,7 +20020,7 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
       }
     },
     {
@@ -22339,7 +22349,7 @@
       "family": "F33",
       "example": {
         "workspaceName": "Engineering",
-        "folderPath": "",
+        "folderPath": "C:/Examples/VCI/Engineering",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -22610,7 +22620,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -23158,7 +23169,8 @@
       "example": {
         "sourceKind": "block",
         "sourcePath": "Examples/Example_1",
-        "dryRun": true
+        "dryRun": true,
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
       }
     },
     {
@@ -24720,7 +24732,7 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
       }
     },
     {
@@ -27049,7 +27061,7 @@
       "family": "F33",
       "example": {
         "workspaceName": "Engineering",
-        "folderPath": "",
+        "folderPath": "C:/Examples/VCI/Engineering",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -27320,7 +27332,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -27970,7 +27983,8 @@
       "example": {
         "sourceKind": "block",
         "sourcePath": "Examples/Example_1",
-        "dryRun": true
+        "dryRun": true,
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
       }
     },
     {
@@ -29583,7 +29597,7 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
       }
     },
     {
@@ -29980,7 +29994,7 @@
       "entry": "ExportPlcBlocksDocuments",
       "family": "F10",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false,
@@ -32067,7 +32081,7 @@
       "family": "F33",
       "example": {
         "workspaceName": "Engineering",
-        "folderPath": "",
+        "folderPath": "C:/Examples/VCI/Engineering",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -32338,7 +32352,8 @@
               "softwarePath": "PLC_1",
               "action": "createGroup",
               "name": "ExampleSources",
-              "dryRun": true
+              "dryRun": true,
+              "confirm": true
             }
           }
         ]
@@ -33063,7 +33078,8 @@
       "example": {
         "sourceKind": "block",
         "sourcePath": "Examples/Example_1",
-        "dryRun": true
+        "dryRun": true,
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
       }
     },
     {
@@ -34688,7 +34704,7 @@
       "family": "F09",
       "example": {
         "softwarePath": "PLC_1",
-        "tablePath": "Default tag table"
+        "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
       }
     },
     {
@@ -35085,7 +35101,7 @@
       "entry": "ExportPlcBlocksDocuments",
       "family": "F10",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false,
@@ -39291,7 +39307,7 @@
       "entry": "ExportPlcBlocksDocuments",
       "family": "FOUNDATION",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false,
@@ -39874,7 +39890,7 @@
       "entry": "ExportPlcBlocksDocuments",
       "family": "FOUNDATION",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false,
@@ -41584,7 +41600,8 @@
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
-          "dryRun": true
+          "dryRun": true,
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -41727,7 +41744,7 @@
         ],
         "arguments": {
           "workspaceName": "Engineering",
-          "folderPath": "",
+          "folderPath": "C:/Examples/VCI/Engineering",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -42706,7 +42723,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false,
@@ -43855,7 +43872,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -48260,10 +48277,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "form": "inspectionRules",
+          "form": "blockFilter",
           "mode": "set",
           "fields": {
-            "namePattern": "^FB_"
+            "filter": "Motor"
           }
         },
         "envelopeVersion": 4,
@@ -48286,7 +48303,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -51259,7 +51277,8 @@
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
-          "dryRun": true
+          "dryRun": true,
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -51402,7 +51421,7 @@
         ],
         "arguments": {
           "workspaceName": "Engineering",
-          "folderPath": "",
+          "folderPath": "C:/Examples/VCI/Engineering",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -52381,7 +52400,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false,
@@ -53529,7 +53548,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -58102,10 +58121,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "form": "inspectionRules",
+          "form": "blockFilter",
           "mode": "set",
           "fields": {
-            "namePattern": "^FB_"
+            "filter": "Motor"
           }
         },
         "envelopeVersion": 4,
@@ -58128,7 +58147,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -60320,7 +60340,8 @@
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
-          "dryRun": true
+          "dryRun": true,
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -61722,7 +61743,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -64149,10 +64170,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "form": "inspectionRules",
+          "form": "blockFilter",
           "mode": "set",
           "fields": {
-            "namePattern": "^FB_"
+            "filter": "Motor"
           }
         },
         "envelopeVersion": 4,
@@ -64175,7 +64196,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -65777,7 +65799,8 @@
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
-          "dryRun": true
+          "dryRun": true,
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -67404,7 +67427,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -70175,10 +70198,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "form": "inspectionRules",
+          "form": "blockFilter",
           "mode": "set",
           "fields": {
-            "namePattern": "^FB_"
+            "filter": "Motor"
           }
         },
         "envelopeVersion": 4,
@@ -70201,7 +70224,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -71914,7 +71938,8 @@
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
-          "dryRun": true
+          "dryRun": true,
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -72057,7 +72082,7 @@
         ],
         "arguments": {
           "workspaceName": "Engineering",
-          "folderPath": "",
+          "folderPath": "C:/Examples/VCI/Engineering",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -73612,7 +73637,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -76731,10 +76756,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "form": "inspectionRules",
+          "form": "blockFilter",
           "mode": "set",
           "fields": {
-            "namePattern": "^FB_"
+            "filter": "Motor"
           }
         },
         "envelopeVersion": 4,
@@ -76757,7 +76782,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -78503,7 +78529,8 @@
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
-          "dryRun": true
+          "dryRun": true,
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -78646,7 +78673,7 @@
         ],
         "arguments": {
           "workspaceName": "Engineering",
-          "folderPath": "",
+          "folderPath": "C:/Examples/VCI/Engineering",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -80346,7 +80373,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -83653,10 +83680,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "form": "inspectionRules",
+          "form": "blockFilter",
           "mode": "set",
           "fields": {
-            "namePattern": "^FB_"
+            "filter": "Motor"
           }
         },
         "envelopeVersion": 4,
@@ -83679,7 +83706,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -85580,7 +85608,8 @@
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
-          "dryRun": true
+          "dryRun": true,
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -85723,7 +85752,7 @@
         ],
         "arguments": {
           "workspaceName": "Engineering",
-          "folderPath": "",
+          "folderPath": "C:/Examples/VCI/Engineering",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -87479,7 +87508,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -91082,10 +91111,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "form": "inspectionRules",
+          "form": "blockFilter",
           "mode": "set",
           "fields": {
-            "namePattern": "^FB_"
+            "filter": "Motor"
           }
         },
         "envelopeVersion": 4,
@@ -91108,7 +91137,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -93412,7 +93442,8 @@
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
-          "dryRun": true
+          "dryRun": true,
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -93555,7 +93586,7 @@
         ],
         "arguments": {
           "workspaceName": "Engineering",
-          "folderPath": "",
+          "folderPath": "C:/Examples/VCI/Engineering",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -95598,7 +95629,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -99859,10 +99890,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "form": "inspectionRules",
+          "form": "blockFilter",
           "mode": "set",
           "fields": {
-            "namePattern": "^FB_"
+            "filter": "Motor"
           }
         },
         "envelopeVersion": 4,
@@ -99885,7 +99916,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -102387,7 +102419,7 @@
         ],
         "arguments": {
           "workspaceName": "Engineering",
-          "folderPath": ""
+          "folderPath": "C:/Examples/VCI/Engineering"
         },
         "envelopeVersion": 4
       },
@@ -103190,7 +103222,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports",
           "regexName": "FB_.*"
         },
@@ -104104,7 +104136,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4
       },
@@ -107233,7 +107265,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]
@@ -109730,7 +109763,7 @@
         ],
         "arguments": {
           "workspaceName": "Engineering",
-          "folderPath": ""
+          "folderPath": "C:/Examples/VCI/Engineering"
         },
         "envelopeVersion": 4
       },
@@ -110533,7 +110566,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportPath": "C:\\Examples\\exports",
           "regexName": "FB_.*"
         },
@@ -111446,7 +111479,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "tablePath": "Default tag table"
+          "tablePath": "&lt;exact table path from ListPlcTagTables&gt;"
         },
         "envelopeVersion": 4
       },
@@ -114711,7 +114744,8 @@
                 "softwarePath": "PLC_1",
                 "action": "createGroup",
                 "name": "ExampleSources",
-                "dryRun": true
+                "dryRun": true,
+                "confirm": true
               }
             }
           ]

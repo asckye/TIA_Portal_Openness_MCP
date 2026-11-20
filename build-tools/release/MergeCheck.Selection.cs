@@ -117,6 +117,8 @@ internal static partial class MergeCheck
         Tool("check-repository", "-NoBinaries");
         Tool("check-dead-tool-references");
         Tool("generate-tool-counts", "-Check");
+        const string status = "generate-real-machine-status";
+        plan.Checks.Add(new(status, dotnet, [typeof(Program).Assembly.Location, status, "-Check"], PostSuite: true));
         if (plan.DocsOnly) return plan;
         void Suite(string name, string path) { if (catalog.ContainsKey(name)) Reason(plan.Suites, name, path); }
         void Everything(string path)

@@ -222,7 +222,7 @@ public sealed class MergeCheckTests
         var rows = File.ReadAllLines(Path.Combine(tree.Root, "bin-build/merge-check/timeline.tsv"));
         Assert.Equal("name\tstart_seconds\tend_seconds\telapsed_seconds\texit_code", rows[0]);
         var expected = new[] { "selection", "suite-stage", "check-repository", "check-dead-tool-references", "generate-tool-counts",
-            "wrap-long-lines" };
+            "generate-real-machine-status", "wrap-long-lines" };
         Assert.Equal(expected.Order(), rows.Skip(1).Select(row => row.Split('\t')[0]).Order());
         foreach (var row in rows.Skip(1))
         {
@@ -461,13 +461,16 @@ public sealed class MergeCheckTests
     [InlineData("README.md")]
     [InlineData("docs/manuals/example.md")]
     [InlineData("")]
-    public void DocsPlanHasExactlyThreeChecksAndNoBuildsOrSuites(string path)
+    public void DocsPlanHasExactlyFourChecksAndNoBuildsOrSuites(string path)
     {
         var plan = Select(path.Length == 0 ? [] : [path]);
         Assert.True(plan.DocsOnly);
         Assert.Empty(plan.Builds);
         Assert.Empty(plan.Suites);
-        Assert.Equal(new[] { "check-repository", "check-dead-tool-references", "generate-tool-counts" }, plan.Checks.Select(job => job.Name));
+        Assert.Equal(new[] { "check-repository", "check-dead-tool-references", "generate-tool-counts", "generate-real-machine-status" },
+            plan.Checks.Select(job => job.Name));
+        Assert.False(plan.Checks[2].PostSuite);
+        Assert.True(plan.Checks[3].PostSuite);
         Assert.DoesNotContain("-NoAnalyzer", plan.Checks[0].Arguments);
     }
 
@@ -915,7 +918,7 @@ public sealed class MergeCheckTests
             : args.Contains("HEAD") ? "revision" : "", ""),
             (_, _) => throw new InvalidOperationException("No decoder preparation for docs"));
         Assert.Equal(0, result);
-        Assert.Equal(new[] { "check-dead-tool-references", "check-repository", "generate-tool-counts" }, commands.Order());
+        Assert.Equal(new[] { "check-dead-tool-references", "check-repository", "generate-real-machine-status", "generate-tool-counts" }, commands.Order());
         Assert.Single(longLineCommands);
         Assert.True(File.Exists(Path.Combine(tree.Root, "bin-build/merge-check/suites/pipeline/wrap-long-lines.log")));
     }
@@ -953,13 +956,14 @@ public sealed class MergeCheckTests
             : args.Contains("--git-common-dir") ? Path.Combine(main, ".git") : args.Contains("HEAD") ? head : "", "");
         int result = MergeCheck.Run(tree.Root, Options.Parse([], new HashSet<string>()), Process, Git);
         Assert.Equal(failedCheck ? 1 : 0, result);
-        Assert.Equal(3, calls);
+        Assert.Equal(4, calls);
         Assert.Equal(1, longLineCalls);
         string[] rows = File.ReadAllLines(Path.Combine(output, "trend.jsonl"));
-        Assert.Equal(3, rows.Count(row => ((string?)JsonNode.Parse(row)!["metric"])!.StartsWith("sample-", StringComparison.Ordinal)));
+        Assert.Equal(4, rows.Count(row => ((string?)JsonNode.Parse(row)!["metric"])!.StartsWith("sample-", StringComparison.Ordinal)));
         string[] successfulJobs = failedCheck
-            ? ["selection", "check-dead-tool-references", "generate-tool-counts", "wrap-long-lines"]
-            : ["selection", "check-dead-tool-references", "generate-tool-counts", "check-repository", "suite-stage", "wrap-long-lines"];
+            ? ["selection", "check-dead-tool-references", "generate-tool-counts", "generate-real-machine-status", "wrap-long-lines"]
+            : ["selection", "check-dead-tool-references", "generate-tool-counts", "generate-real-machine-status",
+                "check-repository", "suite-stage", "wrap-long-lines"];
         Assert.Equal(successfulJobs.Order(), rows.Select(row => (string)JsonNode.Parse(row)!["metric"]!)
             .Where(metric => metric.StartsWith("timing:", StringComparison.Ordinal)).Select(metric => metric[7..]).Order());
         Assert.All(rows, row => Assert.False(JsonNode.Parse(row)!.AsObject().ContainsKey("head")));

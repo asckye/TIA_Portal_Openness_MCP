@@ -54,13 +54,14 @@ public sealed class PrepareTests
     {
         using var tree = VersionTree();
         Assert.Contains("is missing", Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.6")).Message);
-        foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath }) tree.Copy(source);
+        foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath,
+            RealMachineStatusGenerator.Roster, RealMachineStatusGenerator.Manifest }) tree.Copy(source);
         var path = tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.6"), PrereleaseNotes.Begin + "\nstale\n" + PrereleaseNotes.End + "\n");
         var before = File.ReadAllText(path);
         Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.6"));
         Assert.Equal(before, File.ReadAllText(path));
-        File.WriteAllText(path, PrereleaseNotes.Generate(File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.LedgerPath)),
-            File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.ChecklistPath))));
+        File.WriteAllText(path, PrereleaseNotes.DraftBlock(File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.LedgerPath)),
+            File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.ChecklistPath)), RealMachineStatusGenerator.Read(tree.Root)));
         Prepare.RequireNotes(tree.Root, "4.0.0-beta.6");
     }
 
@@ -468,12 +469,33 @@ public sealed class PrepareTests
         "-Python", Path.Combine(root, python), "-CompanionPython", Path.Combine(root, "python.exe"),
         "-NuGetConfig", Path.Combine(root, "nuget.config")], new HashSet<string>());
 
+    [Fact]
+    public void TaggedNotesStayFrozenAndEditsFailTheCheckWithoutBeingOverwritten()
+    {
+        using var tree = new StaticTree();
+        const string version = "4.0.0-rc.2";
+        var path = PrereleaseNotes.NotesPath(version);
+        var notes = $"# Archive\n{PrereleaseNotes.Begin}\n{PrereleaseNotes.Heading}\nOriginal checklist.\n{PrereleaseNotes.End}\n";
+        tree.Write(path, notes);
+        SealRepository(tree);
+        Git(tree, ["update-ref", "refs/tags/v" + version, "HEAD"]);
+        Assert.Equal(notes, PrereleaseNotes.Outputs(tree.Root, version)[path]);
+        Assert.Null(PrereleaseNotes.CurrentError(tree.Root, version));
+        var changed = notes.Replace("Original", "Changed", StringComparison.Ordinal);
+        tree.Write(path, changed);
+        Assert.Contains("frozen release notes", PrereleaseNotes.CurrentError(tree.Root, version));
+        Assert.Throws<ReleaseException>(() => PrereleaseNotes.Outputs(tree.Root, version));
+        Assert.Equal(changed, File.ReadAllText(Path.Combine(tree.Root, path)));
+    }
+
     private static StaticTree ContextTree()
     {
         var tree = VersionTree();
-        foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath }) tree.Copy(source);
-        tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.6"), PrereleaseNotes.Generate(
-            File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.LedgerPath)), File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.ChecklistPath))));
+        foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath,
+            RealMachineStatusGenerator.Roster, RealMachineStatusGenerator.Manifest }) tree.Copy(source);
+        tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.6"), PrereleaseNotes.DraftBlock(
+            File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.LedgerPath)), File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.ChecklistPath)),
+            RealMachineStatusGenerator.Read(tree.Root)));
         tree.Write("python.exe", "interpreter existence fixture; process probe is injected");
         tree.Write(".gitignore", "bin-build/\n");
         tree.Write("nuget.config", "<configuration><packageSources><clear /></packageSources></configuration>");

@@ -49,6 +49,25 @@
 | V21 | 519 | 104 |
 <!-- generated:tool-counts:end -->
 
+<!-- generated:real-machine-status:begin -->
+### 真机记录覆盖 3209/3247 个已注册的工具与版本组合
+
+| TIA 版本 | 注册工具 | 调用西门子 API | 有实机记录 | 全部成功 | 有失败 | 最近候选提交 | 运行日期（UTC） |
+|---|---:|---:|---:|---:|---:|---|---|
+| V14 SP1 | 287 | 191 | 286 | 147 | 71 | d89d0152 | 2026-11-19 |
+| V15.1 | 328 | 232 | 309 | 177 | 66 | d89d0152 | 2026-11-19 |
+| V16 | 354 | 258 | 349 | 186 | 83 | d89d0152 | 2026-11-19 |
+| V17 | 377 | 280 | 374 | 198 | 69 | 9a4274f2 | 2026-11-20 |
+| V18 | 403 | 305 | 399 | 217 | 83 | d89d0152 | 2026-11-20 |
+| V19 | 479 | 373 | 477 | 284 | 68 | d89d0152 | 2026-11-20 |
+| V20 | 500 | 384 | 498 | 287 | 91 | d89d0152 | 2026-11-20 |
+| V21 | 519 | 397 | 517 | 291 | 117 | 02107734 | 2026-11-19 |
+
+部分记录来自较早的候选版本，在完整表中以 ᵒ 标出。
+
+[查看每个工具的真机记录](docs/reference/real-machine-status.md)
+<!-- generated:real-machine-status:end -->
+
 - **按需发现与统一示例入口**：八个版本默认使用 lite 档以节省上下文；其余工具通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。调用不熟悉的工具前，使用 `GetToolUsage(toolName, operation)` 获取当前版本的参数、完整编程示例 (`language` / `exampleId`) 和结果解释；官方 API 模式与本项目封装示例分别标明。
 - **统一入口与隔离 worker**：交付包根入口为 `TiaOpenness.exe`，八版宿主统一入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`。宿主自动启动 `worker/` 下对应版本的 PLC worker（V20/V21 完整工具目录也由该 worker 执行），八版共有工具使用同一份 Foundation 契约。V14 SP1、V15.1 不等于原版 V14、V15。详细范围见[逐版本工具说明](docs/reference/version-tools.md)和实际服务的 `tools/list`。
 - **契约、容错与安全**：V4 响应信封包含 `ok`、`data`、`error` 和 `meta`。结果未知的写入 (`OUTCOME_UNKNOWN`) 从不自动重放，重试前须先核对目标状态。更多内容见[已接入生态工具](docs/reference/ecosystem-tools.md)和[安全标准与威胁模型](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md)。
