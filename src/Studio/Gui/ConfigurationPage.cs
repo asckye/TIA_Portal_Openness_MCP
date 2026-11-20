@@ -3,7 +3,10 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using TiaMcpConfigurator;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.ViewModels;
@@ -90,11 +93,39 @@ public partial class MainWindow
         var release = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey);
         var status = state == "Config.Local" ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state];
         McpStatusText.Text = Loc.Current.T("Shell.McpStatus", status);
-        SessionStatus.Text = release.DisplayName + " · " + release.OwnerApartment + "   " + (HasProject ? ProjectFileName : Loc.Current["Blocks.Empty.Title"]);
+        string prefix = release.DisplayName + " · " + release.OwnerApartment + "   ";
+        string file = HasProject ? ProjectFileName : Loc.Current["Blocks.Empty.Title"];
+        string fullText = prefix + file;
+        if (SessionStatus.Text != fullText)
+        {
+            SessionStatus.Text = fullText;
+            // Set the complete accessible text first, then format its two runs without replacing the text.
+            var run = (Run)SessionStatus.Inlines.FirstInline!;
+            var end = run.ContentStart.GetPositionAtOffset(prefix.Length)!;
+            new TextRange(run.ContentStart, end).ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.SemiBold);
+            var label = (Run)SessionStatus.Inlines.FirstInline!;
+            var name = (Run)SessionStatus.Inlines.LastInline!;
+            label.SetResourceReference(TextElement.ForegroundProperty, "Primer.text");
+            label.SetResourceReference(TextElement.FontFamilyProperty, "Ui.FontMono");
+            name.FontWeight = FontWeights.Normal;
+            name.SetResourceReference(TextElement.FontFamilyProperty, "Ui.Font");
+            double prefixWidth = MeasureSessionRun(label);
+            SessionStatus.MaxWidth = prefixWidth + 170;
+            SessionStatus.Width = prefixWidth + Math.Min(170, MeasureSessionRun(name));
+        }
         McpStatusText.ToolTip = McpStatusText.Text;
         SessionStatus.ToolTip = SessionStatus.Text;
         McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Primer.accent" : "Primer.textMuted");
     }
+
+    private double MeasureSessionRun(Run run)
+    {
+        var text = new TextBlock { Text = run.Text, FontFamily = run.FontFamily, FontWeight = run.FontWeight, FontSize = run.FontSize };
+        TextOptions.SetTextFormattingMode(text, TextOptions.GetTextFormattingMode(SessionStatus));
+        text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        return text.DesiredSize.Width;
+    }
+
     private void OnDesktopModelChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (Configuration == null) return;

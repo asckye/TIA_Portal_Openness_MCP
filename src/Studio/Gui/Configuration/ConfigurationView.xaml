@@ -5,211 +5,304 @@
     Foreground="{DynamicResource Primer.text}" FontFamily="{DynamicResource Ui.Font}"
     FontSize="{DynamicResource Ui.FontSize.Body}" UseLayoutRounding="True">
   <UserControl.Resources>
+    <DataTemplate x:Key="Configuration.Check">
+      <Grid>
+        <Ellipse x:Name="Ring" Stroke="{DynamicResource Primer.inputBorder}" StrokeThickness="1"/>
+        <Path x:Name="Tick" Width="8" Height="7" Stretch="Fill" Data="M1,4 L3,6 L8,1"
+              Stroke="{DynamicResource Primer.primaryText}" StrokeThickness="1.5" Visibility="Collapsed"/>
+      </Grid>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding IsChecked,RelativeSource={RelativeSource AncestorType=ToggleButton}}" Value="True">
+          <Setter TargetName="Ring" Property="Fill" Value="{DynamicResource Primer.primaryBg}"/>
+          <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource Primer.primaryBg}"/>
+          <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
+        </DataTrigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
     <DataTemplate x:Key="Configuration.Release">
       <StackPanel>
-        <TextBlock Text="{Binding DisplayName}" FontFamily="{DynamicResource Ui.FontMono}" HorizontalAlignment="Center"/>
-        <TextBlock HorizontalAlignment="Center" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.Muted}"
-                   Text="{Binding Path=(AutomationProperties.HelpText),RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+        <TextBlock x:Name="ReleaseName" Text="{Binding DisplayName}" HorizontalAlignment="Center" FontFamily="{DynamicResource Ui.FontMono}"
+                   FontSize="{DynamicResource Ui.FontSize.12}" FontWeight="SemiBold"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+          <Ellipse x:Name="ReleaseDot" Width="6" Height="6" Fill="{DynamicResource Primer.textFaint}" Margin="0,0,4,0"/>
+          <TextBlock x:Name="InstalledLabel" FontSize="{DynamicResource Ui.FontSize.10_5}" FontWeight="Normal" Text="{l:Tr Config.Missing}"/>
+        </StackPanel>
       </StackPanel>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="False">
+          <Setter TargetName="ReleaseName" Property="Foreground" Value="{DynamicResource Primer.textFaint}"/>
+          <Setter TargetName="InstalledLabel" Property="Foreground" Value="{DynamicResource Primer.textFaint}"/>
+          <Setter TargetName="ReleaseDot" Property="Opacity" Value="0.35"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+          <Setter TargetName="ReleaseDot" Property="Fill" Value="{DynamicResource Primer.ok}"/>
+          <Setter TargetName="InstalledLabel" Property="Text" Value="{l:Tr Config.Found}"/>
+        </DataTrigger>
+      </DataTemplate.Triggers>
     </DataTemplate>
   </UserControl.Resources>
-  <DockPanel AutomationProperties.Name="{l:Tr Config.Eyebrow}">
-    <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
-      <DockPanel LastChildFill="False">
-        <TextBlock Text="{l:Tr Config.McpService}" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
-        <Label x:Name="AccessibleLabel1" Content="{l:Tr Access.FieldConfigVersion}" Target="{Binding ElementName=Version}"
-               Style="{StaticResource Primer.FormLabel}" Margin="16,0,4,0" VerticalAlignment="Center"/>
-        <ComboBox x:Name="Version" AutomationProperties.Name="{l:Tr Config.Version}" AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}"
-                  ItemContainerStyle="{StaticResource Primer.SelectItem}" DisplayMemberPath="DisplayName" SelectedValuePath="Key" VerticalAlignment="Center"/>
+  <DockPanel Margin="-16,-12" AutomationProperties.Name="{l:Tr Config.Eyebrow}">
+    <Border x:Name="McpToolbar" DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
+      <DockPanel LastChildFill="False" VerticalAlignment="Center">
+        <TextBlock Text="{l:Tr Config.McpService}" Style="{StaticResource Primer.ContainerTitle}"
+                   FontSize="{DynamicResource Ui.FontSize.13}" VerticalAlignment="Center"/>
+        <Border Style="{StaticResource Primer.VerticalDivider}" Height="16" Margin="8,0"/>
+        <Border x:Name="TransportChip" Style="{StaticResource Primer.Tag.Ok}" Height="26">
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Ellipse x:Name="TransportDot" Width="6" Height="6" Margin="0,0,6,0"/>
+            <TextBlock x:Name="TransportStatus" FontSize="{DynamicResource Ui.FontSize.11_5}"/>
+          </StackPanel>
+        </Border>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-          <Button x:Name="GoClients" Content="{l:Tr Mcp.Clients}" AutomationProperties.Name="{l:Tr Mcp.Clients}"
-                  Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Clients" Style="{StaticResource Primer.IdeToolButton}"/>
+          <Button x:Name="DetectTia" Style="{StaticResource Primer.IdeToolButton}" AutomationProperties.Name="{l:Tr Config.Detect}" ToolTip="{l:Tr Config.AutoDetect}">
+            <StackPanel Orientation="Horizontal">
+              <Path Width="13" Height="13" Margin="0,0,5,0" Stretch="Uniform" StrokeThickness="1.8"
+                    Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                    Data="M22,3 V9 H16 M21,9 A9,9 0 1 0 21,16"/>
+              <TextBlock Text="{l:Tr Config.Detect}"/>
+            </StackPanel>
+          </Button>
+          <Border Style="{StaticResource Primer.VerticalDivider}" Height="16" Margin="6,0"/>
+          <Button x:Name="GoClients" Content="{l:Tr Config.GoClients}" AutomationProperties.Name="{l:Tr Config.GoClients}"
+                  Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Clients" Style="{StaticResource Primer.Button.Primary.Small}"/>
         </StackPanel>
       </DockPanel>
     </Border>
-    <Grid x:Name="Panes" ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="360"/></Grid.ColumnDefinitions>
-      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel>
-          <Border Style="{StaticResource Primer.Container}" Margin="0,0,0,12">
+    <ScrollViewer x:Name="Panes" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <Grid Margin="24">
+        <StackPanel MaxWidth="860">
+          <ContentControl Style="{StaticResource Primer.Box}" Padding="20">
             <StackPanel>
-              <ux:PageHeadPanel x:Name="ModeHead" Title="{Binding ElementName=ModeTitle}">
-                <TextBlock x:Name="ModeTitle" Text="{l:Tr Config.Transport}" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
-                <UniformGrid Columns="2">
-                  <RadioButton x:Name="LocalNav" GroupName="Transport" AutomationProperties.Name="{l:Tr Config.LocalMode}" Style="{StaticResource Primer.Tile}"
-                               Margin="0,0,4,0" ToolTip="{l:Tr Config.LocalTitle}">
-                    <StackPanel><TextBlock Text="{l:Tr Config.LocalMode}"/><TextBlock Text="stdio" Style="{StaticResource Primer.Mono}"/></StackPanel>
+              <ux:PageHeadPanel x:Name="ModeHead" Spacing="18" Title="{Binding ElementName=ModeTitle}">
+                <DockPanel>
+                  <Border DockPanel.Dock="Right" Style="{StaticResource Primer.Tag}">
+                    <StackPanel Orientation="Horizontal">
+                      <Ellipse Width="6" Height="6" Fill="{DynamicResource Primer.textFaint}" Margin="0,0,5,0"/>
+                      <TextBlock x:Name="ModeTag" VerticalAlignment="Center"/>
+                    </StackPanel>
+                  </Border>
+                  <StackPanel>
+                    <TextBlock x:Name="ModeTitle" Text="{l:Tr Config.ConnectionTitle}" Style="{StaticResource Primer.ContainerTitle}"
+                               FontSize="{DynamicResource Ui.FontSize.14}"/>
+                    <TextBlock x:Name="PageSubtitle" Text="{l:Tr Config.ConnectionHint}" Style="{StaticResource Primer.Muted.textFaint}"
+                               TextWrapping="Wrap" TextTrimming="None" FontSize="{DynamicResource Ui.FontSize.12}" Margin="0,2,8,0"/>
+                  </StackPanel>
+                </DockPanel>
+                <UniformGrid Columns="2" Width="{Binding ActualWidth,ElementName=ModeHead}">
+                  <RadioButton x:Name="LocalNav" GroupName="Transport" Margin="0,0,6,0"
+                               Style="{StaticResource Primer.Tile}" Padding="16" MinHeight="78" VerticalContentAlignment="Top"
+                               AutomationProperties.ItemType="{l:Tr Config.LocalMode}" AutomationProperties.HelpText="{l:Tr Config.LocalSubtitle}"
+                               ToolTip="{l:Tr Config.LocalTitle}" AutomationProperties.Name="{l:Tr Config.LocalTile}">
+                    <DockPanel>
+                      <Border x:Name="LocalIcon" DockPanel.Dock="Left" Width="36" Height="36" Padding="0" Margin="0,0,12,0"
+                              VerticalAlignment="Top" Style="{StaticResource Primer.IdeChip}">
+                        <Path Width="17" Height="17" Stretch="Uniform" StrokeThickness="1.7" HorizontalAlignment="Center"
+                              VerticalAlignment="Center" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                              Data="M4,3 H20 Q22,3 22,5 V15 Q22,17 20,17 H4 Q2,17 2,15 V5 Q2,3 4,3 Z M12,17 V21 M8,21 H16"/>
+                      </Border>
+                      <StackPanel>
+                        <DockPanel>
+                          <ContentControl DockPanel.Dock="Right" ContentTemplate="{StaticResource Configuration.Check}" Width="16" Height="16"/>
+                          <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{l:Tr Config.LocalTile}" FontSize="{DynamicResource Ui.FontSize.13}" FontWeight="SemiBold"/>
+                            <TextBlock Text="STDIO" Margin="6,0,0,0" VerticalAlignment="Center" Style="{StaticResource Primer.Mono.textFaint}"
+                                       FontSize="{DynamicResource Ui.FontSize.11}"/>
+                          </StackPanel>
+                        </DockPanel>
+                        <TextBlock Text="{l:Tr Config.LocalTileHint}" Margin="0,5,0,0" TextWrapping="Wrap" TextTrimming="None"
+                                   Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.12}" FontWeight="Normal"/>
+                      </StackPanel>
+                    </DockPanel>
                   </RadioButton>
-                  <RadioButton x:Name="RemoteNav" GroupName="Transport" IsChecked="True" AutomationProperties.Name="{l:Tr Config.RemoteMode}"
-                               Style="{StaticResource Primer.Tile}" Margin="4,0,0,0" ToolTip="{l:Tr Config.RemoteTitle}">
-                    <StackPanel><TextBlock Text="{l:Tr Config.RemoteMode}"/><TextBlock Text="HTTP" Style="{StaticResource Primer.Mono}"/></StackPanel>
+                  <RadioButton x:Name="RemoteNav" GroupName="Transport" IsChecked="True" Margin="6,0,0,0"
+                               Style="{StaticResource Primer.Tile}" Padding="16" MinHeight="78" VerticalContentAlignment="Top"
+                               AutomationProperties.ItemType="{l:Tr Config.RemoteMode}" AutomationProperties.HelpText="{l:Tr Config.RemoteSubtitle}"
+                               ToolTip="{l:Tr Config.RemoteTitle}" AutomationProperties.Name="{l:Tr Config.RemoteTile}">
+                    <DockPanel>
+                      <Border x:Name="RemoteIcon" DockPanel.Dock="Left" Width="36" Height="36" Padding="0" Margin="0,0,12,0"
+                              VerticalAlignment="Top" Style="{StaticResource Primer.IdeChip}">
+                        <Path Width="17" Height="17" Stretch="Uniform" StrokeThickness="1.7" HorizontalAlignment="Center"
+                              VerticalAlignment="Center" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                              Data="M3,2 H21 Q22,2 22,3 V9 Q22,10 21,10 H3 Q2,10 2,9 V3 Q2,2 3,2 Z M3,14 H21 Q22,14 22,15 V21 Q22,22 21,22 H3 Q2,22 2,21 V15 Q2,14 3,14 Z M5,6 H8 M5,18 H8"/>
+                      </Border>
+                      <StackPanel>
+                        <DockPanel>
+                          <ContentControl DockPanel.Dock="Right" ContentTemplate="{StaticResource Configuration.Check}" Width="16" Height="16"/>
+                          <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{l:Tr Config.RemoteTile}" FontSize="{DynamicResource Ui.FontSize.13}" FontWeight="SemiBold"/>
+                            <TextBlock Text="HTTP" Margin="6,0,0,0" VerticalAlignment="Center" Style="{StaticResource Primer.Mono.textFaint}"
+                                       FontSize="{DynamicResource Ui.FontSize.11}"/>
+                          </StackPanel>
+                        </DockPanel>
+                        <TextBlock Text="{l:Tr Config.RemoteTileHint}" Margin="0,5,0,0" TextWrapping="Wrap" TextTrimming="None"
+                                   Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.12}" FontWeight="Normal"/>
+                      </StackPanel>
+                    </DockPanel>
                   </RadioButton>
                 </UniformGrid>
               </ux:PageHeadPanel>
-              <TextBlock x:Name="PageSubtitle" Margin="0,8,0,0" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None"/>
+              <Border x:Name="ServerPane" Style="{StaticResource Primer.Plain}" Margin="0,16,0,0"
+                          Visibility="{Binding IsChecked,ElementName=RemoteNav,Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                  <Border Style="{StaticResource Primer.Divider}" Margin="0,0,0,12"/>
+                  <DockPanel>
+                    <ContentControl x:Name="ServiceStateChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
+                      <TextBlock x:Name="ServiceStatusText" Style="{StaticResource Primer.StatusText}"/>
+                    </ContentControl>
+                    <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Primer.ContainerTitle}"/>
+                  </DockPanel>
+                  <DockPanel Margin="0,8,0,0">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
+                      <Button x:Name="SaveBoth" Content="{l:Tr Pages.SaveBoth}" AutomationProperties.Name="{l:Tr Pages.SaveBoth}"
+                              Style="{StaticResource Primer.Button.Secondary.Medium}" IsDefault="True" Margin="0,0,6,0"/>
+                      <Button x:Name="StartServer" Content="{l:Tr Config.Start}" AutomationProperties.Name="{l:Tr Config.Start}"
+                              Style="{StaticResource Primer.Button.Primary.Medium}"/>
+                      <Button x:Name="StopServer" Content="{l:Tr Config.Stop}" AutomationProperties.Name="{l:Tr Config.Stop}"
+                              Style="{StaticResource Primer.Button.Danger.Medium}" IsEnabled="False" Visibility="Collapsed"/>
+                    </StackPanel>
+                    <Grid x:Name="AddressRow" VerticalAlignment="Bottom">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition/>
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Width="168" Margin="0,0,8,0">
+                        <Label x:Name="AccessibleLabel3" Target="{Binding ElementName=ServerAddress}" Content="{l:Tr Access.FieldConfigIpv4}"
+                               Style="{StaticResource Primer.FormLabel}"/>
+                        <TextBox x:Name="ServerAddress" Style="{StaticResource Primer.MonoInput}" AutomationProperties.Name="{l:Tr Config.Ipv4}"
+                                 AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" Width="80" Margin="0,0,8,0">
+                        <Label x:Name="AccessibleLabel4" Target="{Binding ElementName=ServerPort}" Content="{l:Tr Access.FieldConfigPort}"
+                               Style="{StaticResource Primer.FormLabel}"/>
+                        <TextBox x:Name="ServerPort" Text="8765" Style="{StaticResource Primer.MonoInput}" AutomationProperties.Name="{l:Tr Config.Port}"
+                                 AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}"/>
+                      </StackPanel>
+                      <Grid Grid.Column="2" x:Name="ServerActions" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <Button x:Name="TestClient" Content="{l:Tr Pages.TestConnection}" AutomationProperties.Name="{l:Tr Pages.TestConnection}"
+                                Style="{StaticResource Primer.Button.Secondary.Medium}" Margin="0,0,6,0"/>
+                        <Button Grid.Column="1" x:Name="Network" Content="{l:Tr Config.Network}" AutomationProperties.Name="{l:Tr Config.Network}"
+                                Style="{StaticResource Primer.Button.Secondary.Medium}"/>
+                      </Grid>
+                    </Grid>
+                  </DockPanel>
+                  <Border Style="{StaticResource Primer.CodeBlock}" Padding="12,8" Margin="0,12,0,0">
+                    <DockPanel>
+                      <TextBlock x:Name="LinkEndpoint" DockPanel.Dock="Right" Style="{StaticResource Primer.ListMonoValue}"><Run
+                          x:Name="EndpointScheme"/><Run x:Name="EndpointAddress"/><Run x:Name="EndpointPath"/></TextBlock>
+                      <TextBlock Text="{l:Tr Config.Address}" Style="{StaticResource Primer.Muted}"/>
+                    </DockPanel>
+                  </Border>
+                  <TextBlock x:Name="LastTest" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+              </Border>
             </StackPanel>
-          </Border>
-          <Border x:Name="InstallationCard" Style="{StaticResource Primer.Container}">
+          </ContentControl>
+          <Border x:Name="InstallationCard" Style="{StaticResource Primer.Container}" Margin="0,16,0,0" Padding="20">
             <StackPanel>
               <DockPanel>
-                <ContentControl x:Name="DetectionChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
-                  <TextBlock x:Name="DetectionSource" Style="{StaticResource Primer.StatusText}"/>
-                </ContentControl>
-                <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap" TextTrimming="None"/>
+                <Border DockPanel.Dock="Right" Style="{StaticResource Primer.Tag.Accent}" VerticalAlignment="Center">
+                  <TextBlock x:Name="ThreadText" Text="{Binding SelectedItem.OwnerApartment,ElementName=Version}" FontFamily="{DynamicResource Ui.FontMono}"
+                             VerticalAlignment="Center" FontWeight="SemiBold"/>
+                </Border>
+                <Border DockPanel.Dock="Right" Style="{StaticResource Primer.Tag}" Margin="0,0,6,0" VerticalAlignment="Center">
+                  <TextBlock x:Name="ToolCount" FontFamily="{DynamicResource Ui.FontMono}" FontWeight="Normal" VerticalAlignment="Center"/>
+                </Border>
+                <Border DockPanel.Dock="Right" Style="{StaticResource Primer.Tag}" Margin="0,0,6,0" VerticalAlignment="Center">
+                  <TextBlock x:Name="LiteCount" FontFamily="{DynamicResource Ui.FontMono}" FontWeight="Normal" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Config.ReleaseTitle}" Style="{StaticResource Primer.ContainerTitle}" FontSize="{DynamicResource Ui.FontSize.14}"/>
+                  <TextBlock x:Name="ReleaseSummary" Style="{StaticResource Primer.Muted.textFaint}" FontSize="{DynamicResource Ui.FontSize.12}"
+                             TextWrapping="Wrap" TextTrimming="None" Margin="0,2,8,0"/>
+                </StackPanel>
               </DockPanel>
-              <UniformGrid x:Name="ReleaseTiles" Columns="4" Margin="-2,8,-2,8" IsEnabled="{Binding IsEnabled,ElementName=Version}"
+              <UniformGrid x:Name="ReleaseTiles" Columns="8" Margin="-4,20,-4,16" IsEnabled="{Binding IsEnabled,ElementName=Version}"
                            AutomationProperties.Name="{l:Tr Config.Version}"/>
-              <Label x:Name="AccessibleLabel2" Content="{l:Tr Access.FieldConfigInstallPath}" Target="{Binding ElementName=TiaPath}"
-                     Style="{StaticResource Primer.FormLabel}" AutomationProperties.Name="{l:Tr Config.InstallPath}"/>
-              <DockPanel>
-                <Button DockPanel.Dock="Right" x:Name="DetectTia" Content="{l:Tr Config.AutoDetect}" AutomationProperties.Name="{l:Tr Config.AutoDetect}"
-                        Style="{StaticResource Primer.FormAction}" Margin="8,0,0,0"/>
-                <Button DockPanel.Dock="Right" x:Name="BrowseTia" Content="{l:Tr Config.Browse}" AutomationProperties.Name="{l:Tr Config.Browse}"
-                        Style="{StaticResource Primer.FormAction}" Margin="8,0,0,0"/>
-                <TextBox x:Name="TiaPath" AutomationProperties.Name="{l:Tr Config.InstallPath}" AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}"
-                         Style="{StaticResource Primer.MonoInput}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
-              </DockPanel>
+              <Expander x:Name="InstallDetails" Style="{StaticResource Primer.Expander}" AutomationProperties.Name="{l:Tr Config.InstallPath}">
+                <Expander.Header>
+                  <Border Style="{StaticResource Primer.CodeBlock}" Padding="14,8" MinHeight="36">
+                    <DockPanel>
+                      <TextBlock x:Name="AssemblyStatus" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="10,0,0,0"
+                                 FontSize="{DynamicResource Ui.FontSize.11}" FontFamily="{DynamicResource Ui.FontMono}"/>
+                      <TextBlock Text="{Binding Text,ElementName=TiaPath}" ToolTip="{Binding Text,ElementName=TiaPath}" Style="{StaticResource Primer.Mono}"
+                                 TextTrimming="CharacterEllipsis" FontSize="{DynamicResource Ui.FontSize.12}"/>
+                    </DockPanel>
+                  </Border>
+                </Expander.Header>
+                <StackPanel Margin="0,8,0,0">
+                  <DockPanel>
+                    <ContentControl x:Name="DetectionChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
+                      <TextBlock x:Name="DetectionSource" Style="{StaticResource Primer.StatusText}"/>
+                    </ContentControl>
+                    <TextBlock Text="{l:Tr Config.Installation}" Style="{StaticResource Primer.ContainerTitle}"/>
+                  </DockPanel>
+                  <DockPanel>
+                    <Label x:Name="AccessibleLabel1" Content="{l:Tr Access.FieldConfigVersion}" Target="{Binding ElementName=Version}"
+                           VerticalAlignment="Center" Style="{StaticResource Primer.FormLabel}"/>
+                    <ComboBox x:Name="Version" DisplayMemberPath="DisplayName" SelectedValuePath="Key"
+                              ItemContainerStyle="{StaticResource Primer.SelectItem}" AutomationProperties.Name="{l:Tr Config.Version}"
+                              AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" Margin="6,0,12,0"/>
+                    <Label x:Name="AccessibleLabel2" Content="{l:Tr Access.FieldConfigInstallPath}" Target="{Binding ElementName=TiaPath}"
+                           VerticalAlignment="Center" Style="{StaticResource Primer.FormLabel}"/>
+                    <Button x:Name="BrowseTia" DockPanel.Dock="Right" Content="{l:Tr Config.Browse}" AutomationProperties.Name="{l:Tr Config.Browse}"
+                            Style="{StaticResource Primer.Button.Secondary.Medium}" Margin="6,0,0,0"/>
+                    <TextBox x:Name="TiaPath" Style="{StaticResource Primer.MonoInput}" AutomationProperties.Name="{l:Tr Config.InstallPath}"
+                             AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+                  </DockPanel>
+                </StackPanel>
+              </Expander>
             </StackPanel>
           </Border>
-          <Border x:Name="ServerPane" Style="{StaticResource Primer.Container}" Margin="0,16,0,0">
-            <Grid>
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" MinHeight="24"/>
-                <RowDefinition Height="6"/>
-                <RowDefinition Height="Auto" MinHeight="52"/>
-                <RowDefinition Height="10"/>
-                <RowDefinition Height="Auto" MinHeight="30"/>
-              </Grid.RowDefinitions>
-              <DockPanel>
-                <ContentControl x:Name="ServiceStateChip" DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}">
-                  <TextBlock x:Name="ServiceStatusText" Style="{StaticResource Primer.StatusText}"/>
-                </ContentControl>
-                <TextBlock Text="{l:Tr Config.HttpService}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap" TextTrimming="None"/>
+          <ContentControl x:Name="HostsCard" Style="{StaticResource Primer.Box}" Padding="20" Margin="0,16,0,0">
+            <StackPanel>
+              <DockPanel Margin="0,0,0,6">
+                <Button x:Name="RefreshHosts" DockPanel.Dock="Right" Content="{l:Tr Hosts.Refresh}" AutomationProperties.Name="{l:Tr Hosts.Refresh}" Style="{StaticResource Primer.Quiet}"/>
+                <TextBlock Text="{l:Tr Hosts.Title}" Style="{StaticResource Primer.ContainerTitle}" FontSize="{DynamicResource Ui.FontSize.14}"/>
               </DockPanel>
-              <Grid x:Name="AddressRow" Grid.Row="2">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*"/>
-                  <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="Auto" MinWidth="90"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ServerAddress}" x:Name="AccessibleLabel3" Content="{l:Tr Access.FieldConfigIpv4}" Target="{Binding ElementName=ServerAddress}" Style="{StaticResource Primer.FormLabel}"/>
-                    <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}" AutomationProperties.Name="{l:Tr Config.Ipv4}" x:Name="ServerAddress" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
-                </StackPanel>
-                <StackPanel Grid.Column="2">
-                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ServerPort}" x:Name="AccessibleLabel4" Content="{l:Tr Access.FieldConfigPort}" Target="{Binding ElementName=ServerPort}" Style="{StaticResource Primer.FormLabel}"/>
-                    <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}" AutomationProperties.Name="{l:Tr Config.Port}" x:Name="ServerPort" Text="8765" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
-                </StackPanel>
-              </Grid>
-              <Grid x:Name="ServerActions" Grid.Row="4">
-                <WrapPanel>
-                  <Button x:Name="TestClient" Content="{l:Tr Pages.TestConnection}" AutomationProperties.Name="{l:Tr Pages.TestConnection}"
-                          Style="{StaticResource Primer.FormAction}" Margin="0,0,8,0"/>
-                  <Button AutomationProperties.Name="{l:Tr Config.Network}" x:Name="Network" Content="{l:Tr Config.Network}" Style="{StaticResource Primer.FormAction}" Margin="0,0,8,0"/>
-                  <Grid>
-                    <Button AutomationProperties.Name="{l:Tr Config.Start}" x:Name="StartServer" Content="{l:Tr Config.Start}" Style="{StaticResource Primer.FormRun}"/>
-                    <Button AutomationProperties.Name="{l:Tr Config.Stop}" x:Name="StopServer" Content="{l:Tr Config.Stop}" Style="{StaticResource Primer.FormAction}" IsEnabled="False" Visibility="Collapsed"/>
-                  </Grid>
-                </WrapPanel>
-              </Grid>
-            </Grid>
-          </Border>
-          <Button x:Name="SaveBoth" Content="{l:Tr Pages.SaveBoth}" AutomationProperties.Name="{l:Tr Pages.SaveBoth}" Margin="0,8,0,0"
-                  HorizontalAlignment="Left" Style="{StaticResource Primer.Secondary}" IsDefault="True"/>
+              <ListBox x:Name="HostList" MinHeight="36" Style="{StaticResource Primer.List}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{l:Tr Hosts.Title}">
+                <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Display}" TextWrapping="Wrap"/></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+              <TextBlock x:Name="HostDetail" Text="{l:Tr Hosts.Hint}" TextWrapping="Wrap" Style="{StaticResource Primer.Muted}" Margin="0,6,0,6"/>
+              <WrapPanel>
+                <Button x:Name="RestartHost" Content="{l:Tr Hosts.Restart}" AutomationProperties.Name="{l:Tr Hosts.Restart}" IsEnabled="False" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+                <Button x:Name="StopHost" Content="{l:Tr Hosts.Stop}" AutomationProperties.Name="{l:Tr Hosts.Stop}" IsEnabled="False" Style="{StaticResource Primer.Secondary}"/>
+              </WrapPanel>
+              <Expander x:Name="ConfigurationActivity" AutomationProperties.Name="{l:Tr Mcp.ActivityLog}" Header="{l:Tr Mcp.ActivityLog}" Style="{StaticResource Primer.Expander}" Margin="0,16,0,0">
+                <Grid Height="240">
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" MinHeight="24"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="*"/>
+                  </Grid.RowDefinitions>
+                  <DockPanel>
+                    <Button AutomationProperties.Name="{l:Tr Primer.Clear}" x:Name="ClearLog" Content="{l:Tr Primer.Clear}" DockPanel.Dock="Right" Style="{StaticResource Primer.Quiet}" Margin="12,0,0,0"/>
+                    <TextBlock x:Name="LogCount" DockPanel.Dock="Right" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+                    <TextBlock Text="{l:Tr Mcp.ActivityLog}" Style="{StaticResource Primer.SectionLabel}"/>
+                  </DockPanel>
+                  <Border x:Name="ConfigurationLogCard" Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
+                    <ux:WorkbenchLogView AutomationProperties.Name="{l:Tr Mcp.ActivityLog}" x:Name="ActivityLog" Style="{StaticResource Primer.LogDocument}"/>
+                  </Border>
+                </Grid>
+              </Expander>
+              <Expander Header="{l:Tr Config.Summary}" AutomationProperties.Name="{l:Tr Config.Summary}"
+                        Style="{StaticResource Primer.Expander}" Margin="0,8,0,0">
+                <Border x:Name="SummaryCard" Style="{StaticResource Primer.CodeBlock}" Padding="12,8">
+                  <StackPanel>
+                    <TextBlock x:Name="LinkState" Style="{StaticResource Primer.ListValue}"/>
+                    <TextBlock x:Name="LinkClient" Style="{StaticResource Primer.ListValue}"/>
+                    <DockPanel>
+                      <TextBlock Text="{l:Tr Config.Service}" Style="{StaticResource Primer.Muted}"/>
+                      <TextBlock x:Name="LinkServer" Style="{StaticResource Primer.ListValue}"/>
+                    </DockPanel>
+                    <TextBlock x:Name="Transport" Style="{StaticResource Primer.ListValue}"/>
+                    <TextBlock x:Name="Status" Style="{StaticResource Primer.Muted}" AutomationProperties.LiveSetting="Polite"/>
+                  </StackPanel>
+                </Border>
+              </Expander>
+            </StackPanel>
+          </ContentControl>
         </StackPanel>
-      </ScrollViewer>
-      <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel>
-          <StackPanel>
-            <DockPanel Margin="0,0,0,8">
-              <ContentControl DockPanel.Dock="Right" Style="{StaticResource Primer.StatusChip}" Tag="{Binding Tag,ElementName=ServiceStateChip}">
-                <TextBlock x:Name="LinkState" Style="{StaticResource Primer.StatusText}"/>
-              </ContentControl>
-              <TextBlock Text="{l:Tr Config.Summary}" Style="{StaticResource Primer.SectionLabel}"/>
-            </DockPanel>
-            <Border x:Name="SummaryCard" Style="{StaticResource Primer.TableContainer}">
-              <Border.ToolTip>
-                <TextBlock x:Name="Status"/>
-              </Border.ToolTip>
-              <StackPanel>
-                <Border Style="{StaticResource Primer.ListRow}">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.Muted}"/>
-                    <TextBlock x:Name="LinkClient" Grid.Column="1" Style="{StaticResource Primer.ListValue}" Margin="8,0,0,0"/>
-                  </Grid>
-                </Border>
-                <Border Style="{StaticResource Primer.ListRow}">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{l:Tr Config.Service}" Style="{StaticResource Primer.Muted}"/>
-                    <TextBlock x:Name="LinkServer" Grid.Column="1" Style="{StaticResource Primer.ListValue}" Margin="8,0,0,0"/>
-                  </Grid>
-                </Border>
-                <Border Style="{StaticResource Primer.ListRow}">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{l:Tr Config.Address}" Style="{StaticResource Primer.Muted}"/>
-                    <TextBlock x:Name="LinkEndpoint" Grid.Column="1" Style="{StaticResource Primer.ListMonoValue}" Margin="8,0,0,0"><Run
-                        x:Name="EndpointScheme"/><Run x:Name="EndpointAddress"/><Run x:Name="EndpointPath"/></TextBlock>
-                  </Grid>
-                </Border>
-                <Border Style="{StaticResource Primer.ListRow}">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{l:Tr Config.Transport}" Style="{StaticResource Primer.Muted}"/>
-                    <TextBlock x:Name="Transport" Grid.Column="1" Style="{StaticResource Primer.ListValue}" Margin="8,0,0,0"/>
-                  </Grid>
-                </Border>
-              </StackPanel>
-            </Border>
-            <Border Style="{StaticResource Primer.Note}" Margin="0,12,0,0">
-              <TextBlock x:Name="LastTest" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.Text.text}"/>
-            </Border>
-            <DockPanel Margin="0,12,0,6">
-              <Button x:Name="RefreshHosts" DockPanel.Dock="Right" Content="{l:Tr Hosts.Refresh}" AutomationProperties.Name="{l:Tr Hosts.Refresh}" Style="{StaticResource Primer.Quiet}"/>
-              <TextBlock Text="{l:Tr Hosts.Title}" Style="{StaticResource Primer.SectionLabel}"/>
-            </DockPanel>
-            <ListBox x:Name="HostList" MinHeight="36" Style="{StaticResource Primer.List}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{l:Tr Hosts.Title}">
-              <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Display}" TextWrapping="Wrap"/></DataTemplate></ListBox.ItemTemplate>
-            </ListBox>
-            <TextBlock x:Name="HostDetail" Text="{l:Tr Hosts.Hint}" TextWrapping="Wrap" Style="{StaticResource Primer.Muted}" Margin="0,6,0,6"/>
-            <WrapPanel>
-              <Button x:Name="RestartHost" Content="{l:Tr Hosts.Restart}" AutomationProperties.Name="{l:Tr Hosts.Restart}" IsEnabled="False" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-              <Button x:Name="StopHost" Content="{l:Tr Hosts.Stop}" AutomationProperties.Name="{l:Tr Hosts.Stop}" IsEnabled="False" Style="{StaticResource Primer.Secondary}"/>
-            </WrapPanel>
-          </StackPanel>
-          <Expander x:Name="ConfigurationActivity" AutomationProperties.Name="{l:Tr Mcp.ActivityLog}" Header="{l:Tr Mcp.ActivityLog}" Style="{StaticResource Primer.Expander}" Margin="0,16,0,0">
-            <Grid Height="240">
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" MinHeight="24"/>
-                <RowDefinition Height="8"/>
-                <RowDefinition Height="*"/>
-              </Grid.RowDefinitions>
-              <DockPanel>
-                <Button AutomationProperties.Name="{l:Tr Primer.Clear}" x:Name="ClearLog" Content="{l:Tr Primer.Clear}" DockPanel.Dock="Right" Style="{StaticResource Primer.Quiet}" Margin="12,0,0,0"/>
-                <TextBlock x:Name="LogCount" DockPanel.Dock="Right" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-                <TextBlock Text="{l:Tr Mcp.ActivityLog}" Style="{StaticResource Primer.SectionLabel}"/>
-              </DockPanel>
-              <Border x:Name="ConfigurationLogCard" Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
-                <ux:WorkbenchLogView AutomationProperties.Name="{l:Tr Mcp.ActivityLog}" x:Name="ActivityLog" Style="{StaticResource Primer.LogDocument}"/>
-              </Border>
-            </Grid>
-          </Expander>
-        </StackPanel>
-      </ScrollViewer>
-    </Grid>
+      </Grid>
+    </ScrollViewer>
   </DockPanel>
 </UserControl>

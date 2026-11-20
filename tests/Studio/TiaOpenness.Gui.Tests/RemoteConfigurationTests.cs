@@ -1,3 +1,4 @@
+extern alias PlcRendering;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -74,7 +75,18 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
         {
             var mcp = window.Configuration!;
             var host = WorkbenchRenderTests.CreateHost(window);
+            void CheckCounts()
+            {
+                var roster = PlcRendering::TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(mcp.SelectedReleaseKey);
+                Assert.Equal(Loc.Current.T("Config.ToolCount", roster.Count), mcp.ToolCount.Text);
+                int lite = roster.Count(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"));
+                Assert.Equal(Loc.Current.T("Config.LiteCount", lite), mcp.LiteCount.Text);
+            }
             var tiles = mcp.ReleaseTiles.Children.Cast<RadioButton>().ToArray();
+            CheckCounts();
+            Assert.Equal("HTTP :8765", mcp.TransportStatus.Text);
+            Assert.Same(mcp.FindResource("Primer.textFaint"), mcp.Clients.TargetDot.Fill);
+            Assert.Equal(Visibility.Visible, mcp.HostsCard.Visibility);
             Assert.Equal(8, tiles.Length);
             Assert.True((bool)Assert.Single(tiles, tile => tile.IsChecked == true).Tag);
             Assert.Single(tiles, tile => (bool)tile.Tag);
@@ -82,6 +94,9 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             var undetected = tiles.First(tile => !(bool)tile.Tag);
             undetected.IsChecked = true;
             Assert.Equal(mcp.Version.SelectedItem, undetected.Content);
+            WpfContext.Drain();
+            Assert.Equal("STA", mcp.ThreadText.Text);
+            CheckCounts();
             mcp.SelectedReleaseKey = "21";
             mcp.SetReleaseEnabled(false);
             Assert.All(tiles, tile => Assert.False(tile.IsEnabled));
@@ -112,6 +127,15 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             Assert.DoesNotContain("8766", clients.JsonText.Text);
             mcp.LocalNav.IsChecked = true;
             mcp.TiaPath.Text = @"C:\fixture\Local Portal";
+            Assert.Equal(Loc.Current.T("Config.LocalStatus", "V21"), mcp.TransportStatus.Text);
+            Assert.Same(mcp.FindResource("Primer.ok"), mcp.Clients.TargetDot.Fill);
+            Assert.Equal(Visibility.Collapsed, mcp.HostsCard.Visibility);
+            Assert.Equal(Visibility.Collapsed, mcp.ServerPane.Visibility);
+            mcp.HostList.Items.Add(new { Display = "Fixture · stdio" });
+            Assert.Equal(Visibility.Visible, mcp.HostsCard.Visibility);
+            mcp.HostList.Items.Clear();
+            Assert.Equal(Visibility.Collapsed, mcp.HostsCard.Visibility);
+            Assert.Equal(Loc.Current["Config.AssembliesMissing"], mcp.AssemblyStatus.Text);
             Navigate(mcp.GoClients);
             var local = JsonNode.Parse(clients.JsonText.Text)!["servers"]!["tia-portal"]!;
             Assert.Equal(mcp.TiaPath.Text, (string?)local["args"]!.AsArray().Last());
@@ -121,6 +145,32 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             Assert.Same(mcp, window.ConfigurationHost.Content);
             Assert.False(File.Exists(((ClientProfile)clients.PreviewTarget.SelectedItem).Path));
             Assert.True(host.IsAncestorOf(clients));
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
+    public void Keyboard_can_select_local_transport_and_reopen_the_install_path_editor() => wpf.Run(() =>
+    {
+        var window = ConfigurationWindow();
+        try
+        {
+            WpfContext.ShowWindow(window);
+            var mcp = window.Configuration!;
+            Assert.True(mcp.LocalNav.Focus());
+            WpfContext.PressSpace(mcp.LocalNav);
+            Assert.True(mcp.LocalNav.IsChecked);
+            Assert.False(mcp.InstallDetails.IsExpanded);
+            var toggle = WorkbenchRenderFeaturePagesTests.Descendants<ToggleButton>(mcp.InstallDetails)
+                .Single(button => ReferenceEquals(button.TemplatedParent, mcp.InstallDetails));
+            Assert.True(toggle.Focus());
+            WpfContext.PressSpace(toggle);
+            WpfContext.Drain();
+            Assert.True(mcp.InstallDetails.IsExpanded);
+            Assert.True(mcp.TiaPath.IsVisible);
+            Assert.True(mcp.TiaPath.Focus());
+            Assert.Equal("127.0.0.1", mcp.ServerAddress.Text);
+            Assert.Equal("8765", mcp.ServerPort.Text);
         }
         finally { window.Close(); }
     });
@@ -169,7 +219,18 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             mcp.ConfirmClientSelection = _ => true;
             provider.Toggle();
             clients.PreviewTarget.SelectedItem = profiles[2];
-            Assert.NotNull(JsonNode.Parse(clients.JsonText.Text)!["mcp_servers"]!["tia-portal-vm"]);
+            string toml = clients.JsonText.Text;
+            Assert.StartsWith("[mcp_servers.tia-portal-vm]" + Environment.NewLine, toml);
+            Assert.Contains("command = ", toml);
+            Assert.Contains("\"--relay\", \"http://127.0.0.1:8765/mcp\"", toml);
+            Assert.Contains("tool_timeout_sec = 300", toml);
+            Assert.Equal(Loc.Current.T("Config.HideFormat", "TOML"), clients.PreviewJson.Header);
+            Assert.Equal(Loc.Current.T("Config.CopyFormat", "TOML"), clients.CopyJson.Content);
+            clients.PreviewJson.IsExpanded = false;
+            string? copied = null;
+            mcp.CopyClientText = value => copied = value;
+            Click(clients.CopyJson);
+            Assert.Equal(toml, copied);
             Click(clients.SelectDetected);
             Assert.DoesNotContain(profiles[2], clients.ClientChoices.SelectedItems.Cast<ClientProfile>());
             Assert.All(profiles, profile => Assert.False(File.Exists(profile.Path)));
@@ -229,7 +290,7 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
         var appearance = ThemeManager.Current;
         var previous = (appearance.Theme, appearance.HighContrastOverride, Loc.Current.Language);
         var catalogue = ClientProfiles.All().Select((client, index) =>
-            new ClientProfile(client.Id, client.Name, Path.Combine(root, client.Client, Path.GetFileName(client.Path)), "", client.Client, client.Kind)
+            new ClientProfile(client.Id, client.Name, Path.Combine(@"C:\fixture", client.Client, Path.GetFileName(client.Path)), "", client.Client, client.Kind)
             { Detected = index % 3 == 0 }).ToList();
         var window = ConfigurationWindow(catalogue);
         try
@@ -245,6 +306,7 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
                 WorkbenchRenderTests.ApplyCurrentPalette(host);
                 foreach (string page in new[] { "Mcp", "Clients" })
                 {
+                    mcp.RemoteNav.IsChecked = true;
                     window.Navigate(page);
                     host.UpdateLayout();
                     WpfContext.Drain();
@@ -266,6 +328,57 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
                     {
                         var folder = Directory.CreateDirectory(Path.Combine(output, "configuration"));
                         WorkbenchRenderTests.SaveRender(host, Path.Combine(folder.FullName, $"{page}-{width}x{height}-{language}-{mode}.png"), width, height);
+                    }
+                    mcp.LocalNav.IsChecked = true;
+                    WpfContext.Drain();
+                    host.UpdateLayout();
+                    Assert.Equal("STDIO · TIA V21", mcp.Clients.TargetEndpoint.Text);
+                    Assert.Equal(Visibility.Collapsed, mcp.HostsCard.Visibility);
+                    if (page == "Mcp")
+                    {
+                        Assert.True(mcp.ModeHead.IsWrapped);
+                        var title = mcp.ModeTitle.TranslatePoint(new Point(), host);
+                        var tiles = mcp.LocalNav.TranslatePoint(new Point(), host);
+                        Assert.True(tiles.Y >= title.Y + mcp.ModeTitle.ActualHeight);
+                        Assert.Equal(8, mcp.ReleaseTiles.Columns);
+                        foreach (RadioButton tile in mcp.ReleaseTiles.Children)
+                        {
+                            bool installed = (bool)tile.Tag;
+                            Assert.Same(tile.FindResource(installed ? "Primer.Tile" : "Primer.Tile.Muted"), tile.Style);
+                            var dash = Assert.IsType<System.Windows.Shapes.Rectangle>(tile.Template.FindName("Dash", tile));
+                            Assert.Equal(installed ? Visibility.Collapsed : Visibility.Visible, dash.Visibility);
+                            var dot = Assert.Single(WorkbenchRenderFeaturePagesTests.Descendants<System.Windows.Shapes.Ellipse>(tile));
+                            Assert.Same(tile.FindResource(installed ? "Primer.ok" : "Primer.textFaint"), dot.Fill);
+                            Assert.Equal(installed ? 1 : 0.35, dot.Opacity);
+                            var labels = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(tile).ToArray();
+                            Assert.Equal(2, labels.Length);
+                            Assert.All(labels, label => Assert.Same(installed ? tile.Foreground : tile.FindResource("Primer.textFaint"), label.Foreground));
+                        }
+                        Assert.Equal(860, mcp.InstallationCard.ActualWidth);
+                        Assert.Equal(28, mcp.GoClients.ActualHeight);
+                        Assert.Equal("MTA", mcp.ThreadText.Text);
+                    }
+                    else
+                    {
+                        var choices = mcp.Clients.ClientChoices;
+                        var first = (ListBoxItem)choices.ItemContainerGenerator.ContainerFromIndex(0);
+                        var badge = WorkbenchRenderFeaturePagesTests.Descendants<Border>(first).Single(border => border.Name == "Monogram");
+                        var letters = Assert.IsType<TextBlock>(badge.Child);
+                        Assert.Equal("CC", letters.Text);
+                        Assert.Equal(32, badge.ActualWidth);
+                        Assert.Equal(32, badge.ActualHeight);
+                        Assert.Same(badge.FindResource("Primer.clientClaudeBg"), badge.Background);
+                        Assert.Same(badge.FindResource("Primer.clientClaudeFg"), letters.Foreground);
+                        var row = (ListBoxItem)choices.ItemContainerGenerator.ContainerFromItem(catalogue.Single(profile => profile.Id == "deepseek"));
+                        var neutral = WorkbenchRenderFeaturePagesTests.Descendants<Border>(row).Single(border => border.Name == "Monogram");
+                        Assert.Same(neutral.FindResource("Primer.clientNeutralBg"), neutral.Background);
+                        Assert.Equal(3, Assert.IsType<UniformGrid>(VisualTreeHelper.GetParent(row)).Columns);
+                    }
+                    if (!string.IsNullOrEmpty(output))
+                    {
+                        var folder = Directory.CreateDirectory(Path.Combine(output, "configuration"));
+                        var file = $"{page}-local-{width}x{height}-{language}-{mode}.png";
+                        WorkbenchRenderTests.SaveRender(host, Path.Combine(folder.FullName, file), width, height);
                     }
                 }
             }

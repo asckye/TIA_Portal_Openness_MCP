@@ -403,7 +403,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Tags_wait_for_the_target_plc_blocks_and_exclude_competing_operations"
             },
             ["TiaOpenness.Gui.Tests.RemoteConfigurationTests"] = new[] {
-                "Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection"
+                "Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection",
+                "Keyboard_can_select_local_transport_and_reopen_the_install_path_editor"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchApprovalConfirmationTests"] = new[] {
                 "Enter_is_inert_and_cancel_or_escape_preserves_approval_and_reopening_clears_input"

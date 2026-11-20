@@ -40,6 +40,39 @@ public sealed class McpPanelTests(WpfContext wpf)
         => await client.AttachAsync(Assert.Single(await client.DiscoverAsync(host.Host.ReleaseKey)));
 
     [Fact]
+    public void Session_item_keeps_the_entire_project_name_available_when_its_label_trims() => wpf.Run(() =>
+    {
+        string file = new string('W', 60) + ".ap21";
+        var project = new ProjectInfo { Name = Path.GetFileNameWithoutExtension(file), Path = @"D:\fixture\" + file };
+        var client = new FakeProjectClient { AttachedProject = project };
+        var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = "21" };
+        model.Session.Connect.Execute(null);
+        var window = new MainWindow(model, false);
+        try
+        {
+            WorkbenchRenderTests.CreateHost(window, 1024, 640);
+            var text = window.SessionStatus;
+            var runs = text.Inlines.Cast<System.Windows.Documents.Run>().ToArray();
+            Assert.Equal(2, runs.Length);
+            Assert.Equal("V21 · MTA", runs[0].Text.TrimEnd());
+            Assert.Equal(FontWeights.SemiBold, runs[0].FontWeight);
+            Assert.Same(text.FindResource("Ui.FontMono"), runs[0].FontFamily);
+            Assert.Equal(file, runs[1].Text);
+            Assert.Equal(FontWeights.Normal, runs[1].FontWeight);
+            Assert.Same(text.FindResource("Ui.Font"), runs[1].FontFamily);
+            Assert.Equal(TextTrimming.CharacterEllipsis, text.TextTrimming);
+            var prefix = new TextBlock { Text = runs[0].Text, FontFamily = runs[0].FontFamily, FontWeight = runs[0].FontWeight, FontSize = runs[0].FontSize };
+            System.Windows.Media.TextOptions.SetTextFormattingMode(prefix, System.Windows.Media.TextOptions.GetTextFormattingMode(text));
+            prefix.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            Assert.InRange(text.MaxWidth - prefix.DesiredSize.Width, 169, 171);
+            Assert.InRange(text.ActualWidth - prefix.DesiredSize.Width, 169, 171);
+            Assert.Equal(text.Text, new System.Windows.Automation.Peers.ButtonAutomationPeer(window.SessionStatusButton).GetName());
+            Assert.EndsWith(file, Assert.IsType<string>(window.SessionStatusButton.ToolTip));
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
     public async Task Status_identifies_the_attached_client_and_reports_the_bound_portal_process()
     {
         await using var host = new McpOperatorFixture();

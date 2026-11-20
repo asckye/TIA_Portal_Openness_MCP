@@ -40,20 +40,24 @@ namespace TiaMcpConfigurator
             Clients.PreviewTarget.ItemsSource = choices.SelectedItems;
             Clients.PreviewTarget.SelectionChanged += (_, _) => UpdateJsonPreview();
             Clients.PreviewJson.Expanded += (_, _) => UpdateJsonPreview();
+            Clients.PreviewJson.Collapsed += (_, _) => UpdateJsonPreview();
             choices.SelectionChanged += (_, _) => UpdateInstructions();
             choices.PreviewMouseLeftButtonDown += OnClientPreviewMouse;
             choices.PreviewKeyDown += OnClientPreviewKey;
             choices.AddHandler(ToggleButton.CheckedEvent, new RoutedEventHandler(OnClientSwitch));
             choices.AddHandler(ToggleButton.UncheckedEvent, new RoutedEventHandler(OnClientSwitch));
-            Clients.ClientSelection.KeyDown += OnClientGuidanceKey;
-            Clients.ClientSelection.MouseLeftButtonUp += (_, _) => WorkbenchMessageBox.Show(Window, clientInstructions,
-                Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
+            foreach (var guidance in new[] { Clients.ClientSelection, Clients.DetectedCount })
+            {
+                guidance.KeyDown += OnClientGuidanceKey;
+                guidance.MouseLeftButtonUp += (_, _) => ShowClientGuidance();
+            }
             Clients.SelectDetected.Click += (_, _) => Guard(SelectDetectedClients);
             Clients.ClearClients.Click += (_, _) => choices.UnselectAll();
             Clients.SaveClient.Click += (_, _) => Guard(() => SaveClients(Remote));
             Clients.CopyJson.Click += (_, _) => Guard(() => {
                 CopyClientText(Clients.JsonText.Text);
-                SetLocalizedText("ClientStatus", TextBlock.TextProperty, "Config.JsonCopied");
+                SetLocalizedText("ClientStatus", TextBlock.TextProperty, "Config.FormatCopied", PreviewFormatName);
+                Clients.ClientStatus.Visibility = Visibility.Visible;
             });
         }
 
@@ -70,9 +74,12 @@ namespace TiaMcpConfigurator
                 if (!choices.SelectedItems.Contains(profile)) choices.SelectedItems.Add(profile);
         }
 
+        private string PreviewFormatName => (Clients.PreviewTarget.SelectedItem as ClientProfile)?.Client == "codex" ? "TOML" : "JSON";
+
         private void UpdateJsonPreview()
         {
-            if (!Clients.PreviewJson.IsExpanded) return;
+            Clients.PreviewJson.Header = Loc.Current.T(Clients.PreviewJson.IsExpanded ? "Config.HideFormat" : "Config.PreviewFormat", PreviewFormatName);
+            Clients.CopyJson.Content = Loc.Current.T("Config.CopyFormat", PreviewFormatName);
             Clients.CopyJson.IsEnabled = false;
             if (Clients.PreviewTarget.SelectedItem is not ClientProfile target)
             {
@@ -82,11 +89,18 @@ namespace TiaMcpConfigurator
             try
             {
                 int port = Remote ? int.Parse(ServerPort.Text.Trim(), CultureInfo.InvariantCulture) : 0;
-                var entry = ClientProfiles.Entry(target, Remote, ServerAddress.Text.Trim(), port, ConfigCore.Engine(root, SelectedVersion),
-                    SelectedVersion, TiaPath.Text.Trim());
-                string section = target.Client == "codex" ? "mcp_servers" : ClientProfiles.RootKey(target);
-                var servers = new Dictionary<string, object> { [ClientProfiles.ServerName(target, Remote)] = entry };
-                Clients.JsonText.Text = JsonSerializer.Serialize(new Dictionary<string, object> { [section] = servers }, PreviewFormat);
+                var engine = ConfigCore.Engine(root, SelectedVersion);
+                string name = ClientProfiles.ServerName(target, Remote);
+                string address = ServerAddress.Text.Trim(), path = TiaPath.Text.Trim();
+                if (target.Client == "codex")
+                    Clients.JsonText.Text = ClientProfiles.MergeToml("", name, Remote, address, port, engine, SelectedVersion, path);
+                else
+                {
+                    var entry = ClientProfiles.Entry(target, Remote, address, port, engine, SelectedVersion, path);
+                    var servers = new Dictionary<string, object> { [name] = entry };
+                    var document = new Dictionary<string, object> { [ClientProfiles.RootKey(target)] = servers };
+                    Clients.JsonText.Text = JsonSerializer.Serialize(document, PreviewFormat);
+                }
                 Clients.CopyJson.IsEnabled = true;
             }
             catch (Exception ex) when (ex is IOException or ArgumentException or InvalidOperationException or FormatException or OverflowException)
@@ -98,11 +112,11 @@ namespace TiaMcpConfigurator
         private void OnClientGuidanceKey(object sender, KeyEventArgs e)
         {
             if (e.Key is not (Key.Enter or Key.Space)) return;
-            TiaOpenness.Gui.Controls.WorkbenchMessageBox
-                .Show(Window, (string)Clients.ClientSelection.ToolTip, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage
-                    .Information);
+            ShowClientGuidance();
             e.Handled = true;
         }
+        private void ShowClientGuidance() => WorkbenchMessageBox.Show(Window, clientInstructions,
+            Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
         internal bool PreviewClientSelection(ClientProfile profile)
         {
             if (ConfirmClientSelection != null) return ConfirmClientSelection(profile);
@@ -174,20 +188,31 @@ namespace TiaMcpConfigurator
             ServiceStateChip.Tag = running ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
             StartServer.Visibility = running ? Visibility.Collapsed : Visibility.Visible;
             StopServer.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
-            Clients.TargetEndpoint.Text = remote ? ServiceEndpoint : "stdio · " + TiaVersionCatalog.Get(SelectedVersion).DisplayName;
+            var release = TiaVersionCatalog.Get(SelectedVersion);
+            TransportStatus.Text = remote ? "HTTP :" + Text("ServerPort") : Loc.Current.T("Config.LocalStatus", release.DisplayName);
+            TransportStatus.ToolTip = ServiceStatusText.Text;
+            TransportChip.SetResourceReference(StyleProperty, remote && !running ? "Primer.Tag" : "Primer.Tag.Ok");
+            string statusBrush = remote && !running ? "Primer.textFaint" : "Primer.ok";
+            TransportDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, statusBrush);
+            Clients.TargetDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, statusBrush);
+            Clients.TargetEndpoint.Text = remote ? ServiceEndpoint : "STDIO · TIA " + release.DisplayName;
             UpdateJsonPreview();
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
         private void UpdateInstructions()
         {
             var selected = Clients.ClientChoices.SelectedItems.Cast<ClientProfile>().ToList();
-            Clients.ClientSelection.Text = Loc.Current
-                .T("Mcp.ClientCounts", selected.Count, Clients.ClientChoices.Items.Cast<ClientProfile>().Count(x => x.Detected));
+            int detected = Clients.ClientChoices.Items.Cast<ClientProfile>().Count(profile => profile.Detected);
+            Clients.DetectedCount.Text = Loc.Current.T("Config.DetectedCount", detected);
+            Clients.DetectedDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, detected > 0 ? "Primer.ok" : "Primer.textFaint");
+            Clients.ClientSelection.Text = Loc.Current.T("Mcp.ClientCounts", selected.Count, detected);
             Clients.SaveClient.IsEnabled = Clients.ClearClients.IsEnabled = selected.Count > 0;
-            Clients.SelectDetected.IsEnabled = Clients.ClientChoices.Items.Cast<ClientProfile>().Any(profile => profile.Detected);
+            Clients.SaveClient.Tag = selected.Count == 0 ? Loc.Current["Config.SelectForWrite"] : Loc.Current.T("Config.WriteCount", selected.Count);
+            Clients.SelectDetected.Content = Loc.Current.T("Config.SelectDetected", detected);
+            Clients.SelectDetected.IsEnabled = detected > 0;
             if (Clients.PreviewTarget.SelectedIndex < 0 && selected.Count > 0) Clients.PreviewTarget.SelectedIndex = 0;
-            Clients.WriteTargets.Text = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
-                Loc.Current["Mcp.WillWrite"] + " " + string.Join(Loc.Current["Config.ListSeparator"], selected.Select(x => x.DisplayName + " → " + x.Path));
+            Clients.WriteTargets.Text = selected.Count == 0 ? Loc.Current["Config.EmptySelection"] : Loc.Current.T("Config.SelectionBackup", selected.Count);
+            Clients.WriteTargets.ToolTip = Loc.Current["Mcp.WillWrite"] + "\n" + string.Join("\n", selected.Select(x => x.DisplayName + " → " + x.Path));
             clientInstructions = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
                 string
                     .Join("\n", selected
@@ -258,6 +283,7 @@ namespace TiaMcpConfigurator
                     Address = ip, Port = port });
             SetStatus("Config.ClientsConfigured", saved);
             SetLocalizedText("ClientStatus", TextBlock.TextProperty, "Config.ClientsConfigured", saved);
+            Clients.ClientStatus.Visibility = Visibility.Visible;
             Append(Loc.Current.T("Config.RestartClients", remote ? "tia-portal-vm" : "tia-portal"));
             if (errors.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.SomeClientsNotSaved", string.Join("\n", errors)));
         }

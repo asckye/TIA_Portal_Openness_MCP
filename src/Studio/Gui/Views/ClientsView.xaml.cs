@@ -1,36 +1,58 @@
 using System;
 using System.Globalization;
+using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
+using TiaMcpConfigurator;
 
 namespace TiaOpenness.Gui.Views;
 
 public partial class ClientsView : UserControl
 {
     public ClientsView() => InitializeComponent();
+
+    public static readonly DependencyProperty MonogramProperty = DependencyProperty.RegisterAttached(
+        "Monogram", typeof(ClientProfile), typeof(ClientsView), new PropertyMetadata(null, OnMonogramChanged));
+
+    public static ClientProfile? GetMonogram(Border badge) => (ClientProfile?)badge.GetValue(MonogramProperty);
+    public static void SetMonogram(Border badge, ClientProfile? value) => badge.SetValue(MonogramProperty, value);
+
+    private static void OnMonogramChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is not ClientProfile profile) return;
+        var badge = (Border)sender;
+        var (letters, hue) = profile.Id switch
+        {
+            "claude-code" => ("CC", "Claude"),
+            "codex" => ("CX", "Codex"),
+            "gemini" => ("GM", "Gemini"),
+            "cursor" => ("CR", "Cursor"),
+            "vscode" => ("VS", "VSCode"),
+            "opencode" => ("OC", "OpenCode"),
+            "qwen" => ("QW", "Qwen"),
+            "kimi" => ("KM", "Kimi"),
+            "codebuddy" => ("YB", "Yuanbao"),
+            _ => (Initials(profile.DisplayName), "Neutral")
+        };
+        badge.Tag = letters;
+        badge.SetResourceReference(Border.BackgroundProperty, "Primer.client" + hue + "Bg");
+        badge.SetResourceReference(Border.BorderBrushProperty, "Primer.client" + hue + "Fg");
+        badge.SetResourceReference(TextElement.ForegroundProperty, "Primer.client" + hue + "Fg");
+    }
+
+    private static string Initials(string name)
+    {
+        var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(words.Take(2).Select(word => StringInfo.GetNextTextElement(word))).ToUpperInvariant();
+    }
 }
 
 public sealed class ClientTileColumnsConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
-        value is double width ? width switch { <= 940 => 1, < 1024 => 2, _ => 3 } : 1;
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
-}
-
-public sealed class ClientMonogramConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        if (value is not string name) return "";
-        var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return words.Length switch
-        {
-            0 => "",
-            1 => StringInfo.GetNextTextElement(words[0]).ToUpperInvariant(),
-            _ => (StringInfo.GetNextTextElement(words[0]) + StringInfo.GetNextTextElement(words[1])).ToUpperInvariant()
-        };
-    }
+        value is double width ? width switch { < 570 => 1, < 850 => 2, _ => 3 } : 1;
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
 }

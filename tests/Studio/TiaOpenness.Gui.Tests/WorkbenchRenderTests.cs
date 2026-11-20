@@ -40,9 +40,13 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 using var trace = new BindingPathTests.BindingTrace();
                 var previous = ThemeManager.Current.Theme;
                 ThemeManager.Current.Theme = state.Theme;
+                var clients = Clients();
+                var scannedClients = clients.Select(client => client.DisplayName + (client.Detected ? " ✓" : " –"));
+                var scan = string.Join(Loc.Current["Config.ClientListSeparator"], scannedClients);
                 var preview = new ConfigurationPreview("14sp1", @"C:\Program Files\Siemens\Automation\Portal V14",
                     "192.168.86.131", state.Local, state.Running, state.Running, state.Running ? "render-fixture-secret" : "",
-                    "20:50:27   Client scan · 1 detected, 11 not detected\n20:50:27   Ready · configure both sides on this page\n20:50:27   Loaded V14sp1 service config\n20:50:27   Update check · 3.3.0 is latest (api)\n", Clients());
+                    "20:50:27   " + Loc.Current.T("Config.ClientDetection", scan) + "\n20:50:27   Ready · configure both sides on this page\n"
+                    + "20:50:27   Loaded V14sp1 service config\n20:50:27   Update check · 3.3.0 is latest (api)\n", clients);
                 var approvals = FeaturePageFixtures.Approvals(state.Pending);
                 approvals.Enabled = !state.Pending;
                 var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals: approvals, preview: preview);
@@ -57,7 +61,18 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     Assert.False(window.Configuration.HasRunningServer);
                     var installationState = (ContentControl)window.Configuration.FindName("DetectionChip");
                     var serviceState = (ContentControl)window.Configuration.FindName("ServiceStateChip");
-                    Assert.True(installationState.TranslatePoint(new Point(), host).Y < serviceState.TranslatePoint(new Point(), host).Y);
+                    var mcp = window.Configuration;
+                    Assert.Equal(state.Local ? Visibility.Collapsed : Visibility.Visible, mcp.ServerPane.Visibility);
+                    Assert.Equal(state.Local ? Visibility.Collapsed : Visibility.Visible, mcp.HostsCard.Visibility);
+                    Assert.Equal(!state.Local, mcp.InstallDetails.IsExpanded);
+                    Assert.True(mcp.ModeHead.TranslatePoint(new Point(0, mcp.ModeHead.ActualHeight), host).Y
+                        < mcp.InstallationCard.TranslatePoint(new Point(), host).Y);
+                    // Measure both detailed status chips in the mode that displays them, then restore the capture state.
+                    mcp.RemoteNav.IsChecked = true;
+                    WpfContext.Drain();
+                    host.UpdateLayout();
+                    Assert.True(serviceState.TranslatePoint(new Point(0, serviceState.ActualHeight), host).Y
+                        < installationState.TranslatePoint(new Point(), host).Y);
                     var start = (Button)window.Configuration.FindName(state.Running ? "StopServer" : "StartServer");
                     Assert.True(serviceState.TranslatePoint(new Point(), host).Y + serviceState.ActualHeight < start.TranslatePoint(new Point(), host).Y);
                     foreach (var chip in new[] { installationState, serviceState })
@@ -74,6 +89,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(FontWeights.Normal, value.FontWeight);
                         Assert.Equal(TextAlignment.Right, value.TextAlignment);
                     }
+                    if (state.Local) mcp.LocalNav.IsChecked = true;
                     window.Navigate("Calls"); host.UpdateLayout();
                     var callsCount = DesktopCapture.Descendants<Border>(window.CallsContent).Single(b => b.Name == "CallsCountBadge");
                     Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, callsCount.Visibility);
@@ -149,12 +165,16 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.InRange(textHeight, 10, maximumTextHeight);
                         Assert.InRange(textHeight + verticalPadding, 10 + verticalPadding, maximumRowHeight);
                         metrics.Add($"First log message height: {textHeight}");
+                        var summary = Assert.IsType<Expander>(mcp.SummaryCard.Parent);
+                        summary.IsExpanded = true;
+                        host.UpdateLayout();
                         foreach (string name in new[] { "LinkClient", "LinkServer", "LinkEndpoint", "Transport" })
                         {
                             var row = (FrameworkElement)window.Configuration.FindName(name);
                             var point = row.TransformToAncestor(host).Transform(new Point(0, row.ActualHeight / 2));
                             metrics.Add($"{name} center: {point.Y}");
                         }
+                        summary.IsExpanded = false;
                         File.WriteAllLines(Path.Combine(output, "layout.txt"), metrics);
                     }
                     window.Navigate(state.Page); WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();

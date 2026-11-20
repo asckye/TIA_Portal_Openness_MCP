@@ -305,8 +305,8 @@ namespace TiaMcpConfigurator
                 Assert(((System.Windows.Controls.Border)clients.FindName("ClientActionsBand")).Visibility == System.Windows.Visibility.Visible
                     && !((System.Windows.Controls.Grid)form.FindName("AddressRow")).IsEnabled
                     && !((System.Windows.Controls.Grid)form.FindName("ServerActions")).IsEnabled
-                    && ((System.Windows.Controls.Border)form.FindName("ServerPane")).Opacity == .45,
-                    "local mode dims the HTTP card and disables address and service actions");
+                    && form.ServerPane.Visibility == System.Windows.Visibility.Collapsed,
+                    "local mode hides the HTTP card and disables address and service actions");
                 form.CapturePage(Path.Combine(output, "remote.png"), 0);
                 window.Navigate("Clients"); window.UpdateLayout();
                 var list = (System.Windows.Controls.ListBox)clients.FindName("ClientChoices");
@@ -317,9 +317,9 @@ namespace TiaMcpConfigurator
                 window.Navigate("Mcp"); window.UpdateLayout();
                 // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
                 var shell = (System.Windows.FrameworkElement)window.Content;
-                var pill = (System.Windows.Controls.TextBlock)form.FindName("LinkState");
+                var pill = form.TransportChip;
                 double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
-                Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
+                Assert(pill.ActualWidth > 0 && pillRight < shell.ActualWidth, "the visible transport status pill stays inside the panel");
                 var caption = (System.Windows.FrameworkElement)window.FindName("CaptionBar");
                 Assert(caption.ActualHeight == 38 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 38 pixels inside the frame");
                 using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
@@ -330,8 +330,8 @@ namespace TiaMcpConfigurator
                 form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
                 window.Navigate("Clients"); window.UpdateLayout();
                 var tilePanel = System.Windows.Media.VisualTreeHelper.GetParent(list.ItemContainerGenerator.ContainerFromIndex(0));
-                Assert(window.MinWidth == 1024 && window.MinHeight == 640 && tilePanel is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 1,
-                    "minimum window size keeps the single-column client switches");
+                Assert(window.MinWidth == 1024 && window.MinHeight == 640 && tilePanel is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 3,
+                    "minimum window size keeps three columns of client switches");
                 window.Navigate("Mcp");
                 NarrowWindowChecks(window, form, output);
                 window.Width = 1200; window.Height = 780;
@@ -440,8 +440,8 @@ namespace TiaMcpConfigurator
                     && serverPane.ActualHeight >= 156 && installation.ActualHeight >= 156 && clientPane.ActualHeight > 300,
                     $"1044x780 {state}: service halves and client container keep the handoff heights (installation {installation.ActualHeight:F1}, server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1})");
                 Assert(Inside((System.Windows.FrameworkElement)form.FindName("StartServer"), serverPane) && Inside((System.Windows.FrameworkElement)form.FindName("Network"), serverPane)
-                    && Inside((System.Windows.FrameworkElement)form.FindName("TiaPath"), installation) && Inside((System.Windows.FrameworkElement)form.FindName("DetectTia"), installation),
-                    $"1044x780 {state}: path field and service buttons stay inside their cards");
+                    && Inside(form.TiaPath, installation) && Inside(form.DetectTia, form.McpToolbar),
+                    $"1044x780 {state}: path and service controls stay in their cards and auto-detect stays in the MCP toolbar");
                 Assert(head.IsWrapped ? segments.TransformToAncestor(head).Transform(new System.Windows.Point()).Y >= title.ActualHeight : titleEnd <= segmentsStart + 0.5,
                     $"1044x780 {state}: the page title ends at {titleEnd:F1} before the mode control at {segmentsStart:F1}");
             }
