@@ -159,7 +159,8 @@ public sealed class WriteRefusalTests
         finally { directory.Delete(true); }
     }
 
-    [Theory, InlineData("queryRefused"), InlineData("success"), InlineData("mappingExists"), InlineData("absent"), InlineData("absent-unchanged"), InlineData("findThrows")]
+    [Theory, InlineData("queryRefused"), InlineData("success"), InlineData("mappingExists"), InlineData("absent"),
+        InlineData("absent-unchanged"), InlineData("findThrows")]
     public void Workspace_export_tracks_native_dispatch_and_fresh_Find_after_a_throw(string result)
     {
         var attempts = new VciExportAttempts();

@@ -53,7 +53,8 @@ internal sealed class ProjectLifecycleProjectTools
             }
             catch (Exception error) when (error is JsonException || error is ArgumentNullException)
             {
-                throw new AdapterPreconditionException("BuildProjectScaffold requires a valid JSON object.", nameof(spec), isArgument: true, innerException: error);
+                throw new AdapterPreconditionException("BuildProjectScaffold requires a valid JSON object.", nameof(spec), isArgument: true,
+                    innerException: error);
             }
         }
 
