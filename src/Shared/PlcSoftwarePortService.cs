@@ -97,11 +97,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             var unavailable = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, "GetPlcCrossReferences", unitName: unitName, unitKind: unitKind);
             if (unavailable != null) throw new NotSupportedException(unavailable);
-            reason = CrossReferenceGuardLogic
-                .PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable), release: HardwareContract.ReleaseKey,
-                    sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
             queried = false;
-            if (reason != null) return null;
             if (!hasProject()) { reason = "No project is open."; return null; }
             var reply =
                 Invoke(new PlcSoftwareRequest {

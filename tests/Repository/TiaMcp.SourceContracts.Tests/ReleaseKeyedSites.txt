@@ -1,6 +1,5 @@
 # One use of each fragment is allowed in the named source. Repeated lines represent distinct occurrences.
 # Approved runtime policies and real-machine guards (U3, U4, U6, VMFIX).
-Adapters.Contracts/NativeCrossReferenceConsent.cs|release == "18" || release == "19" || release == "20";
 Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (release is "17" or "18" or "19" or "20")
 Adapters/Native/Session/PlcFoundationEngine.cs|throw new InvalidOperationException(releaseKey == "20" || releaseKey == "21"
 Adapters/Policy/PlcLifecyclePolicy.cs|release == "20" || release == "21" ? System.Threading.ApartmentState.MTA
@@ -71,12 +70,9 @@ Logic/V4/Construction/ConstructionJson.cs|string outputReleaseKey = "21"
 Logic/V4/Construction/FoundationConstructionValidation.Ladder.cs|string outputReleaseKey = "21"
 Logic/V4/Construction/FoundationConstructionValidation.Ladder.cs|string outputReleaseKey = "21"
 # Default arguments, fallback release keys and initial values.
-Adapters/Native/Plc/PlcCrossReferencePolicy.cs|?.Value ?? "21"
-Adapters/Native/Plc/PlcCrossReferencePolicy.cs|string release = "21"
 FoundationHost/HostCliOptions.cs|File.ReadAllText(marker).Trim() : "21"
 FoundationHost/PlcCrossReferenceAnalysis.cs|string release = "21"
 FoundationHost/PortedToolContract.cs|string release = "21"
-Logic/Siemens/CrossReferenceGuardLogic.cs|string release = "21"
 Studio/Gui/Configuration/ClientProfiles.cs|string releaseKey = "21"
 Studio/Gui/Configuration/ConfigCore.cs|string version = "21"
 ToolPipeline/EngineHostPipeline.cs|static string ReleaseKey = "21";

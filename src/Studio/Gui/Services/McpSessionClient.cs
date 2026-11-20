@@ -15,7 +15,7 @@ using TiaOpenness.Shared;
 
 namespace TiaOpenness.Gui.Services;
 
-public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSettings
+public sealed class McpSessionClient : IMcpSessionClient
 {
     internal static readonly TimeSpan OwnedHostExitTimeout = TimeSpan.FromSeconds(20);
     internal static readonly TimeSpan RegistrationPollInterval = TimeSpan.FromMilliseconds(500);
@@ -97,8 +97,7 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
             if (host != null && Alive(host)) yield return host;
         }
     }
-    private async Task<(Stream Stream, OperatorHandshakeResult Result)> Handshake(OperatorHost host, string action, string? key, CancellationToken token, bool
-            ? nativeCrossReferencesAllowed = null)
+    private async Task<(Stream Stream, OperatorHandshakeResult Result)> Handshake(OperatorHost host, string action, string? key, CancellationToken token)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         deadline.CancelAfter(TimeSpan.FromSeconds(5));
@@ -106,32 +105,19 @@ public sealed class McpSessionClient : IMcpSessionClient, IHumanCrossReferenceSe
         try
         {
             await OperatorProtocol
-                .Write(stream, new OperatorHandshake { Action = action, SessionKey = key, NativeCrossReferencesAllowed = nativeCrossReferencesAllowed,
+                .Write(stream, new OperatorHandshake { Action = action, SessionKey = key,
                 Workbench = new() { Pid = Environment.ProcessId, Version = ViewModels.MainViewModel.AppVersion } }, deadline.Token).ConfigureAwait(false);
             var result = await OperatorProtocol.Read<OperatorHandshakeResult>(stream, deadline.Token).ConfigureAwait(false);
             if (result.Protocol != "tiamcp.operator" || result.Version != 1 || !result.Accepted)
                 throw new IOException(result.Error ?? "Invalid operator handshake response.");
             if (action != "list"
                     && (!Guid.TryParseExact(result.SessionKey, "N", out _)
-                        || ((action == "attach" || action == "native-cross-references") && result.SessionKey != key)))
+                        || (action == "attach" && result.SessionKey != key)))
                 throw new InvalidDataException("Operator session identity mismatch.");
             return (stream, result);
         }
         catch { stream.Dispose(); throw; }
     }
-    async Task IHumanCrossReferenceSettings.SetNativeCrossReferencesAsync(bool enabled, CancellationToken token)
-    {
-        OperatorHost host; string key;
-        lock (sync)
-        {
-            host = attachedHost ?? throw new InvalidOperationException("Select and attach an MCP session first.");
-            key = SessionKey ?? throw new InvalidOperationException("The selected session has ended.");
-        }
-        var response = await Handshake(host, "native-cross-references", key, token, enabled).ConfigureAwait(false);
-        await response.Stream.DisposeAsync().ConfigureAwait(false);
-        foreach (var snapshot in response.Result.Sessions) Merge(snapshot);
-    }
-
     public async Task<IReadOnlyList<OperatorSession>> DiscoverAsync(string releaseKey, CancellationToken token = default)
     {
         var sessions = new List<OperatorSession>();

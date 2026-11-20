@@ -238,6 +238,49 @@ public sealed class PlcObjectPathTests
         Assert.Same(nested, engine.ExactBlock("G/A/B%2FC"));
     }
 
+    [Fact]
+    public void V21_direct_and_preview_queries_dispatch_to_the_selected_block_without_consent()
+    {
+        var engine = new PathEngine("21");
+        var group = AddGroup(engine.Plc.BlockGroup, "Group");
+        var block = AddBlock(group, "Target");
+        const string path = "Group/Target";
+        var rows = engine.BlockReferences.GetCrossReferences("PLC", path, "Block", "ObjectsWithReferences",
+            out var reason, out bool queried, "", "unit");
+        Assert.True(queried, reason);
+        Assert.Null(reason);
+        Assert.Equal("Caller", Assert.Single(rows!).ReferenceName);
+        Assert.Equal("ObjectsWithReferences", Assert.Single(block.Service.Queries).ToString());
+
+        var ordinaryPreview = engine.DeletePlcBlock(path, dryRun: true);
+        Assert.Equal(false, ordinaryPreview["crossReferenceQueried"]);
+        Assert.Single(block.Service.Queries);
+        var preview = engine.DeletePlcBlock(path, dryRun: true, crossReferences: true);
+        Assert.Equal(true, preview["crossReferenceQueried"]);
+        Assert.Equal(1, preview["crossReferenceCount"]);
+        Assert.Equal(new[] { "ObjectsWithReferences", "AllObjects" }, block.Service.Queries.Select(filter => filter.ToString()));
+        Assert.Same(block, Assert.Single(group.Blocks));
+    }
+
+    [Fact]
+    public void V21_consistency_failure_prevents_both_reference_queries()
+    {
+        var engine = new PathEngine("21");
+        var group = AddGroup(engine.Plc.BlockGroup, "Group");
+        var block = AddBlock(group, "Target");
+        AddBlock(group, "Uncompiled").IsConsistent = false;
+        var rows = engine.BlockReferences.GetCrossReferences("PLC", "Group/Target", "Block", "AllObjects",
+            out var reason, out bool queried, "", "unit");
+        Assert.False(queried);
+        Assert.Null(rows);
+        Assert.Contains("Group/Uncompiled", reason);
+        var preview = engine.DeletePlcBlock("Group/Target", dryRun: true, crossReferences: true);
+        Assert.Equal(false, preview["crossReferenceQueried"]);
+        Assert.Null(preview["crossReferenceCount"]);
+        Assert.Equal(reason, preview["crossReferenceUnavailableReason"]);
+        Assert.Empty(block.Service.Queries);
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void Delete_and_move_never_use_raw_name_fallback(string release)
     {

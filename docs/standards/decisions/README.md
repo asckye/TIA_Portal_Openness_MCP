@@ -60,7 +60,7 @@
 | B04 | 2026-10-03 | PLC 名称解析（G9）：非空名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与候选路径；空名称只在工程内唯一 PLC 时选中 | `engine-decomposition.md`“G9”；`phase6-review.md` §6 决策 5 | 已采纳 | 否 |
 | B06 | 2026-10-03 | 所有 worker 与适配器统一为 .NET Framework 4.8；删除未接线的预览 worker 协议，PLC worker 与 Studio 桥接统一使用 WorkerChannel 协议 2 | `adapter-merge.md`“待维护者决定”D4、D7 | 已采纳 | 否 |
 | B12 | 2026-10-07 | 4.0 保留 Foundation 宿主与 V20/V21 引擎（当时称“完整引擎”）两个程序，两类宿主共用一份行为规则，合并推迟到 4.x | `refactor-plan.md` P6-65 | 已被 0005 取代 | 否（回溯） |
-| B13 | 2026-10-08 | 已知 TIA 崩溃路径的原生防护在移植中保留：V20/V21 拒绝 CFC 图表保护与导出；SiVArc 块级工具只接受 FB/FC；PLC 原生交叉引用默认禁用；HMI 诊断控件属性暂缓读取 | `phase8-port-plan.md` §3.1 I9 与相关维护者决定；`troubleshooting/openness-limitations.md` | 已采纳 | 是 |
+| B13 | 2026-10-08 | 已知 TIA 崩溃路径的原生防护在移植中保留：V20/V21 拒绝 CFC 图表保护与导出；SiVArc 块级工具只接受 FB/FC；PLC 原生交叉引用当时默认禁用（2026-11-20 起在 API 可用时默认允许）；HMI 诊断控件属性暂缓读取 | `phase8-port-plan.md` §3.1 I9 与相关维护者决定；`troubleshooting/openness-limitations.md` | 已采纳 | 是 |
 | B17 | 2026-10-08 | 新开与审批管道分开的工作台控制通道，提供显示、读取、预填三类共 8 个宿主工具；通道上不提供审批、审批开关、服务启停；“允许 AI 控制界面”默认开启，人正在操作时优先 | `phase8-workbench-control.md` §0、§4 与“维护者决定（2026-10-08）”；`runtime-layout.md`“工作台控制通道” | 已采纳 | 是 |
 | B18 | 2026-10-08 | 工程操作页改为共享 MCP 会话的操作面板：默认附着 AI 正在使用的会话；没有 AI 会话时只在工作台启动的宿主中自建会话；面板发起的写仍须审批；“人/AI”由传输决定 | `phase8-workbench-control.md` §5 与“维护者决定”；`refactor-plan.md` P8-21 | 已采纳 | 是 |
 | B20 | 2026-10-08 | 审计链只记录写调用与审批；工作台控制调用只进调用日志与工作台控制日志；迁移期 V16–V19 版本控制页经 Studio 桥接只读 VCI；`--mock` 演示只显示离线页面 | `phase8-workbench-control.md`“维护者决定”与 §5.6 | 已采纳 | 否 |

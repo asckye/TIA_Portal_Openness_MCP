@@ -91,7 +91,7 @@ public sealed class PlcFixtureWorkerRobustnessTests
         internal Task<CallToolResult> Call(McpServerTool tool, RequestContext<CallToolRequestParams> request)
         {
             session ??= new HostSession(release, "fixture", true, new[] { tool }, new[] { tool }, Worker.OperatorSnapshot,
-                () => { }, nativeConsentDirectory: gate, lateResults: Worker.LateResults, unsettled: Worker.Unsettled);
+                () => { }, lateResults: Worker.LateResults, unsettled: Worker.Unsettled);
             return session.OperatorTools.Single().InvokeAsync(request).AsTask();
         }
         internal void Release() { if (Directory.Exists(gate)) File.WriteAllText(Path.Combine(gate, "release"), ""); }

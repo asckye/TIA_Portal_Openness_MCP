@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
-using TiaMcp.Adapters.Native.Plc;
 using TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
@@ -54,36 +52,24 @@ namespace TiaMcp.Engine.Tests
             }
             finally { UnifiedRequestValues.Inputs = previous; }
         }
-        public static IEnumerable<object?[]> Refusals => from release in new[] { "19", "20", "21" }
-            from setting in new string?[] { null, "", "0", "true", " 1" }
-            select new object?[] { release, setting };
-
         [Theory]
         [InlineData("19")]
         [InlineData("20")]
         [InlineData("21")]
-        public void Explicit_opt_in_uses_the_existing_native_sequence_and_filter(string release)
+        public void Default_query_uses_the_existing_native_sequence_and_filter(string release)
         {
             using var scope = HardwareContract.UseRelease(release);
-            WithSetting("1", () => {
-                var session = new Session();
-                var reply = UnifiedCrossReferences.Read(session, "HMI", "[]", "UnusedObjects");
-                Assert.Equal(1, session.Resolves);
-                Assert.Equal(1, session.Target.ServiceRequests);
-                Assert.Equal(1, session.Target.Service.Calls);
-                Assert.Equal(global::Siemens.Engineering.CrossReference.CrossReferenceFilter.UnusedObjects, session.Target.Service.LastFilter);
-                Assert.True((bool)reply.Meta["apiCallSuccess"]!);
-                Assert.True((bool)reply.Meta["traversalComplete"]!);
-                Assert.False((bool)reply.Meta["dataComplete"]!);
-            });
+            var session = new Session();
+            var reply = UnifiedCrossReferences.Read(session, "HMI", "[]", "UnusedObjects");
+            Assert.Equal(1, session.Resolves);
+            Assert.Equal(1, session.Target.ServiceRequests);
+            Assert.Equal(1, session.Target.Service.Calls);
+            Assert.Equal(global::Siemens.Engineering.CrossReference.CrossReferenceFilter.UnusedObjects, session.Target.Service.LastFilter);
+            Assert.True((bool)reply.Meta["apiCallSuccess"]!);
+            Assert.True((bool)reply.Meta["traversalComplete"]!);
+            Assert.False((bool)reply.Meta["dataComplete"]!);
         }
 
-        private static void WithSetting(string? setting, Action action)
-        {
-            string? previous = Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable);
-            try { Environment.SetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable, setting); action(); }
-            finally { Environment.SetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable, previous); }
-        }
         public sealed class TargetObject : global::Siemens.Engineering.IEngineeringServiceProvider
         {
             public int ServiceRequests;

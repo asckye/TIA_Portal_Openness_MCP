@@ -45,11 +45,11 @@ namespace Siemens.Engineering.SW.Blocks
     public sealed class BlockList(PlcBlockGroup parent) : NamedList<PlcBlock> { public PlcBlockGroup Parent => parent; }
     public sealed class OB : PlcBlock { }
     public sealed class PlcBlockUserGroup : PlcBlockGroup { }
-    public class PlcBlock
+    public class PlcBlock : CrossReference.ServiceProvider
     {
         public string Name { get; set; } = "";
         public object? Parent { get; set; }
-        public bool IsConsistent => true;
+        public bool IsConsistent { get; set; } = true;
         public string Language { get; set; } = "LAD";
         public int Exports { get; set; }
         public bool IsKnowHowProtected => false;
@@ -64,11 +64,11 @@ namespace Siemens.Engineering.SW.Types
         public NamedList<PlcTypeGroup> Groups { get; } = new();
         public PlcTypeComposition Types { get; } = new();
     }
-    public sealed class PlcType { public string Name { get; set; } = ""; }
+    public sealed class PlcType : CrossReference.ServiceProvider { public string Name { get; set; } = ""; }
 }
 namespace TiaMcp.Adapters.Native.Plc
 {
-    public interface IPlcOrganisationSession
+    public partial interface IPlcOrganisationSession
     {
         public string ReleaseKey { get; }
         public void VerifyBinding(string tool);
@@ -158,8 +158,8 @@ namespace TiaMcp.Adapters
         public string TreePath(string group, string name) => PlcSoftwareReadPolicy.ChildPath(group, name);
         public PlcBlock? DescribePlcBlockLogic(string path, string file)
             => new PlcOrganisationAdapter(new OrganisationSession(this)).ExportBlock("PLC", path, file);
-        public Dictionary<string, object?> DeletePlcBlock(string path)
-            => new PlcOrganisationAdapter(new OrganisationSession(this)).DeletePlcBlock("PLC", path, false);
+        public Dictionary<string, object?> DeletePlcBlock(string path, bool dryRun = false, bool crossReferences = false)
+            => Artifacts.DeletePlcBlock("PLC", path, dryRun, crossReferences);
         public HardwareAddressingReply MovePlcBlockToGroup(string path, string group)
             => new PlcOrganisationAdapter(new OrganisationSession(this)).MoveBlockToGroup("PLC", path, group);
         public HardwareAddressingReply VerifiedImport(PlcSoftwareRequest request, PlcVerifiedCandidate candidate, Func<PlcVerifiedExecution, string> run)
@@ -192,7 +192,7 @@ namespace TiaMcp.Adapters
             public List<PlcBlock>? GetBlocks(string path, string regex = "") => engine.Plc.BlockGroup.Groups.SelectMany(group => group.Blocks).ToList();
             public string AvailablePlcPathsSuffix() => "";
             public List<PlcCrossReference>? GetCrossReferences(string path, string block, string kind, string filter, out string? reason, out bool queried)
-            { reason = null; queried = false; return null; }
+            => new PlcCrossReferences(this).GetCrossReferences(path, block, kind, filter, out reason, out queried, "", "unit");
             public string SerializeEvidence(Dictionary<string, object?> evidence) => System.Text.Json.JsonSerializer.Serialize(evidence);
             public string BindingIdentity() => engine.ReleaseKey + ":fixture";
             public IDisposable AcquireHmiEditAccess() => new MemoryStream();
@@ -203,7 +203,7 @@ namespace TiaMcp.Adapters
 
 namespace TiaMcp.Adapters.Native.Plc
 {
-    internal static class PlcOrganisationPrimitives
+    internal static partial class PlcOrganisationPrimitives
     {
         internal static bool AutoNumber(PlcBlock block) => true;
         internal static int Number(PlcBlock block) => 1;

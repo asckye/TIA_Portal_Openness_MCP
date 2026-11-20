@@ -70,9 +70,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     new JsonObject {
                 ["success"] = true, ["engineMajor"] = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion, ["installedPatch"] = null,
                     ["assemblies"] = assemblies,
-                ["nativeCrossReferencesEnabled"] = CrossReferenceGuardLogic
-                    .PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable), release: HardwareContract.ReleaseKey,
-                        sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled) == null,
+                ["nativeCrossReferencesEnabled"] = true,
                 ["reflectionCrossReferencesAllowed"] = false,
                 ["faceplateTypeInternalAuthoring"] =
                     "No verified public API in the supplied V20/V21 SDK for creating a type from zero or editing its internal controls/scripts.",

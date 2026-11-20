@@ -1,7 +1,3 @@
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
 using TiaMcpServer.Siemens;
@@ -20,30 +16,21 @@ public sealed class NativeCrossReferenceDefaultsTests
     [InlineData("19")]
     [InlineData("20")]
     [InlineData("21")]
-    public void Release_policy_is_identical_in_host_and_native_adapter(string release)
+    public void Native_queries_are_allowed_by_default_where_the_release_has_the_API(string release)
     {
-        foreach (var setting in new string?[] { null, "", "0", "true", "yes", " 1 ", "1" })
-        foreach (bool consent in new[] { false, true })
-        foreach (bool unified in new[] { false, true })
-        {
-            var expected = release != "21" || setting == "1" || consent;
-            var host = CrossReferenceGuardLogic.PolicyRefusal(setting, unified, release, consent);
-            Assert.Equal(host, PlcCrossReferencePolicy.PolicyRefusal(setting, unified, release, consent));
-            Assert.Equal(expected, host == null);
-            if (!expected)
-            {
-                Assert.Contains("No native query was made", host);
-                Assert.Contains("does not mean there are no references", host);
-                Assert.Contains("Save the project", host);
-                Assert.Contains("do not automatically retry", host);
-            }
-        }
+        var compiled = new[] { (Path: "Main", Consistent: (bool?)true) };
+        Assert.Null(CrossReferenceGuardLogic.Refusal(compiled, "PLC"));
+        Assert.Null(PlcCrossReferencePolicy.Refusal(compiled, "PLC"));
+        Assert.Equal(release is "18" or "19" or "20" or "21",
+            PlcSoftwareCapabilities.Unsupported(release, "GetPlcCrossReferences") == null);
+        Assert.Equal(release is "19" or "20" or "21", PortedFamilies.Available(release, "GetUnifiedCrossReferences"));
     }
 
     [Fact]
-    public void Unknown_release_fails_closed_and_consent_does_not_bypass_consistency_or_reflection()
+    public void Inconsistent_blocks_and_reflection_are_still_refused()
     {
-        Assert.NotNull(CrossReferenceGuardLogic.PolicyRefusal(null, release: "future"));
+        Assert.False(PortedFamilies.Available("future", "GetPlcCrossReferences"));
+        Assert.False(PortedFamilies.Available("future", "GetUnifiedCrossReferences"));
         foreach (bool? consistent in new bool?[] { false, null })
         {
             var blocks = new[] { (Path: "Group/Block", Consistent: consistent) };
@@ -61,35 +48,8 @@ public sealed class NativeCrossReferenceDefaultsTests
     }
 
     [Fact]
-    public async Task Consent_is_session_scoped_and_requires_a_live_owner_with_the_same_start_time()
+    public void Removed_consent_contract_is_absent_from_the_adapter_assembly()
     {
-        string directory = Path.Combine(Path.GetTempPath(), "xref-consent-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(directory);
-        string allowed = Path.Combine(directory, "allowed.settings"), other = Path.Combine(directory, "other.settings");
-        try
-        {
-            using var owner = Process.GetCurrentProcess();
-            string secret = NativeCrossReferenceConsent.CreateSecret();
-            File.WriteAllText(allowed, NativeCrossReferenceConsent.Record(secret, true, owner.Id, owner.StartTime.ToUniversalTime().Ticks));
-            Assert.True(NativeCrossReferenceConsent.Read(allowed, secret));
-            using (NativeCrossReferenceConsent.EnterSession(allowed, secret))
-            {
-                Assert.True(NativeCrossReferenceConsent.Enabled);
-                Assert.True(await Task.Run(() => NativeCrossReferenceConsent.Enabled));
-                using (NativeCrossReferenceConsent.EnterSession(other, NativeCrossReferenceConsent.CreateSecret())) Assert.False(NativeCrossReferenceConsent.Enabled);
-                Assert.True(NativeCrossReferenceConsent.Enabled);
-            }
-            Assert.False(NativeCrossReferenceConsent.Read(allowed, NativeCrossReferenceConsent.CreateSecret()));
-            File.WriteAllText(allowed, NativeCrossReferenceConsent.Record(secret, false, owner.Id, owner.StartTime.ToUniversalTime().Ticks));
-            Assert.False(NativeCrossReferenceConsent.Read(allowed, secret));
-            File.WriteAllText(allowed, NativeCrossReferenceConsent.Record(secret, true, owner.Id, 1));
-            Assert.False(NativeCrossReferenceConsent.Read(allowed, secret));
-            File.WriteAllText(allowed, "enabled=true\n2147483647\n1\n");
-            Assert.False(NativeCrossReferenceConsent.Read(allowed, secret));
-            File.WriteAllText(allowed, "enabled=true\n");
-            Assert.False(NativeCrossReferenceConsent.Read(allowed, secret));
-            Assert.False(NativeCrossReferenceConsent.Read(other, secret));
-        }
-        finally { Directory.Delete(directory, true); }
+        Assert.Null(typeof(PlcSoftwareCapabilities).Assembly.GetType("TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent"));
     }
 }

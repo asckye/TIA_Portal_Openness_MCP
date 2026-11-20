@@ -23,19 +23,8 @@ internal static class EngineeringAuditRuntimeChecks
             check(Refused(() => EngineSurface.InvokeUninitialized(portalType.Method("DescribeService"), new object?[] { "Block", "does-not-exist", suffix, "", 200 })), "actual DescribeService rejects " + suffix + " before native acquisition");
         }
         check(Refused(() => EngineSurface.InvokeUninitialized(portalType.Method("InvokeObject"), new object?[] { "Block", "does-not-exist", "GetCrossReferences", null, "", true })), "actual InvokeObject cannot bypass cross-reference policy with allowWrite");
-        var query = portalType.Method("GetCrossReferences", new[] { typeof(string), typeof(string), typeof(string), typeof(string),
-            typeof(string).MakeByRefType(), typeof(bool).MakeByRefType(), typeof(string), typeof(string) });
-        string? previous = Environment.GetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES");
-        try
-        {
-            Environment.SetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES", null);
-            object?[] args = { "invalid", "invalid", "Tag", "AllObjects", null, false, "", "unit" };
-            check(EngineSurface.InvokeUninitialized(query, args) == null && args[4]!.ToString()!.Contains("No native query was made") && (bool)args[5]! == false,
-                "disabled tag query refuses before inspecting a project and never reports zero references");
-        }
-        finally { Environment.SetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES", previous); }
-
         var crossReferences = portalType.Adapter.GetType("TiaMcp.Adapters.Native.Plc.PlcCrossReferences", true)!;
+        CheckNativeQueryFilter(crossReferences, check);
         var api = crossReferences.GetMethod("BuildPlcCrossReference", BindingFlags.NonPublic | BindingFlags.Static)!.GetParameters()[0].ParameterType.Assembly;
         var read = portalType.Adapter.GetType("TiaMcpServer.Siemens.CrossReferenceTreeReader", true)!.GetMethod("Read", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(object), typeof(object), typeof(object), typeof(object));
         Func<object, System.Collections.Generic.IEnumerable<object>> noRows = _ => Array.Empty<object>();
@@ -84,5 +73,13 @@ internal static class EngineeringAuditRuntimeChecks
             { refused = error.InnerException.Message.Contains("has no API on this release"); }
             check(refused, "V21 option refusal precedes project resolution");
         }
+    }
+
+    internal static void CheckNativeQueryFilter(Type crossReferences, Action<bool, string> check)
+    {
+        var query = crossReferences.GetMethod("GetCrossReferences")!;
+        object?[] args = { "PLC", "Table/Tag", "Tag", "invalid-filter", null, false, "", "unit" };
+        check(EngineSurface.InvokeUninitialized(query, args) == null && (string?)args[4] == "Invalid CrossReferenceFilter name: invalid-filter"
+            && (bool)args[5]! == false, "the default native path validates the filter before accessing the project");
     }
 }

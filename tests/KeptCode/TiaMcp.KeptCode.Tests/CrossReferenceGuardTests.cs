@@ -8,23 +8,21 @@ namespace TiaMcp.Engine.Tests
     /// 2.9.1: the cross-reference guard. Real project 2026-09-21: Override re-import of five blocks, no compile, then a
     /// CrossReferenceService query on the old instance DB - TIA Portal V21 terminated itself (Process Exit Monitor 3000,
     /// EVENT_PROCESSTERMINATION_SELF, exit code -1) right after the query returned. The guard refuses the query while any
-    /// block of the PLC is not compiled or its state is unknown. Native queries also require a server-process opt-in.
+    /// block of the PLC is not compiled or its state is unknown.
     /// </summary>
     internal static class CrossReferenceGuardTests
     {
         internal static void Run(Action<bool, string> check)
         {
-            check(CrossReferenceGuardLogic.PolicyRefusal(null)?.Contains("No native query was made") == true,
-                "cross-reference policy: unset process setting refuses native queries and never reports zero references");
-            foreach (var setting in new[] { "", "0", "true", "yes", " 1 ", "invalid" })
-                check(CrossReferenceGuardLogic.PolicyRefusal(setting) != null,
-                    "cross-reference policy: only the exact diagnostic opt-in enables queries (rejected '" + setting + "')");
-            check(CrossReferenceGuardLogic.PolicyRefusal("1") == null,
-                "cross-reference policy: exact opt-in permits the compile-state checks, not a guarantee of native safety");
-
             var compiled = new List<(string Path, bool? Consistent)> { ("Main", true), ("MOTOR_FB", true), ("MOTOR_FB_IDB", true) };
+            foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
+            {
+                var reason = TiaMcp.Adapters.Contracts.PlcSoftwareCapabilities.Unsupported(release, "GetPlcCrossReferences");
+                check((reason == null) == (release is "18" or "19" or "20" or "21"),
+                    "cross-reference capability follows the native API on release " + release);
+            }
             check(CrossReferenceGuardLogic.Refusal(compiled, "PLC_1") == null && CrossReferenceGuardLogic.StaleCount(compiled) == 0,
-                "cross-reference guard: a fully compiled PLC passes the state check (process opt-in still required)");
+                "cross-reference guard: a fully compiled PLC passes the state check");
 
             var unknown = new List<(string Path, bool? Consistent)> { ("Main", true), ("KnowHow_FB", null) };
             var unknownReason = CrossReferenceGuardLogic.Refusal(unknown, "PLC_1");

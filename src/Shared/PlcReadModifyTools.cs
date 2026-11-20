@@ -307,11 +307,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetPlcCrossReferences"),
                 Description("[L2][PLC-Software][READ] Native Step7 block/type/tag/system-constant cross references, including software and safety units " +
-                "where supported. Allowed by default through V20 where the API exists (this tool requires V18+). V21 remains opt-in: the human Workbench " +
-                "Allow native cross references (V21) switch for this session OR TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. Save " +
-                "before the first query: V21 queries have terminated TIA Portal even after returning results; compilation is no guarantee. Any false/unknown " +
-                "IsConsistent still refuses; reflection cannot bypass the guard. Refusal means NOT QUERIED, never zero references. AnalyzePlcCrossReferences " +
-                "provides bounded export-based partial analysis without CrossReferenceService. Delete tools share the release policy and still require " +
+                "where supported. Enabled by default on V18–V21. Save before the first query. On V21, TIA Portal has exited after returning results. " +
+                "Compilation is no guarantee. Any false/unknown IsConsistent still refuses; reflection cannot bypass the guard. " +
+                "Refusal means NOT QUERIED, never zero references. AnalyzePlcCrossReferences provides bounded export-based partial analysis " +
+                "without CrossReferenceService. Delete tools require " +
                 "crossReferences=true. No automatic retry after TIA exit. Rows carry location address, type and referenced-as name. PLC user constants are " +
                 "not covered. Returns a V4 envelope; inspect outcome, execution and completeness. Native acceptance is pending.")]
         public CallToolResult GetCrossReferencesV4(

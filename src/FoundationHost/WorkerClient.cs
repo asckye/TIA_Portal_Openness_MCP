@@ -119,8 +119,6 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
         ? timeoutConfig = null)
     : IFoundationSessionWorker, IFoundationWorkerResult, IFoundationWorkerSupervisor
 {
-    internal string? NativeCrossReferenceSessionFile { get; set; }
-    internal string? NativeCrossReferenceSessionSecret { get; set; }
     internal bool SharedSession { get; init; } = true;
     internal Func<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession>? StagingProvider { get; set; }
     internal bool WorkerFaulted => Faulted;

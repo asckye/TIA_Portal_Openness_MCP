@@ -15,8 +15,6 @@ internal sealed class SharedSessionState
 {
     private static readonly ConditionalWeakTable<IFoundationWorker, SharedSessionState> States = new();
     private readonly IFoundationWorker worker;
-    private readonly bool environmentCrossReferences = Environment.GetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES") == "1";
-    internal Func<bool> HumanCrossReferences = () => false;
     internal Func<string?> HostSessionKey = () => null;
     private JsonObject? runtimeState;
     private SharedSessionState(IFoundationWorker worker) => this.worker = worker;
@@ -42,16 +40,6 @@ internal sealed class SharedSessionState
                 ["projectName"] = Field("projectName", "ProjectName", "Project"),
                 ["generation"] = Field("generation", "Generation", "BindingEpoch") };
         }
-    }
-    internal JsonObject Switches(string release)
-    {
-        bool human = HumanCrossReferences();
-        bool allowed = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.DefaultAllowed(release) || environmentCrossReferences || human;
-        return new JsonObject {
-            ["nativeCrossReferences"] = new JsonObject { ["allowed"] = allowed, ["humanSessionAllowed"] = human,
-                ["environmentAllowed"] = environmentCrossReferences, ["defaultAllowed"] = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent
-                    .DefaultAllowed(release) },
-            ["approval"] = new JsonObject { ["enabled"] = ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled, ["readOnly"] = true } };
     }
     internal JsonObject Snapshot(string release)
         => Snapshot(release, (worker as IFoundationWorkerSupervisor)?.OperatorSnapshot() ?? new JsonObject());
@@ -95,8 +83,7 @@ internal sealed class SharedSessionState
         bool connected = (bool?)transport["connected"] ?? (transport["binding"]?["processId"] != null
             || worker is WorkerClient { SharedSession: true } plc && (bool?)plc.SharedStatus?["session"]?["isConnected"] == true
             || worker is not IFoundationWorkerSupervisor && identity?["processId"] != null);
-        var switches = Switches(release);
-        if (ended) switches["nativeCrossReferences"]!["allowed"] = false;
+        var approval = new JsonObject { ["enabled"] = ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled, ["readOnly"] = true };
         var result = new JsonObject { ["binding"] = ended || identity == null ? null : new JsonObject { ["identity"] = identity },
             ["connected"] = !ended && connected,
             ["workerGeneration"] = transport["generation"]?.DeepClone(),
@@ -106,7 +93,7 @@ internal sealed class SharedSessionState
             ["lateResults"] = LateResults.Snapshot(),
             ["workerFault"] = transport["workerFault"]?.DeepClone(),
             ["workerRecovery"] = transport["workerRecovery"]?.DeepClone(),
-            ["disconnected"] = ended, ["switches"] = switches };
+            ["disconnected"] = ended, ["switches"] = new JsonObject { ["approval"] = approval } };
         if (!ended && transport["secondaryProjectFile"] is { } secondary) result["secondaryProjectFile"] = secondary.DeepClone();
         return result;
     }

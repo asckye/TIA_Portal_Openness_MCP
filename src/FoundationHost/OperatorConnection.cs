@@ -33,7 +33,7 @@ internal sealed class OperatorConnection(HostRegistration registration, Func<Can
                 if (error == null) shutdown!();
                 return;
             }
-            if (error == null && (request.Action == "attach" || request.Action == "native-cross-references"))
+            if (error == null && request.Action == "attach")
             {
                 session = registration.Find(request.SessionKey!);
                 if (session == null || session.Closed.IsCancellationRequested) error = "SESSION_NOT_FOUND";
@@ -44,13 +44,11 @@ internal sealed class OperatorConnection(HostRegistration registration, Func<Can
                 if (!isOwner(verifiedPeer.Value)) error = "CREATE_NOT_ALLOWED";
                 else { session = created = await create(deadline.Token).ConfigureAwait(false); membership = registration.Register(session); }
             }
-            if (error == null && request.Action == "native-cross-references")
-                session!.SetNativeCrossReferences(request.NativeCrossReferencesAllowed!.Value, verifiedPeer.Value);
             using var attachment = error == null ? session?.AttachOperator() : null;
             await OperatorProtocol.Write(pipe, new OperatorHandshakeResult { Accepted = error == null, Error = error,
                 SessionKey = session?.SessionKey, Sessions = request.Action == "list" ? registration.List() : session == null ? [] : [session.Snapshot()] },
                     deadline.Token).ConfigureAwait(false);
-            if (error != null || session == null || request.Action == "native-cross-references") return;
+            if (error != null || session == null) return;
             var tools = new McpServerPrimitiveCollection<McpServerTool>();
             foreach (var tool in session.OperatorTools) tools.Add(tool);
             await using var server = McpServerFactory.Create(new StreamServerTransport(pipe, pipe, "TiaMcp.Operator"), new McpServerOptions {

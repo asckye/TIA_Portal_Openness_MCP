@@ -6,6 +6,8 @@
 
 ### Changed
 
+- V21 enables native PLC and Unified cross-reference queries by default. The Workbench switch and environment opt-in have been removed, including `switches.nativeCrossReferences` in `GetSessionState`. Delete previews still require `crossReferences=true` to query. V21 real-machine confirmation is pending.
+
 - PUT/GET inspection and configuration prefer the CPU when a station mirrors its attribute. Both tools accept an optional exact `itemPath`.
 - Release-specific tool guidance describes unavailable actions and their API requirements. `GetToolUsage` names the selected release when a tool is unregistered.
 - `ExportTechnologyObjectsToDirectory` now previews and executes one `ExportTechnologyObject` per inventory entry. Grouped objects require V19 or later. An uncertain export is tracked by the batch request ID.

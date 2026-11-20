@@ -333,9 +333,6 @@
             <Button x:Name="ReloadSafety" Content="{l:Tr Settings.ReloadSafety}" AutomationProperties.Name="{l:Tr Settings.ReloadSafety}"
               Style="{StaticResource Primer.OutlinedAccent}" Click="OnReloadSafety" HorizontalAlignment="Left" Margin="0,0,0,12"/>
           </StackPanel>
-          <TextBlock Text="{l:Tr CrossReferences.Section}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,12,0,0"/>
-          <TextBlock Text="{l:Tr CrossReferences.Risk}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,4,0,8"/>
-          <ToggleButton AutomationProperties.Name="{l:Tr CrossReferences.Enabled}" x:Name="NativeCrossReferencesEnabled" Content="{l:Tr CrossReferences.Enabled}" Style="{StaticResource Primer.Switch}" Click="OnNativeCrossReferencesClick" Margin="0,8,0,12"/>
         </StackPanel>
       </StackPanel>
     </ScrollViewer>

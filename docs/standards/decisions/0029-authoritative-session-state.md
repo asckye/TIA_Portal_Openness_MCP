@@ -15,8 +15,9 @@ operator pipe read this view. The supervisor wraps the identity consistently as
 of that identity. Worker generation and the existing worker/pipeline reset
 requirement are read from their owners, with no independent reset flag.
 
-The view reports effective cross-reference policy, including release defaults,
-the host startup environment and authenticated human session consent. Approval
+The view reported effective cross-reference policy, including release defaults,
+the host startup environment and authenticated human session consent (superseded in part 2026-11-20: native cross
+references are on by default on all eight releases and the switch was removed). Approval
 is read-only information from the existing approval settings. Signing, peer
 verification, approval, audit, dispatch lanes and generation write fences retain
 their current owners and behavior.

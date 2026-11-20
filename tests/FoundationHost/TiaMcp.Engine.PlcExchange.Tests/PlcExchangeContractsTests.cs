@@ -194,6 +194,46 @@ namespace PlcExchangeTests
             .GetMethod("For", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, new object[] { typeof(AttributeMap<Scalar>) })!;
 
         [Fact]
+        public void Native_reference_read_and_requested_delete_preview_dispatch_without_consent()
+        {
+            var requests = new List<JsonObject>();
+            var port = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, arguments) => {
+                var request = arguments["request"]!.AsObject();
+                requests.Add(request);
+                Assert.EndsWith(".ExecutePlcOrganisation", operation);
+                Assert.True((bool)arguments["dryRun"]!);
+                Assert.False(arguments.ContainsKey("confirm"));
+                if ((string?)request["Operation"] == "GetPlcCrossReferences")
+                    return new JsonObject { ["Queried"] = true, ["References"] = new JsonArray(new JsonObject { ["ReferenceName"] = "Caller" }) };
+                return new JsonObject { ["Data"] = new JsonObject { ["dryRun"] = true, ["resolvedBlockPath"] = "Group/Target",
+                    ["crossReferenceQueried"] = true, ["crossReferenceAvailable"] = true, ["crossReferenceCount"] = 1 } };
+            }, () => true, () => "C:/Project/Example");
+            var query = new toolpipeline::TiaMcpServer.ModelContextProtocol.PlcReadModifyTools(port);
+            var read = Body(query.GetCrossReferencesV4("PLC", "Group/Target"));
+            Assert.True((bool?)read["ok"], read.ToJsonString());
+            var delete = new toolpipeline::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools(port);
+            var preview = Body(delete.DeletePlcBlockV4("PLC", "Group/Target", dryRun: true, crossReferences: true));
+            Assert.True((bool?)preview["ok"], preview.ToJsonString());
+            Assert.Equal(new[] { "GetPlcCrossReferences", "DeletePlcBlock" }, requests.Select(request => (string?)request["Operation"]));
+            Assert.All(requests, request => Assert.Equal("Group/Target", (string?)request["Path"]));
+            Assert.Equal("AllObjects", (string?)requests[0]["Filter"]);
+            Assert.True((bool?)requests[1]["CrossReferences"]);
+        }
+
+        [Theory]
+        [InlineData("PlcReadModifyTools", "GetCrossReferencesV4")]
+        [InlineData("UnifiedObjectServicesTools", "GetUnifiedCrossReferencesV4")]
+        public void Native_query_descriptions_explain_the_default_and_V21_exit_risk(string owner, string name)
+        {
+            var method = HostType("TiaMcpServer.ModelContextProtocol." + owner).GetMethod(name)!;
+            var description = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()!.Description;
+            Assert.Contains("Enabled by default", description);
+            Assert.DoesNotContain("opt-in", description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("save before the first query", description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("no automatic retry after TIA exit", description, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void RenamedCrossReferencesRemainBatchOrchestration()
         {
             var method = Entries()["GetPlcCrossReferences"];

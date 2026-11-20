@@ -14,6 +14,18 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class SafetySettingsViewTests(WpfContext wpf)
 {
     [Fact]
+    public void Settings_has_no_native_cross_reference_toggle()
+    {
+        wpf.Run(() =>
+        {
+            var view = new SettingsView();
+            Assert.NotNull(view.FindName("ControlEnabled"));
+            Assert.Null(view.FindName("NativeCrossReferencesEnabled"));
+            view.Dispose();
+        });
+    }
+
+    [Fact]
     public void Safety_labels_and_lists_use_the_project_Primer_styles()
     {
         wpf.Run(() =>

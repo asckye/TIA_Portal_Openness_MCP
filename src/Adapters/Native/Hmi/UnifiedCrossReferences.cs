@@ -11,16 +11,6 @@ namespace TiaMcp.Adapters.Native.Hmi
             => session.RunHmiStepTool("GetUnifiedCrossReferences", meta => {
                 meta["queried"] = false;
                 UnifiedObjectAddress.Parse(objectPathJson);
-                var refusal = PlcCrossReferencePolicy.PolicyRefusal(
-                    Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), unified: true, release: PlcCrossReferencePolicy
-                        .ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
-                if (refusal != null)
-                {
-                    meta["status"] = "PRECONDITION_FAILED"; meta["operationSuccess"] = false;
-                    meta["queried"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
-                    meta["reason"] = refusal;
-                    return refusal;
-                }
                 var target = UnifiedObjectAddress.Resolve(session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 var serviceType = typeof(global::Siemens.Engineering.IEngineeringObject).Assembly
                     .GetType("Siemens.Engineering.CrossReference.CrossReferenceService", true)!;

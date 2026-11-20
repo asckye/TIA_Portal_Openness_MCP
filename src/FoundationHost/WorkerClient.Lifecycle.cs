@@ -78,10 +78,6 @@ internal sealed partial class WorkerClient
                 start.Environment["TIA_MCP_WORKER_SPILLS_DIRECTORY"] = SpillsDirectory;
                 start.Environment[TiaMcp.Adapters.Contracts.ProjectFilePreset.WorkerVariable] = PresetProjectFile;
                 start.Environment["TIA_MCP_HOST_PROCESS_ID"] = Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                if (NativeCrossReferenceSessionFile != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionFileVariable] =
-                    NativeCrossReferenceSessionFile;
-                if (NativeCrossReferenceSessionSecret != null) start.Environment[TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.SessionSecretVariable] =
-                    NativeCrossReferenceSessionSecret;
                 start.Environment["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory;
                 process = Process.Start(start) ?? throw new IOException("Worker failed to start."); WorkerJob.Bind(process); WorkerShutdown.Register(this);
                 Holders.TryAdd(this, 0);

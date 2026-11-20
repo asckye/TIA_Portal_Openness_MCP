@@ -142,7 +142,7 @@
 #### 操作端与共享会话
 
 - 项目页默认附着 AI 正在使用的 MCP 会话：同一工具对象、同一 worker、同一 Openness 通道、审批和审计。没有 AI 会话时，只有工作台启动的宿主（`--transport operator --operator-owner <工作台 PID>`）允许 `create` 工作台自有会话，AI 不能加入；AI 客户端拉起的宿主拒绝 `create`。
-- 握手首帧的 `action` 为 `list`、`attach`、`create`、`native-cross-references` 或 `shutdown`。`native-cross-references` 只修改所选会话的人工原生交叉引用许可，宿主只把该会话的随机 HMAC 密钥传给它的 worker；它不是 MCP 工具，也不经审批。`shutdown` 在有调用进行或占用通道时返回 `HOST_BUSY`，否则封闭新的准入后走宿主停止路径；工作台按 20 秒宿主退出预算等待（含 worker 的 10 秒宽限），超时后须再经人确认才强制结束。
+- 握手首帧的 `action` 为 `list`、`attach`、`create` 或 `shutdown`。`shutdown` 在有调用进行或占用通道时返回 `HOST_BUSY`，否则封闭新的准入后走宿主停止路径；工作台按 20 秒宿主退出预算等待（含 worker 的 10 秒宽限），超时后须再经人确认才强制结束。
 - 会话规则对所有参与方相同：Openness 通道串行，结果未知记入未确认调用清单，`DisconnectPortal` 与 `RestartOpennessWorker` 影响整个会话；`DisconnectPortal` 的回执带 `endedBy`。面板发起的写同样经预检和审批卡，没有第二条批准路径。
 - 已附着工作台或由操作端拥有的会话保留 TIA 连接。其他 MCP 会话的 `takeOver=true` 仍须等待人在工作台结束该连接。
 - 审计行、调用日志和审批请求都带 `actor`（`mcp` 或 `workbench`）。附着后宿主从缓存推送 `notifications/tiamcp/sessionState`，不调用 TIA。

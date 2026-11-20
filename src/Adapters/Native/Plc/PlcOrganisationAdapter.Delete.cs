@@ -110,7 +110,6 @@ namespace TiaMcp.Adapters.Native.Plc
                 ["verifiedAbsent"] = false
             };
 
-            // 交叉引用仅在 crossReferences=true 时查，保留上方 TIA V21 真机退出证据对应的显式启用约束。
             string? crossRefReason = crossReferences ? _session.CrossReferenceRefusal(softwarePath) : "not queried (crossReferences=false)";
             bool crossRefQueried = false;
             var refs = crossReferences && crossRefReason == null ? TryGetTagTableCrossReferences(table, resolvedPath, out crossRefReason, out crossRefQueried)
@@ -130,8 +129,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human " +
-                        "Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
+                    + "and prefer offline analysis of exported documents. Compilation cannot guarantee stability.");
                 else warnings.Add("Table cross references are unavailable; see crossReferenceUnavailableReason. "
                     + "This does not establish that there are no references. Back up with ExportPlcTagTable, "
                     + "then use GetPlcCrossReferences for blocks that may use these symbols, or inspect references manually in TIA.");
@@ -212,7 +210,6 @@ namespace TiaMcp.Adapters.Native.Plc
                 + "recompile the entire PLC to see the full impact."
             };
 
-            // 仅在 crossReferences=true 时查，保留上方 TIA V21 真机退出证据对应的显式启用约束。
             string? crossRefReason = null;
             bool crossRefQueried = false;
             var refs = crossReferences ? _session.GetCrossReferences(softwarePath, typePath, "Type", "AllObjects", out crossRefReason, out crossRefQueried)
@@ -232,8 +229,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human " +
-                        "Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
+                    + "and prefer offline analysis of exported documents. Compilation cannot guarantee stability.");
                 else warnings
                     .Add("Warning: Cross-references for this UDT could not be retrieved (" + (crossRefReason ?? "unknown reason")
                         + "); this **does not mean** the UDT is unused. "
@@ -343,10 +339,6 @@ namespace TiaMcp.Adapters.Native.Plc
             object table, string resolvedPath, out string? reason, out bool queried)
         {
             queried = false;
-            reason = PlcCrossReferencePolicy
-                .PolicyRefusal(Environment.GetEnvironmentVariable(PlcCrossReferencePolicy.NativeQueryOptInVariable), release: PlcCrossReferencePolicy
-                    .ReleaseKey, sessionAllowed: TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Enabled);
-            if (reason != null) return null;
             try
             {
                 // The service belongs to tags/constants, not the table itself. Any failed child invalidates the aggregate.

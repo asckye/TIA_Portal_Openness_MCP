@@ -46,7 +46,7 @@ public sealed class ApprovalHostTests
     }
 
     private static CloseHost.HostSession CloseSession(McpServerTool tool) =>
-        new("19", "", false, [tool], [], () => new JsonObject(), () => { }, Path.GetTempPath());
+        new("19", "", false, [tool], [], () => new JsonObject(), () => { });
 
     private static CloseHost.FoundationTool CloseTool(CloseWorker worker, string release = "19") =>
         new(CloseHost.FoundationTools.ForRelease(CloseHost.FoundationTools.Definitions.Single(d => d.Name == "CloseProject"), release), worker);

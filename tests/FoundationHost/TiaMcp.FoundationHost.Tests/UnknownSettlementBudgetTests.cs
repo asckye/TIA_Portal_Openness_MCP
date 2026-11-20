@@ -54,7 +54,7 @@ public sealed class UnknownSettlementBudgetTests
         using var pipeline = new EngineHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
         using var context = pipeline.EnterSession();
         using var session = new Foundation.HostSession(release, "fixture", true, new[] { tool }, new[] { tool }, services.OperatorSnapshot,
-            () => { }, nativeConsentDirectory: scope.Root, lateResults: scope.Worker.LateResults, unsettled: scope.Worker.Unsettled);
+            () => { }, lateResults: scope.Worker.LateResults, unsettled: scope.Worker.Unsettled);
         var pending = session.OperatorTools.Single().InvokeAsync(Request("CreatePlcTagTable", new() {
             ["plc"] = "PLC_1", ["group"] = "", ["name"] = "SettledTable", ["dryRun"] = false,
             ["confirm"] = true, ["expectedProjectFile"] = scope.Project })).AsTask();
@@ -85,7 +85,7 @@ public sealed class UnknownSettlementBudgetTests
         using var pipeline = new EngineHost.EngineHostPipeline(release, services, Array.Empty<McpServerTool>());
         using var context = pipeline.EnterSession();
         using var session = new Foundation.HostSession(release, "fixture", true, new[] { tool }, new[] { tool }, services.OperatorSnapshot,
-            () => { }, nativeConsentDirectory: scope.Root, lateResults: scope.Worker.LateResults, unsettled: scope.Worker.Unsettled);
+            () => { }, lateResults: scope.Worker.LateResults, unsettled: scope.Worker.Unsettled);
         var request = Request("CreatePlcTagTable", new() { ["plc"] = "PLC_1", ["group"] = "", ["name"] = "SettledTable",
             ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = scope.Project });
         var pending = session.OperatorTools.Single().InvokeAsync(request).AsTask();

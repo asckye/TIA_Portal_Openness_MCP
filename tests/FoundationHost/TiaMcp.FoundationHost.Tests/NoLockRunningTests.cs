@@ -844,7 +844,7 @@ public sealed class NoLockRunningTests
         }
         internal Foundation.HostSession Session(McpServerTool tool, bool operatorOwned = true)
             => new(release, "fixture", operatorOwned, new[] { tool }, new[] { tool }, services.OperatorSnapshot,
-                () => { Disposed = true; Worker.Dispose(); }, nativeConsentDirectory: gate,
+                () => { Disposed = true; Worker.Dispose(); },
                 lateResults: Worker.LateResults, unsettled: Worker.Unsettled);
         internal async Task<CallToolResult> Call(Foundation.HostSession session, string name, JsonObject arguments,
             bool ai = false, CancellationToken token = default)

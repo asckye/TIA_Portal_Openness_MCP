@@ -143,9 +143,8 @@ namespace TiaMcpServer.ModelContextProtocol
         => _service.ValidateUnifiedObject(softwarePath,objectPathJson);
 
         [McpServerTool(Name="GetUnifiedCrossReferences"),
-                Description("[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Allowed by default through V20 " +
-                "where the API exists (Unified V19+). V21 requires the human Workbench Allow native cross references (V21) switch for this session OR " +
-                "TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before server startup. V21 TIA exits recorded: save before the first query; compilation is no " +
+                Description("[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Enabled by default on V19–V21. " +
+                "V21 TIA exits recorded: save before the first query; compilation is no " +
                 "guarantee. Not queried never means zero references; decoded results retain partial-coverage limits. Reflection cannot bypass the policy. No " +
                 "automatic retry after TIA exit. No complete offline replacement for Unified references is established. Native acceptance pending.")]
         public CallToolResult GetUnifiedCrossReferencesV4(

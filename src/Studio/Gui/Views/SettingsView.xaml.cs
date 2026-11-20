@@ -16,7 +16,6 @@ namespace TiaOpenness.Gui.Views;
 public partial class SettingsView : UserControl
 {
     private IApprovalService? _approvals;
-    private McpSessionPanel? _session;
     private FeaturePagesViewModel? _features;
     internal event EventHandler? ControlEnabledChanged;
 
@@ -31,9 +30,6 @@ public partial class SettingsView : UserControl
 
     internal void Initialize(IApprovalService approvals, McpSessionPanel? session = null)
     {
-        _session = session;
-        if (_session != null) _session.PropertyChanged += OnSessionChanged;
-        UpdateNativeCrossReferences();
         _approvals = approvals;
         approvals.PropertyChanged += OnApprovalChanged;
         UpdateApproval();
@@ -113,7 +109,6 @@ public partial class SettingsView : UserControl
     internal void Dispose()
     {
         SetFeatures(null);
-        if (_session != null) _session.PropertyChanged -= OnSessionChanged; _session = null;
         if (_approvals != null) _approvals.PropertyChanged -= OnApprovalChanged; _approvals = null;
     }
 
@@ -169,26 +164,6 @@ public partial class SettingsView : UserControl
     private void OnRetentionFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Audit.OpenFolder); }
     private void OnGenerateDiagnostics(object sender, RoutedEventArgs e) => _features?.Export();
     private void OnOpenDiagnosticsFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Diagnostics.OpenFolder); }
-
-    private void OnSessionChanged(object? sender, PropertyChangedEventArgs e) => UpdateNativeCrossReferences();
-    private void UpdateNativeCrossReferences()
-    {
-        NativeCrossReferencesEnabled.IsEnabled = _session?.CanSetNativeCrossReferences == true;
-        NativeCrossReferencesEnabled.IsChecked = _session?.NativeCrossReferencesAllowed == true;
-    }
-
-    private async void OnNativeCrossReferencesClick(object sender, RoutedEventArgs e)
-    {
-        if (_session?.CanSetNativeCrossReferences != true) { UpdateNativeCrossReferences(); return; }
-        try { await _session.SetNativeCrossReferencesAsync(NativeCrossReferencesEnabled.IsChecked == true); }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or System.Threading.Tasks
-                .TaskCanceledException)
-        {
-            Controls.WorkbenchMessageBox
-                .Show(Window.GetWindow(this), error.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-        UpdateNativeCrossReferences();
-    }
 
     private void OnControlEnabledClick(object sender, RoutedEventArgs e)
     {

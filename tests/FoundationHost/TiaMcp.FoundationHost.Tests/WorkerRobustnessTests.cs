@@ -152,7 +152,7 @@ public sealed class WorkerRobustnessTests
             using (Worker.ProductionBudgets()) Worker.Status(CancellationToken.None).GetAwaiter().GetResult();
             var tools = new[] { engine, shared }.Distinct().ToArray();
             session = new Foundation.HostSession(release, "fixture", true, tools, tools,
-                ((Foundation.WorkerClient)Worker.Client).OperatorSnapshot, () => { }, nativeConsentDirectory: dataDirectory,
+                ((Foundation.WorkerClient)Worker.Client).OperatorSnapshot, () => { },
                 lateResults: Worker.LateResults, unsettled: Worker.Unsettled);
         }
         internal Task<CallToolResult> Call(bool foundation, string? payload = null, CancellationToken token = default)

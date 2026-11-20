@@ -21,7 +21,12 @@ namespace Siemens.Engineering.SW
 
 namespace Siemens.Engineering.SW.Tags
 {
-    public sealed class PlcTagTable { public string Name { get; set; } = ""; }
+    public sealed class PlcTagTable
+    {
+        public string Name { get; set; } = "";
+        public NamedList<CrossReference.ServiceProvider> Tags { get; } = new();
+        public NamedList<CrossReference.ServiceProvider> SystemConstants { get; } = new();
+    }
     public class PlcTagTableGroup
     {
         public string Name { get; set; } = "";

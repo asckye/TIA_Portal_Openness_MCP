@@ -23,7 +23,6 @@ internal interface IHostSession : IDisposable
     public event Action? StateChanged;
     public void BindAi(IMcpServer server);
     public IDisposable AttachOperator();
-    public void SetNativeCrossReferences(bool enabled, int workbenchPid) => throw new NotSupportedException("Human session settings unavailable.");
     public bool TryBeginHostShutdown() => false;
     public void CancelHostShutdown() { }
 }
@@ -56,11 +55,6 @@ internal sealed class HostSession : IHostSession
     private Action<string>? registerAi;
     private readonly CancellationToken closedToken;
     public string SessionKey { get; } = Guid.NewGuid().ToString("N");
-    private FileStream? nativeConsent;
-    private readonly string? nativeConsentDirectory;
-    internal string NativeCrossReferenceSessionSecret { get; } = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.CreateSecret();
-    internal string NativeCrossReferenceSessionFile => Path
-        .Combine(nativeConsentDirectory ?? ApprovalSettings.SettingsPath + ".sessions", "native-cross-references-" + SessionKey + ".settings");
     public string Instructions { get; }
     public bool OperatorOwned { get; }
     public CancellationToken Closed => closedToken;
@@ -71,12 +65,11 @@ internal sealed class HostSession : IHostSession
     private readonly UnsettledCalls? unsettled;
 
     internal HostSession(string release, string instructions, bool operatorOwned, IReadOnlyList<McpServerTool> tools,
-        IReadOnlyList<McpServerTool> operatorTools, Func<JsonObject> workerState, Action dispose, string? nativeConsentDirectory = null,
+        IReadOnlyList<McpServerTool> operatorTools, Func<JsonObject> workerState, Action dispose,
         LateCalls? lateResults = null, UnsettledCalls? unsettled = null, TimeProvider? clock = null)
     {
         this.clock = clock ?? TimeProvider.System;
         created = lastRequestUtc = this.clock.GetUtcNow();
-        this.nativeConsentDirectory = nativeConsentDirectory;
         this.release = release; Instructions = instructions; OperatorOwned = operatorOwned;
         LateResults = lateResults ?? new LateCalls();
         this.unsettled = unsettled;
@@ -129,21 +122,6 @@ internal sealed class HostSession : IHostSession
             owner.Changed();
         }
     }
-    // Called only after the operator pipe has verified the Workbench image and peer PID.
-    public void SetNativeCrossReferences(bool enabled, int workbenchPid)
-    {
-        using var workbench = Process.GetProcessById(workbenchPid);
-        lock (sync)
-        {
-            if (disposed) throw new InvalidOperationException("The host session has ended.");
-            Directory.CreateDirectory(Path.GetDirectoryName(NativeCrossReferenceSessionFile)!);
-            nativeConsent ??= new FileStream(NativeCrossReferenceSessionFile, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
-            var bytes = System.Text.Encoding.UTF8.GetBytes(TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Record(
-                NativeCrossReferenceSessionSecret, enabled, workbenchPid, workbench.StartTime.ToUniversalTime().Ticks));
-            nativeConsent.Position = 0; nativeConsent.SetLength(0); nativeConsent.Write(bytes, 0, bytes.Length); nativeConsent.Flush(true);
-        }
-        Changed();
-    }
     public JsonObject Snapshot()
     {
         lock (sync)
@@ -154,7 +132,6 @@ internal sealed class HostSession : IHostSession
             if (disconnected && sessionState is JsonObject ended)
             {
                 ended["connected"] = false; ended["disconnected"] = true;
-                if (ended["switches"]?["nativeCrossReferences"] is JsonObject policy) policy["allowed"] = false;
             }
             return new JsonObject {
                 ["sessionKey"] = SessionKey, ["releaseKey"] = release, ["createdUtc"] = created.ToString("O"), ["revision"] = revision,
@@ -167,8 +144,6 @@ internal sealed class HostSession : IHostSession
                 ["lane"] = lane?.DeepClone(), ["running"] = LateResults.Running,
                 ["binding"] = worker["binding"]?.DeepClone(),
                 ["sessionState"] = sessionState,
-                ["nativeCrossReferencesAllowed"] = !disposed && ((bool?)sessionState?["switches"]?["nativeCrossReferences"]?["humanSessionAllowed"]
-                    ?? TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret)),
                 ["approvalEnabled"] = (bool?)sessionState?["switches"]?["approval"]?["enabled"] ?? ApprovalSettings.Load(ApprovalSettings.SettingsPath).Enabled,
                 ["recentCalls"] = new JsonArray(calls.Select(c => (JsonNode)c.DeepClone()).ToArray()) };
         }
@@ -322,8 +297,6 @@ internal sealed class HostSession : IHostSession
     {
         if (!workbench) BindAi(request.Server);
         string id = Guid.NewGuid().ToString("N"), actor = workbench ? ActorScope.Workbench : ActorScope.Mcp;
-        using var crossReferenceSession = TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent
-            .EnterSession(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret);
         using var attribution = workbench ? ActorScope.EnterWorkbench(mcpSessionId ?? SessionKey, id) : ActorScope
             .EnterCall(mcpSessionId ?? SessionKey, request.Server);
         using var observation = HostSessionCall.Enter(LaneChanged, Ended, inner.ProtocolTool.Name, actor, id, SessionKey);
@@ -366,10 +339,6 @@ internal sealed class HostSession : IHostSession
         if (aiNotifications != null) aiNotifications.DisposeAsync().AsTask().GetAwaiter().GetResult();
         stagingRegistration?.Dispose(); dispose();
         LateResults.Clear();
-        nativeConsent?.Dispose(); nativeConsent = null;
-        try { File.Delete(NativeCrossReferenceSessionFile); }
-        catch (IOException error) { OperatorEndpoint.Report(error); }
-        catch (UnauthorizedAccessException error) { OperatorEndpoint.Report(error); }
         closed.Dispose();
     }
     private sealed class ObservedTool(McpServerTool inner, HostSession session) : McpServerTool

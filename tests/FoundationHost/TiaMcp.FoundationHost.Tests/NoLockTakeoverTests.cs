@@ -366,9 +366,9 @@ public sealed class NoLockTakeoverTests
             Holder = new(release, image, AppContext.BaseDirectory, true) { Bundled = false, SharedSession = false, SpillsDirectoryForTest = root };
             Newcomer = new(release, image, AppContext.BaseDirectory, true) { Bundled = false, SharedSession = false, SpillsDirectoryForTest = root };
             HolderSession = new(release, "fixture", operatorOwned, [], [], Holder.OperatorSnapshot, () => { },
-                nativeConsentDirectory: root, lateResults: Holder.LateResults, unsettled: Holder.Unsettled, clock: Clock);
+                lateResults: Holder.LateResults, unsettled: Holder.Unsettled, clock: Clock);
             NewSession = new(release, "fixture", false, [], [], Newcomer.OperatorSnapshot, () => { },
-                nativeConsentDirectory: root, lateResults: Newcomer.LateResults, unsettled: Newcomer.Unsettled, clock: Clock);
+                lateResults: Newcomer.LateResults, unsettled: Newcomer.Unsettled, clock: Clock);
             Holder.OwnerSession = HolderSession; Newcomer.OwnerSession = NewSession;
             Audit = new AuditLog(Path.Combine(root, "audit"));
             audit = AuditInvocation.UseLog(Audit);

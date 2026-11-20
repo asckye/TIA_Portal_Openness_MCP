@@ -48,7 +48,7 @@ public sealed class SessionStateTests
             return new CallToolResult { Content = [], StructuredContent = new JsonObject { ["schemaVersion"] = 4,
                 ["ok"] = true, ["data"] = new JsonObject(), ["error"] = null, ["meta"] = new JsonObject { ["outcome"] = "succeeded" } } };
         });
-        using var session = new Session("21", "host-only fixture", false, [tool], [], () => new JsonObject(), () => { }, fixture.DirectoryPath);
+        using var session = new Session("21", "host-only fixture", false, [tool], [], () => new JsonObject(), () => { });
         using var member = registration.Register(session);
         await using var ai = await SessionTests.Peer.Ai(session);
         int changes = 0;
@@ -99,7 +99,7 @@ public sealed class SessionStateTests
         using var fixture = new SessionTests.Fixture("21"); using var registration = fixture.Register();
         bool invoked = false;
         var tool = new HostOnlyTool(_ => { invoked = true; throw new InvalidOperationException("Fixture host-only failure."); });
-        using var session = new Session("21", "host-only fixture", setupFailure, [tool], [tool], () => new JsonObject(), () => { }, fixture.DirectoryPath);
+        using var session = new Session("21", "host-only fixture", setupFailure, [tool], [tool], () => new JsonObject(), () => { });
         using var member = registration.Register(session);
         int changes = 0;
         void Count() => changes++;
@@ -204,20 +204,18 @@ public sealed class SessionStateTests
         Assert.Single(services.OperatorSnapshot()["sessionState"]!["unsettled"]!.AsArray());
     }
 
-    [Theory] [InlineData(false)] [InlineData(true)]
-    public async Task Runtime_query_and_workbench_origin_share_the_same_session_switches(bool enabled)
+    [Theory] [InlineData("20")] [InlineData("21")]
+    public async Task Runtime_query_and_workbench_origin_share_the_same_session_switches(string release)
     {
         using var worker = new CachedWorker();
-        var state = SharedSessionState.For(worker);
-        state.HumanCrossReferences = () => enabled;
         var query = new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker);
         var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
             Params = new() { Name = "GetSessionState", Arguments = new Dictionary<string, JsonElement>() } };
-        var result = await query.InvokeV4Async(request, "21", "state", CancellationToken.None);
+        var result = await query.InvokeV4Async(request, release, "state", CancellationToken.None);
         var body = result.StructuredContent!;
         Assert.True((bool?)body["ok"], body.ToJsonString());
-        Assert.True(JsonNode.DeepEquals(body["data"]?["sessionState"], WorkbenchControlSession.For(worker).State("21")));
-        Assert.Equal(enabled, (bool?)body["data"]?["sessionState"]?["switches"]?["nativeCrossReferences"]?["humanSessionAllowed"]);
+        Assert.True(JsonNode.DeepEquals(body["data"]?["sessionState"], WorkbenchControlSession.For(worker).State(release)));
+        Assert.False(body["data"]!["sessionState"]!["switches"]!.AsObject().ContainsKey("nativeCrossReferences"));
         Assert.True((bool?)body["data"]?["sessionState"]?["switches"]?["approval"]?["readOnly"]);
         Assert.Equal(body.ToJsonString(), ((TextContentBlock)result.Content[0]).Text);
     }

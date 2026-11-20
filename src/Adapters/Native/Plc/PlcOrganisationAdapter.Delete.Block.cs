@@ -107,8 +107,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!crossReferences)
                 warnings.Add("Cross references were not queried (crossReferences=false, the default). CrossReferenceService.GetCrossReferences "
                     + "previously terminated TIA Portal V21 during a DeletePlcBlock dry run, so it is no longer automatic. Use SaveProject first "
-                    + "and prefer offline analysis of exported documents. Native queries are allowed through V20 where supported; V21 requires the human " +
-                        "Workbench session switch or server-process opt-in. Compilation cannot guarantee stability.");
+                    + "and prefer offline analysis of exported documents. Compilation cannot guarantee stability.");
                 else warnings
                     .Add("Block cross references are unavailable (" + (crossRefReason ?? "unknown reason")
                         + "); this does not establish that the block has no callers. "

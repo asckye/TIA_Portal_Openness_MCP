@@ -61,33 +61,21 @@ public sealed class PlcCrossReferenceAnalysisTests
     }
 
     [Fact]
-    public void Host_signed_consent_is_locked_against_file_tools_and_cannot_be_replayed_between_sessions()
+    public void Operator_snapshot_omits_consent_and_creates_no_session_record()
     {
-        string root = NewDirectory();
-        string file;
-        try
+        using var session = new HostSession("21", "fixture", false, [], [], () => new JsonObject(), () => { });
+        string record = Path.Combine(TiaOpenness.Shared.ApprovalSettings.SettingsPath + ".sessions",
+            "native-cross-references-" + session.SessionKey + ".settings");
+        Assert.False(session.Snapshot().ContainsKey("nativeCrossReferencesAllowed"));
+        Assert.False(File.Exists(record));
+        using (session.AttachOperator())
         {
-            using (var session = new HostSession("21", "fixture", false, [], [], () => new JsonObject(), () => { }, root))
-            {
-                file = session.NativeCrossReferenceSessionFile;
-                Assert.False((bool)session.Snapshot()["nativeCrossReferencesAllowed"]!);
-                session.SetNativeCrossReferences(true, Environment.ProcessId);
-                Assert.True((bool)session.Snapshot()["nativeCrossReferencesAllowed"]!);
-                Assert.True(TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(file, session.NativeCrossReferenceSessionSecret));
-                Assert.False(TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(file, TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.CreateSecret()));
-                Assert.DoesNotContain(session.NativeCrossReferenceSessionSecret, session.Snapshot().ToJsonString());
-                if (OperatingSystem.IsWindows())
-                {
-                    Assert.Throws<IOException>(() => File.WriteAllText(file, "enabled=true\nforged"));
-                    Assert.Throws<IOException>(() => File.Delete(file));
-                }
-                session.SetNativeCrossReferences(false, Environment.ProcessId);
-                Assert.False((bool)session.Snapshot()["nativeCrossReferencesAllowed"]!);
-                Assert.False(TiaMcp.Adapters.Contracts.NativeCrossReferenceConsent.Read(file, session.NativeCrossReferenceSessionSecret));
-            }
-            Assert.False(File.Exists(file));
+            Assert.False(session.Snapshot().ContainsKey("nativeCrossReferencesAllowed"));
+            Assert.False(File.Exists(record));
         }
-        finally { Directory.Delete(root, true); }
+        session.Dispose();
+        Assert.False(session.Snapshot().ContainsKey("nativeCrossReferencesAllowed"));
+        Assert.False(File.Exists(record));
     }
 
     [Theory]
@@ -95,7 +83,7 @@ public sealed class PlcCrossReferenceAnalysisTests
     [InlineData("unverified")]
     [InlineData("spoofed")]
     [InlineData("foreign-owner")]
-    public async Task Consent_handshake_requires_the_verified_Workbench_peer_and_correct_session_owner(string peer)
+    public async Task Retired_operator_action_is_rejected_for_every_peer(string peer)
     {
         string root = NewDirectory();
         try
@@ -106,18 +94,22 @@ public sealed class PlcCrossReferenceAnalysisTests
             using var member = registration.Register(session);
             using var stream = new MemoryStream();
             await TiaOpenness.Shared.OperatorProtocol.Write(stream, new TiaOpenness.Shared.OperatorHandshake {
-                Action = "native-cross-references", SessionKey = session.SessionKey, NativeCrossReferencesAllowed = true,
+                Action = "native-cross-references", SessionKey = session.SessionKey,
                 Workbench = new() { Pid = peer == "spoofed" ? Environment.ProcessId + 1 : Environment.ProcessId, Version = "fixture" } }, CancellationToken.None);
             long requestBytes = stream.Length; stream.Position = 0;
             var connection = new OperatorConnection(registration, _ => throw new InvalidOperationException("Must target the existing session."), _ => false);
-            await connection.Serve(stream, peer == "unverified" ? null : Environment.ProcessId, CancellationToken.None);
-            Assert.Equal(peer == "verified" ? 1 : 0, session.Changes);
-            if (peer is "verified" or "foreign-owner")
+            if (peer == "unverified")
             {
-                stream.Position = requestBytes;
-                var result = await TiaOpenness.Shared.OperatorProtocol.Read<TiaOpenness.Shared.OperatorHandshakeResult>(stream, CancellationToken.None);
-                Assert.Equal(peer == "verified", result.Accepted);
+                await connection.Serve(stream, null, CancellationToken.None);
+                Assert.Equal(0, stream.Position);
             }
+            else
+            {
+                var error = await Assert.ThrowsAsync<InvalidDataException>(() => connection.Serve(stream, Environment.ProcessId, CancellationToken.None));
+                Assert.Equal("Unknown operator action.", error.Message);
+            }
+            Assert.Equal(requestBytes, stream.Length);
+            Assert.Equal(0, session.Attachments);
         }
         finally { Directory.Delete(root, true); }
     }
@@ -126,12 +118,17 @@ public sealed class PlcCrossReferenceAnalysisTests
     [InlineData("list")]
     [InlineData("attach")]
     [InlineData("create")]
-    public void Consent_cannot_be_added_to_an_ordinary_operator_handshake(string action)
+    public async Task Consent_cannot_be_added_to_an_ordinary_operator_handshake(string action)
     {
-        var request = new TiaOpenness.Shared.OperatorHandshake { Action = action,
-            SessionKey = action == "attach" ? Guid.NewGuid().ToString("N") : null, NativeCrossReferencesAllowed = true,
-            Workbench = new() { Pid = Environment.ProcessId, Version = "fixture" } };
-        Assert.Throws<InvalidDataException>(() => TiaOpenness.Shared.OperatorProtocol.Validate(request));
+        using var stream = new MemoryStream();
+        await TiaOpenness.Shared.OperatorProtocol.Write(stream, new {
+            protocol = "tiamcp.operator", version = 1, action, sessionKey = action == "attach" ? Guid.NewGuid().ToString("N") : null,
+            nativeCrossReferencesAllowed = true, workbench = new { pid = Environment.ProcessId, version = "fixture" }
+        }, CancellationToken.None);
+        stream.Position = 0;
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() =>
+            TiaOpenness.Shared.OperatorProtocol.Read<TiaOpenness.Shared.OperatorHandshake>(stream, CancellationToken.None));
+        Assert.IsType<JsonException>(error.InnerException);
     }
 
     private static string Xml(string name, string body = "") => "<Document><SW.Blocks.FC><AttributeList><Name>" + name
@@ -460,6 +457,25 @@ public sealed class PlcCrossReferenceAnalysisTests
         Assert.False(tool.ProtocolTool.InputSchema.GetProperty("additionalProperties").GetBoolean());
     }
 
+    [Theory, MemberData(nameof(B3HostPortsTests.Releases), MemberType = typeof(B3HostPortsTests))]
+    public async Task Served_cross_reference_examples_describe_the_default_policy(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var names = new List<string> { "DeletePlcBlock", "DeletePlcType", "DeletePlcTagTable" };
+        if (release is "18" or "19" or "20" or "21") names.Add("GetPlcCrossReferences");
+        if (release is "19" or "20" or "21") names.Add("GetUnifiedCrossReferences");
+        foreach (var name in names)
+        {
+            var body = await fixture.Call("GetToolUsage", new { toolName = name });
+            Assert.True((bool?)body["ok"], body.ToJsonString());
+            string? note = (string?)body["data"]?["example"]?["note"];
+            Assert.Contains("Native queries are enabled", note);
+            Assert.Contains("crossReferences=true", note);
+            Assert.Contains("No automatic retry", note);
+            Assert.DoesNotContain("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES", body["data"]!.ToJsonString());
+        }
+    }
+
     private static string NewDirectory()
     {
         string directory = Path.Combine(Path.GetTempPath(), "xref-analysis-" + Guid.NewGuid().ToString("N"));
@@ -507,7 +523,7 @@ public sealed class PlcCrossReferenceAnalysisTests
     }
     private sealed class ConsentSession(bool owned) : IHostSession
     {
-        internal int Changes;
+        internal int Attachments;
         public string SessionKey { get; } = Guid.NewGuid().ToString("N");
         public string Instructions => "fixture";
         public bool OperatorOwned => owned;
@@ -517,8 +533,7 @@ public sealed class PlcCrossReferenceAnalysisTests
         public JsonObject Snapshot() => new() { ["sessionKey"] = SessionKey, ["releaseKey"] = "21" };
         public event Action? StateChanged { add { } remove { } }
         public void BindAi(IMcpServer server) { }
-        public IDisposable AttachOperator() => new Membership();
-        public void SetNativeCrossReferences(bool enabled, int workbenchPid) { Assert.True(enabled); Changes++; }
+        public IDisposable AttachOperator() { Attachments++; return new Membership(); }
         public void Dispose() { }
         private sealed class Membership : IDisposable { public void Dispose() { } }
     }

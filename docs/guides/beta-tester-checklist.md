@@ -44,10 +44,10 @@
 | V15.1 | 绑定 `.ap15_1` 工程（T01 使用该工程即可） |
 | V14 SP1、V15.1 | 导出一个块后查看 SimaticML 文件头中 TIA 写入的版本写法（例如 “V14 SP1”、“V15.1”），附在报告中 |
 | V15.1–V21 | 受 UMAC 保护的工程：`OpenProject` 分别用正确、错误和缺少的 `umacUserName` / `umacPassword` 打开；缺少凭据时应返回 `PRECONDITION_FAILED` 并指出缺少的参数，密码不出现在日志、审批和审计中 |
-| V18–V20 | `GetPlcCrossReferences`（V19–V20 另有 `GetUnifiedCrossReferences`）：先看 `GetToolUsage` 中当前版本是否默认允许查询；能查询时记录查询是否完成、TIA 是否保持运行 |
+| V18–V20 | 保存工程后，按当前版本的 `GetToolUsage` 调用 `GetPlcCrossReferences`（V19–V20 另有 `GetUnifiedCrossReferences`），记录查询是否完成以及 TIA 是否保持运行 |
 | V19–V21 | T12 删除预览格式错误路径；T13 HMI 面板容器；Unified 变量表和画面以 `/组/子组/名称` 创建时位于已有分组内（例如 `EnsureUnifiedHmiTagTable`） |
 | V20、V21 | T01–T08 使用版本匹配的导入导出样本；T04 记录完整的嵌套编译诊断 |
-| V21 | T11 原生交叉引用（需显式开启） |
+| V21 | T11 原生交叉引用 |
 
 预发布说明的“Not verified on a real TIA Portal”清单还列出在线下载、硬件与网络、会话生命周期、PLC 软件、安全与可选产品等逐项核对点；有条件时按那里的编号测试和报告。清单中依赖试验开关、需要比较两种内部实现的项目只能由维护者完成，测试者可以跳过。
 
@@ -71,16 +71,14 @@
 3. 再导出到一个不存在的目录：界面应显示原始错误文本，之后再次读取块列表仍正常。
 4. 断开并关闭工作台，在任务管理器中确认工作台为本次连接启动的后台进程都已退出，记录残留的进程名。
 
-### T11 V21 原生交叉引用（需显式开启）
+### T11 V21 原生交叉引用
 
-V21 上的原生交叉引用查询曾导致 TIA Portal 退出，有时发生在返回结果之后，因此默认不查询。拒绝表示“未查询”，不表示“没有引用”。这项检查确认它在你的 V21 环境中是否稳定。
+V21 默认允许原生查询。PLC 查询曾导致 TIA Portal 退出，有时发生在返回结果之后。请在工程副本中验证当前补丁上的表现。
 
 1. 保存工程副本，关闭其他工程。
-2. 在启动 MCP 服务之前设置 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1`：本机连接写在客户端配置中该服务的 `env`，或在启动客户端的窗口中设置；HTTP 服务在启动工作台之前设置。若该预发布的说明列出了工作台中的开启方式，再用那种方式重复一次。
-3. 确认目标块已编译且一致，调用 `GetPlcCrossReferences`；再对一个准确的 Unified 对象调用 `GetUnifiedCrossReferences`。
-4. 对一个有引用的块执行删除预览（`DeletePlcBlock`，`crossReferences: true`，不要确认执行），删除工具使用同一个开关。
-5. 每次查询后在 TIA 中继续操作几分钟（例如打开一个块），观察 TIA 是否退出。
-6. 测试结束后删除该环境变量并重启 MCP 服务。
+2. 确认 PLC 块和类型已编译且一致，调用 `GetPlcCrossReferences`，再对一个准确的 Unified 对象调用 `GetUnifiedCrossReferences`。
+3. 对一个已知有引用的块分别执行两次 `DeletePlcBlock` 预览，保持 `dryRun=true`。第一次省略 `crossReferences`，核对 `crossReferenceQueried=false`。第二次指定 `crossReferences=true`，核对是否查询及返回的引用。
+4. 每次查询后在 TIA 中继续操作几分钟，观察 TIA 是否退出。若退出，保存日志并结束本轮测试。
 
 记录：每次查询是否返回、返回的行数、TIA 是否退出以及退出前的最后一个操作；退出时附诊断包和 `GetNativeInvocationLog` 结果。
 
