@@ -50,7 +50,8 @@ namespace TiaMcp.PlcWorker
                     if (name == family.OperationPrefix + "." + operation) return true;
             return false;
         }
-        internal const string CrashProbeVariable = "TIA_MCP_CRASH_PROBES";
+        // Not a const: string constants in this class are operation names (pinned-timeout coverage reads them).
+        internal static readonly string CrashProbeVariable = "TIA_MCP_CRASH_PROBES";
         // Hidden crash probes answer "disabled" before argument, confirmation or project identity checks touch the native session.
         internal static string? DisabledProbeReply(string name, string? enabled)
             => name.StartsWith("diagnostics.", StringComparison.Ordinal) && enabled != "1" ? "{\"status\":\"disabled\",\"steps\":[]}" : null;

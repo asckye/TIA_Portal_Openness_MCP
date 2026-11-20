@@ -28,7 +28,7 @@ internal static class ProjectTextProbe
         if (string.IsNullOrWhiteSpace(plc) || !layoutOnly && (string.IsNullOrWhiteSpace(ownerColumn) || string.IsNullOrWhiteSpace(categoryColumn)
             || ownerColumn == categoryColumn || string.IsNullOrWhiteSpace(textListCategory) || string.IsNullOrWhiteSpace(alarmCategory)
             || textListCategory == alarmCategory)) { reply["status"] = "invalid-argument"; return reply; }
-        string directory = Path.Combine(Path.GetTempPath(), "tia-project-texts-" + Guid.NewGuid().ToString("N"));
+        string directory = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia-project-texts-" + Guid.NewGuid().ToString("N"));
         try
         {
             Directory.CreateDirectory(directory);
