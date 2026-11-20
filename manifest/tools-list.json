@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-20T18:44:06.7317236+00:00",
+  "generatedAt": "2026-11-20T19:31:43.1680247+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "a766a31a75c85e027d32b15523c8e4719ea15c88dea02432ff663335a1a41a1a",
+  "workerSha256": "a6b1eb54808feaa173a45667e71bf04d336a5ae09c56341ee730950b91deb6a9",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -5227,7 +5227,7 @@
         "expectedProject"
       ],
       "description": "[L2][Meta][READ] Preview 1..50 tools explicitly admitted by BatchWrite metadata with a bool dryRun parameter. Forces dryRun=true and preserves confirmation flags. expectedProject must exactly match the connected project. Returns a single-use 10-minute previewToken bound to ordered calls, connection identity and previews. No writes, atomic rollback or complete native state coverage. Examples: GetToolUsage(toolName: \"PreviewToolBatch\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"expectedProject\":\"Example\",\"operations\":[{\"name\":\"ManagePlcExternalSources\",\"arguments\":{\"softwarePath\":\"PLC_1\",\"action\":\"createGroup\",\"name\":\"ExampleSources\",\"dryRun\":true}}]}"
+      "example": "{\"expectedProject\":\"Example\",\"operations\":[{\"name\":\"ManagePlcExternalSources\",\"arguments\":{\"softwarePath\":\"PLC_1\",\"action\":\"createGroup\",\"name\":\"ExampleSources\",\"dryRun\":true,\"confirm\":true}}]}"
     },
     {
       "name": "PrefillWorkbenchForm",
@@ -5244,7 +5244,7 @@
         "fields"
       ],
       "description": "[L1][Workbench][UI] Set or clear an allowed UI form prefill owned by this MCP session. A human keeps or clears it; success awaits confirmation. Uses an already running local Workbench; no TIA calls or automatic launch. Examples: GetToolUsage(toolName: \"PrefillWorkbenchForm\"), optionally operation or language.",
-      "example": "{\"form\":\"inspectionRules\",\"mode\":\"set\",\"fields\":{\"namePattern\":\"^FB_\"}}"
+      "example": "{\"form\":\"blockFilter\",\"mode\":\"set\",\"fields\":{\"filter\":\"Motor\"}}"
     },
     {
       "name": "PlugDeviceItem",
@@ -5768,7 +5768,7 @@
         "expectedProjectFile"
       ],
       "description": "[L2][VersionControl][WRITE] Create a VCI workspace pointing at a folder on disk — normally the working tree of a Git repository, so every synchronized export lands where Git can commit it. Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace afterwards to map the whole project (or one device) automatically. Workspace-language selection at creation is not exposed. Requires TIA V16+ and an open project. Current native policy; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"CreateVersionControlWorkspace\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"workspaceName\":\"Engineering\",\"folderPath\":\"\",\"dryRun\":true}"
+      "example": "{\"workspaceName\":\"Engineering\",\"folderPath\":\"C:/Examples/VCI/Engineering\",\"dryRun\":true}"
     },
     {
       "name": "CreateProject",
@@ -5926,7 +5926,7 @@
         "dryRun"
       ],
       "description": "[L2][Library][WRITE] Create a native master copy from an exact block/type/device/screen in an existing library folder. sourcePath is relative object path; for device use JSON array of exact group/station names. Empty libraryName=project library; otherwise already-open global library. dryRun=true default. Native IMasterCopySource required; no automatic save or close. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"CreateLibraryMasterCopy\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"sourceKind\":\"block\",\"sourcePath\":\"Examples/Example_1\",\"dryRun\":true}"
+      "example": "{\"sourceKind\":\"block\",\"sourcePath\":\"Examples/Example_1\",\"dryRun\":true,\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\"}"
     },
     {
       "name": "CreateHardwareDevice",
@@ -8222,7 +8222,7 @@
         "limit"
       ],
       "description": "[L2][PLC-Software][READ] Constants of one exact PLC tag table (tablePath under TagTableGroup, or a unit's TagTableGroup via unitName + unitKind): PlcTagTable.UserConstants and SystemConstants as typed PlcConstant rows (Name, DataTypeName, Value, kind user/system); kind filters. Paginated. User constants are edited with ManagePlcTag kind=constant. No modification. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcTagTableConstants\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"tablePath\":\"Default tag table\"}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"tablePath\":\"\\u003Cexact table path from ListPlcTagTables\\u003E\"}"
     },
     {
       "name": "GetPlcSimAdvancedTags",
@@ -9628,7 +9628,7 @@
         "exportDirectory"
       ],
       "description": "[PLC foundation; native unverified][FILE] [batch-document-export-candidate] Exact V20/V21 ordinary LAD/DB groups only. Complete bounded inventory; recursive opt-in; unsupported/protected members refuse entire batch. exportPath MUST be a NEW tree under an existing parent, with path-hashed block directories. Files include .s7dcl and .s7res when produced. Preview then exact project/hash confirmation. preservePath=true refused. One non-overwrite tree publication, retain partial staging and stop on failure; no replay. SDK/native acceptance pending. SIMATIC SD here covers LAD blocks and global DBs on V20 and V21; V21's FBD, SCL and mixed-language SD support is not used. Examples: GetToolUsage(toolName: \"ExportPlcBlocksDocuments\"), optionally operation or language. exportPath and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false,\"groupPath\":\"\\u003Cexact caller-selected block group containing the intended LAD or DB blocks\\u003E\"}"
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false,\"groupPath\":\"\\u003Cexact caller-selected block group containing the intended LAD or DB blocks\\u003E\"}"
     },
     {
       "name": "ExportPlcBlocks",
@@ -9789,7 +9789,7 @@
       "parameters": [
         "requestId"
       ],
-      "description": "[L0][Diagnostics][READ] Read a running or completed call by requestId from this session. A running call returns in-progress. Keeps the latest 16 full completed results. After eviction, summaries without the original payload survive only for unread writes and unread unsettled IDs. Reading a summary removes it; later lookups return NOT_FOUND. Inner unknown write IDs resolve to their enclosing batch result when retained. Reading a completed result or summary acknowledges its related unknown writes and releases their identical-write guards. Inspect targets before repeating writes. Examples: GetToolUsage(toolName: \"GetCallResult\"), optionally operation or language.",
+      "description": "[L0][Diagnostics][READ] Read a running or completed call by requestId from this session. A running call returns in-progress. Session memory keeps the latest 16 ordinary completions. For results over 16 MiB, data summarizes the original tool, outcome and error code. Evicted ordinary results return NOT_FOUND. A separate history keeps 16 detached or unsettled completions, including unknown outcomes. After eviction, only unread writes and unread unsettled IDs retain a summary until read. Inner unknown write IDs resolve to their retained batch result. Reading it acknowledges related writes and releases their identical-write guards. Inspect targets before repeating writes. Examples: GetToolUsage(toolName: \"GetCallResult\"), optionally operation or language.",
       "example": "{\"requestId\":\"request-id-from-original-call\"}"
     },
     {
