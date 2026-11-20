@@ -1,7 +1,9 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +19,10 @@ public sealed class LateCalls
     private static readonly AsyncLocal<Invocation?> Current = new();
     private readonly object gate = new();
     private readonly Dictionary<string, Entry> entries = new(StringComparer.Ordinal);
+    private const int RetainedResults = 16;
+    // Match the worker response frame limit without coupling the tool pipeline to the worker transport.
+    private const int ResponseBytes = 16 * 1024 * 1024;
+    private readonly Queue<(string Id, byte[] Result)> ordinary = new();
     private readonly LinkedList<Entry> completed = new();
     private Entry? running;
     private readonly Dictionary<string, string> unreadWrites = new(StringComparer.Ordinal);
@@ -26,7 +32,10 @@ public sealed class LateCalls
     public static void Detach(JsonObject running) => Current.Value?.Detach(running);
     public static void IdentifyWrite(string digest) { if (Current.Value is { } call) call.Digest ??= digest; }
     public static void ObserveUnsettled(string id)
-    { if (Current.Value is { } call) { lock (call.owner.gate) call.UnsettledIds.Add(id); } }
+    {
+        if (Current.Value is { } call)
+            lock (call.owner.gate) (call.UnsettledIds ??= new(StringComparer.Ordinal)).Add(id);
+    }
     public Invocation CreateInvocation(string tool, string requestId, CancellationToken token) => new(this, tool, requestId, token);
     public Func<JsonObject, JsonObject>? DescribeRunning { get; set; }
 
@@ -93,17 +102,26 @@ public sealed class LateCalls
     }
     public CallToolResult? Read(string release, string id, UnsettledCalls unsettled)
     {
-        var result = ReadStored(release, id, unsettled);
+        var result = ReadStored(release, id, unsettled, out var bytes);
+        if (bytes != null) result = JsonSerializer.Deserialize<CallToolResult>(bytes, ModelContextProtocol.McpJsonUtilities.DefaultOptions);
         TiaOpenness.Shared.ToolCallTiming.Active?.PreserveRetrievedResult(result?.StructuredContent);
+        if (Current.Value is { } call && ReferenceEquals(call.owner, this))
+        {
+            var meta = (result?.StructuredContent as JsonObject)?["meta"] as JsonObject;
+            call.RetrievedId = (string?)meta?["requestId"] ?? id;
+        }
         return result;
     }
-    private CallToolResult? ReadStored(string release, string id, UnsettledCalls unsettled)
+    private CallToolResult? ReadStored(string release, string id, UnsettledCalls unsettled, out byte[]? ordinaryResult)
     {
+        ordinaryResult = null;
         lock (gate)
         {
             entries.TryGetValue(id, out var entry);
             if (entry == null)
             {
+                foreach (var stored in ordinary)
+                    if (stored.Id == id) { ordinaryResult = stored.Result; return null; }
                 if (!unsettled.IsUnread(id)) return null;
                 var unknown = unsettled.Snapshot().FirstOrDefault(call => call.RequestId == id);
                 var settlement = unsettled.Settlement(id);
@@ -139,7 +157,38 @@ public sealed class LateCalls
             return selected;
         }
     }
-    public void Clear() { lock (gate) { entries.Clear(); completed.Clear(); running = null; unreadWrites.Clear(); } }
+    public void Clear() { lock (gate) { entries.Clear(); completed.Clear(); ordinary.Clear(); running = null; unreadWrites.Clear(); } }
+    private static byte[]? SerializeWithinLimit(CallToolResult result)
+    {
+        if (result.Content.OfType<TextContentBlock>().Sum(block => (long)block.Text.Length) >= ResponseBytes) return null;
+        var options = ModelContextProtocol.McpJsonUtilities.DefaultOptions;
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer, new JsonWriterOptions { Encoder = options.Encoder, Indented = options.WriteIndented,
+            MaxDepth = options.MaxDepth }))
+            JsonSerializer.Serialize(writer, result, options);
+        return buffer.WrittenCount <= ResponseBytes ? buffer.WrittenSpan.ToArray() : null;
+    }
+    private static byte[] OrdinaryResult(string id, string tool, JsonObject? body, CallToolResult result)
+    {
+        if (SerializeWithinLimit(result) is { } bytes) return bytes;
+        var meta = body?["meta"] as JsonObject;
+        bool readOnly = (string?)meta?["execution"] == "read-only";
+        var data = new JsonObject { ["tool"] = tool, ["requestId"] = id, ["outcome"] = meta?["outcome"]?.DeepClone(),
+            ["errorCode"] = (body?["error"] as JsonObject)?["code"]?.DeepClone(), ["fullResultEvicted"] = true,
+            ["note"] = readOnly ? "Result too large; repeat the read." : "Result too large. Inspect the target before repeating a write." };
+        if (body?["schemaVersion"] is JsonValue version && version.TryGetValue<int>(out var number) && number == 4 && body["ok"] != null && meta != null)
+        {
+            var summary = SummaryEnvelope(body, data);
+            if (SerializeWithinLimit(SummaryResult(summary)) is { } compact) return compact;
+        }
+        // Without a retainable envelope, report the lookup limit and keep the original status in the summary.
+        var lookup = new Meta(DateTimeOffset.UtcNow, (string?)meta?["releaseKey"], "GetCallResult", id, Outcome.ReadFailed,
+            Execution.ReadOnly, BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>());
+        var error = new Error($"The full {tool} result exceeded the response limit. Original outcome: {data["outcome"] ?? "unavailable"}.",
+            new LimitExceededDetails("response", ResponseBytes, null));
+        var limited = JsonNode.Parse(V4Json.Serialize(Envelope.Create(data, error, lookup)))!.AsObject();
+        return JsonSerializer.SerializeToUtf8Bytes(SummaryResult(limited), ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+    }
     private void Index(Entry entry)
     {
         foreach (string id in entry.Ids) entries[id] = entry;
@@ -151,7 +200,7 @@ public sealed class LateCalls
     }
     private void Trim()
     {
-        while (completed.Count > 16)
+        while (completed.Count > RetainedResults)
         {
             var entry = completed.First!.Value;
             completed.RemoveFirst();
@@ -164,6 +213,17 @@ public sealed class LateCalls
     private static JsonObject OutcomeSummary(CallToolResult result, JsonObject running)
     {
         var body = TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(result)!;
+        var data = new JsonObject { ["tool"] = body["meta"]?["tool"]?.DeepClone() ?? running["tool"]?.DeepClone(),
+            ["outcome"] = body["meta"]?["outcome"]?.DeepClone(),
+            ["utc"] = body["meta"]?["timestamp"]?.DeepClone() ?? running["sinceUtc"]?.DeepClone(),
+            ["nativeOutcomeUnknown"] = body["data"]?["nativeOutcomeUnknown"]?.DeepClone(),
+            ["fullResultEvicted"] = true, ["note"] = "The full result payload is unavailable. This stored outcome summary acknowledges the call. "
+                + "Inspect its target before repeating a write." };
+        if (body["data"]?["settlement"] is { } settlement) data["settlement"] = settlement.DeepClone();
+        return SummaryEnvelope(body, data);
+    }
+    private static JsonObject SummaryEnvelope(JsonNode body, JsonObject data)
+    {
         var meta = body["meta"]?.DeepClone();
         if (meta is JsonObject metadata)
         {
@@ -173,17 +233,9 @@ public sealed class LateCalls
         }
         var error = body["error"]?.DeepClone();
         if (error?["details"] is JsonObject details && details.ContainsKey("evidence")) details["evidence"] = new JsonObject();
-        var summary = new JsonObject { ["schemaVersion"] = body["schemaVersion"]?.DeepClone() ?? JsonValue.Create(4),
+        return new JsonObject { ["schemaVersion"] = body["schemaVersion"]?.DeepClone() ?? JsonValue.Create(4),
             ["ok"] = body["ok"]?.DeepClone() ?? JsonValue.Create((string?)body["meta"]?["outcome"] == "succeeded"),
-            ["meta"] = meta, ["error"] = error,
-            ["data"] = new JsonObject { ["tool"] = body["meta"]?["tool"]?.DeepClone() ?? running["tool"]?.DeepClone(),
-                ["outcome"] = body["meta"]?["outcome"]?.DeepClone(),
-                ["utc"] = body["meta"]?["timestamp"]?.DeepClone() ?? running["sinceUtc"]?.DeepClone(),
-                ["nativeOutcomeUnknown"] = body["data"]?["nativeOutcomeUnknown"]?.DeepClone(),
-                ["fullResultEvicted"] = true, ["note"] = "The full result payload is unavailable. This stored outcome summary acknowledges the call. "
-                    + "Inspect its target before repeating a write." } };
-        if (body["data"]?["settlement"] is { } settlement) summary["data"]!["settlement"] = settlement.DeepClone();
-        return summary;
+            ["meta"] = meta, ["error"] = error, ["data"] = data };
     }
     private static CallToolResult SummaryResult(JsonObject summary)
         => new() { IsError = (bool?)summary["ok"] != true, StructuredContent = summary.DeepClone(),
@@ -241,7 +293,8 @@ public sealed class LateCalls
         private Entry? entry;
         private int isDetached;
         internal string? Digest;
-        internal readonly HashSet<string> UnsettledIds = new(StringComparer.Ordinal);
+        internal string? RetrievedId;
+        internal volatile HashSet<string>? UnsettledIds;
         public bool Detached => Volatile.Read(ref isDetached) != 0;
         public Task<JsonObject> Detachment => detached.Task;
         public CancellationToken Token => cancellation.Token;
@@ -270,16 +323,41 @@ public sealed class LateCalls
             }
             detached.TrySetResult((JsonObject)running.DeepClone());
         }
+        private (string Id, byte[] Result)? PrepareOrdinary(CallToolResult result)
+        {
+            var body = result.StructuredContent as JsonObject;
+            if (result.StructuredContent == null && result.Content is [TextContentBlock text] && text.Text.AsSpan().TrimStart().StartsWith("{"))
+                body = TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(result) as JsonObject;
+            var meta = body?["meta"] as JsonObject;
+            string ordinaryId = (string?)meta?["requestId"] ?? id;
+            string ordinaryTool = (string?)meta?["tool"] ?? tool;
+            if (tool == "CallTool" && (ordinaryTool == "GetCallResult" || ordinaryId == RetrievedId)) return null;
+            return (ordinaryId, OrdinaryResult(ordinaryId, ordinaryTool, body, result));
+        }
         public void Complete(CallToolResult result, UnsettledCalls? unsettled = null)
         {
+            if (tool == "GetCallResult" && !Detached) return;
+            var structured = result.StructuredContent;
+            bool unknown = structured != null && UnsettledCalls.HasUnknownOutcome(structured);
+            // A detach or inner unsettled write during serialization takes precedence when publishing below.
+            var ordinary = !Detached && !unknown && UnsettledIds == null ? PrepareOrdinary(result) : null;
             lock (owner.gate)
             {
                 if (tool == "GetCallResult" && entry == null) return;
-                string resultId = (string?)result.StructuredContent?["meta"]?["requestId"] ?? id;
-                string? resultTool = (string?)result.StructuredContent?["meta"]?["tool"];
+                string resultId = (string?)structured?["meta"]?["requestId"] ?? id;
+                string? resultTool = (string?)structured?["meta"]?["tool"];
                 if (entry == null)
                 {
-                    if (result.StructuredContent == null || !UnsettledCalls.HasUnknownOutcome(result.StructuredContent) && UnsettledIds.Count == 0) return;
+                    if (tool == "CallTool" && (resultTool == "GetCallResult" || resultId == RetrievedId)) return;
+                    if (structured == null || !unknown && UnsettledIds == null)
+                    {
+                        if (ordinary.HasValue && UnsettledIds == null)
+                        {
+                            owner.ordinary.Enqueue(ordinary.Value);
+                            if (owner.ordinary.Count > RetainedResults) owner.ordinary.Dequeue();
+                        }
+                        return;
+                    }
                     owner.entries.TryGetValue(resultId, out entry);
                     if (entry == null)
                     {
@@ -291,7 +369,7 @@ public sealed class LateCalls
                 entry.Ids.Add(resultId);
                 resultTool ??= (string?)entry.Running["tool"] ?? tool;
                 entry.Running["tool"] = resultTool;
-                entry.Ids.UnionWith(UnsettledIds);
+                if (UnsettledIds != null) entry.Ids.UnionWith(UnsettledIds);
                 owner.Index(entry);
                 if (ReferenceEquals(owner.running, entry)) owner.running = null;
                 if (entry.Completed != null) owner.completed.Remove(entry.Completed);
@@ -307,14 +385,10 @@ public sealed class LateCalls
                     else if (owner.unreadWrites.TryGetValue(entry.Digest, out var guardedId) && entry.Ids.Contains(guardedId))
                         owner.unreadWrites.Remove(entry.Digest);
                 }
-                if (result.StructuredContent != null)
-                {
-                    if (UnsettledCalls.HasUnknownOutcome(result.StructuredContent))
-                    {
-                        if (entry.Digest != null) unsettled?.Record(resultId, resultTool, entry.Digest, DateTimeOffset.UtcNow);
-                    }
-                    else foreach (string alias in entry.Ids.Where(alias => !UnsettledIds.Contains(alias))) unsettled?.Settle(alias);
-                }
+                if (unknown && entry.Digest != null)
+                    unsettled?.Record(resultId, resultTool, entry.Digest, DateTimeOffset.UtcNow);
+                else if (!unknown && result.StructuredContent != null)
+                    foreach (string alias in entry.Ids.Where(alias => UnsettledIds?.Contains(alias) != true)) unsettled?.Settle(alias);
                 owner.Trim();
             }
         }

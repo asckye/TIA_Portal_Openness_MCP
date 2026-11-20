@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using TiaMcp.FoundationHost;
@@ -15,6 +16,213 @@ public sealed class LateCallsTests
     private static CallToolResult Completed(string id, string outcome = "succeeded") => new() {
         Content = new[] { new TextContentBlock { Text = "original content" } },
         StructuredContent = new JsonObject { ["meta"] = new JsonObject { ["requestId"] = id, ["outcome"] = outcome } } };
+
+    [Fact]
+    public void Seventeen_ordinary_completions_evict_only_the_oldest_ordinary_result()
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        store.RecordUnknown("unknown", "SaveProject", "digest", Completed("unknown", "unknown"));
+        for (int i = 0; i < 17; i++)
+        {
+            using var read = store.CreateInvocation("GetProjectInfo", "outer-" + i, CancellationToken.None);
+            read.Complete(Completed("read-" + i), unsettled);
+        }
+        Assert.Null(store.Read("21", "read-0", unsettled));
+        for (int i = 1; i < 17; i++)
+        {
+            var result = store.Read("21", "read-" + i, unsettled)!;
+            Assert.Equal("read-" + i, (string?)result.StructuredContent?["meta"]?["requestId"]);
+            Assert.Equal("original content", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        }
+        Assert.Equal("unknown", store.FindUnread("digest"));
+        var unknown = store.Read("21", "unknown", unsettled)!;
+        Assert.Equal("original content", Assert.IsType<TextContentBlock>(Assert.Single(unknown.Content)).Text);
+        Assert.Null(new LateCalls().Read("21", "read-16", new UnsettledCalls()));
+        store.Clear();
+        Assert.Null(store.Read("21", "read-16", unsettled));
+    }
+
+    [Fact]
+    public void Ordinary_writes_are_retrievable_without_creating_or_acknowledging_a_guard()
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        using var first = store.CreateInvocation("SaveProject", "first", CancellationToken.None);
+        using (first.Enter()) LateCalls.IdentifyWrite("same-write");
+        first.Complete(Completed("first"), unsettled);
+        Assert.Null(store.FindUnread("same-write"));
+        Assert.Empty(unsettled.Snapshot());
+        store.RecordUnknown("second", "SaveProject", "same-write", Completed("second", "unknown"));
+        unsettled.Record("second", "SaveProject", "same-write", DateTimeOffset.UtcNow);
+        Assert.Equal("succeeded", (string?)store.Read("21", "first", unsettled)!.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("second", store.FindUnread("same-write"));
+        Assert.True(unsettled.IsUnread("second"));
+    }
+
+    [Theory, InlineData("CallTool"), InlineData("GetCallResult")]
+    public void Looking_up_a_result_does_not_extend_its_retention(string lookupTool)
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        for (int i = 0; i < 16; i++)
+        {
+            using var call = store.CreateInvocation("GetProjectInfo", "read-" + i, CancellationToken.None);
+            call.Complete(Completed("read-" + i));
+        }
+        using var lookup = store.CreateInvocation(lookupTool, "lookup", CancellationToken.None);
+        using (lookup.Enter()) lookup.Complete(store.Read("21", "read-0", unsettled)!);
+        Assert.NotNull(store.Read("21", "read-0", unsettled));
+        using var last = store.CreateInvocation("GetProjectInfo", "last", CancellationToken.None);
+        last.Complete(Completed("last"));
+        Assert.Null(store.Read("21", "read-0", unsettled));
+        Assert.Null(store.Read("21", "lookup", unsettled));
+    }
+
+    [Theory, InlineData(false, false), InlineData(false, true), InlineData(true, false), InlineData(true, true)]
+    public void Text_only_unknown_envelopes_do_not_classify_writes_or_supply_protected_ids(bool detached, bool innerUnsettled)
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        var meta = new Meta(DateTimeOffset.UtcNow, "21", "SaveProject", "text-id", Outcome.Unknown, Execution.Unknown,
+            BehaviorPolicy.NotApplicable, Completeness.Unknown, null, Array.Empty<Warning>());
+        var error = new Error("Unknown outcome.", new OutcomeUnknownDetails("write", new Dictionary<string, JsonElement>()));
+        string text = V4Json.Serialize(Envelope.Create(new JsonObject(), error, meta));
+        using var call = store.CreateInvocation("CallTool", "outer", CancellationToken.None);
+        using (call.Enter())
+        {
+            LateCalls.IdentifyWrite("write");
+            if (detached) LateCalls.Detach(Running("active"));
+            if (innerUnsettled) unsettled.Record("inner", "SaveProject", "inner-write", DateTimeOffset.UtcNow);
+            call.Complete(new CallToolResult { IsError = true, Content = new[] { new TextContentBlock { Text = text } } }, unsettled);
+        }
+        Assert.Equal(detached ? "active" : null, store.FindUnread("write"));
+        Assert.Equal(innerUnsettled ? new[] { "inner" } : Array.Empty<string>(), unsettled.Snapshot().Select(item => item.RequestId));
+        Assert.Equal(innerUnsettled, unsettled.IsUnread("inner"));
+        if (detached)
+        {
+            Assert.Equal("active", (string?)Assert.Single(store.Snapshot())!["requestId"]);
+            Assert.Null(store.Read("21", "text-id", unsettled));
+            Assert.NotNull(store.Read("21", "outer", unsettled));
+        }
+        else
+        {
+            Assert.Empty(store.Snapshot());
+            Assert.Null(store.Read("21", "outer", unsettled));
+            var cached = store.Read("21", "text-id", unsettled);
+            if (innerUnsettled) Assert.Null(cached);
+            else Assert.Equal(text, Assert.IsType<TextContentBlock>(Assert.Single(cached!.Content)).Text);
+        }
+    }
+
+    private sealed class SerializationProbe(Func<int> observe)
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("value")]
+        public int Value => observe();
+    }
+
+    [Fact]
+    public void Serializing_an_ordinary_result_leaves_the_store_lock_available()
+    {
+        var store = new LateCalls();
+        var gate = typeof(LateCalls).GetField("gate", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(store)!;
+        bool? locked = null;
+        var result = Completed("read");
+        result.StructuredContent!["data"] = JsonValue.Create(new SerializationProbe(() => { locked = Monitor.IsEntered(gate); return 42; }));
+        using var read = store.CreateInvocation("GetProjectInfo", "read", CancellationToken.None);
+        read.Complete(result);
+        Assert.False(locked);
+        Assert.Equal(42, (int?)store.Read("21", "read", new UnsettledCalls())!.StructuredContent?["data"]?["value"]);
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void A_call_that_becomes_protected_during_serialization_does_not_evict_an_ordinary_result(bool detached)
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        for (int i = 0; i < 16; i++)
+        {
+            using var read = store.CreateInvocation("GetProjectInfo", "read-" + i, CancellationToken.None);
+            read.Complete(Completed("read-" + i));
+        }
+        using var call = store.CreateInvocation("SaveProject", "outer", CancellationToken.None);
+        using var scope = call.Enter();
+        LateCalls.IdentifyWrite("write");
+        var result = Completed("final");
+        var probe = new SerializationProbe(() =>
+        {
+            if (detached) LateCalls.Detach(Running("active"));
+            else LateCalls.ObserveUnsettled("inner");
+            return 42;
+        });
+        result.StructuredContent!["data"] = new JsonObject { ["probe"] = JsonValue.Create(probe) };
+        call.Complete(result, unsettled);
+        string guardedId = detached ? "active" : "final";
+        Assert.Equal(guardedId, (string?)Assert.Single(store.Snapshot())!["requestId"]);
+        Assert.Equal(guardedId, store.FindUnread("write"));
+        Assert.NotNull(store.Read("21", "read-0", unsettled));
+        Assert.NotNull(store.Read("21", detached ? "outer" : "inner", unsettled));
+        Assert.Null(store.FindUnread("write"));
+    }
+
+    [Theory, InlineData(0, false), InlineData(1, false), InlineData(1, true)]
+    public void Ordinary_results_keep_the_full_MCP_response_up_to_the_byte_limit(int extraByte, bool write)
+    {
+        var store = new LateCalls();
+        var unsettled = new UnsettledCalls();
+        string tool = write ? "SaveProject" : "GetProjectInfo";
+        using var call = store.CreateInvocation(tool, "outer", CancellationToken.None);
+        var meta = new Meta(DateTimeOffset.UtcNow, "21", tool, "large", write ? Outcome.Failed : Outcome.Succeeded,
+            write ? Execution.Completed : Execution.ReadOnly, BehaviorPolicy.NotApplicable, Completeness.Complete, null, Array.Empty<Warning>());
+        var error = write ? new Error("Save failed.", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())) : null;
+        var result = new CallToolResult { IsError = write, StructuredContent = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new JsonObject(), error, meta))),
+            Content = new[] { new TextContentBlock { Text = "" } } };
+        var options = ModelContextProtocol.McpJsonUtilities.DefaultOptions;
+        int overhead = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(result, options).Length;
+        int size = TiaMcp.WorkerChannel.ChannelLimits.ResponseBytes - overhead + extraByte;
+        result.Content = new[] { new TextContentBlock { Text = new string('x', size) } };
+        call.Complete(result, unsettled);
+        var stored = store.Read("21", "large", unsettled)!;
+        string text = Assert.IsType<TextContentBlock>(Assert.Single(stored.Content)).Text;
+        if (extraByte == 0)
+            Assert.Equal(size, text.Length);
+        else
+        {
+            var summary = V4Json.Deserialize<Envelope>(text);
+            Assert.Equal("large", summary.Meta.RequestId);
+            Assert.Equal(tool, summary.Meta.Tool);
+            Assert.Equal(meta.Outcome, summary.Meta.Outcome);
+            Assert.Equal(!write, summary.Ok);
+            Assert.Equal(write, stored.IsError);
+            Assert.Equal(error?.Code, summary.Error?.Code);
+            Assert.True(JsonNode.DeepEquals(JsonNode.Parse(text), stored.StructuredContent));
+            var data = stored.StructuredContent?["data"];
+            Assert.Equal(tool, (string?)data?["tool"]);
+            Assert.Equal(write ? "failed" : "succeeded", (string?)data?["outcome"]);
+            Assert.Equal(write ? "NATIVE_OPERATION_FAILED" : null, (string?)data?["errorCode"]);
+            string expectedNote = write ? "Result too large. Inspect the target before repeating a write." : "Result too large; repeat the read.";
+            Assert.Equal(expectedNote, (string?)data?["note"]);
+            Assert.True(text.Length < 1024);
+        }
+    }
+
+    [Fact]
+    public void An_oversized_failure_without_a_v4_envelope_reports_the_lookup_limit_and_original_failure()
+    {
+        var store = new LateCalls();
+        using var call = store.CreateInvocation("SaveProject", "write", CancellationToken.None);
+        var body = new JsonObject { ["meta"] = new JsonObject { ["outcome"] = "failed" }, ["error"] = new JsonObject { ["code"] = "NATIVE_OPERATION_FAILED" } };
+        call.Complete(new CallToolResult { IsError = true, StructuredContent = body,
+            Content = new[] { new TextContentBlock { Text = new string('x', TiaMcp.WorkerChannel.ChannelLimits.ResponseBytes) } } });
+        var stored = store.Read("21", "write", new UnsettledCalls())!;
+        var summary = V4Json.Deserialize<Envelope>(Assert.IsType<TextContentBlock>(Assert.Single(stored.Content)).Text);
+        Assert.True(stored.IsError);
+        Assert.False(summary.Ok);
+        Assert.Equal(Outcome.ReadFailed, summary.Meta.Outcome);
+        Assert.Equal(ErrorCode.LimitExceeded, summary.Error!.Code);
+        Assert.Equal("failed", (string?)stored.StructuredContent?["data"]?["outcome"]);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)stored.StructuredContent?["data"]?["errorCode"]);
+    }
 
     [Theory, InlineData(false), InlineData(true)]
     public void Bridged_unknown_completion_keeps_the_actual_tool_in_state_and_unsettled_entries(bool detached)

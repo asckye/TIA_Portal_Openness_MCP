@@ -330,10 +330,20 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => McpServer
+            => ScreenImportPreview(McpServer
                 .RunWritePreview("ImportHmiScreen", dryRun, new { softwarePath, folderPath, importPath, overwrite }, () => HmiExchangeContract
                     .Run("ImportHmiScreen", true, true, () => ImportHmiScreen(softwarePath, folderPath, importPath, overwrite)), expectedPlanHash,
-                    expectedProjectFile);
+                    expectedProjectFile));
+
+        private static CallToolResult ScreenImportPreview(CallToolResult result)
+        {
+            if (result.StructuredContent?["data"] is JsonObject data && (bool?)data["dryRun"] == true && (bool?)result.StructuredContent["ok"] == true)
+            {
+                data["scope"] = (string?)data["scope"] + " The Classic panel screen size is checked when the import is applied.";
+                result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(result.StructuredContent) } };
+            }
+            return result;
+        }
 
         public ResponseMessage ImportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
@@ -476,10 +486,10 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => McpServer
+            => ScreenImportPreview(McpServer
                 .RunWritePreview("ImportHmiScreensFromDirectory", dryRun, new { softwarePath, folderPath, dir, regexName, overwrite }, () => HmiExchangeContract
                 .Run("ImportHmiScreensFromDirectory", true, true, () => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite)),
-                    expectedPlanHash, expectedProjectFile);
+                    expectedPlanHash, expectedProjectFile));
 
         public ResponseImportBatch ImportHmiScreensFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,

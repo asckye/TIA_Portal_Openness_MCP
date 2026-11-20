@@ -50,10 +50,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetCallResult"),
             Description("[L0][Diagnostics][READ] Read a running or completed call by requestId from this session. " +
-                "A running call returns in-progress. Keeps the latest 16 full completed results. After eviction, summaries without the original payload " +
-                "survive only for unread writes and unread unsettled IDs. Reading a summary removes it; later lookups return NOT_FOUND. " +
-                "Inner unknown write IDs resolve to their enclosing batch result when retained. Reading a completed result " +
-                "or summary acknowledges its related unknown writes and releases their identical-write guards. Inspect targets before repeating writes.")]
+                "A running call returns in-progress. Session memory keeps the latest 16 ordinary completions. For results over 16 MiB, data summarizes " +
+                "the original tool, outcome and error code. Evicted ordinary results return NOT_FOUND. " +
+                "A separate history keeps 16 detached or unsettled completions, including unknown outcomes. After eviction, only unread writes and unread " +
+                "unsettled IDs retain a summary until read. Inner unknown write IDs resolve to their retained batch result. Reading it acknowledges " +
+                "related writes and releases their identical-write guards. Inspect targets before repeating writes.")]
         public static CallToolResult GetCallResult([Description("Request ID returned by the original call.")] string requestId)
         {
             if (string.IsNullOrWhiteSpace(requestId)) return V4Reject("GetCallResult", InvalidInput("requestId"));

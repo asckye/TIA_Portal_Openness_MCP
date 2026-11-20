@@ -192,6 +192,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             try
             {
                 var sw = softwareContainer.Software;
+                // The guard precedes this item's mutation. The session flag also accounts for earlier directory items.
                 GuardClassicScreenSize(sw, importPath);
 
                 object rootGroup = TryGetPropertyValue(sw, "ScreenFolder")
@@ -283,9 +284,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                     deviceWidth = resolution.Value.width; deviceHeight = resolution.Value.height; source = "hardware catalog description"; }
             }
             if (deviceWidth == null)
-                throw new PlcSoftwareException("InvalidState", "Screen size " + xmlWidth + "x" + xmlHeight
-                        + " could not be checked against the panel (no existing screen, no display attribute, no catalog resolution) and a mismatch makes " +
-                        "TIA Portal exit (real project, crash 10); import a screen of the panel's own size first or check the panel in TIA.");
+            {
+                string message = "Screen size " + xmlWidth + "x" + xmlHeight
+                    + " could not be checked against the panel (no existing screen, no display attribute, no catalog resolution) and a mismatch makes "
+                    + "TIA Portal exit (real project, crash 10); import a screen of the panel's own size first or check the panel in TIA.";
+                throw new PlcSoftwareException("PreconditionFailed", message,
+                    inner: AdapterPreconditionException.Failed(message, "classic-screen-size-unverifiable", null))
+                    { Data = { ["mayHaveChanged"] = false } };
+            }
             if (deviceWidth != xmlWidth || deviceHeight != xmlHeight)
                 throw new PlcSoftwareException("InvalidParams", "Screen size " + xmlWidth + "x" + xmlHeight + " in the XML does not match the panel ("
                         + deviceWidth + "x" + deviceHeight + " from " + source
@@ -412,6 +418,11 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (exception is PlcSoftwareException portal && (portal.Code == "InvalidState" || portal.Code == "NotFound"))
                 evidence["status"] = portal.Code == "InvalidState" && portal.Message.StartsWith("HMI import target already exists:", StringComparison.Ordinal)
                     ? "ImportTargetExists" : portal.Code.ToString();
+            if (exception is PlcSoftwareException { Code: "PreconditionFailed" } refusal && refusal.Data["mayHaveChanged"] is false)
+            {
+                evidence["mayHaveChanged"] = false;
+                EngineeringCredentialRules.TryRecordRefusal(refusal, evidence);
+            }
             if (exception != null) evidence["exceptionType"] = exception.GetType().Name;
             return new HmiObject { ["target"] = target, ["evidence"] = evidence };
         }

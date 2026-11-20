@@ -40,6 +40,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", parameter: argument.ParamName)
                     : HostBehavior.KnownAdapterRefusal(ex);
                 var outcome = rejection != null ? Outcome.RejectedBeforeOperation : writes ? Outcome.Unknown : Outcome.ReadFailed;
+                if (cause is TiaMcp.Adapters.Contracts.AdapterPreconditionException && rejection?.Details is PreconditionFailedDetails)
+                    evidence["mayHaveChanged"] = false;
                 if (outcome == Outcome.Unknown && HostBehavior.WorkerReplyEvidence(tool, ex) is { } retained)
                     foreach (var pair in retained) evidence[pair.Key] = JsonSerializer.SerializeToNode(pair.Value);
                 return Result(tool, new JsonObject { ["evidence"] = evidence },

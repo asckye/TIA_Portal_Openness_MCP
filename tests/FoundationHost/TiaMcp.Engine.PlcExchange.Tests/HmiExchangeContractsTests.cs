@@ -9,10 +9,12 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
+using TiaMcpServer.Siemens.Services;
 using Xunit;
 
 namespace PlcExchangeTests
@@ -125,6 +127,74 @@ namespace PlcExchangeTests
                 Assert.Equal(typeof(bool), parameter.ParameterType);
                 Assert.Equal(false, parameter.DefaultValue);
             }
+        }
+
+        [Fact]
+        public void UnverifiableClassicScreenSizeKeepsItsMessageAndConditionForSingleAndDirectoryImports()
+        {
+            string file = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllText(file, "<Document><Hmi.Screen.Screen><AttributeList><Width>800</Width><Height>480</Height></AttributeList>"
+                    + "</Hmi.Screen.Screen></Document>");
+                var type = PlcExchangeTarget.Adapter.GetType("TiaMcp.Adapters.Native.Hmi.HmiExchangeAdapter", true)!;
+                var adapter = Activator.CreateInstance(type, new object?[] { null });
+                var guard = type.GetMethod("GuardClassicScreenSize", All)!;
+                var panel = new { ScreenFolder = new { Screens = Array.Empty<object>(), Folders = Array.Empty<object>() } };
+                var thrown = Assert.Throws<TargetInvocationException>(() => guard.Invoke(adapter, new object[] { panel, file }));
+                var failure = Assert.IsType<PlcSoftwareException>(thrown.InnerException);
+                Assert.Equal("PreconditionFailed", failure.Code);
+                Assert.Equal(false, failure.Data["mayHaveChanged"]);
+                var refusal = Assert.IsType<AdapterPreconditionException>(failure.GetBaseException());
+                var reply = new HmiReply { Failure = new PlcSoftwareFailure { Code = failure.Code, Message = failure.Message,
+                    Evidence = new() { ["v4FailureCode"] = MutationEvidence.FailureCode(refusal), ["condition"] = refusal.Condition } } };
+                var service = new HmiExchangeService((_, _) => JsonSerializer.SerializeToNode(reply), () => "panel.ap17");
+                var tools = new HmiExchangeTools(service);
+                var single = Body(HmiExchangeContract.Run("ImportHmiScreen", true, true, () => tools.ImportHmiScreen("HMI", "/", file)));
+                var row = type.GetMethod("ImportItem", All)!.Invoke(null, new object?[] { file, false, failure, null });
+                var batch = Body(Map("ImportHmiScreensFromDirectory", new ResponseMessage { Meta = new JsonObject {
+                    ["success"] = false, ["items"] = new JsonArray(JsonSerializer.SerializeToNode(row)) } }, true, true));
+                foreach (var result in new[] { single, batch["data"]!["items"]![0]!["result"]! })
+                {
+                    Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
+                    Assert.Equal("classic-screen-size-unverifiable", (string?)result["error"]?["details"]?["condition"]);
+                    Assert.Contains("Screen size 800x480", (string?)result["error"]?["message"]);
+                    Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+                    Assert.False((bool?)result["data"]?["evidence"]?["mayHaveChanged"]);
+                }
+                var accepted = type.GetMethod("ImportItem", All)!.Invoke(null, new object?[] { "Earlier.xml", true, null, null });
+                var mixed = Body(Map("ImportHmiScreensFromDirectory", new ResponseMessage { Meta = new JsonObject {
+                    ["success"] = false, ["items"] = JsonSerializer.SerializeToNode(new[] { accepted, row }) } }, true, true));
+                Assert.Equal("PARTIAL_FAILURE", (string?)mixed["error"]?["code"]);
+                Assert.Equal("succeeded", (string?)mixed["data"]?["items"]?[0]?["result"]?["meta"]?["outcome"]);
+                Assert.Equal("PRECONDITION_FAILED", (string?)mixed["data"]?["items"]?[1]?["result"]?["error"]?["code"]);
+            }
+            finally { File.Delete(file); }
+        }
+
+        [Fact]
+        public void SingleScreenImportWithNoProjectStillReturnsProjectNotBound()
+        {
+            var reply = new HmiReply { Failure = new PlcSoftwareFailure { Code = "InvalidState", Message = "No project is open." } };
+            var service = new HmiExchangeService((_, _) => JsonSerializer.SerializeToNode(reply), () => "");
+            var tools = new HmiExchangeTools(service);
+            var result = Body(HmiExchangeContract.Run("ImportHmiScreen", true, true, () => tools.ImportHmiScreen("HMI", "/", "Screen.xml")));
+            Assert.Equal("PROJECT_NOT_BOUND", (string?)result["error"]?["code"]);
+        }
+
+        [Fact]
+        public void ScreenImportPreviewExplainsWhenThePanelSizeIsChecked()
+        {
+            string file = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllText(file, "<Document/>");
+                var tools = new HmiExchangeTools(new HmiExchangeService((_, _) => throw new InvalidOperationException(), () => ""));
+                var preview = Body(tools.ImportHmiScreenV4("HMI", "/", file));
+                Assert.True((bool?)preview["data"]?["dryRun"]);
+                Assert.Contains("screen size is checked when the import is applied", (string?)preview["data"]?["scope"]);
+            }
+            finally { File.Delete(file); }
         }
 
         [Fact]
