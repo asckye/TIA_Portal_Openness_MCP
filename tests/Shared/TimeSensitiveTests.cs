@@ -57,7 +57,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Gui.Tests.McpPanelTests"] = "Real session expiry and bounded command completion.",
             ["TiaOpenness.Gui.Tests.WorkbenchMcpPrefillTests"] = "Bounded command completion polling.",
             ["TiaOpenness.Gui.Tests.NetworkHelperTests"] = "Synthetic helper process exit within sixty seconds.",
-            ["TiaOpenness.Gui.Tests.UnifiedDesktopTests"] = "Asynchronous approval persistence protected by a hang guard.",
+            ["TiaOpenness.Gui.Tests.UnifiedDesktopTests"] = "Asynchronous approval persistence protected by a hang guard and WPF keyboard input requiring exclusive focus.",
             ["TiaOpenness.Gui.Tests.VciPanelTests"] = "Preview command admission protected by a hang guard.",
             ["TiaMcp.ShippedTools.Tests.WriteGuardPortTests"] = "Cold hook startup/decision within fifteen/twenty seconds.",
             ["TiaMcp.Updater.Tests.UpdaterTests"] = "Synthetic launcher/installed-process startup and exit bounds.",
@@ -396,7 +396,10 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Network_helper_rejects_a_wrong_argument_count"
             },
             ["TiaOpenness.Gui.Tests.UnifiedDesktopTests"] = new[] {
-                "Dispatcher_idle_does_not_complete_an_approval_save"
+                "Dispatcher_idle_does_not_complete_an_approval_save",
+                "Narrow_left_pane_overlays_the_page_and_returns_keyboard_focus",
+                "Rail_arrow_keys_cover_the_order_and_agent_restores_its_subpage_unless_approval_is_pending",
+                "Visible_overlay_handles_the_window_control_shortcuts_on_preview_key_down"
             },
             ["TiaOpenness.Gui.Tests.VciPanelTests"] = new[] {
                 "Registered_older_release_tools_use_MCP_reads_and_approval_gated_writes",

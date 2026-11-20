@@ -244,14 +244,15 @@ namespace TiaMcpConfigurator
                     string Content(string name) => ((System.Windows.Controls.ContentControl)(window.FindName(name) ?? settings.FindName(name))).Content.ToString();
                     var labels = new (Func<string> Read, string En, string Zh)[] {
                         (() => Content("RailEngineering"), "Project", "项目"),
-                        (() => Content("RailMcp"), "MCP & clients", "MCP 与客户端"),
+                        (() => Content("RailMcp"), "MCP", "MCP"),
+                        (() => Content("RailClients"), "Clients", "客户端"),
                         (() => Content("SettingsButton"), "Settings", "设置"),
                         (() => Content("CheckUpdate"), "Check updates", "检查更新"),
                         (() => Content("RunUpdate"), "Update service…", "更新服务…"),
                         (() => Content("OpenReleases"), "Open", "打开"),
                         (() => Content("OpenData"), "Open", "打开"),
                         (() => Content("OpenProjectPage"), "Open", "打开"),
-                        (() => Content("RailLog"), "Logs & diagnostics", "日志与诊断")
+                        (() => Content("RailLog"), "Logs", "日志")
                     };
                     Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Pages.SaveBoth"],
                         (chinese ? "Chinese" : "English") + " save both label");
@@ -315,7 +316,7 @@ namespace TiaMcpConfigurator
                 double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
                 Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
                 var caption = (System.Windows.FrameworkElement)window.FindName("CaptionBar");
-                Assert(caption.ActualHeight == 44 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 44 pixels inside the frame");
+                Assert(caption.ActualHeight == 38 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 38 pixels inside the frame");
                 using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
                     Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
                         >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");
@@ -330,9 +331,9 @@ namespace TiaMcpConfigurator
                     && window.FontFamily.Source == ((System.Windows.Media.FontFamily)System.Windows.Application.Current.FindResource("Ui.Font")).Source,
                     "configuration window uses the system Ui.Font chain");
                 ThemeManager.Current.Theme = AppTheme.Dark;
-                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF0B0F15", "dark palette switches live");
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF141B26", "dark palette switches live");
                 ThemeManager.Current.Theme = AppTheme.Light;
-                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFF3F6FA", "light palette switches live");
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFF8FAFD", "light palette switches live");
                 var port = (System.Windows.Controls.TextBox)form.FindName("ServerPort");
                 port.Text = "8766";
                 Loc.Current.Language = AppLanguage.Chinese;
