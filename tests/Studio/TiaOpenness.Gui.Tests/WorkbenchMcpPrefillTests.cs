@@ -155,6 +155,41 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
     public void Project_validation_accepts_absolute_project_or_local_session_format_only(string path)
         => Assert.True(PrefillRegistry.Valid(new() { Form = WorkbenchPrefillForm.ConnectProject, Fields = new WorkbenchConnectProjectFields { ProjectPath = path } }));
 
+    [Theory]
+    [InlineData(Localization.AppLanguage.English)]
+    [InlineData(Localization.AppLanguage.Chinese)]
+    public async Task Attached_client_status_keeps_the_unverified_label_and_the_bound_Tia_pid(Localization.AppLanguage language)
+    {
+        await using var fixture = new McpOperatorFixture("21");
+        fixture.BindProject();
+        await using var client = fixture.Client();
+        await client.AttachAsync(Assert.Single(await client.DiscoverAsync("21")));
+        wpf.RunWithLanguage(language, () =>
+        {
+            var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
+            var window = new MainWindow(model, false, new ApprovalServiceStub(), new FeaturePageFixtures.Diagnostics());
+            try
+            {
+                var state = fixture.Snapshot();
+                state["binding"]!["processId"] = 43210;
+                WpfContext.Complete(model.Session.ApplySharedStateAsync(state));
+                var host = WorkbenchRenderTests.CreateHost(window, 1024, 640);
+                var panel = (DockPanel)window.FindName("ParticipantStatus");
+                var clientText = (TextBlock)window.FindName("ClientStatus");
+                var pid = (TextBlock)window.FindName("TiaProcessStatus");
+                Assert.Equal(Visibility.Visible, panel.Visibility);
+                Assert.Contains("fixture AI", clientText.Text);
+                Assert.Contains(language == Localization.AppLanguage.English ? "(unverified)" : "（未验证）", clientText.Text);
+                Assert.Equal(Localization.Loc.Current.T("Shell.TiaProcessStatus", 43210), pid.Text);
+                var probe = new TextBlock { Text = pid.Text, FontFamily = pid.FontFamily, FontSize = pid.FontSize };
+                probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                Assert.True(pid.ActualWidth >= probe.DesiredSize.Width);
+                Assert.True(new Rect(host.RenderSize).Contains(pid.TransformToAncestor(host).TransformBounds(new Rect(pid.RenderSize))));
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
     public async Task Registered_execution_commands_are_attributed_MCP_panel_commands()
     {
@@ -202,7 +237,8 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 Assert.Equal("workbench", Assert.Single(approvals.Requests).Actor);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window!.FindName("ApprovalsContent")).Visibility);
                 WpfContext.Drain();
-                Assert.True(((RadioButton)window.FindName("RailApprovals")).IsChecked);
+                Assert.True(((RadioButton)window.FindName("RailAgent")).IsChecked);
+                Assert.Equal("Approvals", window.CurrentPage);
                 Assert.Same(((Views.ApprovalsDrawer)window.FindName("ApprovalsContent")).FindName("RequestTitle"), Keyboard.FocusedElement);
                 var calls = host.Calls.Where(c => c.Name == (form == 3 ? "OpenProject" : form == 4 ? "ExportPlcBlock" : "ImportPlcBlock")).ToArray();
                 Assert.Equal(new[] { true, false }, calls.Select(c => (bool)c.Arguments["dryRun"]!));

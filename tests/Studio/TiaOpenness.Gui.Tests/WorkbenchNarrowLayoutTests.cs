@@ -30,7 +30,7 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
     private static readonly string[] CapturedPages = ["Mcp", "Engineering", "Environment", "Calls"];
 
     [Fact]
-    public void Sider_selects_only_the_current_page_after_leaving_version_control()
+    public void Rail_selects_only_the_current_group_after_leaving_version_control()
     {
         foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
         foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
@@ -49,14 +49,18 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                         Settle(host, 1200, 780);
                         var selected = Assert.Single(Descendants<RadioButton>(sider),
                             item => Shown(item, sider) && item.IsChecked == true);
-                        Assert.Equal(page == "Settings" ? "SettingsButton" : "Rail" + page, selected.Name);
+                        Assert.Equal(page switch
+                        {
+                            "Settings" => "SettingsButton", "VersionControl" => "RailEngineering", "Calls" or "Approvals" => "RailAgent", _ => "Rail" + page,
+                        }, selected.Name);
+                        Assert.Same(selected, Assert.Single(Descendants<RadioButton>(sider), item => item.IsTabStop));
                     }
-                    foreach (string page in new[] { "Approvals", "Mcp", "Engineering", "Calls", "Audit", "Environment", "Log", "Settings" })
+                    foreach (string page in new[] { "Agent", "Mcp", "Engineering", "Clients", "Audit", "Environment", "Log", "Settings" })
                     {
                         window.Navigate("VersionControl"); Selected("VersionControl");
                         window.Navigate(page); Selected(page);
 
-                        UnifiedDesktopTests.ClickControl((RadioButton)window.FindName("RailVersionControl"));
+                        WorkbenchCommands.Navigate.Execute("VersionControl", host);
                         Selected("VersionControl");
                         UnifiedDesktopTests.ClickControl((RadioButton)window.FindName(page == "Settings" ? "SettingsButton" : "Rail" + page));
                         Selected(page);

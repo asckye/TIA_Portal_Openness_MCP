@@ -24,6 +24,7 @@ public sealed class UiSettings
     public AppTheme Theme { get; set; } = AppTheme.Light;
     public AppAccent Accent { get; set; } = AppAccent.Cobalt;
     public LowEffectsMode LowEffects { get; set; } = LowEffectsMode.Auto;
+    public bool LeftPaneOpen { get; set; } = true;
     public bool WorkbenchControlEnabled { get; set; } = true;
 
     public static string FilePath { get; } = TiaOpenness.Shared.DataLocations.Current.UiFilePath;
@@ -59,6 +60,10 @@ public sealed class UiSettings
                 {
                     settings.WorkbenchControlEnabled = controlEnabled;
                 }
+                else if (key == "leftPaneOpen" && bool.TryParse(value, out var leftPaneOpen))
+                {
+                    settings.LeftPaneOpen = leftPaneOpen;
+                }
                 else if (key == ThemeKey)
                 {
                     if (string.Equals(value, "Auto", StringComparison.OrdinalIgnoreCase)) settings.Theme = AppTheme.Light;
@@ -92,6 +97,7 @@ public sealed class UiSettings
                 $"{LanguageKey}={Language}",
                 $"{ThemeKey}={Theme}",
                 $"{AccentKey}={Accent}",
+                $"leftPaneOpen={LeftPaneOpen}",
                 $"lowEffects={LowEffects}",
                 $"workbenchControlEnabled={WorkbenchControlEnabled}",
             });

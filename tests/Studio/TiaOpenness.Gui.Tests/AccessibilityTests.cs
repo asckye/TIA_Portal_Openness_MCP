@@ -45,6 +45,16 @@ public sealed class AccessibilityTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Every_text_size_token_is_at_least_twelve_effective_pixels()
+    {
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var sizes = SourceScan.Markup.SelectMany(file => XDocument.Parse(file.Text).Descendants())
+            .Where(element => ((string?)element.Attribute(x + "Key"))?.StartsWith("Ui.FontSize.", StringComparison.Ordinal) == true).ToArray();
+        Assert.NotEmpty(sizes);
+        Assert.All(sizes, size => Assert.True((double)size >= 12, (string?)size.Attribute(x + "Key")));
+    }
+
+    [Fact]
     public void High_contrast_uses_dynamic_system_colours_and_overrides_explicit_appearance()
     {
         var source = SourceScan.Markup.Single(f => f.Name.EndsWith(".Palette.HighContrast.xaml", StringComparison.Ordinal)).Text;
@@ -80,12 +90,14 @@ public sealed class AccessibilityTests(WpfContext wpf)
     [InlineData("Light")]
     [InlineData("Dark")]
     [InlineData("HighContrast")]
+    [InlineData("Light.Petrol")]
+    [InlineData("Dark.Petrol")]
     public void Boundaries_focus_badges_and_action_text_meet_AA(string theme)
     {
         wpf.Run(() =>
         {
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
-            Color Token(string key) => ((SolidColorBrush)palette["Primer." + key]).Color;
+            Color Token(string key) => ((SolidColorBrush)palette[key.StartsWith("Ant.") ? key : "Primer." + key]).Color;
             void Check(string foreground, string background, double minimum)
             {
                 var bg = ThemeSurfaceTests.Composite(Token(background), Token("bg"));
@@ -96,6 +108,12 @@ public sealed class AccessibilityTests(WpfContext wpf)
             }
             foreach (string surface in new[] { "bg", "card", "input", "cardSel", "pill", "pillHover" })
                 foreach (string text in new[] { "text", "textMuted" }) Check(text, surface, 4.5);
+            foreach (string surface in new[] { "window", "bg", "card", "cardSoft", "input", "cardSel", "pill", "pillHover", "menuBg", "sidebar",
+                "titlebar", "rail", "statusBar", "codeBg", "accentSoft", "okBg", "warnBg", "noteBg", "Ant.colorErrorBg", "countWarningBg" })
+                Check("textFaint", surface, 4.5);
+            Check("accent", "accentSoft", 4.5); Check("accent", "rail", 4.5);
+            foreach (string kind in new[] { "Ob", "Fb", "Fc", "Db", "Fs" }) Check("blk" + kind + "Fg", "blk" + kind + "Bg", 4.5);
+            Check("ok", "okBg", 4.5); Check("warn", "warnBg", 4.5); Check("destructiveText", "Ant.colorErrorBg", 4.5);
             Check("primaryText", "primaryBg", 4.5); Check("warningText", "warn", 4.5);
             Check("destructiveText", "pill", 4.5); Check("destructiveText", "pillHover", 4.5);
             Check("warn", "countWarningBg", 4.5); Check("onAccent", "accent", 4.5);
@@ -193,7 +211,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 Assert.True(settings.IsEnabled);
                 Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("DrawerOverlay")).Visibility);
                 window.Navigate("Calls");
-                var callTrigger = (RadioButton)window.FindName("RailCalls"); callTrigger.Focus();
+                var callTrigger = (RadioButton)window.FindName("RailAgent"); callTrigger.Focus();
                 window.Features.OpenCall(window.Features.Calls[0]); WpfContext.Drain();
                 var drawer = (Grid)window.FindName("DrawerOverlay");
                 Assert.Equal(KeyboardNavigationMode.Cycle, KeyboardNavigation.GetTabNavigation(drawer));

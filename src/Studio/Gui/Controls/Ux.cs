@@ -19,6 +19,13 @@ namespace TiaOpenness.Gui.Controls;
 /// </summary>
 public static class Ux
 {
+    public static readonly DependencyProperty LeftPaneOpenProperty = DependencyProperty.RegisterAttached(
+        "LeftPaneOpen", typeof(bool), typeof(Ux), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.Inherits));
+
+    public static bool GetLeftPaneOpen(DependencyObject element) => (bool)element.GetValue(LeftPaneOpenProperty);
+
+    public static void SetLeftPaneOpen(DependencyObject element, bool value) => element.SetValue(LeftPaneOpenProperty, value);
+
     /// <summary>Grey prompt shown inside an empty text field or an unset pop-up button.</summary>
     public static readonly DependencyProperty PlaceholderProperty =
         DependencyProperty.RegisterAttached(

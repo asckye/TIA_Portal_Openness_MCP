@@ -14,6 +14,7 @@
         <ResourceDictionary Source="Themes/Shell.xaml" />
         <ResourceDictionary Source="Themes/Approvals.xaml" />
         <ResourceDictionary Source="Themes/Pages.xaml" />
+        <ResourceDictionary Source="Themes/Project.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />

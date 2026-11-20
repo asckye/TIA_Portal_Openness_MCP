@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui;
@@ -89,17 +90,19 @@ public partial class MainWindow : Window
     private void OnMaximize(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState
         .Maximized;
     private void OnClose(object sender, RoutedEventArgs e) => Close();
-    protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+    private bool ShellModalOpen => DrawerOverlay.Visibility == Visibility.Visible || OverlayHost.Visibility == Visibility.Visible
+        || ApprovalsContent.ConfirmationSheet.Visibility == Visibility.Visible
+        || OperationsContent.OptionsOpen || BlocksContent.OptionsOpen || VersionControlContent.OptionsOpen;
+
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
         base.OnPreviewKeyDown(e);
-        bool modal = DrawerOverlay.Visibility == Visibility.Visible
-            || OperationsContent.OptionsOpen || BlocksContent.OptionsOpen || VersionControlContent.OptionsOpen;
-        if (modal && System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control)
-            && e.Key is System.Windows.Input.Key.O or System.Windows.Input.Key.S or System.Windows.Input.Key.B
-                or System.Windows.Input.Key.D1 or System.Windows.Input.Key.D2 or System.Windows.Input.Key.D3
-                or System.Windows.Input.Key.D4 or System.Windows.Input.Key.D5 or System.Windows.Input.Key.D6
-                or System.Windows.Input.Key.D7 or System.Windows.Input.Key.D8 or System.Windows.Input.Key.OemComma) e.Handled = true;
-        if (!modal && e.Key == System.Windows.Input.Key.Escape && Toast.Visibility == Visibility.Visible)
+        bool modal = ShellModalOpen;
+        if (modal && Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+            && e.Key is Key.O or Key.S or Key.B or Key.K or Key.OemComma or >= Key.D1 and <= Key.D7) e.Handled = true;
+        if (!modal && e.Key == Key.Escape && _leftPaneFlyoutOpen)
+        { CloseLeftPaneFlyout(); e.Handled = true; }
+        else if (!modal && e.Key == Key.Escape && Toast.Visibility == Visibility.Visible)
         { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
     }
     private void OnOpenExecuted(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)

@@ -182,6 +182,25 @@ public sealed class WpfContext : IDisposable
         if (!SetKeyboardState(keys)) throw new Win32Exception(Marshal.GetLastWin32Error());
     }
 
+    internal static void WithControlPressed(Action action)
+    {
+        var previous = new byte[256];
+        if (!GetKeyboardState(previous)) throw new Win32Exception(Marshal.GetLastWin32Error());
+        var pressed = (byte[])previous.Clone();
+        pressed[KeyInterop.VirtualKeyFromKey(Key.LeftCtrl)] |= 0x80;
+        pressed[0x11 /* VK_CONTROL */] |= 0x80;
+        if (!SetKeyboardState(pressed)) throw new Win32Exception(Marshal.GetLastWin32Error());
+        bool restored;
+        try { action(); }
+        finally { restored = SetKeyboardState(previous); }
+        if (!restored) throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetKeyboardState([Out] byte[] keys);
+
     [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [return: MarshalAs(UnmanagedType.Bool)]

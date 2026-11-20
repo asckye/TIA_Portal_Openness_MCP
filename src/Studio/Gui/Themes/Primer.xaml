@@ -1603,8 +1603,8 @@
   <Style x:Key="Primer.WindowButton" TargetType="Button" BasedOn="{StaticResource Primer.CaptionButton}">
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
     <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
-    <Setter Property="Width" Value="28"/>
-    <Setter Property="MinHeight" Value="28"/>
+    <Setter Property="Width" Value="46"/>
+    <Setter Property="Height" Value="38"/>
     <Setter Property="ContentTemplate" Value="{x:Null}"/>
   </Style>
   <!--
@@ -2250,7 +2250,7 @@
   <Style x:Key="Primer.HeaderBar" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
     <Setter Property="Background" Value="{DynamicResource Primer.titlebar}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
-    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    <Setter Property="BorderThickness" Value="0"/>
   </Style>
   <Style x:Key="Primer.TabStrip" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
     <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
@@ -3256,5 +3256,54 @@
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.IdeBar" TargetType="Border" BasedOn="{StaticResource Primer.TabStrip}">
+    <Setter Property="MinHeight" Value="44"/>
+    <Setter Property="Padding" Value="12,0"/>
+  </Style>
+  <Style x:Key="Primer.IdeSubBar" TargetType="Border" BasedOn="{StaticResource Primer.IdeBar}">
+    <Setter Property="MinHeight" Value="38"/>
+  </Style>
+  <Style x:Key="Primer.IdePill" TargetType="RadioButton" BasedOn="{StaticResource Primer.Segment}">
+    <Setter Property="Height" Value="28"/>
+    <Style.Triggers>
+      <Trigger Property="IsChecked" Value="True">
+        <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.IdeSearch" TargetType="TextBox" BasedOn="{StaticResource Primer.Input}">
+    <Setter Property="MinHeight" Value="28"/>
+  </Style>
+  <Style x:Key="Primer.IdeToolButton" TargetType="Button" BasedOn="{StaticResource Primer.Secondary}">
+    <Setter Property="MinHeight" Value="28"/>
+    <Setter Property="Padding" Value="8,0"/>
+    <Setter Property="ux:Ux.CornerRadius" Value="{StaticResource Ui.Radius.Small}"/>
+    <Setter Property="ContentTemplate" Value="{x:Null}"/>
+  </Style>
+  <Style x:Key="Primer.IdeChip" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
+    <Setter Property="Padding" Value="8,0"/>
+    <Setter Property="CornerRadius" Value="{StaticResource Ui.Radius.Small}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+  </Style>
+  <Style x:Key="Primer.SelRow" TargetType="ToggleButton" BasedOn="{StaticResource Primer.Secondary}">
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="ContentTemplate" Value="{x:Null}"/>
+    <Setter Property="MinHeight" Value="36"/>
+    <Style.Triggers>
+      <Trigger Property="IsChecked" Value="True">
+        <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.accentSoft}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.accent}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.Tile" TargetType="ToggleButton" BasedOn="{StaticResource Primer.SelRow}">
+    <Setter Property="Padding" Value="12,8"/>
+    <Setter Property="ux:Ux.CornerRadius" Value="{StaticResource Ui.Radius.Large}"/>
   </Style>
 </ResourceDictionary>

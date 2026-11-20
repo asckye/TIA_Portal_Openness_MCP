@@ -86,12 +86,12 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     {
                         var metrics = new List<string>();
                         metrics.Add($"ClientPane: {((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth}");
-                        foreach (string name in new[] { "RailMcp", "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog" })
+                        foreach (string name in new[] { "RailMcp", "RailEngineering", "RailAgent", "RailAudit", "RailEnvironment", "RailLog" })
                         {
                             var element = (FrameworkElement)window.FindName(name);
                             var point = element.TransformToAncestor(host).Transform(new Point());
-                            Assert.Equal(9, point.X);
-                            Assert.Equal(36, element.ActualHeight);
+                            Assert.Equal(3, point.X);
+                            Assert.Equal(48, element.ActualHeight);
                             var item = (RadioButton)element;
                             var icon = (Border)item.Template.FindName("GlyphBox", item);
                             Assert.Equal(18, icon.ActualWidth);
@@ -99,7 +99,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                             metrics.Add($"{name}: {point.X},{point.Y} {element.ActualWidth}x{element.ActualHeight}");
                         }
                         foreach (string name in new[] { "MinimizeWindowButton", "MaximizeWindowButton", "CloseWindowButton" })
-                            Assert.Equal(28, ((FrameworkElement)window.FindName(name)).ActualWidth);
+                            Assert.Equal(46, ((FrameworkElement)window.FindName(name)).ActualWidth);
                         var log = (TiaOpenness.Gui.Controls.WorkbenchLogView)window.Configuration.FindName("ActivityLog");
                         log.BringIntoView(); WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain();
                         metrics.Add($"Log: {log.ActualWidth}, padding {log.Padding}, document padding {log.Document.PagePadding}, page width {log.Document.PageWidth}");
@@ -162,7 +162,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
     }
 
     [WorkbenchRenderFact]
-    public void Sider_collapses_to_its_icons_below_the_lg_breakpoint()
+    public void Rail_keeps_icons_and_labels_while_the_left_pane_follows_content_width()
     {
         var output = Path.GetFullPath(Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR")!);
         Directory.CreateDirectory(output);
@@ -179,32 +179,32 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         window.Navigate("Calls");
                         var host = CreateHost(window, 960, 700);
                         var sider = (Border)window.FindName("Sider");
-                        Assert.Equal(64, sider.ActualWidth);
-                        Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("BrandTitle")).Visibility);
-                        var toggle = (Button)window.FindName("SiderToggle");
-                        Assert.Equal(Loc.Current["Shell.ExpandMenu"], System.Windows.Automation.AutomationProperties.GetName(toggle));
-                        foreach (string name in new[] { "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog", "RailMcp", "SettingsButton" })
+                        Assert.Equal(60, sider.ActualWidth);
+                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("BrandTitle")).Visibility);
+                        Assert.Null(window.FindName("SiderToggle"));
+                        var toggle = (Button)window.FindName("LeftPaneToggle");
+                        Assert.Equal(Loc.Current["Shell.LeftPane"], System.Windows.Automation.AutomationProperties.GetName(toggle));
+                        foreach (string name in new[]
+                            { "RailEngineering", "RailAgent", "RailClients", "RailAudit", "RailEnvironment", "RailLog", "RailMcp", "SettingsButton" })
                         {
-                            var item = (FrameworkElement)window.FindName(name);
+                            var item = (RadioButton)window.FindName(name);
                             var origin = item.TransformToAncestor(host).Transform(new Point());
-                            Assert.True(origin.X >= 0 && origin.X + item.ActualWidth <= sider.ActualWidth, name + " stays inside the collapsed sider");
-                            Assert.True(item.ActualHeight >= 24, name + " keeps the target size");
-                            Assert.False(string.IsNullOrWhiteSpace(System.Windows.Automation.AutomationProperties.GetName(item)), name + " keeps its name");
+                            Assert.InRange(origin.X, 0, sider.ActualWidth - item.ActualWidth);
+                            Assert.Equal(48, item.ActualHeight);
+                            Assert.False(string.IsNullOrWhiteSpace(System.Windows.Automation.AutomationProperties.GetName(item)));
+                            Assert.Equal(Visibility.Visible, ((ContentPresenter)item.Template.FindName("Label", item)).Visibility);
                         }
                         var title = (FrameworkElement)window.FindName("CurrentPageTitle");
                         Assert.True(title.TransformToAncestor(host).Transform(new Point()).X > sider.ActualWidth);
                         string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToString().ToLowerInvariant();
-                        SaveRender(host, Path.Combine(output, "sider-collapsed-" + suffix + ".png"), 960, 700);
-                        // The trigger expands it below the breakpoint, and the label returns.
-                        UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
-                        Assert.Equal(232, sider.ActualWidth);
-                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("BrandTitle")).Visibility);
-                        SaveRender(host, Path.Combine(output, "sider-expanded-" + suffix + ".png"), 960, 700);
-                        Resize(1200); Assert.Equal(232, sider.ActualWidth);
-                        UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout();
-                        Assert.Equal(64, sider.ActualWidth);
-                        Resize(1199); Assert.Equal(64, sider.ActualWidth);
-                        Resize(1200); Assert.Equal(232, sider.ActualWidth);
+                        SaveRender(host, Path.Combine(output, "rail-narrow-" + suffix + ".png"), 960, 700);
+                        Assert.False(Controls.Ux.GetLeftPaneOpen(sider));
+                        Resize(1200); Assert.Equal(60, sider.ActualWidth);
+                        Assert.Equal(App.Settings.LeftPaneOpen, Controls.Ux.GetLeftPaneOpen(sider));
+                        Resize(1199); Assert.Equal(60, sider.ActualWidth);
+                        Resize(1083); Assert.False(Controls.Ux.GetLeftPaneOpen(sider));
+                        Resize(1084); Assert.Equal(App.Settings.LeftPaneOpen, Controls.Ux.GetLeftPaneOpen(sider));
+                        SaveRender(host, Path.Combine(output, "rail-wide-" + suffix + ".png"), 1084, 700);
                         void Resize(double width)
                         {
                             host.Width = width; host.Measure(new Size(width, 700)); host.Arrange(new Rect(0, 0, width, 700));
@@ -215,6 +215,41 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     finally { window.Close(); ThemeManager.Current.Theme = previous; }
                     Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
                 });
+    }
+
+    [Fact]
+    public void Left_pane_preference_applies_to_project_and_settings_across_width_changes()
+    {
+        wpf.Run(() =>
+        {
+            bool previous = App.Settings.LeftPaneOpen;
+            App.Settings.LeftPaneOpen = true;
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false);
+            try
+            {
+                var tree = (ContentControl)window.FindName("ProjectTree");
+                tree.Content = new TreeView();
+                var host = CreateHost(window, 1366, 860);
+                var toggle = (Button)window.FindName("LeftPaneToggle");
+                Assert.Equal(262, tree.ActualWidth);
+                UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout();
+                Assert.False(App.Settings.LeftPaneOpen); Assert.Equal(Visibility.Collapsed, tree.Visibility);
+                window.Navigate("Settings"); host.UpdateLayout();
+                var settings = (Views.SettingsView)window.FindName("SettingsContent");
+                var pane = (Border)((ListBox)settings.FindName("SectionList")).Parent;
+                Assert.Equal(Visibility.Collapsed, pane.Visibility);
+                UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout();
+                Assert.True(App.Settings.LeftPaneOpen); Assert.Equal(236, pane.ActualWidth);
+                host.Width = 1024; host.Height = 640;
+                host.Measure(new Size(1024, 640)); host.Arrange(new Rect(0, 0, 1024, 640)); host.UpdateLayout();
+                Assert.True(App.Settings.LeftPaneOpen); Assert.Equal(Visibility.Collapsed, pane.Visibility);
+                Assert.Equal(0, ((Grid)settings.Content).ColumnDefinitions[0].ActualWidth);
+                window.Navigate("Engineering"); host.UpdateLayout();
+                Assert.Equal(Visibility.Collapsed, tree.Visibility);
+                Assert.Equal(0, ((Grid)window.FindName("EngineeringPage")).ColumnDefinitions[0].ActualWidth);
+            }
+            finally { window.Close(); App.Settings.LeftPaneOpen = previous; }
+        });
     }
 
     [Fact]
@@ -247,10 +282,10 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Same(Application.Current.FindResource("Primer.bg"), ((Grid)window.FindName("Root")).Background);
                         double rowHeight = Assert.IsType<double>(Application.Current.FindResource("Ui.RowHeight"));
                         Assert.Equal(36, rowHeight);
-                        foreach (string name in new[] { "RailMcp", "RailEngineering", "RailCalls", "RailAudit", "RailEnvironment", "RailLog" })
+                        foreach (string name in new[] { "RailMcp", "RailEngineering", "RailAgent", "RailAudit", "RailEnvironment", "RailLog" })
                         {
                             var element = (FrameworkElement)window.FindName(name);
-                            Assert.Equal(rowHeight, element.ActualHeight);
+                            Assert.Equal(48, element.ActualHeight);
                         }
                         string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToLowerInvariant();
                         if (output != null) SaveRender(host, Path.Combine(output, suffix + ".png"), 1366, 860);
@@ -305,11 +340,12 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
                     var host = CreateHost(window, size.Width, size.Height);
                     var sider = (Border)window.FindName("Sider");
-                    Assert.Equal(size.Width < 1200 ? 64 : 232, sider.ActualWidth);
-                    foreach (string name in new[] { "RailApprovals", "RailEngineering", "RailVersionControl", "RailCalls", "RailAudit", "RailEnvironment", "RailLog", "RailMcp", "SettingsButton" })
+                    Assert.Equal(60, sider.ActualWidth);
+                    foreach (string name in new[]
+                            { "RailEngineering", "RailAgent", "RailMcp", "RailClients", "RailEnvironment", "RailAudit", "RailLog", "SettingsButton" })
                     {
                         var item = (RadioButton)window.FindName(name);
-                        Assert.Equal(36, item.ActualHeight);
+                        Assert.Equal(48, item.ActualHeight);
                         var surface = (Border)item.Template.FindName("Surface", item);
                         if (item.IsChecked != true) Assert.Equal(0, ((SolidColorBrush)surface.Background).Color.A);
                         else
@@ -319,19 +355,17 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                             Assert.Equal(FontWeights.SemiBold, item.FontWeight);
                             if (theme == "HighContrast") Assert.Equal(SystemColors.HighlightTextColor, ((SolidColorBrush)bar.Background).Color);
                         }
-                        Assert.Equal(System.Windows.Automation.AutomationProperties.GetName(item), item.ToolTip);
+                        Assert.Equal(System.Windows.Automation.AutomationProperties.GetName(item) + " ("
+                            + System.Windows.Automation.AutomationProperties.GetAcceleratorKey(item) + ")", item.ToolTip);
                         var label = (ContentPresenter)item.Template.FindName("Label", item);
-                        if (size.Width < 1200) Assert.Equal(Visibility.Collapsed, label.Visibility);
-                        else
-                        {
-                            foreach (var text in DesktopCapture.Descendants<TextBlock>(label))
-                            {
-                                Assert.Equal(TextWrapping.NoWrap, text.TextWrapping);
-                                var probe = new TextBlock { Text = text.Text, FontFamily = text.FontFamily, FontSize = text.FontSize, FontWeight = text.FontWeight };
-                                probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-                                Assert.True(probe.DesiredSize.Width <= text.ActualWidth + 1, $"{language}: '{text.Text}' is truncated");
-                            }
-                        }
+                        Assert.Equal(Visibility.Visible, label.Visibility);
+                        var text = Assert.Single(DesktopCapture.Descendants<TextBlock>(label));
+                        Assert.Equal((string)item.Content, text.Text);
+                        Assert.Equal(TextWrapping.NoWrap, text.TextWrapping);
+                        var probe = new TextBlock { Text = text.Text, FontFamily = text.FontFamily,
+                            FontSize = text.FontSize, FontWeight = text.FontWeight };
+                        probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                        Assert.True(probe.DesiredSize.Width <= text.ActualWidth + 1, $"{language}: '{text.Text}' is truncated");
                     }
                     foreach (string name in new[] { "McpStatusButton", "SessionStatusButton", "ApprovalStatusButton" })
                     {
@@ -355,6 +389,34 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         var title = (TextBlock)window.FindName("CurrentPageTitle");
                         Assert.Equal(17, title.FontSize); Assert.Equal(FontWeights.SemiBold, title.FontWeight);
                         Assert.Equal(title.Text + " – " + Loc.Current["App.Title"], window.Title);
+                        if (page == "Approvals")
+                        {
+                            var agent = (RadioButton)window.FindName("RailAgent");
+                            var calls = (Border)window.FindName("CallsCountBadge");
+                            var pending = (Button)window.FindName("PendingBadge");
+                            var bar = (Border)agent.Template.FindName("Bar", agent);
+                            var icon = (Border)agent.Template.FindName("GlyphBox", agent);
+                            Rect Bounds(FrameworkElement element) => element.TransformToAncestor(sider).TransformBounds(new Rect(element.RenderSize));
+                            Assert.True(agent.IsChecked); Assert.Equal(Visibility.Visible, bar.Visibility);
+                            foreach (var badge in new FrameworkElement[] { calls, pending })
+                            {
+                                Assert.Equal(Visibility.Visible, badge.Visibility);
+                                var bounds = Bounds(badge);
+                                Assert.True(bounds.Width > 0 && bounds.Height > 0);
+                                Assert.True(new Rect(sider.RenderSize).Contains(bounds));
+                                Assert.False(bounds.IntersectsWith(Bounds(bar)));
+                                Assert.False(bounds.IntersectsWith(Bounds(icon)));
+                            }
+                            Assert.False(Bounds(calls).IntersectsWith(Bounds(pending)));
+                            if (theme == "HighContrast")
+                            {
+                                Assert.Equal(SystemColors.WindowColor, ((SolidColorBrush)calls.Background).Color);
+                                Assert.Equal(SystemColors.WindowTextColor, ((SolidColorBrush)((TextBlock)calls.Child).Foreground).Color);
+                                Assert.Equal(SystemColors.WindowTextColor, ((SolidColorBrush)calls.BorderBrush).Color);
+                                Assert.Equal(SystemColors.WindowColor, ((SolidColorBrush)pending.Background).Color);
+                                Assert.Equal(SystemColors.WindowTextColor, ((SolidColorBrush)pending.Foreground).Color);
+                            }
+                        }
                         Save(page);
                     }
                     var settings = (Views.SettingsView)window.FindName("SettingsContent");

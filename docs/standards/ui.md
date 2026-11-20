@@ -1,13 +1,13 @@
 # 工作台界面规范
 
-状态：现行 · 最后核对：2026-11-19
+状态：现行 · 最后核对：2026-11-20
 
 本文是自动化工程工作台（`src/Studio/Gui`）唯一的界面规范，包括设计令牌、布局、组件、审批交互、无障碍、文案和偏差登记；它取代本文件的旧版（v0.4，见 Git 历史）与[工作台偏差清单](../archive/development/design-spec/deviations/workbench.md)。
 
 ## 1 范围与依据
 
-- 适用范围：`src/Studio/Gui`（`TiaOpenness.exe`，WPF，.NET 10，`net10.0-windows`）的全部界面：主窗口、侧边栏、标题栏与状态栏、8 个一级页面、设置页、确认面板与对话框、提示条、toast 与系统通知、`--mock` 离线演示。测试在 `tests/Studio/TiaOpenness.Gui.Tests`。
-- 视觉与外框遵循 [ADR 0035](decisions/0035-workbench-native-ide-dual-accent.md)（原生桌面 IDE 外框、冷调浅色 / 午夜板岩深色、精密钴蓝与西门子青碧双强调色），通用规则见《工程开发规范》通用规范[第 21 节 界面设计](https://github.com/asckye/engineering-standards/blob/v2.0/general/21-ui.md#ui)和[桌面界面](https://github.com/asckye/engineering-standards/blob/v2.0/desktop/ui.md)。基础语义令牌结构、无障碍与审批红线沿用 [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md)（C1–C17 中未被 0035 取代的部分）。
+- 适用范围：`src/Studio/Gui`（`TiaOpenness.exe`，WPF，.NET 10，`net10.0-windows`）的全部界面：主窗口、侧边栏、标题栏与状态栏、7 个活动页和设置页、确认面板与对话框、提示条、toast 与系统通知、`--mock` 离线演示。测试在 `tests/Studio/TiaOpenness.Gui.Tests`。
+- 活动栏、标题栏、状态栏、页面顺序与令牌见 [ADR 0036](decisions/0036-workbench-final-ide-layout.md)。主题与双强调色遵循 [ADR 0035](decisions/0035-workbench-native-ide-dual-accent.md)（原生桌面 IDE 外框、冷调浅色 / 午夜板岩深色、精密钴蓝与西门子青碧双强调色），通用规则见《工程开发规范》通用规范[第 21 节 界面设计](https://github.com/asckye/engineering-standards/blob/v2.0/general/21-ui.md#ui)和[桌面界面](https://github.com/asckye/engineering-standards/blob/v2.0/desktop/ui.md)。基础语义令牌结构、无障碍与审批红线沿用 [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md)（C1–C17 中未被 0035 取代的部分）。
 
 冲突时按下列顺序取上位：
 
@@ -54,35 +54,54 @@ token 名称取自设计系统与 [ADR 0035](decisions/0035-workbench-native-ide
 
 | token | 浅色（钴蓝 / 青碧） | 深色（钴蓝 / 青碧） | 高对比 | 实现键 | 用途 |
 |---|---|---|---|---|---|
-| bg-window | #FFFFFF | #0B0F15 | Window | `Primer.window` | 窗口主体、列表区与详情区 |
-| bg-grouped | #F1F5F9 | #101620 | Window | `Primer.bg` | 分组列表页（如设置页）底色，上放 bg-elevated 卡片 |
-| bg-elevated | #FFFFFF | #141B26 | Window | `Primer.card`、`Primer.menuBg` | 分组卡片、确认面板、弹出层 |
-| bg-titlebar / bg-rail | #F8FAFC / #F1F5F9 | #0D121A | Window | `Primer.titlebar`、`Primer.rail`、`Primer.sidebar` | 顶部标题栏与左侧导航栏 |
-| bg-statusbar | #E2E8F0 | #090D12 | Window | `Primer.statusBar` | 底部 IDE 状态栏 |
-| fill-control | #E2E8F0 | #1E293B | ButtonFace | `Primer.pill` | 非默认按钮底（拒绝、取消、写入请求的批准）、关闭态开关轨道 |
-| fill-track | #F1F5F9 | #161E2B | Window | `Primer.input`、`Primer.cardSoft` | 分段控件与搜索框底槽 |
-| fill-selected-inactive | #E2E8F0 | #1E293B | Highlight（文字用 HighlightText） | `Primer.cardSel` | 窗口非激活时的选中行、侧边栏当前项 |
-| separator | #CBD5E1 | #1E293B | WindowText | `Primer.cardBorder`、`Primer.divider` | 装饰性 1 px 分隔线 |
-| border-control | #64748B | #64748B | WindowText | `Primer.inputBorder`、`Primer.checkBorder` | 输入框、复选框等控件边界（≥ 3:1，C12） |
-| focus-ring | #2563EB / #0E7C86 | #60A5FA / #2DD4BF | WindowText | `Primer.focusOuter` | 键盘焦点环（KEY-03，C13） |
-| hc-outline | 透明 | 透明 | WindowText | `Primer.hcOutline` | 高对比下卡片、按钮、输入框、提示条与状态标记的 1 px 描边 |
-| label | #0F172A | #F1F5F9 | WindowText | `Primer.text` | 正文、标题 |
-| label-secondary | #475569 | #94A3B8 | WindowText | `Primer.textMuted`、`Primer.textFaint` | 说明、元数据、表头、占位符（所有底色上 ≥ 4.5:1） |
-| label-tertiary | #64748B | #64748B | GrayText | `Ant.colorTextDisabled` | 只用于禁用态和图标，不用于要读的文字 |
-| label-on-accent | #FFFFFF | #FFFFFF | HighlightText | `Primer.onPrimary`、`Primer.onAccent` | accent 与 destructive 实底上的文字和图标 |
-| accent | #2563EB / #0E7C86 | #2563EB / #0E7C86 | Highlight | `Primer.primaryBg`、`Ant.colorPrimary` | 默认按钮实底、获得焦点的选中行、开关打开、进度（白字 ≥ 4.5:1） |
-| accent-hover | #1D4ED8 / #0B656E | #1D4ED8 / #0B656E | Highlight | `Ant.colorPrimaryHover` | 默认按钮悬停实底（白字 ≥ 4.5:1） |
-| accent-text | #1D4ED8 / #0B656E | #60A5FA / #2DD4BF | HotTrack | `Primer.accent` | 链接、文字按钮、选中的图标 |
-| accent-tint | #EFF6FF / #E6F6F7 | #122138 / #0C2B30 | Window | `Primer.noteBg`、`Primer.accentSoft` | 信息类提示条底、强调色柔底 |
-| destructive | #DC2626 | #DC2626 | Highlight | `Ant.colorErrorSolid` | 破坏性确认后的实底按钮、破坏性标记（白字 ≥ 4.5:1） |
-| destructive-text | #B91C1C | #F87171 | WindowText | `Primer.destructiveText` | 破坏性按钮文字（普通与悬停底色均 ≥ 4.5:1） |
-| destructive-tint | #FEF2F2 | #321619 | Window | `Ant.colorErrorBg` | 错误提示条、破坏性请求图标底 |
-| warning-text | #B45309 | #FBBF24 | WindowText | `Primer.warn` | 警告文字、即将超时的时间 |
-| warning-tint | #FFF4E5 | #2E2211 | Window | `Primer.warnBg`、`Primer.countWarningBg` | 警告提示条、警告行底 |
-| success-text | #15803D | #4ADE80 | WindowText | `Primer.ok` | “已批准”“已完成”文字 |
-| success-tint | #ECFDF5 | #0F291E | Window | `Primer.okBg` | 成功提示条、新增变更的标记底 |
-| scrim | 黑 25% | 黑 55% | 黑 80%，浮层另加 hc-outline | `Ant.colorBgMask` | 确认面板与模态层背后的遮罩 |
+| bg-window | #FFFFFF | #1B2332 | Window | `Primer.window` | 窗口主体 |
+| bg-grouped | #F8FAFD | #141B26 | Window | `Primer.bg` | 页面内容底色 |
+| bg-elevated | #FFFFFF | #1B2332 | Window | `Primer.card` | 卡片、确认面板 |
+| menu | #FFFFFF | #1B2332 | Window | `Primer.menuBg` | 菜单 |
+| titlebar | #E9EEF5 | #0B0F15 | Window | `Primer.titlebar` | 标题栏 |
+| rail | #E9EEF5 | #0B0F15 | Window | `Primer.rail` | 活动栏 |
+| statusbar | #E9EEF5 | #0B0F15 | Window | `Primer.statusBar` | 状态栏 |
+| sidebar | #F3F6FA | #101620 | Window | `Primer.sidebar` | 上下文左栏 |
+| card-soft | #F3F6FA | #101620 | Window | `Primer.cardSoft` | 卡片次级表面 |
+| code | #F6F8FC | #0C1017 | Window | `Primer.codeBg` | 代码与结构化数据 |
+| fill-control | #E5ECF4 | #1D2736 | Window | `Primer.pill` | 普通操作与审批按钮 |
+| input | #EAEFF6 | #232E40 | Window | `Primer.input` | 输入框底色 |
+| selection | #E2EAF4 | #222E42 | Window | `Primer.cardSel` | 选中行 |
+| divider | #EBECEE | #2A3242 | WindowText | `Primer.divider` | 装饰性分隔线 |
+| card-border | #DBDDE0 | #363F4F | WindowText | `Primer.cardBorder` | 卡片边界 |
+| border-control | #7B8797 | #6D7D94 | WindowText | `Primer.inputBorder` | 控件边界，≥ 3:1 |
+| focus-ring | #1D4ED8 / #0B656E | #60A5FA / #2DD4BF | WindowText | `Primer.focusOuter` | 键盘焦点环 |
+| hc-outline | #00000000 | #00000000 | WindowText | `Primer.hcOutline` | 高对比边界 |
+| label | #0F172A | #F1F5F9 | WindowText | `Primer.text` | 正文与标题 |
+| label-secondary | #475569 | #94A3B8 | WindowText | `Primer.textMuted` | 说明与元数据，在所有背景上对比度均 ≥ 4.5:1 |
+| label-faint | #57657A | #8B9BB2 | WindowText | `Primer.textFaint` | 占位文字，≥ 4.5:1 |
+| label-disabled | #8B97A8 | #6B7B91 | GrayText | `Ant.colorTextDisabled` | 仅用于禁用态和装饰图标；必须读懂的文字使用正文或次级文字色 |
+| label-on-primary | #FFFFFF | #FFFFFF | HighlightText | `Primer.onPrimary` | 主按钮文字 |
+| accent | #2563EB / #0E7C86 | #2563EB / #0E7C86 | Highlight | `Primer.primaryBg` | 主按钮实底，白色文字对比度 ≥ 4.5:1 |
+| accent-hover | #1D4ED8 / #0B656E | #1D4ED8 / #0B656E | Highlight | `Ant.colorPrimaryHover` | 主按钮悬停实底，白色文字对比度 ≥ 4.5:1 |
+| accent-text | #1D4ED8 / #0B656E | #60A5FA / #2DD4BF | HotTrack | `Primer.accent` | 文字与选中指示条 |
+| accent-tint | #E9EFFD / #E7F2F3 | #203251 / #0F2A2E | Window | `Primer.accentSoft` | 选中底色 |
+| destructive | #DC2626 | #DC2626 | Highlight | `Ant.colorErrorSolid` | 危险操作实底，白色文字对比度 ≥ 4.5:1 |
+| destructive-text | #B91C1C | #FCA5A5 | WindowText | `Primer.destructiveText` | 危险操作文字，在普通与悬停背景上对比度均 ≥ 4.5:1 |
+| destructive-tint | #FEF2F2 | #31151B | Window | `Ant.colorErrorBg` | 错误提示底 |
+| warning-text | #9A5504 | #FBBF24 | WindowText | `Primer.warn` | 警告文字 |
+| warning-tint | #FFF4E5 | #2D220E | Window | `Primer.warnBg` | 警告提示底 |
+| success-text | #0E7A50 | #34D399 | WindowText | `Primer.ok` | 成功文字 |
+| success-tint | #E8F7F0 | #0F2920 | Window | `Primer.okBg` | 成功提示底 |
+| OB 徽标文字 | #5B21B6 | #C4B5FD | WindowText | `Primer.blkObFg` | 程序块类型 |
+| OB 徽标底色 | #EDE9FE | #2E1F5E | Window | `Primer.blkObBg` | 程序块类型 |
+| FB 徽标文字 | #1D4ED8 | #93C5FD | WindowText | `Primer.blkFbFg` | 程序块类型 |
+| FB 徽标底色 | #DBEAFE | #172D54 | Window | `Primer.blkFbBg` | 程序块类型 |
+| FC 徽标文字 | #065F46 | #6EE7B7 | WindowText | `Primer.blkFcFg` | 程序块类型 |
+| FC 徽标底色 | #D1FAE5 | #12362B | Window | `Primer.blkFcBg` | 程序块类型 |
+| DB 徽标文字 | #155E75 | #67E8F9 | WindowText | `Primer.blkDbFg` | 程序块类型 |
+| DB 徽标底色 | #CFFAFE | #113344 | Window | `Primer.blkDbBg` | 程序块类型 |
+| FS 徽标文字 | #92400E | #FDE68A | WindowText | `Primer.blkFsFg` | 程序块类型 |
+| FS 徽标底色 | #FEF3C7 | #382810 | Window | `Primer.blkFsBg` | 程序块类型 |
+| scrim | #4D0F172A | #AD070A0F | Window | `Ant.colorBgMask` | 模态遮罩，浅色 30%，深色 68% |
 | toast-bg | rgba(15,23,42,0.95) | rgba(30,41,59,0.96) | Window | `Ant.colorBgSpotlight` | toast 与工具提示底，上面白字 |
+
+深色青碧的选中底色保留 `#0F2A2E`。设计稿的 `#1A3B45` 与三级文字只有 4.23:1，与控件边界只有 2.85:1。
 
 破坏性按钮文字使用独立的 `Primer.destructiveText`：原亮色 `#D70015` 在 `Primer.pill`（`#E5E5EA`）上只有 4.29:1，低于普通文字要求的 4.5:1。表中的亮色与暗色值由 [ThemeSurfaceTests](../../tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs) 固定，并由 [AccessibilityTests](../../tests/Studio/TiaOpenness.Gui.Tests/AccessibilityTests.cs) 检查普通与悬停底色上的对比度。`Primer.diffRed`、`Ant.colorError` 仍表示差异删除与错误说明，不能代替破坏性按钮文字的专用令牌。
 
@@ -127,7 +146,9 @@ token 名称取自设计系统与 [ADR 0035](decisions/0035-workbench-native-ide
 | control-md | 32 | `Ui.ControlHeight` | 普通按钮、输入框、下拉框 |
 | control-lg | 44 | `Ui.ControlHeight.Large` | 审批决策按钮、确认面板按钮 |
 | 行高（项目值） | 36 | 无 | 表格与列表行最小高度；不采用设计系统的 row-min 44（C11） |
-| sidebar-width / -collapsed | 232 / 64 | 随 UI-2b | 侧边栏；窗口窄于 1200 epx 时收为图标栏 |
+| 活动栏 | 60 | `Sider` | 固定宽度，按钮高 48，图标下保留 12 epx 短标签 |
+| 上下文左栏 | 项目 262，设置 236 | `Ux.LeftPaneOpen` | 记住停靠偏好。内容宽度小于 1024 epx 时默认收起，标题栏按钮可在内容上方打开无蒙层的左栏。焦点进入左栏，按 Esc 或再次按按钮关闭并将焦点还给按钮 |
+| 页面工具栏 / 筛选条 | 44 / 38 | `Primer.IdeBar` / `Primer.IdeSubBar` | 最小高度，随内容增高 |
 | list-width | 320 | 随 UI-2b | 列表 + 详情页的中间列表 |
 | sheet-width | 420 | 随 UI-2c | 确认面板 |
 
@@ -151,8 +172,8 @@ WPF 不画 CSS 阴影：测试禁止 `Effect`（`PrimerVocabularyTests`），阴
 | shadow-card | 0 0 0 0.5px 黑 8%，0 1px 2px 黑 4% | 0 0 0 0.5px 白 8% | 无，改用 hc-outline | 分组卡片：以细描边为主 |
 | shadow-segment | 0 1px 3px 黑 12%，0 0 0 0.5px 黑 4% | 同浅色 | 无 | 分段控件选中块、开关圆钮 |
 | shadow-sheet | 0 20px 48px 黑 22%，0 0 0 0.5px 黑 12% | 0 20px 48px 黑 60%，0 0 0 0.5px 白 12% | 无 | 确认面板、提示条：唯一需要明显层级的地方 |
-| duration-fast | 150 ms | 同左 | 同左 | 选中、悬停、开关切换 |
-| duration-base | 250 ms，缓出 | 同左 | 同左 | 确认面板滑入、提示条出现；系统“减少动态效果”开启时改为淡入 |
+| duration-fast | 120 ms | 同左 | 同左 | 选中、悬停、开关切换 |
+| duration-base | 120 ms，缓出 | 同左 | 同左 | 确认面板滑入、提示条出现；系统“减少动态效果”开启时改为淡入 |
 
 ## 3 布局
 
@@ -160,15 +181,17 @@ WPF 不画 CSS 阴影：测试禁止 `Effect`（`PrimerVocabularyTests`），阴
 
 | 区域 | 尺寸 | 底色 | 内容 |
 |---|---|---|---|
-| 侧边栏 | 232 epx；窗口窄于 1200 epx 时 64 epx 图标栏（C11） | bg-sidebar | 应用名、分组的 8 个一级页面、底部状态行（MCP 服务、TIA Portal 与当前项目、写操作审批开 / 关）、固定在底部的设置 |
-| 工具栏 | 自适应高度 | bg-window | 页名（large-title）与可选的 callout 上下文；本页操作在右；窗口按钮贴在右上角 |
-| 提示条 | 工具栏下方，一条 | 按严重级别的 tint | 安全与环境提示，按 §3.2 的优先级合并 |
-| 内容 | 其余宽度 | bg-window 或 bg-grouped | 按页面类型选用：列表 320 + 详情、分组列表（bg-grouped 上放 bg-elevated 卡片）、整页表格 |
+| 标题栏 | 38 epx | bg-titlebar | 产品名与当前页标题、居中 Ctrl+K、左栏与主题按钮、46 × 38 窗口按钮 |
+| 活动栏 | 60 epx | rail | 图标与短标签，设置固定在底部；协作显示待批数与调用数，检查显示关注数 |
+| 安全提示条 | 内容上方一条 | 按严重程度 | 优先级见 §3.2 |
+| 内容 | 剩余空间 | bg-window 或 bg-grouped | 项目树或设置左栏、页面工具栏与内容。内容宽度达到 1200 epx 时调用详情在右侧停靠（344 epx），更窄时使用模态抽屉 |
+| 状态栏 | 最小 26 epx，项高 24 | statusbar | 会话入口、未验证的客户端名与 TIA PID、服务与审批状态、编译错误与警告数、审计头与版本。编译前隐藏计数；仅当前会话验证通过且无更新事件时显示 ✓ |
 
 ### 3.2 页面与入口
 
-- 一级页面 8 个，按侧边栏顺序：审批、项目、版本控制；AI 调用、审计日志；环境体检、日志与诊断、MCP 与客户端（Ctrl+1…Ctrl+8 同序）。设置（Ctrl+,）固定在侧边栏底部。删除隐藏的导航别名（概览、程序块）；`WorkbenchPage` 协议枚举不变，`Blocks` 是项目页的别名，MCP 契约不变。
-- 每类功能只有一个主入口：待批请求 → 审批页（取代审批抽屉）；环境 → 环境体检页，其他页面只显示一条链接到该页的提示条；日志和诊断包 → 日志与诊断页；连接信息 → MCP 与客户端页。
+- Ctrl+1…7 依次打开项目、协作、MCP、客户端、检查、审计、日志。Ctrl+, 打开设置。项目包含版本控制，协作包含审批与 AI 调用；协作入口优先显示待批审批，否则回到上次子页，首次进入显示调用。
+- `WorkbenchPage` 保留原协议枚举，`Blocks` 定位项目页。人或 AI 发起的导航都经过 `MainWindow.Navigate`，页面控件使用 `WorkbenchCommands.Navigate` 并传入目标页。
+- 审批状态项显示“写操作审批 · 开/关”，点击打开设置中的 AI 控制区。客户端配置由客户端页承载；服务与传输配置在 MCP 页。
 - 设置是页面，分三区：外观（主题、语言）；服务（版本、更新、目录、关于）；AI 控制（允许 AI 控制工作台界面、写操作审批与超时、原生交叉引用），AI 控制区只有人能改。
 - 安全提示同时出现时合并为一条提示条，只显示最高的一条并标出其余数量：1 待批计数（侧边栏徽标，永不隐藏）> 2 审批已关 > 3 工作台控制通道不可用 > 4 AI 预填，待确认 > 5 “AI 操作了界面”（短暂显示）。
 
@@ -178,7 +201,7 @@ WPF 不画 CSS 阴影：测试禁止 `Effect`（`PrimerVocabularyTests`），阴
 |---|---|---|
 | LAY-01 | MUST | 窗口最小尺寸不超过 1024 × 640 epx，在此尺寸下所有功能可用（允许滚动）。 |
 | LAY-02 | SHOULD | 最小宽度不超过 960 epx，使窗口能贴靠到 1920 宽屏幕的一半，与 TIA Portal 并排（维护者 2026-11-03：保持 960，不采用设计系统的 1024）。 |
-| LAY-03 | MUST | 窄窗口：侧边栏按 §3.1 收起；列表 + 详情页保留 320 列表；带右栏的页面在宽度不足时把右栏移到内容下方；数据表格属于二维内容，允许横向滚动。 |
+| LAY-03 | MUST | 窄窗口：活动栏保持 60 epx，取消按 1200 epx 折叠活动栏的规则；上下文左栏按 §2.3 切换为浮层；带右栏的页面在宽度不足时把右栏移到内容下方；数据表格属于二维内容，允许横向滚动。 |
 | LAY-05 | SHOULD | 间距按 §2.3 的用途取值；一致的间距本身表达分组。 |
 | LAY-06 | MUST | 承载文字的行和容器不用固定高度，用 `Auto`、`MinHeight` 或 `*`。 |
 | LAY-07 | SHOULD | 文字左对齐；只有空状态与图标下的说明居中。 |
@@ -186,15 +209,15 @@ WPF 不画 CSS 阴影：测试禁止 `Effect`（`PrimerVocabularyTests`），阴
 | LAY-09 | SHOULD | 浮层与背景可区分：常规主题用描边和 shadow-sheet；高对比用 hc-outline，阴影为无。 |
 | LAY-10 | MUST | 声明 Per-Monitor V2 DPI 感知（`app.manifest`），在 100–200% 与跨屏混合缩放下不模糊、不截断。 |
 | LAY-11 | SHOULD | 自绘标题区保留系统行为：空白处拖动、右键系统菜单、双击最大化 / 还原、最大化按钮悬停显示 Snap 布局（命中测试返回 HTMAXBUTTON）。 |
-| LAY-12 | MUST | 控件高 32 epx；行内紧凑按钮不低于 24 epx（指针目标见 CTL-10）；表格和列表行高 36 epx；审批决策按钮和确认面板按钮 44 epx（control-lg）。 |
+| LAY-12 | MUST | 表单控件高 32 epx；IDE 工具栏的胶囊高 28 epx，搜索框与工具按钮最小高 28 epx（A11Y-13 的目标下限为 24 epx）；行内紧凑按钮不低于 24 epx（指针目标见 CTL-10）；表格和列表行高 36 epx；审批决策按钮和确认面板按钮 44 epx（control-lg）。 |
 | NAV-01 | MUST | 一级页面扁平，不超过 8 个（C14），按 §3.2 排列；不再加深二级页签。 |
 | NAV-02 | MUST | 所有导航（人点击、快捷键、AI 控制）只经过 `MainWindow.Navigate(page)` 一个入口；守卫、快照与侧边栏同步只在这里实现。 |
-| NAV-03 | MUST | 当前位置始终可见：侧边栏当前项同时有选中底色、指示条和 SemiBold（C17），未选中项恢复 Regular；工具栏显示页名；`Window.Title` 为“<页名> – 自动化工程工作台”（SHOULD，对应 WCAG 2.4.2）。 |
+| NAV-03 | MUST | 当前位置始终可见：侧边栏当前项同时有选中底色、指示条和 SemiBold（C17），未选中项恢复 Regular；标题栏面包屑显示页名；`Window.Title` 为“<页名> – 自动化工程工作台”（SHOULD，对应 WCAG 2.4.2）。 |
 | NAV-04 | MUST | 侧边栏在 UIA 中是一组可选项：每项有名称、选中状态、`SizeOfSet` / `PositionInSet`；整组一个 Tab 停靠点，方向键切换。 |
 | NAV-05 | MUST | 暂不可用的页面保持可见但禁用，并说明原因（HelpText / ToolTip，如“连接 TIA 项目后可用”）；指向它的快捷键给出可见反馈，不静默无效。 |
 | NAV-06 | SHOULD | 每页使用 §3.1 的结构和三种页面类型之一。 |
 | NAV-07 | MUST | 切页后焦点可预期：人点击侧边栏时焦点留在该项；快捷键或 AI 切页时焦点放到页面标题或当前侧边栏项，绝不放到执行类或审批类按钮上；原焦点元素被折叠时恢复焦点。 |
-| NAV-08 | MUST | AI 可定位的页面白名单是一个 `WorkbenchPage` 枚举列表，不含审批页、设置页和 MCP 与客户端页（C15）。 |
+| NAV-08 | MUST | AI 可定位的页面白名单是一个 `WorkbenchPage` 枚举列表，不含审批、设置、MCP 和客户端页（C15）。 |
 | NAV-09 | SHOULD | F6 / Shift+F6 在区域间循环：侧边栏 → 工具栏 → 提示条 → 内容（列表 → 详情）；每个区域根元素有 `AutomationProperties.Name`。 |
 
 ## 4 组件
@@ -275,7 +298,7 @@ WPF 不画 CSS 阴影：测试禁止 `Effect`（`PrimerVocabularyTests`），阴
 
 | ID | 级别 | 规则 |
 |---|---|---|
-| STS-01 | MUST | 侧边栏底部状态行和提示条的每一项有文字（不只是圆点）和 UIA 名称；可交互的项是可聚焦的按钮，不用鼠标事件挂在面板上。 |
+| STS-01 | MUST | 底部状态栏和提示条的每一项有文字（不只是圆点）和 UIA 名称；可交互的项是可聚焦的按钮，不用鼠标事件挂在面板上。 |
 | STS-02 | MUST | 重要状态变化用 live region 播报（`AccessibleStatus`）：MCP 服务状态、会话连接 / 断开、AI 操作界面、预填待确认、长操作完成或失败用 Polite；新的待批请求与阻断性错误可用 Assertive。 |
 | STS-03 | MUST | 长操作显示进度：已知总量用确定进度，否则用不确定进度，旁边有说明当前操作的文字；进度放在发起处附近。 |
 | STS-04 | SHOULD | 后端支持取消的长操作（MCP 面板请求、图集生成、诊断包）提供“取消”。 |
@@ -373,7 +396,8 @@ WCAG 2.2 A/AA 是必须达到的底线，按 WCAG2ICT 对非 Web 软件的解释
 
 | 快捷键 | 动作 | 级别 |
 |---|---|---|
-| Ctrl+1 … Ctrl+8 | 依次切到审批、项目、版本控制、AI 调用、审计日志、环境体检、日志与诊断、MCP 与客户端（与侧边栏顺序一致） | MUST |
+| Ctrl+1 … Ctrl+7 | 依次切到项目、协作、MCP、客户端、检查、审计、日志 | MUST |
+| Ctrl+K | 打开命令面板；模态层打开时抑制全局快捷键 | MUST |
 | Ctrl+, | 打开设置 | MUST |
 | Ctrl+Tab / Ctrl+Shift+Tab | 下一个 / 上一个一级页 | SHOULD |
 | Ctrl+O | 打开项目选项 | MUST |
@@ -510,7 +534,7 @@ WCAG 2.2 A/AA 是必须达到的底线，按 WCAG2ICT 对非 Web 软件的解释
 | UI-14 | 指针目标过小：项目“⋯”按钮 20 × 16、审计“跳转”高 18、待批徽标高 20、安静按钮高 22、程序块行复选框 16 × 16 | CTL-10、A11Y-13 | 2.5.8 | 4.0 前（待核对） |
 | UI-16 | 没有 F6 区域切换（HeadingLevel 部分已完成） | NAV-09 | 2.4.1（按 SHOULD） | 4.0 后 |
 | UI-17 | 视图与样式中仍有小于 12 epx 的字面字号 | TYP-04、TYP-02 | 无（关联 1.4.4） | 4.0 前（待核对） |
-| UI-19 | 快捷键没有 ToolTip 与 `AcceleratorKey`；用户文档的 Ctrl+1 / Ctrl+2 与代码相反，并描述已删除的菜单栏 | CMD-05、KEY-07 | 无 | 4.0 前（待核对；Ctrl+1…8 顺序随 UI-2b 改） |
+| UI-19 | 快捷键没有 ToolTip 与 `AcceleratorKey`；用户文档的 Ctrl+1 / Ctrl+2 与代码相反，并描述已删除的菜单栏 | CMD-05、KEY-07 | 无 | 4.0 前（按 ADR 0036 核对） |
 | UI-20 | 不跟随 Windows“文本大小”；全局 `TextBlock` 默认截断，完整值只在不可聚焦元素的 ToolTip 中 | A11Y-09、TYP-06、LAY-06 | 1.4.4（部分） | 4.0 后 |
 | UI-21 | 嵌套的可交互元素与双重停靠点（AI 调用行内按钮、Expander 标题内的“修复”、程序块行复选框） | CTL-03、CTL-07 | 2.1.1 | 4.0 后 |
 | UI-22 | 页签用 `RadioButton`；复选框套按钮样式（“显示”“全部”）；“会话已锁定”用不可聚焦的复选框 | NAV-04、CTL-06 | 4.1.2（技术上满足） | 4.0 后（页签随 UI-2b 改为侧边栏） |
@@ -533,7 +557,7 @@ WCAG 2.2 A/AA 是必须达到的底线，按 WCAG2ICT 对非 Web 软件的解释
 | UI-46 | `Window.Title` 不含页名；产品名有“TIA 工作台”“TIA Workbench”等写法 | NAV-03、LOC-07 | 2.4.2（按 SHOULD） | 4.0 后 |
 | UI-47 | 硬编码文字与单位（“ · Software”、“PLC”“ID”、“60s”、“TIA Workbench”、“TIA Portal”消息框标题、“IO_FAILED: ”等） | LOC-01、LOC-03 | 3.1.2（轻微） | 4.0 前（待核对） |
 | UI-48 | 文案问题：英文全大写表头、“点击 / click”、中英不对等、“项目 / 工程 / 博途”混用、半角逗号、同一功能不同叫法、用位置指代 | TYP-05、TXT-02、TXT-03、TXT-06、LOC-06、LOC-07、LOC-09、CMD-09 | 1.3.3、3.2.4（轻微） | 4.0 前（待核对；“引擎”改“服务”随 UI-2d） |
-| UI-50 | 设计系统迁移未完成：外框仍是 216 epx 侧栏加顶栏；快捷键仍是 Ctrl+1 = MCP 与客户端、Ctrl+2 = 工程操作；审批与设置仍是抽屉；`WorkbenchPage` 仍含概览入口；悬停动效 0.12 s（`PrimerVocabularyTests` 固定），设计系统为 150 ms | §2.5、§3、§5、NAV-01、KEY-07 | 无 | 随 UI-2b…UI-2d；动效断言按设计值断言规则改 |
+| UI-50 | 原外框、导航顺序与动效差异由 ADR 0036 取代。 | §2.5、§3、§5、NAV-01、KEY-07 | 无 | 标题栏、活动栏与状态栏按 §3.1 验证 |
 
 已关闭，编号不复用：
 

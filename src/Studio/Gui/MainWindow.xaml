@@ -1,22 +1,23 @@
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" x:Class="TiaOpenness.Gui.MainWindow" Title="{l:Tr App.Title}" Width="1200" Height="780" MinWidth="1024" MinHeight="640" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize" Style="{StaticResource Ui.Window}">
   <shell:WindowChrome.WindowChrome>
-    <shell:WindowChrome CaptionHeight="44" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="6" UseAeroCaptionButtons="False"/>
+    <shell:WindowChrome CaptionHeight="38" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="6" UseAeroCaptionButtons="False"/>
   </shell:WindowChrome.WindowChrome>
   <Window.InputBindings>
     <KeyBinding Key="O" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Open}"/>
     <KeyBinding Key="S" Modifiers="Control" Command="{Binding Engineering.Save}"/>
     <KeyBinding Key="B" Modifiers="Control" Command="{Binding Engineering.Compile}"/>
-    <KeyBinding Key="D1" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Approvals"/>
-    <KeyBinding Key="D2" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Engineering"/>
-    <KeyBinding Key="D3" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="VersionControl"/>
-    <KeyBinding Key="D4" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Calls"/>
-    <KeyBinding Key="D5" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Audit"/>
-    <KeyBinding Key="D6" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Environment"/>
+    <KeyBinding Key="D1" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Engineering"/>
+    <KeyBinding Key="D2" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Agent"/>
+    <KeyBinding Key="D3" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Mcp"/>
+    <KeyBinding Key="D4" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Clients"/>
+    <KeyBinding Key="D5" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Environment"/>
+    <KeyBinding Key="D6" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Audit"/>
     <KeyBinding Key="D7" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Log"/>
-    <KeyBinding Key="D8" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Mcp"/>
+    <KeyBinding Key="K" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.CommandPalette}"/>
     <KeyBinding Key="OemComma" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Settings"/>
   </Window.InputBindings>
   <Window.CommandBindings>
+    <CommandBinding Command="{x:Static ux:WorkbenchCommands.CommandPalette}" Executed="OnCommandPalette" CanExecute="OnCanOpenPalette"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Open}" Executed="OnOpenExecuted"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Engineering}" Executed="OnPageExecuted"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Configuration}" Executed="OnPageExecuted"/>
@@ -26,90 +27,32 @@
     <Border Style="{StaticResource Primer.Frame}">
       <Grid>
         <Grid.RowDefinitions>
-          <RowDefinition Height="*"/>
-          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="38"/><RowDefinition/><RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Border x:Name="Sider" Width="232" Style="{StaticResource Primer.Workbench.Sider}">
-          <DockPanel>
-            <Grid DockPanel.Dock="Top" Height="44" Margin="16,0,12,0">
-              <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-              <Border VerticalAlignment="Center" Style="{StaticResource Primer.BrandDot}"/>
-              <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
-                <TextBlock x:Name="BrandTitle" Text="{l:Tr Shell.Brand}" FontWeight="SemiBold" TextWrapping="NoWrap" FontSize="{DynamicResource Ui.FontSize.Control}"/>
-                <TextBlock x:Name="BrandVersion" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}">
-                  <Run x:Name="RailVersion"/>
-                </TextBlock>
-              </StackPanel>
-            </Grid>
-            <StackPanel DockPanel.Dock="Bottom">
-              <RadioButton x:Name="SettingsButton" AutomationProperties.Name="{l:Tr Shell.Settings}" Content="{l:Tr Shell.Settings}" GroupName="Pages"
-                AutomationProperties.AcceleratorKey="Ctrl+," Tag="Settings" ux:Ux.Icon="{DynamicResource Icon.Setting}"
-                Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
-              <Button x:Name="SiderToggle" AutomationProperties.Name="{l:Tr Shell.CollapseMenu}" Content="{l:Tr Shell.CollapseMenu}" ux:Ux.Icon="{DynamicResource Icon.MenuFold}" Style="{StaticResource Primer.MenuButton}" Click="OnSiderToggle" Height="36" Margin="8,4,8,8"/>
-            </StackPanel>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
-              <StackPanel x:Name="SiderMenu">
-                <Grid>
-                  <RadioButton x:Name="RailApprovals" AutomationProperties.Name="{l:Tr Shell.Approvals}" Content="{l:Tr Shell.Approvals}" GroupName="Pages"
-                    AutomationProperties.AcceleratorKey="Ctrl+1" Tag="Approvals" ux:Ux.Icon="{DynamicResource Icon.Bell}"
-                    Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
-                  <Button x:Name="PendingBadge" AutomationProperties.Name="{l:Tr Shell.PendingTitle}" Style="{StaticResource Primer.Workbench.PendingBadge}"
-                    Click="OnApprovals" Visibility="Collapsed"/>
-                </Grid>
-                <RadioButton x:Name="RailEngineering" AutomationProperties.Name="{l:Tr Shell.Engineering}" Content="{l:Tr Shell.Engineering}" GroupName="Pages"
-                  AutomationProperties.AcceleratorKey="Ctrl+2" Tag="Engineering" ux:Ux.Icon="{DynamicResource Icon.Project}"
-                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
-                <RadioButton x:Name="RailVersionControl" AutomationProperties.Name="{l:Tr Shell.VersionControl}" Content="{l:Tr Shell.VersionControl}"
-                  GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+3" Tag="VersionControl" ux:Ux.Icon="{DynamicResource Icon.Branch}"
-                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
-                <TextBlock Text="{l:Tr Shell.GroupAi}" Style="{StaticResource Primer.Workbench.MenuGroup}"/>
-                <RadioButton x:Name="RailCalls" AutomationProperties.Name="{l:Tr Shell.Calls}" GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+4"
-                  Tag="Calls" ux:Ux.Icon="{DynamicResource Icon.Robot}" Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick">
-                  <DockPanel>
-                    <Border x:Name="CallsCountBadge" DockPanel.Dock="Right" Style="{StaticResource Primer.TabCountBadge}" Tag="{Binding DataContext.Calls.Count,ElementName=CallsContent}" Margin="6,0,0,0">
-                      <TextBlock Text="{Binding DataContext.Calls.Count,ElementName=CallsContent}" Style="{StaticResource Primer.CountText}"/>
-                    </Border>
-                    <TextBlock Text="{l:Tr Shell.Calls}"/>
-                  </DockPanel>
-                </RadioButton>
-                <RadioButton x:Name="RailAudit" AutomationProperties.Name="{l:Tr Shell.Audit}" Content="{l:Tr Shell.Audit}" GroupName="Pages"
-                  AutomationProperties.AcceleratorKey="Ctrl+5" Tag="Audit" ux:Ux.Icon="{DynamicResource Icon.Audit}"
-                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
-                <TextBlock Text="{l:Tr Shell.GroupOperations}" Style="{StaticResource Primer.Workbench.MenuGroup}"/>
-                <Grid>
-                  <RadioButton x:Name="RailEnvironment" AutomationProperties.Name="{l:Tr Shell.Environment}" Content="{l:Tr Shell.Environment}"
-                    GroupName="Pages" AutomationProperties.AcceleratorKey="Ctrl+6" Tag="Environment" ux:Ux.Icon="{DynamicResource Icon.Health}"
-                    Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
-                  <Border x:Name="EnvironmentCountBadge" Style="{StaticResource Primer.Workbench.AttentionBadge}"
-                    Tag="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}"
-                    AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}"
-                    ToolTip="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}">
-                    <TextBlock Text="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}" Style="{StaticResource Primer.CountText}"/>
-                  </Border>
-                </Grid>
-                <RadioButton x:Name="RailLog" AutomationProperties.Name="{l:Tr Shell.Logs}" Content="{l:Tr Shell.Logs}" GroupName="Pages"
-                  AutomationProperties.AcceleratorKey="Ctrl+7" Tag="Log" ux:Ux.Icon="{DynamicResource Icon.FileText}"
-                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
-                <RadioButton x:Name="RailMcp" AutomationProperties.Name="{l:Tr Desktop.Configuration}" Content="{l:Tr Desktop.Configuration}" GroupName="Pages"
-                  AutomationProperties.AcceleratorKey="Ctrl+8" Tag="Mcp" ux:Ux.Icon="{DynamicResource Icon.Api}"
-                  Style="{StaticResource Primer.Workbench.NavItem}" Click="OnRailClick"/>
-              </StackPanel>
-            </ScrollViewer>
-          </DockPanel>
-        </Border>
-        <Grid Grid.Column="1">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-          </Grid.RowDefinitions>
-          <Border Style="{StaticResource Primer.HeaderBar}">
-            <DockPanel x:Name="CaptionBar" Height="44" Margin="20,0,8,0" LastChildFill="True">
-              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="60"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <Border Grid.ColumnSpan="2" Style="{StaticResource Primer.HeaderBar}">
+          <Grid x:Name="CaptionBar">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <DockPanel Margin="12,0,8,0">
+              <TextBlock x:Name="BrandTitle" Text="{l:Tr Shell.Brand}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <Path Data="{StaticResource Icon.ChevronRight}" Style="{StaticResource Primer.Icon}" Width="12" Height="12" Margin="8,0"/>
+              <TextBlock x:Name="CurrentPageTitle" Style="{StaticResource Primer.Workbench.PageTitle}" Focusable="True"
+                FocusVisualStyle="{StaticResource Primer.Focus}" KeyboardNavigation.IsTabStop="False" AutomationProperties.HeadingLevel="Level1"/>
+            </DockPanel>
+            <Button x:Name="CommandPaletteButton" Grid.Column="1" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+              AutomationProperties.Name="{l:Tr Shell.CommandPalette}" AutomationProperties.AcceleratorKey="Ctrl+K"
+              Style="{StaticResource Primer.IdeToolButton}" Command="{x:Static ux:WorkbenchCommands.CommandPalette}"
+              VerticalAlignment="Center" Width="320">
+              <DockPanel>
+                <Path DockPanel.Dock="Left" Data="{StaticResource Icon.Search}" Style="{StaticResource Primer.Icon}" Margin="0,0,8,0"/>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding Path=(AutomationProperties.AcceleratorKey),ElementName=CommandPaletteButton}"
+                  Margin="8,0,0,0" Style="{StaticResource Primer.Mono}"/>
+                <TextBlock Text="{l:Tr Shell.CommandPalette}"/>
+              </DockPanel>
+            </Button>
+            <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+              <Button x:Name="LeftPaneToggle" AutomationProperties.Name="{l:Tr Shell.LeftPane}" Content="{l:Tr Shell.LeftPane}"
+                ux:Ux.Icon="{DynamicResource Icon.MenuFold}" Style="{StaticResource Primer.HeaderIconButton}" Click="OnLeftPaneToggle"/>
                 <Button x:Name="QuickThemeButton" AutomationProperties.Name="{l:Tr Shell.ToggleTheme}" Content="{l:Tr Shell.ToggleTheme}" ux:Ux.Icon="{DynamicResource Icon.Theme}" Style="{StaticResource Primer.HeaderIconButton}" Click="OnToggleTheme" Margin="0,0,4,0"/>
                 <Button x:Name="MinimizeWindowButton" AutomationProperties.Name="{l:Tr Access.Minimize}" Style="{StaticResource Primer.WindowButton}" Click="OnMinimize">
                   <Path Width="10" Height="10" Data="M0,5 L10,5" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
@@ -120,14 +63,78 @@
                 <Button x:Name="CloseWindowButton" AutomationProperties.Name="{l:Tr Access.Close}" Style="{StaticResource Primer.WindowButton}" Click="OnClose">
                   <Path Width="10" Height="10" Data="M0.5,0.5 L9.5,9.5 M9.5,0.5 L0.5,9.5" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
                 </Button>
-              </StackPanel>
-              <Button x:Name="ApprovalsButton" DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Shell.PendingTitle}" Style="{StaticResource Primer.PendingBadge}" Click="OnApprovals" Visibility="Collapsed" Margin="0,0,8,0" shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
-              <ContentControl x:Name="PageActions" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
-              <TextBlock x:Name="CurrentPageTitle" Style="{StaticResource Primer.Workbench.PageTitle}" Focusable="True"
-                FocusVisualStyle="{StaticResource Primer.Focus}" KeyboardNavigation.IsTabStop="False" AutomationProperties.HeadingLevel="Level1"/>
-            </DockPanel>
-          </Border>
-          <Border x:Name="SafetyBanner" Grid.Row="1" Style="{StaticResource Primer.Workbench.SafetyBanner}" Visibility="Collapsed">
+            </StackPanel>
+          </Grid>
+        </Border>
+        <Border x:Name="Sider" Grid.Row="1" Width="60" Style="{StaticResource Primer.Workbench.Sider}">
+          <Grid x:Name="SiderMenu" KeyboardNavigation.TabNavigation="Once" PreviewKeyDown="OnRailKeyDown">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/><RowDefinition/><RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <RadioButton x:Name="RailEngineering" Grid.Row="0" GroupName="Pages" Tag="Engineering"
+              AutomationProperties.AcceleratorKey="Ctrl+1" AutomationProperties.Name="{l:Tr Rail.Project}"
+              AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="1" Content="{l:Tr Rail.Project}"
+              ux:Ux.Icon="{DynamicResource Icon.Project}" Style="{StaticResource Primer.Workbench.NavItem}"
+              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Engineering"/>
+            <StackPanel Grid.Row="1">
+              <RadioButton x:Name="RailAgent" GroupName="Pages" Tag="Agent"
+                AutomationProperties.AcceleratorKey="Ctrl+2" AutomationProperties.Name="{l:Tr Rail.Agent}"
+                AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="2" Content="{l:Tr Rail.Agent}"
+                ux:Ux.Icon="{DynamicResource Icon.Robot}" Style="{StaticResource Primer.Workbench.NavItem}"
+                Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Agent"/>
+              <WrapPanel HorizontalAlignment="Center">
+                <Border x:Name="CallsCountBadge" Style="{StaticResource Primer.Workbench.CallsCountBadge}" IsHitTestVisible="False"
+                  Tag="{Binding DataContext.Calls.Count,ElementName=CallsContent}">
+                  <TextBlock Text="{Binding DataContext.Calls.Count,ElementName=CallsContent}" Style="{StaticResource Primer.CountText}"/>
+                </Border>
+                <Button x:Name="PendingBadge" Focusable="False" Visibility="Collapsed"
+                  AutomationProperties.LiveSetting="Polite" AutomationProperties.Name="{l:Tr Shell.PendingTitle}"
+                  Style="{StaticResource Primer.Workbench.PendingBadge}" Click="OnApprovals"/>
+              </WrapPanel>
+            </StackPanel>
+            <RadioButton x:Name="RailMcp" Grid.Row="2" GroupName="Pages" Tag="Mcp" AutomationProperties.HelpText="{l:Tr Desktop.Configuration}"
+              AutomationProperties.AcceleratorKey="Ctrl+3" AutomationProperties.Name="{x:Static l:Strings.McpRailLabel}"
+              AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="3" Content="{x:Static l:Strings.McpRailLabel}"
+              ux:Ux.Icon="{DynamicResource Icon.Api}" Style="{StaticResource Primer.Workbench.NavItem}"
+              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Mcp"/>
+            <RadioButton x:Name="RailClients" Grid.Row="3" GroupName="Pages" Tag="Clients"
+              AutomationProperties.AcceleratorKey="Ctrl+4" AutomationProperties.Name="{l:Tr Rail.Clients}"
+              AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="4" Content="{l:Tr Rail.Clients}"
+              ux:Ux.Icon="{DynamicResource Icon.Link}" Style="{StaticResource Primer.Workbench.NavItem}"
+              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Clients"/>
+            <RadioButton x:Name="RailEnvironment" Grid.Row="4" GroupName="Pages" Tag="Environment"
+              AutomationProperties.AcceleratorKey="Ctrl+5" AutomationProperties.Name="{l:Tr Rail.Doctor}"
+              AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="5" Content="{l:Tr Rail.Doctor}"
+              ux:Ux.Icon="{DynamicResource Icon.Health}" Style="{StaticResource Primer.Workbench.NavItem}"
+              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Environment"/>
+            <RadioButton x:Name="RailAudit" Grid.Row="5" GroupName="Pages" Tag="Audit"
+              AutomationProperties.AcceleratorKey="Ctrl+6" AutomationProperties.Name="{l:Tr Rail.Audit}"
+              AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="6" Content="{l:Tr Rail.Audit}"
+              ux:Ux.Icon="{DynamicResource Icon.Audit}" Style="{StaticResource Primer.Workbench.NavItem}"
+              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Audit"/>
+            <RadioButton x:Name="RailLog" Grid.Row="6" GroupName="Pages" Tag="Log"
+              AutomationProperties.AcceleratorKey="Ctrl+7" AutomationProperties.Name="{l:Tr Rail.Logs}"
+              AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="7" Content="{l:Tr Rail.Logs}"
+              ux:Ux.Icon="{DynamicResource Icon.FileText}" Style="{StaticResource Primer.Workbench.NavItem}"
+              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Log"/>
+            <RadioButton x:Name="SettingsButton" Grid.Row="8" GroupName="Pages" Tag="Settings"
+              AutomationProperties.AcceleratorKey="Ctrl+," AutomationProperties.Name="{l:Tr Rail.Settings}"
+              AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="8" Content="{l:Tr Rail.Settings}"
+              ux:Ux.Icon="{DynamicResource Icon.Setting}" Style="{StaticResource Primer.Workbench.NavItem}"
+              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Settings"/>
+            <Border x:Name="EnvironmentCountBadge" Grid.Row="4" Style="{StaticResource Primer.Workbench.AttentionBadge}"
+              Tag="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}"
+              AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}"
+              ToolTip="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}">
+              <TextBlock Text="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}" Style="{StaticResource Primer.CountText}"/>
+            </Border>
+          </Grid>
+        </Border>
+        <Grid Grid.Row="1" Grid.Column="1">
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
+          <Border x:Name="SafetyBanner" Style="{StaticResource Primer.Workbench.SafetyBanner}" Visibility="Collapsed">
             <Grid>
               <Border Style="{StaticResource Primer.Plain}" x:Name="ApprovalOffPill" AutomationProperties.Name="{l:Tr Shell.ApprovalOff}"
                 Visibility="Collapsed">
@@ -141,37 +148,51 @@
               <TextBlock x:Name="ControlStatus" AutomationProperties.LiveSetting="Polite" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Visibility="Collapsed"/>
             </Grid>
           </Border>
-          <Grid Grid.Row="2" Margin="20,16">
+          <Grid Grid.Row="1" Margin="16,12">
             <views:SettingsView x:Name="SettingsContent" Visibility="Collapsed"/>
             <views:ApprovalsDrawer x:Name="ApprovalsContent" Visibility="Collapsed"/>
             <ContentControl x:Name="ConfigurationHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
-            <views:AiCallsView x:Name="CallsContent" Visibility="Collapsed"/>
+            <ContentControl x:Name="ClientsHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
+            <Grid x:Name="CallsPage" Visibility="Collapsed">
+              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+              <views:AiCallsView x:Name="CallsContent" Visibility="Collapsed"/>
+              <Grid x:Name="DockedInspector" AutomationProperties.Name="{l:Tr Calls.Detail}" Grid.Column="1" Width="344" Visibility="Collapsed"/>
+            </Grid>
             <views:AuditLogView x:Name="AuditContent" Visibility="Collapsed"/>
             <views:EnvironmentView x:Name="EnvironmentContent" Visibility="Collapsed"/>
-            <!-- 项目: page head and program blocks on the left, the result cards in a full-height column on the right. -->
-            <Grid x:Name="EngineeringPage" ux:ResponsiveLayout.Enabled="True">
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-              </Grid.RowDefinitions>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="300"/>
-              </Grid.ColumnDefinitions>
-              <views:ProjectOperationsView x:Name="OperationsContent" Panel.ZIndex="1" Tag="{Binding Tag,ElementName=Root}"/>
-              <views:BlocksView x:Name="BlocksContent" Grid.Row="1" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
-              <views:EngineeringSideView x:Name="EngineeringSideContent" Grid.RowSpan="2" Grid.Column="2" Tag="{Binding Tag,ElementName=Root}"/>
+            <Grid x:Name="EngineeringPage">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+              <ContentControl x:Name="ProjectTree" Focusable="True" KeyboardNavigation.IsTabStop="False" AutomationProperties.Name="{l:Tr Rail.Project}"
+                AutomationProperties.HelpText="{Binding Text,ElementName=SessionStatus}" Style="{StaticResource Primer.Workbench.ProjectTree}"/>
+              <Grid x:Name="ProjectOverview" Grid.Column="1" ux:ResponsiveLayout.Enabled="True">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="16"/>
+                  <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
+                <views:ProjectOperationsView x:Name="OperationsContent" Panel.ZIndex="1" Tag="{Binding Tag,ElementName=Root}"/>
+                <views:BlocksView x:Name="BlocksContent" Grid.Row="1" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
+                <views:EngineeringSideView x:Name="EngineeringSideContent" Grid.RowSpan="2" Grid.Column="2" Tag="{Binding Tag,ElementName=Root}"/>
+              </Grid>
+              <ContentControl x:Name="PlcTagsContent" Grid.Column="1" Visibility="Collapsed"/>
+              <views:VersionControlView x:Name="VersionControlContent" Grid.Column="1" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
             </Grid>
-            <views:VersionControlView x:Name="VersionControlContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
             <views:LogView x:Name="LogContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
           </Grid>
         </Grid>
-        <Border x:Name="IdeStatusBar" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Primer.Workbench.StatusBar}">
+        <Border x:Name="IdeStatusBar" Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource Primer.Workbench.StatusBar}">
           <Grid x:Name="StatusInformation">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*"/>
               <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Button x:Name="SessionStatusButton" Grid.Column="0" HorizontalAlignment="Left" Style="{StaticResource Primer.Workbench.StatusButton}"
@@ -199,11 +220,22 @@
                 <TextBlock x:Name="ApprovalStatusText" Style="{StaticResource Primer.Workbench.StatusText}"/>
               </DockPanel>
             </Button>
+            <DockPanel x:Name="ParticipantStatus" Grid.Column="3" Margin="8,0">
+              <TextBlock x:Name="TiaProcessStatus" DockPanel.Dock="Right" Style="{StaticResource Primer.Workbench.StatusText}" Margin="4,0,0,0"/>
+              <TextBlock x:Name="ClientStatus" Style="{StaticResource Primer.Workbench.StatusText}" MaxWidth="220"
+                ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+            </DockPanel>
+            <TextBlock x:Name="CompileStatus" Grid.Column="4" Style="{StaticResource Primer.Workbench.StatusText}" Visibility="Collapsed" Margin="8,0"/>
+            <TextBlock x:Name="AuditHead" Grid.Column="5" Style="{StaticResource Primer.Workbench.StatusText}" Margin="8,0"/>
+            <TextBlock x:Name="BrandVersion" Grid.Column="6" Style="{StaticResource Primer.Workbench.StatusText}" Margin="8,0">
+              <Run x:Name="RailVersion"/>
+            </TextBlock>
           </Grid>
         </Border>
       </Grid>
     </Border>
-    <Border VerticalAlignment="Bottom" Margin="240,0,348,40" Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Container}">
+    <Border VerticalAlignment="Bottom" Margin="80,0,24,36"
+      Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Container}">
       <StackPanel>
         <TextBlock AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Activity.Status}" Text="{Binding Activity.Status}" Style="{StaticResource Primer.Muted}"/>
         <ProgressBar Height="3" Margin="0,6,0,0" IsIndeterminate="{Binding Activity.ProgressIndeterminate}" Maximum="{Binding Activity.ProgressMax}" Value="{Binding Activity.ProgressValue,Mode=OneWay}"/>
@@ -221,12 +253,17 @@
           <Border Padding="24,0" Style="{StaticResource Primer.Divider}">
             <DockPanel x:Name="DrawerHeading" DataContext="{x:Null}">
               <Button DockPanel.Dock="Right" Content="" AutomationProperties.Name="{l:Tr Access.CloseDrawer}" Style="{StaticResource Primer.CaptionButton}" Click="OnCloseDrawer"/>
-              <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock x:Name="DrawerTitle" Focusable="True" FocusVisualStyle="{StaticResource Primer.Focus}" KeyboardNavigation.IsTabStop="False" AutomationProperties.HeadingLevel="Level1" FontSize="{DynamicResource Ui.FontSize.Section}" FontWeight="SemiBold" VerticalAlignment="Center" MaxWidth="300"/>
-                <ContentControl x:Name="DrawerCallResult" Style="{StaticResource Primer.StatusChip}" Tag="{Binding SelectedCall.Tone}" Margin="10,0,0,0" Visibility="Collapsed">
+              <Grid VerticalAlignment="Center">
+                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock x:Name="DrawerTitle" Focusable="True" FocusVisualStyle="{StaticResource Primer.Focus}"
+                  KeyboardNavigation.IsTabStop="False" AutomationProperties.HeadingLevel="Level1" FontWeight="SemiBold"
+                  FontSize="{DynamicResource Ui.FontSize.Section}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                  ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+                <ContentControl x:Name="DrawerCallResult" Grid.Column="1" Style="{StaticResource Primer.StatusChip}"
+                  Tag="{Binding SelectedCall.Tone}" Margin="8,0,0,0" Visibility="Collapsed">
                   <TextBlock Text="{Binding SelectedCall.Result}" Style="{StaticResource Primer.StatusText}"/>
                 </ContentControl>
-              </StackPanel>
+              </Grid>
             </DockPanel>
           </Border>
           <views:CallDetailDrawer x:Name="CallDetailContent" Grid.Row="1" Visibility="Collapsed"/>
@@ -234,7 +271,8 @@
       </Border>
     </Grid>
     <ContentControl Style="{StaticResource Primer.Shadow}" Width="{Binding ActualWidth,ElementName=Toast}" Height="{Binding ActualHeight,ElementName=Toast}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="{Binding Margin,ElementName=Toast}" Visibility="{Binding Visibility,ElementName=Toast}"/>
-    <Border x:Name="Toast" Width="320" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16,0,16,36" Visibility="Collapsed" Style="{StaticResource Primer.Toast}">
+    <Border x:Name="Toast" Width="320" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16,0,16,40"
+      Visibility="Collapsed" Style="{StaticResource Primer.Toast}">
       <DockPanel>
         <Button Content="" AutomationProperties.Name="{l:Tr Access.Dismiss}" DockPanel.Dock="Right" Style="{StaticResource Primer.CaptionButton}" Click="OnDismissToast"/>
         <Border Width="34" Height="34" Margin="0,0,12,0" Style="{StaticResource Primer.WarningIcon}">
@@ -247,5 +285,6 @@
         </StackPanel>
       </DockPanel>
     </Border>
+    <Grid x:Name="OverlayHost" Visibility="Collapsed"/>
   </Grid>
 </Window>

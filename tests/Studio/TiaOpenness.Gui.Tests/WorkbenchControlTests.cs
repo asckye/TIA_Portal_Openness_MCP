@@ -67,6 +67,58 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
     internal static string Scratch(string name) => Path.GetFullPath(Path.Combine(Path.GetTempPath(), "tia-workbench-control-" + name + "-" + Guid.NewGuid().ToString("N")));
 
     [Theory]
+    [InlineData(1200, false)]
+    [InlineData(1259, false)]
+    [InlineData(1260, true)]
+    [InlineData(1366, true)]
+    public void Calls_inspector_preserves_the_control_record_and_modal_boundary(int width, bool docked)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                var host = WorkbenchRenderTests.CreateHost(window, width, 780);
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.DisplayCall)).Status);
+                WpfContext.Drain(); host.UpdateLayout();
+                var detail = (Views.CallDetailDrawer)window.FindName("CallDetailContent");
+                WpfContext.Complete(window.ReadControlDetailAsync(CallId, () => new WorkbenchControlLog.Activity("ShowWorkbenchCall", "done")));
+                Assert.Contains("ShowWorkbenchCall", ((TextBlock)detail.FindName("ControlActivity")).Text);
+                var panel = (Border)window.FindName("DrawerPanel");
+                Assert.Equal(docked ? 344 : 520, panel.ActualWidth);
+                Assert.Same(window.FindName(docked ? "DockedInspector" : "DrawerOverlay"), panel.Parent);
+                var inspector = (Grid)window.FindName("DockedInspector");
+                Assert.Equal(Loc.Current["Calls.Detail"], System.Windows.Automation.AutomationProperties.GetName(inspector));
+                Assert.Equal(docked, Controls.WorkbenchCommands.CommandPalette.CanExecute(null, host));
+                Assert.Equal(docked ? Visibility.Collapsed : Visibility.Visible, ((Grid)window.FindName("DrawerOverlay")).Visibility);
+                var navigation = window.ApplyControl(Request());
+                if (docked) Assert.Equal(WorkbenchControlStatus.Done, navigation.Status);
+                else Assert.Equal("workbench-modal-open", navigation.Refusal?.Condition);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Clients_is_a_human_navigation_target_outside_the_control_protocol()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                window.Navigate("Clients");
+                Assert.True(((RadioButton)window.FindName("RailClients")).IsChecked);
+                Assert.Equal(Visibility.Visible, ((ContentControl)window.FindName("ClientsHost")).Visibility);
+                Assert.DoesNotContain("Clients", Enum.GetNames<WorkbenchPage>());
+                WpfContext.Drain();
+                Assert.Null(window.ControlSurface.Snapshot.Read(new WorkbenchReadStateArguments()).Page);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
     [InlineData(4)] [InlineData(5)] [InlineData(6)] [InlineData(7)]
     public void Each_operation_uses_loaded_window_state_without_native_calls(int operation)

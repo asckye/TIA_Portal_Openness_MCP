@@ -114,6 +114,90 @@ public class MainWindowTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Ide_toolbar_controls_use_shared_sizes_and_selection_boundaries()
+    {
+        wpf.Run(() =>
+        {
+            using var rendered = Render();
+            var window = rendered.Window;
+            Assert.Equal(38, ((Grid)window.FindName("CaptionBar")).ActualHeight);
+            foreach (var name in new[] { "MinimizeWindowButton", "MaximizeWindowButton", "CloseWindowButton" })
+            {
+                var button = (Button)window.FindName(name);
+                Assert.Equal(46, button.ActualWidth); Assert.Equal(38, button.ActualHeight);
+            }
+            Assert.Equal(26, ((Border)window.FindName("IdeStatusBar")).MinHeight);
+            foreach (string name in new[] { "SessionStatusButton", "McpStatusButton", "ApprovalStatusButton" })
+                Assert.Equal(24, ((Button)window.FindName(name)).ActualHeight);
+
+            FrameworkElement Styled(FrameworkElement element, string style)
+            {
+                element.Style = (Style)Application.Current.FindResource("Primer." + style);
+                return element;
+            }
+            void GrowsWithContent(FrameworkElement element, int minimum)
+            {
+                Assert.Equal(minimum, element.MinHeight);
+                Assert.True(double.IsNaN(element.Height));
+                element.Measure(new Size(320, double.PositiveInfinity));
+                Assert.True(element.DesiredSize.Height > minimum);
+            }
+            GrowsWithContent(Styled(new Border { Child = new Border { Height = 64 } }, "IdeBar"), 44);
+            GrowsWithContent(Styled(new Border { Child = new Border { Height = 64 } }, "IdeSubBar"), 38);
+            GrowsWithContent(Styled(new Button { Content = new Border { Height = 64 } }, "IdeToolButton"), 28);
+            var search = (TextBox)Styled(new TextBox { Text = "first\nsecond\nthird" }, "IdeSearch");
+            GrowsWithContent(search, 28);
+            var boundary = Application.Current.FindResource("Primer.inputBorder");
+            Assert.Same(boundary, search.BorderBrush);
+            Assert.Same(boundary, ((Border)Styled(new Border(), "IdeChip")).BorderBrush);
+            var pill = (RadioButton)Styled(new RadioButton(), "IdePill"); pill.IsChecked = true;
+            Assert.Equal(28, pill.Height); Assert.Equal(FontWeights.SemiBold, pill.FontWeight);
+            Assert.Same(Application.Current.FindResource("Primer.accent"), pill.BorderBrush);
+            foreach (string style in new[] { "SelRow", "Tile" })
+            {
+                var selection = (ToggleButton)Styled(new RadioButton(), style);
+                Assert.Same(boundary, selection.BorderBrush);
+                selection.IsChecked = true;
+                Assert.Same(Application.Current.FindResource("Primer.accent"), selection.BorderBrush);
+            }
+        });
+    }
+
+    [Fact]
+    public void Status_counts_are_bound_to_completed_compile_and_current_verified_head()
+    {
+        wpf.Run(() =>
+        {
+            var model = ProjectPageTestSupport.Model();
+            var window = new MainWindow(model, false, FeaturePageFixtures.Approvals(false));
+            try
+            {
+                var audit = new FeaturePageFixtures.Audit();
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), audit, new FeaturePageFixtures.Environment());
+                var compile = (TextBlock)window.FindName("CompileStatus");
+                Assert.Null(model.Engineering.LastCompile);
+                Assert.Equal(Visibility.Collapsed, compile.Visibility);
+                model.Engineering.Compile.Execute(null); WpfContext.Drain();
+                Assert.NotNull(model.Engineering.LastCompile);
+                Assert.Equal(Visibility.Visible, compile.Visibility);
+                Assert.Equal(Loc.Current.T("Shell.CompileCounts", 0, 0), compile.Text);
+
+                var head = (TextBlock)window.FindName("AuditHead");
+                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1239), head.Text);
+                WpfContext.Complete(window.Features.VerifyAsync());
+                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1239) + " ✓", head.Text);
+                audit.Events = audit.Events.Append(audit.Events[0] with { Index = 1240 }).ToArray();
+                window.Navigate("Calls");
+                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1240), head.Text);
+                audit.Broken = true;
+                WpfContext.Complete(window.Features.VerifyAsync());
+                Assert.Equal(Loc.Current.T("Shell.AuditHead", 1240), head.Text);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Renders_in_chinese_as_well_as_english()
     {
         wpf.RunWithLanguage(AppLanguage.Chinese, () =>
@@ -155,10 +239,14 @@ public class MainWindowTests(WpfContext wpf)
                 using var rendered = Render();
 
                 var expected = ((SolidColorBrush)Application.Current.FindResource("Primer.titlebar")).Color;
-                var actual = PixelAt(rendered.Bitmap, Width / 2, 6);
-
-                Assert.Equal(255, actual.A);
-                Assert.Equal(expected, actual);
+                var search = (Button)rendered.Window.FindName("CommandPaletteButton");
+                var bounds = search.TransformToAncestor(rendered.Host).TransformBounds(new Rect(search.RenderSize));
+                foreach (int x in new[] { (int)bounds.Left - 4, (int)bounds.Right + 4 })
+                {
+                    var actual = PixelAt(rendered.Bitmap, x, 6);
+                    Assert.Equal(255, actual.A);
+                    Assert.Equal(expected, actual);
+                }
             }
             finally
             {
@@ -173,7 +261,7 @@ public class MainWindowTests(WpfContext wpf)
     /// means its binding did not resolve.
     /// </summary>
     [Theory]
-    [InlineData("Pages", 9)]
+    [InlineData("Pages", 8)]
     [InlineData("SyncDirection", 2)]
     public void Every_picker_group_has_one_and_only_one_choice(string group, int expectedSegments)
     {

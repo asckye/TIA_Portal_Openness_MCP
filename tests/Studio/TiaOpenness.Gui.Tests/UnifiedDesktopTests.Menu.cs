@@ -71,27 +71,31 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Null(window.FindName("MenuBar"));
                 Assert.Null(window.FindName("SidebarCard"));
                 Assert.Null(window.FindName("RailCard"));
-                Assert.Equal(36, ((RadioButton)window.FindName("RailEngineering")).Height);
-                var pages = new[] { "Approvals", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log", "Mcp" };
+                Assert.Equal(48, ((RadioButton)window.FindName("RailEngineering")).Height);
+                var pages = new[] { "Engineering", "Agent", "Mcp", "Clients", "Environment", "Audit", "Log" };
                 for (int i = 0; i < pages.Length; i++)
                 {
                     var shortcut = window.InputBindings.OfType<KeyBinding>().Single(x => x.Key == Key.D1 + i);
                     Assert.Equal(pages[i], shortcut.CommandParameter);
                     Assert.Same(WorkbenchCommands.Navigate, shortcut.Command);
                     var rail = (RadioButton)window.FindName("Rail" + pages[i]);
-                    if (pages[i] == "VersionControl")
-                    {
-                        Assert.False(rail.IsEnabled);
-                        Assert.True(WorkbenchCommands.Navigate.CanExecute(pages[i], window));
-                        WorkbenchCommands.Navigate.Execute(pages[i], window);
-                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility);
-                        Assert.Equal(rail.ToolTip, ((TextBlock)window.FindName("ToastMessage")).Text);
-                        continue;
-                    }
+                    Assert.Equal(ModifierKeys.Control, shortcut.Modifiers);
+                    var accelerator = System.Windows.Automation.AutomationProperties.GetAcceleratorKey(rail);
+                    Assert.Equal("Ctrl+" + (i + 1), accelerator);
+                    Assert.Contains(accelerator, (string)rail.ToolTip);
+                    Assert.Equal(i + 1, System.Windows.Automation.AutomationProperties.GetPositionInSet(rail));
+                    Assert.Equal(8, System.Windows.Automation.AutomationProperties.GetSizeOfSet(rail));
                     WorkbenchCommands.Navigate.Execute(pages[i], window);
                     Assert.True(rail.IsChecked);
                     Assert.True(WorkbenchCommands.Open.CanExecute(null, window));
                 }
+                Assert.DoesNotContain(window.InputBindings.OfType<KeyBinding>(), binding => binding.Key == Key.D8);
+                Assert.True(WorkbenchCommands.Navigate.CanExecute("VersionControl", window));
+                WorkbenchCommands.Navigate.Execute("VersionControl", window);
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility);
+                Assert.Equal(Loc.Current["Shell.NoProject"], ((TextBlock)window.FindName("ToastMessage")).Text);
+                Assert.False(((MainViewModel)window.DataContext).IsVcTab);
+                Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("VersionControlContent")).Visibility);
                 WorkbenchCommands.Open.Execute(null, window);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)ProjectPageTestSupport.Find(window, "OptionsOverlay")).Visibility);
                 window.OpenSettings();
@@ -99,7 +103,8 @@ public sealed partial class UnifiedDesktopTests
                 var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
                 Assert.Equal(Visibility.Visible, settings.Visibility);
                 Assert.Equal(3, ((ListBox)settings.FindName("SectionList")).Items.Count);
-                Assert.Equal(320, ((Grid)settings.Content).ColumnDefinitions[0].Width.Value);
+                var sectionList = (ListBox)settings.FindName("SectionList");
+                Assert.Equal(236, ((Border)sectionList.Parent).Width);
                 foreach (string name in new[] { "CheckUpdate", "RunUpdate", "OpenReleases", "OpenProjectPage", "OpenConfig", "OpenLog", "OpenData" })
                     Assert.IsType<Button>(settings.FindName(name));
                 ClickControl((RadioButton)settings.FindName("Chinese"));
@@ -128,15 +133,191 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Equal(ModifierKeys.Control, settingsShortcut.Modifiers);
                 Assert.Equal("Settings", settingsShortcut.CommandParameter);
                 ClickControl((Button)window.FindName("McpStatusButton")); AssertPage(window, true);
-                ClickControl((Button)window.FindName("SessionStatusButton")); AssertPage(window, false);
+                ClickControl((Button)window.FindName("SessionStatusButton")); AssertPage(window, true);
+                bool approvalEnabled = window.Approvals.Enabled, controlEnabled = App.Settings.WorkbenchControlEnabled;
                 ClickControl((Button)window.FindName("ApprovalStatusButton"));
-                Assert.True(((RadioButton)window.FindName("SettingsButton")).IsChecked);
+                Assert.Equal(approvalEnabled, window.Approvals.Enabled);
+                Assert.Equal(controlEnabled, App.Settings.WorkbenchControlEnabled);
+                var settingsRail = (RadioButton)window.FindName("SettingsButton");
+                Assert.True(settingsRail.IsChecked);
+                Assert.Equal(8, System.Windows.Automation.AutomationProperties.GetPositionInSet(settingsRail));
+                Assert.Equal(8, System.Windows.Automation.AutomationProperties.GetSizeOfSet(settingsRail));
+                Assert.Equal("Ctrl+,", System.Windows.Automation.AutomationProperties.GetAcceleratorKey(settingsRail));
+                Assert.Contains("Ctrl+,", (string)settingsRail.ToolTip);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)settings.FindName("AiPanel")).Visibility);
                 Assert.Same(settings.FindName("AiSection"), ((ListBox)settings.FindName("SectionList")).SelectedItem);
 
             }
             finally { window.Close(); ThemeManager.Current.Theme = previous; }
             Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+        });
+    }
+
+    [Fact]
+    public void Visible_overlay_handles_the_window_control_shortcuts_on_preview_key_down()
+    {
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false);
+            try
+            {
+                WpfContext.ShowWindow(window);
+                var overlay = (Grid)window.FindName("OverlayHost");
+                overlay.Visibility = Visibility.Visible;
+                WpfContext.WithControlPressed(() =>
+                {
+                    Assert.True(Keyboard.Modifiers.HasFlag(ModifierKeys.Control));
+                    bool Handled(Key key)
+                    {
+                        var preview = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(overlay), 0, key)
+                            { RoutedEvent = Keyboard.PreviewKeyDownEvent };
+                        overlay.RaiseEvent(preview);
+                        return preview.Handled;
+                    }
+                    foreach (var key in new[] { Key.D1, Key.D2, Key.D3, Key.D4, Key.D5, Key.D6, Key.D7, Key.O, Key.S, Key.B, Key.OemComma, Key.K })
+                        Assert.True(Handled(key), key.ToString());
+                    Assert.False(Handled(Key.D8));
+                    overlay.Visibility = Visibility.Collapsed;
+                    Assert.False(Handled(Key.D1));
+                });
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData("Engineering")]
+    [InlineData("Settings")]
+    public void Narrow_left_pane_overlays_the_page_and_returns_keyboard_focus(string page)
+    {
+        wpf.Run(() =>
+        {
+            bool saved = App.Settings.LeftPaneOpen;
+            App.Settings.LeftPaneOpen = false;
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false) { Width = 1024, Height = 640 };
+            try
+            {
+                WpfContext.ShowWindow(window); window.Navigate(page); WpfContext.Drain();
+                var toggle = (Button)window.FindName("LeftPaneToggle");
+                var tree = (ContentControl)window.FindName("ProjectTree");
+                var settings = (Views.SettingsView)window.FindName("SettingsContent");
+                var list = (ListBox)settings.FindName("SectionList");
+                FrameworkElement pane = page == "Settings" ? (Border)list.Parent : tree;
+                var detail = (FrameworkElement)(page == "Settings" ? settings.FindName("DetailScroll") : window.FindName("ProjectOverview"));
+                double width = detail.ActualWidth;
+                Assert.True(toggle.IsEnabled);
+                Assert.Equal(Visibility.Collapsed, pane.Visibility);
+                var search = (Button)window.FindName("CommandPaletteButton");
+                Assert.True(search.Focus());
+                Assert.True(search.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next)));
+                Assert.Same(toggle, Keyboard.FocusedElement);
+                WpfContext.PressSpace(toggle);
+                Assert.Equal(Visibility.Visible, pane.Visibility);
+                Assert.True(pane.IsKeyboardFocusWithin);
+                Assert.Equal(page == "Settings" ? 236 : 262, pane.ActualWidth);
+                Assert.Equal(width, detail.ActualWidth);
+                Assert.Equal(0, pane.TranslatePoint(new Point(), detail).X);
+                Assert.True(Panel.GetZIndex(pane) > Panel.GetZIndex(detail));
+                Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("OverlayHost")).Visibility);
+                if (Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR") is { Length: > 0 } output)
+                {
+                    System.IO.Directory.CreateDirectory(output);
+                    WorkbenchRenderTests.SaveRender((FrameworkElement)window.Content, System.IO.Path.Combine(output, $"flyout-{page}-1024x640.png"), 1024, 640);
+                }
+                if (page == "Settings") Assert.Same(list.SelectedItem, Keyboard.FocusedElement);
+                else Assert.Same(tree, Keyboard.FocusedElement);
+                var escape = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(pane), 0, Key.Escape)
+                    { RoutedEvent = Keyboard.PreviewKeyDownEvent };
+                ((UIElement)Keyboard.FocusedElement).RaiseEvent(escape);
+                Assert.True(escape.Handled);
+                Assert.Equal(Visibility.Collapsed, pane.Visibility);
+                Assert.Same(toggle, Keyboard.FocusedElement);
+                if (page == "Engineering") tree.Content = new Button { Content = "PLC_1" };
+                WpfContext.PressSpace(toggle);
+                Assert.True(pane.IsKeyboardFocusWithin);
+                if (page == "Engineering") Assert.Same(tree.Content, Keyboard.FocusedElement);
+                toggle.Focus(); WpfContext.PressSpace(toggle);
+                Assert.Equal(Visibility.Collapsed, pane.Visibility);
+                Assert.Same(toggle, Keyboard.FocusedElement);
+                Assert.False(App.Settings.LeftPaneOpen);
+            }
+            finally { window.Close(); App.Settings.LeftPaneOpen = saved; }
+        });
+    }
+
+    [Fact]
+    public void Command_palette_shortcut_is_available_only_outside_modal_surfaces()
+    {
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals());
+            try
+            {
+                WpfContext.ShowWindow(window); WpfContext.Drain();
+                var binding = Assert.Single(window.InputBindings.OfType<KeyBinding>(), key => key.Key == Key.K);
+                Assert.Same(WorkbenchCommands.CommandPalette, binding.Command);
+                Assert.Equal(ModifierKeys.Control, binding.Modifiers);
+                Assert.True(WorkbenchCommands.CommandPalette.CanExecute(null, window));
+                var overlay = (Grid)window.FindName("OverlayHost");
+                Assert.Equal(Visibility.Collapsed, overlay.Visibility);
+                overlay.Visibility = Visibility.Visible;
+                Assert.False(WorkbenchCommands.CommandPalette.CanExecute(null, window));
+                overlay.Visibility = Visibility.Collapsed;
+                var operations = (Views.ProjectOperationsView)window.FindName("OperationsContent");
+                operations.ShowProjectOptions(); WpfContext.Drain();
+                Assert.False(WorkbenchCommands.CommandPalette.CanExecute(null, window));
+                operations.HideOptions();
+                window.Navigate("Approvals");
+                var sheet = (FrameworkElement)((Views.ApprovalsDrawer)window.FindName("ApprovalsContent")).FindName("ConfirmationSheet");
+                sheet.Visibility = Visibility.Visible;
+                Assert.False(WorkbenchCommands.CommandPalette.CanExecute(null, window));
+                sheet.Visibility = Visibility.Collapsed;
+                Assert.True(WorkbenchCommands.CommandPalette.CanExecute(null, window));
+                WorkbenchCommands.CommandPalette.Execute(null, window);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Rail_arrow_keys_cover_the_order_and_agent_restores_its_subpage_unless_approval_is_pending()
+    {
+        wpf.Run(() =>
+        {
+            var approvals = FeaturePageFixtures.Approvals(false);
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, approvals);
+            try
+            {
+                WpfContext.ShowWindow(window); WpfContext.Drain();
+                var items = new[] { "RailEngineering", "RailAgent", "RailMcp", "RailClients", "RailEnvironment", "RailAudit", "RailLog", "SettingsButton" }
+                    .Select(name => (RadioButton)window.FindName(name)).ToArray();
+                Assert.Equal(KeyboardNavigationMode.Once, KeyboardNavigation.GetTabNavigation((Grid)window.FindName("SiderMenu")));
+                items[0].Focus();
+                for (int i = 0; i < items.Length; i++)
+                {
+                    Assert.True(items[i].IsChecked);
+                    Assert.Same(items[i], Assert.Single(items, item => item.IsTabStop));
+                    items[i].RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(items[i]), 0, Key.Down)
+                        { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+                    Assert.Same(items[(i + 1) % items.Length], Keyboard.FocusedElement);
+                    if (i == 0) Assert.Equal("Calls", window.CurrentPage);
+                }
+                window.Navigate("Approvals"); window.Navigate("Mcp"); window.Navigate("Agent");
+                Assert.Equal("Approvals", window.CurrentPage); Assert.True(items[1].IsChecked);
+                window.Navigate("Calls"); window.Navigate("Mcp");
+                var badge = (Button)window.FindName("PendingBadge");
+                bool announced = false;
+                void OnAnnounced(FrameworkElement element) { if (element == badge) announced = true; }
+                AccessibleStatus.Announced += OnAnnounced;
+                try { approvals.Receive(FeaturePageFixtures.Request()); WpfContext.Drain(); }
+                finally { AccessibleStatus.Announced -= OnAnnounced; }
+                Assert.True(announced);
+                Assert.Equal(Visibility.Visible, badge.Visibility);
+                Assert.Contains(Loc.Current.T("Shell.Pending", 1), System.Windows.Automation.AutomationProperties.GetName(items[1]));
+                ClickControl(items[1]);
+                Assert.Equal("Approvals", window.CurrentPage); Assert.True(items[1].IsChecked);
+            }
+            finally { window.Close(); }
         });
     }
 

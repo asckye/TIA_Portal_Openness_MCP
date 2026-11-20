@@ -51,6 +51,17 @@ public sealed class UiSettingsTests : IDisposable
         Assert.Equal(AppAccent.Petrol, loaded.Accent);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Left_pane_preference_round_trips_and_defaults_open_for_existing_files(bool open)
+    {
+        new UiSettings { LeftPaneOpen = open }.Save(_path);
+        Assert.Equal(open, UiSettings.Load(_path).LeftPaneOpen);
+        File.WriteAllText(_path, "language=English");
+        Assert.True(UiSettings.Load(_path).LeftPaneOpen);
+    }
+
     [Fact]
     public void Save_creates_the_folder_it_needs()
     {

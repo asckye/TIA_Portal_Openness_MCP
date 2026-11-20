@@ -122,7 +122,11 @@ public sealed class VciPanelTests(WpfContext wpf)
                 WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
                 WpfContext.ShowWindow(window); window.Navigate("VersionControl");
                 WpfContext.Complete(model.VersionControl.VcRefreshAsync());
-                Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("RailVersionControl")).Visibility);
+                var projectItem = (RadioButton)window.FindName("RailEngineering");
+                Assert.Equal(Visibility.Visible, projectItem.Visibility);
+                Assert.True(projectItem.IsChecked);
+                Assert.Equal("VersionControl", window.CurrentPage);
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("VersionControlContent")).Visibility);
                 Assert.Equal("git", Assert.Single(model.VersionControl.Workspaces).Name);
                 Assert.Equal("Main", Assert.Single(model.VersionControl.VcStatusItems).Name);
                 Assert.True(model.VersionControl.VcPull.CanExecute(null));
@@ -232,7 +236,11 @@ public sealed class VciPanelTests(WpfContext wpf)
                 Assert.Equal("workbench", request?.Actor); Assert.NotNull(request?.OperatorCallId);
                 host.Approval.TrySetResult(true); WpfContext.Complete(pending);
                 Assert.Equal(1, host.ExecutedWrites);
-                Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("RailVersionControl")).Visibility);
+                var projectItem = (RadioButton)window.FindName("RailEngineering");
+                Assert.Equal(Visibility.Visible, projectItem.Visibility);
+                Assert.True(projectItem.IsChecked);
+                Assert.Equal("VersionControl", window.CurrentPage);
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("VersionControlContent")).Visibility);
             }
             finally { window.Close(); }
         });
@@ -249,11 +257,16 @@ public sealed class VciPanelTests(WpfContext wpf)
         try
         {
             model.SelectedReleaseKey = release; model.Session.Connect.Execute(null); WpfContext.Drain();
-            var navigation = (RadioButton)window.FindName("RailVersionControl");
-            Assert.Equal(Visibility.Visible, navigation.Visibility);
-            Assert.False(navigation.IsEnabled);
-            Assert.Equal(Loc.Current["Shell.VersionControlUnavailable"], navigation.ToolTip);
+            window.Navigate("Engineering");
+            var projectItem = (RadioButton)window.FindName("RailEngineering");
+            Assert.Equal(Visibility.Visible, projectItem.Visibility);
+            Assert.True(projectItem.IsEnabled);
+            Assert.False(model.VersionControlPageVisible);
             window.Navigate("VersionControl"); Assert.False(model.IsVcTab);
+            Assert.Equal("Engineering", window.CurrentPage);
+            Assert.True(projectItem.IsChecked);
+            Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("VersionControlContent")).Visibility);
+            Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility);
             Assert.Equal(Loc.Current["Shell.VersionControlUnavailable"], ((TextBlock)window.FindName("ToastMessage")).Text);
         }
         finally { window.Close(); }

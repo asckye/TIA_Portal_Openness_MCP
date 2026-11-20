@@ -2,6 +2,8 @@ namespace TiaOpenness.Gui.Localization;
 
 internal static partial class Strings
 {
+    public const string McpRailLabel = "MCP";
+
     // Workbench shell navigation and page sections.
     internal static (string Key, string En, string Zh)[] LayoutCatalogue =>
     [
@@ -19,6 +21,18 @@ internal static partial class Strings
         ("ProcessPicker.Row", "PID {0}, {1}, {2}, {3}", "PID {0}，{1}，{2}，{3}"),
         ("ProcessPicker.Cancel", "_Cancel", "取消(_C)"),
         ("ProcessPicker.Connect", "C_onnect", "连接(_O)"),
+        ("Rail.Project", "Project", "项目"),
+        ("Rail.Agent", "Agent", "协作"),
+        ("Rail.Clients", "Clients", "客户端"),
+        ("Rail.Doctor", "Doctor", "检查"),
+        ("Rail.Audit", "Audit", "审计"),
+        ("Rail.Logs", "Logs", "日志"),
+        ("Rail.Settings", "Settings", "设置"),
+        ("Shell.CommandPalette", "Search blocks, pages or commands", "搜索程序块、页面或命令"),
+        ("Shell.LeftPane", "Show or hide the left pane", "显示或隐藏左侧面板"),
+        ("Shell.CompileCounts", "{0} errors · {1} warnings", "{0} 个错误 · {1} 个警告"),
+        ("Shell.TiaProcessStatus", "· TIA PID {0}", "· TIA 进程号 {0}"),
+        ("Shell.AuditHead", "Audit #{0}", "审计 #{0}"),
         ("Shell.Approvals", "Approvals", "审批"),
         ("Shell.Logs", "Logs & diagnostics", "日志与诊断"),
         ("Shell.NoProject", "Open a project first.", "请先打开项目。"),
@@ -26,16 +40,12 @@ internal static partial class Strings
         ("Shell.VersionControlUnavailable", "Version control is unavailable for this TIA Portal release.", "此 TIA Portal 版本不支持版本控制。"),
         ("Shell.PageUnavailable", "Page unavailable", "页面不可用"),
         ("Shell.ProjectStatus", "TIA Portal {0} · {1}", "TIA Portal {0} · 项目：{1}"),
-        ("Shell.ApprovalOnStatus", "Write approval on", "写操作审批已开"),
-        ("Shell.ApprovalOffStatus", "Write approval off", "写操作审批已关"),
+        ("Shell.ApprovalOnStatus", "Write approval · On", "写操作审批 · 开"),
+        ("Shell.ApprovalOffStatus", "Write approval · Off", "写操作审批 · 关"),
         ("Settings.Sections", "Settings sections", "设置分区"),
         ("Settings.HumanOnly", "Human only", "仅限人工操作"),
         ("Settings.Folders", "Folders", "目录"),
         ("Settings.DataDirectory", "Data folder", "数据目录"),
-        ("Shell.GroupAi", "AI collaboration", "AI 协作"),
-        ("Shell.GroupOperations", "Operations", "运行"),
-        ("Shell.CollapseMenu", "Collapse menu", "收起菜单"),
-        ("Shell.ExpandMenu", "Expand menu", "展开菜单"),
         ("Calls.Subtitle", "Recent tool calls; select a row for the full arguments and result.", "最近的工具调用；点击一行查看完整参数与返回。"),
         ("Calls.All", "All", "全部"),
         ("Calls.AllReleases", "All releases", "全部版本"),

@@ -28,6 +28,9 @@ public sealed class OfflineDemoTests(WpfContext wpf)
             Assert.False(((RadioButton)window.FindName("RailMcp")).IsEnabled);
             Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("RailEngineering")).Visibility);
             Assert.False(((RadioButton)window.FindName("RailEngineering")).IsEnabled);
+            Assert.False(((RadioButton)window.FindName("RailClients")).IsEnabled);
+            Assert.True(((RadioButton)window.FindName("RailAgent")).IsEnabled);
+            window.Navigate("Agent"); Assert.Equal("Calls", window.CurrentPage);
             window.ShowConfiguration(); Assert.Null(window.Configuration);
             Assert.Equal(Visibility.Visible, ((RadioButton)window.FindName("SettingsButton")).Visibility);
             Assert.False(((RadioButton)window.FindName("SettingsButton")).IsEnabled);

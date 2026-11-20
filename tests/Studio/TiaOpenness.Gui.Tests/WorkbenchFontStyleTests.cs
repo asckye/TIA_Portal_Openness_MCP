@@ -265,7 +265,13 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             string versionText = new TextRange(version.ContentStart, version.ContentEnd).Text;
                             Assert.Equal(((Run)window.FindName("RailVersion")).Text, versionText);
                             AssertSingleLine(version, context, versionText);
-                            Assert.True(version.TranslatePoint(new Point(0, version.ActualHeight), host).Y <= 56, context);
+                            var statusBar = (Border)window.FindName("IdeStatusBar");
+                            Assert.Equal(26, statusBar.MinHeight);
+                            var shell = (Grid)statusBar.Parent;
+                            Assert.Equal(shell.ActualHeight, statusBar.TranslatePoint(new Point(0, statusBar.ActualHeight), shell).Y);
+                            Assert.True(statusBar.IsAncestorOf(version), context);
+                            var versionBounds = version.TransformToAncestor(statusBar).TransformBounds(new Rect(version.RenderSize));
+                            Assert.True(new Rect(statusBar.RenderSize).Contains(versionBounds), context);
                             for (int i = 0; i < clients.Count; i++)
                             {
                                 var row = Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(i));
@@ -319,14 +325,12 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             string context = page + " " + suffix;
                             var brand = (TextBlock)window.FindName("BrandTitle");
                             var environmentItem = (RadioButton)window.FindName("RailEnvironment");
-                            var environmentLabel = Descendants<TextBlock>(environmentItem).Single(text => text.Text == Loc.Current["Shell.Environment"]);
-                            if (width < 1200)
-                            {
-                                Assert.Equal(Visibility.Collapsed, brand.Visibility);
-                                Assert.False(environmentLabel.IsVisible);
-                                Assert.Equal(Loc.Current["Shell.Environment"], System.Windows.Automation.AutomationProperties.GetName(environmentItem));
-                            }
-                            else { AssertSingleLine(brand, context); AssertWholeWords(environmentLabel, context); }
+                            var environmentLabel = Descendants<TextBlock>(environmentItem).Single(text => text.Text == Loc.Current["Rail.Doctor"]);
+                            Assert.Equal(Visibility.Visible, brand.Visibility);
+                            Assert.Equal(Visibility.Visible, environmentLabel.Visibility);
+                            Assert.Equal(Loc.Current["Rail.Doctor"], System.Windows.Automation.AutomationProperties.GetName(environmentItem));
+                            AssertSingleLine(brand, context);
+                            AssertWholeWords(environmentLabel, context);
                             if (page == "Mcp")
                             {
                                 AssertWholeWords((TextBlock)window.Configuration!.FindName("PageSubtitle"), context);

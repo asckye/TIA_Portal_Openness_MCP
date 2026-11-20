@@ -15,7 +15,7 @@ internal static partial class Strings
 {
     /// <summary>key, English, Chinese.</summary>
     internal static (string Key, string En, string Zh)[] Catalogue =>
-        [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue, .. SessionCatalogue, .. LayoutCatalogue, .. SafetyCatalogue];
+        [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue, .. SessionCatalogue, .. LayoutCatalogue, .. OverlaysCatalogue, .. SafetyCatalogue];
 
     private static readonly (string Key, string En, string Zh)[] SessionCatalogue =
     [
@@ -47,7 +47,7 @@ internal static partial class Strings
         ("Session.Create", "Create owned session", "创建自有会话"),
         ("Session.Cancel", "Cancel panel request", "取消面板请求"),
         ("Session.Detach", "Detach / release panel", "分离 / 释放面板"),
-        ("Session.Unverified", "client name unverified", "客户端名称未验证"),
+        ("Session.Unverified", "(unverified)", "（未验证）"),
         ("Session.SelectHint", "Select an AI session of this release, or create a Workbench session. Start TIA manually.", "选择此版本的 AI 会话，或创建工作台会话。请手动启动 TIA。"),
         ("Session.ReconnectHint", "Select the new session key after the AI reconnects.", "AI 重连后，请选择新的会话键。"),
         ("Session.Working", "Updating MCP session", "更新 MCP 会话"),

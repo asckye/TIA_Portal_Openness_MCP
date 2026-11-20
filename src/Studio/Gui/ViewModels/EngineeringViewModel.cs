@@ -71,6 +71,9 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     private bool _importOverwrite;
     public string ImportPathsText { get => _importPathsText; set => Set(ref _importPathsText, value); }
     public bool ImportOverwrite { get => _importOverwrite; set => Set(ref _importOverwrite, value); }
+    private CompileResult? _lastCompile;
+    public CompileResult? LastCompile { get => _lastCompile; private set => Set(ref _lastCompile, value); }
+
     public AsyncCommand Compile { get; }
     public AsyncCommand Inspect { get; }
     public AsyncCommand Save { get; }
@@ -248,6 +251,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     private async Task CompileAsync() => await _activity.Guarded("Status.Compiling", async () =>
     {
         var result = await _client.CompileAsync(SelectedDevice!.Id);
+        LastCompile = result;
 
         foreach (var message in Flatten(result.Messages).Where(m => m.Severity != CompileSeverity.Information))
         {
@@ -335,6 +339,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
     internal void ClearPresentation()
     {
+        LastCompile = null;
         LoadedDeviceId = null;
         SelectedDevice = null;
         Devices.Clear();
