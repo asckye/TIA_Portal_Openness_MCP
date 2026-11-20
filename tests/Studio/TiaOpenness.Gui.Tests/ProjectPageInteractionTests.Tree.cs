@@ -39,11 +39,11 @@ public sealed partial class ProjectPageInteractionTests
                     }
                     var side = window.CompileDocument;
                     var blocks = window.BlockDocument;
-                    if (width < 1200) Assert.True(blocks.TranslatePoint(new Point(), side).Y >= side.ActualHeight);
+                    Assert.True(side.TranslatePoint(new Point(), blocks).Y >= blocks.ActualHeight);
+                    Assert.Equal(System.Math.Min(920, window.ProjectOverview.ActualWidth - 56), side.ActualWidth);
+                    if (width < 1200) Assert.Equal(Visibility.Collapsed, window.FoldProjectContext.Visibility);
                     else
                     {
-                        Assert.Equal(300, side.ActualWidth);
-                        Assert.True(side.TranslatePoint(new Point(), blocks).X >= blocks.ActualWidth);
                         Assert.Equal(Visibility.Visible, window.FoldProjectContext.Visibility);
                         UnifiedDesktopTests.ClickControl(window.FoldProjectContext);
                         Assert.Equal(Visibility.Collapsed, side.Visibility);

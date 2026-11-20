@@ -12,6 +12,7 @@ public partial class ProjectOperationsView : UserControl
         InitializeComponent();
         Options.ClearPrefillRequested += (_, form) => ClearPrefillRequested?.Invoke(this, form);
     }
+    internal RadioButton TagsTab { get; set; } = null!;
     internal bool OptionsOpen => Options.IsOpen;
     private Action? _environmentRequested;
     internal void SetFeatures(FeaturePagesViewModel? features, Action? environmentRequested)
@@ -34,15 +35,29 @@ public partial class ProjectOperationsView : UserControl
     internal void SetControlPrefillMarker(bool pending) => Options.SetControlPrefillMarker(pending);
     internal void HideOptions() => Options.Hide();
     private void OnProjectOptions(object sender, RoutedEventArgs e) => ShowProjectOptions();
-    private void OnTransfer(object sender, RoutedEventArgs e) => ShowTransferOptions();
-    private void OnInspect(object sender, RoutedEventArgs e) => ShowControlInspectionRules();
-    private void OnRender(object sender, RoutedEventArgs e) => Model.Engineering.Document = ProjectDocument.Render;
-    private void OnCompileResults(object sender, RoutedEventArgs e) => Model.Engineering.Document = ProjectDocument.Compile;
-    private async void OnTags(object sender, RoutedEventArgs e)
+    internal event EventHandler? OpenTransferRequested;
+    private void OnTransfer(object sender, RoutedEventArgs e) => OpenTransferRequested?.Invoke(this, EventArgs.Empty);
+    private void OnExportMenu(object sender, RoutedEventArgs e)
     {
-        Model.Engineering.Document = ProjectDocument.Tags;
-        await Model.Engineering.ReadTagsAsync();
+        var menu = ExportMenuButton.ContextMenu;
+        menu.PlacementTarget = ExportMenuButton;
+        menu.DataContext = Model;
+        SessionItem.Visibility = Model.HasMcpPanel ? Visibility.Visible : Visibility.Collapsed;
+        menu.IsOpen = true;
     }
+    private void OnSessions(object sender, RoutedEventArgs e)
+    {
+        Sessions.Visibility = Visibility.Visible;
+        Sessions.IsExpanded = true;
+    }
+    private void OnInspect(object sender, RoutedEventArgs e) => ShowControlInspectionRules();
+    private async void OnRender(object sender, RoutedEventArgs e)
+    {
+        Model.Engineering.Document = ProjectDocument.Render;
+        await Model.Engineering.ReadFocusedBlockAsync();
+    }
+    private void OnInterface(object sender, RoutedEventArgs e) => Model.Engineering.Document = ProjectDocument.Interface;
+    private void OnCompileResults(object sender, RoutedEventArgs e) => Model.Engineering.Document = ProjectDocument.Compile;
     private async void OnRefresh(object sender, RoutedEventArgs e)
     {
         var engineering = Model.Engineering;

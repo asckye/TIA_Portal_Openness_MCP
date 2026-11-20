@@ -23,7 +23,8 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
 {
-    private sealed class TagSession(bool units, bool reject = false) : IMcpSessionClient
+    private sealed class TagSession(bool units, bool reject = false, string? reply = null, string? previewReply = null,
+        string? release = null) : IMcpSessionClient
     {
         internal List<(string Tool, IReadOnlyDictionary<string, object?> Args)> Calls { get; } = [];
         public string? SessionKey => "fixture";
@@ -33,8 +34,8 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
         public event EventHandler? Detached { add { } remove { } }
         public Task<JsonObject> CallAsync(string tool, IReadOnlyDictionary<string, object?> arguments, CancellationToken token = default)
         {
-            Calls.Add((tool, arguments));
-            string json = tool switch
+            Calls.Add((tool, new Dictionary<string, object?>(arguments)));
+            string json = reply ?? (tool switch
             {
                 "ListPlcTagTables" => """{"ok":true,"data":{"items":["Inputs / local"]}}""",
                 "ListPlcTags" when reject => """{"ok":false,"error":{"code":"INVALID_ARGUMENT","message":"Unknown table."}}""",
@@ -47,20 +48,31 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
                     {"ok":true,"data":{"items":[{"name":"Ready/A","path":"Inputs %2F local/Ready%2FA","kind":"tag","dataType":"Bool","value":"%I0.0"}]}}
                     """,
                 _ => throw new InvalidOperationException(tool),
-            };
+            });
+            bool preview = tool == "CompilePlcSoftware" && Equals(arguments["dryRun"], true);
+            if (preview) json = previewReply ?? """{"ok":true,"data":{"dryRun":true,"wouldCompile":true}}""";
             var envelope = JsonNode.Parse(json)!.AsObject();
             envelope["schemaVersion"] = 4;
             bool success = (bool)envelope["ok"]!;
-            envelope["meta"] = new JsonObject { ["timestamp"] = "2026-11-20T00:00:00.0000000Z", ["releaseKey"] = units ? "21" : "14sp1",
+            envelope["meta"] = new JsonObject { ["timestamp"] = "2026-11-20T00:00:00.0000000Z", ["releaseKey"] = release ?? (units ? "21" : "14sp1"),
                 ["tool"] = tool, ["requestId"] = "request-1", ["outcome"] = success ? "succeeded" : "rejected-before-operation",
                 ["execution"] = success ? "read-only" : "not-started", ["behaviorPolicy"] = "not-applicable",
                 ["completeness"] = success ? "complete" : "none", ["paging"] = null, ["warnings"] = new JsonArray() };
             if (success) envelope["error"] = null;
-            else
+            else if (reply == null)
             {
                 envelope["data"] = null;
                 envelope["error"]!["details"] = JsonNode.Parse(
                     """{"parameter":"table","parameters":["table"],"allowedValues":[],"expected":"exact table path"}""");
+            }
+            if (reply != null && tool == "CompilePlcSoftware")
+            {
+                bool completedWithErrors = (string?)envelope["error"]?["code"] == "COMPILE_ERRORS";
+                if (success || completedWithErrors)
+                {
+                    envelope["meta"]!["execution"] = preview ? "read-only" : "completed";
+                    envelope["meta"]!["outcome"] = success ? "succeeded" : "failed";
+                }
             }
             _ = TiaOpenness.Core.EngineToolResult.Read(envelope.ToJsonString());
             return Task.FromResult(envelope);
@@ -111,6 +123,43 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
         Assert.Equal(includeUnits, call.Args["includeUnits"]);
     }
 
+    [Theory]
+    [InlineData("21", true)]
+    [InlineData("14sp1", false)]
+    [InlineData("15.1", false)]
+    public async Task Table_cells_show_decoded_names_and_expose_the_original_path(string release, bool units)
+    {
+        const string scopedRows = """
+            {"ok":true,"data":{"items":[
+              {"name":"Ready/A","path":"units/Mix%2FA/tag-tables/Signals/In%2FOut/Ready%2FA","kind":"tag","dataType":"Bool","value":"%I0.0"},
+              {"name":"Speed","path":"root/tag-tables/Inputs/Speed","kind":"tag","dataType":"Real","value":""}]}}
+            """;
+        await using var session = new TagSession(units, reply: units ? scopedRows : null, release: release);
+        using var client = new McpProjectClient(session);
+        var tags = await client.ListPlcTagsAsync("devices/Station/PLC_1", "", true);
+        wpf.Run(() =>
+        {
+            var view = new PlcTagsView();
+            var grid = view.TagRows;
+            grid.ItemsSource = tags;
+            view.Measure(new Size(1000, 400));
+            view.Arrange(new Rect(0, 0, 1000, 400));
+            view.UpdateLayout();
+            var expected = units ? new[] { "Mix/A / In/Out", "Inputs" } : new[] { "Inputs / local" };
+            var paths = units ? new[] { "units/Mix%2FA/tag-tables/Signals/In%2FOut", "root/tag-tables/Inputs" } : new[] { "Inputs %2F local" };
+            Assert.Equal(paths, tags.Select(tag => tag.TableName));
+            Assert.Equal(expected.Length, tags.Count);
+            for (int i = 0; i < tags.Count; i++)
+            {
+                var text = Assert.IsType<TextBlock>(grid.Columns[3].GetCellContent(tags[i]));
+                Assert.Equal(expected[i], text.Text);
+                var cell = Assert.IsType<DataGridCell>(text.Parent);
+                Assert.Equal(tags[i].TableName, cell.ToolTip);
+                Assert.Equal(tags[i].TableName, System.Windows.Automation.AutomationProperties.GetHelpText(cell));
+            }
+        });
+    }
+
     [Fact]
     public void Tag_panel_clears_stale_rows_on_error_and_discards_reads_after_device_change()
     {
@@ -120,6 +169,7 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
             using var model = new MainViewModel(client, new FakeDialogService());
             var engineering = model.Engineering;
             engineering.SelectedDevice = client.Devices[0];
+            Assert.Null(engineering.TagCount);
             client.Tags.Add(new() { Name = "Ready", DataType = "Bool", LogicalAddress = "%I0.0", TableName = "Inputs" });
             WpfContext.Complete(engineering.ReadTagsAsync());
             Assert.Single(engineering.PlcTags);
@@ -127,6 +177,7 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
             WpfContext.Complete(engineering.ReadTagsAsync());
             Assert.Empty(engineering.PlcTags);
             Assert.Equal("Unknown table.", engineering.TagStatus);
+            Assert.Null(engineering.TagCount);
             var late = new TaskCompletionSource<List<TagInfo>>();
             client.TagHandler = _ => late.Task;
             client.Calls.Clear();
@@ -261,10 +312,20 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
             try
             {
                 model.Session.Connect.Execute(null);
-                var host = WorkbenchRenderTests.CreateHost(window, 1366, 860);
+                window.Width = 1366; window.Height = 860;
+                WpfContext.ShowWindow(window); WpfContext.Drain();
+                var host = window;
                 var bar = (Border)ProjectPageTestSupport.Find(window, "ProjectToolbar");
                 var buttons = WorkbenchRenderFeaturePagesTests.Descendants<Button>(bar).ToList();
-                Assert.Equal(7, buttons.Count);
+                Assert.Equal(3, buttons.Count);
+                Assert.Equal(44, bar.ActualHeight);
+                Assert.All(buttons, button => Assert.Equal(28, button.ActualHeight));
+                UnifiedDesktopTests.ClickControl(window.OperationsContent.ExportMenuButton);
+                var menu = window.OperationsContent.ExportMenuButton.ContextMenu;
+                Assert.True(menu.IsOpen);
+                foreach (string key in new[] { "Project.OpenConnect", "Common.Reload", "Pages.Import", "Toolbar.Inspect", "Primer.Transfer" })
+                    Assert.Contains(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, Loc.Current[key]));
+                menu.IsOpen = false;
                 var save = Assert.Single(buttons, button => Equals(button.Background, host.FindResource("Primer.primaryBg")));
                 Assert.Same(model.Engineering.Save, save.Command);
                 client.Calls.Clear();

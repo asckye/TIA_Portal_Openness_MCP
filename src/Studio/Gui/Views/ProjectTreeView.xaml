@@ -3,10 +3,20 @@
   xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:vm="clr-namespace:TiaOpenness.Gui.ViewModels"
   xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls">
   <DockPanel>
-    <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
-      <StackPanel VerticalAlignment="Center">
-        <TextBlock Text="{l:Tr Rail.Project}" Style="{StaticResource Primer.ContainerTitle}" AutomationProperties.HeadingLevel="Level2"/>
-        <TextBlock Text="{Binding Session.ProjectName}" ToolTip="{Binding Session.ProjectPath}" Style="{StaticResource Primer.Muted}"/>
+    <Border Style="{StaticResource Primer.ProjectHeaderLine}" DockPanel.Dock="Top" Padding="12,10">
+      <StackPanel>
+        <DockPanel Margin="0,0,0,8">
+          <TextBlock DockPanel.Dock="Left" Text="{l:Tr Project.Tree}" Style="{StaticResource Primer.Muted}"
+            FontSize="{DynamicResource Ui.FontSize.11}" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level2"/>
+          <TextBlock x:Name="ProjectFile" TextAlignment="Right" Style="{StaticResource Project.Caption}" AutomationProperties.Name="{l:Tr Primer.Bound}"/>
+        </DockPanel>
+        <Grid>
+          <Label x:Name="FilterLabel" Content="{l:Tr Project.Filter}" Target="{Binding ElementName=ControlFilter}" Visibility="Collapsed"/>
+          <TextBox x:Name="ControlFilter" Style="{StaticResource Primer.IdeSearch}" Padding="25,0,6,0"
+            Text="{Binding Engineering.BlockFilter,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Filter}"
+            AutomationProperties.Name="{l:Tr Project.Filter}" AutomationProperties.LabeledBy="{Binding ElementName=FilterLabel}"/>
+        </Grid>
+        <ux:PrefillMarker x:Name="FilterMarker" Target="{Binding ElementName=ControlFilter}"/>
       </StackPanel>
     </Border>
     <ux:PrefillMarker x:Name="SelectionMarker" DockPanel.Dock="Top" Target="{Binding ElementName=Nodes}" Margin="8,0"/>
@@ -14,28 +24,109 @@
       Visibility="{Binding Engineering.HasDevices,Converter={StaticResource NotBoolToVisibility}}"/>
     <TreeView x:Name="Nodes" ItemsSource="{Binding Engineering.ProjectDevices}" AutomationProperties.Name="{l:Tr Access.Software}"
       PreviewMouseLeftButtonDown="OnNodeClick" PreviewKeyDown="OnNodeKey" ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}"
-      Background="Transparent" BorderThickness="0">
+      Background="Transparent" BorderThickness="0" Padding="8" AlternationCount="2147483647" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+      PreviewMouseRightButtonDown="OnContextRow">
+      <TreeView.ContextMenu>
+        <ContextMenu Opened="OnContextOpening">
+          <MenuItem Header="{l:Tr Primer.SelectAll}" Click="OnAll" InputGestureText="Ctrl+A"/>
+          <MenuItem Header="{l:Tr Pages.ClearSelection}" Click="OnClear"/>
+          <Separator/>
+          <MenuItem x:Name="SelectGroup" Header="{l:Tr Project.SelectGroup}" Click="OnGroup"/>
+          <MenuItem x:Name="ClearGroup" Header="{l:Tr Project.ClearGroup}" Click="OnGroup"/>
+        </ContextMenu>
+      </TreeView.ContextMenu>
       <TreeView.Resources>
         <HierarchicalDataTemplate DataType="{x:Type vm:DeviceNode}" ItemsSource="{Binding ProjectChildren}"
           ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}">
-          <TextBlock Text="{Binding Label}" ToolTip="{Binding Detail}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold"/>
+          <Border x:Name="DeviceSurface" Style="{StaticResource Primer.ProjectDeviceSurface}">
+            <DockPanel>
+              <Border Style="{StaticResource Primer.ProjectDeviceTile}" x:Name="Tile" Width="20" Height="20" Margin="0,0,6,0">
+                <Path x:Name="PlcIcon" Data="M2,2 H14 V14 H2 Z M6,6 H10 V10 H6 Z M5,0 V2 M10,0 V2 M5,14 V16 M10,14 V16"
+                  Stroke="{DynamicResource Primer.textMuted}" Stretch="Uniform" Width="12" Height="12"/>
+              </Border>
+              <StackPanel>
+                <DockPanel LastChildFill="False">
+                  <TextBlock x:Name="DeviceName" Text="{Binding Label}" Style="{StaticResource Primer.Mono}" FontWeight="SemiBold"
+                    FontSize="{DynamicResource Ui.FontSize.12_5}" LineHeight="18.75" LineStackingStrategy="BlockLineHeight"/>
+                  <Border Style="{StaticResource Primer.ProjectSafetyTag}" Margin="5,0" Padding="3,0"
+                    Visibility="{Binding HasSafetyBlocks,Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="F" Foreground="{DynamicResource Primer.blkFsFg}" FontSize="{DynamicResource Ui.FontSize.9}"/>
+                  </Border>
+                </DockPanel>
+                <TextBlock Text="{Binding Caption}" Style="{StaticResource Project.DeviceDetail}" ToolTip="{Binding Caption}"
+                  LineHeight="13.125" LineStackingStrategy="BlockLineHeight"/>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+          <HierarchicalDataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsActive}" Value="True">
+              <Setter TargetName="DeviceName" Property="Foreground" Value="{DynamicResource Primer.accent}"/>
+              <Setter TargetName="Tile" Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+              <Setter TargetName="PlcIcon" Property="Stroke" Value="{DynamicResource Primer.onPrimary}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsFolder}" Value="True">
+              <Setter TargetName="PlcIcon" Property="Data" Value="{StaticResource Icon.WorkbenchProject}"/>
+            </DataTrigger>
+          </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
         <HierarchicalDataTemplate DataType="{x:Type vm:BlockNode}" ItemsSource="{Binding Children}"
           ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}">
-          <StackPanel Orientation="Horizontal">
-            <CheckBox AutomationProperties.Name="{Binding Name}" IsChecked="{Binding IsSelected,Mode=TwoWay}" Style="{StaticResource Primer.Checkbox}"
-              MinWidth="24" MinHeight="24" IsEnabled="{Binding Tag.CanOperate,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-            <Border Style="{StaticResource Primer.BlkBadge}" ToolTip="{Binding Detail}" Margin="0,0,4,0"
-              Visibility="{Binding IsFolder,Converter={StaticResource NotBoolToVisibility}}">
-              <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.BlkBadgeText}"/>
-            </Border>
-            <TextBlock Text="●" Style="{StaticResource Primer.Muted}" Margin="4,0,0,0" AutomationProperties.Name="{l:Tr Project.Modified}"
-              ToolTip="{l:Tr Project.Modified}" Visibility="{Binding IsModified,Converter={StaticResource BoolToVisibility}}"/>
-            <TextBlock Text="{Binding Name}" ToolTip="{Binding Name}" Style="{StaticResource Primer.Text}"/>
-          </StackPanel>
+          <CheckBox AutomationProperties.Name="{Binding Name}" IsChecked="{Binding IsSelected,Mode=TwoWay}"
+            Style="{StaticResource Primer.ProjectBlockChoice}" IsEnabled="{Binding Tag.CanOperate,RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <Grid MinHeight="20">
+              <DockPanel x:Name="FolderRow" LastChildFill="True">
+                <Path Style="{StaticResource Project.Glyph}" Data="{StaticResource Icon.WorkbenchProject}" Stroke="{DynamicResource Primer.accent}"/>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding Detail}" Style="{StaticResource Project.Caption}"/>
+                <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.Text}"/>
+              </DockPanel>
+              <DockPanel x:Name="LeafRow" Visibility="Collapsed">
+                <DockPanel.ToolTip>
+                  <StackPanel>
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                    <TextBlock><Run Text="{l:Tr Primer.Number}"/> · <Run Text="{Binding Detail,Mode=OneWay}"/></TextBlock>
+                    <TextBlock><Run Text="{l:Tr Primer.Language}"/> · <Run Text="{Binding Language,Mode=OneWay}"/></TextBlock>
+                    <TextBlock><Run Text="{l:Tr Primer.Group}"/> · <Run Text="{Binding Row.Info.FolderPath,Mode=OneWay}"/></TextBlock>
+                    <TextBlock><Run Text="{l:Tr Primer.Consistent}"/> · <Run>
+                      <Run.Text><MultiBinding Mode="OneWay" Converter="{StaticResource Primer.Value}" ConverterParameter="consistent">
+                        <Binding Path="Row.Info.IsConsistent"/><Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
+                      </MultiBinding></Run.Text></Run></TextBlock>
+                  </StackPanel>
+                </DockPanel.ToolTip>
+                <Border Style="{StaticResource Primer.BlkBadge}" Margin="0,0,8,0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.BlkBadgeText}"/>
+                </Border>
+                <Ellipse DockPanel.Dock="Right" Style="{StaticResource Project.Dot}" ToolTip="{l:Tr Project.Modified}"
+                  Visibility="{Binding IsModified,Converter={StaticResource BoolToVisibility}}"/>
+                <Ellipse DockPanel.Dock="Right" Style="{StaticResource Project.Dot}" Fill="{DynamicResource Primer.destructiveText}"
+                  ToolTip="{Binding Status}" Visibility="{Binding Row.Info.IsConsistent,Converter={StaticResource NotBoolToVisibility}}"/>
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock x:Name="BlockName" FontWeight="Medium" Text="{Binding Name}" ToolTip="{Binding Name}" Style="{StaticResource Primer.Mono}"
+                    FontSize="{DynamicResource Ui.FontSize.12}" LineHeight="18" LineStackingStrategy="BlockLineHeight"/>
+                  <TextBlock Text="{Binding Row.Subtitle}" Style="{StaticResource Project.Caption}"
+                    FontSize="{DynamicResource Ui.FontSize.10}" LineHeight="15" LineStackingStrategy="BlockLineHeight"/>
+                </StackPanel>
+              </DockPanel>
+            </Grid>
+          </CheckBox>
+          <HierarchicalDataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsActive}" Value="True">
+              <Setter TargetName="BlockName" Property="FontWeight" Value="SemiBold"/>
+              <Setter TargetName="BlockName" Property="Foreground" Value="{DynamicResource Primer.text}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsFolder}" Value="False">
+              <Setter TargetName="LeafRow" Property="Visibility" Value="Visible"/><Setter TargetName="FolderRow" Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
+          </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
         <DataTemplate DataType="{x:Type vm:ProjectLink}">
-          <TextBlock Style="{StaticResource Primer.ProjectLinkLabel}"/>
+          <DockPanel MinHeight="28">
+            <Path x:Name="LinkIcon" Style="{StaticResource Project.Glyph}" Data="{StaticResource Icon.FileText}"/>
+            <TextBlock DockPanel.Dock="Right" Text="{Binding CountLabel}" Style="{StaticResource Project.Caption}"/>
+            <TextBlock Style="{StaticResource Primer.ProjectLinkLabel}"/>
+          </DockPanel>
+          <DataTemplate.Triggers><DataTrigger Binding="{Binding IsVersionControl}" Value="True">
+            <Setter TargetName="LinkIcon" Property="Data" Value="{StaticResource Icon.Branch}"/>
+          </DataTrigger></DataTemplate.Triggers>
         </DataTemplate>
       </TreeView.Resources>
     </TreeView>

@@ -22,6 +22,10 @@ namespace TiaOpenness.Gui.ViewModels;
 public sealed class BlockNode : ObservableObject
 {
     private bool _isExpanded = true;
+    private bool _isActive;
+    private bool _programCategory;
+
+    public bool IsActive { get => _isActive; internal set => Set(ref _isActive, value); }
 
     private BlockNode(string name, BlockRow? row)
     {
@@ -98,7 +102,7 @@ public sealed class BlockNode : ObservableObject
         Raise(nameof(Status));
     }
 
-    private IEnumerable<BlockRow> Leaves()
+    internal IEnumerable<BlockRow> Leaves()
     {
         if (Row is not null)
         {
@@ -124,13 +128,24 @@ public sealed class BlockNode : ObservableObject
 
         foreach (var group in rows.GroupBy(r => CategoryOf(r.Info.Kind)).OrderBy(g => g.Key))
         {
-            var category = new BlockNode(CategoryLabel(group.Key), null);
+            var category = new BlockNode(CategoryLabel(group.Key), null) { _programCategory = group.Key == 0 };
             foreach (var row in group) Place(category, row);
             Sort(category);
             categories.Add(category);
         }
 
         return categories;
+    }
+
+    // The explorer shows user folders alongside the group of unfiled program blocks.
+    internal IEnumerable<BlockNode> ExplorerGroups()
+    {
+        if (!_programCategory) { yield return this; yield break; }
+
+        var unfiled = new BlockNode(Name, null);
+        foreach (var block in Children.Where(child => !child.IsFolder)) unfiled.Children.Add(block);
+        if (unfiled.Children.Count > 0) yield return unfiled;
+        foreach (var folder in Children.Where(child => child.IsFolder)) yield return folder;
     }
 
     /// <summary>Which part of the TIA tree a block belongs under.</summary>

@@ -391,6 +391,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Activating_a_plc_from_the_narrow_vci_flyout_keeps_focus_through_the_load",
                 "Arrows_browse_plcs_tags_and_version_control_and_only_activation_opens_them",
                 "Expanding_a_plc_loads_only_its_blocks_and_tree_nodes_open_the_existing_documents",
+                "Tree_keyboard_and_mouse_select_blocks_without_exporting",
                 "Tags_wait_for_the_target_plc_blocks_and_exclude_competing_operations"
             },
             ["TiaOpenness.Gui.Tests.RemoteConfigurationTests"] = new[] {

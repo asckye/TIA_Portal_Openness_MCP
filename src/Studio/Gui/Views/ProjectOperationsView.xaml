@@ -6,36 +6,85 @@
       <views:EngineeringOptionsView x:Name="Options" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=Grid}}" Height="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=Grid}}"/>
     </Canvas>
     <Border DockPanel.Dock="Top" x:Name="ProjectToolbar" Style="{StaticResource Primer.IdeBar}">
-      <DockPanel LastChildFill="False">
-        <WrapPanel DockPanel.Dock="Left" VerticalAlignment="Center">
-          <Button Content="{l:Tr Project.OpenConnect}" AutomationProperties.Name="{l:Tr Project.OpenConnect}"
-            Command="{x:Static ux:WorkbenchCommands.Open}" AutomationProperties.AcceleratorKey="Ctrl+O" ToolTip="Ctrl+O" Style="{StaticResource Primer.IdeToolButton}"/>
-          <Button Content="{l:Tr Common.Reload}" AutomationProperties.Name="{l:Tr Common.Reload}" Click="OnRefresh"
-            IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
-        </WrapPanel>
-        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center">
-          <Button Content="{l:Tr Pages.Import}" AutomationProperties.Name="{l:Tr Pages.Import}" Command="{Binding Engineering.Import}"
-            ToolTip="{l:Tr Pages.TransferDescription}"
-            Style="{StaticResource Primer.IdeToolButton}"/>
-          <Button Content="{l:Tr Blocks.Export}" AutomationProperties.Name="{l:Tr Blocks.Export}" Click="OnTransfer"
-            IsEnabled="{Binding Tag.HasSelection,ElementName=PageRoot}" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
-          <Button Content="{l:Tr Toolbar.Inspect}" AutomationProperties.Name="{l:Tr Toolbar.Inspect}" Click="OnInspect"
-            IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
-          <Button Content="{l:Tr Toolbar.Compile}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" Command="{Binding Engineering.Compile}"
-            AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
-          <Button x:Name="SaveButton" Content="{l:Tr Pages.Save}" AutomationProperties.Name="{l:Tr Pages.Save}" Command="{Binding Engineering.Save}"
-            AutomationProperties.AcceleratorKey="Ctrl+S" ToolTip="Ctrl+S" Style="{StaticResource Primer.ProjectSave}" Margin="8,0,0,0"/>
-        </WrapPanel>
+      <DockPanel VerticalAlignment="Center">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Button x:Name="ExportMenuButton" Style="{StaticResource Primer.IdeToolButton}" AutomationProperties.Name="{l:Tr Blocks.Export}"
+            Click="OnExportMenu" ToolTip="{l:Tr Pages.TransferDescription}">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource Icon.Download}" Style="{StaticResource Project.ButtonGlyph}"/><TextBlock Text="{l:Tr Blocks.Export}"/>
+            </StackPanel>
+            <Button.ContextMenu><ContextMenu Placement="Bottom">
+              <MenuItem Header="{l:Tr Primer.Transfer}" Click="OnTransfer" ToolTip="{l:Tr Pages.NoSelection}"/>
+              <MenuItem Header="{l:Tr Pages.Import}" Command="{Binding Engineering.Import}"/>
+              <MenuItem x:Name="GenerateAtlasItem" Header="{l:Tr Pages.GenerateAtlas}"/>
+              <Separator/>
+              <MenuItem Header="{l:Tr Project.OpenConnect}" Command="{x:Static ux:WorkbenchCommands.Open}"
+                CommandTarget="{Binding PlacementTarget,RelativeSource={RelativeSource AncestorType=ContextMenu}}" InputGestureText="Ctrl+O"/>
+              <MenuItem Header="{l:Tr Common.Reload}" Click="OnRefresh"/>
+              <MenuItem Header="{l:Tr Pages.ViewLadder}" Click="OnRender" IsEnabled="{Binding Engineering.FocusedBlock.HasLadderOrFbd,FallbackValue=False}"/>
+              <MenuItem Header="{l:Tr Toolbar.Inspect}" Click="OnInspect"/>
+              <MenuItem Header="{l:Tr Pages.Options}" Click="OnProjectOptions"/>
+              <MenuItem x:Name="SessionItem" Header="{l:Tr Session.Title}" Click="OnSessions"/>
+              <MenuItem Header="{l:Tr Pages.Disconnect}" Command="{Binding Session.Disconnect}"/>
+            </ContextMenu></Button.ContextMenu>
+          </Button>
+          <Border Style="{StaticResource Primer.ProjectDivider}" Width="1" Margin="6,4"/>
+          <Button ContentTemplate="{x:Null}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" Command="{Binding Engineering.Compile}"
+            AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Style="{StaticResource Primer.Button.Secondary.Small}">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="M3,1 L14,8 3,15 Z" Style="{StaticResource Project.ButtonGlyph}"/><TextBlock Text="{l:Tr Toolbar.Compile}"/>
+            </StackPanel>
+          </Button>
+          <Button x:Name="SaveButton" ContentTemplate="{x:Null}" AutomationProperties.Name="{l:Tr Pages.Save}" Command="{Binding Engineering.Save}"
+            AutomationProperties.AcceleratorKey="Ctrl+S" ToolTip="Ctrl+S" Style="{StaticResource Primer.ProjectSave}" Margin="6,0,0,0">
+            <StackPanel Orientation="Horizontal"><Path Style="{StaticResource Project.ButtonGlyph}" Data="M2,2 H11 L14,5 V14 H2 Z M5,2 V6 H10 V2 M5,14 V9 H11 V14"/>
+              <TextBlock Text="{l:Tr Project.Save}"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+        <DockPanel LastChildFill="False">
+          <StackPanel x:Name="BlockIdentity" Orientation="Horizontal" MaxWidth="230" Margin="0,0,8,0">
+            <Border DataContext="{Binding Engineering.FocusedBlock}" Style="{StaticResource Primer.BlkBadge}" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.BlkBadgeText}"/>
+            </Border>
+            <TextBlock Text="{Binding Engineering.FocusedBlock.Name}" Style="{StaticResource Primer.Mono}"
+              MaxWidth="170" FontWeight="SemiBold" Margin="6,0,0,0" ToolTip="{Binding Engineering.FocusedBlock.Path}"/>
+            <Ellipse Style="{StaticResource Project.Dot}" Visibility="{Binding Engineering.FocusedBlock.IsModified,
+              Converter={StaticResource BoolToVisibility},FallbackValue=Collapsed}"/>
+            <Border Style="{StaticResource Primer.ProjectDivider}" Width="1" Margin="8,4,0,4"/>
+          </StackPanel>
+          <RadioButton x:Name="RenderTab" AutomationProperties.Name="{l:Tr Project.Render}" GroupName="ProjectDocument"
+            Style="{StaticResource Primer.ProjectRenderTab}" Click="OnRender">
+            <StackPanel Orientation="Horizontal"><Path Data="M6,3 L1,8 6,13 M10,3 L15,8 10,13" Style="{StaticResource Project.ButtonGlyph}"/>
+              <TextBlock Text="{l:Tr Project.Render}"/></StackPanel>
+          </RadioButton>
+          <RadioButton x:Name="InterfaceTab" AutomationProperties.Name="{l:Tr Project.Interface}" GroupName="ProjectDocument"
+            Margin="4,0" Style="{StaticResource Primer.ProjectInterfaceTab}" Click="OnInterface">
+            <StackPanel Orientation="Horizontal"><Path Data="{StaticResource Icon.FileText}" Style="{StaticResource Project.ButtonGlyph}"/>
+              <TextBlock Text="{l:Tr Project.Interface}"/></StackPanel>
+          </RadioButton>
+          <RadioButton x:Name="CompileTab" ToolTip="{l:Tr Pages.CompileDescription}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" GroupName="ProjectDocument"
+            Style="{StaticResource Primer.ProjectCompileTab}" Click="OnCompileResults">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource Icon.Warning}" Style="{StaticResource Project.ButtonGlyph}"/>
+              <TextBlock Text="{l:Tr Toolbar.Compile}"/>
+              <Border Style="{StaticResource Primer.ProjectCompileCount}" Margin="4,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Engineering.DiagnosticCount}"/>
+              </Border>
+            </StackPanel>
+          </RadioButton>
+        </DockPanel>
       </DockPanel>
     </Border>
+    <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
     <Border x:Name="EnvironmentBanner" DockPanel.Dock="Top" Style="{StaticResource Primer.Alert.Warning}" Margin="0,0,0,12" Visibility="{Binding EnvironmentNeedsAction,Converter={StaticResource BoolToVisibility}}">
       <ux:PageHeadPanel Spacing="12">
         <TextBlock Text="{Binding EnvironmentAttention}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap"/>
         <Button x:Name="RunEnvironmentButton" Content="{l:Tr Pages.ViewEnvironment}" AutomationProperties.Name="{l:Tr Pages.ViewEnvironment}" Click="OnEnvironment" Style="{StaticResource Primer.Secondary}"/>
       </ux:PageHeadPanel>
     </Border>
-    <Expander DockPanel.Dock="Top" Header="{l:Tr Session.Title}" AutomationProperties.Name="{l:Tr Session.Title}"
-      Visibility="{Binding HasMcpPanel,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.ProjectSessions}">
+    <Expander x:Name="Sessions" DockPanel.Dock="Top" Header="{l:Tr Session.Title}" AutomationProperties.Name="{l:Tr Session.Title}"
+      Style="{StaticResource Primer.ProjectSessions}">
       <StackPanel>
       <Border Style="{StaticResource Primer.Container}">
         <StackPanel>
@@ -87,30 +136,6 @@
           <Button AutomationProperties.Name="{l:Tr Pages.Options}" DockPanel.Dock="Right" Content="{l:Tr Pages.Options}" Click="OnProjectOptions" Style="{StaticResource Primer.Link}" MinHeight="24"/>
           <TextBlock Text="{l:Tr Pages.ConnectHint}" Style="{StaticResource Primer.Muted.textFaint}" TextWrapping="Wrap"/>
         </DockPanel>
-      </StackPanel>
-    </Border>
-    <Border x:Name="ProjectCard" Style="{StaticResource Primer.PageHead}" Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
-      <StackPanel>
-        <DockPanel>
-          <Button x:Name="DisconnectButton" DockPanel.Dock="Right" Content="{l:Tr Pages.Disconnect}" AutomationProperties.Name="{l:Tr Pages.Disconnect}"
-            Command="{Binding Session.Disconnect}" Style="{StaticResource Primer.IdeToolButton}"/>
-          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <TextBlock x:Name="ProjectTitle" Text="{Binding Session.ProjectName}" Style="{StaticResource Primer.ContainerTitle}"
-              ToolTip="{Binding Session.ProjectPath}" AutomationProperties.HeadingLevel="Level2"/>
-            <TextBlock Text="{l:Tr Primer.Bound}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
-            <TextBlock Text="{Binding Engineering.SelectedDevice.Name}" Style="{StaticResource Primer.Mono}" Margin="8,0,0,0"/>
-          </StackPanel>
-        </DockPanel>
-      </StackPanel>
-    </Border>
-    <Border Style="{StaticResource Primer.IdeSubBar}" Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
-      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-        <RadioButton x:Name="RenderTab" Content="{l:Tr Project.Render}" AutomationProperties.Name="{l:Tr Project.Render}"
-          Style="{StaticResource Primer.ProjectRenderTab}" GroupName="ProjectDocument" Click="OnRender"/>
-        <RadioButton x:Name="CompileTab" Content="{l:Tr Toolbar.Compile}" AutomationProperties.Name="{l:Tr Toolbar.Compile}"
-          Style="{StaticResource Primer.ProjectCompileTab}" GroupName="ProjectDocument" Click="OnCompileResults" Margin="4,0,0,0"/>
-        <RadioButton x:Name="TagsTab" Content="{l:Tr Project.Tags}" AutomationProperties.Name="{l:Tr Project.Tags}"
-          Style="{StaticResource Primer.ProjectTagsTab}" GroupName="ProjectDocument" Click="OnTags" IsEnabled="{Binding Engineering.CanReadTags}" Margin="4,0,0,0"/>
       </StackPanel>
     </Border>
   </StackPanel>

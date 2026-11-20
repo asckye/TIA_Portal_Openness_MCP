@@ -6,7 +6,17 @@ using TiaOpenness.Gui.Common;
 
 namespace TiaOpenness.Gui.ViewModels;
 
-public sealed record ProjectLink(DeviceInfo Device, bool IsVersionControl);
+public sealed class ProjectLink(DeviceInfo device, bool isVersionControl) : ObservableObject
+{
+    private string _countLabel = "";
+    public DeviceInfo Device { get; } = device;
+    private bool _visible = !isVersionControl;
+    public bool Visible { get => _visible; internal set => Set(ref _visible, value); }
+    public bool IsVersionControl { get; } = isVersionControl;
+    private bool _active;
+    public bool IsActive { get => _active; internal set => Set(ref _active, value); }
+    public string CountLabel { get => _countLabel; internal set => Set(ref _countLabel, value); }
+}
 
 /// <summary>
 /// One row of the device tree: the project at the root, the device groups the engineer filed
@@ -37,6 +47,12 @@ public sealed class DeviceNode : ObservableObject
     /// <summary>The device this row stands for, or null for the project root and for groups.</summary>
     public DeviceInfo? Device { get; }
 
+    private bool _active;
+    public bool IsActive { get => _active; internal set => Set(ref _active, value); }
+    private bool _safety;
+    public bool HasSafetyBlocks { get => _safety; internal set => Set(ref _safety, value); }
+    private bool _matchesFilter = true;
+    public bool MatchesFilter { get => _matchesFilter; internal set => Set(ref _matchesFilter, value); }
     public bool IsRoot { get; }
 
     public ObservableCollection<DeviceNode> Children { get; } = [];
@@ -47,7 +63,7 @@ public sealed class DeviceNode : ObservableObject
     {
         // Keep the PLC and its two navigation links in place as block groups change.
         while (_plcChildren.Count > 0 && _plcChildren[0] is BlockNode) _plcChildren.RemoveAt(0);
-        for (int i = 0; i < blocks.Count; i++) _plcChildren.Insert(i, blocks[i]);
+        for (int index = 0; index < blocks.Count; index++) _plcChildren.Insert(index, blocks[index]);
     }
 
     internal IEnumerable<DeviceNode> DeviceNodes() => Device != null ? [this] : Children.SelectMany(child => child.DeviceNodes());
@@ -74,6 +90,8 @@ public sealed class DeviceNode : ObservableObject
     }
 
     /// <summary>"Plc", "Hmi", "Drive" or "Other"; empty for the root and for groups.</summary>
+    public string Caption => Device == null ? Detail : Device.TypeName ?? Device.ArticleNumber ?? "";
+
     public string Category => Device?.Category ?? string.Empty;
 
     private IEnumerable<DeviceInfo> Devices()

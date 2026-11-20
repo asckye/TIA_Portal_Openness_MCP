@@ -54,6 +54,9 @@ public sealed class McpProjectClient : IProjectClient
         if ((bool?)envelope["ok"] != true)
         {
             string code = (string?)envelope["error"]?["code"] ?? "INTERNAL_ERROR";
+            if (tool == "CompilePlcSoftware" && phase == "apply" && code == "COMPILE_ERRORS"
+                && (string?)envelope["meta"]?["execution"] == "completed")
+                throw new CompilerErrors(envelope);
             throw new InvalidOperationException(code + ": " + EngineResultText.Error(code) + " " + (string?)envelope["error"]?["message"]);
         }
         return envelope;
@@ -161,13 +164,20 @@ public sealed class McpProjectClient : IProjectClient
             Kind = kind.Contains("OB", StringComparison.Ordinal) ? BlockKind.OB : kind.Contains("FB", StringComparison.Ordinal) ? BlockKind.FB
                 : kind.Contains("FC", StringComparison.Ordinal) ? BlockKind.FC : kind.Contains("DB", StringComparison.Ordinal) ? BlockKind.DB : BlockKind
                     .Unknown,
-            Number = int
-                .TryParse(Attribute("Number"), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int number)
-                ? number : null,
+            Number = int.TryParse(data["number"]?.ToString() ?? Attribute("Number"), System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out int number) ? number : null,
             IsConsistent = (bool?)data["isConsistent"] == true, IsKnowHowProtected = (bool?)data["isKnowHowProtected"] == true,
             ProgrammingLanguage = (string?)data["programmingLanguage"] ?? "", HeaderAuthor = Attribute("HeaderAuthor") ?? "" };
     }
     private static string Escape(string name) => Uri.EscapeDataString(name);
+    public async Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath)
+    {
+        var data = await Read("DescribePlcBlockLogic", new() { ["softwarePath"] = softwarePath, ["blockPath"] = blockPath });
+        if ((string?)data["evidence"]?["xmlContent"] == "interface-only")
+            throw new InvalidOperationException((string?)data["summary"] ?? Loc.Current["Project.NoSource"]);
+        return (string?)data["readable"] ?? "";
+    }
+
     public async Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits)
     {
         bool supportsUnits = Supports("ListPlcTags", "includeUnits");
@@ -189,7 +199,8 @@ public sealed class McpProjectClient : IProjectClient
             {
                 string identity = item!["path"]!.GetValue<string>();
                 tags.Add(new() { Name = item["name"]!.GetValue<string>(), DataType = item["dataType"]!.GetValue<string>(),
-                    LogicalAddress = item["value"]!.GetValue<string>(), TableName = identity[..identity.LastIndexOf('/')] });
+                    LogicalAddress = item["value"]!.GetValue<string>(), TableName = identity[..identity.LastIndexOf('/')],
+                    Comment = (string?)item["comment"] ?? "" });
             }
         }
         return tags;
@@ -253,11 +264,83 @@ public sealed class McpProjectClient : IProjectClient
     }
     public async Task<CompileResult> CompileAsync(string deviceId)
     {
-        var data = await Write("CompilePlcSoftware", new() { ["softwarePath"] = deviceId });
+        JsonObject data;
+        JsonNode? details = null;
+        try { data = await Write("CompilePlcSoftware", new() { ["softwarePath"] = deviceId }); }
+        catch (CompilerErrors error)
+        {
+            data = error.Envelope["data"] as JsonObject ?? new();
+            details = error.Envelope["error"]?["details"];
+        }
+        var evidence = data["evidence"];
         var diagnostics = data["attempt"]?["diagnostics"];
-        return new() { State = (string?)data["state"] ?? (string?)diagnostics?["state"] ?? "Unknown",
-            ErrorCount = (int?)data["errorCount"] ?? (int?)diagnostics?["rootErrorCount"] ?? 0,
-            WarningCount = (int?)data["warningCount"] ?? (int?)diagnostics?["rootWarningCount"] ?? 0 };
+        var result = new CompileResult
+        {
+            State = details != null ? "Error" : (string?)evidence?["effectiveState"] ?? (string?)data["state"] ?? (string?)diagnostics?["state"] ?? "Unknown",
+            ErrorCount = (int?)details?["errorCount"] ?? (int?)data["errorCount"]
+                ?? (int?)evidence?["rootCounts"]?["errors"] ?? (int?)diagnostics?["rootErrorCount"] ?? 0,
+            WarningCount = (int?)details?["warningCount"] ?? (int?)data["warningCount"]
+                ?? (int?)evidence?["rootCounts"]?["warnings"] ?? (int?)diagnostics?["rootWarningCount"] ?? 0,
+        };
+        var messages = data["diagnosticMessages"] ?? evidence?["nodes"] ?? data["nodes"] ?? diagnostics?["messages"] ?? data["messages"];
+        if (messages is JsonArray array) ParseCompilerMessages(array, result.Messages, "");
+        if (details?["errors"] is JsonArray failures && !result.Messages.Any(m => m.Severity == CompileSeverity.Error))
+            foreach (var item in failures.OfType<JsonObject>())
+                result.Messages.Add(new() { Severity = CompileSeverity.Error, Target = (string?)item["path"] ?? "",
+                    Description = (string?)item["description"] ?? (string?)item["message"] ?? "" });
+        return result;
+    }
+
+    private sealed class CompilerErrors(JsonObject envelope) : Exception((string?)envelope["error"]?["message"])
+    {
+        internal JsonObject Envelope { get; } = envelope;
+    }
+
+    private static void ParseCompilerMessages(JsonArray nodes, List<CompileMessage> messages, string parent)
+    {
+        var descendants = nodes.OfType<JsonObject>().Select(node => (string?)node["parentPath"]).ToHashSet(StringComparer.Ordinal);
+        var paths = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var node in nodes)
+        {
+            string? state, description, path, code = null;
+            if (node is JsonObject fields)
+            {
+                state = (fields["State"] ?? fields["state"])?.ToString();
+                description = (fields["Description"] ?? fields["description"])?.ToString();
+                code = fields["ErrorCode"]?.ToString();
+                path = (fields["Path"] ?? fields["path"] ?? fields["ObjectPath"])?.ToString();
+                if (string.IsNullOrEmpty(path))
+                    path = paths.GetValueOrDefault((string?)fields["parentPath"] ?? "", parent);
+                if (fields["treePath"] is JsonValue address)
+                {
+                    // The native collector emits parents first and locates children by collection path.
+                    string collection = address + "/messages";
+                    paths[collection] = path;
+                    if (descendants.Contains(collection)) continue;
+                }
+                if ((fields["Messages"] ?? fields["messages"]) is JsonArray { Count: > 0 } children)
+                {
+                    ParseCompilerMessages(children, messages, path);
+                    continue;
+                }
+            }
+            else
+            {
+                // Native descriptions may contain semicolons. Split only at a named diagnostic field.
+                string line = node?.ToString() ?? "";
+                string Field(string key) => Regex.Match(line,
+                    @"(?:^|; )" + key + @"=(.*?)(?=; (?:State|Description|Path|DateTime|ErrorCount|WarningCount)=|$)", RegexOptions.Singleline).Groups[1].Value;
+                state = Field("State");
+                description = line.StartsWith("State=", StringComparison.Ordinal) ? Field("Description") : line;
+                path = Field("Path");
+            }
+            if (string.IsNullOrWhiteSpace(description)) continue;
+            messages.Add(new()
+            {
+                Target = string.IsNullOrEmpty(path) ? parent : path, Description = description, ErrorCode = code ?? "",
+                Severity = Enum.TryParse<CompileSeverity>(state, true, out var severity) ? severity : CompileSeverity.Information,
+            });
+        }
     }
     public async Task<InspectionReport> InspectAsync(string deviceId, string? blockNamePattern)
     {

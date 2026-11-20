@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using TiaOpenness.Contracts.Models;
 using TiaOpenness.Gui.Localization;
+using TiaOpenness.Gui.ViewModels;
 using TiaOpenness.Gui.Services.Stubs;
 using TiaOpenness.Gui.Themes;
 using TiaOpenness.Gui.Views;
@@ -17,6 +19,152 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
 {
+    [Theory]
+    [InlineData(1366, 860, AppTheme.Light, AppLanguage.Chinese)]
+    [InlineData(1366, 860, AppTheme.Light, AppLanguage.English)]
+    [InlineData(1366, 860, AppTheme.Dark, AppLanguage.Chinese)]
+    [InlineData(1024, 640, AppTheme.Light, AppLanguage.Chinese)]
+    public void Project_documents_render_the_selected_fixture_at_design_size(int width, int height, AppTheme theme, AppLanguage language)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var themes = ThemeManager.Current;
+            var previous = (themes.Theme, themes.Accent, themes.HighContrastOverride, App.Settings.LeftPaneOpen);
+            themes.Theme = theme; themes.Accent = AppAccent.Cobalt; themes.HighContrastOverride = false; App.Settings.LeftPaneOpen = true;
+            var model = ProjectPageTestSupport.Model(release: "21", configure: client =>
+            {
+                client.AttachedProject = new() { Name = "Conveyor_Line_04", Path = @"D:\Projects\Line04\Conveyor_Line_04.ap21" };
+                client.Devices[0].TypeName = "CPU 1512SP-1 PN";
+                client.StatusItems.RemoveAll(row => row.CompareState != VcCompareState.Unequal);
+                client.Blocks.RemoveAll(block => block.FolderPath is "Drives" or "HMI");
+                client.LogicHandler = (_, _) => Task.FromResult("""
+                    ── 程序段 1 · Conveyor  [SCL]
+                       // Handle the operator start and stop inputs.
+                       IF #StopCmd THEN
+                           #Running := FALSE;
+                           #Speed := 0;
+                       ELSIF #StartCmd THEN
+                           #Running := TRUE;
+                           #Speed := #RequestedSpeed;
+                       END_IF;
+                    """);
+                client.CompileResult = new() { State = "Warning", WarningCount = 1,
+                    Messages = [new() { Severity = CompileSeverity.Warning, Target = "Conveyor/Conveyor_Ctrl_FB",
+                        Description = "Unused temporary variable." }] };
+                client.Tags.Add(new() { Name = "ConveyorSpeed", DataType = "Real", LogicalAddress = "%QD4", TableName = "root/tag-tables/Drives" });
+            });
+            var window = new MainWindow(model, false);
+            try
+            {
+                window.ShowConfiguration(false);
+                window.Navigate("Engineering");
+                var host = WorkbenchRenderTests.CreateHost(window, width, height);
+                WorkbenchRenderTests.ApplyCurrentPalette(host);
+                model.Engineering.Compile.Execute(null);
+                window.BlocksContent.LocateControlBlock(model.Engineering.Blocks.Single(row => row.Name == "Conveyor_Ctrl_FB"));
+                void Capture(string view)
+                {
+                    WpfContext.Drain(); host.UpdateLayout();
+                    string? output = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
+                    if (output == null) return;
+                    var dir = Directory.CreateDirectory(Path.Combine(output, "project"));
+                    string variant = $"{theme.ToString().ToLowerInvariant()}-{(Loc.Current.IsChinese ? "zh" : "en")}-{width}x{height}";
+                    WorkbenchRenderTests.SaveRender(host, Path.Combine(dir.FullName, $"project-{view}-{variant}.png"), width, height);
+                }
+                UnifiedDesktopTests.ClickControl(window.OperationsContent.RenderTab);
+                Assert.Equal(9, model.Engineering.SourceLines.Count);
+                Assert.Equal(width >= 1280, window.OperationsContent.BlockIdentity.Visibility == Visibility.Visible);
+                Assert.Equal(44, window.OperationsContent.ProjectToolbar.ActualHeight);
+                Assert.DoesNotContain(WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(window.OperationsContent.ProjectToolbar),
+                    text => text.Text.Contains("System.Windows.", StringComparison.Ordinal));
+                Assert.True(model.Engineering.FocusedBlock!.IsModified);
+                if (width >= 1280) AssertTreeGeometry(window.ProjectExplorer.Nodes);
+                Capture("code");
+                UnifiedDesktopTests.ClickControl(window.OperationsContent.InterfaceTab);
+                Assert.Equal(ProjectDocument.Interface, model.Engineering.Document);
+                Capture("interface");
+                window.BlocksContent.ShowCompileTab();
+                Assert.Equal(CompileSeverity.Warning, Assert.Single(model.Engineering.CompilerMessages).Severity);
+                Capture("compile");
+                UnifiedDesktopTests.ClickControl(window.OperationsContent.TagsTab);
+                Assert.Equal(2, model.Engineering.TagCount);
+                Capture("tags");
+                var tags = (PlcTagsView)window.PlcTagsContent.Content;
+                tags.TagSearch.Text = "%QD";
+                Assert.Equal("ConveyorSpeed", Assert.Single(tags.TagRows.Items.Cast<TagInfo>()).Name);
+                Assert.True(tags.ExportCsv.IsEnabled);
+                tags.TagSearch.Text = "";
+                Assert.Equal(2, tags.TagRows.Items.Count);
+                window.Navigate("VersionControl");
+                Assert.True(model.VersionControl.HasStatus);
+                Capture("vci");
+            }
+            finally
+            {
+                window.Close();
+                (themes.Theme, themes.Accent, themes.HighContrastOverride, App.Settings.LeftPaneOpen) = previous;
+            }
+        });
+    }
+
+    private static void AssertTreeGeometry(TreeView tree)
+    {
+        Assert.Equal(new Thickness(8), tree.Padding);
+        var items = WorkbenchRenderFeaturePagesTests.Descendants<TreeViewItem>(tree)
+            .Where(item => item.Visibility == Visibility.Visible && item.ActualHeight > 0).ToArray();
+        Assert.Contains(items, item => item.Header is BlockNode { Row: not null });
+        Assert.Contains(items, item => item.Header is ProjectLink);
+        Assert.Single(items, item => item.Header is BlockNode { IsActive: true });
+        foreach (var item in items)
+        {
+            var surface = (Border)item.Template.FindName("Surface", item);
+            double rowHeight = item.Header switch
+            {
+                BlockNode { IsFolder: false } => 45,
+                DeviceNode => 43.875,
+                _ => 28,
+            };
+            Assert.Equal(rowHeight, surface.ActualHeight);
+            var branch = (Border)item.Template.FindName("Branch", item);
+            Assert.Equal(new Thickness(11, item.Header is DeviceNode ? 4 : 2, 0, 0), branch.Margin);
+            Assert.Equal(new Thickness(1, 0, 0, 0), branch.BorderThickness);
+            Assert.Equal(new Thickness(9, 0, 0, 0), branch.Padding);
+            if (item.Header is DeviceNode or BlockNode { IsFolder: true })
+            {
+                bool device = item.Header is DeviceNode;
+                Assert.Equal(device ? new Thickness(8, 6, 8, 6) : new Thickness(6, 0, 6, 0), surface.Padding);
+                var switcher = (FrameworkElement)item.Template.FindName("Switcher", item);
+                Assert.Equal(device ? 11 : 10, switcher.ActualWidth);
+                Assert.Equal(6, switcher.Margin.Right);
+                if (item.IsExpanded && item.HasItems)
+                {
+                    var first = (TreeViewItem)item.ItemContainerGenerator.ContainerFromIndex(0);
+                    Assert.Equal(new Point(21, surface.ActualHeight + branch.Margin.Top), first.TranslatePoint(new Point(), item));
+                }
+            }
+            if (item.Header is BlockNode { IsFolder: false })
+            {
+                var choice = WorkbenchRenderFeaturePagesTests.Descendants<CheckBox>(surface).Single();
+                Assert.Equal(new Thickness(12, 6, 8, 6), choice.Padding);
+                var labels = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(choice)
+                    .Where(label => label.LineStackingStrategy == LineStackingStrategy.BlockLineHeight).ToArray();
+                Assert.Equal(new double[] { 18, 15 }, labels.Select(label => label.LineHeight));
+                Assert.Equal(18, labels[1].TranslatePoint(new Point(), labels[0]).Y);
+                if (item.Header is BlockNode { IsActive: true })
+                {
+                    var card = (Border)choice.Template.FindName("Row", choice);
+                    Assert.Equal(new Size(203, 45), card.RenderSize);
+                    var bar = (Border)choice.Template.FindName("ActiveBar", choice);
+                    Assert.Equal(new Size(3, 16), bar.RenderSize);
+                    Assert.Equal(new Point(3, 14.5), bar.TranslatePoint(new Point(), card));
+                }
+            }
+        }
+        var conveyor = items.Where(item => item.Header is BlockNode { Row.Info.FolderPath: "Conveyor" }).ToArray();
+        Assert.Equal(2, conveyor.Length);
+        Assert.Equal(47, Math.Abs(conveyor[0].TranslatePoint(new Point(), conveyor[1]).Y));
+    }
+
     [Fact]
     public void Render_redesigned_pages_at_both_review_sizes_in_all_languages_and_themes()
     {
@@ -59,7 +207,7 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         }
                         window.Navigate("Engineering");
                         using var projectTrace = new BindingPathTests.BindingTrace();
-                        foreach (string name in new[] { "RenderTab", "TagsTab", "CompileTab" })
+                        foreach (string name in new[] { "RenderTab", "InterfaceTab", "TagsTab", "CompileTab" })
                         {
                             var tab = (RadioButton)ProjectPageTestSupport.Find(window, name);
                             UnifiedDesktopTests.ClickControl(tab);
@@ -159,8 +307,10 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         var card = (Border)blocks.FindName("BlocksCard");
                         var rows = (Grid)card.Child;
                         var header = rows.Children.OfType<Border>().Single(border => Grid.GetRow(border) == 0);
-                        var selection = rows.Children.OfType<Border>().Single(border => Grid.GetRow(border) == 1);
-                        Assert.InRange(selection.TranslatePoint(new Point(), card).Y - header.TranslatePoint(new Point(0, header.ActualHeight), card).Y, 8, 16);
+                        var selection = rows.Children.OfType<StackPanel>().Single(panel => Grid.GetRow(panel) == 1);
+                        Assert.Equal(header.TranslatePoint(new Point(0, header.ActualHeight), card).Y, selection.TranslatePoint(new Point(), card).Y);
+                        Assert.Equal(new Thickness(28, 28, 28, 0), card.Margin);
+                        Assert.Equal(920, card.MaxWidth);
                     }
                     WorkbenchRenderTests.SaveRender(host, Path.Combine(output, state.Item1 + ".png"));
                     if (state.Item2 is "Engineering" or "Blocks")
@@ -177,7 +327,7 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         }
                         host.UpdateLayout();
                         Assert.True(tab.IsChecked);
-                        Assert.Equal(300, ((FrameworkElement)window.FindName("EngineeringSideContent")).ActualWidth);
+                        Assert.Equal(Math.Min(920, window.ProjectOverview.ActualWidth - 56), side.ActualWidth);
                         Assert.Null(side.FindName("EnvironmentCard"));
                         Assert.Null(side.FindName("BlocksLogCard"));
                         Assert.True(((Button)side.FindName("CompileButton")).IsDefault);

@@ -14,6 +14,7 @@ internal static class ProjectPageTestSupport
     internal static object Find(MainWindow window, string name)
     {
         if (window.FindName(name) is { } own) return own;
+        if (((PlcTagsView)window.PlcTagsContent.Content).FindName(name) is { } tagControl) return tagControl;
         foreach (string host in new[] { "OperationsContent", "BlocksContent", "EngineeringSideContent", "VersionControlContent", "LogContent" })
         {
             var view = (UserControl)window.FindName(host);
@@ -23,7 +24,8 @@ internal static class ProjectPageTestSupport
         throw new InvalidOperationException("No page element: " + name);
     }
 
-    internal static MainViewModel Model(bool connected = true, bool results = false, bool workspace = true, string release = "14sp1")
+    internal static MainViewModel Model(bool connected = true, bool results = false, bool workspace = true, string release = "14sp1",
+        Action<FakeProjectClient>? configure = null)
     {
         var client = new FakeProjectClient
         {
@@ -48,6 +50,7 @@ internal static class ProjectPageTestSupport
             Name = names[i], FilePath = names[i] + ".xml", FileFormat = "SimaticML",
             CompareState = i is 1 or 4 or 5 or 3 ? VcCompareState.Unequal : VcCompareState.Equal,
         });
+        configure?.Invoke(client);
         var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = release };
         if (connected)
         {

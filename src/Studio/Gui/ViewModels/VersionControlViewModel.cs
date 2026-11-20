@@ -35,7 +35,10 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         _dialogs = dialogs;
         _activity = activity;
         _selectedDeviceId = selectedDeviceId;
-        VcStatusItems.CollectionChanged += (_, _) => Raise(nameof(HasVcItems));
+        VcStatusItems.CollectionChanged += (_, _) =>
+        {
+            Raise(nameof(HasVcItems)); Raise(nameof(ModifiedCount)); Raise(nameof(ModifiedLabel));
+        };
         Loc.Current.LanguageChanged += OnLanguageChanged;
         VcRefresh = new AsyncCommand(VcRefreshAsync, () => _client.CanRead && !_activity.Busy);
         VcCreate = new AsyncCommand(VcCreateAsync,
@@ -72,6 +75,11 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         }
     }
 
+    private bool _hasStatus;
+    public bool HasStatus { get => _hasStatus; private set => Set(ref _hasStatus, value); }
+    public int ModifiedCount => VcStatusItems.Count(item => item.CompareState == VcCompareState.Unequal);
+    public string ModifiedLabel => !HasStatus ? "" : ModifiedCount == 1
+        ? Loc.Current["Project.OneModified"] : Loc.Current.T("Project.ModifiedCount", ModifiedCount);
     public bool HasVcItems => VcStatusItems.Count > 0;
 
     /// <summary>Whether the current project exposes the Version Control Interface.</summary>
@@ -100,13 +108,20 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     public string VcDiffCaption { get => _vcDiffCaption; private set => Set(ref _vcDiffCaption, value); }
 
+    public bool HasWorkspace => SelectedWorkspace != null;
+
     public WorkspaceInfo? SelectedWorkspace
     {
         get => _selectedWorkspace;
         set
         {
             if (!Set(ref _selectedWorkspace, value)) return;
+            HasStatus = false;
+            SelectedVcItem = null;
+            VcStatusItems.Clear();
+            Raise(nameof(ModifiedLabel));
             Raise(nameof(WorkspaceRootDisplay));
+            Raise(nameof(HasWorkspace));
             RaiseVcCommands();
         }
     }
@@ -144,7 +159,10 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         if (!_client.CanRead) { ClearPresentation(); return; }
         VcSupported = await _client.VcSupportedAsync();
 
+        string? selectedName = SelectedWorkspace?.Name;
         Workspaces.Clear();
+        SelectedWorkspace = null;
+        HasStatus = false;
         VcStatusItems.Clear();
 
         if (!VcSupported)
@@ -154,7 +172,6 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             return;
         }
 
-        string? selectedName = SelectedWorkspace?.Name;
         foreach (var workspace in await _client.VcListWorkspacesAsync()) Workspaces.Add(workspace);
         SelectedWorkspace = Workspaces.FirstOrDefault(w => w.Name == selectedName) ?? Workspaces.FirstOrDefault();
 
@@ -181,7 +198,9 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         VcDiffLines.Clear();
         Raise(nameof(HasVcDiff));
 
-        if (SelectedVcItem is null)
+        var item = SelectedVcItem;
+        var workspace = SelectedWorkspace;
+        if (item is null)
         {
             VcDiffCaption = string.Empty;
             return;
@@ -189,7 +208,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
         try
         {
-            var diff = await _client.VcDiffAsync(SelectedWorkspace?.Name, SelectedVcItem.FilePath);
+            var diff = await _client.VcDiffAsync(workspace?.Name, item.FilePath);
+            if (item != SelectedVcItem || workspace != SelectedWorkspace) return;
 
             if (!diff.Available)
             {
@@ -200,12 +220,12 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             foreach (var line in diff.Lines) VcDiffLines.Add(line);
 
             VcDiffCaption = VcDiffLines.Count > 0
-                ? SelectedVcItem.Name
-                : Loc.Current.T("Vc.Diff.Unchanged", SelectedVcItem.Name);
+                ? item.Name
+                : Loc.Current.T("Vc.Diff.Unchanged", item.Name);
         }
         catch (Exception ex)
         {
-            VcDiffCaption = ex.Message;
+            if (item == SelectedVcItem && workspace == SelectedWorkspace) VcDiffCaption = ex.Message;
         }
         finally
         {
@@ -215,7 +235,12 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     private async Task LoadVcStatusAsync()
     {
-        var report = await _client.VcStatusAsync(SelectedWorkspace?.Name, changedOnly: !VcShowAll);
+        var workspace = SelectedWorkspace;
+        HasStatus = false;
+        Raise(nameof(ModifiedLabel));
+        var report = await _client.VcStatusAsync(workspace?.Name, changedOnly: !VcShowAll);
+        if (workspace != SelectedWorkspace) return;
+        HasStatus = true;
 
         VcStatusItems.Clear();
         foreach (var item in report.Items) VcStatusItems.Add(item);
@@ -324,7 +349,10 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         VcSupported = false;
     }
 
-    private void OnLanguageChanged(object? sender, EventArgs e) => Raise(nameof(WorkspaceRootDisplay));
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        Raise(nameof(WorkspaceRootDisplay)); Raise(nameof(ModifiedLabel));
+    }
 
     public void Dispose() { Loc.Current.LanguageChanged -= OnLanguageChanged; _client.Dispose(); }
 }

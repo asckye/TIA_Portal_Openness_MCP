@@ -93,6 +93,12 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
         Record("Blocks", deviceId);
         return BlockHandler?.Invoke(deviceId) ?? Task.FromResult(Blocks);
     }
+    public Func<string, string, Task<string>>? LogicHandler { get; set; }
+    public Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath)
+    {
+        Record("DescribePlcBlockLogic", softwarePath, blockPath);
+        return LogicHandler?.Invoke(softwarePath, blockPath) ?? Task.FromResult("");
+    }
     public List<TagInfo> Tags { get; } = [];
     public Func<string, Task<List<TagInfo>>>? TagHandler { get; set; }
     public Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits)
@@ -108,7 +114,8 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
         Record("Import", deviceId, files.ToArray(), overwrite);
         return ImportError is null ? Task.FromResult(new ExportResult()) : Task.FromException<ExportResult>(ImportError);
     }
-    public Task<CompileResult> CompileAsync(string deviceId) => Reply("Compile", new CompileResult { State = "Success" }, deviceId);
+    public CompileResult CompileResult { get; set; } = new() { State = "Success" };
+    public Task<CompileResult> CompileAsync(string deviceId) => Reply("Compile", CompileResult, deviceId);
     public Task<InspectionReport> InspectAsync(string deviceId, string? blockNamePattern)
         => Reply("Inspect", new InspectionReport { DeviceId = deviceId }, deviceId, blockNamePattern);
     public Task<bool> VcSupportedAsync() => Reply("VcSupported", VcSupported);

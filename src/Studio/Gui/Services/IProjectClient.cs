@@ -21,6 +21,7 @@ public interface IProjectClient : IDisposable
     public Task SaveProjectAsync();
     public Task<List<DeviceInfo>> ListDevicesAsync();
     public Task<List<BlockInfo>> ListBlocksAsync(string deviceId);
+    public Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath);
     public Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits);
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format);
     public Task<ExportResult> ImportBlocksAsync(string deviceId, IEnumerable<string> files, bool overwrite);
