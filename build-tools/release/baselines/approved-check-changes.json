@@ -7114,6 +7114,43 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):250ca96b578a061eb619aaa6f82a448704e8e0af3c6556ddc0e0287488f28004:1"
         }
       ]
+    },
+    {
+      "task": "UI-0036FT",
+      "maintainerDate": "2026-11-20",
+      "reason": "Maintainer decision 2026-11-20 all messages go through the toast: assertions moved from inline status controls to the toast with the same expected texts (maintainer standing approval 2026-11-17 for recommended options)",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs( AppLanguage language , string detection , string ready , string status ):9afc3630eb7176b2d92503a91563643a6ab78e7458e73c64dff879b181331ed5:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs( AppLanguage language , string detection , string ready , string status ):ccd5525d3d56f31624848827364161227886200618846372624e20b4d63d50a2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs( AppLanguage language , string detection , string ready , string status ):f242147f1023a7406fd1ddf6ff507090f36c3fd412b56fdf8b184bf54a45f589:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs( AppLanguage language , string detection , string ready , string status ):f242147f1023a7406fd1ddf6ff507090f36c3fd412b56fdf8b184bf54a45f589:2"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Hosted_configuration_uses_workbench_resources_in_both_directions( AppLanguage initialLanguage , AppTheme initialTheme , AppLanguage nextLanguage , AppTheme nextTheme ):6e80d5e9f5746e0803ed21673ef730d545d2e10c2fdd232bab5f3ebf17f5cedb:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Hosted_configuration_uses_workbench_resources_in_both_directions( AppLanguage initialLanguage , AppTheme initialTheme , AppLanguage nextLanguage , AppTheme nextTheme ):946ff51ccad6ab0365b4ec2ee0887899f7f9832a94bc5763dbd014879069544b:1"
+        }
+      ]
     }
   ]
 }
