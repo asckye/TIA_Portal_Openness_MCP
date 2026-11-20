@@ -326,7 +326,7 @@ internal sealed class HostSession : IHostSession
             .EnterSession(NativeCrossReferenceSessionFile, NativeCrossReferenceSessionSecret);
         using var attribution = workbench ? ActorScope.EnterWorkbench(mcpSessionId ?? SessionKey, id) : ActorScope
             .EnterCall(mcpSessionId ?? SessionKey, request.Server);
-        using var observation = HostSessionCall.Enter(LaneChanged, Ended, inner.ProtocolTool.Name, actor, id);
+        using var observation = HostSessionCall.Enter(LaneChanged, Ended, inner.ProtocolTool.Name, actor, id, SessionKey);
         lock (sync) activeRequests[id] = new JsonObject { ["tool"] = inner.ProtocolTool.Name, ["requestId"] = id,
             ["sinceUtc"] = clock.GetUtcNow().ToString("O") };
         var elapsed = Stopwatch.StartNew();

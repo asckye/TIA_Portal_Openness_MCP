@@ -1,4 +1,7 @@
 extern alias toolpipeline;
+extern alias adaptertests;
+extern alias foundationhost;
+using CloseHost = foundationhost::TiaMcp.FoundationHost;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Logic.V4;
@@ -10,6 +13,183 @@ using Xunit;
 
 public sealed class ApprovalHostTests
 {
+    private sealed class CloseWorker : CloseHost.IFoundationSessionWorker
+    {
+        private readonly adaptertests::TiaMcp.Adapters.PlcFoundationEngine engine = new("19");
+        internal int Calls { get; private set; }
+        internal adaptertests::Siemens.Engineering.Project OpenModifiedProject(bool workerStarted = true)
+        {
+            if (workerStarted) engine.ProjectConnectionCreated!(engine.Connection);
+            else engine.ReattachForTest(Environment.ProcessId);
+            engine.Connection.Projects.NextIsPrimary = true;
+            var project = engine.Connection.Projects.Open(new FileInfo(@"C:\fixture.ap19"), null, adaptertests::Siemens.Engineering.ProjectOpenMode.Primary);
+            project.IsModified = true;
+            engine.ProjectRetrieved!(project);
+            return project;
+        }
+        public string ApprovalIdentity => "{}";
+        public bool SharedSession => toolpipeline::TiaMcp.FoundationHost.ReleaseCatalogData.Releases["19"].SharedSession;
+        public bool Bundled => false;
+        public TiaMcp.Logic.ModelContextProtocol.ImportStagingSession? StagingOwner => null;
+        public IDisposable? EnterRequest(RequestContext<CallToolRequestParams> request) => null;
+        public Task<IDisposable?> AcquireLane(CancellationToken token) => Task.FromResult<IDisposable?>(null);
+        public void ActivateLane(IDisposable? lane) { }
+        public void Dispose() { }
+        public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
+        {
+            Assert.Equal("CloseProject", operation);
+            Calls++;
+            var result = engine.CloseProject((bool)args["dryRun"]!, (string?)args["secondaryProjectFile"] ?? "", (bool)args["discardChanges"]!,
+                (string)args["expectedPlanHash"]!, (bool)args["bindingOwnedByCaller"]!, (bool)args["confirm"]!, (string)args["expectedProjectFile"]!);
+            return Task.FromResult(JsonSerializer.SerializeToNode(result, result.GetType()));
+        }
+    }
+
+    private static CloseHost.HostSession CloseSession(McpServerTool tool) =>
+        new("19", "", false, [tool], [], () => new JsonObject(), () => { }, Path.GetTempPath());
+
+    private static CloseHost.FoundationTool CloseTool(CloseWorker worker, string release = "19") =>
+        new(CloseHost.FoundationTools.ForRelease(CloseHost.FoundationTools.Definitions.Single(d => d.Name == "CloseProject"), release), worker);
+
+    private static IMcpServer CloseClient() => System.Reflection.DispatchProxy.Create<IMcpServer, WorkerRobustnessTests.ServerProxy>();
+
+    private static JsonObject DiscardApply(JsonNode preview) => new() {
+        ["discardChanges"] = true, ["dryRun"] = false, ["confirm"] = true,
+        ["expectedProjectFile"] = preview["data"]!["projectFile"]!.DeepClone(), ["expectedPlanHash"] = preview["data"]!["planHash"]!.DeepClone() };
+
+    private static async Task<JsonNode> Close(McpServerTool tool, IMcpServer client, JsonObject arguments)
+    {
+        var request = new RequestContext<CallToolRequestParams>(client) { Params = new CallToolRequestParams {
+            Name = "CloseProject", Arguments = arguments.Deserialize<Dictionary<string, JsonElement>>() } };
+        return (await tool.InvokeAsync(request)).StructuredContent!;
+    }
+
+    [Theory, InlineData(true, false), InlineData(true, true), InlineData(false, false), InlineData(false, true)]
+    public async Task Discard_apply_requires_a_Workbench_grant_even_with_ordinary_write_approval_disabled(bool enabled, bool grant)
+    {
+        using var session = LiveApprovalSession();
+        using var worker = new CloseWorker();
+        Assert.True(worker.SharedSession);
+        var project = worker.OpenModifiedProject();
+        int decisions = 0;
+        var tool = new CloseHost.FoundationV4Tool(CloseTool(worker), "19", () => new ApprovalSettings(enabled, 1),
+            (pending, settings, _) =>
+            {
+                if (!settings.Enabled) return Task.FromResult(new ApprovalOutcome(pending, true, null));
+                decisions++;
+                return Task.FromResult(new ApprovalOutcome(pending, false, grant ? null : "denied"));
+            });
+        using var owner = CloseSession(tool);
+        CloseHost.SharedSessionState.For(worker).HostSessionKey = () => owner.SessionKey;
+        var client = CloseClient();
+        var args = new JsonObject { ["discardChanges"] = true };
+        var preview = await Close(owner.Tools.Single(), client, args);
+        Assert.True((bool?)preview["ok"], preview.ToJsonString());
+        Assert.True((bool?)preview["data"]?["isModified"]);
+        Assert.Equal(project.Path.FullName, (string?)preview["data"]?["projectFile"]);
+        Assert.Equal(0, project.CloseCalls);
+        Assert.Equal(0, decisions);
+        var applied = await Close(owner.Tools.Single(), client, DiscardApply(preview));
+        Assert.Equal(1, decisions);
+        Assert.Equal(grant, (bool?)applied["ok"]);
+        if (!grant) Assert.Equal("CONFIRMATION_REQUIRED", (string?)applied["error"]?["code"]);
+        Assert.Equal(grant ? 1 : 0, project.CloseCalls);
+        Assert.Equal(0, project.SaveCalls);
+    }
+
+    [Theory, InlineData(false, false, true), InlineData(true, false, true), InlineData(true, true, true), InlineData(true, false, false)]
+    public async Task Another_session_cannot_discard_even_with_the_owners_preview(bool apply, bool nested, bool approvalEnabled)
+    {
+        using var session = LiveApprovalSession();
+        using var worker = new CloseWorker();
+        var project = worker.OpenModifiedProject();
+        var tool = new CloseHost.FoundationV4Tool(CloseTool(worker), "19", () => new ApprovalSettings(approvalEnabled, 1),
+            (pending, settings, _) => settings.Enabled ? throw new InvalidOperationException("A foreign session must be refused before approval.")
+                : Task.FromResult(new ApprovalOutcome(pending, true, null)));
+        using var owner = CloseSession(tool);
+        using var other = CloseSession(nested ? owner.Tools.Single() : tool);
+        CloseHost.SharedSessionState.For(worker).HostSessionKey = () => owner.SessionKey;
+        var args = new JsonObject { ["discardChanges"] = true };
+        var preview = await Close(owner.Tools.Single(), CloseClient(), args);
+        Assert.True((bool?)preview["ok"], preview.ToJsonString());
+        if (apply) args = DiscardApply(preview);
+        Assert.False(tool.ProtocolTool.InputSchema.GetProperty("properties").TryGetProperty("sharedSession", out _));
+        var otherClient = CloseClient();
+        var refused = await Close(other.Tools.Single(), otherClient, args);
+        Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
+        Assert.Equal("tia-held-by-session", (string?)refused["error"]?["details"]?["condition"]);
+        args["sharedSession"] = false;
+        var spoofed = await Close(other.Tools.Single(), otherClient, args);
+        Assert.Equal("INVALID_ARGUMENT", (string?)spoofed["error"]?["code"]);
+        args.Remove("sharedSession");
+        args["bindingOwnedByCaller"] = true;
+        Assert.Equal("INVALID_ARGUMENT", (string?)(await Close(other.Tools.Single(), otherClient, args))["error"]?["code"]);
+        Assert.Equal(1, worker.Calls);
+        Assert.Equal(0, project.CloseCalls);
+    }
+
+    [Fact]
+    public async Task Discard_rechecks_the_lease_holder_after_the_approval_wait()
+    {
+        using var session = LiveApprovalSession();
+        using var worker = new CloseWorker();
+        var project = worker.OpenModifiedProject();
+        var state = CloseHost.SharedSessionState.For(worker);
+        using var newOwner = CloseSession(CloseTool(worker));
+        int grants = 0;
+        var tool = new CloseHost.FoundationV4Tool(CloseTool(worker), "19", () => new ApprovalSettings(true, 1),
+            (pending, _, _) => {
+                grants++;
+                state.HostSessionKey = () => newOwner.SessionKey;
+                return Task.FromResult(new ApprovalOutcome(pending, false, null));
+            });
+        using var owner = CloseSession(tool);
+        state.HostSessionKey = () => owner.SessionKey;
+        var client = CloseClient();
+        var args = new JsonObject { ["discardChanges"] = true };
+        var preview = await Close(owner.Tools.Single(), client, args);
+        Assert.True((bool?)preview["ok"], preview.ToJsonString());
+        var refused = await Close(owner.Tools.Single(), client, DiscardApply(preview));
+        Assert.Equal(1, grants);
+        Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
+        Assert.Equal("tia-held-by-session", (string?)refused["error"]?["details"]?["condition"]);
+        Assert.Equal(0, project.CloseCalls);
+        Assert.Equal(0, project.SaveCalls);
+    }
+
+    [Fact]
+    public async Task Binding_owner_cannot_discard_a_project_in_a_maintainer_started_portal()
+    {
+        using var session = LiveApprovalSession();
+        using var worker = new CloseWorker();
+        var project = worker.OpenModifiedProject(workerStarted: false);
+        var tool = new CloseHost.FoundationV4Tool(CloseTool(worker), "19");
+        using var owner = CloseSession(tool);
+        CloseHost.SharedSessionState.For(worker).HostSessionKey = () => owner.SessionKey;
+        var refused = await Close(owner.Tools.Single(), CloseClient(), new JsonObject { ["discardChanges"] = true });
+        Assert.Equal("PRECONDITION_FAILED", (string?)refused["error"]?["code"]);
+        Assert.Equal(1, worker.Calls);
+        Assert.Equal(0, project.CloseCalls);
+        Assert.Equal(0, project.SaveCalls);
+    }
+
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"),
+        InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Discard_is_an_explicit_option_on_the_destructive_session_tool(string release)
+    {
+        using var worker = new CloseWorker();
+        var tool = new CloseHost.FoundationV4Tool(CloseTool(worker, release), release).ProtocolTool;
+        var properties = tool.InputSchema.GetProperty("properties");
+        Assert.True(tool.Annotations!.DestructiveHint);
+        Assert.Contains("[SESSION]", tool.Description);
+        Assert.Equal("boolean", properties.GetProperty("discardChanges").GetProperty("type").GetString());
+        Assert.False(properties.GetProperty("discardChanges").GetProperty("default").GetBoolean());
+        Assert.Equal("string", properties.GetProperty("expectedPlanHash").GetProperty("type").GetString());
+        Assert.Equal("", properties.GetProperty("expectedPlanHash").GetProperty("default").GetString());
+        Assert.False(properties.TryGetProperty("sharedSession", out _));
+        Assert.False(properties.TryGetProperty("bindingOwnedByCaller", out _));
+    }
+
     [Theory]
     [InlineData("DownloadPlc", "{}", "destructive")]
     [InlineData("DeletePlcBlock", "{}", "destructive")]

@@ -1560,6 +1560,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ["OpenProject.path"] = new ParameterHint("\"C:\\\\Temp\\\\OpenProject\""),
             ["OpenProject.openMode"] = new ParameterHint("\"primary\"", "primary", "secondary"),
             ["CloseProject.secondaryProjectFile"] = new ParameterHint("\"\u003Cexact secondaryProjectFile from GetSessionState\u003E\""),
+            ["CloseProject.discardChanges"] = new ParameterHint("false"),
+            ["CloseProject.expectedPlanHash"] = new ParameterHint("\"<data.planHash from the matching CloseProject preview>\""),
             ["OpenProject.umacUserName"] = new ParameterHint("\"\\u003CumacUserName\\u003E\""),
             ["OpenProject.umacPassword"] = new ParameterHint("\"\\u003CumacPassword\\u003E\""),
             ["OpenProject.umacUserType"] = new ParameterHint("\"\\u003CumacUserType\\u003E\""),

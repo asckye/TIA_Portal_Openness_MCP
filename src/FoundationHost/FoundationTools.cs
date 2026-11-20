@@ -23,6 +23,10 @@ internal static class FoundationTools
 {
     private const string BlockHierarchyDescription = "[v17-read-safe-v1] Actual nested block groups, including empty groups; structure only; " +
         "use ListPlcBlocks or GetPlcBlockInfo for details. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error.";
+    private const string CloseProjectDescription = "[v17-project-safe-v1] Close a project opened by this worker. By default a modified project is refused. "
+        + "To discard unsaved changes, preview with discardChanges=true from the session holding the binding. The worker must have started the portal "
+        + "and own the ordinary primary project. Review data.projectFile, data.isModified and data.planHash. Apply with dryRun=false, confirm=true, "
+        + "expectedProjectFile and expectedPlanHash from that preview. Discard always requires Workbench approval. Then DisconnectPortal can release the portal.";
     private const string DisconnectDescription =
         "[acknowledged-disconnect-candidate] Disconnect this worker attachment. An attached existing process is detached. " +
         "A TIA Portal this session started is disposed, which closes a headless instance. Disconnect refuses while a project is open " +
@@ -62,7 +66,7 @@ internal static class FoundationTools
         new("OpenProject","OpenProject","[v17-project-safe-v1] Preview opening an exact-version .ap file or API-supported .als local session. No replacement, upgrade, server-open or commit. Refused while the TIA instance already has an open project or local session.",new[]{S("path"),Dry(),new Argument("umacUserName","string",false,"",UmacUser),new Argument("umacPassword","string",false,"",UmacPassword),new Argument("umacUserType","string",false,"",UmacType),new Argument("openMode", "string", false, "primary", "primary (default) or secondary; secondary requires a bound primary project and preserves its binding.")},"ProjectMutation"),
         new("CreateProject","CreateProject","[v17-project-safe-v1] Preview creation in an existing parent directory; no project/session replacement. Refused while the TIA instance already has an open project or local session.",new[]{S("directoryPath"),S("projectName"),Dry()},"ProjectMutation"),
         new("SaveProject","SaveProject","[v17-project-safe-v1] Explicitly save the exact bound project/local session locally; no server commit. Preview by default.",new[]{Dry()},"ProjectMutation"),
-        new("CloseProject","CloseProject","[v17-project-safe-v1] Close only an unmodified project/local session opened by this worker. No implicit save, discard, commit or TIA termination.",new[]{Dry(),new Argument("secondaryProjectFile", "string", false, "", "Exact session-recorded secondary project file on its holding TIA process; empty selects the bound primary project.")},"ProjectMutation"),
+        new("CloseProject","CloseProject",CloseProjectDescription,new[]{Dry(),new Argument("secondaryProjectFile", "string", false, "", "Exact session-recorded secondary project file on its holding TIA process; empty selects the bound primary project."),new Argument("discardChanges", "boolean", false, false, "Explicitly close the owned primary project without saving unsaved changes."),new Argument("expectedPlanHash", "string", false, "", "Copy data.planHash from the matching discard preview for apply.")},"ProjectMutation"),
         new("GetProjectTree","ReadProjectTree","[v17-project-safe-v1] Actual device groups, devices, nested items and software, including ungrouped devices and exact software paths.",Array.Empty<Argument>(),"ProjectTree"),
         new("ListPlcBlocks","ReadBlocks","[v17-read-safe-v1] V17 block fields and case-insensitive regex. Accepts unique PLC/device/group aliases or exact address; rejects ambiguity and unused path segments.",new[]{S("softwarePath"),new Argument("regexName","string",false,"")},"Items"),
         new("GetPlcBlockHierarchy","ReadBlockHierarchy",BlockHierarchyDescription,new[]{S("softwarePath")},"Root"),
@@ -131,7 +135,7 @@ internal static class FoundationTools
                 "secondary first while its holding TIA process is alive. The path, holder PID and start time survive worker recovery. " +
                 "A confirmed exited or replaced holder clears the record without starting TIA." };
         if (definition.Name == "CloseProject" && releaseKey != "14sp1")
-            return definition with { Description = definition.Description + " Close secondaryProjectFile only when this session records that exact secondary " +
+            return definition with { Description = definition.Description + " Use discardChanges=false for secondaryProjectFile. Close secondaryProjectFile only when this session records that exact secondary " +
                 "project (V15.1–V21); never saves it. Recovery retains its path, holding TIA PID and process start time. Close on another TIA refuses and " +
                 "keeps the record. On the same holding process, require IsPrimary=false; an absent exact path clears the record with " +
                 "data.secondaryProjectGone=true, including previews, and Executed=false. A confirmed exited or replaced holder clears the record. " +
@@ -261,6 +265,8 @@ internal sealed partial class FoundationTool : McpServerTool
         }
         if(definition.Name=="GetPortalConnectionReadiness" && values["processId"]!.GetValue<int>()<=0) throw new ArgumentException("Select an explicit positive processId.","processId");
         if (definition.Name == "OpenProject" && values["openMode"] is JsonValue mode) ValidateOpenMode(mode.GetValue<string>());
+        if (definition.Name == "CloseProject" && (bool?)values["discardChanges"] == true)
+            ValidateDiscard((bool)values["dryRun"]!, (string?)values["secondaryProjectFile"], (string?)values["expectedPlanHash"]);
         if (definition.ResponseMember == "Compile")
         {
             string scope = values["scope"]!.GetValue<string>();
@@ -300,6 +306,13 @@ internal sealed partial class FoundationTool : McpServerTool
         if(definition.ResponseMember=="ExternalSourcePlan" && !values["dryRun"]!.GetValue<bool>()) throw new ArgumentException("External-source native apply is blocked; this route is planning only.","dryRun");
         if(definition.ResponseMember=="ExternalSourceWorkflow" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("External-source execution requires expectedPlanHash from this tool's preview.","expectedPlanHash");
     }
+    private static void ValidateDiscard(bool dryRun, string? secondaryProjectFile, string? expectedPlanHash)
+    {
+        if (!string.IsNullOrEmpty(secondaryProjectFile))
+            throw new ArgumentException("Discard requires the bound primary project.", nameof(secondaryProjectFile));
+        if (!dryRun && string.IsNullOrWhiteSpace(expectedPlanHash))
+            throw new ArgumentException("Discard requires expectedPlanHash from the matching CloseProject preview.", nameof(expectedPlanHash));
+    }
     private static void ValidateOpenMode(string openMode)
     {
         if (openMode is not ("primary" or "secondary")) throw new ArgumentException("openMode must be primary or secondary.", nameof(openMode));
@@ -312,6 +325,13 @@ internal sealed partial class FoundationTool : McpServerTool
         try
         {
             ReadArguments(request.Params?.Arguments, values);
+            if (definition.Name == "CloseProject" && (bool?)values["discardChanges"] == true)
+            {
+                if (HostSessionCall.SessionKey is not { } caller || caller != SharedSessionState.For(worker).HostSessionKey())
+                    throw AdapterPreconditionException.Failed("Discard requires the MCP session holding this worker's TIA binding.",
+                        "tia-held-by-session", "discardChanges");
+                values["bindingOwnedByCaller"] = true;
+            }
             if (release != null) TiaMcp.Logic.V4.CallerInputFiles.Validate(definition.Name, values);
             if (definition.ResponseMember == "ImportStaging")
             {

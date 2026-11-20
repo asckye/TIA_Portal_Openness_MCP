@@ -31,14 +31,19 @@ internal sealed class HostSessionCall : IDisposable
     }
 
     private static readonly AsyncLocal<HostSessionCall?> Current = new();
+    internal static string? SessionKey => Current.Value?.sessionKey;
     private readonly HostSessionCall? previous = Current.Value;
     private readonly Action<bool, string, string, string> changed;
     private readonly Action<string, string> ended;
-    private readonly string tool, actor, id;
-    private HostSessionCall(Action<bool, string, string, string> changed, Action<string, string> ended, string tool, string actor, string id)
-    { this.changed = changed; this.ended = ended; this.tool = tool; this.actor = actor; this.id = id; Current.Value = this; }
-    internal static IDisposable Enter(Action<bool, string, string, string> changed, Action<string, string> ended, string tool, string actor, string id)
-        => new HostSessionCall(changed, ended, tool, actor, id);
+    private readonly string tool, actor, id, sessionKey;
+    private HostSessionCall(Action<bool, string, string, string> changed, Action<string, string> ended, string tool, string actor, string id, string sessionKey)
+    {
+        this.changed = changed; this.ended = ended; this.tool = tool; this.actor = actor; this.id = id;
+        // Nested tool calls retain the initiating host session's takeover key.
+        this.sessionKey = previous?.sessionKey ?? sessionKey; Current.Value = this;
+    }
+    internal static IDisposable Enter(Action<bool, string, string, string> changed, Action<string, string> ended, string tool, string actor, string id,
+        string sessionKey) => new HostSessionCall(changed, ended, tool, actor, id, sessionKey);
     internal static void LaneChanged(bool held)
     {
         var call = Current.Value;

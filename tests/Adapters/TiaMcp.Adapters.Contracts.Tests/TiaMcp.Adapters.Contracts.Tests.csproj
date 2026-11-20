@@ -75,6 +75,7 @@
     <Compile Include="../../../src/Shared/shared-native/WorkerSessionCallbacks.cs" Link="Session/WorkerSessionCallbacks.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/ProjectLifecycleWorker.cs" Link="Session/ProjectLifecycleWorker.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/PlcSecondaryProjects.cs" Link="Session/PlcSecondaryProjects.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.CloseProject.cs" Link="Session/PlcFoundationEngine.CloseProject.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.ProjectSelection.cs" Link="Session/PlcFoundationEngine.ProjectSelection.cs" />
     <Compile Include="../../../src/Adapters/Native/Studio/OpennessSession.ProjectSelection.cs" Link="Studio/OpennessSession.ProjectSelection.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/ProjectArchive.cs" Link="Session/ProjectArchive.cs" />

@@ -178,7 +178,7 @@ internal static class ApiMetadataTests
                 ["BindProject"]=new[]{"projectName","expectedProjectFile","recordedSecondaryProjectFile","recordedSecondaryProcessId","recordedSecondaryProcessStartTicks"},
                 ["OpenProject"]=new[]{"path","dryRun","umacUserName","umacPassword","umacUserType","openMode"},
                 ["CreateProject"]=new[]{"directoryPath","projectName","dryRun"},["SaveProject"]=new[]{"dryRun"},
-                ["CloseProject"]=new[]{"dryRun","secondaryProjectFile"},["ReadProjectTree"]=Array.Empty<string>()})
+                ["CloseProject"]=new[]{"dryRun","secondaryProjectFile","discardChanges","expectedPlanHash","bindingOwnedByCaller","confirm","expectedProjectFile"},["ReadProjectTree"]=Array.Empty<string>()})
             {
                 var method=type.GetMethods().Select(md.GetMethodDefinition).Single(m=>md.GetString(m.Name)==pair.Key);
                 var names=method.GetParameters().Select(md.GetParameter).Where(p=>p.SequenceNumber>0).Select(p=>md.GetString(p.Name));

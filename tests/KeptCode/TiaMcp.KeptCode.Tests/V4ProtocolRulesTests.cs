@@ -303,7 +303,8 @@ namespace TiaMcp.Engine.Tests
         {
             Assert.True(DeclaredToolMetadata.V4(Descriptor("CloseProject")).Annotations!.DestructiveHint);
             var served = DeclaredToolMetadata.V4(Descriptor("CloseProject"), true);
-            Assert.False(served.Annotations!.DestructiveHint);
+            Assert.True(served.Annotations!.DestructiveHint);
+            Assert.Equal("SESSION", ToolMetadata.RuntimeOperation("CloseProjectV4"));
             served.Description = "[L1][Project][READ] wrong category";
             Assert.Throws<InvalidOperationException>(() => DeclaredToolMetadata.ValidateV4(served));
             var preview = Descriptor("PlanPlcExternalSourceImport", "{\"dryRun\":{\"type\":\"boolean\"}}");

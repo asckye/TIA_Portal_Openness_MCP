@@ -10,7 +10,8 @@ namespace TiaMcp.Adapters
     internal sealed class PlcDisconnectState
     {
         internal const string OwnedOpenProjectRefusal = "DisconnectPortal would close the TIA Portal instance this session started and the project open in it. "
-            + "Save it explicitly (SaveProject) and close it (CloseProject) first; DisconnectPortal never saves, closes or discards a project.";
+            + "Use SaveProject and CloseProject first. To discard unsaved changes in an owned primary project, use the session holding its binding to "
+            + "preview CloseProject discardChanges=true and approve its apply before DisconnectPortal.";
         internal bool Attempted { get; private set; }
         internal PlcDisconnectResult? Result { get; private set; }
         internal void RequireActive()

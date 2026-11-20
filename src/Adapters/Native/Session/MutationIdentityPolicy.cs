@@ -8,6 +8,15 @@ namespace TiaMcp.Adapters
         internal static string Absolute(string path) => Contracts.ProjectFileIdentity.Absolute(path);
         private static void RequireSegment(string segment) => Contracts.ProjectFileIdentity.RequireSegment(segment);
         internal static string AbsoluteFile(string path) => Contracts.ProjectFileIdentity.AbsoluteFile(path);
+        internal static string ClosePlanHash(string file, bool isModified, bool discardChanges)
+            => Contracts.Candidates.CandidatePrimitives.ByteHash(System.Text.Encoding.UTF8.GetBytes(
+                AbsoluteFile(file).ToUpperInvariant() + "\n" + (isModified ? "1" : "0") + (discardChanges ? "1" : "0")));
+        internal static void RequireConfirmedProject(bool confirm, string expected, string file)
+        {
+            if (!confirm) throw new Contracts.AdapterPreconditionException("Execution requires confirm=true.", "confirm");
+            try { RequireSameProject(expected, file); }
+            catch (ArgumentException error) { throw new Contracts.AdapterPreconditionException(error.Message, "expectedProjectFile", true, error); }
+        }
         public static void RequireSameProject(string expected,string actual)
         {
             bool same = string.Equals(AbsoluteFile(expected), AbsoluteFile(actual), StringComparison.OrdinalIgnoreCase);

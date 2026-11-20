@@ -4,6 +4,106 @@ using Xunit;
 
 public sealed class ProjectLifecyclePortTests
 {
+    private static (TiaMcp.Adapters.PlcFoundationEngine Engine, Siemens.Engineering.Project Project) CloseFixture(bool modified,
+        bool borrowedProject = false, bool borrowedPortal = false)
+    {
+        var engine = new TiaMcp.Adapters.PlcFoundationEngine("19");
+        if (borrowedPortal) engine.ReattachForTest(Environment.ProcessId);
+        else engine.ProjectConnectionCreated!(engine.Connection);
+        var project = engine.NewProject("P");
+        project.IsModified = modified;
+        engine.Connection.Projects.Add(project);
+        project.OnClose = () => engine.Connection.Projects.Remove(project);
+        if (borrowedProject) engine.BorrowPrimaryForTest(project);
+        else engine.ProjectRetrieved!(project);
+        return (engine, project);
+    }
+
+    private static System.Text.Json.Nodes.JsonObject ClosePreview(TiaMcp.Adapters.PlcFoundationEngine engine, bool discard = true)
+        => System.Text.Json.Nodes.JsonNode.Parse(TiaMcp.PlcWorker.WorkerJson.Serialize(
+            engine.CloseProject(discardChanges: discard, bindingOwnedByCaller: true)))!.AsObject();
+
+    [Fact]
+    public void Ordinary_close_preserves_unsaved_changes_and_discard_requires_the_binding_owner()
+    {
+        var (engine, project) = CloseFixture(true);
+        Assert.Throws<AdapterPreconditionException>(() => engine.CloseProject());
+        Assert.Throws<AdapterPreconditionException>(() => engine.CloseProject(false, bindingOwnedByCaller: true,
+            confirm: true, expectedProjectFile: project.Path.FullName));
+        Assert.Throws<AdapterPreconditionException>(() => engine.CloseProject(discardChanges: true));
+        Assert.Equal(0, project.CloseCalls);
+        Assert.Equal(0, project.SaveCalls);
+        Assert.Equal(project.Path.FullName, engine.ProjectFile);
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void Reviewed_discard_closes_once_and_releases_the_binding_without_saving(bool modified)
+    {
+        var (engine, project) = CloseFixture(modified);
+        var preview = ClosePreview(engine);
+        string file = project.Path.FullName, hash = (string)preview["PlanHash"]!;
+        Assert.Equal(64, hash.Length);
+        Assert.Equal(modified, (bool?)preview["IsModified"]);
+        Assert.Equal(file, (string?)preview["ProjectFile"]);
+        Assert.False((bool?)preview["Executed"]);
+        Assert.True((bool?)preview["DiscardChanges"]);
+        Assert.Equal(0, project.CloseCalls);
+        var result = engine.CloseProject(false, discardChanges: true, expectedPlanHash: hash, bindingOwnedByCaller: true,
+            confirm: true, expectedProjectFile: file);
+        Assert.True(result.Executed);
+        Assert.Equal(file, result.ProjectFile);
+        Assert.Equal(1, project.CloseCalls);
+        Assert.Equal(0, project.SaveCalls);
+        Assert.Empty(engine.Connection.Projects);
+        Assert.Null(engine.ReadState().ProjectFile);
+    }
+
+    [Theory, InlineData("borrowed-project"), InlineData("attached-portal"), InlineData("different-session"), InlineData("local-session"),
+        InlineData("secondary")]
+    public void Discard_refuses_ineligible_targets_before_preview_or_apply(string target)
+    {
+        var (engine, project) = CloseFixture(true, target == "borrowed-project", target == "attached-portal");
+        if (target == "local-session") engine.LocalSession = true;
+        foreach (bool preview in new[] { true, false })
+            Assert.Throws<AdapterPreconditionException>(() => engine.CloseProject(preview, target == "secondary" ? project.Path.FullName : "",
+                true, "unused", target != "different-session", true, project.Path.FullName));
+        Assert.Equal(0, project.CloseCalls);
+        Assert.Equal(0, project.SaveCalls);
+        Assert.Equal(project.Path.FullName, engine.ProjectFile);
+    }
+
+    [Theory, InlineData("modified-after-preview"), InlineData("clean-after-preview"), InlineData("other-file"), InlineData("ordinary-preview"),
+        InlineData("no-confirm"), InlineData("wrong-expected-file"), InlineData("missing-hash")]
+    public void Discard_rechecks_the_reviewed_identity_and_state_before_close(string change)
+    {
+        var (engine, project) = CloseFixture(change == "clean-after-preview");
+        string file = project.Path.FullName;
+        var preview = ClosePreview(engine, change != "ordinary-preview");
+        if (change == "modified-after-preview") project.IsModified = true;
+        if (change == "clean-after-preview") project.IsModified = false;
+        if (change == "other-file") project.Path = new FileInfo(@"C:\fixture\Other.ap19");
+        string expectedFile = change == "wrong-expected-file" ? @"C:\fixture\Other.ap19" : project.Path.FullName;
+        var refused = Assert.Throws<AdapterPreconditionException>(() => engine.CloseProject(false, discardChanges: true,
+            expectedPlanHash: change == "missing-hash" ? "" : (string)preview["PlanHash"]!, bindingOwnedByCaller: true,
+            confirm: change != "no-confirm", expectedProjectFile: expectedFile));
+        Assert.Equal(change switch { "no-confirm" => "confirm", "wrong-expected-file" => "expectedProjectFile", _ => "expectedPlanHash" },
+            refused.ParamName);
+        Assert.Equal(0, project.CloseCalls);
+        Assert.Equal(file, engine.ProjectFile);
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void Discard_needs_post_close_absence_before_reporting_success(bool unreadable)
+    {
+        var (engine, project) = CloseFixture(true);
+        string hash = (string)ClosePreview(engine)["PlanHash"]!;
+        project.OnClose = () => { if (unreadable) engine.Connection.EngineeringCall = () => throw new IOException("Cannot enumerate projects."); };
+        Assert.Throws<IOException>(() => engine.CloseProject(false, discardChanges: true, expectedPlanHash: hash,
+            bindingOwnedByCaller: true, confirm: true, expectedProjectFile: project.Path.FullName));
+        Assert.Equal(1, project.CloseCalls);
+        Assert.Equal(project.Path.FullName, engine.ProjectFile);
+    }
+
     public static IEnumerable<object[]> SecondaryReleases()
         => new[] { "15.1", "16", "17", "18", "19", "20", "21" }.Select(release => new object[] { release });
 

@@ -111,23 +111,5 @@ namespace TiaMcp.Adapters
             }
             return Mutation("SaveProject", dryRun);
         }
-        public PlcMutationResult CloseProject(bool dryRun = true, string secondaryProjectFile = "")
-        {
-            if (secondaryProjectFile.Length > 0) return CloseSecondaryProject(secondaryProjectFile, dryRun);
-            RequireSecondaryClosed("CloseProject");
-            PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,dryRun);
-            var p = Project();
-            lifecycle.RequireClose(p.IsModified);
-            var file=p.Path.FullName;
-            if (!dryRun)
-            {
-#if PROJECT_MULTIUSER
-                if(localSession!=null) { localSession.Close(); localSession=null; } else
-#endif
-                    ((Project)p).Close();
-                project=null; lifecycle.Unbound();
-            }
-            var result=Mutation("CloseProject",dryRun); result.ProjectFile=file; return result;
-        }
     }
 }

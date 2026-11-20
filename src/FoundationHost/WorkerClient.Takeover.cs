@@ -79,7 +79,8 @@ internal sealed partial class WorkerClient
                 if (running) throw HeldBySession(holder, "This clears when the active call returns.");
                 if (owned)
                     throw HeldBySession(holder,
-                        "This worker started its TIA instance. End its connection in the Workbench after saving and closing its project.");
+                        "This worker started its TIA instance. From the holding session, save and close the project. To discard changes to an owned "
+                        + "primary project, preview CloseProject discardChanges=true and approve its apply. Then call DisconnectPortal.");
                 if (!holder.OwnerSession.TryBeginGiveWay(takeOver ? TimeSpan.Zero : TimeSpan.FromMinutes(10)))
                     throw HeldBySession(holder, holder.OwnerSession.GiveWayRefusal(takeOver));
                 reserved = true;

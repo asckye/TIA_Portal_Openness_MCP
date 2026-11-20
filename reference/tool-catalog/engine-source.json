@@ -860,7 +860,7 @@
       "path": "src/FoundationHost/FoundationTools.cs",
       "owner": "FoundationTools",
       "domain": "Project",
-      "signature": "public CallToolResult CloseProject(bool dryRun = true, string secondaryProjectFile = \"\", bool confirm = false, string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult CloseProject(bool dryRun = true, string secondaryProjectFile = \"\", bool discardChanges = false, string expectedPlanHash = \"\", bool confirm = false, string expectedProjectFile = \"\")",
       "parameters": {
         "dryRun": {
           "type": "bool",
@@ -872,6 +872,18 @@
           "type": "string",
           "default": "\"\"",
           "description": "Exact session-recorded secondary project file on its holding TIA process; empty selects the bound primary project.",
+          "value": ""
+        },
+        "discardChanges": {
+          "type": "bool",
+          "default": "false",
+          "description": "Explicitly close the owned primary project without saving unsaved changes.",
+          "value": false
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Copy data.planHash from the matching discard preview for apply.",
           "value": ""
         },
         "confirm": {
@@ -887,7 +899,7 @@
           "value": ""
         }
       },
-      "description": "Close a worker-owned primary or the session-recorded exact secondary path on its holding TIA PID and process start time. Another attached TIA refuses and keeps the record. On the same holder require IsPrimary=false; confirmed absence clears the record with data.secondaryProjectGone=true and Executed=false, including preview. An exited or replaced holder clears the record. No save."
+      "description": "Close a worker-owned primary or the session-recorded exact secondary path on its holding TIA PID and process start time. A modified primary project requires an explicit save or discard. Discard requires the session holding the binding, a portal started by this worker, an ordinary owned primary project, and Workbench approval. Preview discardChanges=true, review data.isModified, then apply with confirm=true and the preview's projectFile and planHash. Another attached TIA refuses secondary close and keeps the record. On the same holder require IsPrimary=false. Confirmed absence clears the record with data.secondaryProjectGone=true and Executed=false, including preview. An exited or replaced holder clears the record."
     },
     "InitializeEnvironment": {
       "method": "InitializeEnvironmentV4",

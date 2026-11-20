@@ -71,7 +71,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["CheckLibraryUpdates"] = new Classification("L2", "Library", "READ", false, true, false),
             ["CheckProductUpdate"] = new Classification("L0", "Diagnostics", "SESSION", false, false, false),
             ["ClearExportHandles"] = new Classification("L1", "Exports", "WRITE", false, false, true),
-            ["CloseProject"] = new Classification("L1", "Project", "SESSION", false, false, false, false, false, false, false),
+            ["CloseProject"] = new Classification("L1", "Project", "SESSION", false, false, false, false, true, false, false),
             ["CompareLibraries"] = new Classification("L2", "Library", "READ", false, true, false),
             ["CompareLibraryObjects"] = new Classification("L2", "Library", "READ", false, true, false),
             ["ComparePlcBlockDocuments"] = new Classification("L2", "Validation", "READ", false, true, false),
