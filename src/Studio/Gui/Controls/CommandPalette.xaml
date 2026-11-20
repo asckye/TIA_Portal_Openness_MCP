@@ -1,52 +1,113 @@
 <UserControl x:Class="TiaOpenness.Gui.Controls.CommandPalette"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization"
+    xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes"
     Focusable="False" IsTabStop="False" AutomationProperties.Name="{l:Tr Shell.CommandPalette}" PreviewKeyDown="OnPaletteKey">
-  <Grid Background="{DynamicResource Ant.colorBgMask}" MouseLeftButtonDown="OnBackdrop">
-    <Border Width="490" VerticalAlignment="Top" Margin="0,64,0,0" CornerRadius="12" Padding="12"
-        Background="{DynamicResource Primer.window}" BorderBrush="{DynamicResource Primer.inputBorder}" BorderThickness="1">
+  <Grid MouseLeftButtonDown="OnBackdrop">
+    <Rectangle x:Name="Backdrop" IsHitTestVisible="False">
+      <Rectangle.Style>
+        <Style TargetType="Rectangle">
+          <Setter Property="Visibility" Value="Collapsed"/>
+          <Style.Triggers>
+            <MultiDataTrigger>
+              <MultiDataTrigger.Conditions>
+                <Condition Binding="{Binding UseLowEffects,Source={x:Static themes:ThemeManager.Current}}" Value="False"/>
+                <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="False"/>
+              </MultiDataTrigger.Conditions>
+              <Setter Property="Visibility" Value="Visible"/>
+              <Setter Property="Effect"><Setter.Value><BlurEffect Radius="6"/></Setter.Value></Setter>
+            </MultiDataTrigger>
+          </Style.Triggers>
+        </Style>
+      </Rectangle.Style>
+    </Rectangle>
+    <ContentControl Style="{StaticResource Primer.Shadow}" Width="{Binding ActualWidth,ElementName=Surface}"
+        Height="{Binding ActualHeight,ElementName=Surface}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,64,0,0"/>
+    <Border x:Name="Scrim" Background="{DynamicResource Ant.colorBgMask}"/>
+    <Border x:Name="Surface" MaxWidth="490" VerticalAlignment="Top" Margin="16,64,16,0"
+        CornerRadius="{StaticResource Ui.Radius.Large}" Background="{DynamicResource Primer.window}"
+        BorderBrush="{DynamicResource Primer.inputBorder}" BorderThickness="1">
       <StackPanel>
-        <DockPanel MinHeight="44">
-          <Button x:Name="Dismiss" DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Center"
-              Style="{StaticResource Primer.IdeToolButton}" Content="{l:Tr Overlay.Close}"
-              AutomationProperties.Name="{l:Tr Overlay.Close}" Click="OnDismiss"/>
-          <Grid>
-            <TextBox x:Name="SearchBox" VerticalAlignment="Center" Style="{StaticResource Primer.Input}"
-                AutomationProperties.Name="{l:Tr Shell.CommandPalette}" AutomationProperties.LabeledBy="{Binding ElementName=SearchHint}"
-                ToolTip="{l:Tr Shell.CommandPalette}" TextChanged="OnSearch"/>
-            <TextBlock x:Name="SearchHint" Text="{l:Tr Shell.CommandPalette}" IsHitTestVisible="False" VerticalAlignment="Center" Margin="12,0">
-              <TextBlock.Style>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
-                  <Setter Property="Visibility" Value="Collapsed"/>
-                  <Style.Triggers><DataTrigger Binding="{Binding Text,ElementName=SearchBox}" Value="">
-                    <Setter Property="Visibility" Value="Visible"/>
-                  </DataTrigger></Style.Triggers>
-                </Style>
-              </TextBlock.Style>
-            </TextBlock>
-          </Grid>
-        </DockPanel>
-        <ListBox x:Name="ResultList" ItemsSource="{Binding Results}" MaxHeight="300" SelectedIndex="0"
+        <Border Height="44" Padding="16,0" Style="{StaticResource Primer.Divider}">
+          <DockPanel>
+            <Path DockPanel.Dock="Left" Style="{StaticResource Primer.Icon}" Data="{StaticResource Icon.Search}"
+                Stroke="{DynamicResource Primer.textFaint}" Margin="0,0,12,0"/>
+            <Button x:Name="Dismiss" DockPanel.Dock="Right" Style="{StaticResource Primer.IdeToolButton}" Margin="12,0,0,0"
+                Padding="0" VerticalAlignment="Center" AutomationProperties.Name="{l:Tr Overlay.Close}"
+                AutomationProperties.AcceleratorKey="Esc" ToolTip="{l:Tr Overlay.Close}" Click="OnDismiss">
+              <Border Style="{StaticResource Primer.Workbench.KeyCap}" CornerRadius="5" Padding="6,2">
+                <TextBlock Text="ESC" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.10}"
+                    Foreground="{DynamicResource Primer.textFaint}"/>
+              </Border>
+            </Button>
+            <Grid VerticalAlignment="Center">
+              <TextBox x:Name="SearchBox" Style="{StaticResource Primer.Input}" Padding="2,0" Background="Transparent"
+                  MinHeight="26" FontSize="{DynamicResource Ui.FontSize.13}"
+                  AutomationProperties.Name="{l:Tr Overlay.SearchHint}" AutomationProperties.LabeledBy="{Binding ElementName=SearchHint}"
+                  ToolTip="{l:Tr Overlay.SearchHint}" TextChanged="OnSearch">
+                <TextBox.Template>
+                  <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="Outline" BorderThickness="2" BorderBrush="{DynamicResource Primer.hcOutline}"
+                        Background="{TemplateBinding Background}">
+                      <ScrollViewer x:Name="PART_ContentHost"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                      <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                        <Setter TargetName="Outline" Property="BorderBrush" Value="{DynamicResource Primer.focusOuter}"/>
+                      </Trigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </TextBox.Template>
+              </TextBox>
+              <TextBlock x:Name="SearchHint" Text="{l:Tr Overlay.SearchHint}" IsHitTestVisible="False" Margin="4,0"
+                  Foreground="{DynamicResource Primer.textFaint}" FontSize="{DynamicResource Ui.FontSize.13}">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers><DataTrigger Binding="{Binding Text,ElementName=SearchBox}" Value="">
+                      <Setter Property="Visibility" Value="Visible"/>
+                    </DataTrigger></Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Grid>
+          </DockPanel>
+        </Border>
+        <ListBox x:Name="ResultList" ItemsSource="{Binding Results}" MaxHeight="300" SelectedIndex="0" Padding="6,6,6,0"
             Style="{StaticResource Primer.VirtualList}" AutomationProperties.Name="{l:Tr Overlay.Results}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
           <ListBox.ItemContainerStyle>
             <Style TargetType="ListBoxItem" BasedOn="{StaticResource Primer.TableItem}">
               <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
-              <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+              <Setter Property="AutomationProperties.HelpText" Value="{Binding Detail}"/>
+              <Setter Property="Margin" Value="0,0,0,2"/>
+              <Setter Property="MinHeight" Value="35.5"/>
+              <Setter Property="Padding" Value="12,0"/>
+              <Setter Property="BorderThickness" Value="0"/>
+              <Setter Property="Template">
+                <Setter.Value>
+                  <ControlTemplate TargetType="ListBoxItem">
+                    <Border CornerRadius="7" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
+                        BorderBrush="{DynamicResource Primer.hcOutline}" BorderThickness="1">
+                      <ContentPresenter VerticalAlignment="Center"/>
+                    </Border>
+                  </ControlTemplate>
+                </Setter.Value>
+              </Setter>
               <EventSetter Event="MouseLeftButtonUp" Handler="OnChoose"/>
             </Style>
           </ListBox.ItemContainerStyle>
           <ListBox.ItemTemplate>
             <DataTemplate>
-              <DockPanel LastChildFill="True" Margin="8,0">
-                <TextBlock DockPanel.Dock="Right" MaxWidth="200" Margin="12,0,0,0" Text="{Binding Detail}"
-                    ToolTip="{Binding Detail}" TextTrimming="CharacterEllipsis" Style="{StaticResource Primer.Muted}"/>
-                <TextBlock Text="{Binding Title}" ToolTip="{Binding Title}" TextTrimming="CharacterEllipsis" Style="{StaticResource Primer.Text}"/>
+              <DockPanel>
+                <TextBlock DockPanel.Dock="Right" MaxWidth="170" Margin="12,0,0,0" Text="{Binding Detail}" ToolTip="{Binding Detail}"
+                    Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.11}" Foreground="{DynamicResource Primer.textFaint}"/>
+                <TextBlock Text="{Binding Title}" ToolTip="{Binding Title}" Style="{StaticResource Primer.Text}" FontSize="{DynamicResource Ui.FontSize.13}"/>
               </DockPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
-        <TextBlock Text="{l:Tr Overlay.NoResults}" Margin="8">
+        <TextBlock Text="{l:Tr Overlay.NoResults}" Margin="18,0,18,12">
           <TextBlock.Style>
             <Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
               <Setter Property="Visibility" Value="Collapsed"/>

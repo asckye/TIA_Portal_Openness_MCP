@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -148,7 +149,8 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
             var accent = ThemeManager.Current.Accent;
             try
             {
-                string[] pages = ["Project", "Approvals", "AI calls", "MCP", "Clients", "Doctor", "Audit", "Logs", "Settings", "Version control"];
+                string[] pages = ["Project · Line.ap21", "Agent & Approvals", "MCP Server", "AI Clients", "Environment Check",
+                    "Audit Chain", "Runtime Logs", "Settings & Safety", "Approvals", "AI calls", "Version control"];
                 string[] appearance = ["Settings.Light", "Settings.Dark", "Settings.AccentCobalt", "Settings.AccentPetrol",
                     "Settings.English", "Settings.Chinese"];
                 var titles = pages.Concat(new[] { "Main" }).Concat(appearance.Select(key => Loc.Current[key])).ToArray();
@@ -157,11 +159,13 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                 bool approvalEnabled = approvals.Enabled, controlEnabled = App.Settings.WorkbenchControlEnabled;
                 model.Engineering.Blocks[0].Selected = blockChecked;
                 model.Engineering.BlockFilter = "unmatched";
-                string[] destinations = ["Engineering", "Approvals", "Calls", "Mcp", "Clients", "Environment", "Audit", "Log", "Settings", "VersionControl"];
+                string[] destinations = ["Engineering", "Approvals", "Mcp", "Clients", "Environment", "Audit", "Log",
+                    "Settings", "Approvals", "Calls", "VersionControl"];
                 for (int i = 0; i < titles.Length; i++)
                 {
                     var palette = OpenPalette(window);
                     Assert.Equal(titles.Order(), palette.ResultList.Items.Cast<CommandPaletteItem>().Select(item => item.Title).Order());
+                    Assert.Equal(pages.Take(8), palette.ResultList.Items.Cast<CommandPaletteItem>().Take(8).Select(item => item.Title));
                     palette.SearchBox.Text = titles[i];
                     palette.ResultList.SelectedItem = palette.ResultList.Items.Cast<CommandPaletteItem>().Single(item => item.Title == titles[i]);
                     Assert.True(KeyDown(palette.SearchBox, Key.Enter));
@@ -186,6 +190,60 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Palette_keeps_surface_clicks_inside_and_dismisses_on_a_scrim_click()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                Assert.True(window.CommandPaletteButton.Focus());
+                var palette = OpenPalette(window);
+                static void Click(UIElement target) => target.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                    { RoutedEvent = Mouse.MouseDownEvent });
+                Click(palette.Surface);
+                Assert.True(palette.IsVisible);
+                Click(palette.Scrim);
+                WpfContext.Drain();
+                Assert.Equal(Visibility.Collapsed, window.OverlayHost.Visibility);
+                Assert.Same(window.CommandPaletteButton, Keyboard.FocusedElement);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Palette_finds_a_block_by_metadata_or_path_and_keeps_the_short_page_names_searchable()
+    {
+        wpf.RunWithLanguage(AppLanguage.English, () =>
+        {
+            var (window, model, client) = Window();
+            try
+            {
+                var row = model.Engineering.Blocks[0];
+                row.Info.Number = 7;
+                row.Info.ProgrammingLanguage = "SCL";
+                row.Info.Path = "Program/Main";
+                var palette = OpenPalette(window);
+                foreach (string query in new[] { "OB 7", "scl", "program/", "PLC_1" })
+                {
+                    palette.SearchBox.Text = query;
+                    var result = Assert.Single(palette.ResultList.Items.Cast<CommandPaletteItem>());
+                    Assert.Equal("Main (OB 7 · SCL)", result.Title);
+                    Assert.Equal("PLC_1", result.Detail);
+                }
+                palette.SearchBox.Text = "doctor";
+                Assert.Equal("Environment Check", Assert.Single(palette.ResultList.Items.Cast<CommandPaletteItem>()).Title);
+                palette.SearchBox.Text = "Ctrl+2";
+                Assert.True(KeyDown(palette.SearchBox, Key.Enter));
+                Assert.Equal("Calls", window.CurrentPage);
+                Assert.Empty(client.Calls);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Offline_palette_offers_only_available_pages_and_appearance()
     {
         wpf.Run(() =>
@@ -197,7 +255,7 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                 var palette = OpenPalette(window);
                 var titles = palette.ResultList.Items.Cast<CommandPaletteItem>().Select(item => item.Title).ToArray();
                 Assert.Equal(10, titles.Length);
-                foreach (var key in new[] { "Shell.Calls", "Rail.Doctor", "Rail.Audit", "Rail.Logs" }) Assert.Contains(Loc.Current[key], titles);
+                foreach (var key in new[] { "Shell.Calls", "Shell.Environment", "Shell.Audit", "Shell.Logs" }) Assert.Contains(Loc.Current[key], titles);
                 palette.SearchBox.Text = Guid.NewGuid().ToString();
                 Assert.Empty(palette.ResultList.Items);
             }
@@ -215,12 +273,15 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
             {
                 var popover = OpenSession(window);
                 Assert.False(AutomationProperties.GetIsDialog(popover));
-                Assert.Equal("Line", popover.Project.Text);
+                Assert.Equal("Line.ap21", popover.Project.Text);
+                Assert.Equal(Loc.Current["Overlay.Session"], popover.SessionHeading.Text);
                 Assert.Equal("PLC_1", popover.Plc.Text);
+                Assert.Equal("—", popover.Client.Text);
                 Assert.True(KeyDown(popover, Key.Escape));
                 Assert.Empty(window.Root.Children.OfType<SessionPopover>());
                 Assert.Same(window.SessionStatusButton, Keyboard.FocusedElement);
-                OpenSession(window);
+                client.Devices[0].TypeName = "CPU 1512SP-1 PN";
+                Assert.Equal("PLC_1 · CPU 1512SP-1 PN", OpenSession(window).Plc.Text);
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request()).Status);
                 Assert.Equal("Log", window.CurrentPage);
                 Assert.Empty(window.Root.Children.OfType<SessionPopover>());
@@ -374,6 +435,8 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                 var popover = OpenSession(window);
                 Assert.Equal(TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName + " · " + apartment, popover.Release.Text);
                 Assert.Contains("fixture AI", popover.Client.Text);
+                Assert.Contains("(stdio)", popover.Client.Text);
+                Assert.Equal(Loc.Current["Overlay.SharedSession"], popover.SessionHeading.Text);
                 Assert.Contains(language == AppLanguage.Chinese ? "（未验证）" : "(unverified)", popover.Client.Text);
                 popover.UpdateLayout();
                 // XREF-1 removed the cross-reference strings, so match the visible words in both languages.
@@ -431,17 +494,23 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
     [Theory]
     [InlineData(1024, 640)]
     [InlineData(1366, 860)]
-    public void Overlays_fit_the_workbench_in_both_languages_and_all_contrast_modes(int width, int height)
+    public async Task Overlays_fit_the_workbench_in_both_languages_and_all_contrast_modes(int width, int height)
     {
+        await using var fixture = new McpOperatorFixture("19");
+        fixture.BindProject();
+        await using var client = fixture.Client();
+        await client.AttachAsync(Assert.Single(await client.DiscoverAsync("19")));
         wpf.Run(() =>
         {
-            var (window, _, _) = Window();
+            var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
+            WpfContext.Complete(model.Session.ApplySharedStateAsync(client.State));
+            var window = new MainWindow(model, false, new ApprovalServiceStub()) { Width = width, Height = height };
             var themes = ThemeManager.Current;
             var saved = (themes.Theme, themes.HighContrastOverride, Loc.Current.Language);
             string? render = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
             try
             {
-                window.Width = width; window.Height = height;
+                WpfContext.ShowWindow(window);
                 window.UpdateLayout();
                 foreach (var language in Enum.GetValues<AppLanguage>())
                 foreach (var mode in new[] { "light", "dark", "high-contrast" })
@@ -451,9 +520,24 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                     themes.HighContrastOverride = mode == "high-contrast";
                     var palette = OpenPalette(window);
                     Capture((FrameworkElement)palette.ResultList.Parent, "palette");
+                    Assert.Equal(!themes.UseLowEffects && !themes.EffectivelyHighContrast, palette.Backdrop.IsVisible);
+                    Assert.Equal(490, palette.Surface.ActualWidth);
+                    Assert.Equal(64, palette.Surface.TranslatePoint(new Point(), window.Root).Y);
+                    Assert.Equal(300, palette.ResultList.ActualHeight);
                     UnifiedDesktopTests.ClickControl(palette.Dismiss);
                     var popover = OpenSession(window);
                     Capture(popover, "session");
+                    var corner = popover.TranslatePoint(new Point(0, popover.ActualHeight), window.Root);
+                    Assert.Equal(12, corner.X);
+                    Assert.Equal(32, window.Root.ActualHeight - corner.Y);
+                    Assert.Equal(312, popover.ActualWidth);
+                    Assert.Equal(28, popover.SwitchVersion.ActualHeight);
+                    Assert.Equal(28, popover.Disconnect.ActualHeight);
+                    Assert.InRange(Math.Abs(popover.SwitchVersion.ActualWidth - popover.Disconnect.ActualWidth), 0, 1);
+                    var peer = new ButtonAutomationPeer(popover.Disconnect);
+                    Assert.Equal(Loc.Current["Overlay.Disconnect"], peer.GetName());
+                    var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(popover);
+                    Assert.InRange(Math.Abs(peer.GetBoundingRectangle().Height - 28 * dpi.DpiScaleY), 0, 1);
                     UnifiedDesktopTests.ClickControl(window.SessionStatusButton);
 
                     void Capture(FrameworkElement panel, string name)

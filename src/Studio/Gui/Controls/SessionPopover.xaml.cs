@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using TiaMcp.Versioning;
@@ -50,12 +51,20 @@ public partial class SessionPopover : UserControl
         var session = _model.Session;
         var panel = _model.Panel;
         var release = TiaVersionCatalog.Get(session.SelectedReleaseKey);
+        SessionHeading.Text = panel?.Attached == true ? Loc.Current["Overlay.SharedSession"] : Loc.Current["Overlay.Session"];
         // Both the bridge and the shared worker use the release's Openness owner apartment.
         Release.Text = session.IsConnected ? release.DisplayName + " · " + release.OwnerApartment : "—";
-        Project.Text = session.IsConnected && session.ProjectName.Length > 0 ? session.ProjectName : "—";
+        ConnectedTag.Visibility = session.IsConnected ? Visibility.Visible : Visibility.Collapsed;
+        string projectName = Path.GetFileName(session.OpenProjectFile) is { Length: > 0 } file ? file : session.ProjectName;
+        Project.Text = session.IsConnected && projectName.Length > 0 ? projectName : "—";
         var device = _model.Engineering.SelectedDevice;
-        Plc.Text = session.IsConnected && device is { Category: "Plc" } ? device.DisplayName ?? device.Name : "—";
-        Client.Text = panel?.Attached == true ? panel.Participants : "—";
+        Plc.Text = "—";
+        if (session.IsConnected && device is { Category: "Plc" })
+        {
+            Plc.Text = string.IsNullOrEmpty(device.DisplayName) ? device.Name : device.DisplayName;
+            if (!string.IsNullOrEmpty(device.TypeName)) Plc.Text += " · " + device.TypeName;
+        }
+        Client.Text = panel is { Attached: true, ClientStatus.Length: > 0 } ? panel.ClientStatus : "—";
     }
 
     private void OnAiSettings(object sender, RoutedEventArgs e) => _navigate("Settings");

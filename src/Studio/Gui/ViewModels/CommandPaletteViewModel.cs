@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace TiaOpenness.Gui.ViewModels;
 
-internal sealed record CommandPaletteItem(string Title, string Detail, Action Execute);
+internal sealed record CommandPaletteItem(string Title, string Detail, Action Execute, string SearchAlias = "");
 
 internal sealed class CommandPaletteViewModel(List<CommandPaletteItem> items)
 {
@@ -15,6 +15,7 @@ internal sealed class CommandPaletteViewModel(List<CommandPaletteItem> items)
         string term = query.Trim();
         Results.Filter = term.Length == 0 ? null : value => value is CommandPaletteItem item
             && (item.Title.Contains(term, StringComparison.CurrentCultureIgnoreCase)
-                || item.Detail.Contains(term, StringComparison.CurrentCultureIgnoreCase));
+                || item.Detail.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                || item.SearchAlias.Contains(term, StringComparison.CurrentCultureIgnoreCase));
     }
 }

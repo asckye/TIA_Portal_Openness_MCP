@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Automation;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Themes;
@@ -20,31 +22,39 @@ public partial class MainWindow
     {
         if (ShellModalOpen) return;
         CloseSessionPopover();
-        var palette = new CommandPalette(new CommandPaletteViewModel(PaletteItems()), CloseCommandPalette);
+        var invoker = Keyboard.FocusedElement as UIElement;
+        void Close() => CloseCommandPalette(invoker);
+        var palette = new CommandPalette(new CommandPaletteViewModel(PaletteItems()), Close);
+        palette.Backdrop.Fill = new VisualBrush((Visual)Sider.Parent) { AutoLayoutContent = false };
         OverlayHost.Children.Add(palette);
         OverlayHost.Visibility = Visibility.Visible;
-        _paletteFocus = new ModalPane(palette, palette.SearchBox, CloseCommandPalette);
+        _paletteFocus = new ModalPane(palette, palette.SearchBox, Close);
         QueueControlSnapshot();
     }
 
     private List<CommandPaletteItem> PaletteItems()
     {
         var items = new List<CommandPaletteItem>();
-        void Page(string id, string title, string detail)
+        void Page(string id, string title, string detail, string alias = "")
         {
-            if (PageUnavailable(id) == null) items.Add(new(title, detail, () => Navigate(id)));
+            if (PageUnavailable(id) == null) items.Add(new(title, detail, () => Navigate(id), alias));
         }
 
-        foreach (var rail in RailItems)
+        void RailPage(RadioButton rail, string title)
         {
-            if ((string)rail.Tag == "Agent")
-            {
-                Page("Approvals", Loc.Current["Shell.ApprovalsPill"], Loc.Current["Rail.Agent"]);
-                Page("Calls", Loc.Current["Shell.Calls"], Loc.Current["Rail.Agent"]);
-            }
-            else if (rail == SettingsButton) Page("Settings", Loc.Current["Palette.Settings"], AutomationProperties.GetAcceleratorKey(rail));
-            else Page((string)rail.Tag, (string)rail.Content, System.Windows.Automation.AutomationProperties.GetAcceleratorKey(rail));
+            Page((string)rail.Tag, title, AutomationProperties.GetAcceleratorKey(rail), (string)rail.Content);
         }
+        RailPage(RailEngineering, HasProject ? Loc.Current["Shell.Engineering"] + " · " + ProjectFileName : Loc.Current["Shell.Engineering"]);
+        RailPage(RailAgent, Loc.Current["Shell.Approvals"]);
+        RailPage(RailMcp, Loc.Current["Desktop.Configuration"]);
+        RailPage(RailClients, Loc.Current["Shell.Clients"]);
+        RailPage(RailEnvironment, Loc.Current["Shell.Environment"]);
+        RailPage(RailAudit, Loc.Current["Shell.Audit"]);
+        RailPage(RailLog, Loc.Current["Shell.Logs"]);
+        Page("Settings", Loc.Current["Shell.Settings"], AutomationProperties.GetAcceleratorKey(SettingsButton),
+            Loc.Current["Palette.Settings"] + " " + SettingsButton.Content);
+        Page("Approvals", Loc.Current["Shell.ApprovalsPill"], Loc.Current["Rail.Agent"]);
+        Page("Calls", Loc.Current["Shell.Calls"], Loc.Current["Rail.Agent"]);
         Page("VersionControl", Loc.Current["Shell.VersionControl"], Loc.Current["Rail.Project"]);
 
         var engineering = _model.Engineering;
@@ -53,13 +63,19 @@ public partial class MainWindow
         if (LoadedPlc())
         {
             foreach (var row in engineering.Blocks)
-                items.Add(new(row.Name, row.Path == row.Name ? engineering.SelectedDevice!.Name : row.Path, () =>
+            {
+                var metadata = new List<string>(2);
+                if (row.Info.Number.HasValue) metadata.Add(row.Kind + " " + row.Number);
+                if (!string.IsNullOrWhiteSpace(row.Info.ProgrammingLanguage)) metadata.Add(row.Language);
+                var title = metadata.Count == 0 ? row.Name : row.Name + " (" + string.Join(" · ", metadata) + ")";
+                items.Add(new(title, engineering.SelectedDevice!.Name, () =>
                 {
                     if (!LoadedPlc() || !engineering.Blocks.Contains(row)) return;
                     Navigate("Blocks");
                     engineering.BlockFilter = "";
                     BlocksContent.LocateControlBlock(row);
-                }));
+                }, row.Path));
+            }
         }
 
         var themes = ThemeManager.Current;
@@ -72,12 +88,23 @@ public partial class MainWindow
         return items;
     }
 
-    private void CloseCommandPalette()
+    private void CloseCommandPalette(UIElement? invoker = null)
     {
         OverlayHost.Visibility = Visibility.Collapsed;
         _paletteFocus?.Dispose();
         _paletteFocus = null;
         OverlayHost.Children.Clear();
+        // A command button can still be disabled until WPF requeries it after the modal closes.
+        if (invoker != null && !invoker.IsKeyboardFocusWithin)
+        {
+            CommandManager.InvalidateRequerySuggested();
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (!ShellModalOpen && invoker.IsEnabled && invoker.IsVisible
+                    && (Keyboard.FocusedElement == this || (IsActive && !IsKeyboardFocusWithin)))
+                    invoker.Focus();
+            }, DispatcherPriority.ContextIdle);
+        }
         QueueControlSnapshot();
     }
 
@@ -89,7 +116,6 @@ public partial class MainWindow
         _sessionPopover = popover;
         popover.AiSettings.IsEnabled = PageUnavailable("Settings") == null;
         popover.SwitchVersion.IsEnabled = PageUnavailable("Mcp") == null;
-        popover.Margin = new Thickness(12, 0, 0, Root.ActualHeight - SessionStatusButton.TranslatePoint(new Point(), Root).Y + 4);
         Root.Children.Add(popover);
         PreviewMouseDown += OnSessionOutsideClick;
         Deactivated += OnSessionDeactivated;

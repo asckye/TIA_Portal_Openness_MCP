@@ -55,7 +55,9 @@ public partial class CommandPalette : UserControl
 
     private void OnBackdrop(object sender, MouseButtonEventArgs e)
     {
-        if (e.OriginalSource == sender) _close();
+        if (e.OriginalSource != Scrim) return;
+        e.Handled = true;
+        _close();
     }
 
     private void OnDismiss(object sender, RoutedEventArgs e) => _close();
