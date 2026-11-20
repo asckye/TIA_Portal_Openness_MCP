@@ -5,6 +5,10 @@ namespace TiaMcp.Adapters.Diagnostics
     // Delegates cross assembly boundaries without exposing either journal's internal types.
     public static class AdapterJournal
     {
+        public static void BeforeProbeStep(string member)
+            => TiaMcpServer.ModelContextProtocol.InvocationJournal.Write(TiaMcpServer.ModelContextProtocol.InvocationJournal.CorrelationId,
+                "ProbeNativeCrash", "BEFORE", objectType: member);
+
         public static void ConfigureCorrelation(Func<string> correlation)
             => TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureCorrelation(correlation);
 

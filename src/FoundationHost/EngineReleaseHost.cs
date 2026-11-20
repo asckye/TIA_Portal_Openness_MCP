@@ -85,6 +85,7 @@ internal static class SharedReleaseHost
             builder.Logging.AddProvider(logger);
             builder.Logging.SetMinimumLevel(LogLevel.Warning);
             var mcp = builder.Services.AddMcpServer(o => o.ServerInstructions = pipeline.Instructions).WithStdioServerTransport().WithTools(hostSession.Tools);
+            mcp.WithCallToolHandler(new NativeDiagnosticProbeTool(session.Worker, options.ReleaseKey).Handler(hostSession));
             // Preserve the SDK's cancellable stdin and EOF lifetime while owning complete stdout frames here.
             builder.Services.Replace(ServiceDescriptor.Singleton<ITransport>(services => new StdioFrameTransport(
                 new StdioServerTransport(services.GetRequiredService<Microsoft.Extensions.Options.IOptions<McpServerOptions>>().Value,
@@ -216,7 +217,8 @@ internal static class SharedReleaseHost
                     foreach (var tool in hostSession.Tools) tools.Add(tool);
                     // Keep the resource and prompt capabilities registered on the server builder; only the tools are per session.
                     server.Capabilities ??= new ServerCapabilities();
-                    server.Capabilities.Tools = new ToolsCapability { ToolCollection = tools };
+                    server.Capabilities.Tools = new ToolsCapability { ToolCollection = tools,
+                        CallToolHandler = new NativeDiagnosticProbeTool(session.Worker, options.ReleaseKey).Handler(hostSession) };
                     context.Items["engineSession"] = session;
                     context.Items["hostSession"] = hostSession;
                     return Task.CompletedTask;

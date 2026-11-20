@@ -317,12 +317,15 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => McpServer
-                .RunWritePreview("InvokeService", dryRun, new {
+        {
+            if (TiaMcp.Adapters.Contracts.OpennessReflectionPolicy.SivarcServiceProblem(HardwareContract.ReleaseKey, serviceTypeSuffix) is string problem)
+                return McpServer.V4Reject("InvokeService", UnsupportedCapabilityDetails.ErrorFor(HardwareContract.ReleaseKey, "InvokeService", null, problem));
+            return McpServer.RunWritePreview("InvokeService", dryRun, new {
                     objectKind, objectPath, serviceTypeSuffix, methodName, args, softwarePath, allowWrite }, () => HmiInspectionContract
                 .Run("InvokeService", allowWrite, allowWrite, () =>
                     InvokeService(objectKind, objectPath, serviceTypeSuffix, methodName, args == null ? null : args.Select(value => value.Json).ToArray(),
                         softwarePath, allowWrite)), expectedPlanHash, expectedProjectFile, writing: allowWrite);
+        }
 
         public ResponseObjectValue InvokeService(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,

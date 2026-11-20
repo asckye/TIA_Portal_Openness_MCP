@@ -5,6 +5,14 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class OpennessReflectionPolicy
     {
+        public static string? SivarcServiceProblem(string release, string? service)
+        {
+            const string provider = "Siemens.Engineering.SiVArc.SivarcDataProvider";
+            var suffix = service?.Trim();
+            return !string.IsNullOrEmpty(suffix) && provider.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+                ? OptionalEngineeringCapabilities.SivarcBlockDefinitionProblem(release) : null;
+        }
+
         // Reflection is not an alternate write route around confirmation/offline/incident guards.
         // CLR getters and the existing read methods remain available.
         public static string? GuardedWriteRefusal(string typeName, string method, int argumentCount)
@@ -113,6 +121,11 @@ namespace TiaMcp.Adapters.Contracts
 
     public sealed class OpennessReflectionReply : IWorkerOperationReply
     {
+        public static OpennessReflectionReply? RefuseUnavailableService(string release, OpennessReflectionRequest request)
+            => request.Operation is "InvokeService" or "DescribeService"
+                && OpennessReflectionPolicy.SivarcServiceProblem(release, request.ServiceTypeSuffix) is string problem
+                ? new OpennessReflectionReply { Failure = new PlcSoftwareFailure { Code = "NotSupportedOnVersion", Message = problem } } : null;
+
         public OpennessObservation? Observation { get; set; }
         public PlcSoftwareFailure? Failure { get; set; }
         public bool MayHaveChanged { get; set; }

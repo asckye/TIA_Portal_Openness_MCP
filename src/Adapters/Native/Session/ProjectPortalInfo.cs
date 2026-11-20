@@ -16,6 +16,15 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         // ---- portal / session diagnostics -------------------------------------------------------------------------------------
+        public Dictionary<string, object?> ReadProbePortalInfo()
+        {
+            Check();
+            return PortalProductProbe.Read<TiaPortalProcess, TiaPortalProduct>(Environment.GetEnvironmentVariable("TIA_MCP_CRASH_PROBES"),
+                () => (portal ?? throw new InvalidOperationException("Portal attachment required.")).GetCurrentProcess(),
+                process => process.InstalledSoftware, product => product.Options, product => product.Name, product => product.Version,
+                Diagnostics.AdapterJournal.BeforeProbeStep);
+        }
+
         private static HmiObject SessionRow(TiaPortalSession session) => new HmiObject
         {
             ["id"] = session.Id, ["version"] = session.Version, ["isActive"] = session.IsActive, ["attachTime"] = HmiScalar.Json(session.AttachTime),

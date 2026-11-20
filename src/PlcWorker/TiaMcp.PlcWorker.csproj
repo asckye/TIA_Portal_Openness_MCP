@@ -79,6 +79,11 @@
     <Compile Include="$(WorkerSourceRoot)/../Logic/Siemens/DownloadTargetPolicy.cs" Link="Safety/DownloadTargetPolicy.cs" />
     <Compile Include="$(WorkerSourceRoot)/../Logic/Siemens/LocalNetworkPolicy.cs" Link="Safety/LocalNetworkPolicy.cs" />
     <Compile Include="$(WorkerSourceRoot)/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
+    <Compile Include="$(WorkerSourceRoot)/ProjectTextProbeWorker.cs" Link="ProjectTextProbeWorker.cs" />
+    <Compile Include="$(WorkerSourceRoot)/ProjectTextProbe.cs" Link="ProjectTextProbe.cs" />
+    <Compile Include="../Logic/Exchange/TableFile.cs" Link="Exchange/TableFile.cs" />
+    <Compile Include="../Logic/Exchange/TableFile.Xlsx.cs" Link="Exchange/TableFile.Xlsx.cs" />
+    <Reference Include="System.IO.Compression" />
     <Compile Include="$(WorkerSourceRoot)/FoundationProcessLease.cs" Link="FoundationProcessLease.cs" />
     <Compile Include="../Logic/Siemens/PortalProcessLease.cs" Link="Shared/PortalProcessLease.cs" />
     <Compile Include="../Shared/DataLocations.cs" Link="Shared/DataLocations.cs" />

@@ -93,6 +93,36 @@ namespace TiaMcp.Logic.Exchange
         }
 
         public static TableData ReadXlsx(byte[] bytes, string sheetName, string file = "table.xlsx", EmptyTableRows emptyRows = EmptyTableRows.Skip)
+            => ReadWorkbook(bytes, file, (sheets, open, shared) => {
+                var matches = sheets.Where(s => (string?)s.Attribute("name") == sheetName).ToArray();
+                var sheet = matches.Length == 1 ? matches[0] : sheets.Length == 1 ? sheets[0]
+                    : throw Error(file, 1, 1, "Workbook sheet is ambiguous; select the kind's named sheet.");
+                return ReadWorksheet(open(sheet), shared, file, emptyRows);
+            });
+
+        internal static Dictionary<string, string[]> ReadXlsxHeaders(byte[] bytes)
+            => ReadWorkbook(bytes, "table.xlsx", (sheets, open, shared) => {
+                var headers = new Dictionary<string, string[]>(StringComparer.Ordinal);
+                long logicalCharacters = 0;
+                foreach (var sheet in sheets)
+                {
+                    string name = (string?)sheet.Attribute("name") ?? throw new InvalidDataException("Missing sheet name.");
+                    var first = open(sheet).Elements(SheetNs + "row").FirstOrDefault();
+                    string[] values = Array.Empty<string>();
+                    // Row one is the probe's header convention. Never promote a later data row for disclosure.
+                    if (first != null && ((string?)first.Attribute("r") ?? "1") == "1")
+                    {
+                        var cells = ReadCells(first, 1, "table.xlsx", shared, ref logicalCharacters);
+                        int width = cells.Where(c => c.Value.Length != 0).Select(c => c.Key).DefaultIfEmpty(0).Max();
+                        if (width > MaximumColumns) throw Error("table.xlsx", 1, width, "Too many columns.");
+                        values = Enumerable.Range(1, width).Select(c => cells.TryGetValue(c, out var value) ? value : "").ToArray();
+                    }
+                    headers.Add(name, values);
+                }
+                return headers;
+            });
+
+        private static T ReadWorkbook<T>(byte[] bytes, string file, Func<XElement[], Func<XElement, XElement>, string[], T> read)
         {
             if (!string.Equals(Path.GetExtension(file), ".xlsx", StringComparison.OrdinalIgnoreCase))
                 throw Error(file, 1, 1, "Only .xlsx workbooks are supported; .xls/.xlsm/encrypted files are refused.");
@@ -133,85 +163,96 @@ namespace TiaMcp.Logic.Exchange
                 }
                 var sheets = (workbook.Root?.Element(SheetNs + "sheets") ?? throw Error(file, 1, 1, "Missing workbook sheets."))
                     .Elements(SheetNs + "sheet").ToArray();
-                var matches = sheets.Where(s => (string?)s.Attribute("name") == sheetName).ToArray();
-                var sheet = matches.Length == 1 ? matches[0] : sheets.Length == 1 ? sheets[0]
-                    : throw Error(file, 1, 1, "Workbook sheet is ambiguous; select the kind's named sheet.");
-                var relation = relationships.Single(r => (string?)r.Attribute("Id") == (string?)sheet.Attribute(OfficeRel + "id")
-                    && (string?)r.Attribute("Type") == OfficeRel.NamespaceName + "/worksheet");
                 var sharedRelation = relationships.SingleOrDefault(r => (string?)r.Attribute("Type") == OfficeRel.NamespaceName + "/sharedStrings");
                 var shared = sharedRelation == null ? Array.Empty<string>()
                     : Load(Target(sharedRelation)).Root!.Elements(SheetNs + "si").Select(StringText).ToArray();
-                var sheetData = Load(Target(relation)).Root!.Element(SheetNs + "sheetData")
-                    ?? throw Error(file, 1, 1, "Missing worksheet data.");
-                var rows = new List<string[]>(); int previousRow = 0, width = 0, pendingEmptyRows = 0;
-                var sourceRows = new List<int>();
-                long logicalCharacters = 0;
-                foreach (var row in sheetData.Elements(SheetNs + "row"))
+                XElement Open(XElement sheet)
                 {
-                    int r;
-                    if (row.Attribute("r") is { } rowNumber)
-                    {
-                        if (!int.TryParse(rowNumber.Value, NumberStyles.None, CultureInfo.InvariantCulture, out r))
-                            throw Error(file, previousRow + 1, 1, "Invalid row index: " + rowNumber.Value);
-                    }
-                    else r = previousRow + 1;
-                    if (r <= previousRow) throw Error(file, r, 1, "Invalid row index.");
-                    var cells = new SortedDictionary<int, string>(); int previousColumn = 0;
-                    foreach (var cell in row.Elements(SheetNs + "c"))
-                    {
-                        string reference = (string?)cell.Attribute("r") ?? ColumnName(previousColumn) + r;
-                        int c = ColumnIndex(reference, r, file);
-                        if (c <= previousColumn) throw Error(file, r, c, "Invalid or duplicate column index.");
-                        previousColumn = c;
-                        string? value = cell.Element(SheetNs + "v")?.Value;
-                        string type = (string?)cell.Attribute("t") ?? "n";
-                        if (cell.Element(SheetNs + "f") != null && (value == null || value.Length == 0 && type != "str"))
-                            throw Error(file, r, c, "Formula has no cached value.");
-                        if (type == "e") throw Error(file, r, c, "Excel error cells are refused.");
-                        if (type == "inlineStr") value = StringText(cell.Element(SheetNs + "is") ?? new XElement(SheetNs + "is"));
-                        else if (type == "s")
-                        {
-                            if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int index)
-                                || index < 0 || index >= shared.Length) throw Error(file, r, c, "Invalid shared-string index.");
-                            value = shared[index];
-                        }
-                        else if (type == "b") value = value == "1" ? "true" : value == "0" ? "false"
-                            : throw Error(file, r, c, "Invalid boolean cell.");
-                        else if (type != "n" && type != "str" && type != "d") throw Error(file, r, c, "Unsupported cell type.");
-                        value ??= "";
-                        logicalCharacters += value.Length;
-                        if (logicalCharacters > MaximumWorkbookCharacters) throw Error(file, r, c, "Workbook exceeds 64 Mi logical characters.");
-                        cells.Add(c, value);
-                    }
-                    if (rows.Count == 0 && cells.Values.Any(value => value.Length != 0))
-                    {
-                        width = cells.Where(cell => cell.Value.Length != 0).Select(cell => cell.Key).DefaultIfEmpty(0).Max();
-                        if (width > MaximumColumns) throw Error(file, r, width, "Too many columns.");
-                    }
-                    bool nonempty = cells.Values.Any(value => value.Length != 0);
-                    if (rows.Count != 0 && emptyRows != EmptyTableRows.Skip) pendingEmptyRows += r - previousRow - 1;
-                    if (nonempty || rows.Count != 0 && emptyRows == EmptyTableRows.Keep)
-                    {
-                        var extra = cells.FirstOrDefault(cell => cell.Key > width && cell.Value.Length != 0);
-                        if (extra.Key != 0) throw Error(file, r, extra.Key, "Row width exceeds header.");
-                        if ((long)rows.Count + pendingEmptyRows > MaximumRows) throw Error(file, r, 1, "More than 10000 data rows.");
-                        while (pendingEmptyRows > 0)
-                        {
-                            sourceRows.Add(r - pendingEmptyRows); rows.Add(Enumerable.Repeat("", width).ToArray()); pendingEmptyRows--;
-                        }
-                        rows.Add(Enumerable.Range(1, width).Select(c => cells.TryGetValue(c, out var value) ? value : "").ToArray());
-                        sourceRows.Add(r);
-                        if (rows.Count > MaximumRows + 1) throw Error(file, r, 1, "More than 10000 data rows.");
-                    }
-                    else if (rows.Count != 0 && emptyRows == EmptyTableRows.TrimTrailing) pendingEmptyRows++;
-                    previousRow = r;
+                    var relation = relationships.Single(r => (string?)r.Attribute("Id") == (string?)sheet.Attribute(OfficeRel + "id")
+                        && (string?)r.Attribute("Type") == OfficeRel.NamespaceName + "/worksheet");
+                    return Load(Target(relation)).Root!.Element(SheetNs + "sheetData")
+                        ?? throw Error(file, 1, 1, "Missing worksheet data.");
                 }
-                var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1), sourceRows.Skip(1), sourceRows.FirstOrDefault());
-                Validate(table, file, 32767); return table;
+                return read(sheets, Open, shared);
             }
             catch (Exception ex) when (ex is InvalidDataException || ex is XmlException || ex is InvalidOperationException
                 || ex is FormatException || ex is OverflowException)
             { throw Error(file, 1, 1, "Invalid, encrypted or unsupported XLSX: " + ex.Message); }
+        }
+
+        private static TableData ReadWorksheet(XElement sheetData, string[] shared, string file, EmptyTableRows emptyRows)
+        {
+            var rows = new List<string[]>(); int previousRow = 0, width = 0, pendingEmptyRows = 0;
+            var sourceRows = new List<int>();
+            long logicalCharacters = 0;
+            foreach (var row in sheetData.Elements(SheetNs + "row"))
+            {
+                int r;
+                if (row.Attribute("r") is { } rowNumber)
+                {
+                    if (!int.TryParse(rowNumber.Value, NumberStyles.None, CultureInfo.InvariantCulture, out r))
+                        throw Error(file, previousRow + 1, 1, "Invalid row index: " + rowNumber.Value);
+                }
+                else r = previousRow + 1;
+                if (r <= previousRow) throw Error(file, r, 1, "Invalid row index.");
+                var cells = ReadCells(row, r, file, shared, ref logicalCharacters);
+                if (rows.Count == 0 && cells.Values.Any(value => value.Length != 0))
+                {
+                    width = cells.Where(cell => cell.Value.Length != 0).Select(cell => cell.Key).DefaultIfEmpty(0).Max();
+                    if (width > MaximumColumns) throw Error(file, r, width, "Too many columns.");
+                }
+                bool nonempty = cells.Values.Any(value => value.Length != 0);
+                if (rows.Count != 0 && emptyRows != EmptyTableRows.Skip) pendingEmptyRows += r - previousRow - 1;
+                if (nonempty || rows.Count != 0 && emptyRows == EmptyTableRows.Keep)
+                {
+                    var extra = cells.FirstOrDefault(cell => cell.Key > width && cell.Value.Length != 0);
+                    if (extra.Key != 0) throw Error(file, r, extra.Key, "Row width exceeds header.");
+                    if ((long)rows.Count + pendingEmptyRows > MaximumRows) throw Error(file, r, 1, "More than 10000 data rows.");
+                    while (pendingEmptyRows > 0)
+                    {
+                        sourceRows.Add(r - pendingEmptyRows); rows.Add(Enumerable.Repeat("", width).ToArray()); pendingEmptyRows--;
+                    }
+                    rows.Add(Enumerable.Range(1, width).Select(c => cells.TryGetValue(c, out var value) ? value : "").ToArray());
+                    sourceRows.Add(r);
+                    if (rows.Count > MaximumRows + 1) throw Error(file, r, 1, "More than 10000 data rows.");
+                }
+                else if (rows.Count != 0 && emptyRows == EmptyTableRows.TrimTrailing) pendingEmptyRows++;
+                previousRow = r;
+            }
+            var table = new TableData(rows.FirstOrDefault() ?? Array.Empty<string>(), rows.Skip(1), sourceRows.Skip(1), sourceRows.FirstOrDefault());
+            Validate(table, file, 32767); return table;
+        }
+
+        private static SortedDictionary<int, string> ReadCells(XElement row, int r, string file, string[] shared, ref long logicalCharacters)
+        {
+            var cells = new SortedDictionary<int, string>(); int previousColumn = 0;
+            foreach (var cell in row.Elements(SheetNs + "c"))
+            {
+                string reference = (string?)cell.Attribute("r") ?? ColumnName(previousColumn) + r;
+                int c = ColumnIndex(reference, r, file);
+                if (c <= previousColumn) throw Error(file, r, c, "Invalid or duplicate column index.");
+                previousColumn = c;
+                string? value = cell.Element(SheetNs + "v")?.Value;
+                string type = (string?)cell.Attribute("t") ?? "n";
+                if (cell.Element(SheetNs + "f") != null && (value == null || value.Length == 0 && type != "str"))
+                    throw Error(file, r, c, "Formula has no cached value.");
+                if (type == "e") throw Error(file, r, c, "Excel error cells are refused.");
+                if (type == "inlineStr") value = StringText(cell.Element(SheetNs + "is") ?? new XElement(SheetNs + "is"));
+                else if (type == "s")
+                {
+                    if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int index)
+                        || index < 0 || index >= shared.Length) throw Error(file, r, c, "Invalid shared-string index.");
+                    value = shared[index];
+                }
+                else if (type == "b") value = value == "1" ? "true" : value == "0" ? "false"
+                    : throw Error(file, r, c, "Invalid boolean cell.");
+                else if (type != "n" && type != "str" && type != "d") throw Error(file, r, c, "Unsupported cell type.");
+                value ??= "";
+                logicalCharacters += value.Length;
+                if (logicalCharacters > MaximumWorkbookCharacters) throw Error(file, r, c, "Workbook exceeds 64 Mi logical characters.");
+                cells.Add(c, value);
+            }
+            return cells;
         }
 
         private static string StringText(XElement element) => DecodeSpreadsheetText(string.Concat(element.Descendants(SheetNs + "t")

@@ -50,6 +50,10 @@ namespace TiaMcp.PlcWorker
                     if (name == family.OperationPrefix + "." + operation) return true;
             return false;
         }
+        internal const string CrashProbeVariable = "TIA_MCP_CRASH_PROBES";
+        // Hidden crash probes answer "disabled" before argument, confirmation or project identity checks touch the native session.
+        internal static string? DisabledProbeReply(string name, string? enabled)
+            => name.StartsWith("diagnostics.", StringComparison.Ordinal) && enabled != "1" ? "{\"status\":\"disabled\",\"steps\":[]}" : null;
         internal static Action<string> MutationIdentity(string name, Action<string> nativeIdentity, Action<string>? sharedFamilyIdentity)
             => sharedFamilyIdentity != null && IsFamilyOperation(name) ? sharedFamilyIdentity : nativeIdentity;
         private static bool IsFamilyRead(string name) => name == "project-security.ReadProjectProtection"
@@ -67,6 +71,7 @@ namespace TiaMcp.PlcWorker
                     "hardware-network.HardwareGetDeviceItemNetworkInfo", "hardware-network.HardwareReadCommunicationConnections"
             }.Contains(name, StringComparer.Ordinal);
         internal static bool RequiresPortal(string name) => name != "hmi-unified.ExecuteUnifiedHmiMetadata"
+            && !name.StartsWith("diagnostics.", StringComparison.Ordinal)
             && name != "hmi-unified-exchange.ReleaseUnifiedReadCursor" && name != "runtime-channels.ExecutePlcSimAdvanced"
             && name != "project-lifecycle.ReadPortalInfo" && name != "project-lifecycle.ValidateAutomationContext"
             && name != "project-lifecycle.ConnectIsolatedPortal" && name != "project-lifecycle.EnsureOpennessUserGroup"
@@ -75,7 +80,9 @@ namespace TiaMcp.PlcWorker
             && name != "ReadState" && name != "ReadPortalProcessProjects" && name != "ReadPortalConnectReadiness"
             && name != "hardware-devices.HardwareLegacySearchInstalledGsdDevices";
         internal const string BlockPage = "plc-paging.ReadBlockPage";
-        internal static bool IsReadOnly(string name) => name == BlockPage || name == "hmi-unified.ExecuteUnifiedHmiMetadata"
+        internal static bool IsReadOnly(string name) => name == BlockPage || name is "diagnostics.ReadProbePortalInfo" or "diagnostics.ReadProbeProjectTexts"
+                or "diagnostics.ReadProbeSivarc" or "diagnostics.ExportProbeAlarmTextLists"
+            || name == "hmi-unified.ExecuteUnifiedHmiMetadata"
             || name == "hmi-unified-exchange.ReleaseUnifiedReadCursor" || name == "project-lifecycle.ReadPortalInfo"
             || name == "project-lifecycle.ValidateAutomationContext" || name == "project-lifecycle.ReadProjectLifecycleBinding"
             || name == "engineering-services.ReadEngineeringTransaction" || name == "plc-analysis.ExportBlockDocument" || IsFamilyRead(name)

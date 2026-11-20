@@ -24,6 +24,11 @@
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareValues.cs" />
 
     <Compile Include="../../Shared/SourceFamily.cs" Link="Shared/SourceFamily.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PortalProductProbe.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/NativeCrashProbes.cs" />
+    <Compile Include="../../../src/PlcWorker/ProjectTextProbe.cs" />
+    <Compile Include="../../../src/Logic/Exchange/TableFile.cs" />
+    <Compile Include="../../../src/Logic/Exchange/TableFile.Xlsx.cs" />
     <Compile Include="../../../src/Adapters/Native/Engineering/WorkerFamilyCallbacks.cs" Link="Engineering/WorkerFamilyCallbacks.cs" />
     <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiContentTokenPolicy.cs" Link="Hmi/HmiContentTokenPolicy.cs" />

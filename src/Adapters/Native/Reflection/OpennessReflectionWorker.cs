@@ -28,6 +28,7 @@ namespace TiaMcp.Adapters
         {
             Check();
             if (dryRun == request.AllowWrite) throw new ArgumentException("Conflicting reflection write mode.");
+            if (OpennessReflectionReply.RefuseUnavailableService(ReleaseKey, request) is { } refusal) return refusal;
             var service = new OpennessReflection(new ReflectionSession(ResolveReflectionObject,
                 () => EngineeringReflectionLookupPaths != null ? EngineeringReflectionLookupPaths() : reflectionLookupPaths, ResolveReflectionReadback));
             var reply = new OpennessReflectionReply();

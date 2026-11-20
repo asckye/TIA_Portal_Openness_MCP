@@ -68,6 +68,9 @@ namespace TiaMcp.PlcWorker
             var modules = new List<WorkerOperationModule> { new WorkerOperationModule("", typeof(PlcFoundationEngine), WorkerOperations.Names) };
             modules.Add(new WorkerOperationModule("plc-paging", typeof(PlcFoundationEngine), new[] { "ReadBlockPage" }));
             modules.Add(new WorkerOperationModule("plc-analysis", typeof(PlcFoundationEngine), new[] { "ExportBlockDocument" }));
+            modules.Add(new WorkerOperationModule("diagnostics", typeof(PlcFoundationEngine), new[] { "ReadProbePortalInfo",
+                "ReadProbeSivarc", "ExecuteProbeMasterCopy", "ExportProbeAlarmTextLists" }));
+            modules.Add(new WorkerOperationModule("diagnostics", typeof(ProjectTextProbeWorker), new[] { "ReadProbeProjectTexts" }));
             foreach (var family in PortedFamilies.All.Where(f => f.Available(releaseKey)))
                 modules
                     .Add(new WorkerOperationModule(family.OperationPrefix, family.Name == "F04"
@@ -117,7 +120,15 @@ namespace TiaMcp.PlcWorker
                 var name = request.Method.Substring("adapter.".Length);
                 readOnly=WorkerOperations.IsReadOnly(name);
                 if (!methods.TryGetValue(name, out var method)) throw new NotSupportedException("Unknown foundation operation: " + name);
+                if (WorkerOperations.DisabledProbeReply(name, Environment.GetEnvironmentVariable(WorkerOperations.CrashProbeVariable)) is { } disabledProbe)
+                    return ChannelResponse.Success(disabledProbe);
                 var values = WorkerJson.ParseArguments(request.ArgumentsJson);
+                // A write-mode reflection request can otherwise resolve a native project during identity validation.
+                if (name == "openness-reflection.ExecuteOpennessReflection" && OptionalEngineeringCapabilities.SivarcBlockDefinitionProblem(releaseKey) != null
+                    && WorkerJson.Get(values, "request") is var reflection
+                    && reflection.ValueKind == JsonValueKind.Object && OpennessReflectionReply.RefuseUnavailableService(releaseKey,
+                        JsonSerializer.Deserialize<OpennessReflectionRequest>(reflection.GetRawText())!) is { } refusal)
+                    return ChannelResponse.Success(WorkerJson.Serialize(refusal));
                 if (name == "plc-online.ExecuteOnline" && WorkerJson.Get(values, "request") is var online
                     && online.ValueKind == JsonValueKind.Object)
                 {
@@ -179,7 +190,8 @@ namespace TiaMcp.PlcWorker
                 var call = WorkerJson.FacadeArguments(parameters, values);
                 enteredOperation=true;
                 if(name=="Disconnect") disconnectAttempted=true;
-                var result = method.Invoke(engine, call);
+                var result = method.DeclaringType == typeof(ProjectTextProbeWorker)
+                    ? method.Invoke(new ProjectTextProbeWorker(engine), call) : method.Invoke(engine, call);
                 if(name=="Disconnect") disconnected=true;
                 if (name == "ReadState")
                 {

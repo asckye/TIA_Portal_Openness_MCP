@@ -20,6 +20,9 @@ namespace TiaMcpServer.Siemens.Services
             // Preserve the original pure safety refusal before acquiring a native target.
             if (request.Operation is "InvokeObject" or "InvokeService" or "DescribeService")
             {
+                if (request.Operation != "InvokeObject" && OpennessReflectionPolicy.SivarcServiceProblem(
+                    HardwareContract.ReleaseKey, request.ServiceTypeSuffix) is string problem)
+                    throw new PortalException(PortalErrorCode.NotSupportedOnVersion, problem);
                 var refusal = OpennessReflectionPolicy.ReflectionRefusal(request.Operation == "InvokeObject" ? null : request.ServiceTypeSuffix,
                     request.Operation == "DescribeService" ? null : request.MethodName);
                 if (refusal != null) throw new PortalException(PortalErrorCode.InvalidState, refusal);

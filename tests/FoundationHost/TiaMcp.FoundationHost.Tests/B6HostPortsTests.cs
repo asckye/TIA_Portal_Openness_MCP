@@ -258,6 +258,58 @@ public sealed class B6HostPortsTests
             ("ManageGlobalLibrary", "saveAs", "15.1"), ("ManageLibraryMasterCopy", "compare", "18") }
         select new object[] { release, pair.Item1, pair.Item2, pair.Item3 };
 
+    [Theory]
+    [InlineData("14sp1", false)]
+    [InlineData("15.1", false)]
+    [InlineData("16", false)]
+    [InlineData("17", true)]
+    [InlineData("18", true)]
+    [InlineData("19", true)]
+    [InlineData("20", true)]
+    [InlineData("21", false)]
+    public void Sivarc_reflection_is_refused_before_identity_or_dispatch_on_affected_releases(string release, bool blocked)
+    {
+        using var worker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline(release, worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        using var scope = Host.HardwareContract.UseRelease(release);
+        int calls = 0, identityReads = 0;
+        var service = new Services.ReflectionPortService((_, _) => {
+            calls++;
+            return new JsonObject { ["Observation"] = new JsonObject { ["Message"] = "fixture" } };
+        }, () => { identityReads++; return "fixture.ap" + release; });
+        foreach (var suffix in new[] { "SivarcDataProvider", "Siemens.Engineering.SiVArc.SivarcDataProvider", " vArCdAtApRoViDeR " })
+        {
+            var request = new OpennessReflectionRequest { Operation = "InvokeService", ServiceTypeSuffix = suffix, AllowWrite = true };
+            var workerReply = OpennessReflectionReply.RefuseUnavailableService(release, request);
+            if (blocked)
+            {
+                Assert.Equal("NotSupportedOnVersion", workerReply?.Failure?.Code);
+                Assert.False(workerReply!.MayHaveChanged);
+                Assert.False(workerReply.OutcomeUnknown);
+                var tools = new Host.ReflectionTools(service);
+                foreach (bool dryRun in new[] { true, false })
+                {
+                    var result = tools.InvokeServiceV4("Block", "missing", suffix, "GetAttribute", allowWrite: true, dryRun: dryRun).StructuredContent!;
+                    Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result["error"]?["code"]);
+                    Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+                }
+                var describe = tools.DescribeServiceV4("Block", "missing", suffix).StructuredContent!;
+                Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)describe["error"]?["code"]);
+                Assert.Equal(0, identityReads);
+                Assert.Equal(0, calls);
+            }
+            else
+            {
+                Assert.Null(workerReply);
+                Assert.Equal("fixture", service.InvokeService("Block", "test", suffix, "GetAttribute", allowWrite: true).Message);
+            }
+        }
+        Assert.Equal(blocked ? 0 : 3, calls);
+        Assert.Equal(blocked ? 0 : 3, identityReads);
+        Assert.Null(OpennessReflectionPolicy.SivarcServiceProblem(release, "PlcChecksumProvider"));
+    }
+
     [Theory, MemberData(nameof(ActionCases))]
     public void Partial_library_actions_refuse_before_worker_dispatch(string release, string operation, string action, string first)
     {
