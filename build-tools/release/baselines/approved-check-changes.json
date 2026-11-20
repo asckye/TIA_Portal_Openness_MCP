@@ -6430,6 +6430,263 @@
           "identifier": "TiaMcp.SourceContracts.Tests.HonestWriteSources/Aml_import_uses_admission_without_exclusive_access_only_on_v21( ):30e7c25820867f563be591cc40e98aafe4b54d2afa444917d36a225245a87d9e"
         }
       ]
+    },
+    {
+      "task": "UI-0036A",
+      "maintainerDate": "2026-11-20",
+      "reason": "ADR 0036 design-value assertions (palette rows, rail sizes and labels, MCP width, version position, VersionControl rail replaced by Project tree navigation) follow the final Workbench design per the 2026-11-01 decision; thresholds and behaviour unchanged; standing approval 2026-11-17",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/BindingPathTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.BindingPathTests/Every_workbench_panel_realizes_its_bindings_without_path_errors( AppLanguage language , AppTheme theme ):5f2e44242bb18dfb665a989a77ec6272c41e1dd954be9b13c5076c394ec0b188:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/FeaturePageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.FeaturePageTests/New_request_shows_badge_toast_and_minimized_notification_then_unsubscribes( ):7589247bba0ec3d69bdc19b6f8fd7f36297abf78e83963d9cb9d22546c23e11f:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/FeaturePageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.FeaturePageTests/New_request_shows_badge_toast_and_minimized_notification_then_unsubscribes( ):8a4ce280700dfa994dc2e5276e2bc2beeb6730552a6ed9d1a43142c602cb2a34:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/MainWindowTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.MainWindowTests/Every_picker_group_has_one_and_only_one_choice( string group , int expectedSegments ):8312c712fc4efed9f3079b2cd4a11409e6a563c6bc683f4cf5154419a508ce2b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ThemeSurfaceTests/Handoff_surface_text_and_semantic_tokens_are_preserved( string theme , string colors ):0d445a57431c4ed1936aedbc6dacdf276166d1fc93677fbbfd8838f0e2bc7ac2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ThemeSurfaceTests/Handoff_surface_text_and_semantic_tokens_are_preserved( string theme , string colors ):2a72b20857e3d8854feaf2764970f5592c8e6aa9cef8b3871fd27baa41675f83:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ThemeSurfaceTests/Handoff_surface_text_and_semantic_tokens_are_preserved( string theme , string colors ):4c039ca8b75ec0092969e03ae3a5ac554337ee88d67584f44f256ff6bb2390e5:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ThemeSurfaceTests/Handoff_surface_text_and_semantic_tokens_are_preserved( string theme , string colors ):9b33f9de5c2f005c23a5e45799be2a5748eaf2770f24b14b08e48bd516f1a5be:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ThemeSurfaceTests/Handoff_surface_text_and_semantic_tokens_are_preserved( string theme , string colors ):a5135a2419e774b4cf29012fd2c2dbab8cf643aec3bec345725da1f881e3f504:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ThemeSurfaceTests/Handoff_surface_text_and_semantic_tokens_are_preserved( string theme , string colors ):c72d35880bed781b3fc8eb300923ee94b4f2e1761b073d58e384d4c9a55c6417:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Rail_shortcuts_and_settings_keep_existing_actions_reachable( AppLanguage language , AppTheme theme ):0568b8132e9f5655d210a5a6a3a07830d0e644dc140082cacd92baa043c9857b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Rail_shortcuts_and_settings_keep_existing_actions_reachable( AppLanguage language , AppTheme theme ):0c871f4ae147230b6c4af359fc414ec12ffe62331c6efac087b6df7f596476f0:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Rail_shortcuts_and_settings_keep_existing_actions_reachable( AppLanguage language , AppTheme theme ):29c57f2d0b024f1f4b276014022b5a0e41d77932a132791d6b1317ba3ddab9a4:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Rail_shortcuts_and_settings_keep_existing_actions_reachable( AppLanguage language , AppTheme theme ):5849136a8870d359685265f3ed7d93c14048307f2bf030ad77eea84bfab740b4:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Rail_shortcuts_and_settings_keep_existing_actions_reachable( AppLanguage language , AppTheme theme ):d3bcbf720d4d18bed2183b8337fc504b84f9c48b4ef3af3a8351c43f5b0f033d:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Rail_shortcuts_and_settings_keep_existing_actions_reachable( AppLanguage language , AppTheme theme ):f9b59121b0cb5b0bff652ebc8d65370b1a5eb316e24859cc9ff6ca7db2ff7269:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Configuration_is_an_embedded_page_and_survives_navigation( AppLanguage language , AppTheme theme ):a42bf6774f2f8b741c4b788a27964818f89a50187d2c9eec7c1be3b459b3499c:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/VciPanelTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.VciPanelTests/Absent_API_disables_VCI_navigation_with_a_reason( string release ):7a78a3eab9cc267533c1ceeb686c9785a8d6cd82c72f414f7d9c1e675ecfdbae:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/VciPanelTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.VciPanelTests/Absent_API_disables_VCI_navigation_with_a_reason( string release ):c68e355e1b338e6849e1ca41b4a9ec8704a1b2f7744473f93f350f17ed90109c:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/VciPanelTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.VciPanelTests/Absent_API_disables_VCI_navigation_with_a_reason( string release ):d15e7343dc2535346251c5a0f36870e5e0438850fa183cc5e179f097b4b8c1a5:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/VciPanelTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.VciPanelTests/Engine_reads_preserve_V4_receipts_and_populate_the_real_page( string release , bool candidate ):69c1317b8617d4cca0ba19795b32fa72876b452e71c9378d0fbe13e3726ed43b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/VciPanelTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.VciPanelTests/Older_real_window_registered_reads_and_writes_are_enabled_and_writes_require_approval( string release ):69c1317b8617d4cca0ba19795b32fa72876b452e71c9378d0fbe13e3726ed43b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchFontStyleTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchFontStyleTests/Catalog_client_names_wrap_only_between_words_without_truncation_and_sider_title_fits( int width , int height ):cda2fe2a521520a60f1e93afb47ccbdc572827b95a4cd037f3b0185b18d640d6:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchFontStyleTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchFontStyleTests/Font_change_labels_keep_complete_words_across_every_page( int width , int height ):09e72edde73cd5b508d0b8c1b77c686f9b3a65dc6193d03a285f1c3e08baff5a:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchFontStyleTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchFontStyleTests/Font_change_labels_keep_complete_words_across_every_page( int width , int height ):9686f96ae887dfc9bccb03b1a75de723d3248dc65435f173ebc39c23d06a9aaa:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchFontStyleTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchFontStyleTests/Font_change_labels_keep_complete_words_across_every_page( int width , int height ):f40a21b8ed118c27082a04d7e3ac63de2eea4f3031b450acde502335cc145e06:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchMcpPrefillTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchMcpPrefillTests/Human_execution_of_prefilled_MCP_forms_previews_and_requires_the_normal_approval( int form ):8a4ce280700dfa994dc2e5276e2bc2beeb6730552a6ed9d1a43142c602cb2a34:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchNarrowLayoutTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchNarrowLayoutTests/Sider_selects_only_the_current_page_after_leaving_version_control( ):d5b0bc630473be1c43c0135499bd0212f51fe8ac99490e830b52fa5336fb9b6f"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):437dc0d74b960caa9ea95176eeb6359aef56e4961560216af73732a31118fe97:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):7781285fa933db293e5d1db0aa82dc22d1f75dac9a60de6ef377da729a5eb2da:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):bd7b932b8358d3d4b063583b6f2f2c14e29a5128b5bef2e6c89b9f79f1d41de6:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_shared_themes_in_both_languages( ):d5204c1f4d0e155272b01166afc249363590f3f4bc93f755221e285d39856bc2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Shell_pages_status_lines_and_settings_render_at_all_handoff_sizes( ):3fdff9640cf8e8978dd7bec1f997d8da9ecb1be3c12bf7ad895411ef7a9757b2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Shell_pages_status_lines_and_settings_render_at_all_handoff_sizes( ):71eb4031bdd560ea56bd691dca4c3fcc2ce888360a263a844d739d521718d65e:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Shell_pages_status_lines_and_settings_render_at_all_handoff_sizes( ):89327c5470f36225589bc5cba85e28a8edf5c30f0c1bfd5898178cd7cd4511d9:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Shell_pages_status_lines_and_settings_render_at_all_handoff_sizes( ):ec70cde8283bed43c91975443a822c7b9426f1fe70ae901bacf3d122dec97aed:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):17cc9754b742937dd4658178a8f4c7a6dd260af3dbda89101e15d4e45235efa7:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):29e2b5d0b6b3b2fc9593eaf1577d53f89d3e1fcad91963ca1e93225a93e44c8b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):29e2b5d0b6b3b2fc9593eaf1577d53f89d3e1fcad91963ca1e93225a93e44c8b:2"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):29e2b5d0b6b3b2fc9593eaf1577d53f89d3e1fcad91963ca1e93225a93e44c8b:3"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):36faf0b5dde72e1d5f47ca598e5e2f172c6a9c0946b515d61fe7de19b0231f32:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):47de3dd6b9ae6e0f9a2af47201272b8c4a857d53d674e01e9f6e545ce753721b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):47de3dd6b9ae6e0f9a2af47201272b8c4a857d53d674e01e9f6e545ce753721b:2"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):47de3dd6b9ae6e0f9a2af47201272b8c4a857d53d674e01e9f6e545ce753721b:3"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):4c8de26acfd883d466dc5fae42be8eac6e55c4fc0a097a7a42e03b170b01dc09:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):51c432f3808dc5bf9423a24b1a07179a73af836e718d3d35fa32e23281e590ca:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):69f096d38368ecb5dddbb9658cf763948bf3068286d16b75d2eee1a5900d3579:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):ac9dd961e9fffcade71b4d285efbf629a87f025be7a61b4cf7437a730bbadf8d:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):c4ae89ead36937fed805855b050e4e41ee54af10d897531abcef3acf2950df8b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):e9d6339e983f438f17aede6997ad2a6262bcfec3ae656983ea7da4125b9d4928:1"
+        }
+      ]
     }
   ]
 }
