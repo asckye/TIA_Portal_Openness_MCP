@@ -31,6 +31,25 @@ public sealed class WritePreviewJournalTests
         Assert.NotNull(error);
     }
 
+    [Theory]
+    [InlineData("EnsureUnifiedHmiButtonAction", "targetTag")]
+    [InlineData("BindUnifiedHmiTagDynamization", "tagName")]
+    public void Missing_unified_tag_reaches_the_client_with_its_name_and_zero_write_outcome(string tool, string parameter)
+    {
+        using var worker = new PlanWorker();
+        using var scope = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker));
+        var reply = new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage { Meta = new JsonObject {
+            ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["status"] = "NotFound", ["parameter"] = parameter,
+            ["target"] = "MissingTag", ["missingDeviceTarget"] = "MissingTag"
+        } };
+        var result = toolpipeline::TiaMcpServer.ModelContextProtocol.UnifiedHmiContract.Map(tool, reply, true, true).StructuredContent!;
+        Assert.Equal("NOT_FOUND", (string?)result["error"]?["code"]);
+        Assert.Equal("MissingTag", (string?)result["error"]?["details"]?["target"]);
+        Assert.Equal("rejected-before-operation", (string?)result["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+    }
+
     [Fact]
     public void Button_action_executes_in_one_worker_request_so_creation_and_script_share_rollback()
     {
@@ -39,12 +58,13 @@ public sealed class WritePreviewJournalTests
             calls++;
             Assert.Equal("hmi-unified.ExecuteUnifiedHmi", operation);
             Assert.Equal("EnsureUnifiedHmiButtonAction", (string?)arguments["request"]?["Operation"]);
+            Assert.Equal("Start", (string?)arguments["request"]?["TagName"]);
             Assert.Equal("/Overview", (string?)arguments["request"]?["ScreenName"]);
             Assert.Equal("HMIRuntime.Tags(\"Start\").Write(true);", (string?)arguments["request"]?["ScriptCode"]);
             Assert.False((bool?)arguments["dryRun"]);
             return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "applied", ["Meta"] = new JsonObject { ["operationSuccess"] = true } } };
         }, () => "C:/Project.ap21");
-        service.ApplyUnifiedHmiButtonAction("HMI", "/Overview", "Start", "Tapped", "HMIRuntime.Tags(\"Start\").Write(true);", false);
+        service.ApplyUnifiedHmiButtonAction("HMI", "/Overview", "Start", "Tapped", "Start", "HMIRuntime.Tags(\"Start\").Write(true);", false);
         Assert.Equal(1, calls);
     }
 

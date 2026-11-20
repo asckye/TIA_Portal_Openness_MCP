@@ -279,6 +279,18 @@ namespace TiaMcp.Adapters.Native.Hmi
             return tag;
         }
 
+        internal static void RequireTag(object software, string tagName, string parameter)
+        {
+            var tags = Get(software, "Tags") ?? throw new NotSupportedException("Unified Tags unavailable.");
+            var find = tags.GetType().GetMethod("Find", new[] { typeof(string) })
+                ?? throw new NotSupportedException("Unified Tags.Find(name) unavailable.");
+            if (find.Invoke(tags, new object[] { tagName }) != null) return;
+            var missing = AdapterPreconditionException.NotFound("Unified HMI tag not found: " + tagName, parameter);
+            missing.Data["target"] = tagName;
+            missing.Data["missingDeviceTarget"] = tagName;
+            throw missing;
+        }
+
         internal static void RequireConnection(object connection, string expectedPartner)
         {
             var partner = Get(connection, "Partner") as string;
@@ -287,13 +299,13 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (!string.Equals(partner, expectedPartner, StringComparison.OrdinalIgnoreCase)
                 || string.IsNullOrWhiteSpace(expectedPartner) || string.IsNullOrWhiteSpace(driver) || string.IsNullOrWhiteSpace(address))
                 throw new NotSupportedException("Existing Unified connection partner/driver/address could not be verified for '" + expectedPartner
-                    + "'. Configure it through TIA or ManageUnifiedEngineeringObject and confirm the readback. No guessed properties were written.");
+                    + "'. Check the connection in TIA Portal (Devices & networks) and confirm the readback. No guessed properties were written.");
         }
 
         internal static string UnifiedTagConnection(object connections, string expectedPartner, string connectionName)
         {
-            const string Guidance = "Configure it in TIA Portal or with ManageUnifiedEngineeringObject, " +
-                "then verify it with EnsureUnifiedHmiConnection.";
+            const string Guidance = "Configure it in TIA Portal (Devices & networks) by creating the connection for the PLC partner. " +
+                "Verify it with EnsureUnifiedHmiConnection. ManageUnifiedEngineeringObject can inspect existing connections.";
             object connection;
             if (!string.IsNullOrWhiteSpace(connectionName))
                 connection = Find(connections, connectionName)

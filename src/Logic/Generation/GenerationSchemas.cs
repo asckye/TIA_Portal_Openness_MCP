@@ -82,6 +82,46 @@ namespace TiaMcp.Logic.Generation
             catch (ArgumentException ex) { throw new InvalidOperationException("Bundled generation schema " + file + " has an invalid pattern.", ex); }
         }
 
+        private static JsonElement ReferencedSchema(JsonElement reference, string file, string path, out string targetFile)
+        {
+            var parts = reference.GetString()!.Split('#');
+            targetFile = parts[0].Length == 0 ? file : parts[0];
+            if (!targetFile.EndsWith(".schema.json", StringComparison.Ordinal) || targetFile.IndexOf('/') >= 0 || targetFile.IndexOf('\\') >= 0)
+                throw CanonicalJson.Failure(path, "$ref", "Only bundled schema references are allowed.");
+            var target = Get(targetFile.Replace(".schema.json", ""));
+            if (parts.Length > 1 && parts[1].Length > 0)
+                foreach (var part in parts[1].TrimStart('/').Split('/')) target = target.GetProperty(part.Replace("~1", "/").Replace("~0", "~"));
+            return target;
+        }
+
+        // Error paths may expose schema members and real array indices. Package-defined map keys are caller data.
+        internal static string PublicMachinePointer(string pointer, JsonElement machine)
+        {
+            var schema = Get("machine");
+            string file = "machine.schema.json", safe = "/machine";
+            foreach (var segment in pointer.Substring("/machine/".Length).Split('/'))
+            {
+                while (schema.TryGetProperty("$ref", out var reference))
+                    schema = ReferencedSchema(reference, file, safe, out file);
+                string key = segment.Replace("~1", "/").Replace("~0", "~");
+                if (schema.TryGetProperty("properties", out var fields) && fields.TryGetProperty(key, out var field))
+                {
+                    schema = field;
+                    machine = machine.ValueKind == JsonValueKind.Object && machine.TryGetProperty(key, out var value) ? value : default;
+                }
+                else if (schema.TryGetProperty("items", out var items) && machine.ValueKind == JsonValueKind.Array
+                    && int.TryParse(segment, NumberStyles.None, CultureInfo.InvariantCulture, out int index) && index < machine.GetArrayLength()
+                    && segment == index.ToString(CultureInfo.InvariantCulture))
+                {
+                    schema = items;
+                    machine = machine[index];
+                }
+                else break;
+                safe += "/" + segment;
+            }
+            return safe;
+        }
+
         private static void Visit(JsonElement schema, JsonElement value, string file, string path, List<GenerationValidationError> errors, int depth)
         {
             if (errors.Count >= 100) return;
@@ -91,13 +131,7 @@ namespace TiaMcp.Logic.Generation
             if (schema.ValueKind == JsonValueKind.False) { Error("false", "Value is prohibited."); return; }
             if (schema.TryGetProperty("$ref", out var reference))
             {
-                var parts = reference.GetString()!.Split('#');
-                var targetFile = parts[0].Length == 0 ? file : parts[0];
-                if (!targetFile.EndsWith(".schema.json", StringComparison.Ordinal) || targetFile.IndexOf('/') >= 0 || targetFile.IndexOf('\\') >= 0)
-                    throw CanonicalJson.Failure(path, "$ref", "Only bundled schema references are allowed.");
-                var target = Get(targetFile.Replace(".schema.json", ""));
-                if (parts.Length > 1 && parts[1].Length > 0)
-                    foreach (var part in parts[1].TrimStart('/').Split('/')) target = target.GetProperty(part.Replace("~1", "/").Replace("~0", "~"));
+                var target = ReferencedSchema(reference, file, path, out var targetFile);
                 Visit(target, value, targetFile, path, errors, depth + 1);
             }
             if (schema.TryGetProperty("type", out var type))

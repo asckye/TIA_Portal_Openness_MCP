@@ -40,7 +40,7 @@ public sealed class DocumentImportFailureTests
         var payload = DocumentImportTests.Payload(arguments);
         payload["Release"] = release;
         payload["ProjectFile"] = (string?)arguments["expectedProjectFile"];
-        if (release == "20") payload["ResourceSha256"] = new string('c', 64);
+        Assert.Equal("", (string?)payload["ResourceSha256"]);
         payload["PlanHash"] = DocumentImportContract.PlanHash(payload.AsObject());
         arguments["expectedPlanHash"] = (string?)payload["PlanHash"];
         payload["Status"] = "failed";

@@ -76,6 +76,21 @@ public sealed class NativeFailureTextTests
     }
 
     [Fact]
+    public void Certificate_failure_keeps_the_outer_reason_inner_reason_and_engineering_details()
+    {
+        var engine = new TiaMcp.Adapters.PlcFoundationEngine("20");
+        engine.ConfigureFixture();
+        var native = new Siemens.Engineering.EngineeringException("Store refused the request", new Exception("Firmware diagnostic"));
+        native.MessageData.Text = native.Message;
+        native.MessageData.DetailText = "Template unavailable";
+        native.DetailMessageData = new[] { new Siemens.Engineering.ExceptionMessageData { Text = "WebServer", DetailText = "Unsupported usage" } };
+        var error = new InvalidOperationException("Certificate template lookup", native);
+        var reply = engine.RunHmiStep("ManagePlcCertificate", meta => { meta["phase"] = "get-certificate-template"; throw error; }, false);
+        Assert.Equal("Certificate template lookup; Store refused the request; Template unavailable; WebServer; Unsupported usage; Firmware diagnostic",
+            reply.Meta["nativeMessage"]);
+    }
+
+    [Fact]
     public void Compose_retains_distinct_reasons_in_one_line()
         => Assert.Equal("Error when calling method; ExclusiveAccess is not supported; Inner reason",
             NativeFailureText.Compose("Error when calling method", "ExclusiveAccess is not supported",

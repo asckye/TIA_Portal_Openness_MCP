@@ -207,7 +207,7 @@ namespace TiaMcp.FoundationHost
             if (tool.Name is "CallTool" or "PreviewToolCall" or "RunReadOnlyToolBatch" or "PreviewToolBatch") return result;
             if (result.Result.StructuredContent is not JsonObject body || (string?)body["error"]?["code"] != "INVALID_ARGUMENT") return result;
             var error = V4Json.Deserialize<Error>(body["error"]!.ToJsonString());
-            var restricted = new InputSchema(tool.Tool.InputSchema).Restrict(error, arguments.Json, body["data"] as JsonObject);
+            var restricted = HostBehavior.RestrictArguments(tool.Name, tool.Tool.InputSchema, error, arguments.Json, body["data"] as JsonObject);
             restricted = TiaMcpServer.Siemens.Services.UnifiedPortService.UnknownRuntimeChangeError(tool.Name, arguments.Json, error) ?? restricted;
             body["error"] = JsonNode.Parse(V4Json.Serialize(restricted));
             return new ToolInvocationResult(new CallToolResult { IsError = result.Result.IsError, StructuredContent = body,

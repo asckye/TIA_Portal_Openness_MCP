@@ -255,6 +255,36 @@ public sealed class HmiAuditRegressionTests
         Assert.Equal(0, writes);
     }
 
+    [Theory]
+    [InlineData("EnsureUnifiedHmiButtonAction", "targetTag")]
+    [InlineData("BindUnifiedHmiTagDynamization", "tagName")]
+    public void Missing_device_wide_tag_identifies_the_target_before_writing(string tool, string parameter)
+    {
+        var software = new { Tags = new FindOnlyTags() };
+        int writes = 0;
+        var engine = new TiaMcp.Adapters.PlcFoundationEngine("20");
+        engine.ConfigureFixture();
+        var missing = engine.RunHmiStep(tool, _ => Bind("Absent"), false);
+        Assert.Equal("NotFound", missing.Meta["status"]);
+        Assert.Equal(parameter, missing.Meta["parameter"]);
+        Assert.Equal("Absent", missing.Meta["target"]);
+        Assert.Equal("Absent", missing.Meta["missingDeviceTarget"]);
+        Assert.Equal(false, missing.Meta["mayHaveChanged"]);
+        Assert.False(missing.OutcomeUnknown);
+        Assert.Equal(0, writes);
+        var present = engine.RunHmiStep(tool, _ => Bind("Present"), false);
+        Assert.Equal(true, present.Meta["operationSuccess"]);
+        Assert.Equal(1, writes);
+        Assert.Equal(new[] { "Absent", "Present" }, software.Tags.Lookups);
+
+        string Bind(string name)
+        {
+            HmiExchangePolicy.RequireTag(software, name, parameter);
+            writes++;
+            return "bound";
+        }
+    }
+
     [Fact]
     public void Connection_verification_never_probes_or_writes_driver_properties_by_substring()
     {
@@ -355,6 +385,17 @@ public sealed class HmiAuditRegressionTests
         public IEnumerable DriverProperties => throw new InvalidOperationException("DriverProperties must not be enumerated.");
     }
     public sealed class Tag : Named { public string TagTableName { get; set; } = ""; }
+    private sealed class FindOnlyTags : IEnumerable
+    {
+        internal List<string> Lookups { get; } = new();
+        public object? Find(string name)
+        {
+            Lookups.Add(name);
+            return name == "Present" ? new Named { Name = name } : null;
+        }
+        public IEnumerator GetEnumerator() => throw new InvalidOperationException("Device-wide tag lookup must use Find.");
+    }
+
     public sealed class Tags : IEnumerable
     {
         private readonly List<Tag> tags = [];

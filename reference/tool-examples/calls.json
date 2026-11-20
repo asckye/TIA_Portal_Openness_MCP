@@ -3282,7 +3282,7 @@
         },
         "parameters": {
           "files": {
-            "meaning": "Array of objects with fileName, kind and complete text content. Allowed extensions: scl=.scl, simaticml/tagtable=.xml, udt=.xml/.scl/.udt, s7dcl=.s7dcl on V20/V21. 4 MiB per file, 128 files/32 MiB per session; no separators, traversal/reserved names, duplicate names, BOM or DTD."
+            "meaning": "Array of objects with fileName, kind and complete text content. Allowed extensions: scl=.scl, simaticml/tagtable=.xml, udt=.xml/.scl/.udt, s7dcl=.s7dcl and optional s7res=.s7res on V20/V21. 4 MiB per file, 128 files/32 MiB per session; no separators, traversal/reserved names, duplicate names, BOM or DTD."
           }
         },
         "operations": {},
@@ -3390,7 +3390,7 @@
         },
         "parameters": {
           "fileNameWithoutExtension": {
-            "meaning": "Use a single scalar-only global DB named DB_Flags.s7dcl in importPath. Arrays are refused. Existing blocks are not overwritten."
+            "meaning": "Use a single scalar-only global DB named DB_Flags.s7dcl in importPath. Include DB_Flags.s7res when produced on V20 or V21. Arrays are refused. Existing blocks are not overwritten."
           }
         },
         "operations": {},
@@ -11511,6 +11511,19 @@
         "parameters": {
           "interfaceType": {
             "exampleValue": "ServerInterface"
+          },
+          "expectedPlanHash": {
+            "exampleValue": "<planHash from this same preview>",
+            "requiresBinding": true,
+            "meaning": "Copy data.planHash from the same mutation preview; keep all other arguments unchanged."
+          },
+          "expectedProjectFile": {
+            "exampleValue": "<exact projectFile from GetSessionState>",
+            "requiresBinding": true,
+            "tools": [
+              "GetSessionState"
+            ],
+            "meaning": "Copy the bound project file identity exactly; do not infer a project path."
           }
         },
         "operations": {
@@ -11525,7 +11538,16 @@
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "execution": {
+          "arguments": {
+            "action": "delete",
+            "dryRun": false,
+            "expectedPlanHash": "<planHash from this same preview>",
+            "expectedProjectFile": "<exact projectFile from GetSessionState>"
+          },
+          "meaning": "Apply to the same interface after reviewing its delete preview. Copy the returned plan hash and the exact bound project file."
+        }
       },
       "ManagePlcAlarmTextList": {
         "arguments": {
@@ -29518,6 +29540,19 @@
         "parameters": {
           "interfaceType": {
             "exampleValue": "ServerInterface"
+          },
+          "expectedPlanHash": {
+            "exampleValue": "<planHash from this same preview>",
+            "requiresBinding": true,
+            "meaning": "Copy data.planHash from the same mutation preview; keep all other arguments unchanged."
+          },
+          "expectedProjectFile": {
+            "exampleValue": "<exact projectFile from GetSessionState>",
+            "requiresBinding": true,
+            "tools": [
+              "GetSessionState"
+            ],
+            "meaning": "Copy the bound project file identity exactly; do not infer a project path."
           }
         },
         "operations": {
@@ -29532,7 +29567,16 @@
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "inline": true,
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+        "execution": {
+          "arguments": {
+            "action": "delete",
+            "dryRun": false,
+            "expectedPlanHash": "<planHash from this same preview>",
+            "expectedProjectFile": "<exact projectFile from GetSessionState>"
+          },
+          "meaning": "Apply to the same interface after reviewing its delete preview. Copy the returned plan hash and the exact bound project file."
+        }
       },
       "ManagePasswordPolicy": {
         "arguments": {
@@ -37526,7 +37570,7 @@
         },
         "parameters": {
           "fileNameWithoutExtension": {
-            "meaning": "Use a single scalar-only global DB named DB_Flags.s7dcl in importPath. Arrays are refused. Existing blocks are not overwritten."
+            "meaning": "Use a single scalar-only global DB named DB_Flags.s7dcl in importPath. Include DB_Flags.s7res when produced on V20 or V21. Arrays are refused. Existing blocks are not overwritten."
           }
         },
         "operations": {},
@@ -38735,7 +38779,7 @@
         },
         "parameters": {
           "files": {
-            "meaning": "Array of objects with fileName, kind and complete text content. Allowed extensions: scl=.scl, simaticml/tagtable=.xml, udt=.xml/.scl/.udt, s7dcl=.s7dcl on V20/V21. 4 MiB per file, 128 files/32 MiB per session; no separators, traversal/reserved names, duplicate names, BOM or DTD."
+            "meaning": "Array of objects with fileName, kind and complete text content. Allowed extensions: scl=.scl, simaticml/tagtable=.xml, udt=.xml/.scl/.udt, s7dcl=.s7dcl and optional s7res=.s7res on V20/V21. 4 MiB per file, 128 files/32 MiB per session; no separators, traversal/reserved names, duplicate names, BOM or DTD."
           }
         },
         "operations": {},

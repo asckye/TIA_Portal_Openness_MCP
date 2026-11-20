@@ -43,6 +43,18 @@ public sealed class StagedGenerationTests
     }
 
     [Fact]
+    public void Unrecognized_software_inventory_names_the_machine_target_before_writes()
+    {
+        using var fixture = new Fixture("20");
+        fixture.Worker.Objects.Add(new PlcExternalSourceObject { Name = "Other", Path = "Other", Kind = "unknown" });
+        var refusal = Assert.Throws<toolpipeline::TiaMcpServer.ModelContextProtocol.GenerationCallRejectionException>(() => fixture.Plan());
+        var details = Assert.IsType<TiaMcp.Logic.V4.PreconditionFailedDetails>(refusal.Error.Details);
+        Assert.Equal("/machine/target/project/softwarePath", details.Parameter);
+        Assert.Contains("unrecognized inventory row", refusal.Message);
+        Assert.Equal(0, fixture.Worker.Writes);
+    }
+
+    [Fact]
     public void Illegal_project_identity_fails_before_planning_or_writing()
     {
         using var fixture = new Fixture("21");

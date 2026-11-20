@@ -346,8 +346,10 @@ namespace TiaMcp.Adapters.Native.Hmi
 
             static string eventValueToText(object value) => value.ToString() ?? string.Empty;
         }
-        public HmiMessage EnsureUnifiedHmiButtonAction(string software, string screen, string button, string eventType, string scriptCode, bool syntaxCheck)
+        public HmiMessage EnsureUnifiedHmiButtonAction(string software, string screen, string button, string eventType,
+            string targetTag, string scriptCode, bool syntaxCheck)
             => _session.RunHmiStepTool("EnsureUnifiedHmiButtonAction", meta => {
+                HmiExchangePolicy.RequireTag(_session.ResolveHmiSoftwareOrThrow(software), targetTag, "targetTag");
                 var ensure = EnsureUnifiedHmiButtonEventHandler(software, screen, button, eventType);
                 meta["ensureMeta"] = ensure.Meta;
                 if (!ensure.Meta.TryGetValue("operationSuccess", out var ensured) || ensured is not true)
@@ -365,6 +367,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             return _session.RunHmiStepTool("BindUnifiedHmiTagDynamization", meta =>
             {
+                HmiExchangePolicy.RequireTag(_session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath), tagName, "tagName");
                 var item = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, itemName);
                 var dynamizations = TryGetPropertyValue(item, "Dynamizations");
                 if (dynamizations == null) throw new InvalidOperationException($"Dynamizations not found on '{itemName}'.");

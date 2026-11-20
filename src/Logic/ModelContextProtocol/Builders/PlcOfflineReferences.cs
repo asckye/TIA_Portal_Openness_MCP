@@ -12,7 +12,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private sealed class Entry
         {
             public string Id = "", Name = "", Kind = "";
-            public List<(string Name, int Network)> Calls = new List<(string, int)>();
+            public string InstanceOf = "";
+            public List<(string Name, int Network, string? Instance, bool Global)> Calls = new List<(string, int, string?, bool)>();
             public List<(string Name, int Network, string Scope)> Symbols = new List<(string, int, string)>();
         }
         public static JsonObject Analyze(string directory, string action, string target, int maxDepth, int offset, int limit, IReadOnlyList<string>
@@ -68,13 +69,18 @@ namespace TiaMcpServer.ModelContextProtocol
                         "and Symbol records.");
                     var d = PlcDocumentEditing.Parse(PlcDocumentEditing.Read(path));
                     var entry = new Entry { Id = id, Name = PlcDocumentEditing.Name(d), Kind = PlcDocumentEditing.Block(d).Name.LocalName };
+                    if (entry.Kind == "SW.Blocks.InstanceDB")
+                        entry.InstanceOf = OfflineAnalysisLogic.InstanceOfName(PlcDocumentEditing.Child(PlcDocumentEditing.Block(d), "AttributeList"));
                     var networkIndex = 0;
                     foreach (var n in PlcDocumentEditing.Networks(d))
                     {
                         foreach (var call in n.Descendants().Where(e => e.Name.LocalName == "CallInfo"))
                         {
-                            var name = (string?)call.Attribute("Name") ?? "";
-                            if (name.Length > 0) entry.Calls.Add((name, networkIndex));
+                            var name = OfflineAnalysisLogic.CallTarget(call, out var selector);
+                            if (selector?.Name.LocalName == "Instance")
+                                entry.Calls.Add((name, networkIndex, OfflineAnalysisLogic.ComponentPath(selector),
+                                    (string?)selector.Attribute("Scope") == "GlobalVariable"));
+                            else if (name.Length > 0) entry.Calls.Add((name, networkIndex, null, false));
                             else warnings.Add(id + ": unnamed CallInfo in network " + networkIndex);
                         }
                         foreach (var access in n.Descendants().Where(e => e.Name.LocalName == "Access"))
@@ -102,10 +108,22 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var e in entries)
                 foreach (var call in e.Calls)
                 {
-                    if (names.TryGetValue(call.Name, out var found) && found.Length == 1) edges.Add((e.Id, found[0].Id, call.Name, call.Network));
-                    else unresolved.Add(new JsonObject { ["caller"] = e.Id, ["name"] = call.Name, ["networkIndex"] = call.Network,
+                    string callee = call.Name;
+                    if (callee.Length == 0 && call.Global && names.TryGetValue(call.Instance!, out var db)
+                        && db.Length == 1 && db[0].Kind == "SW.Blocks.InstanceDB")
+                        callee = db[0].InstanceOf;
+                    if (callee.Length == 0)
+                    {
+                        unresolved.Add(new JsonObject { ["caller"] = e.Id, ["name"] = call.Instance, ["networkIndex"] = call.Network,
+                            ["reason"] = call.Global ? "A unique instance DB export with its declared FB type is required"
+                                : "The declared FB type of the multi-instance is required" });
+                        continue;
+                    }
+                    if (names.TryGetValue(callee, out var found) && found.Length == 1 && (call.Instance == null || found[0].Kind == "SW.Blocks.FB"))
+                        edges.Add((e.Id, found[0].Id, callee, call.Network));
+                    else unresolved.Add(new JsonObject { ["caller"] = e.Id, ["name"] = callee, ["networkIndex"] = call.Network,
                         ["reason"] = found == null ? "Not in supplied exports (may be a system instruction or missing block)"
-                            : "Ambiguous name across supplied exports/scopes" });
+                            : found.Length != 1 ? "Ambiguous name across supplied exports/scopes" : "Declared instance type is not an FB" });
                 }
             string Resolve()
             {

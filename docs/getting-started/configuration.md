@@ -202,7 +202,7 @@ MCP 工具不能修改此文件，包含短文件名和硬链接等别名。在 
 
 ## 下载安全与审批状态
 
-在 **设置 > 安全与 AI 控制 > 下载安全** 设置在线写入计划有效期（1–86400 秒，默认 900 秒），选择 **保存计划有效期** 生效。过期的在线写入返回 `PLAN_STALE`，须重新预览。下载前先编译并显式保存项目；真实目标还需 `confirmPhysicalTarget=true`。关闭普通审批不解除真实设备在线写入的工作台人工确认；已验证的 PLCSIM 下载和三个 PLCSIM 专用工具沿用普通审批开关。
+在 **设置 > 安全与 AI 控制 > 下载安全** 设置在线写入计划有效期（1–86400 秒，默认 900 秒），选择 **保存计划有效期** 生效。过期的在线写入返回 `PLAN_STALE`，须重新预览。下载前先编译并显式保存项目；真实目标还需 `confirmPhysicalTarget=true`。关闭普通审批后，执行 `CloseProject` 且 `discardChanges=true` 或向真实设备在线写入，仍须工作台人工确认。`ManagePlcDataBlockSnapshot` 的 `read`、`exportSnapshot` 及 `InvokeUnifiedOpenPipe` 的读取、浏览消息可直接执行。`createSnapshot`、已验证的 PLCSIM 下载和三个 PLCSIM 专用工具沿用普通审批开关。
 
 八版的 `GetApprovalStatus` 无参数，无需连接 TIA，也不会等待 Openness 执行通道。它返回普通审批开关、等待秒数、在线计划有效期、始终确认规则与工具列表、本会话的 `pending[]` 和最近 16 个 `recent[]`，以及白名单的 `configured` / `valid` / `entries[]`。审批记录只含请求 ID、工具、风险、时间与决定，不含参数或项目路径。关闭普通审批后直接执行的写入不进入最近审批记录，不会挤出人工决定。最近记录是审批决定，不代表工具已执行完成；执行结果使用 `GetCallResult`。其他会话看不到这些审批记录。该工具不能批准、拒绝或修改设置，审批只由工作台中的人决定。
 

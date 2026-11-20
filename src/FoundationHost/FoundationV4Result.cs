@@ -22,7 +22,7 @@ internal static class FoundationV4Result
     {
         if (result.StructuredContent is not JsonObject body || (string?)body["error"]?["code"] != "INVALID_ARGUMENT") return result;
         var error = V4Json.Deserialize<Error>(body["error"]!.ToJsonString());
-        var restricted = new InputSchema(schema).Restrict(error, arguments, body["data"] as JsonObject);
+        var restricted = HostBehavior.RestrictArguments((string?)body["meta"]?["tool"], schema, error, arguments, body["data"] as JsonObject);
         restricted = UnifiedInputAdmission.UnknownRuntimeChangeError((string?)body["meta"]?["tool"], arguments, error) ?? restricted;
         body["error"] = JsonNode.Parse(V4Json.Serialize(restricted));
         return new CallToolResult { IsError = result.IsError, StructuredContent = body,

@@ -22,6 +22,30 @@ namespace TiaMcp.Logic.V4
             }
         }
 
+        internal static Error RestrictArguments(string? tool, JsonElement schema, Error error, JsonElement arguments, JsonObject? data)
+        {
+            var input = new Inputs.InputSchema(schema);
+            string? machineParameter = null;
+            if (tool == "PlanProjectGeneration" && error.Details is InvalidArgumentDetails details && data?["validationErrors"] is JsonArray issues
+                && arguments.ValueKind == JsonValueKind.Object && arguments.TryGetProperty("machine", out var machine))
+            {
+                foreach (var issue in issues.OfType<JsonObject>())
+                {
+                    if (issue["path"] is not JsonValue label || !label.TryGetValue<string>(out var path)
+                        || !path.StartsWith("/machine/", StringComparison.Ordinal)) continue;
+                    string safe = Generation.GenerationSchemas.PublicMachinePointer(path, machine);
+                    issue["path"] = safe;
+                    if (path == details.Parameter && details.Parameters.Count == 1) machineParameter = safe;
+                }
+            }
+            if (machineParameter == null) return input.Restrict(error, arguments, data);
+
+            // The MCP contract declares the machine root. Only the generation validator can identify its public descendants.
+            var rootError = new Error(error.Message, new InvalidArgumentDetails("/machine", Array.Empty<string>()));
+            var restricted = input.Restrict(rootError, arguments, data);
+            return new Error(restricted.Message, new InvalidArgumentDetails(machineParameter, Array.Empty<string>()));
+        }
+
         // Only the top-level credential fields that formerly resolved vault references reserve this prefix.
         internal static Error? RemovedVaultReference(string tool, JsonElement arguments, string path = "")
         {
@@ -122,8 +146,19 @@ namespace TiaMcp.Logic.V4
         internal static bool ApprovalRequired(bool switchEnabled, string tool, JsonObject arguments)
         {
             if (switchEnabled) return true;
-            if (TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool, null).Operation != "ONLINE-WRITE"
-                || IsPreview(arguments, true)) return false;
+            if (IsPreview(arguments, true)) return false;
+            if (tool == "CloseProject")
+                return arguments["discardChanges"] is JsonValue discard && discard.TryGetValue<bool>(out var requested) && requested;
+            if (TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool, null).Operation != "ONLINE-WRITE") return false;
+            if (tool == "ManagePlcDataBlockSnapshot")
+                return !(arguments["action"] is JsonValue action && action.TryGetValue<string>(out var operation)
+                    && operation is "read" or "exportSnapshot" or "createSnapshot");
+            if (tool == "InvokeUnifiedOpenPipe")
+            {
+                if (arguments["request"] is not JsonObject request) return true;
+                var bound = Domain.DomainValidation.Contract<Domain.OpenPipeRequest>().Read(request.ToJsonString(), "request");
+                return bound.Error != null || !bound.Value!.IsReadOnly;
+            }
             if (tool is "ManagePlcSimAdvancedInstance" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario") return false;
             return tool != "DownloadPlc"
                 || DownloadTargetKind((string?)arguments["targetIpAddress"], (string?)arguments["pgPcInterface"]) != "plcsim";
@@ -174,10 +209,12 @@ namespace TiaMcp.Logic.V4
 
         internal static void ExportPreview(JsonObject data)
         {
-            bool export = data["kind"] is JsonValue kind && kind.TryGetValue<string>(out var name) && name is "watch-table" or "technology-object"
-                || data["options"] is JsonValue options && options.TryGetValue<string>(out var option) && option == "native-default-two-argument-overload";
+            bool documents = data["options"] is JsonValue options && options.TryGetValue<string>(out var option)
+                && option == "native-default-two-argument-overload";
+            bool export = documents || data["kind"] is JsonValue kind && kind.TryGetValue<string>(out var name) && name is "watch-table" or "technology-object";
             if (!export || data["applyBlocked"] != null) return;
             if (data["planHash"] == null || data["status"] is not JsonValue status || !status.TryGetValue<string>(out var text)) return;
+            if (documents && text is "planned" or "inconsistent") data["summary"] ??= "Planned files include .s7dcl and .s7res when produced.";
             string? reason = NativeExportPolicy.BlockedReason(text);
             data["applyBlocked"] = reason != null;
             data["applyBlockedReason"] = reason;

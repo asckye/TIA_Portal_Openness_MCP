@@ -82,21 +82,54 @@ public sealed class DocumentImportDeclarationTests
             Directory = directory, Name = BlockName, ProcessId = 123, TargetIdentity = "synthetic/project/plc/group"
         };
         string codePath = Path.Combine(directory, BlockName + ".s7dcl");
-        string[] paths = release == "20" ? new[] { codePath, Path.ChangeExtension(codePath, ".s7res") } : new[] { codePath };
-        int calls = 0;
-        var result = PlcDocumentImportPolicy.Run(request, () => paths,
-            path => new MemoryStream(Encoding.UTF8.GetBytes(path == codePath ? ExportedStartValue
-                : "MultiLingualTexts:\n  - id: MLC_Example\n    en-US: Example\n"), false),
-            () => Array.Empty<string>(), _ => false, () => { }, () => { calls++; return new PlcDocumentImportNative(); }, _ => false);
-        Assert.Equal(BlockName, result.DeclaredName);
-        Assert.Equal("planned", result.Status);
-        Assert.False(result.Attempted);
-        Assert.Equal(0, calls);
-        var arguments = new JsonObject {
-            ["softwarePath"] = request.Software, ["groupPath"] = request.Group, ["importPath"] = directory,
-            ["fileNameWithoutExtension"] = BlockName, ["dryRun"] = true
-        };
-        DocumentImportContract.Validate(JsonSerializer.SerializeToNode(result), arguments);
+        foreach (bool withResource in new[] { false, true })
+        {
+            string[] paths = withResource ? new[] { codePath, Path.ChangeExtension(codePath, ".s7res") } : new[] { codePath };
+            int calls = 0;
+            var result = PlcDocumentImportPolicy.Run(request, () => paths,
+                path => new MemoryStream(Encoding.UTF8.GetBytes(path == codePath ? ExportedStartValue
+                    : "MultiLingualTexts:\n  - id: MLC_Example\n    en-US: Example\n"), false),
+                () => Array.Empty<string>(), _ => false, () => { }, () => { calls++; return new PlcDocumentImportNative(); }, _ => false);
+            Assert.Equal(BlockName, result.DeclaredName);
+            Assert.Equal("planned", result.Status);
+            Assert.False(result.Attempted);
+            Assert.Equal(0, calls);
+            var arguments = new JsonObject {
+                ["softwarePath"] = request.Software, ["groupPath"] = request.Group, ["importPath"] = directory,
+                ["fileNameWithoutExtension"] = BlockName, ["dryRun"] = true
+            };
+            DocumentImportContract.Validate(JsonSerializer.SerializeToNode(result), arguments);
+            Assert.Equal(withResource ? 64 : 0, result.ResourceSha256.Length);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void V20_selects_and_locks_the_resource_only_when_present(bool withResource)
+    {
+        var directory = Directory.CreateTempSubdirectory("s7dcl-");
+        var locks = new Dictionary<string, Stream>();
+        try
+        {
+            string code = Path.Combine(directory.FullName, "Demo.s7dcl");
+            File.WriteAllText(code, "DATA_BLOCK Demo\nVAR\n Flag : Bool;\nEND_VAR\nEND_DATA_BLOCK\n");
+            string resource = Path.ChangeExtension(code, ".s7res");
+            if (withResource) File.WriteAllText(resource, "MultiLingualTexts: []\n");
+            string[] expected = withResource ? new[] { code, resource } : new[] { code };
+            var request = new TiaMcp.Adapters.Contracts.Candidates.PlcImportRequest { InputPath = directory.FullName, FileNameWithoutExtension = "Demo" };
+            var input = Assert.Single(TiaMcp.Adapters.Contracts.Candidates.CandidateImportFiles.Read("20", "ImportPlcBlockDocuments", request, locks));
+            Assert.Equal(expected, input.Files);
+            Assert.Equal(expected, locks.Keys.Order(StringComparer.Ordinal));
+            var scan = new PlcDocumentImportRequest { Release = "20", Directory = directory.FullName, Name = "Demo" };
+            if (OperatingSystem.IsWindows()) Assert.Equal(expected, PlcDocumentImportPolicy.Scan(scan));
+            else Assert.Throws<PlatformNotSupportedException>(() => PlcDocumentImportPolicy.Scan(scan));
+        }
+        finally
+        {
+            foreach (var stream in locks.Values) stream.Dispose();
+            directory.Delete(true);
+        }
     }
 
     [Fact]

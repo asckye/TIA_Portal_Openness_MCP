@@ -82,11 +82,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         [McpServerTool(Name = "StageImportFiles"),
                 Description("[L1][PLC-Software][FILE] Stage caller text on the TIA machine under the installed bundle staging/session folder next to " +
-                "runtime. files contains fileName, kind and content; kinds scl, simaticml, tagtable, udt, and V20/V21 s7dcl/s7res (V20 requires pairs; V21 " +
-                "resources are optional). ASCII without BOM for external sources, UTF-8 Document XML otherwise. Preview by default, dryRun=false requires " +
-                "Workbench approval when enabled. Up to 128 files/32 MiB per session, 4 MiB per file, no overwrite or caller destination. Returns directory, " +
-                "file paths and SHA-256 for reviewed imports. Import/generation requires separate calls. Use ListStagedImportFiles and " +
-                "CleanupStagedImportFiles before ending the session.")]
+                "runtime. files contains fileName, kind and content; kinds scl, simaticml, tagtable, udt, and V20/V21 s7dcl/s7res " +
+                "(.s7res is optional on both releases). ASCII without BOM for external sources, UTF-8 Document XML otherwise. Preview by default. " +
+                "dryRun=false requires Workbench approval when enabled. Up to 128 files/32 MiB per session, 4 MiB per file. " +
+                "No overwrite or caller destination. Returns directory, file paths and SHA-256 for reviewed imports. " +
+                "Import/generation requires separate calls. Use ListStagedImportFiles and CleanupStagedImportFiles before ending the session.")]
         public CallToolResult StageImportFiles([Description("One batch of fileName, kind and text content; server owns the " +
             "destination.")] StagedTextFile[] files,
                 [Description("Preview only by default; false applies after approval.")] bool dryRun = true) =>

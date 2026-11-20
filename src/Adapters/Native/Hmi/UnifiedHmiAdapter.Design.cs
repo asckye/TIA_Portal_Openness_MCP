@@ -79,7 +79,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             var connection = HmiExchangePolicy.Find(connections, connectionName);
             if (connection == null)
                 throw new NotSupportedException("Automatic Unified connection creation requires verified CommunicationDriver and InitialAddress values. " +
-                    "Configure the connection in TIA or use ManageUnifiedEngineeringObject with documented properties, then read it back. DriverProperties " +
+                    "Create the connection in TIA Portal (Devices & networks), then read it back. DriverProperties " +
                     "and Partner/Station/Node are not written; driver-specific values require VM confirmation.");
             var partner = _session.GetSoftwareContainer(plcName)?.Parent as DeviceItem
                 ?? throw new PlcSoftwareException("NotFound", "Exact PLC software partner not found: " + plcName);

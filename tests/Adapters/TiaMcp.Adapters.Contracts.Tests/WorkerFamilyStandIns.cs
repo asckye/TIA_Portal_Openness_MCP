@@ -10,9 +10,9 @@ namespace Siemens.Engineering
 {
     public sealed class EngineeringException : Exception
     {
-        public EngineeringException(string message) : base(message) { }
+        public EngineeringException(string message, Exception? inner = null) : base(message, inner) { }
         public ExceptionMessageData MessageData { get; } = new();
-        public ExceptionMessageData[] DetailMessageData { get; } = Array.Empty<ExceptionMessageData>();
+        public ExceptionMessageData[] DetailMessageData { get; set; } = Array.Empty<ExceptionMessageData>();
     }
     public sealed class ExceptionMessageData
     {

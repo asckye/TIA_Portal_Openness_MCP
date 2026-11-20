@@ -114,9 +114,8 @@ public sealed class AdapterLatchTests
         var context = new PlcDocumentImportContext {
             Request = new() { Release = release, Project = Project, ProcessId = 123, Software = "PLC", Group = "",
                 Directory = directory, Name = name, TargetIdentity = "root" },
-            Scan = () => release == "20" ? new[] { Path.Combine(directory, name + ".s7dcl"), Path.Combine(directory, name + ".s7res") }
-                : new[] { Path.Combine(directory, name + ".s7dcl") },
-            Open = path => new MemoryStream(Encoding.ASCII.GetBytes(path.EndsWith(".s7dcl", StringComparison.Ordinal) ? code : "resource")),
+            Scan = () => new[] { Path.Combine(directory, name + ".s7dcl") },
+            Open = _ => new MemoryStream(Encoding.ASCII.GetBytes(code)),
             Inventory = () => inventory.ToArray(), Collision = _ => false, Exists = _ => true, Recheck = () => { },
             Import = () => {
                 native();

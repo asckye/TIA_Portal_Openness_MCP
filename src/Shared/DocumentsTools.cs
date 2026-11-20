@@ -67,7 +67,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => S7ResScanner.GetMissingEnUsIds(directory, baseName);
 
         [McpServerTool(Name = "ExportPlcBlockDocuments"),
-                Description("[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer."
+                Description("[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl and .s7res when produced) — far more readable/diff-friendly than SimaticML XML (ExportPlcBlock). Requires TIA Portal V20 or newer."
                     + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance."
                     + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ExportAsDocumentsV4(
@@ -81,7 +81,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportPlcBlocksDocuments"),
-                Description("[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer."
+                Description("[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl and .s7res when produced) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer."
                     + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance."
                     + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public async Task<CallToolResult> ExportBlocksAsDocumentsV4(
@@ -99,15 +99,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportPlcBlockDocuments"),
                 Description("[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL " +
-                "documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the " +
-                "target group (data.existsVerified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported " +
-                "documents for content verification."
+                "documents (.s7dcl and .s7res when produced) into PLC software. Requires TIA Portal V20 or newer. " +
+                "After import it checks exact native imported names in the target group (data.existsVerified); contentVerified remains unknown. " +
+                "Use InspectSimaticSdCompatibility before import and compare exported documents for content verification."
                     + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance."
                     + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ImportFromDocumentsV4(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: optional path within the PLC program where the block should be placed (empty for root)")] string groupPath,
-            [Description("importPath: directory containing the document files (.s7dcl/.s7res)")] string importPath,
+            [Description("importPath: directory containing the document files (.s7dcl and optional .s7res)")] string importPath,
             [Description("fileNameWithoutExtension: name of the block file without extension") ] string fileNameWithoutExtension,
             [Description("importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
         {
@@ -118,8 +118,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ImportPlcBlocksDocuments"),
                 Description("[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents " +
-                "(.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial " +
-                "project changes are possible and must not be retried automatically."
+                "(.s7dcl and .s7res when produced) into PLC software. Requires TIA Portal V20 or newer. Stops after the first " +
+                "native failure or unknown result; partial project changes are possible and must not be retried automatically."
                     + " Returns a V4 envelope; inspect outcome, execution and completeness. Native policy remains current pending family acceptance."
                     + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public async Task<CallToolResult> ImportBlocksFromDocumentsV4(
@@ -127,7 +127,7 @@ namespace TiaMcpServer.ModelContextProtocol
             RequestContext<CallToolRequestParams> context,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: optional path within the PLC program where the blocks should be placed (empty for root)")] string groupPath,
-            [Description("importPath: directory containing the document files (.s7dcl/.s7res)")] string importPath,
+            [Description("importPath: directory containing the document files (.s7dcl and optional .s7res)")] string importPath,
             [Description("regexName: name or regular expression to select block files (empty for all)")] string regexName = "",
             [Description("importOption: string value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
         {

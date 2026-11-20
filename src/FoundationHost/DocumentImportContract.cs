@@ -37,7 +37,7 @@ internal static class DocumentImportContract
         bool Hash(string value)=>value.Length==64 && value.All(c=>"0123456789abcdef".Contains(c));
         if(!Hash(Text("PlanHash")) || !Hash(Text("CodeSha256")) || (Text("ResourceSha256")!="" && !Hash(Text("ResourceSha256"))))
             throw new InvalidDataException("Invalid document hashes.");
-        if(!OpennessApi.PlcDocuments.Includes(Text("Release")) || (Text("Release")=="20" && Text("ResourceSha256")=="")
+        if(!OpennessApi.PlcDocuments.Includes(Text("Release"))
             || Text("Kind")!="GlobalDB" || Text("Language")!="DB"
                 || Text("NativeOptions")!="None" || Text("Policy")!="single-document-global-db-v1"
                 || Text("Validation")!="bounded-global-db-lexical-admission-not-Siemens-syntax-or-content-validity"

@@ -1,3 +1,4 @@
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -25,6 +26,69 @@ public sealed class GenerationToolTests : IDisposable
             (pending, _, _) => { observe?.Invoke(pending); return Task.FromResult(new ApprovalOutcome(pending, false, refusal)); });
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments)
         => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) { Params = new CallToolRequestParams { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
+    [Theory]
+    [InlineData("unknown", "/machine/devices/0", "Unknown property.")]
+    [InlineData("station", "/machine/devices/0/station", "Select one of the declared PLC stations.")]
+    [InlineData("topology", "/machine/topology/0/children/0/kind", "Required property is missing.")]
+    [InlineData("locale", "/machine/machine/name", "Unknown property.")]
+    public async Task Planning_reports_declared_machine_paths_and_redacts_free_keys(string invalid, string pointer, string message)
+    {
+        const string name = "PlanProjectGeneration";
+        var args = Identity();
+        var machine = JsonNode.Parse(store.Load("tiamcp.basic", "1.0.0").ReadFile("examples/machine.json"))!.AsObject();
+        args["machine"] = machine;
+        if (invalid == "unknown")
+        {
+            machine["devices"]![0]!["privateField"] = "privateValue";
+            machine["devices"]![0]!["nested/key~"] = new JsonObject { ["innerKey"] = "innerValue" };
+        }
+        else if (invalid == "topology") machine["topology"]![0]!["children"]![0]!.AsObject().Remove("kind");
+        else if (invalid == "locale") machine["machine"]!["name"]!["privateField"] = "privateValue";
+        else machine["devices"]![0]!["station"] = "MissingStation";
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(worker) { Catalog = new PortedPortalAdmissionTests.Catalog("20") });
+        var session = new toolpipeline::TiaMcpServer.ModelContextProtocol.GenerationExecutionSession(() => root,
+            (_, _, _) => throw new InvalidOperationException("Validation must finish before project reads."));
+        var tool = new FoundationV4Tool(new GenerationTool(name, "20", () => store, session), "20");
+        using var diagnostics = new GenerationFailureDiagnostics();
+        var response = await tool.InvokeAsync(Request(name, args));
+        var result = response.StructuredContent!;
+        Assert.True((string?)result["error"]?["code"] == "INVALID_ARGUMENT", diagnostics.Failure(name, response));
+        Assert.Equal(pointer, (string?)result["error"]?["details"]?["parameter"]);
+        Assert.Equal(message, (string?)result["error"]?["message"]);
+        Assert.True(JsonNode.DeepEquals(result, JsonNode.Parse(((TextContentBlock)response.Content.Single()).Text)));
+        Assert.DoesNotContain("privateField", result.ToJsonString());
+        Assert.DoesNotContain("privateValue", result.ToJsonString());
+        Assert.DoesNotContain("nested", result.ToJsonString());
+        Assert.DoesNotContain("innerKey", result.ToJsonString());
+        Assert.DoesNotContain("innerValue", result.ToJsonString());
+        var issues = result["data"]!["validationErrors"]!.AsArray();
+        Assert.Equal(invalid == "unknown" ? 2 : 1, issues.Count);
+        Assert.All(issues, issue => {
+            Assert.Equal(pointer, (string?)issue!["path"]);
+            Assert.Equal(message, (string?)issue["message"]);
+        });
+    }
+
+    [Fact]
+    public async Task Planning_usage_preserves_the_generic_machine_argument_and_example()
+    {
+        const string name = "PlanProjectGeneration";
+        var plan = Tool(name, "20");
+        var usage = new FoundationV4Tool(new ToolUsageTool("20", () => new[] { plan }), "20");
+        using var diagnostics = new GenerationFailureDiagnostics();
+        var response = await usage.InvokeAsync(Request("GetToolUsage", new JsonObject { ["toolName"] = name }));
+        Assert.True((bool?)response.StructuredContent?["ok"], diagnostics.Failure(name, response));
+        Assert.True(JsonNode.DeepEquals(JsonNode.Parse(plan.ProtocolTool.InputSchema.GetRawText()), response.StructuredContent!["data"]?["inputSchema"]));
+        var schema = plan.ProtocolTool.InputSchema;
+        Assert.False(schema.TryGetProperty("$defs", out _));
+        var machine = schema.GetProperty("properties").GetProperty("machine");
+        Assert.Equal("object", machine.GetProperty("type").GetString());
+        Assert.False(machine.TryGetProperty("properties", out _));
+        Assert.NotNull(response.StructuredContent!["data"]?["example"]?["request"]?["params"]?["arguments"]?["machine"]);
+    }
+
     private static JsonObject Identity() => new() { ["packageId"] = "tiamcp.basic", ["version"] = "1.0.0" };
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });
 

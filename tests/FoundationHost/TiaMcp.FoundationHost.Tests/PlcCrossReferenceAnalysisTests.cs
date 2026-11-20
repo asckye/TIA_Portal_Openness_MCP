@@ -174,6 +174,93 @@ public sealed class PlcCrossReferenceAnalysisTests
         finally { Directory.Delete(directory, true); }
     }
 
+    [Fact]
+    public void Call_target_prefers_the_declared_name_and_ignores_parameter_symbols()
+    {
+        var call = System.Xml.Linq.XElement.Parse("""
+            <CallInfo Name="Declared" BlockType="FB">
+              <Instance><Component Name="Calculate_DB"/></Instance>
+              <InstanceOfName>Calculate</InstanceOfName>
+              <Parameter><Access><Symbol><Component Name="Argument"/></Symbol></Access></Parameter>
+            </CallInfo>
+            """);
+        Assert.Equal("Declared", OfflineAnalysisLogic.CallTarget(call));
+        call.Attribute("Name")!.Remove();
+        Assert.Equal("Calculate", OfflineAnalysisLogic.CallTarget(call));
+        call.Element("InstanceOfName")!.Remove();
+        Assert.Empty(OfflineAnalysisLogic.CallTarget(call));
+        call.SetAttributeValue("BlockType", "FC");
+        Assert.Empty(OfflineAnalysisLogic.CallTarget(call));
+    }
+
+    [Theory]
+    [InlineData("18", "Symbol", "FC", "symbol")]
+    [InlineData("20", "Symbol", "FC", "symbol")]
+    [InlineData("20", "Instance", "FB", "inline")]
+    [InlineData("20", "Instance", "FB", "instanceDB")]
+    [InlineData("20", "Instance", "FB", "static")]
+    public void Scl_call_symbols_resolve_once_in_metrics_and_cross_references(string release, string selector, string blockType, string declaration)
+    {
+        string directory = NewDirectory();
+        try
+        {
+            bool local = declaration == "static";
+            string instanceName = local ? "calculateInstance" : "Calculate_DB";
+            string component = selector == "Instance" ? instanceName : "Calculate";
+            string scope = local ? "LocalVariable" : "GlobalVariable";
+            string type = declaration == "inline" ? " InstanceOfName=\"Calculate\"" : "";
+            string members = local ? """
+                <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5"><Section Name="Static">
+                  <Member Name="calculateInstance" Datatype="&quot;Calculate&quot;"/>
+                </Section></Sections></Interface>
+                """ : "";
+            string caller = $$"""
+                <Document><Engineering version="V{{release}}"/>
+                  <SW.Blocks.FB ID="0">
+                    <AttributeList>{{members}}<Name>Controller</Name><Number>1</Number><ProgrammingLanguage>SCL</ProgrammingLanguage></AttributeList>
+                    <ObjectList><SW.Blocks.CompileUnit ID="1" CompositionName="CompileUnits">
+                      <AttributeList><NetworkSource>
+                        <StructuredText xmlns="http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v3">
+                          <Access Scope="Call" UId="21"><CallInfo BlockType="{{blockType}}">
+                            <{{selector}} Scope="{{scope}}"{{type}}><Component Name="{{component}}"/></{{selector}}>
+                            <Token Text="("/><Parameter Name="Value"><Token Text=":="/>
+                              <Access Scope="LocalVariable"><Symbol><Component Name="Setpoint"/></Symbol></Access>
+                            </Parameter><Token Text=")"/>
+                          </CallInfo></Access><Token Text=";"/><NewLine/>
+                        </StructuredText>
+                      </NetworkSource><ProgrammingLanguage>SCL</ProgrammingLanguage></AttributeList>
+                    </SW.Blocks.CompileUnit></ObjectList>
+                  </SW.Blocks.FB>
+                </Document>
+                """;
+            File.WriteAllText(Path.Combine(directory, "Controller.xml"), caller);
+            File.WriteAllText(Path.Combine(directory, "Calculate.xml"), Xml("Calculate").Replace("SW.Blocks.FC", "SW.Blocks." + blockType));
+            var doc = OfflineAnalysisLogic.ParseText(caller, "Controller.xml");
+            if (declaration == "instanceDB")
+            {
+                Assert.Empty(doc.BlockCalls);
+                Assert.Contains("Unresolved FB instance: Calculate_DB", doc.Warnings);
+                var incomplete = PlcOfflineReferences.Analyze(directory, "blocks", "", 10, 0, 500);
+                Assert.Equal(instanceName, (string?)Assert.Single(incomplete["unresolvedCalls"]!.AsArray())!["name"]);
+                File.WriteAllText(Path.Combine(directory, "Calculate_DB.xml"), """
+                    <Document><SW.Blocks.InstanceDB ID="0"><AttributeList>
+                      <Name>Calculate_DB</Name><InstanceOfName>Calculate</InstanceOfName>
+                    </AttributeList></SW.Blocks.InstanceDB></Document>
+                    """);
+            }
+            else Assert.Equal(blockType + ":Calculate", Assert.Single(doc.BlockCalls));
+            if (selector == "Instance") Assert.Contains(doc.Networks.Single().SourceLines,
+                line => line.Contains(local ? "#calculateInstance(" : "\"Calculate_DB\"(", StringComparison.Ordinal));
+            var result = PlcOfflineReferences.Analyze(directory, "blocks", "", 10, 0, 500);
+            var controller = result["rows"]!.AsArray().Single(n => (string?)n!["name"] == "Controller")!;
+            var edge = Assert.Single(controller["callees"]!.AsArray())!;
+            Assert.Equal("Calculate.xml", (string?)edge["callee"]);
+            Assert.Equal(0, (int)edge["networkIndex"]!);
+            Assert.Empty(result["unresolvedCalls"]!.AsArray());
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
     [Theory]
     [InlineData("v4")]
     [InlineData("v5")]

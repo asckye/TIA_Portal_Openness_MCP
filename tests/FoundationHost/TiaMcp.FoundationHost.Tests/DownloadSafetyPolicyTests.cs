@@ -46,6 +46,58 @@ public sealed class DownloadSafetyPolicyTests(Xunit.Abstractions.ITestOutputHelp
         Assert.True(HostBehavior.ApprovalRequired(false, "WritePlcWebVars", new JsonObject { ["dryRun"] = "true" }));
     }
 
+    [Theory]
+    [InlineData("read", false)]
+    [InlineData("exportSnapshot", false)]
+    [InlineData("createSnapshot", false)]
+    [InlineData("loadSnapshotAsActualValues", true)]
+    [InlineData("loadStartValuesAsActualValues", true)]
+    [InlineData("Read", true)]
+    [InlineData("unknown", true)]
+    [InlineData(null, true)]
+    public void Snapshot_approval_follows_the_exact_action(string? action, bool required)
+    {
+        var args = new JsonObject { ["dryRun"] = false };
+        if (action != null) args["action"] = action;
+        Assert.Equal(required, HostBehavior.ApprovalRequired(false, "ManagePlcDataBlockSnapshot", args));
+        args["action"] = 1;
+        Assert.True(HostBehavior.ApprovalRequired(false, "ManagePlcDataBlockSnapshot", args));
+    }
+
+    [Theory]
+    [InlineData("ReadTag", false)]
+    [InlineData("BrowseTags", false)]
+    [InlineData("WriteTag", true)]
+    [InlineData("WriteConfig", true)]
+    [InlineData("ReadUnknown", true)]
+    [InlineData(null, true)]
+    public void Open_pipe_approval_uses_the_nested_message(string? message, bool required)
+    {
+        var request = new JsonObject();
+        if (message != null) request["message"] = message;
+        if (message == "ReadTag") request["params"] = new JsonObject { ["tags"] = new JsonArray("Motor") };
+        if (message == "BrowseTags") request["params"] = new JsonObject();
+        var args = new JsonObject { ["dryRun"] = false, ["message"] = "ReadTag", ["request"] = request };
+        Assert.Equal(required, HostBehavior.ApprovalRequired(false, "InvokeUnifiedOpenPipe", args));
+        request["message"] = "ReadTag";
+        request["params"] = "invalid";
+        Assert.True(HostBehavior.ApprovalRequired(false, "InvokeUnifiedOpenPipe", args));
+        request["message"] = 1;
+        Assert.True(HostBehavior.ApprovalRequired(false, "InvokeUnifiedOpenPipe", args));
+        args["request"] = "ReadTag";
+        Assert.True(HostBehavior.ApprovalRequired(false, "InvokeUnifiedOpenPipe", args));
+        args.Remove("request");
+        Assert.True(HostBehavior.ApprovalRequired(false, "InvokeUnifiedOpenPipe", args));
+    }
+
+    [Theory]
+    [InlineData(true, false, true)]
+    [InlineData(false, false, false)]
+    [InlineData(true, true, false)]
+    public void Discarding_changes_requires_approval_on_apply(bool discard, bool preview, bool required)
+        => Assert.Equal(required, HostBehavior.ApprovalRequired(false, "CloseProject",
+            new JsonObject { ["discardChanges"] = discard, ["dryRun"] = preview }));
+
     internal static JsonObject RunningInstance(string ip) => DownloadTargetCases.Listing(ip);
 
     [Theory, MemberData(nameof(DownloadTargetCases.Cases), MemberType = typeof(DownloadTargetCases))]

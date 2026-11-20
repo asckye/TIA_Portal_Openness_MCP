@@ -76,9 +76,8 @@ namespace TiaMcp.Adapters
                 SafePath(entry);if(entry is DirectoryInfo || (entry.Name!=r.Name+".s7dcl" && entry.Name!=r.Name+".s7res")) throw new TiaMcp.Adapters.Contracts
                     .AdapterPreconditionException("Ambiguous case/stem or alternate-format document input.");
             }
-            if(selected.Select(x=>x.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=selected.Length || !selected.Any(x=>x.Name==r.Name+".s7dcl")
-                    || (r.Release=="20" && !selected.Any(x=>x.Name==r.Name+".s7res")))
-                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Missing or ambiguous document pair; V20 resource is required.");
+            if(selected.Select(x=>x.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=selected.Length || !selected.Any(x=>x.Name==r.Name+".s7dcl"))
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Missing declaration or ambiguous document files.");
             return selected.Select(x=>x.FullName).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
         }
         internal static byte[] Read(Stream stream)
@@ -117,8 +116,8 @@ namespace TiaMcp.Adapters
             var paths=scan();
             if(paths.Length<1 || paths.Length>2 || !paths.Contains(Path.Combine(r.Directory,r.Name+".s7dcl")) || paths
                     .Any(x=>x!=Path.Combine(r.Directory,r.Name+".s7dcl") && x!=Path.Combine(r.Directory,r.Name+".s7res")) || paths
-                    .Distinct(StringComparer.OrdinalIgnoreCase).Count()!=paths.Length || (r.Release=="20" && paths.Length!=2))
-                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Incomplete or ambiguous document pair.");
+                    .Distinct(StringComparer.OrdinalIgnoreCase).Count()!=paths.Length)
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Missing declaration or ambiguous document files.");
             var streams=new List<Stream>();
             PlcDocumentImportResult? outcome=null;
             PlcDocumentImportResult Execute()

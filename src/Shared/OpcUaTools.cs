@@ -50,17 +50,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 "(ServerInterfaceGroup.ServerInterfaces / SimaticInterfaces / ReferenceNamespaces, native Delete with readback)."
                 +
             " Use it to remove an interface that blocks compilation (an empty server interface makes the whole PLC fail with 'The OPC UA server interface " +
-                "... is empty or does not contain unique nodes'). Default preview; dryRun=false deletes; no save/compile/download. Current native policy; V4 " +
-                "safety behavior is not yet accepted.")]
+                "... is empty or does not contain unique nodes'). Preview delete first. Apply with dryRun=false, its planHash as expectedPlanHash " +
+                "and the bound expectedProjectFile. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ManageOpcUaInterfaceV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("interfaceName: exact name as shown in GetPlcOpcUaConfiguration")] string interfaceName,
             [Description("read | delete. action: read (default) or delete")] string action = "read",
             [Description("interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'")] string interfaceType = "ServerInterface",
-            [Description("dryRun: true (default) previews; false deletes")] bool dryRun = true)
-            => EngineeringToolContract
-                .Run("ManageOpcUaInterface", !dryRun && action != "read" && action != "list", () =>
-                    ManageOpcUaInterface(softwarePath, interfaceName, action, interfaceType, dryRun));
+            [Description("true previews deletion.")] bool dryRun = true,
+            [Description("planHash from the delete preview.")] string expectedPlanHash = "",
+            [Description("Exact project file bound to the delete preview.")] string expectedProjectFile = "")
+        {
+            CallToolResult Call(bool preview) => EngineeringToolContract.Run("ManageOpcUaInterface", !preview && action != "read" && action != "list",
+                () => ManageOpcUaInterface(softwarePath, interfaceName, action, interfaceType, preview));
+            return action == "delete" ? McpServer.RunNativeWritePreview("ManageOpcUaInterface", dryRun,
+                new { softwarePath, interfaceName, action, interfaceType }, () => Call(true), () => Call(false), expectedPlanHash, expectedProjectFile)
+                : Call(dryRun);
+        }
 
         public ResponseMessage ManageOpcUaInterface(
             string softwarePath,

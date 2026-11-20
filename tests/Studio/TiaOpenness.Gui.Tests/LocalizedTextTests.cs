@@ -33,6 +33,21 @@ public class LocalizedTextTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData(AppLanguage.English)]
+    [InlineData(AppLanguage.Chinese)]
+    public void Always_confirmed_help_names_the_discard_and_read_actions(AppLanguage language)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            string text = LocalizedText.Key("Settings.AlwaysConfirmed").Resolve();
+            foreach (string term in new[] { "CloseProject", "discardChanges=true", "ManagePlcDataBlockSnapshot",
+                "read", "exportSnapshot", "InvokeUnifiedOpenPipe" })
+                Assert.Contains(term, text);
+            Assert.Contains(language == AppLanguage.English ? "read/browse" : "读取、浏览", text);
+        });
+    }
+
     [Fact]
     public void Arguments_are_formatted_in()
     {

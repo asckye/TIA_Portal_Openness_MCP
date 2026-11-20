@@ -70,27 +70,23 @@ namespace TiaMcp.Adapters
                 meta["status"] = StepFailureStatus.Of(error);
                 meta["parameter"] = StepFailureStatus.Parameter(error);
                 StepFailureStatus.RecordTarget(error, meta);
-                if (error.GetBaseException() is Siemens.Engineering.EngineeringException engineering)
+                if (tool == "ManagePlcCertificate" && meta.TryGetValue("phase", out var phase) && Equals(phase, "get-certificate-template"))
                 {
-                    try
+                    var messages = new List<string?>();
+                    for (Exception? cause = error; cause != null; cause = cause.InnerException)
                     {
-                        var data = engineering.MessageData;
-                        string message = data.Text, detailText = data.DetailText;
-                        meta["messageData"] = new Dictionary<string, object?> { ["text"] = message, ["detailText"] = detailText };
-                        var details = new List<object?>();
-                        var detailTexts = new List<string?>();
-                        foreach (var detail in engineering.DetailMessageData)
-                        {
-                            string text = detail.Text, detailMessage = detail.DetailText;
-                            details.Add(new Dictionary<string, object?> { ["text"] = text, ["detailText"] = detailMessage });
-                            detailTexts.Add(text);
-                            detailTexts.Add(detailMessage);
-                        }
-                        meta["detailMessageData"] = details;
-                        string composed = NativeFailureText.Compose(message, detailText, detailTexts);
-                        if (composed.Length != 0) meta["nativeMessage"] = composed;
+                        messages.Add(cause.Message);
+                        if (cause is Siemens.Engineering.EngineeringException native) RecordEngineeringDetails(native, meta, messages);
                     }
-                    catch { /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ }
+                    string chain = NativeFailureText.Compose(null, null, messages);
+                    if (chain.Length != 0) meta["nativeMessage"] = chain;
+                }
+                else if (error.GetBaseException() is Siemens.Engineering.EngineeringException engineering)
+                {
+                    var messages = new List<string?>();
+                    RecordEngineeringDetails(engineering, meta, messages);
+                    string details = NativeFailureText.Compose(null, null, messages);
+                    if (details.Length != 0) meta["nativeMessage"] = details;
                 }
                 if (meta["status"] as string == "ReadOrWriteFailed") EngineeringCredentialRules.TryRecordRefusal(error, meta);
                 if (HmiReadSafety.ConnectionUnavailable(error)) RecordHmiFault(meta);
@@ -106,6 +102,33 @@ namespace TiaMcp.Adapters
             if (reply.OutcomeUnknown) { meta["writeOutcomeUnknown"] = true; }
             return reply;
         }
+        private static void RecordEngineeringDetails(Siemens.Engineering.EngineeringException engineering,
+            Dictionary<string, object?> meta, List<string?> messages)
+        {
+            try
+            {
+                var data = engineering.MessageData;
+                string message = data.Text, detailText = data.DetailText;
+                meta["messageData"] = new Dictionary<string, object?> { ["text"] = message, ["detailText"] = detailText };
+                messages.Add(message);
+                messages.Add(detailText);
+            }
+            catch { /* swallow(probe-optional): some SDK errors have only DetailMessageData */ }
+            try
+            {
+                var details = new List<object?>();
+                foreach (var detail in engineering.DetailMessageData)
+                {
+                    string text = detail.Text, detailMessage = detail.DetailText;
+                    details.Add(new Dictionary<string, object?> { ["text"] = text, ["detailText"] = detailMessage });
+                    messages.Add(text);
+                    messages.Add(detailMessage);
+                }
+                meta["detailMessageData"] = details;
+            }
+            catch { /* swallow(probe-optional): retain the exception message and any available engineering details */ }
+        }
+
         internal void RecordHmiFault(Dictionary<string, object?> meta)
         {
             if (HmiReadFault != null) { HmiReadFault(meta); return; }

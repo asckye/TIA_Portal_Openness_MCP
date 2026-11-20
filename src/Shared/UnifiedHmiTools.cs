@@ -153,8 +153,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("address: optional absolute PLC address, e.g. %DB200.DBX0.0. When supplied, Address holds the runtime address and PlcTag is " +
                 "empty.")] string address =
                 "",
-            [Description("requireVerifiedBinding: stable public generation should keep this true. Set false only for intentional internal HMI-only tags used " +
-                "by local validation/probes.")] bool requireVerifiedBinding =
+            [Description("Require verified binding readback. plcName and plcTag are required regardless of this setting.")] bool requireVerifiedBinding =
                 true, bool dryRun = true)
             => UnifiedHmiContract
                 .Run("EnsureUnifiedHmiTag", !dryRun, true, () =>
@@ -188,7 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "EnsureUnifiedHmiConnection"),
-                Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Automatic creation/configuration is refused until CommunicationDriver and InitialAddress are verified; use ManageUnifiedEngineeringObject with explicit documented properties. Partner/Station/Node are readback only; DriverProperties are never guessed.  Create or verify the PLC↔HMI communication connection (HMI_Connection_1 by default). Requires: ConnectPortal + OpenProject + both PLC and Unified HMI devices. Must exist before PLC-backed HMI tags can exchange data. Call before EnsureUnifiedHmiTag with plcTag binding. UNIFIED PANELS ONLY: on Classic/Comfort/Basic panels (KTP Basic, TP/KTP Comfort) this connection cannot be created via Openness (CommunicationConnections service is not exposed); if the project needs end-to-end HMI automation, use a WinCC Unified panel instead of a classic one. Current native policy; V4 safety behavior is not yet accepted.")]
+                Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Automatic creation/configuration is refused until CommunicationDriver and InitialAddress are verified; create the connection in TIA Portal (Devices & networks), then verify it here. Partner/Station/Node are readback only; DriverProperties are never guessed.  Verify the PLC↔HMI communication connection (HMI_Connection_1 by default). Requires: ConnectPortal + OpenProject + both PLC and Unified HMI devices. Must exist before PLC-backed HMI tags can exchange data. Call before EnsureUnifiedHmiTag with plcTag binding. UNIFIED PANELS ONLY: on Classic/Comfort/Basic panels (KTP Basic, TP/KTP Comfort) this connection cannot be created via Openness (CommunicationConnections service is not exposed); if the project needs end-to-end HMI automation, use a WinCC Unified panel instead of a classic one. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiConnectionV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
             [Description("connectionName: HMI connection name")] string connectionName = "HMI_Connection_1",

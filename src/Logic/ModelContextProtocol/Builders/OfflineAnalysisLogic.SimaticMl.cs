@@ -19,6 +19,46 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static XElement? Child(XElement? e, string local) => e?.Elements().FirstOrDefault(x => Local(x) == local);
 
+        internal static string CallTarget(XElement call) => CallTarget(call, out _);
+
+        internal static string ComponentPath(XElement? selector) => selector == null ? "" : string.Join(".",
+            selector.Elements().Where(e => Local(e) == "Component").Select(e => (string?)e.Attribute("Name")).Where(n => !string.IsNullOrEmpty(n)));
+
+        internal static string InstanceOfName(XElement element) =>
+            ((string?)element.Attribute("InstanceOfName") ?? Child(element, "InstanceOfName")?.Value ?? "").Trim();
+
+        internal static string CallTarget(XElement call, out XElement? selector)
+        {
+            selector = null;
+            string? name = (string?)call.Attribute("Name");
+            if (!string.IsNullOrEmpty(name)) return name;
+            selector = Child(call, "Symbol");
+            name = ComponentPath(selector);
+            if (name.Length != 0) return name;
+            selector = (string?)call.Attribute("BlockType") == "FB" ? Child(call, "Instance") : null;
+            if (selector == null) return "";
+            string type = InstanceOfName(call);
+            if (type.Length != 0) return type;
+            type = InstanceOfName(selector);
+            if (type.Length != 0 || (string?)selector.Attribute("Scope") != "LocalVariable") return type;
+
+            // A multi-instance call uses the type of the static member in the calling FB.
+            var owner = call.Ancestors().FirstOrDefault(e => Local(e) == "SW.Blocks.FB");
+            var sections = Child(Child(owner, "AttributeList"), "Interface")?.Descendants()
+                .Where(e => Local(e) == "Section" && (string?)e.Attribute("Name") == "Static");
+            var members = sections?.SelectMany(e => e.Elements()) ?? Enumerable.Empty<XElement>();
+            XElement? member = null;
+            foreach (var component in selector.Elements().Where(e => Local(e) == "Component"))
+            {
+                var matches = members.Where(e => Local(e) == "Member" && (string?)e.Attribute("Name") == (string?)component.Attribute("Name"))
+                    .Take(2).ToArray();
+                if (matches.Length != 1) return "";
+                member = matches[0];
+                members = member.Elements();
+            }
+            return ((string?)member?.Attribute("Datatype") ?? "").Trim().Trim('"');
+        }
+
         private static BlockDocument ParseSimaticMl(string xml)
         {
             var doc = new BlockDocument { Format = "SimaticML" };
@@ -85,6 +125,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var source = Child(unitAttributes, "NetworkSource")?.Elements().FirstOrDefault();
                 if (source != null)
                 {
+                    var firstCall = doc.BlockCalls.Count;
                     if (Local(source) == "StructuredText")
                     {
                         var rendered = RenderStructuredText(source, out var commentLines);
@@ -100,11 +141,24 @@ namespace TiaMcpServer.ModelContextProtocol
                         // Graphical networks: the stripped FlgNet XML is diffable but is not "source lines".
                         net.SourceLines = StrippedXmlLines(source);
                     }
+                    // Match each structural call to at most one rendered SCL occurrence in this network.
+                    var inferred = Enumerable.Range(firstCall, doc.BlockCalls.Count - firstCall)
+                        .GroupBy(i => doc.BlockCalls[i]).ToDictionary(g => g.Key, g => new Queue<int>(g), StringComparer.Ordinal);
                     foreach (var call in source.Descendants().Where(e => Local(e) == "CallInfo"))
                     {
-                        var callName = (string?)call.Attribute("Name") ?? "";
-                        var blockType = (string?)call.Attribute("BlockType") ?? "";
-                        if (callName.Length > 0 && Local(source) != "StructuredText") doc.BlockCalls.Add(blockType + ":" + callName);
+                        string name = CallTarget(call, out var selector);
+                        bool instance = selector != null && Local(selector) == "Instance";
+                        string rendered = instance ? ComponentPath(selector) : name;
+                        string label = instance && (string?)selector!.Attribute("Scope") == "LocalVariable" ? "Instance:" : "Block:";
+                        string typed = ((string?)call.Attribute("BlockType") ?? "") + ":" + name;
+                        if (inferred.TryGetValue(label + rendered, out var sites) && sites.Count != 0)
+                        {
+                            int callIndex = sites.Dequeue();
+                            // Keep existing named-call labels. An untyped instance is not evidence of a particular FB.
+                            if (selector != null) doc.BlockCalls[callIndex] = name.Length == 0 ? "" : typed;
+                        }
+                        else if (name.Length != 0) doc.BlockCalls.Add(typed);
+                        if (instance && name.Length == 0) doc.Warnings.Add("Unresolved FB instance: " + rendered);
                     }
                     foreach (var part in source.Descendants()
                             .Where(e => Local(e) == "Part" || (Local(e) == "Instruction" && Local(source) != "StructuredText")))
@@ -116,6 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 doc.Networks.Add(net);
             }
 
+            doc.BlockCalls.RemoveAll(string.IsNullOrEmpty);
             doc.Canonical = BuildCanonical(doc);
             return doc;
         }
@@ -235,10 +290,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "ConstantType": return;
                 case "IntegerAttribute": case "BooleanAttribute": case "StringAttribute": case "DateAttribute": return;   // informative metadata, not source
                 case "CallInfo":
-                    var callName = (string?)e.Attribute("Name") ?? "";
+                    var callName = CallTarget(e, out var selector);
                     var blockType = (string?)e.Attribute("BlockType") ?? "";
-                    if (blockType == "FC" || blockType == "FB") sb.Append('"').Append(callName).Append('"'); else sb.Append(callName);
-                    foreach (var child in e.Elements()) RenderNode(child, sb, ref comments, scope);
+                    if (selector != null && Local(selector) == "Instance")
+                    {
+                        var instance = ComponentPath(selector);
+                        if ((string?)selector.Attribute("Scope") == "LocalVariable") sb.Append('#').Append(instance);
+                        else sb.Append('"').Append(instance).Append('"');
+                    }
+                    else if (blockType == "FC" || blockType == "FB") sb.Append('"').Append(callName).Append('"');
+                    else sb.Append(callName);
+                    foreach (var child in e.Elements())
+                        if (child != selector) RenderNode(child, sb, ref comments, scope);
                     return;
                 case "Instruction":
                     sb.Append((string?)e.Attribute("Name") ?? "");

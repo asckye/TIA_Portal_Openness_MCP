@@ -125,9 +125,9 @@ namespace TiaMcp.Logic.Generation
             {
                 var path = "/devices/" + deviceIndex++;
                 if (!stations.Contains(device.GetProperty("station").GetString()!)) errors
-                    .Add(new GenerationValidationError(path + "/station", "reference", "Unknown station."));
+                    .Add(new GenerationValidationError(path + "/station", "reference", "Select one of the declared PLC stations."));
                 if (!nodes.Contains(device.GetProperty("parent").GetString()!)) errors
-                    .Add(new GenerationValidationError(path + "/parent", "reference", "Unknown topology parent."));
+                    .Add(new GenerationValidationError(path + "/parent", "reference", "Select a node in the declared machine topology."));
             }
         }
 

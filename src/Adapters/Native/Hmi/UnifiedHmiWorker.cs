@@ -85,7 +85,7 @@ namespace TiaMcp.Adapters
                     break;
                     case "EnsureUnifiedHmiButtonAction": reply.Value = new UnifiedHmiAdapter(session)
                         .EnsureUnifiedHmiButtonAction(request.HmiSoftwarePath, request.ScreenName, request.ButtonName, request.EventType,
-                            request.ScriptCode, request.SyntaxCheck); break;
+                            request.TagName, request.ScriptCode, request.SyntaxCheck); break;
                     case "EnsureUnifiedHmiDynamization": reply.Value = new UnifiedHmiAdapter(session)
                         .EnsureUnifiedHmiDynamization(request.HmiSoftwarePath, request.ScreenName, request.ItemName, request.PropertyName, request
                             .DynamizationType);

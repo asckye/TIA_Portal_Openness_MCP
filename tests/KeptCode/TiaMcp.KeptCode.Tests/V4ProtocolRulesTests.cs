@@ -533,6 +533,19 @@ namespace TiaMcp.Engine.Tests
         private static JsonObject Body(Outcome outcome, Error error) => JsonNode.Parse(V4Json.Serialize(Envelope.Create<object?>(null, error,
             new Meta(DateTimeOffset.UtcNow, "21", "CallTool", "id", outcome, outcome == Outcome.Unknown ? Execution.Unknown : Execution.NotStarted,
                     BehaviorPolicy.NotApplicable, Completeness.None, null, Array.Empty<Warning>()))))!.AsObject();
+        [Theory]
+        [InlineData("planned")]
+        [InlineData("inconsistent")]
+        public void Document_export_preview_explains_the_optional_resource(string status)
+        {
+            var files = new JsonArray("Demo.s7dcl", "Demo.s7res");
+            var data = new JsonObject { ["options"] = "native-default-two-argument-overload", ["planHash"] = "hash",
+                ["status"] = status, ["files"] = files.DeepClone() };
+            HostBehavior.ExportPreview(data);
+            Assert.Contains(".s7res when produced", (string?)data["summary"]);
+            Assert.True(JsonNode.DeepEquals(files, data["files"]));
+        }
+
         private static Tool Descriptor(string name, string properties = "{}") => new Tool { Name = name, Description = "[L1][Project][SESSION] test",
             InputSchema = JsonSerializer.Deserialize<JsonElement>("{\"type\":\"object\",\"properties\":" + properties + "}") };
     }

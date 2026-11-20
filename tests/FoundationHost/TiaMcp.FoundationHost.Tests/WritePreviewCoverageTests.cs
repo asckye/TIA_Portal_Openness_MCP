@@ -13,6 +13,56 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelper output)
 {
     [Theory]
+    [InlineData("14sp1", false)] [InlineData("15.1", true)] [InlineData("16", true)] [InlineData("17", true)]
+    [InlineData("18", true)] [InlineData("19", true)] [InlineData("20", true)] [InlineData("21", true)]
+    public void Opc_ua_delete_bindings_are_advertised_on_the_supported_releases(string release, bool available)
+    {
+        using var worker = new FakeWorker();
+        var tool = LegacyHostToolRegistry.Create(worker, release, false).SingleOrDefault(t => t.ProtocolTool.Name == "ManageOpcUaInterface");
+        Assert.Equal(available, tool != null);
+        if (tool == null) return;
+        var properties = tool.ProtocolTool.InputSchema.GetProperty("properties");
+        foreach (string parameter in new[] { "expectedPlanHash", "expectedProjectFile" })
+            Assert.Equal("string", properties.GetProperty(parameter).GetProperty("type").GetString());
+    }
+
+    [Fact]
+    public void Opc_ua_interface_delete_binds_the_preview_to_the_interface_and_project()
+    {
+        const string project = "C:/Projects/original.ap21";
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var requests = new List<TiaMcp.Adapters.Contracts.PlcB5Request>();
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.OpcUaService((_, args) => {
+            requests.Add(args["request"]!.Deserialize<TiaMcp.Adapters.Contracts.PlcB5Request>()!);
+            return new JsonObject { ["Ok"] = true, ["Meta"] = new JsonObject { ["operationSuccess"] = true, ["success"] = true } };
+        }, () => project);
+        var tool = new toolpipeline::TiaMcpServer.ModelContextProtocol.OpcUaTools(service);
+        var preview = tool.ManageOpcUaInterfaceV4("PLC", "Server", "delete").StructuredContent!;
+        Assert.True((bool?)preview["ok"], preview.ToJsonString());
+        string hash = (string)preview["data"]!["planHash"]!;
+        Assert.Matches("^[0-9a-f]{64}$", hash);
+        Assert.NotNull(preview["data"]!["targetIdentity"]);
+        Assert.True(Assert.Single(requests).DryRun);
+        foreach (var (name, plan, file, code) in new[] {
+            ("Server", "", project, "INVALID_ARGUMENT"), ("Other", hash, project, "PLAN_STALE"),
+            ("Server", hash, "C:/Projects/other.ap21", "IDENTITY_MISMATCH")
+        })
+        {
+            var refused = tool.ManageOpcUaInterfaceV4("PLC", name, "delete", dryRun: false, expectedPlanHash: plan, expectedProjectFile: file);
+            Assert.Equal(code, (string?)refused.StructuredContent?["error"]?["code"]);
+            Assert.Single(requests);
+        }
+        var applied = tool.ManageOpcUaInterfaceV4("PLC", "Server", "delete", dryRun: false, expectedPlanHash: hash, expectedProjectFile: project);
+        Assert.True((bool?)applied.StructuredContent?["ok"], applied.StructuredContent?.ToJsonString());
+        Assert.Equal(2, requests.Count);
+        Assert.False(requests[1].DryRun);
+        Assert.Equal("delete", requests[1].Action);
+        Assert.Equal("Server", requests[1].InterfaceName);
+    }
+
+    [Theory]
     [InlineData("19", false)]
     [InlineData("19", true)]
     [InlineData("20", false)]

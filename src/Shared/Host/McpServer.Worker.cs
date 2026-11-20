@@ -12,7 +12,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         [McpServerTool(Name = "GetApprovalStatus"),
             Description("[L0][Diagnostics][READ] Read this session's pending approvals and latest 16 decisions without contacting TIA. " +
-                "Reports approval settings, always-confirmed online writes and configured online targets. " +
+                "Reports approval settings, operations that always require confirmation and configured online targets. " +
                 "Approval is decided only by a person in the Workbench; this tool cannot approve, deny or change settings.")]
         public static CallToolResult GetApprovalStatus()
             => SessionToolContract.Run("GetApprovalStatus", false, false, ReadApprovalStatus);
@@ -32,9 +32,10 @@ namespace TiaMcpServer.ModelContextProtocol
             status["approval"] = new JsonObject { ["enabled"] = settings.Enabled, ["timeoutSeconds"] = settings.TimeoutSeconds,
                 ["onlinePlanLifetimeSeconds"] = settings.OnlinePlanLifetimeSeconds };
             status["alwaysConfirmed"] = new JsonObject {
-                ["rule"] = "ONLINE-WRITE execution requires Workbench approval even when the switch is off, except the three PLCSIM-only tools " +
-                    "and DownloadPlc to a verified PLCSIM target.",
-                ["tools"] = new JsonArray(available.Where(name => ToolTaxonomy.OperationOf(name, null).Operation == "ONLINE-WRITE"
+                ["rule"] = "Executing CloseProject with discardChanges=true or an ONLINE-WRITE requires Workbench approval even when the switch is off. " +
+                    "Exceptions are the three PLCSIM-only tools, DownloadPlc to a verified PLCSIM target, snapshot actions read, exportSnapshot and " +
+                    "createSnapshot, and read-only Unified OpenPipe messages.",
+                ["tools"] = new JsonArray(available.Where(name => name == "CloseProject" || ToolTaxonomy.OperationOf(name, null).Operation == "ONLINE-WRITE"
                     && name is not ("ManagePlcSimAdvancedInstance" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario"))
                     .OrderBy(name => name, System.StringComparer.Ordinal).Select(name => (JsonNode)JsonValue.Create(name)!).ToArray()),
                 ["downloadException"] = "An explicit PLCSIM/Softbus interface, no overlapping non-PLCSIM subnet, and a matching running PLCSIM " +

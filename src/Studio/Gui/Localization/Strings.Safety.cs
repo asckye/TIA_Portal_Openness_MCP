@@ -4,9 +4,12 @@ internal static partial class Strings
 {
     private static (string Key, string En, string Zh)[] SafetyCatalogue =>
     [
-        ("Settings.AlwaysConfirmed", "Physical online writes always require a person in the Workbench, " +
-            "even with approval off. Verified PLCSIM downloads and the three PLCSIM-only tools follow the ordinary switch.",
-            "即使关闭审批，真实设备在线写入仍须工作台人工确认。已验证的 PLCSIM 下载和三个 PLCSIM 专用工具沿用普通审批开关。"),
+        ("Settings.AlwaysConfirmed", "Even with approval off, the Workbench requires confirmation to execute CloseProject with discardChanges=true " +
+            "or to write to a physical online target. ManagePlcDataBlockSnapshot read/exportSnapshot and InvokeUnifiedOpenPipe read/browse messages " +
+            "can proceed. The createSnapshot action, verified PLCSIM downloads and the three PLCSIM-only tools follow the ordinary approval switch.",
+            "关闭普通审批后，执行 CloseProject 且 discardChanges=true 或向真实设备在线写入，仍须工作台人工确认。" +
+            "ManagePlcDataBlockSnapshot 的 read、exportSnapshot 及 InvokeUnifiedOpenPipe 的读取、浏览消息可直接执行。" +
+            "创建快照、已验证的 PLCSIM 下载和三个 PLCSIM 专用工具沿用普通审批开关。"),
         ("Settings.DownloadSafety", "Download safety", "下载安全"),
         ("Settings.DownloadSafetyHelp", "Compile and save before downloading. Physical targets require explicit confirmation. " +
             "Expired online write plans require a new preview.", "下载前须编译并保存。真实目标还须显式确认。在线写入计划过期后须重新预览。"),

@@ -1140,6 +1140,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ManageOpcUaAccessControl.properties"] = new ParameterHint("\"\\u003Cproperties\\u003E\""),
             ["ManageOpcUaInterface.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["ManageOpcUaInterface.interfaceName"] = new ParameterHint("\"\\u003CinterfaceName\\u003E\""),
+            ["ManageOpcUaInterface.expectedPlanHash"] = new ParameterHint("\"<planHash from the delete preview>\""),
+            ["ManageOpcUaInterface.expectedProjectFile"] = new ParameterHint("\"<exact projectFile from GetSessionState>\""),
             ["ManageOpcUaInterface.action"] = new ParameterHint("\"read\"", "read", "delete"),
             ["ManageOpcUaInterface.interfaceType"] = new ParameterHint("\"\\u003CinterfaceType\\u003E\""),
             ["ManagePasswordPolicy.action"] = new ParameterHint("\"read\"", "read", "update"),

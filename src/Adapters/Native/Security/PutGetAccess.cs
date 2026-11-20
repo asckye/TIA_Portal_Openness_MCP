@@ -61,13 +61,15 @@ public sealed class PutGetAccess
                 ["found"] = false, ["failureCode"] = "NOT_FOUND", ["mayHaveChanged"] = false,
                 ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
 
+            const string guidance = "PUT/GET attribute availability depends on the CPU access level. Use ManagePlcProtection with action=read to inspect it. " +
+                "In TIA Portal check CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication'.";
             DeviceItem? item;
             string? attrName;
             try { (item, attrName) = FindPutGetAttribute(device, itemPath); }
             catch (Exception error) when (error is NotSupportedException || error is InvalidOperationException)
             {
                 string message = error.Message + (error is NotSupportedException
-                    ? " Check or set it in TIA: CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication'." : "");
+                    ? " " + guidance : "");
                 return new HmiObject { ["found"] = false, ["failureCode"] = error is AdapterPreconditionException
                         ? MutationEvidence.FailureCode(error) : "UNSUPPORTED_CAPABILITY", ["mayHaveChanged"] = false,
                     ["device"] = device.Name, ["message"] = message, ["nativeMessage"] = message };
@@ -79,10 +81,7 @@ public sealed class PutGetAccess
                     ["failureCode"] = "UNSUPPORTED_CAPABILITY",
                     ["mayHaveChanged"] = false,
                     ["device"] = device.Name,
-                    ["message"] = "PUT/GET access is not exposed as an Openness attribute on this CPU/firmware " +
-                                  "(confirmed e.g. on S7-1200 1211C V4.6). Check/set it manually in TIA: " +
-                                  "CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication'. " +
-                                  "Note: M/I/Q S7 reads still work when the channel is permitted; a successful M-area read implies PUT/GET is enabled."
+                    ["message"] = guidance
                 };
 
             object? val = null;

@@ -50,6 +50,17 @@ public sealed class HmiAuditNativePathTests
         Assert.DoesNotContain("TrySetProperty(", connectionMethod);
     }
 
+    [Theory]
+    [InlineData("EnsureUnifiedHmiButtonAction", "EnsureUnifiedHmiButtonEventHandler(")]
+    [InlineData("BindUnifiedHmiTagDynamization", "ResolveHmiScreenItemOrThrow(")]
+    public void Tag_lookup_precedes_event_or_dynamization_edits(string tool, string firstStep)
+    {
+        string source = Read("src/Adapters/Native/Hmi/UnifiedHmiAdapter.cs");
+        int method = source.IndexOf("public HmiMessage " + tool + "(", StringComparison.Ordinal);
+        int first = source.IndexOf(firstStep, method, StringComparison.Ordinal);
+        Assert.Contains("HmiExchangePolicy.RequireTag(_session.ResolveHmiSoftwareOrThrow(", source[method..first]);
+    }
+
     private static string Read(string relative)
     {
         var root = new DirectoryInfo(AppContext.BaseDirectory);

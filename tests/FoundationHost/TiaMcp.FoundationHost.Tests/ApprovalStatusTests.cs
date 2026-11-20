@@ -70,6 +70,9 @@ public sealed class ApprovalStatusTests
             Assert.Null(data["vault"]);
             var alwaysConfirmed = data["alwaysConfirmed"]!["tools"]!.AsArray();
             Assert.Contains(alwaysConfirmed, name => (string?)name == "WritePlcWebVars");
+            Assert.Contains(alwaysConfirmed, name => (string?)name == "CloseProject");
+            foreach (var term in new[] { "discardChanges=true", "exportSnapshot", "createSnapshot", "read-only Unified OpenPipe" })
+                Assert.Contains(term, (string?)data["alwaysConfirmed"]!["rule"]);
             Assert.Equal(release != "14sp1", alwaysConfirmed.Any(name => (string?)name == "DownloadPlc"));
             Assert.DoesNotContain("synthetic-private", data.ToJsonString());
             Assert.Equal(0, fixture.Worker.Calls);

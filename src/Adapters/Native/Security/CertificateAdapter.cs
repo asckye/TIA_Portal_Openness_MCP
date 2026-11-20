@@ -99,7 +99,11 @@ namespace TiaMcp.Adapters.Native.Security
                     var kind = (CertificateUsage)HmiScalar
                         .ConvertValue(HmiValues.Value(SecurityCatalog.RequireOneOf(usage, SecurityCatalog.CertificateUsages, "usage")),
                             typeof(CertificateUsage))!;
+                    meta["phase"] = "get-certificate-template";
+                    meta["usage"] = usage;
+                    meta["deviceItem"] = string.Join("/", itemPathJson.Length == 0 ? devicePathJson : itemPathJson);
                     var template = store.GetCertificateTemplate(kind);
+                    meta["phase"] = "prepare-certificate";
                     var changes = Properties();
                     _session.Validate("template");
                     var prepared = SecurityProperties.Prepare(template.GetType(), changes);

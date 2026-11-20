@@ -80,7 +80,6 @@ namespace TiaMcp.Adapters.Contracts.Candidates
                     };
                     string resource = Path.Combine(root, selected + ".s7res");
                     bool exists = File.Exists(resource);
-                    if (release == "20" && !exists) CandidatePrimitives.Invalid("document-resource");
                     files = exists ? new[] { path, resource } : new[] { path };
                     var resourceBytes = exists ? Bytes(resource) : null;
                     contentHash = DocumentHash(bytes, resourceBytes);

@@ -170,10 +170,17 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal CallToolResult Plan(StandardPackage package, string machineJson, string[]? adopt = null)
         {
-            var machine = package.ValidateMachine(machineJson);
+            MachineDescription machine;
+            try { machine = package.ValidateMachine(machineJson); }
+            catch (GenerationValidationException ex)
+            {
+                throw new GenerationValidationException(ex.Errors.Select(e => new GenerationValidationError("/machine" + e.Path, e.Rule, e.Message)));
+            }
             new GenerationArtifacts(root()).ExpireUnreferenced(now());
             string release = McpServer.ReleaseKey;
-            if (machine.Target.Release != release) throw new ArgumentException("Machine release must match the session release.", "machine.target.release");
+            if (machine.Target.Release != release)
+                throw new GenerationValidationException(new[] { new GenerationValidationError("/machine/target/release", "release",
+                    "Select the TIA Portal version used by this session.") });
             bool newProject = machine.Target.Project.Mode == "new";
             var before = Target(allowUnbound: newProject);
             if (newProject ? before.Project.Length != 0 : GenerationProjectPath.CanonicalIdentity(machine.Target.Project.ProjectIdentity!)
@@ -306,7 +313,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         break;
                         case "type-group": if (path.Length != 0) observed.Groups.Add(new ProjectGroup { Station = station.Id, Name = path, Kind = "types" });
                         break;
-                        default: throw new ArgumentException("Unknown software tree row; complete readback required.", nameof(machine));
+                        default: throw new GenerationCallRejectionException(new Error("The selected PLC software returned an unrecognized inventory row.",
+                            new PreconditionFailedDetails("generation-readback", software, "/machine/target/project/softwarePath")));
                     }
                 }
                 foreach (var item in Items(Read("ListPlcExternalSources", new JsonObject { ["softwarePath"] = software })))
