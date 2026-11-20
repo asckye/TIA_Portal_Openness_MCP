@@ -7052,6 +7052,68 @@
           "identifier": "TiaMcp.SourceContracts.Tests.HonestWriteSources/Hardware_writes_initialize_unchanged_before_edit_admission( string path , string method , string admission ):e2fee4740abc478c7775511b7c0eb48f9913fccff4545213fd2d7a88ed3d657a:1"
         }
       ]
+    },
+    {
+      "task": "UI-0036F",
+      "maintainerDate": "2026-11-20",
+      "reason": "Maintainer answer 2026-11-20: follow the final design exactly - page layout, sizes and texts, timer chip instead of the countdown ring, Codex TOML preview; behaviour, red-line, keyboard and contrast checks unchanged",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ApprovalPageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ApprovalPageTests/Page_renders_both_risks_and_languages_with_caption_clear_of_ring_and_HC_selection( int width , int height ):03c2c6420e6ee95fb4ac40c0ff9b6e05022c9f35f5b3961476c6492deccf64f7:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ApprovalPageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ApprovalPageTests/Page_renders_both_risks_and_languages_with_caption_clear_of_ring_and_HC_selection( int width , int height ):0c006c8d1eff48808109a5da4d622559e923f7ac8f9615f34fbcaa915c57e4b2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Tree.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_their_parents_across_tabs_and_breakpoints( ):1795e6d8208cf6e1947146affb7ded3df4c8a811f97a4a69b5472d70c6dd907e:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Tree.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_their_parents_across_tabs_and_breakpoints( ):91b95bf2207901efe6d1c4c9ce9d86dd3e403cf24678f57180b1be75ce685add:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Tree.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_their_parents_across_tabs_and_breakpoints( ):f9a9d62b3798c44ea92bb5563e0b6815d41fff40c7050f032b79588090ea51a4:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_toolbar_save_is_the_only_accent_fill_and_runs_the_existing_confirmation( ):0985abbd0741169d256e91050fd93b218f740ab7de304f0e46ba8aca871650e3:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection( ):59e8b94b259aee5cb3ab09dd0e03c97b553be93402f1780d2210794d0e0f2a81:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlOverlayTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlOverlayTests/Session_escape_returns_focus_and_AI_navigation_closes_the_non_modal_flyout( ):b0583b06e0d4bc79f0ab44716c97b015dc22fb948e32d63f48f4b2c5e110b695:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):bfff8246b83409627c7ce78daef57ca6ebdeebf0592385bd7b8acc4feabd3aa3:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):c9a33dabbc12e37103597d763eb647dff5caa7c66c6b47b26fc714aaae4db1e7:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):250ca96b578a061eb619aaa6f82a448704e8e0af3c6556ddc0e0287488f28004:1"
+        }
+      ]
     }
   ]
 }
