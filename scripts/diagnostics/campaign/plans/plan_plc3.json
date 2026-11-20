@@ -658,6 +658,16 @@
 },
 {
 "tool": "ListSivarcBlockDefinitions",
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ListSivarcBlockDefinitions is available from V21."
+},
+"21": {
+"applicable": true,
+"reason": "ListSivarcBlockDefinitions is registered in V21; validate this input on V21."
+}
+},
 "args": {
 "softwarePath": "MCP_PLC",
 "blockPath": "MCP_G/MCP_FB",
@@ -669,6 +679,16 @@
 },
 {
 "tool": "ManageSivarcBlockDefinition",
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManageSivarcBlockDefinition is available from V21."
+},
+"21": {
+"applicable": true,
+"reason": "ManageSivarcBlockDefinition is registered in V21; validate this input on V21."
+}
+},
 "args": {
 "softwarePath": "MCP_PLC",
 "blockPath": "MCP_G/MCP_FB",
@@ -691,6 +711,16 @@
 },
 {
 "tool": "ManageSivarcBlockDefinition",
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ManageSivarcBlockDefinition is available from V21."
+},
+"21": {
+"applicable": true,
+"reason": "ManageSivarcBlockDefinition is registered in V21; validate this input on V21."
+}
+},
 "args": {
 "softwarePath": "MCP_PLC",
 "blockPath": "MCP_G/MCP_FB",
@@ -708,6 +738,16 @@
 },
 {
 "tool": "UpgradeSivarcDefinitions",
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "UpgradeSivarcDefinitions is available from V21."
+},
+"21": {
+"applicable": true,
+"reason": "UpgradeSivarcDefinitions is registered in V21; validate this input on V21."
+}
+},
 "args": {
 "softwarePath": "MCP_PLC",
 "dryRun": true

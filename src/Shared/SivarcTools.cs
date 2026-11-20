@@ -156,7 +156,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Read-only. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ListSivarcBlockDefinitionsV4(
             string softwarePath,
-            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.")]
+            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. " +
+                "Definition access is disabled on V17 through V20.")]
             string blockPath,
             [Description("includeBlockParameters: true also returns block parameters.")] bool includeBlockParameters=true)
             => LibraryToolContract.Run("ListSivarcBlockDefinitions", false, true, () =>
@@ -179,7 +180,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageSivarcBlockDefinitionV4(
             string softwarePath,
-            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.")]
+            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. " +
+                "Definition access is disabled on V17 through V20.")]
             string blockPath,
             [Description("kind: tagDefinition | textDefinition | tagMemberSettings | commonParameters | blockParameter.")] string kind,
             string name="",
@@ -218,7 +220,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ResolveSivarcExpressionV4(
             string softwarePath,
-            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.")]
+            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. " +
+                "Definition access is disabled on V17 through V20.")]
             string blockPath,
             string[] devicePath,
             string[] itemPath,
@@ -285,7 +288,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "feedback messages. Default preview; NotSupported without the SiVArc option; never saves. Available from V21 because accessing " +
                 "the SiVArc definition subsystem on earlier releases can crash TIA Portal. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult UpgradeSivarcDefinitionsV4(
-            [Description("softwarePath: PLC path from GetProjectTree. Available from V21. Definition access is disabled on V17 through V20.")] string softwarePath,
+            [Description("softwarePath: PLC path from GetProjectTree. Available from V21. " +
+                "Definition access is disabled on V17 through V20.")] string softwarePath,
             bool dryRun=true)
             => LibraryToolContract.Run("UpgradeSivarcDefinitions", !dryRun, true, () =>
             {

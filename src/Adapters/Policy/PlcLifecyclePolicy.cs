@@ -40,7 +40,8 @@ namespace TiaMcp.Adapters
             if (!OwnsProject)
                 throw new AdapterPreconditionException("Borrowed projects or borrowed local sessions are never closed.",isArgument:false);
             if (discardChanges && (IsLocalSession || !canDiscardFromPortal))
-                throw new AdapterPreconditionException("Discard requires the session holding the binding and an ordinary project in a TIA Portal started by this worker.",
+                throw new AdapterPreconditionException(
+                    "Discard requires the session holding the binding and an ordinary project in a TIA Portal started by this worker.",
                     "discardChanges", false);
             if (isModified && !discardChanges)
                 throw new AdapterPreconditionException("Save explicitly before closing; implicit discard is refused.",isArgument:false);

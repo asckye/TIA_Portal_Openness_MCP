@@ -19664,7 +19664,7 @@
     "ManageMotionAxis": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "ManageOnlineDriveFunctions": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
     "ManageOpcUaAccessControl": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
-    "ManageOpcUaInterface": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
+    "ManageOpcUaInterface": "Preset by the server: expectedProjectFile, softwarePath. Equal normalized values are accepted; different values are refused.",
     "ManagePlcAlarmTextList": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "ManagePlcBlockDocuments": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "ManagePlcBlockProtection": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",

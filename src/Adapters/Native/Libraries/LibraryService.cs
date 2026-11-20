@@ -503,7 +503,8 @@ namespace TiaMcp.Adapters
                         options):type.Versions.CreateFromDocuments(file.Directory!,fileName,environment,create,options); }
                     catch
                     {
-                        RecordUnchangedLibraryImport(meta, environmentProof, versionCountBefore, () => PlcGroupOperations.Items(type.Versions).Count(), countProof);
+                        RecordUnchangedLibraryImport(meta, environmentProof, versionCountBefore,
+                            () => PlcGroupOperations.Items(type.Versions).Count(), countProof);
                         throw;
                     }
                     meta["transferResultState"]=result.TransferResultState.ToString();

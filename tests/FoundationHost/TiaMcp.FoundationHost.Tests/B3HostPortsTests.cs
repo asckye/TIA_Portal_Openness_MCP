@@ -88,8 +88,8 @@ public sealed class B3HostPortsTests
             ExchangePlcSupervisions ExchangeSystemDiagnosticsSettings ExchangeTestSuiteCase ExportAlarmClasses ExportAlarmInstanceTexts
             ExportAlarmTextLists ExportPlcProDiagInfo
             ExportSafetyPrintout ExportScadaData GetProjectUserManagement GetSafetyBlockSignatures ImportAlarmClasses
-            ListSivarcBlockDefinitions ListTestSuiteCases ManageMultiuserSession ManagePlcSafety ManagePlcSupervision
-            ManageProjectUserManagement ManageSivarcBlockDefinition ManageTestSuiteCase ManageUmcUsers ManageUnifiedCwcPackage
+            ListTestSuiteCases ManageMultiuserSession ManagePlcSafety ManagePlcSupervision
+            ManageProjectUserManagement ManageTestSuiteCase ManageUmcUsers ManageUnifiedCwcPackage
             RunTestSuiteCase SetPlcWatchTableModifyValue
             """,
         [18] = """
@@ -122,15 +122,15 @@ public sealed class B3HostPortsTests
             BuildFlgNetCall BuildPlcTagTable BuildStructuredText DecodePlcSimaticMl ExportPlcBlockDocuments ExportPlcBlocksDocuments
             ExportUnifiedEngineeringList GetObjectIdentifier ImportLibraryTypeDocuments ImportPlcBlockDocuments ImportPlcBlocksDocuments
             ImportUnifiedEngineeringList InspectSimaticSdCompatibility ManagePlcBlockDocuments ManagePlcDocuments ManageUnifiedListEntries
-            ResolveSivarcExpression RunClassicHmiOfflineValidationSuite RunClassicHmiTemporaryImportPreflight UpgradeSivarcDefinitions
+            RunClassicHmiOfflineValidationSuite RunClassicHmiTemporaryImportPreflight
             ValidateClassicHmiMinimalPackageFiles ValidateClassicHmiMinimalPackagePlcSync WriteClassicHmiMinimalPackageFiles
             """,
         [21] = """
             BindUnifiedHmiButtonPressedTag BuildClassicHmiMinimalPackage BuildClassicHmiTagTable BuildPlcAliasAlarmLad BuildPlcFbBlock
-            BuildPlcFcBlock BuildPlcLadFcBlock GetOpcUaAccessControl ListCommunicationConnections ListSafetyActivationTests
+            BuildPlcFcBlock BuildPlcLadFcBlock GetOpcUaAccessControl ListCommunicationConnections ListSafetyActivationTests ListSivarcBlockDefinitions
             ManageCommunicationConnection ManageDriveSafetyAcceptanceTest ManageOpcUaAccessControl ManagePlcBlockWriteProtection
             ManageSafetyActivationTest ManageSafetyActivationTestGroup ManageSafetyFunction ManageSafetyFunctionCondition
-            ManageSivarcScreenLayout UploadDeviceParameters
+            ManageSivarcBlockDefinition ManageSivarcScreenLayout ResolveSivarcExpression UpgradeSivarcDefinitions UploadDeviceParameters
             """,
     };
 

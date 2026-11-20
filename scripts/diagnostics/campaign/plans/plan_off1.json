@@ -562,6 +562,16 @@
 },
 {
 "tool": "ResolveSivarcExpression",
+"applicability": {
+"20": {
+"applicable": false,
+"reason": "ResolveSivarcExpression is available from V21."
+},
+"21": {
+"applicable": true,
+"reason": "ResolveSivarcExpression is registered in V21; validate this input on V21."
+}
+},
 "args": {
 "softwarePath": "MCP_PLC",
 "blockPath": "MCP_G/MCP_FB",

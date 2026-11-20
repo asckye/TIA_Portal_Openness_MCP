@@ -39,7 +39,7 @@ public sealed class HonestWriteOutcomeTests
         using var scope = EngineHostParity.EnterScope();
         Exception failure = kind switch {
             "file" => new FileNotFoundException("Input was not found."),
-            "argument" => new ArgumentException("Invalid input.", "filePath"),
+            "argument" => new ArgumentException("Invalid input.", nameof(kind)),
             "unsupported" => new NotSupportedException("Unavailable for this release."),
             _ => new AdapterPreconditionException("Text import refused.", "filePath", false)
         };

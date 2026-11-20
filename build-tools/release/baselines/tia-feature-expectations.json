@@ -838,6 +838,7 @@
     "properties": {},
     "targetFramework": "net10.0",
     "defineConstants": [
+      "HMI_UNIFIED",
       "PLC_HARDWARE_CHANGE_TYPE",
       "PLC_SAFETY_UNITS",
       "PLC_UNITS",
