@@ -6687,6 +6687,78 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Sider_collapses_to_its_icons_below_the_lg_breakpoint( ):e9d6339e983f438f17aede6997ad2a6262bcfec3ae656983ea7da4125b9d4928:1"
         }
       ]
+    },
+    {
+      "task": "XREF-1",
+      "maintainerDate": "2026-11-20",
+      "reason": "Maintainer decision 2026-11-20: remove the V21 native cross-reference restriction, the human Workbench switch, consent records and environment opt-in; consent tests replaced by default-on and protocol-rejection tests",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.Engine.Harness/EngineeringAuditRuntimeChecks.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineeringAuditRuntimeChecks/Run( Assembly server , Action \u003C bool , string \u003E check ):31022d55ccb08de4ae07b21fc75742202fa78804f579d2d9ae077c2ed0d5872f:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcCrossReferenceAnalysisTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcCrossReferenceAnalysisTests.ConsentSession/SetNativeCrossReferences( bool enabled , int workbenchPid ):75977aff6871cbd09999c86bf9d3d7b55846a616c2fcf47bb1997fb075bbfd20:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcCrossReferenceAnalysisTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PlcCrossReferenceAnalysisTests/Consent_cannot_be_added_to_an_ordinary_operator_handshake( string action ):ff74603d15b391bf882669fcab5ebbba934c199d1aa7927ecb5c04f630ea2fe5:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcCrossReferenceAnalysisTests.cs",
+          "kind": "test-removed",
+          "identifier": "PlcCrossReferenceAnalysisTests/Consent_handshake_requires_the_verified_Workbench_peer_and_correct_session_owner( string peer ):4de3929f40a64dba61af80b803d67562ba28d21a6a59ef68cbb8938c4deb9714"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PlcCrossReferenceAnalysisTests.cs",
+          "kind": "test-removed",
+          "identifier": "PlcCrossReferenceAnalysisTests/Host_signed_consent_is_locked_against_file_tools_and_cannot_be_replayed_between_sessions( ):fd0e4ff6adf3040bbd43a40d43f5f886cf10e8e89691a9313cd10528a9430228"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionStateTests.cs",
+          "kind": "test-removed",
+          "identifier": "SessionStateTests/Runtime_query_and_workbench_origin_share_the_same_session_switches( bool enabled ):a09eaa454d4858c6ce873b76c17d35142962ae9eb3dc1787c944c055c689958b"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/CrossReferenceGuardTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.CrossReferenceGuardTests/Run( Action \u003C bool , string \u003E check ):0732f155b17487005e313b27929f5010cb684ff00028ab837bdfd04ac5fbdfab:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/CrossReferenceGuardTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.CrossReferenceGuardTests/Run( Action \u003C bool , string \u003E check ):bfa3060e1909e8c12865610048350cd046164f784fcdc67bc48831f91619189c:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/CrossReferenceGuardTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.CrossReferenceGuardTests/Run( Action \u003C bool , string \u003E check ):f97e31f98e2150fea47146e5036bd857493f5a3d93be0501d1cd4f5056986255:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/NativeCrossReferenceDefaultsTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Engine.Tests.NativeCrossReferenceDefaultsTests/Consent_is_session_scoped_and_requires_a_live_owner_with_the_same_start_time( ):c7a5e56c860a181d70e8d3ac6c0c4b5d774294815b2bc6f3d1ef7f8451a69db5"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/NativeCrossReferenceDefaultsTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Engine.Tests.NativeCrossReferenceDefaultsTests/Release_policy_is_identical_in_host_and_native_adapter( string release ):ef503ca4e24247d1953ed6d0469f03444e0f0e921e173b315e6ed690e255899d"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/NativeCrossReferenceDefaultsTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Engine.Tests.NativeCrossReferenceDefaultsTests/Unknown_release_fails_closed_and_consent_does_not_bypass_consistency_or_reflection( ):fd78ec214f9aa572be580be087eb063ce2244e08d13038acdc86a578674ad27f"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/UnifiedCrossReferencePolicyTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Engine.Tests.UnifiedCrossReferencePolicyTests/Explicit_opt_in_uses_the_existing_native_sequence_and_filter( string release ):0e8a8593e145f727d59c1b21dd4c26ca995fb124414662cffb3584f3bb77bfee"
+        }
+      ]
     }
   ]
 }
