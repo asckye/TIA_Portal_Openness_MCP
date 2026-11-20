@@ -57,25 +57,7 @@ namespace TiaMcp.Logic.V4
         private static readonly AsyncLocal<Scope?> Current = new AsyncLocal<Scope?>();
         public static string? RequestId => Current.Value?.RequestId;
         public static IDisposable Begin(string requestId, JsonElement arguments) => new Scope(requestId, arguments);
-        public static string RedactSecrets(string text) => ReplaceSecrets(text, Current.Value?.Secrets ?? Enumerable.Empty<string>());
-
-        public static void RedactResponseValues(JsonNode? data)
-        {
-            if (Current.Value?.Secrets is not { Count: > 0 }) return;
-            void Visit(JsonNode? node)
-            {
-                if (node is JsonObject obj)
-                    foreach (var field in obj.ToArray()) Visit(field.Value);
-                else if (node is JsonArray array)
-                    for (int i = 0; i < array.Count; i++) Visit(array[i]);
-                else if (node is JsonValue value && value.TryGetValue<string>(out var text))
-                {
-                    string redacted = RedactSecrets(text);
-                    if (redacted != text) node.ReplaceWith(redacted);
-                }
-            }
-            Visit(data);
-        }
+        public static string RedactSecrets(string text) => Current.Value?.Secrets is { Count: > 0 } secrets ? ReplaceSecrets(text, secrets) : text;
 
         public static Error FromException(Error error, Exception exception, string? nativeMessage = null)
         {

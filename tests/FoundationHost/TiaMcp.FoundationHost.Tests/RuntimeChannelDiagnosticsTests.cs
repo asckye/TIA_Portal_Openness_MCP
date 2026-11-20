@@ -57,6 +57,51 @@ public sealed class RuntimeChannelDiagnosticsTests
     }
 
     [Fact]
+    public void Runtime_success_preserves_live_values_and_tokens_while_redacting_diagnostics()
+    {
+        const string token = "preview-1012";
+        var structuredValue = new JsonObject { ["message"] = "100", ["error"] = "10" };
+        using var call = Host.InvocationJournal.Observe("runtime-values", "WritePlcWebVars", "host", "21", false,
+            () => JsonSerializer.Serialize(new { password = "10", previewToken = token, writes = new[] { new { name = "MotorKey", value = "12" } } }));
+        var report = new Host.ResponseJsonReport { Ok = true, Message = "Preview using 10", Data = new JsonObject {
+            ["items"] = new JsonArray(new JsonObject { ["name"] = "MotorKey", ["before"] = "100", ["requested"] = "12" },
+                new JsonObject { ["name"] = "MotorState", ["before"] = structuredValue.DeepClone() }),
+            ["previewToken"] = token, ["diagnostic"] = "Device echoed 10", ["nativeMessages"] = new JsonArray("Device echoed 10"),
+            ["readError"] = "Previous failure using 10"
+        } };
+        var result = Host.RuntimeToolContract.Map("WritePlcWebVars", report, true, false);
+        var text = Assert.IsType<ModelContextProtocol.Protocol.TextContentBlock>(Assert.Single(result.Content));
+        foreach (var body in new[] { result.StructuredContent!, JsonNode.Parse(text.Text)! })
+        {
+            Assert.True((bool?)body["ok"]);
+            var data = body["data"]!;
+            Assert.Equal("100", (string?)data["items"]?[0]?["before"]);
+            Assert.Equal("12", (string?)data["items"]?[0]?["requested"]);
+            Assert.True(JsonNode.DeepEquals(structuredValue, data["items"]?[1]?["before"]));
+            Assert.Equal(token, (string?)data["previewToken"]);
+            Assert.Equal("Preview using ••••", (string?)data["summary"]);
+            Assert.Equal("Device echoed ••••", (string?)data["diagnostic"]);
+            Assert.Equal("Device echoed ••••", (string?)data["nativeMessages"]?[0]);
+            Assert.Equal("Previous failure using ••••", (string?)data["readError"]);
+        }
+    }
+
+    [Fact(Timeout = TestDeadlines.HangMilliseconds)]
+    public async Task Web_read_preserves_user_fields_in_a_structured_live_value()
+    {
+        var value = new JsonObject { ["message"] = "100", ["error"] = "10" };
+        await using var fixture = new HttpsFixture { ReadValue = value };
+        using var call = Host.InvocationJournal.Observe("runtime-read", "GetPlcWebVars", "host", "21", false,
+            () => JsonSerializer.Serialize(new { password = "10" }));
+        var tools = new Host.RuntimeChannelTools();
+        var read = await Task.Run(() => tools.ReadPlcWebVarsV4(fixture.Host, "fixture", "10", new[] { "MotorKey" }, true));
+        var body = read.StructuredContent!;
+        Assert.True((bool?)body["ok"], body.ToJsonString());
+        Assert.True(JsonNode.DeepEquals(value, body["data"]?["items"]?[0]?["value"]));
+        Assert.Equal(new[] { "Api.Login", "PlcProgram.Read" }, fixture.Methods.ToArray());
+    }
+
+    [Fact]
     public void Runtime_failure_prefers_the_top_level_reason_and_preserves_write_uncertainty()
     {
         var report = new Host.ResponseJsonReport { Ok = false, Data = new JsonObject {
@@ -195,6 +240,7 @@ public sealed class RuntimeChannelDiagnosticsTests
         internal readonly ConcurrentQueue<string> Methods = new();
         internal bool RefuseLogin;
         internal bool ExpectCertificateRejection;
+        internal JsonNode ReadValue { get; init; } = JsonValue.Create(7)!;
         internal Exception? CertificateRejection { get; private set; }
         internal Task ServerCompletion => serve;
         internal string Host { get; }
@@ -240,7 +286,7 @@ public sealed class RuntimeChannelDiagnosticsTests
                             reply["error"] = new JsonObject { ["code"] = 2, ["message"] = "Fixture API refusal." };
                         else reply["result"] = method switch {
                             "Api.Login" => new JsonObject { ["token"] = "fixture-session-token" },
-                            "PlcProgram.Read" => JsonValue.Create(7),
+                            "PlcProgram.Read" => ReadValue.DeepClone(),
                             "Plc.ReadOperatingMode" => JsonValue.Create("run"),
                             _ => throw new InvalidOperationException("Unexpected fixture method: " + method)
                         };

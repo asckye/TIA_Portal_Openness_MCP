@@ -192,7 +192,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Paging? paging = null;
             int total = Count(data, "totalCount");
             if (data["offset"] != null && Count(data, "limit") > 0) paging = McpServer.OffsetPage(Count(data, "offset"), Count(data, "limit"), total);
-            Sanitize(data);
+            Sanitize(data, openPipeCommand: tool == "InvokeUnifiedOpenPipe");
             if (NativeResultState.TryUnsuccessful(data, !readOnly, out var nativeOutcome, out var nativeError, tool)) {
                 outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
                     ? Completeness.Partial : Completeness.Complete;
@@ -200,12 +200,26 @@ namespace TiaMcpServer.ModelContextProtocol
             return Result(tool, data, error, outcome, completeness, current, readOnly, paging);
         }
 
-        private static void Sanitize(JsonNode? node)
+        private static void Sanitize(JsonNode? node, string? field = "", bool openPipeCommand = false)
         {
-            if (node is JsonArray array) { foreach (var item in array) Sanitize(item); return; }
+            if (node is JsonArray array)
+            {
+                for (int i = 0; i < array.Count; i++) Sanitize(array[i], field);
+                return;
+            }
+            if (node is JsonValue scalar && scalar.TryGetValue<string>(out var text)
+                && field is "diagnostic" or "diagnostics" or "diagnosticNote" or "message" or "messages" or "nativeMessage" or "nativeMessages"
+                    or "workerMessage" or "summary" or "errors" or "warnings" or "issues")
+            {
+                string redacted = NativeFailureDiagnostics.RedactSecrets(text);
+                if (redacted != text) scalar.ReplaceWith(redacted);
+                return;
+            }
             if (!(node is JsonObject obj)) return;
             foreach (var pair in obj.ToArray())
             {
+                // A measured PLC value may itself be a structure with fields named "error" or "message".
+                if (field == "items" && pair.Key is "value" or "requested" or "before" or "after" || field == "series" && pair.Key == "values") continue;
                 if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal))
                 { if (pair.Value != null) obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value.ToString())
                     ?? "The native observation failed; consult the local diagnostic log."; }
@@ -220,7 +234,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else if (pair.Key == "skippedLines" || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)
                     || pair.Key.Equals("token", StringComparison.OrdinalIgnoreCase) && pair.Value is JsonObject) obj.Remove(pair.Key);
-                else Sanitize(pair.Value);
+                // The Open Pipe message identifies the command; its request and response contain protocol data.
+                else if (field is null or "request" or "response" || openPipeCommand && pair.Key == "message") Sanitize(pair.Value, null);
+                else Sanitize(pair.Value, pair.Key);
             }
         }
         private static string? NativeMessage(JsonObject? data)
@@ -254,8 +270,6 @@ namespace TiaMcpServer.ModelContextProtocol
             var meta =
                 new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution, current
                     ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);
-            // Native text may echo credentials even in a successful response that will be parked for paging.
-            NativeFailureDiagnostics.RedactResponseValues(data);
             var mapped = McpResult.From(Envelope.Create(data, error, meta));
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };

@@ -34,7 +34,7 @@
   <text x="44" y="126" class="heading">AI MCP 客户端</text>
   <text x="44" y="154" class="body">本机 STDIO 或虚拟机中继</text>
   <text x="44" y="178" class="body">内置 10+ 客户端一键配置</text>
-  <text x="44" y="200" class="muted">中继密钥由 DPAPI 加密保护</text>
+  <text x="44" y="200" class="muted">本机 stdio 中继转发到 HTTP</text>
 
   <rect x="28" y="242" width="236" height="168" rx="8" class="box"/>
   <text x="44" y="272" class="heading">工作台</text>
@@ -54,7 +54,7 @@
   <text x="328" y="242" class="body">人机共享同一会话与状态</text>
   <text x="328" y="276" class="body">Openness 通道与生成写栅栏</text>
   <text x="328" y="302" class="body">租约、调用日志与审计哈希链</text>
-  <text x="328" y="328" class="muted">凭据保管库与 IPv4 白名单</text>
+  <text x="328" y="328" class="muted">审批与 IPv4 白名单</text>
   <rect x="328" y="376" width="140" height="22" rx="11" class="pill"/>
   <text x="342" y="391" class="badge">随包 .NET 10</text>
 

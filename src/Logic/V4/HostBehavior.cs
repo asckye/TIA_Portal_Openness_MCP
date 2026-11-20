@@ -23,19 +23,19 @@ namespace TiaMcp.Logic.V4
         }
 
         // Only the top-level credential fields that formerly resolved vault references reserve this prefix.
-        internal static Error? RemovedVaultReference(string tool, JsonElement arguments, string path = "/arguments")
+        internal static Error? RemovedVaultReference(string tool, JsonElement arguments, string path = "")
         {
             if (arguments.ValueKind != JsonValueKind.Object) return null;
             Error? Forwarded(JsonElement call, string prefix)
                 => call.ValueKind == JsonValueKind.Object && call.TryGetProperty("name", out var target) && target.ValueKind == JsonValueKind.String
-                    && call.TryGetProperty("arguments", out var nested) ? RemovedVaultReference(target.GetString()!, nested, prefix + "/arguments") : null;
-            if (tool is "CallTool" or "PreviewToolCall") return Forwarded(arguments, path);
+                    && call.TryGetProperty("arguments", out var nested) ? RemovedVaultReference(target.GetString()!, nested, prefix) : null;
+            if (tool is "CallTool" or "PreviewToolCall") return Forwarded(arguments, path + "/arguments");
             if (tool is "PreviewToolBatch" or "RunReadOnlyToolBatch" && arguments.TryGetProperty("operations", out var operations)
                 && operations.ValueKind == JsonValueKind.Array)
             {
                 int i = 0;
                 foreach (var operation in operations.EnumerateArray())
-                    if (Forwarded(operation, path + "/operations/" + i++) is { } error) return error;
+                    if (Forwarded(operation, path + "/operations/" + i++ + "/arguments") is { } error) return error;
                 return null;
             }
             foreach (var field in arguments.EnumerateObject())

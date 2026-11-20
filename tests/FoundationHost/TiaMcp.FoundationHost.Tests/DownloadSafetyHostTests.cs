@@ -77,6 +77,7 @@ public sealed class DownloadSafetyHostTests
         var result = await Call(fixture, nested, args);
         Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
         Assert.Equal("vault references were removed (ADR 0035); pass the credential directly", (string?)result["error"]?["message"]);
+        Assert.Equal(nested ? "/arguments/moduleAccessPassword" : "/moduleAccessPassword", (string?)result["error"]?["details"]?["parameter"]);
         Assert.Equal(0, approvals);
         Assert.Equal(0, worker.Listings);
         Assert.Equal(0, worker.Calls);

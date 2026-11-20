@@ -29,10 +29,18 @@ public sealed class SessionAuditHostTests
         var arguments = new { path = "C:/Fixture/P.ap21", umacUserName = "engineer", umacPassword = "vault:old" };
         var call = new { name = "OpenProject", arguments };
         var result = (await fixture.Call(entry, entry switch {
-            "OpenProject" => (object)arguments, "PreviewToolBatch" or "RunReadOnlyToolBatch" => new { operations = new[] { call } }, _ => call
+            "OpenProject" => (object)arguments,
+            "PreviewToolBatch" or "RunReadOnlyToolBatch" => new { operations = new object[] { new { name = "GetSessionState", arguments = new { } }, call } },
+            _ => call
         })).StructuredContent!;
         Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
         Assert.Equal("vault references were removed (ADR 0035); pass the credential directly", (string?)result["error"]?["message"]);
+        string pointer = entry switch {
+            "OpenProject" => "/umacPassword",
+            "PreviewToolBatch" or "RunReadOnlyToolBatch" => "/operations/1/arguments/umacPassword",
+            _ => "/arguments/umacPassword"
+        };
+        Assert.Equal(pointer, (string?)result["error"]?["details"]?["parameter"]);
         Assert.Equal(0, approvals);
         Assert.Equal(0, fixture.Worker.Calls);
     }
@@ -50,7 +58,7 @@ public sealed class SessionAuditHostTests
     {
         var args = new JsonObject { [field] = "vault:" };
         var failure = HostBehavior.RemovedVaultReference(tool, JsonSerializer.SerializeToElement(args));
-        Assert.Equal("/arguments/" + field, Assert.IsType<InvalidArgumentDetails>(failure?.Details).Parameter);
+        Assert.Equal("/" + field, Assert.IsType<InvalidArgumentDetails>(failure?.Details).Parameter);
         args[field] = "prefix-vault:literal";
         args["description"] = "vault:ordinary-text";
         Assert.Null(HostBehavior.RemovedVaultReference(tool, JsonSerializer.SerializeToElement(args)));
@@ -61,7 +69,8 @@ public sealed class SessionAuditHostTests
     {
         using var targets = new OnlineTargetSettingsScope(null);
         const string marker = "native fixture detail";
-        using var worker = new OnlinePortAdmissionTests.OnlineWorker(diagnostic: marker + new string('x', 24000));
+        string diagnostic = marker + new string('x', 24000);
+        using var worker = new OnlinePortAdmissionTests.OnlineWorker(diagnostic: diagnostic);
         using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker,
             approvalWait: (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)));
         var args = new JsonObject { ["softwarePath"] = "PLC_1", ["targetIpAddress"] = "192.0.2.10",
@@ -84,6 +93,7 @@ public sealed class SessionAuditHostTests
         var payload = toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(handle)!.Content;
         Assert.Contains(marker, payload);
         Assert.DoesNotContain(Secret, payload);
+        Assert.Equal(diagnostic + "••••", (string?)JsonNode.Parse(payload)?["data"]?["diagnostic"]);
     }
 
     [Theory]
