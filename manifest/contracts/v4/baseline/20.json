@@ -14383,7 +14383,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "697d9490b67fd0b4230709f01fd732c1ef0aed09a4e82ddd8edbe87dcef43a23",
+      "descriptionSha256": "1e231cc6f7f12ebf44143bfb2e8ece8a852b802bab3c708ffea187138d3efd31",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14398,7 +14398,7 @@
           },
           "crossReferences": {
             "default": false,
-            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them where supported. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "type": "boolean"
           },
           "dryRun": {
@@ -14486,7 +14486,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "70f4358d6ebd8a95753e3fd79fdb882cb20a7785593533919a2f8b5d3f0c0b41",
+      "descriptionSha256": "2e6ac07f6232c083641130f2f226019fded42076ec34a93d43439c5bbbcb38ff",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14497,7 +14497,7 @@
           },
           "crossReferences": {
             "default": false,
-            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them where supported. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "type": "boolean"
           },
           "dryRun": {
@@ -14535,7 +14535,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3fcaf7d9ca7db0a1800af7f61c5c19381801dbea1dc77a210560a4b9f1f85f39",
+      "descriptionSha256": "33fa7b8e43a03275add2729db90db8d5e1e39a25483cccd0a124acdbaf25e04a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14546,7 +14546,7 @@
           },
           "crossReferences": {
             "default": false,
-            "description": "crossReferences: false (default) skips native references; true requests them under the release policy. V14 SP1–V20 allow native queries where supported; V21 requires the human Workbench session switch or TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 before startup; do not enable automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
+            "description": "crossReferences: false (default) skips native references; true requests them where supported. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.",
             "type": "boolean"
           },
           "dryRun": {
@@ -20133,7 +20133,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "ada2cbc38ef58e711de9cf0318d4b354d763f2d4e517f93a25d49db5b4d7bbec",
+      "descriptionSha256": "445741026b5b48001d07f51a2aae497790bc54c8e77ad31346d7334959b3674c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21369,7 +21369,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "d24a9962b87173e8dc51c86cd2f3b661ac2cdbb0f6400fa5ca633b7c9067f1fc",
+      "descriptionSha256": "603268ad4cdc65d0e5eb71f9fb8807b141fcdd91ec9e6589d1a8fcebfeb47945",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
