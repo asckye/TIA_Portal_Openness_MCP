@@ -8336,7 +8336,7 @@
       "path": "src/Shared/OpcUaTools.cs",
       "owner": "OpcUaTools",
       "domain": "PLC-OpcUA",
-      "signature": "public CallToolResult ManageOpcUaInterfaceV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"interfaceName: exact name as shown in GetPlcOpcUaConfiguration\")] string interfaceName,\n            [Description(\"read | delete. action: read (default) or delete\")] string action = \"read\",\n            [Description(\"interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'\")] string interfaceType = \"ServerInterface\",\n            [Description(\"dryRun: true (default) previews; false deletes\")] bool dryRun = true)",
+      "signature": "public CallToolResult ManageOpcUaInterfaceV4(\n            [Description(\"softwarePath: path to the PLC software, e.g. 'PLC_1'\")] string softwarePath,\n            [Description(\"interfaceName: exact name as shown in GetPlcOpcUaConfiguration\")] string interfaceName,\n            [Description(\"read | delete. action: read (default) or delete\")] string action = \"read\",\n            [Description(\"interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'\")] string interfaceType = \"ServerInterface\",\n            [Description(\"true previews deletion.\")] bool dryRun = true,\n            [Description(\"planHash from the delete preview.\")] string expectedPlanHash = \"\",\n            [Description(\"Exact project file bound to the delete preview.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -8363,8 +8363,20 @@
         "dryRun": {
           "type": "bool",
           "default": "true",
-          "description": "dryRun: true (default) previews; false deletes",
+          "description": "true previews deletion.",
           "value": true
+        },
+        "expectedPlanHash": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "planHash from the delete preview.",
+          "value": ""
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Exact project file bound to the delete preview.",
+          "value": ""
         }
       }
     },
