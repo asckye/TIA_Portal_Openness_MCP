@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Adapters.Native.Vci;
@@ -9,6 +10,7 @@ internal sealed class VciExportAttempts
     internal int Issued { get; private set; }
     internal int Unconfirmed { get; private set; }
     internal int MappedAfterFailure { get; private set; }
+    internal int UnsupportedContainers { get; private set; }
     internal int QueryRefusals { get; private set; }
     internal string? NativeMessage { get; private set; }
 
@@ -16,6 +18,20 @@ internal sealed class VciExportAttempts
     {
         QueryRefusals++;
         NativeMessage ??= Diagnostic(error);
+    }
+
+    // No direct format on a container still permits a walk of its children. A null result stops this branch.
+    internal IList<string>? ReadFormats(Func<IList<string>?> read, bool descendable, bool ungroupedDevice, Action<Exception> onRefusal)
+    {
+        try { return read() ?? Array.Empty<string>(); }
+        catch (Exception error)
+        {
+            bool walkChildren = descendable && !ungroupedDevice;
+            if (walkChildren) UnsupportedContainers++;
+            else QueryRefused(error);
+            onRefusal(error);
+            return walkChildren ? Array.Empty<string>() : null;
+        }
     }
 
     internal bool Export(Action write, Func<bool> freshMapping, Action<string> report)

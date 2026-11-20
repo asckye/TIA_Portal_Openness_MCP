@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts;
 
 // Native members used by the 2.7.38 phase 6 ⑥-① SiVArc option-package tools (SivarcService.cs), verified member by member against
 // the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Sivarc) PublicAPI. The VM has no SiVArc licence, so this
@@ -132,9 +134,14 @@ internal static class SivarcShapeChecks
         Property(sivarc,ns+"UpgradeDefinitionsResult","WarningCount","Int32",false); Property(sivarc,ns+"UpgradeDefinitionsResult","Messages","SivarcFeedbackMessageComposition",false);
 
         // ---- server side ----
-        var portal=EngineSurface.For(server);
+        // The current host pipeline contains the tool declarations. Woven engines also contain the Portal session.
+        var portal=server.GetName().Name=="TiaMcp.ToolPipeline"
+            ? new EngineSurface(server,server.GetTypes(),typeof(object)) : EngineSurface.For(server);
         foreach(var tool in new[]{"GetSivarcRuleTree","ManageSivarcRuleContainer","ManageSivarcTableRule","ListSivarcBlockDefinitions","ManageSivarcBlockDefinition","ResolveSivarcExpression","ManageSivarcScreenLayout","UpgradeSivarcDefinitions","GenerateSivarc"})
             check(portal.Tool(tool)!=null,"Portal."+tool+" exists");
+        check(portal.Tool("GenerateSivarc").DeclaringType!.IsDefined(typeof(McpServerToolTypeAttribute)),"SiVArc tools declare their MCP tool type");
+        foreach(var tool in new[]{"ListSivarcBlockDefinitions","ManageSivarcBlockDefinition","ResolveSivarcExpression","UpgradeSivarcDefinitions"})
+            check(PortedFamilies.Available(v20 ? "20" : "21",tool)==!v20,tool+" is registered from V21");
         check(portal.Tool("GenerateSivarc")!.GetParameters().Any(p=>p.Name=="additionalHmiDeviceNames"),"GenerateSivarc takes additionalHmiDeviceNames (multi-device overload)");
     }
 }

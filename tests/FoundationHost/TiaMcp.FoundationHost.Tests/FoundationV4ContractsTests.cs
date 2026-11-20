@@ -309,14 +309,16 @@ public sealed class FoundationV4ContractsTests
     // UNIFY-1D1 adds ExportTechnologyObject on V14 SP1 and V15.1.
     // TIA-SAFE-4 adds the GetApprovalStatus tool on every release.
     // VMFIX-15 moves the two standalone alarm XLSX exports from V16 to V17.
+    // VMFIX-17B withholds the two SiVArc block definition entries on V17 through V19.
     [InlineData("14sp1", 287)] [InlineData("15.1", 328)] [InlineData("16", 354)]
-    [InlineData("17", 379)] [InlineData("18", 405)] [InlineData("19", 481)]
+    [InlineData("17", 377)] [InlineData("18", 403)] [InlineData("19", 479)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();
         var roster = LegacyHostToolRegistry.Create(worker, release, false);
         Assert.Equal(count, roster.Count);
         Assert.Equal(count, roster.Select(t => t.ProtocolTool.Name).Distinct().Count());
+        Assert.DoesNotContain(roster, t => t.ProtocolTool.Name is "ListSivarcBlockDefinitions" or "ManageSivarcBlockDefinition");
         Assert.DoesNotContain(roster, t => LegacyNames.Contains(t.ProtocolTool.Name));
         Assert.Contains(roster, t => t.ProtocolTool.Name == "CallTool");
         foreach (var tool in roster)

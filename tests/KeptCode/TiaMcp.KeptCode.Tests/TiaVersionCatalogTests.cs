@@ -181,7 +181,7 @@ namespace TiaMcp.Engine.Tests
                 check(ToolVersionPolicy.CallProblem("20", "ManageDeviceServiceObjects", key => key == "family" ? "telecontrolDataPoints" : key == "action" ? action : null).Length == 0, "V20 telecontrol file route retained " + action);
             check(ToolVersionPolicy.CallProblem("20", "ManagePlcDocuments", key => key == "objectKind" ? "type" : key == "action" ? "createFromMasterCopy" : null).Length == 0, "V20 PLC type master-copy route retained");
             foreach (string kind in new[] { "tagDefinition", "textDefinition" })
-                check(ToolVersionPolicy.CallProblem("20", "ManageSivarcBlockDefinition", key => key == "kind" ? kind : null).Length == 0, "V20 SiVArc definition retained " + kind);
+                check(ToolVersionPolicy.CallProblem("20", "ManageSivarcBlockDefinition", key => key == "kind" ? kind : null).Length != 0, "V20 SiVArc definition withheld " + kind);
             check(!isV20 || (string?)TiaMcpServer.ModelContextProtocol.McpServer.ResultBody(safety)?["error"]?["code"] == "UNSUPPORTED_CAPABILITY",
                 "known unavailable tool is distinguished from unknown tool");
             try { OpennessReleaseContract.For("14sp1").RequireAssembly(typeof(TiaVersionCatalogTests).Assembly); check(false, "unbound legacy adapter cannot dispatch"); }

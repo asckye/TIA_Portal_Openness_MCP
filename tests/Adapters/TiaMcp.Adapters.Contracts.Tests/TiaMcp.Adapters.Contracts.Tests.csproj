@@ -7,6 +7,7 @@
     <DefineConstants>$(DefineConstants);WORKER_SESSION_LIFECYCLE</DefineConstants>
     <DefineConstants>$(DefineConstants);PLC_HARDWARE_CHANGE_TYPE</DefineConstants>
     <DefineConstants>$(DefineConstants);PROJECT_UMAC</DefineConstants>
+    <DefineConstants>$(DefineConstants);HMI_UNIFIED</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Fixtures/TiaMcp.CaxTransfer.Fixture/TiaMcp.CaxTransfer.Fixture.csproj" Aliases="caxfixture" PrivateAssets="compile" />
@@ -93,6 +94,7 @@
     <Compile Include="../../../src/Adapters/Native/Reflection/PropertyPathReader.cs" Link="Reflection/PropertyPathReader.cs" />
     <Compile Include="../../../src/Adapters/Native/Reflection/ReflectionScreenTraversal.cs" Link="Reflection/ReflectionScreenTraversal.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryService.Selection.cs" />
+    <Compile Include="../../../src/Adapters/Native/Libraries/GlobalLibraryInfoRows.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryPolicy.cs" Link="Libraries/LibraryPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryService.DocumentImport.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryArchive.cs" />
@@ -105,6 +107,7 @@
     <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Evidence.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryInstantiation.cs" Link="Libraries/LibraryInstantiation.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryInstantiation.Targets.cs" Link="Libraries/LibraryInstantiation.Targets.cs" />
+    <Compile Include="../../../src/Adapters/Native/Optional/SivarcGeneration.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalNativeOperations.cs" Link="OptionalNativeOperations.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />

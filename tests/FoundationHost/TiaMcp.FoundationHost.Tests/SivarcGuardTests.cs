@@ -1,3 +1,4 @@
+extern alias adaptertests;
 extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
@@ -72,33 +73,47 @@ public sealed class SivarcGuardTests
         Assert.Null(body["data"]!["evidence"]!["mayHaveWrittenFiles"]);
     }
 
-    public static IEnumerable<object[]> V20DefinitionCases()
+    [Theory, InlineData(true, "unchanged"), InlineData(false, "unchanged"),
+        InlineData(true, "unreadable-after"), InlineData(false, "unreadable-after")]
+    public void Container_create_reports_proven_failure_or_unknown_with_the_native_refusal(bool legacy, string outcome)
     {
+        var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.SivarcNativeTests.ContainerRefusal(legacy, outcome);
+        var response = new Host.ResponseMessage { Message = reply.Message, Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() };
+        var body = Host.LibraryToolContract.Map("ManageSivarcRuleContainer", response, true).StructuredContent!;
+        Assert.Equal(outcome == "unchanged" ? "NATIVE_OPERATION_FAILED" : "OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Contains("Native SiVArc licence refused.", body["error"]!.ToJsonString());
+    }
+
+    private static readonly string[] GuardedReleases = { "17", "18", "19", "20" };
+
+    public static IEnumerable<object[]> GuardedDefinitionCases()
+    {
+        foreach (string release in GuardedReleases)
         foreach (string block in new[] { "Folder/FB_1", "Folder/FC_1", "Folder/DB_1", "Main_OB" })
         {
-            yield return new object[] { block, "list", true };
+            yield return new object[] { release, block, "list", true };
             foreach (string action in new[] { "read", "create", "update", "delete" })
                 foreach (bool dryRun in new[] { true, false })
-                    yield return new object[] { block, action, dryRun };
+                    yield return new object[] { release, block, action, dryRun };
         }
     }
 
-    [Theory, MemberData(nameof(V20DefinitionCases))]
-    public void V20_definitions_are_refused_before_worker_dispatch(string block, string action, bool dryRun)
+    [Theory, MemberData(nameof(GuardedDefinitionCases))]
+    public void Guarded_definitions_are_refused_before_worker_dispatch(string release, string block, string action, bool dryRun)
     {
-        using var scope = Host.HardwareContract.UseRelease("20");
+        using var scope = Host.HardwareContract.UseRelease(release);
         int calls = 0;
         var service = new Service((_, _) => {
             calls++;
             return new JsonObject { ["Message"] = "worker dispatched", ["Meta"] = new JsonObject() };
-        }, () => "fixture.ap20");
+        }, () => "fixture.ap" + release);
 
         var reply = action == "list" ? service.ReadSivarcBlockDefinitions("PLC", block)
             : service.ManageSivarcBlockDefinition("PLC", block, "tagDefinition", "Tag_1", action,
                 confirmDelete: true, dryRun: dryRun);
 
         Assert.Equal(0, calls);
-        Assert.Contains("TIA Portal V20", reply.Message);
+        Assert.Contains("this release", reply.Message);
         Assert.Contains("crash", reply.Message);
         Assert.Contains("V21", reply.Message);
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)reply.Meta!["v4Rejection"]);
@@ -110,16 +125,22 @@ public sealed class SivarcGuardTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void V20_read_refusal_keeps_the_V4_outcome_known(bool manage)
+    [InlineData("17", false)]
+    [InlineData("17", true)]
+    [InlineData("18", false)]
+    [InlineData("18", true)]
+    [InlineData("19", false)]
+    [InlineData("19", true)]
+    [InlineData("20", false)]
+    [InlineData("20", true)]
+    public void Guarded_read_refusal_keeps_the_V4_outcome_known(string release, bool manage)
     {
-        using var scope = Host.HardwareContract.UseRelease("20");
+        using var scope = Host.HardwareContract.UseRelease(release);
         int calls = 0;
         var service = new Service((_, _) => {
             calls++;
             return new JsonObject { ["Message"] = "worker dispatched", ["Meta"] = new JsonObject() };
-        }, () => "fixture.ap20");
+        }, () => "fixture.ap" + release);
         var tools = new Host.SivarcTools(service);
 
         var result = manage ? tools.ManageSivarcBlockDefinitionV4("PLC", "Folder/FB_1", "tagDefinition", "Tag_1")
@@ -129,7 +150,7 @@ public sealed class SivarcGuardTests
         Assert.Equal(0, calls);
         Assert.True(result.IsError);
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]!["code"]);
-        Assert.Contains("TIA Portal V20", (string?)body["error"]!["message"]);
+        Assert.Contains("this release", (string?)body["error"]!["message"]);
         Assert.Equal("rejected-before-operation", (string?)body["meta"]!["outcome"]);
         Assert.False((bool?)body["data"]!["evidence"]!["writeOutcomeUnknown"]);
     }
@@ -138,8 +159,9 @@ public sealed class SivarcGuardTests
     [InlineData("17")]
     [InlineData("18")]
     [InlineData("19")]
+    [InlineData("20")]
     [InlineData("21")]
-    public void Other_releases_still_dispatch_FC_definition_reads(string release)
+    public void Only_V21_dispatches_FC_definition_reads(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
         var calls = new List<string>();
@@ -151,38 +173,48 @@ public sealed class SivarcGuardTests
             return new JsonObject { ["Message"] = "worker dispatched", ["Meta"] = new JsonObject() };
         }, () => "fixture.ap" + release);
 
-        Assert.Equal("worker dispatched", service.ReadSivarcBlockDefinitions("PLC", "Folder/FC_1").Message);
-        Assert.Equal("worker dispatched", service.ManageSivarcBlockDefinition("PLC", "Folder/FC_1", "tagDefinition", "Tag_1").Message);
+        var list = service.ReadSivarcBlockDefinitions("PLC", "Folder/FC_1");
+        var manage = service.ManageSivarcBlockDefinition("PLC", "Folder/FC_1", "tagDefinition", "Tag_1");
+        if (release != "21")
+        {
+            Assert.Empty(calls);
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)list.Meta!["rejectionCode"]);
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)manage.Meta!["rejectionCode"]);
+            return;
+        }
+        Assert.Equal("worker dispatched", list.Message);
+        Assert.Equal("worker dispatched", manage.Message);
         Assert.Equal(new[] { "ListSivarcBlockDefinitions", "ManageSivarcBlockDefinition" }, calls);
     }
 
-    public static IEnumerable<object[]> V20DependentCases()
+    public static IEnumerable<object[]> GuardedDependentCases()
     {
+        foreach (string release in GuardedReleases)
         foreach (string operation in new[] { "ResolveSivarcExpression", "UpgradeSivarcDefinitions" })
             foreach (string action in new[] { "", "read", "create", "update", "delete", "checkValidity", "checkTraceValidity", "other" })
                 foreach (bool dryRun in new[] { true, false })
-                    yield return new object[] { operation, action, dryRun };
+                    yield return new object[] { release, operation, action, dryRun };
     }
 
-    [Theory, MemberData(nameof(V20DependentCases))]
-    public void V20_dependent_operations_refuse_every_action_and_preview(string operation, string action, bool dryRun)
+    [Theory, MemberData(nameof(GuardedDependentCases))]
+    public void Guarded_dependent_operations_refuse_every_action_and_preview(string release, string operation, string action, bool dryRun)
     {
-        using var scope = Host.HardwareContract.UseRelease("20");
+        using var scope = Host.HardwareContract.UseRelease(release);
         int calls = 0;
         var port = new Port((_, _) => {
             calls++;
             return new JsonObject { ["Message"] = "worker dispatched", ["Meta"] = new JsonObject() };
-        }, () => "fixture.ap20");
+        }, () => "fixture.ap" + release);
         var request = new OptionalEngineeringRequest {
             Operation = operation, Action = action, DryRun = dryRun, SoftwarePath = "PLC", BlockPath = "FC_1"
         };
 
-        Assert.Equal(OptionalEngineeringCapabilities.SivarcBlockDefinitionProblem("20"),
-            OptionalEngineeringCapabilities.Unsupported("20", request));
+        Assert.Equal(OptionalEngineeringCapabilities.SivarcBlockDefinitionProblem(release),
+            OptionalEngineeringCapabilities.Unsupported(release, request));
         var reply = port.Invoke("sivarc.ExecuteSivarc", request);
 
         Assert.Equal(0, calls);
-        Assert.Contains("TIA Portal V20", reply.Message);
+        Assert.Contains("this release", reply.Message);
         Assert.Contains("crash", reply.Message);
         Assert.Contains("V21", reply.Message);
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)reply.Meta!["v4Rejection"]);
@@ -192,6 +224,12 @@ public sealed class SivarcGuardTests
     }
 
     [Theory]
+    [InlineData("17", true)]
+    [InlineData("17", false)]
+    [InlineData("18", true)]
+    [InlineData("18", false)]
+    [InlineData("19", true)]
+    [InlineData("19", false)]
     [InlineData("20", true)]
     [InlineData("20", false)]
     [InlineData("21", true)]
@@ -229,17 +267,26 @@ public sealed class SivarcGuardTests
     }
 
     [Theory]
-    [InlineData(false, true)]
-    [InlineData(true, true)]
-    [InlineData(true, false)]
-    public void V20_dependent_tool_refusals_keep_the_V4_outcome_known(bool upgrade, bool dryRun)
+    [InlineData("17", false, true)]
+    [InlineData("17", true, true)]
+    [InlineData("17", true, false)]
+    [InlineData("18", false, true)]
+    [InlineData("18", true, true)]
+    [InlineData("18", true, false)]
+    [InlineData("19", false, true)]
+    [InlineData("19", true, true)]
+    [InlineData("19", true, false)]
+    [InlineData("20", false, true)]
+    [InlineData("20", true, true)]
+    [InlineData("20", true, false)]
+    public void Guarded_dependent_tool_refusals_keep_the_V4_outcome_known(string release, bool upgrade, bool dryRun)
     {
-        using var scope = Host.HardwareContract.UseRelease("20");
+        using var scope = Host.HardwareContract.UseRelease(release);
         int calls = 0;
         var service = new Service((_, _) => {
             calls++;
             return new JsonObject { ["Message"] = "worker dispatched", ["Meta"] = new JsonObject() };
-        }, () => "fixture.ap20");
+        }, () => "fixture.ap" + release);
         var tools = new Host.SivarcTools(service);
         var result = upgrade ? tools.UpgradeSivarcDefinitionsV4("PLC", dryRun)
             : tools.ResolveSivarcExpressionV4("PLC", "FC_1", new[] { "HMI" }, new[] { "Runtime" },
@@ -269,6 +316,8 @@ public sealed class SivarcGuardTests
         var roster = LegacyHostToolRegistry.Create(worker, release, true);
         var server = DispatchProxy.Create<IMcpServer, ServerProxy>();
         var guide = roster.Single(tool => tool.ProtocolTool.Name == "GetToolUsage");
+        foreach (string name in new[] { "ListSivarcBlockDefinitions", "ManageSivarcBlockDefinition", "ResolveSivarcExpression", "UpgradeSivarcDefinitions" })
+            Assert.Equal(release == "21", roster.Any(tool => tool.ProtocolTool.Name == name));
         foreach (string name in new[] { "ListSivarcBlockDefinitions", "ManageSivarcBlockDefinition" })
         {
             Assert.Equal(PortedFamilies.Available(release, name), roster.Any(tool => tool.ProtocolTool.Name == name));

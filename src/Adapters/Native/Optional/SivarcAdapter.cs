@@ -284,9 +284,14 @@ namespace TiaMcp.Adapters.Native.Optional
                 meta["nativeSignature"] = action == "createFromType" ? collection.GetType().Name + ".CreateFrom(" + family.TypeVersionType.Name + ")"
                     : collection.GetType().Name + ".Create(string)";
                 if (!write) return "SiVArc rule " + kind + " create preview; nothing changed (real creation needs the SiVArc licence).";
-                meta["mayHaveChanged"] = true;
-                object created = kind == "folder" ? family.CreateFolder(collection, parts.Last()) : version != null ? family
-                    .CreateTableFromType(collection, version) : family.CreateTable(collection, parts.Last());
+                object ResolveCollection()
+                {
+                    var folder = SivarcFolder(family, _session.RequireSivarc(), parentPath);
+                    return kind == "folder" ? family.Folders(folder) : family.Tables(folder);
+                }
+                object created = OptionalNativeOperations.CreateSivarcContainer(meta, ResolveCollection, () =>
+                    kind == "folder" ? family.CreateFolder(collection, parts.Last()) : version != null
+                        ? family.CreateTableFromType(collection, version) : family.CreateTable(collection, parts.Last()));
                 var fresh = EngineeringGroupOperations
                     .Find(kind == "folder" ? family.Folders(SivarcFolder(family, sivarc, parentPath)) : family.Tables(SivarcFolder(family, sivarc, parentPath)),
                         SivarcName(created))

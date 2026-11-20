@@ -11,18 +11,42 @@ namespace TiaMcp.Adapters.Native.Optional;
 
 internal static class OptionalNativeOperations
 {
-    internal static void RequireGenerationConnections(string hmi, IEnumerable<string> plcPartners, IEnumerable<string> connections,
+    internal static void RequireGenerationConnections(string hmi, string[] plcPartners, IEnumerable<string> connections,
         bool hasHmiSoftware, string hmiParameter)
     {
         if (!hasHmiSoftware)
             throw AdapterPreconditionException.Failed($"Device '{hmi}' has no Classic or Unified HMI software for SiVArc generation.",
                 "hmi-software-missing", hmiParameter);
         var available = new HashSet<string>(connections.Where(name => !string.IsNullOrWhiteSpace(name)), StringComparer.OrdinalIgnoreCase);
-        foreach (string plc in plcPartners)
-            if (!available.Contains(plc))
-                throw AdapterPreconditionException.Failed(
-                    $"HMI device '{hmi}' requires a connection to PLC '{plc}'. Configure it in TIA Portal before generation.",
-                    "missing-plc-connection", "plcSoftwarePaths");
+        if (!available.Overlaps(plcPartners))
+            throw AdapterPreconditionException.Failed(
+                $"HMI device '{hmi}' needs a connection to at least one selected PLC CPU ({string.Join(", ", plcPartners)}). "
+                + "Configure it in TIA Portal before generation.", "missing-plc-connection", "plcSoftwarePaths");
+    }
+
+    internal static object CreateLegacySivarcContainer(IDictionary<string, object?> meta, Func<object> resolveCollection, object collection,
+        string name, object? version)
+    {
+        string method = version == null ? "Create" : "CreateFrom";
+        object argument = version ?? name;
+        return CreateSivarcContainer(meta, resolveCollection, () =>
+            PlcGroupOperations.Call(collection, method, new[] { argument.GetType() }, argument));
+    }
+
+    internal static object CreateSivarcContainer(IDictionary<string, object?> meta, Func<object> resolveCollection, Func<object> create)
+    {
+        object?[]? Fingerprint()
+        {
+            var collection = resolveCollection();
+            int count = (int)PlcGroupOperations.Get(collection, "Count");
+            var names = PlcGroupOperations.Items(collection).Select(item => (string)PlcGroupOperations.Get(item, "Name"))
+                .OrderBy(name => name, StringComparer.Ordinal).ToArray();
+            if (names.Length != count) return null;
+            return new object?[] { count }.Concat(names).ToArray();
+        }
+        object? created = null;
+        NativeRefusalProbe.Run(meta, Fingerprint, () => created = create());
+        return created!;
     }
 
     internal static (string Name, string Type)[]? ScreenItemRows(object screen)

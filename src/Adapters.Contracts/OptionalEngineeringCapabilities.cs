@@ -7,10 +7,9 @@ public static class OptionalEngineeringCapabilities
 {
     public static string? SivarcBlockDefinitionProblem(string release, string? blockClass = null)
     {
-        if (release == "20")
-            return "SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused "
-                + "for every block type, action and preview on TIA Portal V20: the per-block definition subsystem "
-                + "can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21.";
+        if (release is "17" or "18" or "19" or "20")
+            return "SiVArc block definitions, expression resolution and definition upgrades require V21. "
+                + "Accessing the definition subsystem on this release can crash TIA Portal.";
         if (blockClass != null && blockClass != "FB" && blockClass != "FC")
             return "Block-level SiVArc data is restricted to FB and FC; " + blockClass
                 + " is unsupported. OB access crashed TIA Portal V20 (finding 44).";
@@ -67,7 +66,7 @@ public static class OptionalEngineeringCapabilities
         if (major == 15 && request.Operation == "ManageSivarcRule" && request.Action == "create")
             return "SiVArc rule Create(string) requires V16 or later; read/update/delete are available.";
         if (major < 20 && request.Operation is "ResolveSivarcExpression" or "UpgradeSivarcDefinitions")
-            return "The requested SiVArc service requires V20 or later.";
+            return "SiVArc expression resolution and definition upgrades require V21.";
         if (major < 21 && request.Operation is "ManageSivarcScreenLayout" or "ManageDriveSafetyAcceptanceTest")
             return "The requested optional-product service requires V21.";
         if (major < OpennessApi.DriveHardwareChanges.FirstMajor && request.Operation == "ManageDriveHardwareModule" && request.Action != "read")

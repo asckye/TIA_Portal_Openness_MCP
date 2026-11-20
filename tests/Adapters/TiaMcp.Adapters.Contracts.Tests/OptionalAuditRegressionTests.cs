@@ -87,14 +87,16 @@ public sealed class OptionalAuditRegressionTests
     [Theory]
     [InlineData("")]
     [InlineData("Other")]
-    public void Sivarc_requires_a_connection_to_each_requested_PLC(string available)
+    public void Sivarc_requires_a_connection_to_at_least_one_requested_PLC(string available)
     {
         var refusal = Assert.Throws<AdapterPreconditionException>(() =>
             OptionalNativeOperations.RequireGenerationConnections("MCP_B5_HMI", new[] { "PLC_1", "PLC_2" },
-                new[] { "PLC_1", available }, true, "hmiDeviceName"));
+                new[] { available }, true, "hmiDeviceName"));
         Assert.Equal("missing-plc-connection", refusal.Condition);
         Assert.Contains("MCP_B5_HMI", refusal.Message);
+        Assert.Contains("PLC_1", refusal.Message);
         Assert.Contains("PLC_2", refusal.Message);
+        OptionalNativeOperations.RequireGenerationConnections("MCP_B5_HMI", new[] { "PLC_1", "PLC_2" }, new[] { "PLC_1", available }, true, "hmiDeviceName");
         OptionalNativeOperations.RequireGenerationConnections("MCP_B5_HMI", new[] { "PLC_1", "PLC_2" }, new[] { "plc_2", "PLC_1" }, true, "hmiDeviceName");
     }
 

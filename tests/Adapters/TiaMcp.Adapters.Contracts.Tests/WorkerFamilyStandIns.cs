@@ -123,6 +123,7 @@ namespace TiaMcp.Adapters
         public Action<string?>? UpdateEngineeringReflectionLookupPaths { get; set; }
         public Func<string?>? EngineeringReflectionLookupPaths { get; set; }
         private string? reflectionLookupPaths;
+        private IDisposable? unifiedPages;
         private string _hmiTokenGeneration = "fixture-start";
         private OrganisationSession? EngineeringPlcOrganisationSession;
         private OrganisationSession EngineeringPlcSession => EngineeringPlcOrganisationSession ?? new OrganisationSession(this);

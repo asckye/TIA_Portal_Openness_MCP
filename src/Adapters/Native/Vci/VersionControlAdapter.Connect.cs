@@ -240,26 +240,18 @@ namespace TiaMcp.Adapters.Native.Vci
                     IList<string> formats = new List<string>();
                     if (!node.Structural)   // the UngroupedDevicesGroup is a folder only: never asked, always walked
                     {
-                        try
-                        {
-                            var f = PortVci.SupportedFormats(ws, node.Obj);
-                            formats = f == null ? new List<string>() : f.ToList();
-                        }
-                        catch (Exception ex)
-                        {
-                            queryRefused = true;
-                            if (walkTrace) Console.Error.WriteLine("[VCI-walk]     query threw: " + ex.Message.Split('\n')[0]);
-                            attempts.QueryRefused(ex);
-                            if (node.UngroupedDevice)
+                        var supported = attempts.ReadFormats(() => PortVci.SupportedFormats(ws, node.Obj)?.ToList(),
+                            node.Descendable, node.UngroupedDevice, ex =>
                             {
-                                // A native refusal of an ungrouped device is reported as a failure, not walked past.
-                                Note(node);
-                                lines.Add(VciWorkspaceLayout.NativeRefusal(node.Label, Flatten(ex.Message)));
-                            }
-                            else lines.Add(node.Label + " | format query refused: " + Flatten(ex.GetBaseException().Message));
-                            ws = ReAcquire();
-                            if (node.UngroupedDevice) continue;
-                        }
+                                queryRefused = true;
+                                if (walkTrace) Console.Error.WriteLine("[VCI-walk]     query threw: " + ex.Message.Split('\n')[0]);
+                                if (node.UngroupedDevice)
+                                    lines.Add(VciWorkspaceLayout.NativeRefusal(node.Label, Flatten(ex.Message)));
+                                else lines.Add(node.Label + " | format query refused: " + Flatten(ex.GetBaseException().Message));
+                                ws = ReAcquire();
+                            });
+                        if (supported == null) { Note(node); continue; }
+                        formats = supported;
                     }
 
                     if (walkTrace)
@@ -313,11 +305,8 @@ namespace TiaMcp.Adapters.Native.Vci
 
                     if (!node.Descendable)
                     {
-                        if (!queryRefused)
-                        {
-                            unsupported++;
-                            lines.Add(node.Label + " | not supported by VCI (" + node.Obj.GetType().Name + ")");
-                        }
+                        unsupported++;
+                        lines.Add(node.Label + " | not supported by VCI (" + node.Obj.GetType().Name + ")");
                         Note(node);
                         continue;
                     }
@@ -347,6 +336,7 @@ namespace TiaMcp.Adapters.Native.Vci
                         lines.Add(VciWorkspaceLayout.NothingMappable(device.Label));
                     }
 
+                unsupported += attempts.UnsupportedContainers;
                 failed += attempts.QueryRefusals;
                 bool unsupportedOnly = !dryRun && attempts.Issued == 0 && unsupported > 0 && failed == 0;
                 string head = dryRun

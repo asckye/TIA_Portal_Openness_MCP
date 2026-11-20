@@ -38,45 +38,24 @@ namespace TiaMcp.Adapters
                 }
                 if (action == "infos") {
                     // GetGlobalLibraryInfos lists the libraries known to this Portal (system, corporate, recently used user libraries), open or not.
-                    GlobalLibraryInfo[]? infos;
-                    try { infos = libraries.GetGlobalLibraryInfos()?.ToArray(); }
+                    try
+                    {
+                        var infos = libraries.GetGlobalLibraryInfos();
+                        if (infos != null)
+                        {
+                            GlobalLibraryInfoRows.Read(infos, meta);
+                            return "Global library infos read (GetGlobalLibraryInfos); nothing opened.";
+                        }
+                    }
                     catch (NullReferenceException error)
                     {
                         meta["nativeExceptionType"] = error.GetType().FullName;
-                        infos = null;
                     }
-                    if (infos == null)
-                    {
-                        const string reason = "TIA could not enumerate its known global libraries (GetGlobalLibraryInfos). "
-                            + "Use action=list to inspect open libraries.";
-                        meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
-                        meta["status"] = "ReadOrWriteFailed"; meta["nativeMessage"] = reason;
-                        return reason;
-                    }
-                    var rows = new List<object?>();
-                    var unavailable = new List<string>();
-                    foreach (var info in infos)
-                    {
-                        int index = rows.Count;
-                        object? Field(string field, Func<object?> read)
-                        {
-                            try { return read(); }
-                            catch (NullReferenceException error)
-                            {
-                                meta["nativeExceptionType"] = error.GetType().FullName;
-                                unavailable.Add("infos[" + index + "]." + field);
-                                return null;
-                            }
-                        }
-                        if (info == null) { unavailable.Add("infos[" + index + "]"); rows.Add(null); continue; }
-                        rows.Add(new Dictionary<string, object?> { ["name"] = Field("name", () => info.Name),
-                            ["path"] = Field("path", () => info.Path?.FullName), ["libraryType"] = Field("libraryType", () => info.LibraryType.ToString()),
-                            ["isOpen"] = Field("isOpen", () => info.IsOpen) });
-                    }
-                    meta["records"] = rows; meta["actualCount"] = rows.Count; meta["truncated"] = false;
-                    meta["dataComplete"] = unavailable.Count == 0; meta["apiCallSuccess"] = true;
-                    if (unavailable.Count > 0) meta["unavailableFields"] = unavailable;
-                    return "Global library infos read (GetGlobalLibraryInfos); nothing opened.";
+                    const string reason = "TIA could not enumerate its known global libraries (GetGlobalLibraryInfos). "
+                        + "Use action=list to inspect open libraries.";
+                    meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
+                    meta["status"] = "ReadOrWriteFailed"; meta["nativeMessage"] = reason;
+                    return reason;
                 }
                 if (action == "openInfo") {
                     if (string.IsNullOrWhiteSpace(libraryName)) throw new ArgumentException("Exact library name from action=infos required.");

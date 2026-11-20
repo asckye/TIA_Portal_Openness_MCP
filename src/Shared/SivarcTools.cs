@@ -148,7 +148,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 masterCopyPath,createOption,confirmDelete,dryRun);
         [McpServerTool(Name="ListSivarcBlockDefinitions"),
                 Description("[L2][PLC-Software][READ] SiVArc data of one FB or FC (OB and other block classes are refused with UNSUPPORTED_CAPABILITY before " +
-                "SivarcDataProvider access; all block types are refused on V20 because definition access can crash TIA Portal V20; works on V21; " +
+                "SivarcDataProvider access; available from V21 because definition access on earlier releases can crash TIA Portal; " +
                 "blockPath Group/Subgroup/Name as GetSoftwareTree shows it, or the bare name for a root block) through the SivarcDataProvider block " +
                 "service: tag definitions " +
                 "(name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings " +
@@ -156,7 +156,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Read-only. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ListSivarcBlockDefinitionsV4(
             string softwarePath,
-            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. V20 refused (TIA V20 crash); works on V21.")]
+            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.")]
             string blockPath,
             [Description("includeBlockParameters: true also returns block parameters.")] bool includeBlockParameters=true)
             => LibraryToolContract.Run("ListSivarcBlockDefinitions", false, true, () =>
@@ -174,12 +174,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 "delete), textDefinition (Name / Expression / Comment plus texts {de-DE: text} per project language; create / update / delete), " +
                 "tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode " +
                 "None|CyclicContinuous|CyclicInOperation|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits " +
-                "need the SiVArc licence; never saves. All block-definition reads and writes are refused with UNSUPPORTED_CAPABILITY on V20 before " +
-                "native access because SivarcDataProvider definition access can crash TIA Portal V20; works on V21. " +
+                "need the SiVArc licence; never saves. Available from V21 because accessing SivarcDataProvider definitions " +
+                "on earlier releases can crash TIA Portal. " +
                 "Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageSivarcBlockDefinitionV4(
             string softwarePath,
-            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. V20 refused (TIA V20 crash); works on V21.")]
+            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.")]
             string blockPath,
             [Description("kind: tagDefinition | textDefinition | tagMemberSettings | commonParameters | blockParameter.")] string kind,
             string name="",
@@ -213,12 +213,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 "every instance of one code block in the compiled PLC call structure: Sivarc.GetExpressionResolver(codeBlock, hmiDeviceItem, " +
                 "libraryItem).Resolve(expression). devicePath / itemPath name the HMI device item, libraryItemKind masterCopy | libraryType with " +
                 "libraryItemPath (project library or open global library via libraryName). Rows: instanceName, callPath, result (paged by maxResults). " +
-                "Requires a compiled PLC and the SiVArc option; read-only. Refused with UNSUPPORTED_CAPABILITY on V20 before native access because " +
-                "the per-block SiVArc definition subsystem can crash TIA Portal V20; works on V21. " +
+                "Requires a compiled PLC and the SiVArc option; read-only. Available from V21 because accessing the SiVArc definition " +
+                "subsystem on earlier releases can crash TIA Portal. " +
                 "Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ResolveSivarcExpressionV4(
             string softwarePath,
-            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. V20 refused (TIA V20 crash); works on V21.")]
+            [Description("blockPath: Group/Subgroup/Name from GetSoftwareTree; root block: bare name. Available from V21. Definition access is disabled on V17 through V20.")]
             string blockPath,
             string[] devicePath,
             string[] itemPath,
@@ -282,11 +282,10 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="UpgradeSivarcDefinitions"),
                 Description("[L2][PLC-Software][WRITE] Upgrade the SiVArc definitions of one PLC (SivarcDefinitionsUpgrader.Upgrade on the PlcSoftware: " +
                 "legacy SIVARCCOND / SIVARCTEXT functions become tag / text definitions in the block plug-ins). Returns warningCount and the recursive " +
-                "feedback messages. Default preview; NotSupported without the SiVArc option; never saves. Both preview and execution are refused with " +
-                "UNSUPPORTED_CAPABILITY on V20 before native access because the per-block SiVArc definition subsystem can crash TIA Portal V20; " +
-                "works on V21. Current native policy; V4 native acceptance is pending.")]
+                "feedback messages. Default preview; NotSupported without the SiVArc option; never saves. Available from V21 because accessing " +
+                "the SiVArc definition subsystem on earlier releases can crash TIA Portal. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult UpgradeSivarcDefinitionsV4(
-            [Description("softwarePath: PLC path from GetProjectTree. V20 refused (TIA V20 crash); works on V21.")] string softwarePath,
+            [Description("softwarePath: PLC path from GetProjectTree. Available from V21. Definition access is disabled on V17 through V20.")] string softwarePath,
             bool dryRun=true)
             => LibraryToolContract.Run("UpgradeSivarcDefinitions", !dryRun, true, () =>
             {
@@ -299,8 +298,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][HMI][WRITE] Native SiVArc generation (typed Sivarc.Generate) for one exact HMI device plus optional " +
                 "additionalHmiDeviceNames (multi-device overload) and explicit PLC paths. generationOptions are official GenerationOptions flags joined with " +
                 "| (AllTags|FullGeneration; None = project settings). Default preview; can create/replace HMI objects according to rules. plcSoftwarePaths " +
-                "names the PLC software; the native call is tried with the software names and then with the owning device names (SiVArc only knows PLCs " +
-                "connected to the HMI device - the 2.7.39 real project without an HMI connection answered 'PLC device not found' for both). Returns the " +
+                "selects the PLCs. When partners are readable, each HMI needs a connection to at least one selected PLC CPU item. " +
+                "unverifiedHmiDeviceNames lists HMIs whose partners could not be verified. Generation uses the owning PLC device names. Returns the " +
                 "typed SivarcGenerationResult with recursive feedback messages. No automatic save/compile/download. Current native policy; V4 native " +
                 "acceptance is pending.")]
         public CallToolResult GenerateSivarcV4(

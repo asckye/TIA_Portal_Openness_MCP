@@ -332,29 +332,6 @@ namespace TiaMcp.Adapters.Native.Optional
                     + " not found (Sivarc.Generate needs the PLC device name).");
         }
 
-        private static void CheckGenerationConnections(Device device, string[] partners, string parameter)
-        {
-            var connected = new List<string>();
-            bool hasHmiSoftware = false;
-            foreach (var root in device.DeviceItems)
-            foreach (var (item, _) in PlcFoundationEngine.HardwareTraverseDeviceItems(root, root.Name))
-            {
-                var software = ((IEngineeringServiceProvider)item).GetService<Siemens.Engineering.HW.Features.SoftwareContainer>()?.Software;
-                // Classic exposes connection names only. An empty composition proves absence, a name cannot identify a PLC.
-                if (software is Siemens.Engineering.Hmi.HmiTarget classic)
-                {
-                    hasHmiSoftware = true;
-                    if (classic.Connections.Count > 0) return;
-                }
-                else if (software is Siemens.Engineering.HmiUnified.HmiSoftware unified)
-                {
-                    hasHmiSoftware = true;
-                    connected.AddRange(unified.Connections.Select(connection => connection.Partner));
-                }
-            }
-            OptionalNativeOperations.RequireGenerationConnections(device.Name, partners, connected, hasHmiSoftware, parameter);
-        }
-
         public HardwareAddressingReply GenerateSiVArc(string hmiDeviceName, string plcSoftwarePathsJson, string generationOptions, bool dryRun = true,
                 string additionalHmiDeviceNamesJson = "[]")
             => _session.RunHmiStepTool("GenerateSivarc", meta =>
@@ -384,9 +361,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 meta["generationOptions"] = options.ToString(); meta["nativeSignature"] = devices.Length > 1
                     ? "Sivarc.Generate(IEnumerable<string>, IEnumerable<string>, GenerationOptions)"
                     : "Sivarc.Generate(string, IEnumerable<string>, GenerationOptions)";
-                var partners = selectedPlcs.Select(plc => plc.Partner).ToArray();
-                for (int i = 0; i < targets.Length; i++)
-                    CheckGenerationConnections(targets[i], partners, i == 0 ? "hmiDeviceName" : "additionalHmiDeviceNames");
+                SivarcGeneration.CheckConnections(targets, selectedPlcs.Select(plc => plc.Partner).ToArray(), meta);
                 if (dryRun) return "SiVArc native generation preview; generation can create/update HMI objects according to rules and selected native options.";
                 meta["mayHaveChanged"] = true;
                 // Official SiVArc generation requires PLC device names and an existing HMI connection.

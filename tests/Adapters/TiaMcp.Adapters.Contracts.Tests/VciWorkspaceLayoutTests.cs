@@ -1,4 +1,5 @@
 using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Vci;
 using Xunit;
 
 namespace TiaMcp.Adapters.Contracts.Tests;
@@ -48,6 +49,31 @@ public sealed class VciWorkspaceLayoutTests
         Assert.Contains("'UngroupedDevices'", refusal.Message, StringComparison.Ordinal);
         Assert.Contains("'Line A'", refusal.Message, StringComparison.Ordinal);
         Assert.Contains("Nothing was mapped.", refusal.Message, StringComparison.Ordinal);
+    }
+
+    [Theory, InlineData(false, false), InlineData(true, false), InlineData(false, true)]
+    public void Format_refusals_descend_only_through_ordinary_containers(bool leafRefuses, bool ungroupedDevice)
+    {
+        var attempts = new VciExportAttempts();
+        var visited = new List<string>();
+        var mapped = new List<string>();
+        var diagnostics = new List<string>();
+        void Walk(string node, bool descendable)
+        {
+            visited.Add(node);
+            var formats = attempts.ReadFormats(() => descendable || leafRefuses ? throw new InvalidOperationException(node + " refused")
+                : new[] { "XML" }, descendable, descendable && ungroupedDevice, error => diagnostics.Add(error.Message));
+            if (formats == null) return;
+            if (formats.Count > 0) mapped.Add(node);
+            else if (descendable) Walk("FC_1", false);
+        }
+
+        Walk("Device", true);
+        Assert.Equal(ungroupedDevice ? new[] { "Device" } : new[] { "Device", "FC_1" }, visited);
+        Assert.Equal(leafRefuses || ungroupedDevice ? Array.Empty<string>() : new[] { "FC_1" }, mapped);
+        Assert.Equal(ungroupedDevice ? 0 : 1, attempts.UnsupportedContainers);
+        Assert.Equal(leafRefuses || ungroupedDevice ? 1 : 0, attempts.QueryRefusals);
+        Assert.Equal(leafRefuses ? new[] { "Device refused", "FC_1 refused" } : new[] { "Device refused" }, diagnostics);
     }
 
     [Fact]

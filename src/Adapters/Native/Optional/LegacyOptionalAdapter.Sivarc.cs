@@ -28,15 +28,19 @@ internal sealed partial class LegacyOptionalAdapter
         Device Device(string name) => _engine.PlcB5Session.ExactEngineeringHardware(new[] { name }, Array.Empty<string>()) as Device
             ?? throw new ArgumentException("Exact HMI device required.");
         var device = Device(_request.HmiDeviceName);
-        var extras = SivarcPolicy.ParseNames(_request.AdditionalHmiDeviceNamesJson, "additionalHmiDeviceNamesJson").Select(n => Device(n).Name).ToArray();
+        var targets = new List<Device> { device };
+        var extras = SivarcPolicy.ParseNames(_request.AdditionalHmiDeviceNamesJson, "additionalHmiDeviceNamesJson").Select(name =>
+        {
+            var extra = Device(name);
+            targets.Add(extra);
+            return extra.Name;
+        }).ToArray();
         var devices = new[] { device.Name }.Concat(extras).ToArray();
         if (devices.Distinct(StringComparer.Ordinal).Count() != devices.Length) throw new ArgumentException("HMI device names repeat.");
         var paths = ExactPaths(_request.PlcSoftwarePathsJson);
         var plcs = paths.Select(p => _engine.PlcB5Session.ExactPlcForEngineering(p, !_request.DryRun).Name).ToArray();
-        var plcDevices = paths.Select(path => OptionalNativeOperations.OwningDeviceName(
-            _engine.PlcB5Session.ResolveSoftwareContainerUncached(path)?.Parent,
-            value => (value as IEngineeringObject)?.Parent,
-            value => value is Device owner ? owner.Name : null)).ToArray();
+        var selectedPlcs = paths.Select(path => SivarcGeneration.Plc(_engine.PlcB5Session.ResolveSoftwareContainerUncached(path), path)).ToArray();
+        var plcDevices = selectedPlcs.Select(plc => plc.Device).ToArray();
         if (plcDevices.Distinct(StringComparer.Ordinal).Count() != plcDevices.Length)
             throw new InvalidOperationException("Native PLC device names repeat (two PLC paths inside the same device).");
         var service = Sivarc();
@@ -46,6 +50,7 @@ internal sealed partial class LegacyOptionalAdapter
         meta["plcSoftwareNames"] = new HmiArray(plcs);
         meta["generationOptions"] = options.ToString();
         meta["dryRun"] = _request.DryRun;
+        SivarcGeneration.CheckConnections(targets, selectedPlcs.Select(plc => plc.Partner).ToArray(), meta);
         if (_request.DryRun) return "SiVArc native generation preview; nothing changed.";
         meta["mayHaveChanged"] = true;
         var result = Call(service, "Generate", devices.Length == 1 ? (object)device.Name : devices, plcDevices, options)!;
@@ -171,7 +176,8 @@ internal sealed partial class LegacyOptionalAdapter
         var parts = Group.Parts(_request.Path);
         var root = Rules();
         var parentPath = string.Join("/", parts.Take(parts.Length - 1));
-        var collection = Get(Folder(root, parentPath), _request.Kind == "folder" ? "Folders" : "Tables");
+        string composition = _request.Kind == "folder" ? "Folders" : "Tables";
+        var collection = Get(Folder(root, parentPath), composition);
         var target = Find(collection, parts.Last());
         if (target != null) meta["before"] = Row(target);
         if (_request.Action == "read")
@@ -191,15 +197,20 @@ internal sealed partial class LegacyOptionalAdapter
         }
         else if (target != null) throw new InvalidOperationException("SiVArc container already exists.");
         if (!writing) return "SiVArc container preview; nothing changed.";
-        meta["mayHaveChanged"] = true;
         if (_request.Action == "delete")
         {
+            meta["mayHaveChanged"] = true;
             Call(target!, "Delete");
-            var fresh = Get(Folder(Rules(), parentPath), _request.Kind == "folder" ? "Folders" : "Tables");
+            var fresh = Get(Folder(Rules(), parentPath), composition);
             if (Find(fresh, parts.Last()) != null) throw new InvalidOperationException("SiVArc container remains after Delete.");
             meta["verifiedAbsent"] = true;
         }
-        else meta["created"] = Row(version == null ? Call(collection, "Create", parts.Last())! : Call(collection, "CreateFrom", version)!);
+        else
+        {
+            var created = OptionalNativeOperations.CreateLegacySivarcContainer(meta, () => Get(Folder(Rules(), parentPath), composition),
+                collection, parts.Last(), version);
+            meta["created"] = Row(created);
+        }
         return "SiVArc container operation completed; no generation or save.";
     }
 

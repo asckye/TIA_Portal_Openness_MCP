@@ -12,10 +12,10 @@ public sealed class OptionalEngineeringPortTests
     public static IEnumerable<object[]> RegistrationCases()
     {
         var firstApi = new Dictionary<string, int> {
-            ["GenerateSivarc"] = 15, ["GetSivarcRuleTree"] = 15, ["ListSivarcBlockDefinitions"] = 17,
-            ["ListSivarcRules"] = 15, ["ManageSivarcBlockDefinition"] = 17, ["ManageSivarcRule"] = 15,
+            ["GenerateSivarc"] = 15, ["GetSivarcRuleTree"] = 15, ["ListSivarcBlockDefinitions"] = 21,
+            ["ListSivarcRules"] = 15, ["ManageSivarcBlockDefinition"] = 21, ["ManageSivarcRule"] = 15,
             ["ManageSivarcRuleContainer"] = 18, ["ManageSivarcScreenLayout"] = 21, ["ManageSivarcTableRule"] = 18,
-            ["ResolveSivarcExpression"] = 20, ["UpgradeSivarcDefinitions"] = 20,
+            ["ResolveSivarcExpression"] = 21, ["UpgradeSivarcDefinitions"] = 21,
             ["ExportSafetyPrintout"] = 17, ["GetSafetyBlockSignatures"] = 17, ["ManagePlcSafety"] = 17,
             ["ManageSafetyGlobalSettings"] = 16, ["ListSafetyActivationTests"] = 21, ["ManageSafetyActivationTest"] = 21,
             ["ManageSafetyActivationTestGroup"] = 21, ["ManageSafetyFunction"] = 21, ["ManageSafetyFunctionCondition"] = 21,

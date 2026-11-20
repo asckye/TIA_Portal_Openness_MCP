@@ -2,7 +2,7 @@
 # Approved runtime policies and real-machine guards (U3, U4, U6, VMFIX).
 Adapters.Contracts/CandidateImportFiles.cs|release == "20" && !exists
 Adapters.Contracts/NativeCrossReferenceConsent.cs|release == "18" || release == "19" || release == "20";
-Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (release == "20")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (release is "17" or "18" or "19" or "20")
 Adapters/Native/Hardware/HardwareAml.cs|!dryRun && ReleaseKey != "21" ? HardwareEditAccess()
 Adapters/Native/Hardware/HardwareAml.cs|if (!dryRun && ReleaseKey == "21") HardwareWriteAdmission()
 Adapters/Native/Plc/PlcDocumentImportPolicy.cs|r.Release=="20" && !selected.Any

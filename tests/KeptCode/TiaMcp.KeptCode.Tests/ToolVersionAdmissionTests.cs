@@ -54,6 +54,9 @@ namespace TiaMcp.Engine.Tests
             foreach (var selector in new[] { ("ManagePlcDocuments", "objectKind"), ("ManageSivarcBlockDefinition", "kind"),
                 ("ManageDeviceServiceObjects", "family") })
                 Assert.NotEmpty(ToolVersionPolicy.CallProblem(release, selector.Item1, key => key == selector.Item2 ? "futureKind" : null));
+            foreach (var kind in new[] { "tagDefinition", "textDefinition" })
+                Assert.Equal(release == "21", ToolVersionPolicy.CallProblem(release, "ManageSivarcBlockDefinition",
+                    key => key == "kind" ? kind : null).Length == 0);
             foreach (var option in LibraryDeepLogic.ImportOptions)
                 Assert.Equal(PortedFamilies.Available(release, "ImportLibraryTypeDocuments"),
                     ToolVersionPolicy.CallProblem(release, "ImportLibraryTypeDocuments", key => key == "importOptions" ? option : null).Length == 0);
