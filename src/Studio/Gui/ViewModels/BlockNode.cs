@@ -37,6 +37,8 @@ public sealed class BlockNode : ObservableObject
     public ObservableCollection<BlockNode> Children { get; } = [];
 
     public bool IsFolder => Row is null;
+    private bool _isModified;
+    public bool IsModified { get => _isModified; internal set => Set(ref _isModified, value); }
 
     public bool IsExpanded
     {
@@ -83,6 +85,7 @@ public sealed class BlockNode : ObservableObject
         : Row!.Kind + (Row.Number == "-" ? string.Empty : " " + Row.Number);
 
     public string Language => Row?.Language ?? string.Empty;
+    public string Kind => Language.StartsWith("F-", System.StringComparison.OrdinalIgnoreCase) ? "F" : Row?.Kind ?? string.Empty;
     public string Author => Row?.Author ?? string.Empty;
     public string Status => Row?.Status ?? string.Empty;
 

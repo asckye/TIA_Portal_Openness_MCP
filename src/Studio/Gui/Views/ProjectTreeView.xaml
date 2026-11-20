@@ -1,0 +1,43 @@
+<UserControl x:Class="TiaOpenness.Gui.Views.ProjectTreeView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:vm="clr-namespace:TiaOpenness.Gui.ViewModels"
+  xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
+      <StackPanel VerticalAlignment="Center">
+        <TextBlock Text="{l:Tr Rail.Project}" Style="{StaticResource Primer.ContainerTitle}" AutomationProperties.HeadingLevel="Level2"/>
+        <TextBlock Text="{Binding Session.ProjectName}" ToolTip="{Binding Session.ProjectPath}" Style="{StaticResource Primer.Muted}"/>
+      </StackPanel>
+    </Border>
+    <ux:PrefillMarker x:Name="SelectionMarker" DockPanel.Dock="Top" Target="{Binding ElementName=Nodes}" Margin="8,0"/>
+    <TextBlock DockPanel.Dock="Top" Text="{l:Tr Sidebar.Empty}" Style="{StaticResource Primer.Muted}" Margin="12" TextWrapping="Wrap"
+      Visibility="{Binding Engineering.HasDevices,Converter={StaticResource NotBoolToVisibility}}"/>
+    <TreeView x:Name="Nodes" ItemsSource="{Binding Engineering.ProjectDevices}" AutomationProperties.Name="{l:Tr Access.Software}"
+      PreviewMouseLeftButtonDown="OnNodeClick" PreviewKeyDown="OnNodeKey" ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}"
+      Background="Transparent" BorderThickness="0">
+      <TreeView.Resources>
+        <HierarchicalDataTemplate DataType="{x:Type vm:DeviceNode}" ItemsSource="{Binding ProjectChildren}"
+          ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}">
+          <TextBlock Text="{Binding Label}" ToolTip="{Binding Detail}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold"/>
+        </HierarchicalDataTemplate>
+        <HierarchicalDataTemplate DataType="{x:Type vm:BlockNode}" ItemsSource="{Binding Children}"
+          ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}">
+          <StackPanel Orientation="Horizontal">
+            <CheckBox AutomationProperties.Name="{Binding Name}" IsChecked="{Binding IsSelected,Mode=TwoWay}" Style="{StaticResource Primer.Checkbox}"
+              MinWidth="24" MinHeight="24" IsEnabled="{Binding Tag.CanOperate,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Border Style="{StaticResource Primer.BlkBadge}" ToolTip="{Binding Detail}" Margin="0,0,4,0"
+              Visibility="{Binding IsFolder,Converter={StaticResource NotBoolToVisibility}}">
+              <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.BlkBadgeText}"/>
+            </Border>
+            <TextBlock Text="●" Style="{StaticResource Primer.Muted}" Margin="4,0,0,0" AutomationProperties.Name="{l:Tr Project.Modified}"
+              ToolTip="{l:Tr Project.Modified}" Visibility="{Binding IsModified,Converter={StaticResource BoolToVisibility}}"/>
+            <TextBlock Text="{Binding Name}" ToolTip="{Binding Name}" Style="{StaticResource Primer.Text}"/>
+          </StackPanel>
+        </HierarchicalDataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProjectLink}">
+          <TextBlock Style="{StaticResource Primer.ProjectLinkLabel}"/>
+        </DataTemplate>
+      </TreeView.Resources>
+    </TreeView>
+  </DockPanel>
+</UserControl>

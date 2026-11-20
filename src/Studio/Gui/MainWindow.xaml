@@ -160,25 +160,37 @@
             </Grid>
             <views:AuditLogView x:Name="AuditContent" Visibility="Collapsed"/>
             <views:EnvironmentView x:Name="EnvironmentContent" Visibility="Collapsed"/>
-            <Grid x:Name="EngineeringPage">
+            <Grid x:Name="EngineeringPage" Initialized="OnProjectPageInitialized">
               <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
               <ContentControl x:Name="ProjectTree" Focusable="True" KeyboardNavigation.IsTabStop="False" AutomationProperties.Name="{l:Tr Rail.Project}"
-                AutomationProperties.HelpText="{Binding Text,ElementName=SessionStatus}" Style="{StaticResource Primer.Workbench.ProjectTree}"/>
-              <Grid x:Name="ProjectOverview" Grid.Column="1" ux:ResponsiveLayout.Enabled="True">
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                  <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*"/>
-                  <ColumnDefinition Width="16"/>
-                  <ColumnDefinition Width="300"/>
-                </Grid.ColumnDefinitions>
-                <views:ProjectOperationsView x:Name="OperationsContent" Panel.ZIndex="1" Tag="{Binding Tag,ElementName=Root}"/>
-                <views:BlocksView x:Name="BlocksContent" Grid.Row="1" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
-                <views:EngineeringSideView x:Name="EngineeringSideContent" Grid.RowSpan="2" Grid.Column="2" Tag="{Binding Tag,ElementName=Root}"/>
+                AutomationProperties.HelpText="{Binding Text,ElementName=SessionStatus}" Style="{StaticResource Primer.Workbench.ProjectTree}">
+                <views:ProjectTreeView x:Name="ProjectExplorer" Tag="{Binding Tag,ElementName=Root}"/>
+              </ContentControl>
+              <Grid x:Name="ProjectOverview" Grid.Column="1">
+                <ScrollViewer x:Name="ProjectScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled">
+                  <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <views:ProjectOperationsView x:Name="OperationsContent" Panel.ZIndex="1" Tag="{Binding Tag,ElementName=Root}"/>
+                    <Grid x:Name="DocumentHost" Grid.Row="1">
+                      <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                      <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                      <Grid x:Name="BlockDocument">
+                        <views:BlocksView x:Name="BlocksContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
+                      </Grid>
+                      <Grid x:Name="CompileDocument" Grid.Column="1" Width="300" Margin="16,0,0,0" Visibility="Collapsed">
+                        <views:EngineeringSideView x:Name="EngineeringSideContent" Tag="{Binding Tag,ElementName=Root}"/>
+                      </Grid>
+                      <ContentControl x:Name="PlcTagsContent" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                        Visibility="Collapsed"><views:PlcTagsView/></ContentControl>
+                    </Grid>
+                  </Grid>
+                </ScrollViewer>
+                <ToggleButton x:Name="FoldProjectContext" Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
+                  Margin="0,-24,0,0" Visibility="Collapsed" Style="{StaticResource Primer.ProjectContextToggle}" Click="OnProjectContextClick"
+                  AutomationProperties.Name="{Binding ToolTip,RelativeSource={RelativeSource Self}}">
+                  <Path Style="{StaticResource Primer.ProjectContextIcon}"/>
+                </ToggleButton>
               </Grid>
-              <ContentControl x:Name="PlcTagsContent" Grid.Column="1" Visibility="Collapsed"/>
               <views:VersionControlView x:Name="VersionControlContent" Grid.Column="1" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
             </Grid>
             <views:LogView x:Name="LogContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>

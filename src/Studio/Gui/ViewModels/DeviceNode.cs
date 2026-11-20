@@ -6,6 +6,8 @@ using TiaOpenness.Gui.Common;
 
 namespace TiaOpenness.Gui.ViewModels;
 
+public sealed record ProjectLink(DeviceInfo Device, bool IsVersionControl);
+
 /// <summary>
 /// One row of the device tree: the project at the root, the device groups the engineer filed
 /// devices into, and the devices themselves — the shape TIA's own project tree has.
@@ -14,13 +16,20 @@ namespace TiaOpenness.Gui.ViewModels;
 /// </summary>
 public sealed class DeviceNode : ObservableObject
 {
-    private bool _isExpanded = true;
+    private bool _isExpanded;
+    private readonly ObservableCollection<object> _plcChildren = [];
 
     private DeviceNode(string name, DeviceInfo? device, bool isRoot = false)
     {
         Name = name;
         Device = device;
         IsRoot = isRoot;
+        _isExpanded = device is null;
+        if (device?.Category == "Plc")
+        {
+            _plcChildren.Add(new ProjectLink(device, false));
+            _plcChildren.Add(new ProjectLink(device, true));
+        }
     }
 
     public string Name { get; }
@@ -31,6 +40,17 @@ public sealed class DeviceNode : ObservableObject
     public bool IsRoot { get; }
 
     public ObservableCollection<DeviceNode> Children { get; } = [];
+
+    public System.Collections.IEnumerable ProjectChildren => Category == "Plc" ? _plcChildren : Children;
+
+    internal void ShowBlocks(IReadOnlyList<BlockNode> blocks)
+    {
+        // Keep the PLC and its two navigation links in place as block groups change.
+        while (_plcChildren.Count > 0 && _plcChildren[0] is BlockNode) _plcChildren.RemoveAt(0);
+        for (int i = 0; i < blocks.Count; i++) _plcChildren.Insert(i, blocks[i]);
+    }
+
+    internal IEnumerable<DeviceNode> DeviceNodes() => Device != null ? [this] : Children.SelectMany(child => child.DeviceNodes());
 
     public bool IsFolder => Device is null;
 

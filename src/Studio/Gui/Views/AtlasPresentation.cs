@@ -42,7 +42,8 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
     public bool Done => _state == "Done";
     public bool Failed => _state == "Failed";
     public bool CanGenerate => _model.Session.IsConnected && _model.Engineering.SelectedDevice != null && !_model.Busy && !Running;
-    public bool CanViewBlock => CanGenerate && _model.Engineering.Blocks.Any(b => b.Selected);
+    private BlockRow? RenderBlock => _model.Engineering.FocusedBlock ?? _model.Engineering.Blocks.FirstOrDefault(b => b.Selected);
+    public bool CanViewBlock => CanGenerate && RenderBlock != null;
     public string Label => Running ? Loc.Current.T("Pages.AtlasRunning", _completed, _total)
         : Done ? Loc.Current["Pages.AtlasDone"] : Loc.Current["Pages.AtlasFailed"];
     public string Detail => _detail;
@@ -56,7 +57,7 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
         using var generation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
         _generation = generation;
         var token = generation.Token;
-        var blocks = singleBlock ? _model.Engineering.Blocks.Where(b => b.Selected).Take(1) : _model.Engineering.Blocks;
+        var blocks = singleBlock ? new[] { RenderBlock! }.AsEnumerable() : _model.Engineering.Blocks;
         var request = new AtlasRequest(_model.Session.ProjectPath, _model.Engineering.SelectedDevice!.Id,
             blocks.Select(b => b.Path).ToArray(), singleBlock);
         _state = "Running";

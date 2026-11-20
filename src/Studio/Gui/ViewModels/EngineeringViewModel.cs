@@ -14,6 +14,8 @@ using TiaOpenness.Gui.Services;
 
 namespace TiaOpenness.Gui.ViewModels;
 
+public enum ProjectDocument { Render, Compile, Tags }
+
 /// <summary>Owns devices, block selection and engineering operations.</summary>
 public sealed class EngineeringViewModel : ObservableObject, IDisposable
 {
@@ -26,6 +28,49 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     private DeviceInfo? _selectedDevice;
     private bool _sourceFormat;
     private bool _suppressDeviceLoad;
+    private bool _loadDeviceWhenIdle;
+    private Task _blockLoad = Task.CompletedTask;
+    private DeviceNode? _activeNode;
+    private int _readGeneration;
+    private int _tagGeneration;
+    private IReadOnlyList<TagInfo> _plcTags = [];
+    private LocalizedText _tagStatus = LocalizedText.Empty;
+    private string _tagTable = "";
+    public string TagTable { get => _tagTable; set => Set(ref _tagTable, value); }
+    private ProjectDocument _document;
+    public ProjectDocument Document { get => _document; set => Set(ref _document, value); }
+    private BlockRow? _focusedBlock;
+    public BlockRow? FocusedBlock { get => _focusedBlock; set => Set(ref _focusedBlock, value); }
+    public IReadOnlyList<TagInfo> PlcTags { get => _plcTags; private set => Set(ref _plcTags, value); }
+    public string TagStatus => _tagStatus.Resolve();
+    public bool CanReadTags => !_activity.Busy && SelectedDevice?.Category == "Plc";
+
+    public async Task ReadTagsAsync()
+    {
+        if (SelectedDevice is not { Category: "Plc" } device) return;
+        int generation = _tagGeneration;
+        await _blockLoad;
+        if (generation != _tagGeneration || !CanReadTags) return;
+        await _activity.Guarded("Project.LoadingTags", async () =>
+        {
+            PlcTags = [];
+            Set(ref _tagStatus, LocalizedText.Working("Project.LoadingTags"), nameof(TagStatus));
+            try
+            {
+                var tags = await _client.ListPlcTagsAsync(device.Id, TagTable, includeUnits: true);
+                if (generation != _tagGeneration) return;
+                PlcTags = tags;
+                Set(ref _tagStatus, tags.Count == 0 ? LocalizedText.Key("Project.EmptyTags") : LocalizedText.Empty, nameof(TagStatus));
+                _activity.SetStatus("Project.TagsRead", tags.Count);
+            }
+            catch (Exception error)
+            {
+                if (generation != _tagGeneration) return;
+                Set(ref _tagStatus, LocalizedText.Literal(error.Message), nameof(TagStatus));
+                throw;
+            }
+        });
+    }
 
     public EngineeringViewModel(IProjectClient client, IDialogService dialogs, WorkbenchActivity activity)
     {
@@ -39,6 +84,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         Blocks.CollectionChanged += OnBlocksChanged;
         Loc.Current.LanguageChanged += OnLanguageChanged;
         _activity.PropertyChanged += OnActivityChanged;
+        ((INotifyCollectionChanged)_activity.Entries).CollectionChanged += OnResultEntry;
 
         Refresh = new AsyncCommand(RefreshBlocksAsync, () => !_activity.Busy && SelectedDevice is not null);
         Export = Command(ExportAsync, () => !_activity.Busy && SelectedDevice is not null && OutputDirectory.Length > 0);
@@ -59,6 +105,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
     /// <summary>The devices as TIA shows them: the project, its device groups, then the devices.</summary>
     public ObservableCollection<DeviceNode> DeviceTree { get; } = [];
+    public IEnumerable<DeviceNode> ProjectDevices => DeviceTree.SelectMany(root => root.Children);
 
     public AsyncCommand Refresh { get; }
     private AsyncCommand Command(Func<Task> execute, Func<bool> enabled) => _client is McpProjectClient
@@ -110,13 +157,33 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         set
         {
             if (!Set(ref _selectedDevice, value)) return;
+            Raise(nameof(CanReadTags));
+            _readGeneration++;
+            _tagGeneration++;
+            Document = ProjectDocument.Render;
+            FocusedBlock = null;
+            PlcTags = [];
+            Set(ref _tagStatus, LocalizedText.Empty, nameof(TagStatus));
+            TagTable = "";
+            LoadedDeviceId = null;
+            foreach (var row in Blocks) row.PropertyChanged -= OnRowChanged;
+            Blocks.Clear();
+            BlockTree.Clear();
+            if (_activeNode != null)
+            {
+                _activeNode.IsExpanded = false;
+                _activeNode.ShowBlocks([]);
+            }
+            _activeNode = DeviceTree.SelectMany(root => root.DeviceNodes()).FirstOrDefault(node => node.Device == value);
+            if (_activeNode != null) _activeNode.IsExpanded = true;
             foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save })
             {
                 command.RaiseCanExecuteChanged();
             }
             // A device picked in the list loads its blocks. Suppressed while the app selects one
             // itself, where the caller awaits the load instead of racing this fire-and-forget one.
-            if (value is not null && !_suppressDeviceLoad) _ = RefreshBlocksAsync();
+            _loadDeviceWhenIdle = value is not null && !_suppressDeviceLoad && _activity.Busy;
+            if (value is not null && !_suppressDeviceLoad && !_loadDeviceWhenIdle) _ = RefreshBlocksAsync();
         }
     }
 
@@ -145,6 +212,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
         DeviceTree.Clear();
         foreach (var node in DeviceNode.Build(devices, projectName)) DeviceTree.Add(node);
+        Raise(nameof(ProjectDevices));
 
         _activity.AppendLocalized("Log.DeviceCount", devices.Count);
 
@@ -165,15 +233,25 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         if (SelectedDevice is not null) await RefreshBlocksAsync();
     }
 
-    private async Task RefreshBlocksAsync()
+    private Task RefreshBlocksAsync()
+    {
+        _loadDeviceWhenIdle = false;
+        return _blockLoad = ReadBlocksAsync();
+    }
+
+    private async Task ReadBlocksAsync()
     {
         if (SelectedDevice is null) return;
 
         var deviceId = SelectedDevice.Id;
+        int request = ++_readGeneration;
         LoadedDeviceId = null;
         await _activity.Guarded("Status.ReadingBlocks", async () =>
         {
             var blocks = await _client.ListBlocksAsync(deviceId);
+            if (request != _readGeneration) return;
+            string? focusedPath = FocusedBlock?.Path;
+            foreach (var row in Blocks) row.PropertyChanged -= OnRowChanged;
             Blocks.Clear();
             foreach (var block in blocks)
             {
@@ -181,6 +259,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
                 row.PropertyChanged += OnRowChanged;
                 Blocks.Add(row);
             }
+            FocusedBlock = focusedPath == null ? null : Blocks.FirstOrDefault(row => row.Path == focusedPath);
             LoadedDeviceId = deviceId;
             RebuildTree();
             _activity.SetStatus("Status.BlocksIn", blocks.Count, deviceId);
@@ -272,7 +351,6 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     {
         var report = await _client.InspectAsync(SelectedDevice!.Id,
             string.IsNullOrWhiteSpace(NamePattern) ? null : NamePattern);
-
         _activity.AppendLocalized("Log.InspectionHeader", report.DeviceId);
         foreach (var group in report.Findings.GroupBy(f => f.RuleId).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
@@ -313,6 +391,7 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
     {
         BlockTree.Clear();
         foreach (var node in BlockNode.Build(BlocksView.Cast<BlockRow>())) BlockTree.Add(node);
+        _activeNode?.ShowBlocks(BlockTree);
         Raise(nameof(HasBlocks));
     }
 
@@ -347,10 +426,12 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
         Blocks.Clear();
         BlockTree.Clear();
         DeviceTree.Clear();
+        Raise(nameof(ProjectDevices));
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
+        Raise(nameof(TagStatus));
         Raise(nameof(SelectionSummary));
         foreach (var row in Blocks) row.RefreshLocalizedText();
         // The tree carries TIA's category names, which are captured when it is built.
@@ -359,9 +440,24 @@ public sealed class EngineeringViewModel : ObservableObject, IDisposable
 
     private void OnActivityChanged(object? sender, PropertyChangedEventArgs args)
     {
-        if (args.PropertyName == nameof(WorkbenchActivity.Busy))
-            foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save }) command.RaiseCanExecuteChanged();
+        if (args.PropertyName != nameof(WorkbenchActivity.Busy)) return;
+        if (!_activity.Busy && _loadDeviceWhenIdle)
+        {
+            _loadDeviceWhenIdle = false;
+            _ = RefreshBlocksAsync();
+        }
+        Raise(nameof(CanReadTags));
+        foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save }) command.RaiseCanExecuteChanged();
+    }
+    private void OnResultEntry(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems?.OfType<WorkbenchActivity.Entry>().Any(entry => entry.Key is "Status.CompileResult" or "Status.InspectResult") == true)
+            Document = ProjectDocument.Compile;
     }
     public void Dispose()
-    { Loc.Current.LanguageChanged -= OnLanguageChanged; _activity.PropertyChanged -= OnActivityChanged; }
+    {
+        Loc.Current.LanguageChanged -= OnLanguageChanged;
+        _activity.PropertyChanged -= OnActivityChanged;
+        ((INotifyCollectionChanged)_activity.Entries).CollectionChanged -= OnResultEntry;
+    }
 }

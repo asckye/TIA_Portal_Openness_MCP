@@ -4,6 +4,18 @@ internal static partial class Strings
 {
     internal static (string Key, string En, string Zh)[] ProjectPagesCatalogue =>
     [
+        ("Project.OpenConnect", "Open / connect", "打开 / 连接"),
+        ("Project.Render", "Render", "渲染"),
+        ("Project.Tags", "PLC tags", "PLC 变量"),
+        ("Project.LoadingTags", "Reading PLC tags", "正在读取 PLC 变量"),
+        ("Project.TagsRead", "PLC tags read: {0}", "已读取 {0} 个 PLC 变量"),
+        ("Project.EmptyTags", "No tags in the selected tables.", "所选变量表中没有变量。"),
+        ("Project.Table", "Table", "变量表"),
+        ("Project.TableHint", "Table path (blank for inventory)", "变量表路径（留空使用清单）"),
+        ("Project.TableScope", "Enter a group-relative table path. Leave it blank for all tables in V16–V21 or root tables in V14 SP1 and V15.1.",
+            "输入变量表的分组路径。留空时，V16–V21 显示所有变量表，V14 SP1 和 V15.1 显示根目录下的变量表。"),
+        ("Project.Address", "Logical address", "逻辑地址"),
+        ("Project.Modified", "Differs from workspace", "与工作区不同"),
         ("Pages.ConnectDescription", "Connect to a running TIA Portal, or enter an .ap project path and connect.", "连接到运行中的TIA Portal，或填写 .ap 项目路径后连接。"),
         ("Pages.ConnectHint", "After connecting: blocks, compile, import/export, inspect, version control.", "连接后可用：程序块、编译、导入导出、检查、版本控制。"),
         ("Pages.Options", "Options…", "选项…"),

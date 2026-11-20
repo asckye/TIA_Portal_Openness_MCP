@@ -34,6 +34,21 @@ public partial class ProjectOperationsView : UserControl
     internal void SetControlPrefillMarker(bool pending) => Options.SetControlPrefillMarker(pending);
     internal void HideOptions() => Options.Hide();
     private void OnProjectOptions(object sender, RoutedEventArgs e) => ShowProjectOptions();
+    private void OnTransfer(object sender, RoutedEventArgs e) => ShowTransferOptions();
+    private void OnInspect(object sender, RoutedEventArgs e) => ShowControlInspectionRules();
+    private void OnRender(object sender, RoutedEventArgs e) => Model.Engineering.Document = ProjectDocument.Render;
+    private void OnCompileResults(object sender, RoutedEventArgs e) => Model.Engineering.Document = ProjectDocument.Compile;
+    private async void OnTags(object sender, RoutedEventArgs e)
+    {
+        Model.Engineering.Document = ProjectDocument.Tags;
+        await Model.Engineering.ReadTagsAsync();
+    }
+    private async void OnRefresh(object sender, RoutedEventArgs e)
+    {
+        var engineering = Model.Engineering;
+        if (engineering.Document == ProjectDocument.Tags) await engineering.ReadTagsAsync();
+        else if (engineering.Refresh.CanExecute(null)) engineering.Refresh.Execute(null);
+    }
     private void OnBrowseProject(object sender, RoutedEventArgs e) => Model.Session.BrowseProject();
     private void OnConnect(object sender, RoutedEventArgs e)
     {

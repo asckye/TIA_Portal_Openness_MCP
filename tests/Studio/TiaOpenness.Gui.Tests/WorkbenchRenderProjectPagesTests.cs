@@ -57,6 +57,28 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                                 WorkbenchRenderTests.SaveRender(host, Path.Combine(output, "UI-2d", file), size.Width, size.Height);
                             }
                         }
+                        window.Navigate("Engineering");
+                        using var projectTrace = new BindingPathTests.BindingTrace();
+                        foreach (string name in new[] { "RenderTab", "TagsTab", "CompileTab" })
+                        {
+                            var tab = (RadioButton)ProjectPageTestSupport.Find(window, name);
+                            UnifiedDesktopTests.ClickControl(tab);
+                            host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
+                            Assert.True(tab.IsChecked);
+                            if (name == "TagsTab")
+                            {
+                                Assert.Equal(Visibility.Visible, window.PlcTagsContent.Visibility);
+                                Assert.Single(((PlcTagsView)window.PlcTagsContent.Content).TagRows.Items);
+                            }
+                            if (name == "CompileTab")
+                                Assert.InRange(window.EngineeringSideContent.TranslatePoint(new Point(), host).Y, 0, size.Height - 44);
+                            if (output != null)
+                            {
+                                string file = $"{name}-{size.Width}x{size.Height}-{(language == AppLanguage.Chinese ? "zh" : "en")}-{theme}.png";
+                                WorkbenchRenderTests.SaveRender(host, Path.Combine(output, "UI-2d", file), size.Width, size.Height);
+                            }
+                        }
+                        Assert.True(string.IsNullOrWhiteSpace(projectTrace.Text), projectTrace.Text);
                     }
                 }
                 finally { window.Close(); ThemeManager.Current.HighContrastOverride = contrast; ThemeManager.Current.Theme = previous; }
@@ -143,8 +165,19 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                     WorkbenchRenderTests.SaveRender(host, Path.Combine(output, state.Item1 + ".png"));
                     if (state.Item2 is "Engineering" or "Blocks")
                     {
-                        Assert.Equal(300, ((FrameworkElement)window.FindName("EngineeringSideContent")).ActualWidth);
                         var side = (EngineeringSideView)window.FindName("EngineeringSideContent");
+                        var tab = (RadioButton)ProjectPageTestSupport.Find(window, "CompileTab");
+                        if (state.Item3) UnifiedDesktopTests.ClickControl(tab);
+                        else
+                        {
+                            Assert.Equal(Visibility.Collapsed, ((FrameworkElement)side.Parent).Visibility);
+                            Assert.Equal(0, side.ActualWidth);
+                            // Also measure the results document against the original geometry with an empty project.
+                            model.Engineering.Document = ViewModels.ProjectDocument.Compile;
+                        }
+                        host.UpdateLayout();
+                        Assert.True(tab.IsChecked);
+                        Assert.Equal(300, ((FrameworkElement)window.FindName("EngineeringSideContent")).ActualWidth);
                         Assert.Null(side.FindName("EnvironmentCard"));
                         Assert.Null(side.FindName("BlocksLogCard"));
                         Assert.True(((Button)side.FindName("CompileButton")).IsDefault);

@@ -38,9 +38,10 @@ internal static class ProjectPageTestSupport
         for (int i = 0; i < names.Length; i++) client.Blocks.Add(new BlockInfo
         {
             Name = names[i], Kind = kinds[i], Number = numbers[i], ProgrammingLanguage = languages[i],
-            Path = "Program blocks/" + (groups[i].Length > 0 ? groups[i] + "/" : "") + names[i], IsConsistent = i != 4,
+            Path = "Program blocks/" + (groups[i].Length > 0 ? groups[i] + "/" : "") + names[i], FolderPath = groups[i], IsConsistent = i != 4,
         });
         client.Workspaces.Clear();
+        client.Tags.Add(new() { Name = "Ready", DataType = "Bool", LogicalAddress = "%I0.0", TableName = "root/tag-tables/Inputs" });
         if (workspace) client.Workspaces.Add(new WorkspaceInfo { Name = "Line04_Workspace", RootPath = @"D:\Workspaces\Line04", MappedObjectCount = 9 });
         foreach (int i in new[] { 1, 4, 5, 3, 0, 6, 2, 7, 8 }) client.StatusItems.Add(new MappedObjectInfo
         {

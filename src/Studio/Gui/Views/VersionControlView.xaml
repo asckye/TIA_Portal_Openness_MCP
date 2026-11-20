@@ -1,10 +1,19 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.VersionControlView" x:Name="PageRoot">
   <Grid>
     <DockPanel>
-      <Border DockPanel.Dock="Top" Style="{StaticResource Primer.PageHead}">
-        <StackPanel>
-          <TextBlock Text="{l:Tr Vc.Subtitle}" Style="{StaticResource Primer.PageSubtitle}" ToolTip="{l:Tr Vc.Subtitle}"/>
-        </StackPanel>
+      <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
+        <DockPanel VerticalAlignment="Center">
+          <Button AutomationProperties.Name="{l:Tr Pages.RunSync}" Content="{l:Tr Pages.RunSync}" Click="OnRun" Style="{StaticResource Primer.SyncRun}"
+            DockPanel.Dock="Right" MinHeight="28" Padding="8,0"/>
+          <Button AutomationProperties.Name="{l:Tr Pages.PreviewSync}" Content="{l:Tr Pages.PreviewSync}" IsDefault="True" Click="OnPreview"
+            Margin="0,0,8,0" Style="{StaticResource Primer.SyncPreview}" DockPanel.Dock="Right" MinHeight="28" Padding="8,0"/>
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Button Content="{l:Tr Rail.Project}" AutomationProperties.Name="{l:Tr Rail.Project}" Command="{x:Static ux:WorkbenchCommands.Navigate}"
+              CommandParameter="Blocks" Style="{StaticResource Primer.IdeToolButton}"/>
+            <TextBlock Text="{l:Tr Shell.VersionControl}" ToolTip="{l:Tr Vc.Subtitle}" Style="{StaticResource Primer.ContainerTitle}" Margin="12,0,0,0"
+              AutomationProperties.HeadingLevel="Level2" VerticalAlignment="Center"/>
+          </StackPanel>
+        </DockPanel>
       </Border>
       <Grid ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
         <Grid.ColumnDefinitions>
@@ -169,10 +178,6 @@
                   </Grid>
                 </Border>
                 <DockPanel Grid.Row="3" Margin="0,6,0,0">
-                  <Button AutomationProperties.Name="{l:Tr Pages.RunSync}" Content="{l:Tr Pages.RunSync}" Click="OnRun" Style="{StaticResource Primer.SyncRun}"
-                    DockPanel.Dock="Right" Height="32" Padding="8,0"/>
-                  <Button AutomationProperties.Name="{l:Tr Pages.PreviewSync}" Content="{l:Tr Pages.PreviewSync}" IsDefault="True" Click="OnPreview"
-                    Margin="0,0,8,0" Style="{StaticResource Primer.SyncPreview}" DockPanel.Dock="Right" Height="32" Padding="8,0"/>
                   <TextBlock Text="{Binding ElementName=PageRoot, Path=Tag.SyncSummary}" ToolTip="{Binding Tag.SyncSummary,ElementName=PageRoot}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="NoWrap"/>
                 </DockPanel>
               </Grid>

@@ -19,7 +19,11 @@ public sealed partial class BlocksView : UserControl, IDisposable
     public BlocksView()
     {
         InitializeComponent();
-        BlocksList.SelectionChanged += (_, _) => ControlSelectionChanged?.Invoke(this, EventArgs.Empty);
+        BlocksList.SelectionChanged += (_, _) =>
+        {
+            if (BlocksList.SelectedItem is BlockRow row) BlocksList.ScrollIntoView(row);
+            ControlSelectionChanged?.Invoke(this, EventArgs.Empty);
+        };
         BlocksList.AddHandler(MouseLeftButtonUpEvent, new MouseButtonEventHandler(OnBlockRowClick));
         BlocksList.PreviewMouseLeftButtonDown += (_, e) =>
             _pressedRow = ItemsControl.ContainerFromElement(BlocksList, e.OriginalSource as DependencyObject) as ListBoxItem;
@@ -44,11 +48,14 @@ public sealed partial class BlocksView : UserControl, IDisposable
     internal BlockRow? ControlFocusedBlock => BlocksList.SelectedItem as BlockRow;
     internal void LocateControlBlock(BlockRow row)
     {
+        Model.Engineering.Document = ProjectDocument.Render;
         BlocksList.SelectedItem = row;
         BlocksList.ScrollIntoView(row);
     }
     internal void SetControlPrefillMarker(bool filter, bool selection)
     {
+        if ((filter && FilterMarker.Visibility != Visibility.Visible) || (selection && SelectionMarker.Visibility != Visibility.Visible))
+            Model.Engineering.Document = ProjectDocument.Render;
         FilterMarker.SetPending(filter);
         SelectionMarker.SetPending(selection);
     }
@@ -62,11 +69,6 @@ public sealed partial class BlocksView : UserControl, IDisposable
     // The import/export options open in the 项目 page's options pane, which covers the whole page.
     internal event EventHandler? TransferOptionsRequested;
     private void OnExportOptions(object sender, RoutedEventArgs e) => TransferOptionsRequested?.Invoke(this, EventArgs.Empty);
-    private void OnExport(object sender, RoutedEventArgs e)
-    {
-        if (Model.Engineering.OutputDirectory.Length == 0) TransferOptionsRequested?.Invoke(this, EventArgs.Empty);
-        else if (Model.Engineering.Export.CanExecute(null)) Model.Engineering.Export.Execute(null);
-    }
     private void OnSelectAll(object sender, RoutedEventArgs e) => Model.Engineering.SelectAll(true);
     private void OnSelectNone(object sender, RoutedEventArgs e) => Model.Engineering.SelectAll(false);
     private void OnBlockRowClick(object sender, MouseButtonEventArgs e)

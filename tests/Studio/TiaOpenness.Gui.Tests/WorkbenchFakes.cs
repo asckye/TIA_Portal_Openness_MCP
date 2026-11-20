@@ -87,7 +87,19 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
     public Task<ProjectInfo> OpenProjectAsync(string path) => Reply("OpenProject", new ProjectInfo { Name = "Line", Path = path }, path);
     public Task SaveProjectAsync() { Record("Save"); return Task.CompletedTask; }
     public Task<List<DeviceInfo>> ListDevicesAsync() => Reply("Devices", Devices);
-    public Task<List<BlockInfo>> ListBlocksAsync(string deviceId) => Reply("Blocks", Blocks, deviceId);
+    public Func<string, Task<List<BlockInfo>>>? BlockHandler { get; set; }
+    public Task<List<BlockInfo>> ListBlocksAsync(string deviceId)
+    {
+        Record("Blocks", deviceId);
+        return BlockHandler?.Invoke(deviceId) ?? Task.FromResult(Blocks);
+    }
+    public List<TagInfo> Tags { get; } = [];
+    public Func<string, Task<List<TagInfo>>>? TagHandler { get; set; }
+    public Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits)
+    {
+        Record("Tags", plc, table, includeUnits);
+        return TagHandler?.Invoke(plc) ?? Task.FromResult(Tags);
+    }
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format)
         => Reply("Export", ExportHandler?.Invoke(deviceId, blocks.ToArray(), outputDirectory, format)
             ?? new ExportResult { OutputDirectory = outputDirectory }, deviceId, blocks.ToArray(), outputDirectory, format);

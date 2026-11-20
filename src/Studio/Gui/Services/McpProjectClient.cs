@@ -168,6 +168,33 @@ public sealed class McpProjectClient : IProjectClient
             ProgrammingLanguage = (string?)data["programmingLanguage"] ?? "", HeaderAuthor = Attribute("HeaderAuthor") ?? "" };
     }
     private static string Escape(string name) => Uri.EscapeDataString(name);
+    public async Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits)
+    {
+        bool supportsUnits = Supports("ListPlcTags", "includeUnits");
+        // Older releases require a table for each declaration read. Their table inventory returns root names.
+        var tables = new List<string> { table };
+        if (table.Length == 0 && !(supportsUnits && includeUnits))
+        {
+            var inventory = await Read("ListPlcTagTables", new() { ["softwarePath"] = plc });
+            tables = inventory["items"]!.AsArray()
+                .Select(item => TiaMcp.Adapters.Contracts.ObjectPathEncoding.EncodeSegment(item!.GetValue<string>())).ToList();
+        }
+        var tags = new List<TagInfo>();
+        foreach (string path in tables)
+        {
+            var args = new Dictionary<string, object?> { ["plc"] = plc, ["table"] = path };
+            if (supportsUnits) args["includeUnits"] = includeUnits;
+            var data = await Read("ListPlcTags", args);
+            foreach (var item in data["items"]!.AsArray())
+            {
+                string identity = item!["path"]!.GetValue<string>();
+                tags.Add(new() { Name = item["name"]!.GetValue<string>(), DataType = item["dataType"]!.GetValue<string>(),
+                    LogicalAddress = item["value"]!.GetValue<string>(), TableName = identity[..identity.LastIndexOf('/')] });
+            }
+        }
+        return tags;
+    }
+
     public async Task<List<BlockInfo>> ListBlocksAsync(string deviceId)
     {
         var result = new List<BlockInfo>();

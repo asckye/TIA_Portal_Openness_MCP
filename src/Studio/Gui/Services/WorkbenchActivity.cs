@@ -28,6 +28,7 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
     private LocalizedText _status = LocalizedText.Key("Status.NotConnected");
     private string _log = string.Empty;
     private bool _busy;
+    private int _activeOperations;
     private int _progressValue;
     private int _progressMax;
 
@@ -80,6 +81,7 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public async Task Guarded(string workingKey, Func<Task> action, params object?[] workingArgs)
     {
+        _activeOperations++;
         Busy = true;
         _status = LocalizedText.Working(workingKey, workingArgs);
         Raise(nameof(Status));
@@ -95,8 +97,11 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
         }
         finally
         {
-            Busy = false;
-            ProgressMax = 0;
+            if (--_activeOperations == 0)
+            {
+                ProgressMax = 0;
+                Busy = false;
+            }
         }
     }
 

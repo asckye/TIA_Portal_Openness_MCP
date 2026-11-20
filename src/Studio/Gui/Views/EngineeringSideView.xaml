@@ -50,7 +50,7 @@
               </ItemsControl>
             </ScrollViewer>
             <StackPanel Grid.Row="3" Margin="0,12,0,0">
-              <Button x:Name="CompileButton" Content="{l:Tr Pages.CompileSoftware}" AutomationProperties.Name="{l:Tr Pages.CompileSoftware}" AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Command="{Binding Engineering.Compile}" Style="{StaticResource Primer.Run}" IsDefault="True" HorizontalAlignment="Left"/>
+              <Button x:Name="CompileButton" Content="{l:Tr Pages.CompileSoftware}" AutomationProperties.Name="{l:Tr Pages.CompileSoftware}" AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Command="{Binding Engineering.Compile}" Style="{StaticResource Primer.IdeToolButton}" IsDefault="True" HorizontalAlignment="Left"/>
               <TextBlock Text="{Binding Tag.CompileTime,ElementName=PageRoot}" Style="{StaticResource Primer.Mono}" Margin="0,8,0,0"/>
             </StackPanel>
           </Grid>

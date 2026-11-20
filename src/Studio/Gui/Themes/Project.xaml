@@ -1,2 +1,72 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"/>
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:views="clr-namespace:TiaOpenness.Gui.Views">
+  <views:ProjectNodeStyleSelector x:Key="Primer.ProjectNodeSelector"/>
+  <Style x:Key="Primer.ProjectContextToggle" TargetType="ToggleButton" BasedOn="{StaticResource Primer.ContextToggle}">
+    <Setter Property="ToolTip" Value="{l:Tr Layout.HideContext}"/>
+    <Style.Triggers>
+      <Trigger Property="IsChecked" Value="True"><Setter Property="ToolTip" Value="{l:Tr Layout.ShowContext}"/></Trigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectContextIcon" TargetType="Path" BasedOn="{StaticResource Primer.ButtonIcon}">
+    <Setter Property="Data" Value="{DynamicResource Icon.ChevronLeft}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding IsChecked,RelativeSource={RelativeSource AncestorType=ToggleButton}}" Value="True">
+        <Setter Property="Data" Value="{DynamicResource Icon.ChevronRight}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectNode" TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+    <Setter Property="IsExpanded" Value="{Binding IsExpanded,Mode=TwoWay}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectLinkNode" TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+    <Setter Property="AutomationProperties.Name" Value="{l:Tr Project.Tags}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding IsVersionControl}" Value="True">
+        <Setter Property="AutomationProperties.Name" Value="{l:Tr Shell.VersionControl}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectLinkLabel" TargetType="TextBlock" BasedOn="{StaticResource Primer.Text}">
+    <Setter Property="Text" Value="{l:Tr Project.Tags}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding IsVersionControl}" Value="True"><Setter Property="Text" Value="{l:Tr Shell.VersionControl}"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectSave" TargetType="Button" BasedOn="{StaticResource Primer.Run}">
+    <Setter Property="MinHeight" Value="28"/>
+    <Setter Property="Padding" Value="8,0"/>
+  </Style>
+  <Style x:Key="Primer.ProjectRenderTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.IdePill}">
+    <Setter Property="IsChecked" Value="False"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Engineering.Document}" Value="Render"><Setter Property="IsChecked" Value="True"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectCompileTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.IdePill}">
+    <Setter Property="IsChecked" Value="False"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Engineering.Document}" Value="Compile"><Setter Property="IsChecked" Value="True"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectTagsTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.IdePill}">
+    <Setter Property="IsChecked" Value="False"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Engineering.Document}" Value="Tags"><Setter Property="IsChecked" Value="True"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectBlockTitle" TargetType="TextBlock" BasedOn="{StaticResource Primer.ContainerTitle}">
+    <Setter Property="Text" Value="{Binding Engineering.FocusedBlock.Name}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Engineering.FocusedBlock}" Value="{x:Null}">
+        <Setter Property="Text" Value="{l:Tr Tree.ProgramBlocks}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectSessions" TargetType="Expander" BasedOn="{StaticResource Primer.Expander}">
+    <Setter Property="IsExpanded" Value="True"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Session.IsConnected}" Value="True"><Setter Property="IsExpanded" Value="False"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+</ResourceDictionary>

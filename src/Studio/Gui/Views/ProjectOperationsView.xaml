@@ -1,17 +1,42 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="clr-namespace:TiaOpenness.Gui.ViewModels" x:Name="PageRoot" x:Class="TiaOpenness.Gui.Views.ProjectOperationsView">
   <!-- 项目 page head: the project title and tags, its release and path, and the software, save and disconnect actions. -->
   <DockPanel>
+    <!-- The options pane covers the whole 项目 page, not only this head: a zero-height canvas lets it overflow downwards. -->
+    <Canvas DockPanel.Dock="Top" Height="0" Panel.ZIndex="1">
+      <views:EngineeringOptionsView x:Name="Options" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=Grid}}" Height="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=Grid}}"/>
+    </Canvas>
+    <Border DockPanel.Dock="Top" x:Name="ProjectToolbar" Style="{StaticResource Primer.IdeBar}">
+      <DockPanel LastChildFill="False">
+        <WrapPanel DockPanel.Dock="Left" VerticalAlignment="Center">
+          <Button Content="{l:Tr Project.OpenConnect}" AutomationProperties.Name="{l:Tr Project.OpenConnect}"
+            Command="{x:Static ux:WorkbenchCommands.Open}" AutomationProperties.AcceleratorKey="Ctrl+O" ToolTip="Ctrl+O" Style="{StaticResource Primer.IdeToolButton}"/>
+          <Button Content="{l:Tr Common.Reload}" AutomationProperties.Name="{l:Tr Common.Reload}" Click="OnRefresh"
+            IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
+        </WrapPanel>
+        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center">
+          <Button Content="{l:Tr Pages.Import}" AutomationProperties.Name="{l:Tr Pages.Import}" Command="{Binding Engineering.Import}"
+            ToolTip="{l:Tr Pages.TransferDescription}"
+            Style="{StaticResource Primer.IdeToolButton}"/>
+          <Button Content="{l:Tr Blocks.Export}" AutomationProperties.Name="{l:Tr Blocks.Export}" Click="OnTransfer"
+            IsEnabled="{Binding Tag.HasSelection,ElementName=PageRoot}" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
+          <Button Content="{l:Tr Toolbar.Inspect}" AutomationProperties.Name="{l:Tr Toolbar.Inspect}" Click="OnInspect"
+            IsEnabled="{Binding Tag.CanOperate,ElementName=PageRoot}" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
+          <Button Content="{l:Tr Toolbar.Compile}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" Command="{Binding Engineering.Compile}"
+            AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
+          <Button x:Name="SaveButton" Content="{l:Tr Pages.Save}" AutomationProperties.Name="{l:Tr Pages.Save}" Command="{Binding Engineering.Save}"
+            AutomationProperties.AcceleratorKey="Ctrl+S" ToolTip="Ctrl+S" Style="{StaticResource Primer.ProjectSave}" Margin="8,0,0,0"/>
+        </WrapPanel>
+      </DockPanel>
+    </Border>
     <Border x:Name="EnvironmentBanner" DockPanel.Dock="Top" Style="{StaticResource Primer.Alert.Warning}" Margin="0,0,0,12" Visibility="{Binding EnvironmentNeedsAction,Converter={StaticResource BoolToVisibility}}">
       <ux:PageHeadPanel Spacing="12">
         <TextBlock Text="{Binding EnvironmentAttention}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap"/>
         <Button x:Name="RunEnvironmentButton" Content="{l:Tr Pages.ViewEnvironment}" AutomationProperties.Name="{l:Tr Pages.ViewEnvironment}" Click="OnEnvironment" Style="{StaticResource Primer.Secondary}"/>
       </ux:PageHeadPanel>
     </Border>
-    <!-- The options pane covers the whole 项目 page, not only this head: a zero-height canvas lets it overflow downwards. -->
-    <Canvas DockPanel.Dock="Top" Height="0" Panel.ZIndex="1">
-      <views:EngineeringOptionsView x:Name="Options" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=Grid}}" Height="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=Grid}}"/>
-    </Canvas>
-    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,16" Visibility="{Binding HasMcpPanel,Converter={StaticResource BoolToVisibility}}">
+    <Expander DockPanel.Dock="Top" Header="{l:Tr Session.Title}" AutomationProperties.Name="{l:Tr Session.Title}"
+      Visibility="{Binding HasMcpPanel,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.ProjectSessions}">
+      <StackPanel>
       <Border Style="{StaticResource Primer.Container}">
         <StackPanel>
           <WrapPanel Margin="0,8,0,0">
@@ -38,8 +63,9 @@
 <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}" AutomationProperties.Name="{l:Tr Session.Result}" Style="{StaticResource Primer.Input}" x:Name="McpEnvelopeResult" Text="{Binding LastEnvelope,Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="200" VerticalScrollBarVisibility="Auto" FontFamily="{DynamicResource Ui.FontMono}"/></StackPanel>
         </StackPanel>
       </Expander>
-    </StackPanel>
-  <Grid>
+      </StackPanel>
+    </Expander>
+  <StackPanel>
     <Border Style="{StaticResource Primer.Container}" Margin="0,0,0,16" Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource NotBoolToVisibility}}">
       <StackPanel>
         <TextBlock Text="{l:Tr Blocks.Empty.Title}" Style="{StaticResource Primer.PageTitle}"/>
@@ -65,39 +91,28 @@
     </Border>
     <Border x:Name="ProjectCard" Style="{StaticResource Primer.PageHead}" Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
       <StackPanel>
-      <!-- The actions stay beside the project name while it fits and wrap below the head otherwise. -->
-      <ux:PageHeadPanel Spacing="16" Title="{Binding ElementName=ProjectTitle}">
-        <StackPanel VerticalAlignment="Center">
-          <WrapPanel>
-            <TextBlock x:Name="ProjectTitle" Text="{Binding Session.ProjectName}" Style="{StaticResource Primer.PageTitle}" ToolTip="{Binding Session.ProjectName}" Margin="0,0,12,0"/>
-            <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{x:Static vm:FeatureTone.Success}" Margin="0,0,8,0">
-              <TextBlock Text="{l:Tr Primer.Bound}" Style="{StaticResource Primer.StatusText}"/>
-            </ContentControl>
-            <Border Style="{StaticResource Primer.Chip}">
-              <TextBlock Text="{Binding Tag.ProjectKind,ElementName=PageRoot}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-            </Border>
-          </WrapPanel>
-        </StackPanel>
-        <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Right" MaxWidth="560">
-          <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SoftwarePicker}" x:Name="SoftwareLabel" Content="{l:Tr Access.Software}" Target="{Binding ElementName=SoftwarePicker}" Style="{StaticResource Primer.FormLabel}" VerticalAlignment="Center" Padding="0,0,8,0"/><ComboBox AutomationProperties.LabeledBy="{Binding ElementName=SoftwareLabel}" AutomationProperties.Name="{l:Tr Access.Software}" x:Name="SoftwarePicker" ItemsSource="{Binding Engineering.Devices}" SelectedItem="{Binding Engineering.SelectedDevice}" Style="{StaticResource Primer.Select}" VerticalAlignment="Center" MinWidth="150">
-            <ComboBox.ItemTemplate>
-              <DataTemplate>
-                <TextBlock>
-                  <Run Text="{Binding Name}"/>
-                  <Run Text="{l:Tr Common.SoftwareSuffix}"/>
-                </TextBlock>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
-          <Button AutomationProperties.Name="{l:Tr Pages.Save}" Content="{l:Tr Pages.Save}" ToolTip="Ctrl+S" AutomationProperties.AcceleratorKey="Ctrl+S" Command="{Binding Engineering.Save}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
-          <Button AutomationProperties.Name="{l:Tr Pages.Disconnect}" x:Name="DisconnectButton" Content="{l:Tr Pages.Disconnect}" Command="{Binding Session.Disconnect}" Style="{StaticResource Primer.Danger}" Margin="8,0,0,0"/>
-          <Button AutomationProperties.Name="{l:Tr Pages.Options}" Click="OnProjectOptions" ToolTip="{l:Tr Pages.Options}" Style="{StaticResource Primer.IconButton}" Width="32" Height="32" Margin="4,0,0,0"><Path Style="{StaticResource Primer.ButtonIcon.Ellipsis}"/></Button>
-        </WrapPanel>
-      </ux:PageHeadPanel>
-      <!-- The path line spans the whole head so long project paths trim at the right edge, not under the actions. -->
-      <TextBlock Text="{Binding Session.ProjectPath}" Style="{StaticResource Primer.PageSubtitle}" FontFamily="{DynamicResource Ui.FontMono}" ToolTip="{Binding Session.ProjectPath}"/>
+        <DockPanel>
+          <Button x:Name="DisconnectButton" DockPanel.Dock="Right" Content="{l:Tr Pages.Disconnect}" AutomationProperties.Name="{l:Tr Pages.Disconnect}"
+            Command="{Binding Session.Disconnect}" Style="{StaticResource Primer.IdeToolButton}"/>
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBlock x:Name="ProjectTitle" Text="{Binding Session.ProjectName}" Style="{StaticResource Primer.ContainerTitle}"
+              ToolTip="{Binding Session.ProjectPath}" AutomationProperties.HeadingLevel="Level2"/>
+            <TextBlock Text="{l:Tr Primer.Bound}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
+            <TextBlock Text="{Binding Engineering.SelectedDevice.Name}" Style="{StaticResource Primer.Mono}" Margin="8,0,0,0"/>
+          </StackPanel>
+        </DockPanel>
       </StackPanel>
     </Border>
-  </Grid>
+    <Border Style="{StaticResource Primer.IdeSubBar}" Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <RadioButton x:Name="RenderTab" Content="{l:Tr Project.Render}" AutomationProperties.Name="{l:Tr Project.Render}"
+          Style="{StaticResource Primer.ProjectRenderTab}" GroupName="ProjectDocument" Click="OnRender"/>
+        <RadioButton x:Name="CompileTab" Content="{l:Tr Toolbar.Compile}" AutomationProperties.Name="{l:Tr Toolbar.Compile}"
+          Style="{StaticResource Primer.ProjectCompileTab}" GroupName="ProjectDocument" Click="OnCompileResults" Margin="4,0,0,0"/>
+        <RadioButton x:Name="TagsTab" Content="{l:Tr Project.Tags}" AutomationProperties.Name="{l:Tr Project.Tags}"
+          Style="{StaticResource Primer.ProjectTagsTab}" GroupName="ProjectDocument" Click="OnTags" IsEnabled="{Binding Engineering.CanReadTags}" Margin="4,0,0,0"/>
+      </StackPanel>
+    </Border>
+  </StackPanel>
   </DockPanel>
 </UserControl>

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,16 +11,274 @@ using System.Windows.Threading;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Localization;
+using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.Services.Stubs;
 using TiaOpenness.Gui.ViewModels;
 using TiaOpenness.Gui.Views;
+using TiaOpenness.Shared;
 using Xunit;
 
 namespace TiaOpenness.Gui.Tests;
 
 [Collection(WpfCollection.Name)]
-public sealed class ProjectPageInteractionTests(WpfContext wpf)
+public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
 {
+    private sealed class TagSession(bool units, bool reject = false) : IMcpSessionClient
+    {
+        internal List<(string Tool, IReadOnlyDictionary<string, object?> Args)> Calls { get; } = [];
+        public string? SessionKey => "fixture";
+        public JsonObject? State => null;
+        public JsonObject? ToolSchema(string tool) => units ? JsonNode.Parse("""{"properties":{"includeUnits":{"type":"boolean"}}}""")!.AsObject() : null;
+        public event EventHandler<JsonObject>? StateChanged { add { } remove { } }
+        public event EventHandler? Detached { add { } remove { } }
+        public Task<JsonObject> CallAsync(string tool, IReadOnlyDictionary<string, object?> arguments, CancellationToken token = default)
+        {
+            Calls.Add((tool, arguments));
+            string json = tool switch
+            {
+                "ListPlcTagTables" => """{"ok":true,"data":{"items":["Inputs / local"]}}""",
+                "ListPlcTags" when reject => """{"ok":false,"error":{"code":"INVALID_ARGUMENT","message":"Unknown table."}}""",
+                "ListPlcTags" when units => """
+                    {"ok":true,"data":{"items":[
+                      {"name":"Ready/A","path":"units/Mix/tag-tables/Inputs/Ready%2FA","kind":"tag","dataType":"Bool","value":"%I0.0"},
+                      {"name":"Speed","path":"root/tag-tables/Inputs/Speed","kind":"tag","dataType":"Real","value":""}]}}
+                    """,
+                "ListPlcTags" => """
+                    {"ok":true,"data":{"items":[{"name":"Ready/A","path":"Inputs %2F local/Ready%2FA","kind":"tag","dataType":"Bool","value":"%I0.0"}]}}
+                    """,
+                _ => throw new InvalidOperationException(tool),
+            };
+            var envelope = JsonNode.Parse(json)!.AsObject();
+            envelope["schemaVersion"] = 4;
+            bool success = (bool)envelope["ok"]!;
+            envelope["meta"] = new JsonObject { ["timestamp"] = "2026-11-20T00:00:00.0000000Z", ["releaseKey"] = units ? "21" : "14sp1",
+                ["tool"] = tool, ["requestId"] = "request-1", ["outcome"] = success ? "succeeded" : "rejected-before-operation",
+                ["execution"] = success ? "read-only" : "not-started", ["behaviorPolicy"] = "not-applicable",
+                ["completeness"] = success ? "complete" : "none", ["paging"] = null, ["warnings"] = new JsonArray() };
+            if (success) envelope["error"] = null;
+            else
+            {
+                envelope["data"] = null;
+                envelope["error"]!["details"] = JsonNode.Parse(
+                    """{"parameter":"table","parameters":["table"],"allowedValues":[],"expected":"exact table path"}""");
+            }
+            _ = TiaOpenness.Core.EngineToolResult.Read(envelope.ToJsonString());
+            return Task.FromResult(envelope);
+        }
+        public void CancelPending() { }
+        public Task<IReadOnlyList<OperatorSession>> DiscoverAsync(string releaseKey, CancellationToken token = default) => throw new NotSupportedException();
+        public Task CreateAsync(string releaseKey, CancellationToken token = default) => throw new NotSupportedException();
+        public Task AttachAsync(OperatorSession session, CancellationToken token = default) => throw new NotSupportedException();
+        public Task DetachAsync() => Task.CompletedTask;
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Plc_tags_read_declaration_items_and_only_send_supported_arguments(bool units)
+    {
+        const string plc = "devices/Station/PLC_1";
+        await using var session = new TagSession(units);
+        using var client = new McpProjectClient(session);
+        var tags = await client.ListPlcTagsAsync(plc, "", true);
+        Assert.Equal(units ? new[] { "ListPlcTags" } : new[] { "ListPlcTagTables", "ListPlcTags" }, session.Calls.Select(call => call.Tool));
+        var arguments = session.Calls.Last().Args;
+        Assert.Equal(plc, arguments["plc"]);
+        Assert.Equal(units ? "" : "Inputs %2F local", arguments["table"]);
+        Assert.Equal(units, arguments.ContainsKey("includeUnits"));
+        if (units) Assert.Equal(true, arguments["includeUnits"]);
+        else Assert.Equal(plc, session.Calls[0].Args["softwarePath"]);
+        Assert.Equal(units ? 2 : 1, tags.Count);
+        Assert.Equal(("Ready/A", "Bool", "%I0.0"), (tags[0].Name, tags[0].DataType, tags[0].LogicalAddress));
+        Assert.Equal(units ? "units/Mix/tag-tables/Inputs" : "Inputs %2F local", tags[0].TableName);
+        if (units) Assert.Equal("", tags[1].LogicalAddress);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Plc_tag_error_keeps_the_host_error_and_requested_table(bool includeUnits)
+    {
+        await using var session = new TagSession(true, reject: true);
+        using var client = new McpProjectClient(session);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => client.ListPlcTagsAsync("PLC_1", "Missing", includeUnits));
+        Assert.Contains("INVALID_ARGUMENT", error.Message);
+        Assert.Contains("Unknown table.", error.Message);
+        var call = Assert.Single(session.Calls);
+        Assert.Equal("ListPlcTags", call.Tool);
+        Assert.Equal("Missing", call.Args["table"]);
+        Assert.Equal(includeUnits, call.Args["includeUnits"]);
+    }
+
+    [Fact]
+    public void Tag_panel_clears_stale_rows_on_error_and_discards_reads_after_device_change()
+    {
+        wpf.Run(() =>
+        {
+            var client = new FakeProjectClient();
+            using var model = new MainViewModel(client, new FakeDialogService());
+            var engineering = model.Engineering;
+            engineering.SelectedDevice = client.Devices[0];
+            client.Tags.Add(new() { Name = "Ready", DataType = "Bool", LogicalAddress = "%I0.0", TableName = "Inputs" });
+            WpfContext.Complete(engineering.ReadTagsAsync());
+            Assert.Single(engineering.PlcTags);
+            client.TagHandler = _ => Task.FromException<List<TagInfo>>(new InvalidOperationException("Unknown table."));
+            WpfContext.Complete(engineering.ReadTagsAsync());
+            Assert.Empty(engineering.PlcTags);
+            Assert.Equal("Unknown table.", engineering.TagStatus);
+            var late = new TaskCompletionSource<List<TagInfo>>();
+            client.TagHandler = _ => late.Task;
+            client.Calls.Clear();
+            var read = engineering.ReadTagsAsync();
+            engineering.SelectedDevice = new() { Name = "Next", Id = "PLC_2", Category = "Plc" };
+            Assert.Equal("Tags", Assert.Single(client.Calls).Name);
+            late.SetResult(client.Tags);
+            WpfContext.Complete(read);
+            Assert.Empty(engineering.PlcTags);
+            Assert.Empty(engineering.TagStatus);
+            Assert.Equal(new[] { "Tags", "Blocks" }, client.Calls.Select(call => call.Name));
+            Assert.Equal("PLC_2", client.Calls[1].Arguments[0]);
+        });
+    }
+
+    [Fact]
+    public void Expanding_a_plc_loads_only_its_blocks_and_tree_nodes_open_the_existing_documents()
+    {
+        wpf.Run(() =>
+        {
+            var client = new FakeProjectClient { AttachedProject = new ProjectInfo { Name = "Line", Path = @"D:\Line.ap21" } };
+            client.Devices.Add(new() { Id = "PLC_2", Name = "PLC_2", Category = "Plc" });
+            client.Blocks[0].FolderPath = "Motion";
+            client.Tags.Add(new() { Name = "Ready", TableName = "Inputs", DataType = "Bool", LogicalAddress = "%I0.0" });
+            var model = new MainViewModel(client, new FakeDialogService());
+            var window = new MainWindow(model, false);
+            try
+            {
+                model.SelectedReleaseKey = "21";
+                model.Session.Connect.Execute(null);
+                var host = WorkbenchRenderTests.CreateHost(window, 1366, 860);
+                var tree = ((ProjectTreeView)window.ProjectTree.Content).Nodes;
+                Assert.Equal("PLC_1", Assert.Single(client.Calls, call => call.Name == "Blocks").Arguments[0]);
+                var second = (TreeViewItem)tree.ItemContainerGenerator.ContainerFromIndex(1);
+                ClickNode((UIElement)second.Template.FindName("Switcher", second));
+                WpfContext.Drain();
+                host.UpdateLayout();
+                Assert.Same(client.Devices[1], model.Engineering.SelectedDevice);
+                Assert.Equal(new[] { "PLC_1", "PLC_2" }, client.Calls.Where(call => call.Name == "Blocks").Select(call => call.Arguments[0]));
+                var nodes = WorkbenchRenderFeaturePagesTests.Descendants<TreeViewItem>(second).ToArray();
+                var block = nodes.Single(item => item.Header is BlockNode { Row: not null });
+                var row = model.Engineering.Blocks.Single();
+                Assert.Contains(nodes, item => item.Header is BlockNode { Name: "Motion", IsFolder: true });
+                ClickNode(block);
+                Assert.False(row.Selected);
+                Assert.Same(row, window.BlocksContent.ControlFocusedBlock);
+                var check = WorkbenchRenderFeaturePagesTests.Descendants<CheckBox>(block).Single();
+                UnifiedDesktopTests.ClickControl(check);
+                Assert.True(row.Selected);
+                ClickNode(nodes.Single(item => item.Header is ProjectLink { IsVersionControl: false }));
+                WpfContext.Drain();
+                host.UpdateLayout();
+                Assert.Equal(ProjectDocument.Tags, model.Engineering.Document);
+                Assert.Equal(new object?[] { "PLC_2", "", true }, Assert.Single(client.Calls, call => call.Name == "Tags").Arguments);
+                var table = ((PlcTagsView)window.PlcTagsContent.Content).TagRows;
+                Assert.True(table.IsReadOnly);
+                Assert.Same(client.Tags[0], Assert.Single(table.Items.Cast<TagInfo>()));
+                ClickNode(nodes.Single(item => item.Header is ProjectLink { IsVersionControl: true }));
+                Assert.Equal("VersionControl", window.CurrentPage);
+                Assert.True(window.RailEngineering.IsChecked);
+                ClickNode(block);
+                Assert.Equal("Engineering", window.CurrentPage);
+                Assert.Equal(ProjectDocument.Render, model.Engineering.Document);
+                Assert.True(row.Selected);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Tree_badges_use_block_language_and_current_workspace_differences()
+    {
+        wpf.Run(() =>
+        {
+            var model = ProjectPageTestSupport.Model(release: "21");
+            var window = new MainWindow(model, false);
+            try
+            {
+                var host = WorkbenchRenderTests.CreateHost(window, 1366, 860);
+                WpfContext.Drain(); host.UpdateLayout();
+                var nodes = WorkbenchRenderFeaturePagesTests.Descendants<TreeViewItem>((ProjectTreeView)window.ProjectTree.Content)
+                    .Select(item => item.Header).OfType<BlockNode>().Where(node => node.Row != null).ToArray();
+                Assert.Equal("F", nodes.Single(node => node.Name == "Safety_Door_FB").Kind);
+                Assert.Equal(4, nodes.Count(node => node.IsModified));
+                var main = nodes.Single(node => node.Name == "Main");
+                Assert.False(main.IsModified);
+                model.VersionControl.VcStatusItems.Clear();
+                WpfContext.Drain();
+                Assert.DoesNotContain(nodes, node => node.IsModified);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Block_selection_prefill_from_tags_reveals_the_rows_and_can_be_cleared_in_the_tree()
+    {
+        wpf.Run(() =>
+        {
+            var (window, model, client) = WorkbenchControlTests.Window();
+            try
+            {
+                model.Engineering.Document = ProjectDocument.Tags;
+                var prefill = new WorkbenchPrefillArguments { Form = WorkbenchPrefillForm.BlockSelection,
+                    Fields = new WorkbenchBlockSelectionFields { SoftwarePath = "PLC_1", BlockPaths = ["Main"] } };
+                var result = window.ApplyControl(WorkbenchControlTests.Request(WorkbenchControlOperation.PrefillForm, prefill));
+                Assert.Equal(WorkbenchControlStatus.Done, result.Status);
+                WpfContext.Drain();
+                Assert.Equal(ProjectDocument.Render, model.Engineering.Document);
+                Assert.True(model.Engineering.Blocks[0].Selected);
+                var marker = ((ProjectTreeView)window.ProjectTree.Content).SelectionMarker;
+                Assert.Equal(Visibility.Visible, marker.Visibility);
+                UnifiedDesktopTests.ClickControl(marker.Children.OfType<Button>().Single());
+                WpfContext.Drain();
+                Assert.Equal(Visibility.Collapsed, marker.Visibility);
+                Assert.False(model.Engineering.Blocks[0].Selected);
+                Assert.Empty(client.Calls);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Project_toolbar_save_is_the_only_accent_fill_and_runs_the_existing_confirmation()
+    {
+        wpf.Run(() =>
+        {
+            var client = new FakeProjectClient { AttachedProject = new ProjectInfo { Name = "Line", Path = @"D:\Line.ap21" } };
+            var dialogs = new FakeDialogService();
+            var model = new MainViewModel(client, dialogs);
+            var window = new MainWindow(model, false);
+            try
+            {
+                model.Session.Connect.Execute(null);
+                var host = WorkbenchRenderTests.CreateHost(window, 1366, 860);
+                var bar = (Border)ProjectPageTestSupport.Find(window, "ProjectToolbar");
+                var buttons = WorkbenchRenderFeaturePagesTests.Descendants<Button>(bar).ToList();
+                Assert.Equal(7, buttons.Count);
+                var save = Assert.Single(buttons, button => Equals(button.Background, host.FindResource("Primer.primaryBg")));
+                Assert.Same(model.Engineering.Save, save.Command);
+                client.Calls.Clear();
+                UnifiedDesktopTests.ClickControl(save);
+                Assert.Equal(DialogButtons.OKCancel, Assert.Single(dialogs.Messages).Buttons);
+                Assert.Empty(client.Calls);
+                dialogs.Result = DialogResult.OK;
+                UnifiedDesktopTests.ClickControl(save);
+                Assert.Equal("Save", Assert.Single(client.Calls).Name);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData(1024)]
     [InlineData(1366)]
@@ -147,6 +407,26 @@ public sealed class ProjectPageInteractionTests(WpfContext wpf)
                 Assert.True(results.HasCompile);
             }
             finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Rendering_the_focused_unchecked_block_preserves_the_transfer_selection()
+    {
+        wpf.Run(() =>
+        {
+            using var model = ProjectPageTestSupport.Model();
+            var service = new AtlasProbe();
+            using var atlas = new AtlasPresentation(model, service);
+            var focused = model.Engineering.Blocks[2];
+            var selection = model.Engineering.Blocks.Where(row => row.Selected).ToArray();
+            Assert.False(focused.Selected);
+            model.Engineering.FocusedBlock = focused;
+            var pending = atlas.GenerateAsync(true);
+            Assert.Equal(focused.Path, Assert.Single(service.Request!.BlockPaths));
+            Assert.Equal(selection, model.Engineering.Blocks.Where(row => row.Selected));
+            service.Completion.SetResult(new AtlasResult(null, "fixture failure"));
+            WpfContext.Complete(pending);
         });
     }
 
