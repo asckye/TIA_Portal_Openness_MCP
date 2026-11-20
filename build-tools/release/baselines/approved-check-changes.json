@@ -6348,6 +6348,88 @@
           "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs( AppLanguage language , string detection , string ready , string status ):f08e82f2d1884abffb0ab7d5af7dc8afb3253aea691eb8af5b22f3ed71fecd1d:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-17",
+      "maintainerDate": "2026-11-20",
+      "reason": "VMFIX-17 spec-approved assertion changes: A2 CAx exclusive-access source check for the feature flag; B1 SiVArc block-definition tools registered from V21 (roster counts, guard tests 17-20, inverted FC dispatch test, catalog test) and the M1 connection rule rename; C2 V20 document resource optional; D CloseProject destructiveHint and signature; standing approval of recommended options (2026-11-17)",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalAuditRegressionTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.OptionalAuditRegressionTests/Sivarc_requires_a_connection_to_each_requested_PLC( string available ):af7c4d3b9d2023904774a9d197c64d2ae0fde5d5604e303d462c791ef72c9d75"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):3cb480e92f7df1a3c7aca35a401604725bafaed38e8e33dc7fd69ae0e217d35d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):79d3c57611fe6bbff936a7d36492cf4abac6c0e66bba6693a49d4eb257e40dc1:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):f85a30f1b09fbf312d1313ba04420437220b1ac74b87ec3a1a7c8669e41f13a0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SivarcGuardTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "data-row:0db375276c8654fecb68d145d5b24d7c55cb1dfb6fadb5f9432dde3650aa3184:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SivarcGuardTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "data-row:640d83af02bacdb3304d2fd5fc9a9dbfca499ad8526b2aa6fed07f609d92b207:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SivarcGuardTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "data-row:9acc59dc729ce4b30110dd709bc90615f7661803b27ebf98a474427bc8928cf0:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SivarcGuardTests.cs",
+          "kind": "test-removed",
+          "identifier": "SivarcGuardTests/Other_releases_still_dispatch_FC_definition_reads( string release ):1c3532acb1c8040a2920c44d8d3db20fa163413c9efa5daf585ed78b86679203"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SivarcGuardTests.cs",
+          "kind": "test-removed",
+          "identifier": "SivarcGuardTests/V20_definitions_are_refused_before_worker_dispatch( string block , string action , bool dryRun ):3927a71a3be03792530f50b1bd3327f5b56a2babcc4229aea26adc46e6dff046"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SivarcGuardTests.cs",
+          "kind": "test-removed",
+          "identifier": "SivarcGuardTests/V20_dependent_operations_refuse_every_action_and_preview( string operation , string action , bool dryRun ):9df79156d0b4aa396acbf4b4f795a51a4e57530003cdab33118b12ffb02cd71f"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SivarcGuardTests.cs",
+          "kind": "test-removed",
+          "identifier": "SivarcGuardTests/V20_dependent_tool_refusals_keep_the_V4_outcome_known( bool upgrade , bool dryRun ):aa65d18756630c50d20e97ea0b6764abce80421a254a9f8a70cdb449a5dd4406"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/SivarcGuardTests.cs",
+          "kind": "test-removed",
+          "identifier": "SivarcGuardTests/V20_read_refusal_keeps_the_V4_outcome_known( bool manage ):17712bfd49b56d2525e707504d9ebd5040408b292a5047e47aade2e07e909bda"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/TiaVersionCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.TiaVersionCatalogTests/Run( Action \u003C bool , string \u003E check ):daafbd849ae640ff222bd6458a87fca883b133be1a98b91249c4799254d9d2aa:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4ProtocolRulesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4ProtocolRulesTests/Shared_descriptor_controls_hints_and_mismatch_is_rejected( ):afa4e1043f22c5caf7b76fc99f8a3608ca2826fb6ebe8a81ecb769bd6ecc2e8e:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/HonestWriteSources.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.HonestWriteSources/Aml_import_uses_admission_without_exclusive_access_only_on_v21( ):30e7c25820867f563be591cc40e98aafe4b54d2afa444917d36a225245a87d9e"
+        }
+      ]
     }
   ]
 }
