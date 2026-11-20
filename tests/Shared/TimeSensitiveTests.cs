@@ -371,6 +371,9 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Risky_confirmation_defaults_to_the_safe_choice",
                 "Approval_sheet_accepts_Space_and_the_localized_T_access_key"
             },
+            ["TiaOpenness.Gui.Tests.CallJournalPanelTests"] = new[] {
+                "Escape_rejects_a_destructive_request_only_after_its_confirmation_sheet_closes"
+            },
             ["TiaOpenness.Gui.Tests.ApprovalPageTests"] = new[] {
                 "Destructive_rejection_is_default_and_Enter_on_Approve_rejects",
                 "Enter_never_approves_write_and_Escape_does_not_reject",

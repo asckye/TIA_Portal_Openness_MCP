@@ -14,6 +14,7 @@ public partial class ApprovalsDrawer : UserControl
 {
     private ApprovalRow? _row, _confirming;
     private ModalPane? _confirmationFocus;
+    private Window? _owner;
     public ApprovalsDrawer()
     {
         InitializeComponent(); DataContext = null;
@@ -48,6 +49,7 @@ public partial class ApprovalsDrawer : UserControl
     }
     private void OnDecisionKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Escape) { OnEscape(sender, e); return; }
         if (e.Key != Key.Enter && !(e.Key == Key.System && e.SystemKey == Key.Enter)) return;
         // Enter always takes the safe path, even with focus on either approval button.
         if (_confirming != null) { e.Handled = true; CloseConfirmation(); }
@@ -108,9 +110,23 @@ public partial class ApprovalsDrawer : UserControl
         Model.SelectedRequest = System.Linq.Enumerable.FirstOrDefault(Model.Requests, r => r.Request.Id == id);
         Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => { if (IsVisible && _row?.Request.Id == id) RequestTitle.Focus(); }));
     }
-    private void OnLoaded(object sender, RoutedEventArgs e) { SelectRow(); UpdateDecisionStyle(); }
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        SelectRow(); UpdateDecisionStyle();
+        _owner = Window.GetWindow(this);
+        if (_owner != null) _owner.KeyDown += OnEscape;
+    }
+    private void OnEscape(object sender, KeyEventArgs e)
+    {
+        // The shell heading can retain focus. Bubble unhandled Escape after other controls have had their turn.
+        if (e.Key != Key.Escape || !IsVisible || !IsEnabled || _confirming != null || _row is not { Destructive: true, CanDecide: true } row) return;
+        e.Handled = true;
+        if (!Guarded) Model.Decide(row, false);
+    }
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        if (_owner != null) _owner.KeyDown -= OnEscape;
+        _owner = null;
         CloseConfirmation();
         if (_row != null) { _row.CountdownThreshold -= OnCountdownThreshold; _row.PropertyChanged -= OnRowChanged; _row = null; }
     }

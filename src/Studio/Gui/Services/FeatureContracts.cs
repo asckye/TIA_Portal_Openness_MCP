@@ -52,6 +52,7 @@ public interface ICallJournalService : INotifyPropertyChanged
 public sealed record AuditEvent(long Index, DateTimeOffset Time, AuditEventType Type, string ToolObject,
     string Result, string Hash)
 {
+    public string Chain { get; init; } = "";
     public string? Actor { get; init; }
 }
 public sealed record AuditChainVerification(string Chain, bool Passed, int Count, long? BreakIndex, string? File);

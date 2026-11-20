@@ -101,10 +101,8 @@ public partial class LogView : UserControl
     private void OnOpenFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Diagnostics.OpenFolder); }
     private void OnOpenStorageSettings(object sender, RoutedEventArgs e)
     {
-        if (Window.GetWindow(this) is MainWindow window)
-        {
-            window.OpenSettings();
-            if (window.FindName("SettingsContent") is SettingsView settings) settings.ShowSection("Service");
-        }
+        var button = (Button)sender;
+        WorkbenchCommands.Navigate.Execute(button.CommandParameter, button);
+        if (Window.GetWindow(this) is MainWindow { CurrentPage: "Settings" } window) window.SettingsContent.ShowSection("Service");
     }
 }

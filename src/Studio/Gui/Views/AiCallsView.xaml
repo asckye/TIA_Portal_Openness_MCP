@@ -1,155 +1,131 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.AiCallsView">
-  <Grid>
-
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="0"/>
-        <RowDefinition/>
-      </Grid.RowDefinitions>
-      <!-- Ant PageHead with the follow switch and four Statistic cards over the unfiltered snapshot. -->
-      <Border Style="{StaticResource Primer.PageHead}">
-        <StackPanel>
-          <ux:PageHeadPanel MinHeight="32">
-            <StackPanel Orientation="Horizontal">
-              <TextBlock Text="{Binding CallsCount}" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0"/>
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
+      <ux:PageHeadPanel VerticalAlignment="Center" Spacing="4">
+        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource Pages.AgentTabs}"/>
+        <WrapPanel VerticalAlignment="Center">
+          <WrapPanel x:Name="CallStatistics" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="{l:Tr Calls.StatTotal}" Style="{StaticResource Primer.Muted}"/>
+              <TextBlock Text="{Binding CallStatTotal}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold" Margin="4,0,0,0"/>
             </StackPanel>
-            <ToggleButton AutomationProperties.Name="{Binding FollowLabel}" x:Name="FollowButton" Content="{Binding FollowLabel}" IsChecked="{Binding FollowLatest,Mode=OneWay}" Style="{StaticResource Primer.Switch}" VerticalAlignment="Center" Click="OnFollow"/>
-          </ux:PageHeadPanel>
-          <TextBlock Text="{l:Tr Calls.Subtitle}" Style="{StaticResource Primer.PageSubtitle}" ToolTip="{l:Tr Calls.Subtitle}"/>
-          <UniformGrid x:Name="CallStatistics" Rows="1" Margin="-8,16,-8,0">
-            <Border Style="{StaticResource Primer.Container}" Margin="8,0">
-              <StackPanel>
-                <TextBlock Text="{l:Tr Calls.StatTotal}" Style="{StaticResource Primer.StatisticTitle}"/>
-                <TextBlock Text="{Binding CallStatTotal}" Style="{StaticResource Primer.StatisticValue}"/>
-              </StackPanel>
-            </Border>
-            <Border Style="{StaticResource Primer.Container}" Margin="8,0">
-              <StackPanel>
-                <TextBlock Text="{l:Tr Calls.StatPending}" Style="{StaticResource Primer.StatisticTitle}"/>
-                <TextBlock Text="{Binding CallStatPending}" Style="{StaticResource Primer.StatisticValue.warn}"/>
-              </StackPanel>
-            </Border>
-            <Border Style="{StaticResource Primer.Container}" Margin="8,0">
-              <StackPanel>
-                <TextBlock Text="{l:Tr Calls.StatFailed}" Style="{StaticResource Primer.StatisticTitle}"/>
-                <TextBlock Text="{Binding CallStatFailed}" Style="{StaticResource Primer.StatisticValue.danger}"/>
-              </StackPanel>
-            </Border>
-            <Border Style="{StaticResource Primer.Container}" Margin="8,0">
-              <StackPanel>
-                <TextBlock Text="{l:Tr Calls.StatAverage}" Style="{StaticResource Primer.StatisticTitle}"/>
-                <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="{Binding CallStatAverage}" Style="{StaticResource Primer.StatisticValue}"/>
-                  <TextBlock Text="{l:Tr Calls.Milliseconds}" Style="{StaticResource Primer.Text}" VerticalAlignment="Bottom" Margin="4,0,0,4"/>
-                </StackPanel>
-              </StackPanel>
-            </Border>
-          </UniformGrid>
-        </StackPanel>
-      </Border>
-      <Border Grid.Row="2" Style="{StaticResource Primer.TableContainer}">
-        <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition/>
-          </Grid.RowDefinitions>
-          <!-- Filter bar: a Segmented of the existing filters (All clears them), the release select and the search. -->
-          <!-- The search group follows the Segmented on the same line when it fits and wraps below it otherwise. -->
-          <WrapPanel Margin="16,12">
-            <Border Padding="3" Margin="0,0,16,0" Style="{StaticResource Primer.SegmentGroup}">
-              <WrapPanel>
-                <ToggleButton AutomationProperties.Name="{l:Tr Calls.All}" x:Name="AllFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.All}" IsChecked="{Binding AllCalls,Mode=OneWay}" Click="OnAllCalls"/>
-                <ToggleButton AutomationProperties.Name="{l:Tr Calls.WriteOnly}" x:Name="WriteFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.WriteOnly}" IsChecked="{Binding WriteOnly}"/>
-                <ToggleButton AutomationProperties.Name="{l:Tr Calls.FailOnly}" x:Name="FailFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.FailOnly}" IsChecked="{Binding FailOnly}"/>
-                <ToggleButton AutomationProperties.Name="{l:Tr Calls.HumanOnly}" x:Name="HumanFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.HumanOnly}" IsChecked="{Binding HumanOnly}"/>
-                <ToggleButton AutomationProperties.Name="{l:Tr Calls.AiOnly}" x:Name="AiFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.AiOnly}" IsChecked="{Binding AiOnly}"/>
-              </WrapPanel>
-            </Border>
+            <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="{l:Tr Calls.StatPending}" Style="{StaticResource Primer.Muted}"/>
+              <TextBlock Text="{Binding CallStatPending}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold" Margin="4,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="{l:Tr Calls.StatFailed}" Style="{StaticResource Primer.Muted}"/>
+              <TextBlock Text="{Binding CallStatFailed}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold" Margin="4,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="{l:Tr Calls.StatAverage}" Style="{StaticResource Primer.Muted}"/>
+              <TextBlock Text="{Binding CallStatAverage}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold" Margin="4,0,0,0"/>
+              <TextBlock Text="{l:Tr Calls.Milliseconds}" Style="{StaticResource Primer.Muted}" Margin="4,0,0,0"/>
+            </StackPanel>
+          </WrapPanel>
+          <ToggleButton AutomationProperties.Name="{Binding FollowLabel}" x:Name="FollowButton" Content="{Binding FollowLabel}" IsChecked="{Binding FollowLatest,Mode=OneWay}" Style="{StaticResource Primer.Switch}" Margin="12,0,0,0" Click="OnFollow"/>
+        </WrapPanel>
+      </ux:PageHeadPanel>
+    </Border>
+    <Border Style="{StaticResource Primer.TableContainer}">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Border Style="{StaticResource Primer.IdeSubBar}">
+          <WrapPanel VerticalAlignment="Center">
+            <WrapPanel VerticalAlignment="Center" Margin="0,0,12,0">
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.All}" x:Name="AllFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.All}" IsChecked="{Binding AllCalls,Mode=OneWay}" Click="OnAllCalls"/>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.WriteOnly}" x:Name="WriteFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.WriteOnly}" IsChecked="{Binding WriteOnly}"/>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.FailOnly}" x:Name="FailFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.FailOnly}" IsChecked="{Binding FailOnly}"/>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.HumanOnly}" x:Name="HumanFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.HumanOnly}" IsChecked="{Binding HumanOnly}"/>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.AiOnly}" x:Name="AiFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.AiOnly}" IsChecked="{Binding AiOnly}"/>
+            </WrapPanel>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,4">
               <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ReleaseFilter}" x:Name="ReleaseLabel" Content="{l:Tr Calls.ReleaseScope}" Target="{Binding ElementName=ReleaseFilter}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
-              <ComboBox AutomationProperties.LabeledBy="{Binding ElementName=ReleaseLabel}" AutomationProperties.Name="{l:Tr Calls.ReleaseScope}" x:Name="ReleaseFilter" Style="{StaticResource Primer.Select}" MinWidth="130" Height="32" SelectedIndex="{Binding ReleaseChoice}" ToolTip="{l:Tr Calls.ReleaseScope}" Margin="0,0,8,0">
+              <ComboBox AutomationProperties.LabeledBy="{Binding ElementName=ReleaseLabel}" AutomationProperties.Name="{l:Tr Calls.ReleaseScope}" x:Name="ReleaseFilter" Style="{StaticResource Primer.Select}" MinWidth="130" MinHeight="28" Height="28" SelectedIndex="{Binding ReleaseChoice}" ToolTip="{l:Tr Calls.ReleaseScope}" Margin="0,0,8,0">
                 <ComboBoxItem AutomationProperties.Name="{l:Tr Calls.AllReleases}" Content="{l:Tr Calls.AllReleases}"/>
                 <ComboBoxItem AutomationProperties.Name="{Binding ReleaseFilter}" Content="{Binding ReleaseFilter}"/>
               </ComboBox>
               <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SearchBox}" x:Name="AccessibleLabel1" Content="{l:Tr Calls.Search}" Target="{Binding ElementName=SearchBox}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
-              <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Calls.Search}" x:Name="SearchBox" MinWidth="220" Height="32" Style="{StaticResource Primer.Input}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
+              <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Calls.Search}" x:Name="SearchBox" Width="220" Height="28" Style="{StaticResource Primer.IdeSearch}" Tag="{l:Tr Calls.Search}" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
           </WrapPanel>
-          <Border Grid.Row="1" Style="{StaticResource Primer.ColumnHeaderStrip}">
+        </Border>
+        <Border Grid.Row="1" Style="{StaticResource Primer.ColumnHeaderStrip}">
+          <Grid>
             <Grid>
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="62"/>
-                  <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="1*" MinWidth="51"/>
-                  <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="1.4*"/>
-                  <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="44"/>
-                  <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="90"/>
-                  <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="60"/>
-                  <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="1.4*"/>
-                  <ColumnDefinition Width="10"/>
-                  <ColumnDefinition Width="74"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Time}"/>
-                <TextBlock Grid.Column="2" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Host}"/>
-                <TextBlock Grid.Column="4" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Tool}"/>
-                <TextBlock Grid.Column="6" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.ReadWrite}"/>
-                <TextBlock Grid.Column="8" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Result}"/>
-                <TextBlock Grid.Column="10" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Duration}"/>
-                <TextBlock Grid.Column="12" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Target}"/>
-                <TextBlock Grid.Column="14" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Actor.Title}"/>
-              </Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="62"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="1*" MinWidth="51"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="1.4*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="44"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="1.4*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="74"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Time}"/>
+              <TextBlock Grid.Column="2" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Host}"/>
+              <TextBlock Grid.Column="4" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Tool}"/>
+              <TextBlock Grid.Column="6" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.ReadWrite}"/>
+              <TextBlock Grid.Column="8" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Result}"/>
+              <TextBlock Grid.Column="10" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Duration}"/>
+              <TextBlock Grid.Column="12" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Target}"/>
+              <TextBlock Grid.Column="14" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Actor.Title}"/>
             </Grid>
-          </Border>
-          <ListBox AutomationProperties.Name="{l:Tr Shell.Calls}" x:Name="CallList" Grid.Row="2" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Calls}">
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <Button AutomationProperties.Name="{Binding Tool}" Style="{StaticResource Primer.TableButton}" Click="OnCall" ToolTip="{Binding Tool}">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="62"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="1*" MinWidth="51"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="1.4*"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="44"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="90"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="60"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="1.4*"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="74"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
-                    <TextBlock Grid.Column="2" Text="{Binding Host}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Host}"/>
-                    <TextBlock Grid.Column="4" Text="{Binding Tool}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="6" Text="{Binding ReadWrite}" Style="{StaticResource Primer.ToneText}" Tag="{Binding WriteTone}"/>
-                    <TextBlock Grid.Column="8" Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
-                    <TextBlock Grid.Column="10" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-                    <TextBlock Grid.Column="12" Text="{Binding Target}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Target}"/>
-                    <TextBlock Grid.Column="14" Text="{Binding Actor}" Style="{StaticResource Primer.Muted}"/>
-                  </Grid>
-                </Button>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-          <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="390" Visibility="{Binding CallsEmpty, Converter={StaticResource BoolToVisibility}}">
-            <Path Style="{StaticResource Primer.EmptyImage}" Margin="0,0,0,8"/>
-            <TextBlock Text="{Binding CallEmptyTitle}" FontSize="{DynamicResource Ui.FontSize.Large}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-            <TextBlock Text="{l:Tr Calls.EmptyHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0"/>
-          </StackPanel>
-        </Grid>
-      </Border>
-    </Grid>
-  </Grid>
+          </Grid>
+        </Border>
+        <ListBox AutomationProperties.Name="{l:Tr Shell.Calls}" AutomationProperties.HelpText="{l:Tr Calls.Subtitle}" x:Name="CallList" Grid.Row="2" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Calls}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Button AutomationProperties.Name="{Binding Tool}" Style="{StaticResource Primer.TableButton}" CommandParameter="Approvals" Click="OnCall" ToolTip="{Binding Tool}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="62"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="1*" MinWidth="51"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="1.4*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="1.4*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="74"/>
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
+                  <TextBlock Grid.Column="2" Text="{Binding Host}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Host}"/>
+                  <TextBlock Grid.Column="4" Text="{Binding Tool}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold"/>
+                  <TextBlock Grid.Column="6" Text="{Binding ReadWrite}" Style="{StaticResource Primer.ToneText}" Tag="{Binding WriteTone}"/>
+                  <TextBlock Grid.Column="8" Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
+                  <TextBlock Grid.Column="10" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+                  <TextBlock Grid.Column="12" Text="{Binding Target}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Target}"/>
+                  <TextBlock Grid.Column="14" Text="{Binding Actor}" Style="{StaticResource Primer.Muted}"/>
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="390" Visibility="{Binding CallsEmpty, Converter={StaticResource BoolToVisibility}}">
+          <Path Style="{StaticResource Primer.EmptyImage}" Margin="0,0,0,8"/>
+          <TextBlock Text="{Binding CallEmptyTitle}" FontSize="{DynamicResource Ui.FontSize.Large}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+          <TextBlock Text="{l:Tr Calls.EmptyHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </DockPanel>
 </UserControl>

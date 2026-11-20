@@ -1,8 +1,8 @@
 <UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.CallDetailDrawer">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Margin="22,16,22,22" DataContext="{Binding SelectedCall}">
+    <StackPanel Margin="16,12,16,16" DataContext="{Binding SelectedCall}">
       <TextBlock x:Name="ControlActivity" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
-      <Grid Margin="0,0,0,18">
+      <Grid Margin="0,4,0,16">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" MinWidth="90"/>
           <ColumnDefinition/>
@@ -17,19 +17,19 @@
           <RowDefinition Height="Auto" MinHeight="24"/>
         </Grid.RowDefinitions>
         <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Record.Time, StringFormat=yyyy-MM-dd HH:mm:ss zzz}" Style="{StaticResource Primer.Mono}"/>
+        <TextBlock Grid.Column="1" Text="{Binding Record.Time, StringFormat=yyyy-MM-dd HH:mm:ss zzz}" TextWrapping="Wrap" Style="{StaticResource Primer.Mono}"/>
         <TextBlock Grid.Row="1" Text="{l:Tr Calls.Host}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
-        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Host}" Style="{StaticResource Primer.Text}"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Host}" TextWrapping="Wrap" Style="{StaticResource Primer.Text}"/>
         <TextBlock Grid.Row="2" Text="{l:Tr Calls.ReadWrite}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ReadWrite}" Style="{StaticResource Primer.ToneText}" Tag="{Binding WriteTone}"/>
         <TextBlock Grid.Row="3" Text="{l:Tr Calls.Duration}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}"/>
         <TextBlock Grid.Row="4" Text="{l:Tr Calls.RequestId}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
-        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Record.RequestId}" Style="{StaticResource Primer.Mono}"/>
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Record.RequestId}" TextWrapping="Wrap" Style="{StaticResource Primer.Mono}"/>
         <TextBlock Grid.Row="5" Text="{l:Tr Actor.Title}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
         <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Actor}" Style="{StaticResource Primer.Text}"/>
         <TextBlock Grid.Row="6" Text="{l:Tr Calls.McpSession}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
-        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Record.McpSession}" ToolTip="{Binding Record.McpSession}" Style="{StaticResource Primer.Mono}"/>
+        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Record.McpSession}" TextWrapping="Wrap" ToolTip="{Binding Record.McpSession}" Style="{StaticResource Primer.Mono}"/>
       </Grid>
       <DockPanel Margin="0,0,0,8">
         <Button AutomationProperties.Name="{l:Tr Feature.Copy}" DockPanel.Dock="Right" Content="{l:Tr Feature.Copy}" Style="{StaticResource Primer.Quiet}" Click="OnCopy"/>

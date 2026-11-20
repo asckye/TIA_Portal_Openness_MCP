@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui.Views;
@@ -18,15 +19,16 @@ public partial class EnvironmentView : UserControl
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
     private void OnRecheck(object sender, RoutedEventArgs e) => Model.Run(Model.Environment.Recheck);
-    private void OnLogs(object sender, RoutedEventArgs e) => (Window.GetWindow(this) as MainWindow)?.Navigate("Log");
+    private void OnGenerate(object sender, RoutedEventArgs e) => Model.Export();
     private void OnFix(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
-        var row = (EnvironmentRow)((Button)sender).DataContext;
+        var button = (Button)sender;
+        var row = (EnvironmentRow)button.DataContext;
         if (row.Check.Id == "proxy-remote" && Window.GetWindow(this) is MainWindow window)
         {
-            window.ShowConfiguration();
-            window.Configuration?.RepairRemoteClients();
+            WorkbenchCommands.Navigate.Execute(button.CommandParameter, button);
+            if (window.CurrentPage == "Mcp") window.Configuration?.RepairRemoteClients();
             return;
         }
         Model.Run(() => Model.Environment.Fix(row.Check.Id));

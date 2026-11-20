@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Windows.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui.Views;
@@ -58,7 +59,9 @@ public partial class AiCallsView : UserControl
     }
     private void OnCall(object sender, RoutedEventArgs e)
     {
-        var row = (CallRow)((Button)sender).DataContext;
-        if (row.Pending) Model.OpenApprovals(); else Model.OpenCall(row);
+        var button = (Button)sender;
+        var row = (CallRow)button.DataContext;
+        if (row.Pending) WorkbenchCommands.Navigate.Execute(button.CommandParameter, button);
+        else Model.OpenCall(row);
     }
 }

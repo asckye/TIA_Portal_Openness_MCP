@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TiaOpenness.Gui.Localization;
@@ -78,11 +79,152 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
         }
     }
 
+    [Theory]
+    [InlineData(1024, 640)]
+    [InlineData(1366, 860)]
+    public void Feature_pages_share_the_IDE_bars_and_keep_the_selected_audit_record_at_both_sizes(int width, int height)
+    {
+        string? renders = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
+        string root = Path.GetFullPath(Path.Combine("bin-build", "audit-render", Guid.NewGuid().ToString("N")));
+        string chain = Path.Combine(root, "audit");
+        var log = new TiaOpenness.Shared.AuditLog(chain);
+        log.Append("request", "compile-1", "foundation", "21", "CompilePlc", actor: "mcp");
+        var start = log.Append("start", "compile-1", "foundation", "21", "CompilePlc", actor: "mcp");
+        log.Append("end", "compile-1", "foundation", "21", "CompilePlc", "succeeded", actor: "mcp");
+        foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
+        foreach (string theme in new[] { "Light", "Dark", "HighContrast" })
+            wpf.RunWithLanguage(language, () =>
+            {
+                var previousTheme = ThemeManager.Current.Theme;
+                var contrast = ThemeManager.Current.HighContrastOverride;
+                using var trace = new BindingPathTests.BindingTrace();
+                ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+                ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
+                var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+                try
+                {
+                    var service = new Services.AuditLogService(chain, root, Path.Combine(root, "retention"), _ => { });
+                    WpfContext.Complete(service.RefreshAsync());
+                    window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), service,
+                        new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
+                    window.Navigate("Calls");
+                    var host = WorkbenchRenderTests.CreateHost(window, width, height);
+                    var calls = (Views.AiCallsView)window.FindName("CallsContent");
+                    var approvals = (Views.ApprovalsDrawer)window.FindName("ApprovalsContent");
+                    RadioButton Pill(DependencyObject view, string page) =>
+                        Descendants<RadioButton>(view).Single(p => Equals(p.CommandParameter, page));
+                    void CheckBar(DependencyObject view, string name)
+                    {
+                        host.UpdateLayout();
+                        var bar = Descendants<Border>(view).Single(b => ReferenceEquals(b.Style, Application.Current.FindResource("Primer.IdeBar")));
+                        Assert.True(bar.ActualHeight >= 44);
+                        if (!string.IsNullOrEmpty(renders))
+                        {
+                            string directory = Path.Combine(renders, "feature-pages");
+                            Directory.CreateDirectory(directory);
+                            WorkbenchRenderTests.SaveRender(host, Path.Combine(directory, $"{name}-{language}-{theme}-{width}x{height}.png"), width, height);
+                        }
+                    }
+                    Assert.True(Pill(calls, "Calls").IsChecked);
+                    CheckBar(calls, "Calls");
+                    UnifiedDesktopTests.ClickControl(Pill(calls, "Approvals"));
+                    Assert.Equal("Approvals", window.CurrentPage);
+                    Assert.True(Pill(approvals, "Approvals").IsChecked);
+                    Assert.True(((RadioButton)window.FindName("RailAgent")).IsChecked);
+                    Assert.Equal(1, window.Approvals.PendingCount);
+                    CheckBar(approvals, "Approvals");
+                    UnifiedDesktopTests.ClickControl(Pill(approvals, "Calls"));
+                    Assert.Equal("Calls", window.CurrentPage);
+                    Assert.False(Pill(calls, "Approvals").IsChecked);
+                    window.Features.OpenCall(window.Features.Calls.Single(c => c.Tool == "ExportBlock"));
+                    host.UpdateLayout();
+                    CheckBar(calls, "CallDetail");
+
+                    window.Navigate("Audit");
+                    host.UpdateLayout();
+                    var audit = (Views.AuditLogView)window.FindName("AuditContent");
+                    var list = (ListBox)audit.FindName("AuditList");
+                    list.SelectedIndex = 1;
+                    var inspector = (Border)audit.FindName("AuditInspector");
+                    Assert.Equal(Visibility.Visible, inspector.Visibility);
+                    Assert.Equal(start.PreviousHash, ((TextBlock)audit.FindName("PreviousHashText")).Text);
+                    Assert.Equal(TiaOpenness.Shared.AuditLog.Hash(start), ((TextBlock)audit.FindName("HashText")).Text);
+                    if (width == 1366)
+                    {
+                        Assert.Equal(336, inspector.ActualWidth);
+                        Assert.True(inspector.TranslatePoint(new Point(), list).X >= list.ActualWidth);
+                    }
+                    else Assert.True(inspector.TranslatePoint(new Point(), list).Y >= list.ActualHeight);
+                    var toggle = (ToggleButton)audit.FindName("DetailsToggle");
+                    UnifiedDesktopTests.ClickControl(toggle);
+                    Assert.Equal(Visibility.Collapsed, inspector.Visibility);
+                    UnifiedDesktopTests.ClickControl(toggle);
+                    var search = (TextBox)audit.FindName("AuditSearchBox");
+                    search.Text = "#2";
+                    Assert.Single(list.Items);
+                    Assert.Equal(start.PreviousHash, ((TextBlock)audit.FindName("PreviousHashText")).Text);
+                    var hint = (Border)audit.FindName("ChainHint");
+                    Assert.Equal(Visibility.Collapsed, hint.Visibility);
+                    UnifiedDesktopTests.ClickControl((ToggleButton)audit.FindName("ChainToggle"));
+                    Assert.Equal(Visibility.Visible, hint.Visibility);
+                    CheckBar(audit, "Audit");
+
+                    foreach (var (page, name) in new[] { ("Environment", "EnvironmentContent"), ("Log", "LogContent"), ("Settings", "SettingsContent") })
+                    {
+                        window.Navigate(page);
+                        CheckBar((DependencyObject)window.FindName(name), page);
+                    }
+                    var settings = (Views.SettingsView)window.FindName("SettingsContent");
+                    foreach (var section in new[] { "Service", "AI" })
+                    {
+                        settings.ShowSection(section);
+                        CheckBar(settings, "Settings-" + section);
+                    }
+                    Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+                }
+                finally { window.Close(); ThemeManager.Current.HighContrastOverride = contrast; ThemeManager.Current.Theme = previousTheme; }
+            });
+    }
+
+    [Fact]
+    public void Audit_inspector_moves_at_1200_content_width_without_changing_the_selected_record()
+    {
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+            try
+            {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(),
+                    new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
+                window.Navigate("Audit");
+                var host = WorkbenchRenderTests.CreateHost(window, 1259, 780);
+                var inspector = window.AuditContent.AuditInspector;
+                window.AuditContent.AuditList.SelectedIndex = 2;
+                var selected = window.Features.SelectedAudit;
+                Assert.NotNull(selected);
+                foreach (int width in new[] { 1259, 1260, 1259 })
+                {
+                    host.Width = width;
+                    host.Measure(new Size(width, 780));
+                    host.Arrange(new Rect(0, 0, width, 780));
+                    host.UpdateLayout();
+                    WpfContext.Drain();
+                    host.UpdateLayout();
+                    Assert.Same(selected, window.Features.SelectedAudit);
+                    Assert.Equal(width == 1260 ? 1 : 0, Grid.GetColumn(inspector));
+                    Assert.Equal(width == 1260 ? 0 : 1, Grid.GetRow(inspector));
+                }
+            }
+            finally { window.Close(); }
+        });
+    }
+
     internal static Border Detach(MainWindow window)
     {
         var content = (FrameworkElement)window.Content; window.Content = null;
         var host = new Border { Child = content, DataContext = window.DataContext, Width = 1200, Height = 780 };
         NameScope.SetNameScope(host, NameScope.GetNameScope(window));
+        foreach (System.Windows.Input.CommandBinding command in window.CommandBindings) host.CommandBindings.Add(command);
         return host;
     }
     internal static void Layout(FrameworkElement host)
