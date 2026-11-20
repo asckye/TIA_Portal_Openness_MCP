@@ -6286,6 +6286,68 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Shell_pages_status_lines_and_settings_render_at_all_handoff_sizes( ):a288b5e1289696b53a13bcf228b9646b756edd283801c43ec2f9eeb0ee58b4b0:1"
         }
       ]
+    },
+    {
+      "task": "UI-0035",
+      "maintainerDate": "2026-11-20",
+      "reason": "ADR 0035 completion: 401-without-key assertions replaced by key-free and Host/Origin 403 assertions, readiness test renamed, vault tests replaced by plain-text redaction/approval-card coverage; maintainer confirmed ADR 0035 on 2026-11-19",
+      "items": [
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "check_http:2ffbea7166d2cdbda6e4d9c854dbd2b7c2675daa8c551bce6bb3aaa064403e12:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "check_release:2ffbea7166d2cdbda6e4d9c854dbd2b7c2675daa8c551bce6bb3aaa064403e12:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "main:2ffbea7166d2cdbda6e4d9c854dbd2b7c2675daa8c551bce6bb3aaa064403e12:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "plc_transports:2ffbea7166d2cdbda6e4d9c854dbd2b7c2675daa8c551bce6bb3aaa064403e12:1"
+        },
+        {
+          "path": "scripts/checks/Test-FoundationTransport.py",
+          "kind": "assertion-removed",
+          "identifier": "self_test:2ffbea7166d2cdbda6e4d9c854dbd2b7c2675daa8c551bce6bb3aaa064403e12:1"
+        },
+        {
+          "path": "scripts/checks/Test-ResourceDiscovery.py",
+          "kind": "assertion-removed",
+          "identifier": "run:c717d4b5853a380bcbf5ce72beec1c64a5d79d34832efa484860f5ac340f6ce5:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "test-removed",
+          "identifier": "EngineHttpSessionTestsPlc/Health_has_file_version_and_readiness_requires_authentication( ):a33b8f6d8b00d5ab0cba45ad854f950890b9251e29f0a7b92e998a22e8fa19a0"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HttpRequestBoundaryTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HttpRequestBoundaryTests/Forged_headers_are_forbidden_and_audited_even_on_health_and_unknown_routes( ):94878dae8fa97c61cd988211bbc7056c23bf525dd8a03112f45da2aefecfc4b7:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/OnlinePortAdmissionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "OnlinePortAdmissionTests.VaultOnlineWorker/Call( string operation , JsonObject arguments , CancellationToken token ):c23c1f2af6e2f3447be46d2ca3d7123ca4cd09ff663d5fa77576b283eae1ec4d:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs( AppLanguage language , string detection , string ready , string status ):acd90f46f5353f94e65db790a0e73883237e0f49fa708ac2a4626879f612beec:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs( AppLanguage language , string detection , string ready , string status ):f08e82f2d1884abffb0ab7d5af7dc8afb3253aea691eb8af5b22f3ed71fecd1d:1"
+        }
+      ]
     }
   ]
 }
