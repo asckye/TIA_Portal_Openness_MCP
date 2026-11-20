@@ -6759,6 +6759,18 @@
           "identifier": "TiaMcp.Engine.Tests.UnifiedCrossReferencePolicyTests/Explicit_opt_in_uses_the_existing_native_sequence_and_filter( string release ):0e8a8593e145f727d59c1b21dd4c26ca995fb124414662cffb3584f3bb77bfee"
         }
       ]
+    },
+    {
+      "task": "UI-0036C",
+      "maintainerDate": "2026-11-20",
+      "reason": "D3: an AI-opened call drawer closes on the next AI navigation; the human-opened drawer refusal is asserted separately (maintainer standing approval 2026-11-17 for recommended options)",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Calls_inspector_preserves_the_control_record_and_modal_boundary( int width , bool docked ):5d8b0d3ec3643df32f5dfdbe27a2b98627207f4700ea0e194ae98802ad491cda:1"
+        }
+      ]
     }
   ]
 }
