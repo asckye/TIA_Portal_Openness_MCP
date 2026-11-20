@@ -16,6 +16,7 @@ namespace Siemens.Engineering.Cax
         private bool exclusiveHeld;
         public IDisposable ExclusiveAccess()
         {
+            if (exclusiveHeld) throw new InvalidOperationException("Multiple instances of ExclusiveAccess are not supported.");
             exclusiveHeld = true;
             return new Access(this);
         }
@@ -30,6 +31,16 @@ namespace Siemens.Engineering.Cax
             return result;
         }
         public TransferResult Export(Device device, FileInfo destination) => throw new NotSupportedException();
+#if !PLC_CAX_TRANSFER_RESULT
+        public bool Import(FileInfo source, FileInfo log, CaxImportOptions option)
+        {
+            using var access = ExclusiveAccess();
+            ImportCalls++;
+            File.WriteAllText(log.FullName, "Device import failed.");
+            return result.ErrorCount == 0;
+        }
+        public bool Export(Device device, FileInfo destination, FileInfo log) => throw new NotSupportedException();
+#endif
     }
 }
 

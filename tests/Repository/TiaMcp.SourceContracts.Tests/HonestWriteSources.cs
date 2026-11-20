@@ -120,9 +120,9 @@ public sealed class HonestWriteSources
     {
         string source = Read("src/Adapters/Native/Hardware/HardwareAml.cs");
         source = source[source.IndexOf("public HardwareAddressingReply ImportHardwareAml", StringComparison.Ordinal)..];
-        Assert.Contains("#if PLC_CAX_TRANSFER_RESULT if (!dryRun) HardwareWriteAdmission(); #else", source, StringComparison.Ordinal);
-        Assert.Contains("#else using var exclusive = !dryRun ? HardwareEditAccess() : null; #endif", source, StringComparison.Ordinal);
-        Assert.Equal(1, source.Split("HardwareEditAccess()", StringSplitOptions.None).Length - 1);
+        Assert.Contains("if (!dryRun) HardwareWriteAdmission(); var cax = project!.GetService<CaxProvider>()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("#if", source[..source.IndexOf("HardwareWriteAdmission();", StringComparison.Ordinal)], StringComparison.Ordinal);
+        Assert.DoesNotContain("HardwareEditAccess()", source, StringComparison.Ordinal);
         Assert.Contains("cax.Import(source, option)", source, StringComparison.Ordinal);
         Assert.Contains("cax.Import(source, log, option)", source, StringComparison.Ordinal);
     }
@@ -154,7 +154,7 @@ public sealed class HonestWriteSources
 
     [Theory]
     [InlineData("src/Adapters/Native/Hardware/HardwareNetwork.cs", "public HardwareAddressingReply HardwareUpdateDeviceItemChannel", "using var access")]
-    [InlineData("src/Adapters/Native/Hardware/HardwareAml.cs", "public HardwareAddressingReply ImportHardwareAml", "using var exclusive")]
+    [InlineData("src/Adapters/Native/Hardware/HardwareAml.cs", "public HardwareAddressingReply ImportHardwareAml", "HardwareWriteAdmission();")]
     public void Hardware_writes_initialize_unchanged_before_edit_admission(string path, string method, string admission)
     {
         string source = Read(path);

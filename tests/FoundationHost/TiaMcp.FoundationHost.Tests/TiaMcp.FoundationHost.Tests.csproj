@@ -1,6 +1,7 @@
 <!-- Keep the test-host define when a caller supplies additional constants. -->
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="DefineConstants">
   <Import Project="../../Shared/Xunit.props" />
+  <ItemGroup><None Update="Fixtures/SimaticMl/17/*" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><Compile Include="../../Shared/DownloadTargetCases.cs" Link="Shared/DownloadTargetCases.cs" /></ItemGroup>
   <PropertyGroup>
     <RootNamespace>TiaMcp.FoundationHost.Tests</RootNamespace><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><DefineConstants>$(DefineConstants);TIA_FOUNDATION_TEST_HOST</DefineConstants>

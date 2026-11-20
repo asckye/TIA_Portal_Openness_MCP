@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Logic.Generation;
 using TiaMcp.Logic.V4;
@@ -303,8 +304,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var row in paths.OfType<JsonObject>())
                 {
                     string name = (string)row["name"]!;
-                    string path = Uri.UnescapeDataString((string)row["objectPath"]!);
+                    string objectPath = (string)row["objectPath"]!;
+                    string path = Uri.UnescapeDataString(objectPath);
                     string group = path.Contains('/') ? path.Substring(0, path.LastIndexOf('/')) : "";
+                    if ((string?)row["unitName"] is string unit && unit.Length > 0)
+                    {
+                        // ProjectModel indexes blocks and types by station and name, independently of their group.
+                        string scope = "units/" + ObjectPathEncoding.EncodeSegment(unit);
+                        path = objectPath.Length == 0 ? scope : scope + "/" + objectPath;
+                        name = path;
+                        group = "";
+                    }
                     switch ((string?)row["kind"])
                     {
                         case "block": observed.Blocks.Add(new ProjectBlock { Station = station.Id, Name = name, Group = group }); break;
@@ -313,7 +323,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         break;
                         case "type-group": if (path.Length != 0) observed.Groups.Add(new ProjectGroup { Station = station.Id, Name = path, Kind = "types" });
                         break;
-                        default: throw new GenerationCallRejectionException(new Error("The selected PLC software returned an unrecognized inventory row.",
+                        case "unit": case "tag-table": case "tag-group": case "external-source": case "source-group": break;
+                        default: throw new GenerationCallRejectionException(new Error(
+                            $"The selected PLC software returned an unrecognized inventory row '{row["kind"]}' at '{objectPath}'.",
                             new PreconditionFailedDetails("generation-readback", software, "/machine/target/project/softwarePath")));
                     }
                 }

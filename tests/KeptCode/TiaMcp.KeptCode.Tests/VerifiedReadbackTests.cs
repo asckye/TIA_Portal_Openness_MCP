@@ -86,7 +86,8 @@ namespace TiaMcp.Engine.Tests
             internal JsonObject Run(bool preview, string token = "")
             {
                 var meta = new JsonObject();
-                PlcVerifiedImport.Execute(candidateXml, "PLC/FC_Fixture", directory, preview, token, Export, Import, () => { }, meta, () => { });
+                PlcVerifiedImport.Execute(candidateXml, "PLC/" + PlcVerifiedImport.CandidateName(candidateXml), directory,
+                    preview, token, Export, Import, () => { }, meta, () => { });
                 return meta;
             }
             public void Dispose()
@@ -111,6 +112,27 @@ namespace TiaMcp.Engine.Tests
             Assert.Null(result["cleanupRequired"]);
             Assert.Equal((string?)result["plannedFingerprint"], (string?)result["actualFingerprint"]);
             Assert.Equal(1, fixture.Imports);
+        }
+
+        [Fact]
+        public void V17_global_db_readback_matches_when_TIA_materializes_member_defaults()
+        {
+            const string xml = """
+                <Document><Engineering version="V17"/><SW.Blocks.GlobalDB ID="0"><AttributeList>
+                <Name>MCP_RC_DB2</Name><Number>9802</Number><ProgrammingLanguage>DB</ProgrammingLanguage>
+                <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v4"><Section Name="Static">
+                <Member Name="Ready" Datatype="Bool"><StartValue>FALSE</StartValue></Member>
+                <Member Name="Count" Datatype="Int"><StartValue>0</StartValue></Member>
+                </Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>
+                """;
+            using var fixture = new Fixture(xml);
+            fixture.After = xml.Replace("<Member ", "<Member Remanence=\"NonRetain\" ");
+            var preview = fixture.Run(true);
+            var result = fixture.Run(false, (string)preview["token"]!);
+            Assert.Equal(1, fixture.Imports);
+            Assert.Equal("DocumentReadbackMatched", (string?)result["status"]);
+            Assert.True((bool?)result["verificationSuccess"]);
+            Assert.Equal((string?)result["plannedFingerprint"], (string?)result["actualFingerprint"]);
         }
 
         [Fact]

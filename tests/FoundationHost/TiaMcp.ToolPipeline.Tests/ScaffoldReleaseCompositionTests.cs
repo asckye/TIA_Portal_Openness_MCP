@@ -128,6 +128,26 @@ public sealed class ScaffoldReleaseCompositionTests
         finally { EngineHostConfiguration.ReleaseKey = previousRelease; }
     }
 
+    [Theory, InlineData("[]"), InlineData("42"), InlineData("\"text\""), InlineData("null"), InlineData("{"),
+        InlineData("{\"projectName\":\"P\",\"projectName\":\"Q\"}")]
+    public void Malformed_spec_identifies_the_argument_before_any_worker_call(string spec)
+    {
+        using var session = EngineHostConfiguration.Enter(new EngineSessionContext(new AdmissionWorker()) {
+            Catalog = new FoundationCatalog("17", Array.Empty<McpServerTool>())
+        });
+        var fake = new ScaffoldWorkerFake("17");
+        var tools = Tools(fake);
+        foreach (bool dryRun in new[] { true, false })
+        {
+            var envelope = tools.BuildProjectScaffoldV4(spec, dryRun).StructuredContent!;
+            Assert.Equal("INVALID_ARGUMENT", (string?)envelope["error"]?["code"]);
+            Assert.Equal("/spec", (string?)envelope["error"]?["details"]?["parameter"]);
+            Assert.Equal("not-started", (string?)envelope["meta"]?["execution"]);
+        }
+        Assert.Empty(fake.Calls);
+        Assert.Empty(fake.Primitives);
+    }
+
     private static ProjectLifecycleProjectTools Tools(ScaffoldWorkerFake fake)
     {
         JsonNode? Call(string operation, JsonObject arguments)

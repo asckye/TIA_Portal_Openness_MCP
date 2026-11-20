@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="TiaFeatureProfile;TiaReleaseKey">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TiaFeatureProfile>Adapter</TiaFeatureProfile>
+    <TiaReleaseKey>17</TiaReleaseKey>
+  </PropertyGroup>
+  <Import Project="../../../src/Shared/TiaFeatures.props" />
+  <ItemGroup>
+    <InternalsVisibleTo Include="TiaMcp.Adapters.Contracts.Tests" />
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <Compile Include="../TiaMcp.CaxTransfer.Fixture/CaxStandIns.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAml.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAmlPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareServicesPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativeInputPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" />
+  </ItemGroup>
+</Project>

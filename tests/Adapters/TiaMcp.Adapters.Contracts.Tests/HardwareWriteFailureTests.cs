@@ -409,7 +409,7 @@ public sealed class HardwareWriteFailureTests
         var fixture = NativeFixture(release);
         var cax = new Siemens.Engineering.Cax.CaxProvider();
         fixture.Project.Services[typeof(Siemens.Engineering.Cax.CaxProvider)] = cax;
-        fixture.Portal.ExclusiveFailure = new InvalidOperationException("Native ExclusiveAccess refused.");
+        fixture.Engine.HasEngineeringTransaction = true;
         string directory = System.IO.Path.Combine(AppContext.BaseDirectory, "aml-" + Guid.NewGuid().ToString("N"));
         System.IO.Directory.CreateDirectory(directory);
         string source = System.IO.Path.Combine(directory, "input.aml");
@@ -423,7 +423,7 @@ public sealed class HardwareWriteFailureTests
             Assert.Equal(false, result.Meta["apiCallSuccess"]);
             Assert.False(result.MayHaveChanged);
             Assert.False(result.OutcomeUnknown);
-            Assert.Equal(1, fixture.Portal.ExclusiveCalls);
+            Assert.Equal(0, fixture.Portal.ExclusiveCalls);
             Assert.Equal(0, cax.ImportCalls);
         }
         finally { System.IO.File.Delete(source); System.IO.Directory.Delete(directory); }

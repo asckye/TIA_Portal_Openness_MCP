@@ -56,6 +56,25 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
+        public void Atlas_links_an_FC_selected_by_global_instance_and_renders_it_once()
+        {
+            const string network = """
+                <StructuredText><Access Scope="Call"><CallInfo BlockType="FC">
+                <Instance Scope="GlobalVariable"><Component Name="Calculate"/></Instance>
+                <Token Text="("/><Token Text=")"/></CallInfo></Access><Token Text=";"/></StructuredText>
+                """;
+            string exports = Directory.CreateDirectory(Path.Combine(root, "exports")).FullName;
+            File.WriteAllText(Path.Combine(exports, "Caller.xml"), Block("Caller", "SCL", network, "V17"));
+            File.WriteAllText(Path.Combine(exports, "Calculate.xml"), Block("Calculate", "SCL", "<StructuredText/>", "V17")
+                .Replace("SW.Blocks.FB", "SW.Blocks.FC"));
+            var result = PlcProgramRenderer.Write(exports, Output(), true, "17");
+            Assert.True(result.Ok, result.Error?.Message);
+            string html = System.Net.WebUtility.HtmlDecode(File.ReadAllText(Output()));
+            Assert.Contains("\"Calculate\"();", html);
+            Assert.Contains("1: <a href=\"#block-2\">Caller</a>", html);
+        }
+
+        [Fact]
         public void Atlas_links_calls_and_limits_called_by_to_included_blocks()
         {
             var exports = Directory.CreateDirectory(Path.Combine(root, "exports")).FullName;

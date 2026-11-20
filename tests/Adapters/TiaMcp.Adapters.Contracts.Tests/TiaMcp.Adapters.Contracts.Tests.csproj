@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Fixtures/TiaMcp.CaxTransfer.Fixture/TiaMcp.CaxTransfer.Fixture.csproj" Aliases="caxfixture" PrivateAssets="compile" />
+    <ProjectReference Include="../../Fixtures/TiaMcp.CaxLegacy.Fixture/TiaMcp.CaxLegacy.Fixture.csproj" Aliases="legacycax" PrivateAssets="compile" />
     <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />
     <ProjectReference Include="../../Fixtures/TiaMcp.UnifiedWorker.Fixture/TiaMcp.UnifiedWorker.Fixture.csproj" Aliases="unifiedworkerfixture" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareLegacyWrites.cs" />

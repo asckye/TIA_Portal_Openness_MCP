@@ -22,6 +22,20 @@ namespace TiaMcp.Engine.Tests
             bool Fails(Action run) { try { run(); return false; } catch { return true; } }
             string Canon(string xml) => PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(xml));
             var hash = PlcDocumentEditing.HashText(Canon(Xml));
+            foreach (int version in new[] { 2, 3, 4, 5 })
+            {
+                string original = Xml.Replace("urn:interface", "http://www.siemens.com/automation/Openness/SW/Interface/v" + version);
+                string With(string attributes) => original.Replace("<Member ", "<Member " + attributes + " ");
+                check(Canon(original) == Canon(With("Remanence='NonRetain'")), "V" + version + " member NonRetain is the default");
+                check(Canon(original) != Canon(With("Remanence='Retain'")), "V" + version + " retained member differs from absent");
+                check(Canon(With("Remanence='Retain'")) != Canon(With("Remanence='NonRetain'")), "V" + version + " explicit retention differs");
+                check(Canon(original) == Canon(With("Accessibility='Public'")), "V" + version + " member Public is the default");
+                check(Canon(original) == Canon(With("Informative='false'")), "V" + version + " member Informative false is the default");
+                check(Canon(original) != Canon(With("Informative='true'")), "V" + version + " informative members stay distinct");
+                check(Canon(original) != Canon(original.Replace("<Section ", "<Section Remanence='NonRetain' ")),
+                    "V" + version + " non-Member attributes stay strict");
+            }
+            check(Canon(Xml) != Canon(Xml.Replace("<Member ", "<Member Remanence='NonRetain' ")), "Unrelated Member namespaces stay strict");
             var inspection = PlcDocumentEditing.Inspect(Xml);
             check(inspection["networks"]![0]!["language"]!.GetValue<string>() == "LAD", "PLC capability reads the compile-unit language");
             check(inspection["nativeImportValidated"]!.GetValue<bool>() == false, "PLC capability never claims native validation");

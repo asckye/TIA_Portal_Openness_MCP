@@ -170,7 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         var network = new Network { Unit = unit, Xml = xml, Language = language, Code = code,
                             Kind = empty ? "empty" : graph ? "ladder" : "code",
                             Calls = xml.DescendantsAndSelf().Where(e => e.Name.LocalName == "CallInfo")
-                                .Select(e => (string?)e.Attribute("Name") ?? "").Where(n => n.Length > 0).Distinct(StringComparer.Ordinal).ToArray() };
+                                .Select(e => OfflineAnalysisLogic.ReadCall(e).Callee).Where(n => n.Length > 0).Distinct(StringComparer.Ordinal).ToArray() };
                         page.Networks.Add(network);
                     }
                     pages.Add(page); Limit("inputPath.blocks", pages.Count, MaxFiles);

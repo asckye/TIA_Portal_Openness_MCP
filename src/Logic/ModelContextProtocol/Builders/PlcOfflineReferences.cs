@@ -76,11 +76,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         foreach (var call in n.Descendants().Where(e => e.Name.LocalName == "CallInfo"))
                         {
-                            var name = OfflineAnalysisLogic.CallTarget(call, out var selector);
-                            if (selector?.Name.LocalName == "Instance")
-                                entry.Calls.Add((name, networkIndex, OfflineAnalysisLogic.ComponentPath(selector),
-                                    (string?)selector.Attribute("Scope") == "GlobalVariable"));
-                            else if (name.Length > 0) entry.Calls.Add((name, networkIndex, null, false));
+                            var targetCall = OfflineAnalysisLogic.ReadCall(call);
+                            if (targetCall.Callee.Length > 0 || targetCall.InstancePath != null)
+                                entry.Calls.Add((targetCall.Callee, networkIndex, targetCall.InstancePath,
+                                    (string?)targetCall.Selector?.Attribute("Scope") == "GlobalVariable"));
                             else warnings.Add(id + ": unnamed CallInfo in network " + networkIndex);
                         }
                         foreach (var access in n.Descendants().Where(e => e.Name.LocalName == "Access"))

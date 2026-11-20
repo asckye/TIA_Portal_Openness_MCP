@@ -18,6 +18,7 @@ public sealed class GenerationExecutionTests : IDisposable
     private readonly string repository;
     private int writes, approvals;
     private string? textTreeFirmware;
+    private readonly JsonArray softwarePaths = new();
     private string bindingGeneration = "1";
     private string? approvalReason, failure;
     private int stopAt = 2;
@@ -85,7 +86,7 @@ public sealed class GenerationExecutionTests : IDisposable
                     new JsonObject { ["name"] = "FirmwareVersion", ["value"] = textTreeFirmware }) });
             }
             if (name == "GetProjectTree") return Result(name, new JsonObject { ["devices"] = new JsonArray(new JsonObject { ["kind"] = "device", ["name"] = "PLC1", ["articleNumber"] = "6ES7 513-1AL02-0AB0", ["version"] = "V2.0" }) });
-            if (name == "GetSoftwareTree") return Result(name, new JsonObject { ["paths"] = new JsonArray() }, incomplete ? "partial" : "complete");
+            if (name == "GetSoftwareTree") return Result(name, new JsonObject { ["paths"] = softwarePaths.DeepClone() }, incomplete ? "partial" : "complete");
             if (name.StartsWith("List", StringComparison.Ordinal)) return Result(name, new JsonObject { ["items"] = new JsonArray() });
             if (check?.Invoke() is { } refused) return refused;
             if (mismatch)
@@ -169,6 +170,48 @@ public sealed class GenerationExecutionTests : IDisposable
     private static CallToolResult Apply(GenerationExecutionSession session, JsonObject plan, bool preview = false)
         => session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, (string)plan["target"]!["projectIdentity"]!, null, preview);
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });
+
+    [Fact]
+    public void Unit_inventory_keeps_block_and_type_identities_separate_from_root_objects()
+    {
+        var session = Session("17");
+        var empty = Plan(session, "17");
+        const string unit = "Cell";
+        void Row(string kind, string name, string rootPath, string relative, string selector)
+        {
+            softwarePaths.Add(new JsonObject { ["kind"] = kind, ["name"] = name, ["unitName"] = unit,
+                ["path"] = "PLC1/units/Cell" + rootPath, ["objectPath"] = relative, ["selectorParameter"] = selector });
+        }
+        Row("unit", unit, "", unit, "unitName");
+        Row("block-group", "Library", "/blocks/Library", "Library", "groupPath");
+        Row("block", "FB_MotorDol", "/blocks/Library/FB_MotorDol", "Library/FB_MotorDol", "blockPath");
+        Row("type-group", "Library", "/types/Library", "Library", "groupPath");
+        Row("type", "UDT_MotorDolStatus", "/types/Library/UDT_MotorDolStatus", "Library/UDT_MotorDolStatus", "typePath");
+        Row("tag-group", "IO", "/tag-tables/IO", "IO", "groupPath");
+        Row("tag-table", "Signals", "/tag-tables/IO/Signals", "IO/Signals", "table");
+        Row("source-group", "Sources", "/external-sources/Sources", "Sources", "groupPath");
+        Row("external-source", "Program", "/external-sources/Sources/Program", "Sources/Program", "externalSourceName");
+        var scoped = Plan(session, "17");
+        Assert.Equal(new[] { "block:units/Cell/Library/FB_MotorDol", "type:units/Cell/Library/UDT_MotorDolStatus" },
+            scoped["observed"]!["PLC1"]!["objectKeys"]!.AsArray().Select(n => (string?)n));
+        Assert.True(JsonNode.DeepEquals(empty["conflicts"], scoped["conflicts"]));
+        softwarePaths.Add(new JsonObject { ["kind"] = "block", ["name"] = "FB_MotorDol", ["objectPath"] = "FB_MotorDol",
+            ["path"] = "PLC1/blocks/FB_MotorDol", ["selectorParameter"] = "blockPath" });
+        var both = Plan(session, "17");
+        Assert.Contains("block:FB_MotorDol", both["observed"]!["PLC1"]!["objectKeys"]!.AsArray().Select(n => (string?)n));
+        Assert.Contains("FB_MotorDol", both["conflicts"]!.ToJsonString());
+        Assert.Equal(0, writes);
+    }
+
+    [Fact]
+    public void Unknown_software_inventory_row_reports_kind_and_object_path()
+    {
+        softwarePaths.Add(new JsonObject { ["kind"] = "unknown-kind", ["name"] = "Thing", ["objectPath"] = "Group/Thing" });
+        var error = Assert.Throws<GenerationCallRejectionException>(() => Plan(Session("17"), "17"));
+        Assert.Contains("unknown-kind", error.Message);
+        Assert.Contains("Group/Thing", error.Message);
+        Assert.Equal(0, writes);
+    }
 
     [Fact]
     public void Existing_text_tree_station_uses_native_article_and_firmware()

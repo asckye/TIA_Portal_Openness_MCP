@@ -1,14 +1,66 @@
 extern alias caxfixture;
+extern alias legacycax;
 
 using System.Text;
 using Cax = caxfixture::Siemens.Engineering.Cax;
 using CaxEngine = caxfixture::TiaMcp.Adapters.PlcFoundationEngine;
+using LegacyCax = legacycax::Siemens.Engineering.Cax;
+using LegacyEngine = legacycax::TiaMcp.Adapters.PlcFoundationEngine;
 using Xunit;
 
 namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class CaxTransferResultTests
 {
+    [Fact]
+    public void Legacy_importer_can_acquire_its_own_exclusive_scope_after_admission()
+    {
+        var provider = new LegacyCax.CaxProvider(new(LegacyCax.TransferResultState.Error, 1, 0, []));
+        var engine = new LegacyEngine("17", provider);
+        var directory = Directory.CreateTempSubdirectory("cax-");
+        string source = Path.Combine(directory.FullName, "input.aml");
+        string log = Path.Combine(directory.FullName, "import.log");
+        try
+        {
+            File.WriteAllText(source, """<CAEXFile SchemaVersion="2.15" FileName="input.aml"><InstanceHierarchy Name="Project"/></CAEXFile>""");
+            engine.ImportHardwareAml(source, log);
+            Assert.Equal(0, engine.WriteAdmissions);
+            Assert.Equal(0, provider.ImportCalls);
+            using (provider.ExclusiveAccess())
+                Assert.Throws<InvalidOperationException>(() => engine.ImportHardwareAml(source, log, confirmImport: true, dryRun: false));
+            var reply = engine.ImportHardwareAml(source, log, confirmImport: true, dryRun: false);
+            Assert.Equal(2, engine.WriteAdmissions);
+            Assert.Equal(1, provider.ImportCalls);
+            Assert.Equal(false, reply.Meta["nativeResult"]);
+            Assert.Equal("ImportFailed", reply.Meta["status"]);
+            Assert.Equal("Device import failed.", Assert.Single(Assert.IsType<List<string>>(reply.Meta["logExcerpt"])));
+        }
+        finally { directory.Delete(true); }
+    }
+
+    [Theory, InlineData("gbk"), InlineData("utf8"), InlineData("utf16-bom"), InlineData("utf8-cut")]
+    public void Legacy_log_decodes_bom_then_strict_utf8_then_ansi(string format)
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var gbk = Encoding.GetEncoding(936);
+        const string message = "设备导入失败";
+        byte[] bytes = format switch {
+            "gbk" => gbk.GetBytes(message),
+            "utf16-bom" => Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes(message)).ToArray(),
+            "utf8-cut" => Encoding.UTF8.GetBytes(message + "\n" + new string('x', 4094 - Encoding.UTF8.GetByteCount(message) - 1) + "界"),
+            _ => Encoding.UTF8.GetBytes(message)
+        };
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllBytes(path, bytes);
+            var lines = LegacyEngine.ReadLogExcerpt(new FileInfo(path), gbk);
+            Assert.Equal(message, lines[0]);
+            if (format == "utf8-cut") Assert.All(lines[1], c => Assert.Equal('x', c));
+        }
+        finally { File.Delete(path); }
+    }
+
     [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
     public void Transfer_result_import_passes_write_admission_and_runs_outside_exclusive_access(string release)
     {

@@ -25,26 +25,36 @@ internal sealed class ProjectLifecycleProjectTools
             [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun =
                 true)
         {
-            ScaffoldStep? refused;
-            try
+            JsonObject plan;
+            try { plan = ParseSpec(spec); }
+            catch (AdapterPreconditionException error)
             {
-                var root = JsonNode.Parse(spec);
-                refused = root is JsonObject plan ? UnsupportedSteps(plan).FirstOrDefault() : null;
+                return SessionToolContract.Failure("BuildProjectScaffold", error, !dryRun, true, nativeCallIssued: false);
             }
-            catch (Exception error) when (error is JsonException || error is ArgumentException)
-            {
-                return SessionToolContract.Run("BuildProjectScaffold", !dryRun, true, () => ScaffoldProject(spec, dryRun));
-            }
+            var refused = UnsupportedSteps(plan).FirstOrDefault();
             TiaMcp.Logic.V4.Error Refusal() => new TiaMcp.Logic.V4.Error(refused!.Detail!,
                 new TiaMcp.Logic.V4.UnsupportedCapabilityDetails(_service.ReleaseKey, "BuildProjectScaffold", null));
             if (!dryRun && refused != null)
                 return McpServer.V4Reject("BuildProjectScaffold", Refusal());
-            var result = SessionToolContract.Run("BuildProjectScaffold", !dryRun, true, () => ScaffoldProject(spec, dryRun));
+            var result = SessionToolContract.Run("BuildProjectScaffold", !dryRun, true, () => ScaffoldProject(plan, dryRun));
             if (dryRun && refused != null && result.StructuredContent?["data"] is JsonObject data)
             {
                 return McpServer.V4Reject("BuildProjectScaffold", Refusal(), data.DeepClone().AsObject());
             }
             return result;
+        }
+
+        private static JsonObject ParseSpec(string spec)
+        {
+            try
+            {
+                return JsonNode.Parse(spec, documentOptions: new JsonDocumentOptions { AllowDuplicateProperties = false }) as JsonObject
+                    ?? throw new AdapterPreconditionException("BuildProjectScaffold requires a JSON object.", nameof(spec));
+            }
+            catch (Exception error) when (error is JsonException || error is ArgumentNullException)
+            {
+                throw new AdapterPreconditionException("BuildProjectScaffold requires a valid JSON object.", nameof(spec), isArgument: true, innerException: error);
+            }
         }
 
         private IEnumerable<ScaffoldStep> UnsupportedSteps(JsonNode root)
@@ -76,14 +86,13 @@ internal sealed class ProjectLifecycleProjectTools
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
             [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun =
                 true)
+            => ScaffoldProject(ParseSpec(spec), dryRun);
+
+        private ResponseScaffold ScaffoldProject(JsonObject root, bool dryRun)
         {
             var resp = new ResponseScaffold { Ok = true };
             void Step(string name, string status, string? detail = null)
                 => resp.Steps.Add(new ScaffoldStep { Step = name, Status = status, Detail = detail });
-
-            JsonNode root;
-            try { root = JsonNode.Parse(spec) ?? throw new JsonException("spec parsed to null"); }
-            catch (Exception ex) { throw new McpException($"BuildProjectScaffold: invalid spec JSON: {ex.Message}", McpErrorCode.InvalidParams); }
 
             string S(string key, string def = "") { try { return root[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): malformed optional scaffold values retain the caller-provided default */ { return def; } }
             bool B(string key, bool def) { try { return root[key] is JsonNode n ? n.GetValue<bool>() : def; } catch /* swallow(parse-fallback): malformed optional scaffold values retain the caller-provided default */ { return def; } }

@@ -99,6 +99,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (e.HasElements && !e.Nodes().OfType<XText>().Any(t => !string.IsNullOrWhiteSpace(t.Value))
                     && !e.AncestorsAndSelf().Any(p => (string?)p.Attribute(XNamespace.Xml + "space") == "preserve"))
                     e.Nodes().OfType<XText>().Where(t => string.IsNullOrWhiteSpace(t.Value)).Remove();
+                if (e.Name.LocalName == "Member" && Regex.IsMatch(e.Name.NamespaceName, @"/SW/Interface/v[0-9]+\z", RegexOptions.CultureInvariant))
+                {
+                    if ((string?)e.Attribute("Remanence") == "NonRetain") e.Attribute("Remanence")!.Remove();
+                    if ((string?)e.Attribute("Accessibility") == "Public") e.Attribute("Accessibility")!.Remove();
+                    if ((string?)e.Attribute("Informative") == "false") e.Attribute("Informative")!.Remove();
+                }
                 var attrs = e.Attributes().OrderBy(a => a.Name.ToString(), StringComparer.Ordinal).ToArray();
                 e.RemoveAttributes(); e.Add(attrs);
             }

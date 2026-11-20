@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Siemens.Engineering;
 using Siemens.Engineering.Cax;
@@ -87,11 +88,7 @@ namespace TiaMcp.Adapters
                 var source = HardwareAmlPolicy.InputFile(filePath);
                 var log = HardwareAmlPolicy.Plan(logFilePath, nameof(logFilePath));
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false;
-#if PLC_CAX_TRANSFER_RESULT
                 if (!dryRun) HardwareWriteAdmission();
-#else
-                using var exclusive = !dryRun ? HardwareEditAccess() : null;
-#endif
                 var cax = project!.GetService<CaxProvider>() ?? throw new NotSupportedException("CaxProvider unavailable for this project.");
                 meta["importOption"] = option.ToString();
                 meta["sourceFile"] = HardwareAmlPolicy.Verify(source); meta["plannedLogFile"] = log.FullName;
@@ -129,14 +126,7 @@ namespace TiaMcp.Adapters
                 if (!ok)
                 {
                     if (log.Exists && log.Length > 0)
-                    {
-                        using var file = log.OpenRead();
-                        using var reader = new BinaryReader(file);
-                        using var prefix = new StreamReader(new MemoryStream(reader.ReadBytes(4096)));
-                        var lines = new List<string>();
-                        while (lines.Count < 40 && prefix.ReadLine() is string line) lines.Add(line);
-                        meta["logExcerpt"] = DiagnosticLines(lines);
-                    }
+                        meta["logExcerpt"] = ReadLogExcerpt(log, Encoding.Default);
                     return ImportFailed(meta);
                 }
                 return "CAx/AutomationML import returned true (native log hashed); imported content not semantically verified. Project not saved, compiled " +
@@ -156,6 +146,43 @@ namespace TiaMcp.Adapters
                 }
             });
         }
+
+#if !PLC_CAX_TRANSFER_RESULT
+        internal static List<string> ReadLogExcerpt(FileInfo log, Encoding fallback)
+        {
+            using var file = log.OpenRead();
+            using var reader = new BinaryReader(file);
+            var bytes = reader.ReadBytes(4096);
+            bool complete = file.Position == file.Length;
+
+            string Decode(Encoding encoding, int offset)
+            {
+                var chars = new char[encoding.GetMaxCharCount(bytes.Length - offset)];
+                // At the byte limit the decoder retains any unfinished character.
+                int count = encoding.GetDecoder().GetChars(bytes, offset, bytes.Length - offset, chars, 0, flush: complete);
+                return new string(chars, 0, count);
+            }
+
+            // UTF-32 LE has the same first two bytes as UTF-16 LE.
+            var bom = new[] { Encoding.UTF32, new UTF32Encoding(true, true), Encoding.Unicode, Encoding.BigEndianUnicode, Encoding.UTF8 }
+                .FirstOrDefault(encoding => bytes.Take(encoding.GetPreamble().Length).SequenceEqual(encoding.GetPreamble()));
+            string text;
+            if (bom != null) text = Decode(bom, bom.GetPreamble().Length);
+            else
+            {
+                try { text = Decode(new UTF8Encoding(false, true), 0); }
+                catch (DecoderFallbackException)
+                {
+                    /* swallow(parse-fallback): Legacy CAx logs with invalid UTF-8 use the Windows ANSI code page. */
+                    text = Decode(fallback, 0);
+                }
+            }
+            using var prefix = new StringReader(text);
+            var lines = new List<string>();
+            while (lines.Count < 40 && prefix.ReadLine() is string line) lines.Add(line);
+            return DiagnosticLines(lines);
+        }
+#endif
 
         private static string ImportFailed(Dictionary<string, object?> meta)
         {

@@ -163,11 +163,14 @@ namespace TiaMcpServer.ModelContextProtocol
                         var template = e.Elements().Where(x => x.Name.LocalName == "TemplateValue").Select(x => x.Value.Trim()).Where(v => v.Length > 0)
                             .ToList();
                         var callInfo = e.Elements().FirstOrDefault(x => x.Name.LocalName == "CallInfo");
-                        var callName = callInfo == null ? "" : ((string?)callInfo.Attribute("Name") ?? "");
-                        if (callInfo != null && instance == null)
+                        string callName = "";
+                        if (callInfo != null)
                         {
+                            var call = OfflineAnalysisLogic.ReadCall(callInfo);
+                            callName = call.Callee;
                             var callInstance = callInfo.Elements().FirstOrDefault(x => x.Name.LocalName == "Instance");
-                            if (callInstance != null) instanceName = AccessLabel(callInstance);
+                            if (instance == null && callInstance != null && (callInstance != call.Selector || call.InstancePath != null))
+                                instanceName = AccessLabel(callInstance);
                         }
                         var label = callName.Length > 0 ? name + " \"" + callName + "\"" : name;
                         if (name == "Contact" && HasNegatedOperand(e)) label += " (normally closed)";
