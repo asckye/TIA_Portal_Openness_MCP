@@ -992,7 +992,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 379,
+      "toolCount": 377,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1232,7 +1232,6 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
-        "ListSivarcBlockDefinitions",
         "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
@@ -1290,7 +1289,6 @@
         "ManageSafetyGlobalSettings",
         "ManageSinumerikArchive",
         "ManageSinumerikSafetyMode",
-        "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageStandardPackage",
         "ManageStartdriveParameter",
@@ -1377,7 +1375,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 405,
+      "toolCount": 403,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1627,7 +1625,6 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
-        "ListSivarcBlockDefinitions",
         "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
@@ -1693,7 +1690,6 @@
         "ManageSafetyGlobalSettings",
         "ManageSinumerikArchive",
         "ManageSinumerikSafetyMode",
-        "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageSivarcRuleContainer",
         "ManageSivarcTableRule",
@@ -1788,7 +1784,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 481,
+      "toolCount": 479,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2083,7 +2079,6 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
-        "ListSivarcBlockDefinitions",
         "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
@@ -2156,7 +2151,6 @@
         "ManageSafetyGlobalSettings",
         "ManageSinumerikArchive",
         "ManageSinumerikSafetyMode",
-        "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageSivarcRuleContainer",
         "ManageSivarcTableRule",
@@ -2275,7 +2269,7 @@
     },
     "20": {
       "profile": "plc-foundation",
-      "toolCount": 504,
+      "toolCount": 500,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2583,7 +2577,6 @@
         "ListPlcUserConstants",
         "ListPlcWatchTables",
         "ListPortalProcessProjects",
-        "ListSivarcBlockDefinitions",
         "ListSivarcRules",
         "ListStagedImportFiles",
         "ListStandardPackages",
@@ -2658,7 +2651,6 @@
         "ManageSafetyGlobalSettings",
         "ManageSinumerikArchive",
         "ManageSinumerikSafetyMode",
-        "ManageSivarcBlockDefinition",
         "ManageSivarcRule",
         "ManageSivarcRuleContainer",
         "ManageSivarcTableRule",
@@ -2713,7 +2705,6 @@
         "RenderPlcProgramAtlas",
         "RenderPlcVisualDiff",
         "RepairAndReimportPlcBlock",
-        "ResolveSivarcExpression",
         "RestartOpennessWorker",
         "RetrieveProjectArchive",
         "RunCapabilitySelfTest",
@@ -2768,7 +2759,6 @@
         "SynchronizeVersionControlWorkspace",
         "TraceTagCause",
         "TraceTagCauseLive",
-        "UpgradeSivarcDefinitions",
         "UploadStationFromPlc",
         "ValidateAutomationContext",
         "ValidateClassicHmiMinimalPackageFiles",
@@ -3311,8 +3301,8 @@
   },
   "groupCounts": {
     "all-releases": 286,
-    "shared-subset": 218,
-    "release-only": 20
+    "shared-subset": 214,
+    "release-only": 24
   },
   "tools": [
     {
@@ -7556,13 +7546,9 @@
     {
       "name": "ListSivarcBlockDefinitions",
       "releases": [
-        "17",
-        "18",
-        "19",
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -8615,13 +8601,9 @@
     {
       "name": "ManageSivarcBlockDefinition",
       "releases": [
-        "17",
-        "18",
-        "19",
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -9340,10 +9322,9 @@
     {
       "name": "ResolveSivarcExpression",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -10070,10 +10051,9 @@
     {
       "name": "UpgradeSivarcDefinitions",
       "releases": [
-        "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "release-only",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

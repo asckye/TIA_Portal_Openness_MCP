@@ -14709,33 +14709,10 @@
     },
     {
       "releaseKey": "17",
-      "entry": "ListSivarcBlockDefinitions",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
-      }
-    },
-    {
-      "releaseKey": "17",
       "entry": "ListSivarcRules",
       "family": "F29",
       "example": {
         "category": "screens"
-      }
-    },
-    {
-      "releaseKey": "17",
-      "entry": "ManageSivarcBlockDefinition",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
-        "kind": "tagDefinition",
-        "confirmDelete": false,
-        "dryRun": true,
-        "action": "read",
-        "name": "Example_1"
       }
     },
     {
@@ -17987,33 +17964,10 @@
     },
     {
       "releaseKey": "18",
-      "entry": "ListSivarcBlockDefinitions",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
-      }
-    },
-    {
-      "releaseKey": "18",
       "entry": "ListSivarcRules",
       "family": "F29",
       "example": {
         "category": "screens"
-      }
-    },
-    {
-      "releaseKey": "18",
-      "entry": "ManageSivarcBlockDefinition",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
-        "kind": "tagDefinition",
-        "confirmDelete": false,
-        "dryRun": true,
-        "action": "read",
-        "name": "Example_1"
       }
     },
     {
@@ -21610,33 +21564,10 @@
     },
     {
       "releaseKey": "19",
-      "entry": "ListSivarcBlockDefinitions",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
-      }
-    },
-    {
-      "releaseKey": "19",
       "entry": "ListSivarcRules",
       "family": "F29",
       "example": {
         "category": "screens"
-      }
-    },
-    {
-      "releaseKey": "19",
-      "entry": "ManageSivarcBlockDefinition",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
-        "kind": "tagDefinition",
-        "confirmDelete": false,
-        "dryRun": true,
-        "action": "read",
-        "name": "Example_1"
       }
     },
     {
@@ -26343,33 +26274,10 @@
     },
     {
       "releaseKey": "20",
-      "entry": "ListSivarcBlockDefinitions",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "FC_1"
-      }
-    },
-    {
-      "releaseKey": "20",
       "entry": "ListSivarcRules",
       "family": "F29",
       "example": {
         "category": "screens"
-      }
-    },
-    {
-      "releaseKey": "20",
-      "entry": "ManageSivarcBlockDefinition",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "FC_1",
-        "kind": "tagDefinition",
-        "confirmDelete": false,
-        "dryRun": true,
-        "action": "read",
-        "name": "Example_1"
       }
     },
     {
@@ -26420,33 +26328,6 @@
         "dryRun": true,
         "action": "read",
         "rulePath": "ExampleRule"
-      }
-    },
-    {
-      "releaseKey": "20",
-      "entry": "ResolveSivarcExpression",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "blockPath": "Main",
-        "devicePath": [
-          "&lt;exact device name from GetProjectTree&gt;"
-        ],
-        "itemPath": [
-          "&lt;exact device item from GetProjectTree&gt;"
-        ],
-        "libraryItemKind": "masterCopy",
-        "libraryItemPath": "MasterCopies/FB_Motor",
-        "expression": "&lt;SiVArc expression for the selected rule context&gt;"
-      }
-    },
-    {
-      "releaseKey": "20",
-      "entry": "UpgradeSivarcDefinitions",
-      "family": "F29",
-      "example": {
-        "softwarePath": "PLC_1",
-        "dryRun": true
       }
     },
     {
@@ -36171,7 +36052,8 @@
       "family": "FOUNDATION",
       "example": {
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "discardChanges": false
       }
     },
     {
@@ -36659,7 +36541,8 @@
       "family": "FOUNDATION",
       "example": {
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "discardChanges": false
       }
     },
     {
@@ -37167,7 +37050,8 @@
       "family": "FOUNDATION",
       "example": {
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "discardChanges": false
       }
     },
     {
@@ -37675,7 +37559,8 @@
       "family": "FOUNDATION",
       "example": {
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "discardChanges": false
       }
     },
     {
@@ -38183,7 +38068,8 @@
       "family": "FOUNDATION",
       "example": {
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "discardChanges": false
       }
     },
     {
@@ -38712,7 +38598,8 @@
       "family": "FOUNDATION",
       "example": {
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "discardChanges": false
       }
     },
     {
@@ -39241,7 +39128,8 @@
       "family": "FOUNDATION",
       "example": {
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "discardChanges": false
       }
     },
     {
@@ -39823,7 +39711,8 @@
       "family": "FOUNDATION",
       "example": {
         "dryRun": true,
-        "confirm": false
+        "confirm": false,
+        "discardChanges": false
       }
     },
     {
@@ -41189,7 +41078,8 @@
         ],
         "arguments": {
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "discardChanges": false
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -45690,21 +45580,6 @@
         "exampleSource": "plc-foundation"
       },
       {
-        "name": "ListSivarcBlockDefinitions",
-        "currentName": "ListSivarcBlockDefinitions",
-        "sourceName": "ReadSivarcBlockDefinitions",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "ListSivarcRules",
         "currentName": "ListSivarcRules",
         "sourceName": "ReadSiVArcRules",
@@ -47044,26 +46919,6 @@
           "dryRun": true,
           "confirmSafetyChange": false,
           "action": "read"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
-        "name": "ManageSivarcBlockDefinition",
-        "currentName": "ManageSivarcBlockDefinition",
-        "sourceName": "ManageSivarcBlockDefinition",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
-          "kind": "tagDefinition",
-          "confirmDelete": false,
-          "dryRun": true,
-          "action": "read",
-          "name": "Example_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -48638,30 +48493,6 @@
         "exampleSource": "full-engine"
       },
       {
-        "name": "ResolveSivarcExpression",
-        "currentName": "ResolveSivarcExpression",
-        "sourceName": "ResolveSivarcExpression",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "Main",
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "libraryItemKind": "masterCopy",
-          "libraryItemPath": "MasterCopies/FB_Motor",
-          "expression": "&lt;SiVArc expression for the selected rule context&gt;"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "RestartOpennessWorker",
         "currentName": "RestartOpennessWorker",
         "sourceName": "RestartOpennessWorker",
@@ -49644,21 +49475,6 @@
           "softwarePath": "PLC_1",
           "tag": "DB_Status.Ready",
           "ip": "192.0.2.10"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
-        "name": "UpgradeSivarcDefinitions",
-        "currentName": "UpgradeSivarcDefinitions",
-        "sourceName": "UpgradeSivarcDefinitions",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -50937,7 +50753,8 @@
         ],
         "arguments": {
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "discardChanges": false
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -60268,7 +60085,8 @@
         ],
         "arguments": {
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "discardChanges": false
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -65708,7 +65526,8 @@
         ],
         "arguments": {
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "discardChanges": false
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -71830,7 +71649,8 @@
         ],
         "arguments": {
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "discardChanges": false
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -78418,7 +78238,8 @@
         ],
         "arguments": {
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "discardChanges": false
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -81837,21 +81658,6 @@
         "exampleSource": "plc-foundation"
       },
       {
-        "name": "ListSivarcBlockDefinitions",
-        "currentName": "ListSivarcBlockDefinitions",
-        "sourceName": "ReadSivarcBlockDefinitions",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "ListSivarcRules",
         "currentName": "ListSivarcRules",
         "sourceName": "ReadSiVArcRules",
@@ -82878,26 +82684,6 @@
           "dryRun": true,
           "confirmSafetyChange": false,
           "action": "read"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
-        "name": "ManageSivarcBlockDefinition",
-        "currentName": "ManageSivarcBlockDefinition",
-        "sourceName": "ManageSivarcBlockDefinition",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
-          "kind": "tagDefinition",
-          "confirmDelete": false,
-          "dryRun": true,
-          "action": "read",
-          "name": "Example_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -85445,7 +85231,8 @@
         ],
         "arguments": {
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "discardChanges": false
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -89024,21 +88811,6 @@
         "exampleSource": "plc-foundation"
       },
       {
-        "name": "ListSivarcBlockDefinitions",
-        "currentName": "ListSivarcBlockDefinitions",
-        "sourceName": "ReadSivarcBlockDefinitions",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "ListSivarcRules",
         "currentName": "ListSivarcRules",
         "sourceName": "ReadSiVArcRules",
@@ -90232,26 +90004,6 @@
           "dryRun": true,
           "confirmSafetyChange": false,
           "action": "read"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
-        "name": "ManageSivarcBlockDefinition",
-        "currentName": "ManageSivarcBlockDefinition",
-        "sourceName": "ManageSivarcBlockDefinition",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
-          "kind": "tagDefinition",
-          "confirmDelete": false,
-          "dryRun": true,
-          "action": "read",
-          "name": "Example_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -93154,7 +92906,8 @@
         ],
         "arguments": {
           "dryRun": true,
-          "confirm": false
+          "confirm": false,
+          "discardChanges": false
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -97477,21 +97230,6 @@
         "exampleSource": "plc-foundation"
       },
       {
-        "name": "ListSivarcBlockDefinitions",
-        "currentName": "ListSivarcBlockDefinitions",
-        "sourceName": "ReadSivarcBlockDefinitions",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "ListSivarcRules",
         "currentName": "ListSivarcRules",
         "sourceName": "ReadSiVArcRules",
@@ -98799,26 +98537,6 @@
           "dryRun": true,
           "confirmSafetyChange": false,
           "action": "read"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
-        "name": "ManageSivarcBlockDefinition",
-        "currentName": "ManageSivarcBlockDefinition",
-        "sourceName": "ManageSivarcBlockDefinition",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
-          "kind": "tagDefinition",
-          "confirmDelete": false,
-          "dryRun": true,
-          "action": "read",
-          "name": "Example_1"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -105732,19 +105450,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ListSivarcBlockDefinitions",
-        "currentName": "ListSivarcBlockDefinitions",
-        "sourceName": "ReadSivarcBlockDefinitions",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ListSivarcRules",
         "currentName": "ListSivarcRules",
         "sourceName": "ReadSiVArcRules",
@@ -106854,24 +106559,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ManageSivarcBlockDefinition",
-        "currentName": "ManageSivarcBlockDefinition",
-        "sourceName": "ManageSivarcBlockDefinition",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "FC_1",
-          "kind": "tagDefinition",
-          "confirmDelete": false,
-          "dryRun": true,
-          "action": "read",
-          "name": "Example_1"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ManageSivarcRule",
         "currentName": "ManageSivarcRule",
         "sourceName": "ManageSiVArcRule",
@@ -107706,28 +107393,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ResolveSivarcExpression",
-        "currentName": "ResolveSivarcExpression",
-        "sourceName": "ResolveSivarcExpression",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "blockPath": "Main",
-          "devicePath": [
-            "&lt;exact device name from GetProjectTree&gt;"
-          ],
-          "itemPath": [
-            "&lt;exact device item from GetProjectTree&gt;"
-          ],
-          "libraryItemKind": "masterCopy",
-          "libraryItemPath": "MasterCopies/FB_Motor",
-          "expression": "&lt;SiVArc expression for the selected rule context&gt;"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "RestartOpennessWorker",
         "currentName": "RestartOpennessWorker",
         "sourceName": "RestartOpennessWorker",
@@ -108493,19 +108158,6 @@
           "softwarePath": "PLC_1",
           "tag": "DB_Status.Ready",
           "ip": "192.0.2.10"
-        },
-        "envelopeVersion": 4
-      },
-      {
-        "name": "UpgradeSivarcDefinitions",
-        "currentName": "UpgradeSivarcDefinitions",
-        "sourceName": "UpgradeSivarcDefinitions",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "dryRun": true
         },
         "envelopeVersion": 4
       },

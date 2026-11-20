@@ -5250,9 +5250,7 @@
         "entries": [
           "GenerateSivarc",
           "GetSivarcRuleTree",
-          "ListSivarcBlockDefinitions",
           "ListSivarcRules",
-          "ManageSivarcBlockDefinition",
           "ManageSivarcRule"
         ]
       },
@@ -5930,9 +5928,7 @@
         "entries": [
           "GenerateSivarc",
           "GetSivarcRuleTree",
-          "ListSivarcBlockDefinitions",
           "ListSivarcRules",
-          "ManageSivarcBlockDefinition",
           "ManageSivarcRule",
           "ManageSivarcRuleContainer",
           "ManageSivarcTableRule"
@@ -6647,9 +6643,7 @@
         "entries": [
           "GenerateSivarc",
           "GetSivarcRuleTree",
-          "ListSivarcBlockDefinitions",
           "ListSivarcRules",
-          "ManageSivarcBlockDefinition",
           "ManageSivarcRule",
           "ManageSivarcRuleContainer",
           "ManageSivarcTableRule"
@@ -7465,14 +7459,10 @@
         "entries": [
           "GenerateSivarc",
           "GetSivarcRuleTree",
-          "ListSivarcBlockDefinitions",
           "ListSivarcRules",
-          "ManageSivarcBlockDefinition",
           "ManageSivarcRule",
           "ManageSivarcRuleContainer",
-          "ManageSivarcTableRule",
-          "ResolveSivarcExpression",
-          "UpgradeSivarcDefinitions"
+          "ManageSivarcTableRule"
         ]
       },
       {

@@ -294,7 +294,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `WritePlcWebVars` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `WriteUnifiedRuntimeTags` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 
-## Shared by some releases (218)
+## Shared by some releases (214)
 
 | Tool | Release keys |
 |---|---|
@@ -415,7 +415,6 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ListPlcForceTables` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ListPlcSoftwareUnits` | 16, 17, 18, 19, 20, 21 |
 | `ListPlcWatchTables` | 15.1, 16, 17, 18, 19, 20, 21 |
-| `ListSivarcBlockDefinitions` | 17, 18, 19, 20, 21 |
 | `ListSivarcRules` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ListTestSuiteCases` | 17, 18, 19, 20, 21 |
 | `ListTransferAreas` | 15.1, 16, 17, 18, 19, 20, 21 |
@@ -458,7 +457,6 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ManageSafetyGlobalSettings` | 16, 17, 18, 19, 20, 21 |
 | `ManageSinumerikArchive` | 16, 17, 18, 19, 20 |
 | `ManageSinumerikSafetyMode` | 16, 17, 18, 19, 20 |
-| `ManageSivarcBlockDefinition` | 17, 18, 19, 20, 21 |
 | `ManageSivarcRule` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ManageSivarcRuleContainer` | 18, 19, 20, 21 |
 | `ManageSivarcTableRule` | 18, 19, 20, 21 |
@@ -486,7 +484,6 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `MonitorPlcWatchTableS7` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ProbePlcMonitorOnlineCapabilities` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ReleaseUnifiedReadCursor` | 19, 20, 21 |
-| `ResolveSivarcExpression` | 20, 21 |
 | `RetrieveProjectArchive` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `RunClassicHmiOfflineValidationSuite` | 20, 21 |
 | `RunClassicHmiTemporaryImportPreflight` | 20, 21 |
@@ -510,14 +507,13 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `SetUnifiedPlantObject` | 19, 20, 21 |
 | `SetUnifiedRuntimeSettings` | 19, 20, 21 |
 | `SynchronizeVersionControlWorkspace` | 16, 17, 18, 19, 20, 21 |
-| `UpgradeSivarcDefinitions` | 20, 21 |
 | `UploadStationFromPlc` | 15.1, 16, 17, 18, 19, 20, 21 |
 | `ValidateClassicHmiMinimalPackageFiles` | 20, 21 |
 | `ValidateClassicHmiMinimalPackagePlcSync` | 20, 21 |
 | `ValidateUnifiedObject` | 19, 20, 21 |
 | `WriteClassicHmiMinimalPackageFiles` | 20, 21 |
 
-## One release only (20)
+## One release only (24)
 
 | Tool | Release keys |
 |---|---|
@@ -531,6 +527,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `GetOpcUaAccessControl` | 21 |
 | `ListCommunicationConnections` | 21 |
 | `ListSafetyActivationTests` | 21 |
+| `ListSivarcBlockDefinitions` | 21 |
 | `ManageCommunicationConnection` | 21 |
 | `ManageDriveSafetyAcceptanceTest` | 21 |
 | `ManageOpcUaAccessControl` | 21 |
@@ -539,5 +536,8 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ManageSafetyActivationTestGroup` | 21 |
 | `ManageSafetyFunction` | 21 |
 | `ManageSafetyFunctionCondition` | 21 |
+| `ManageSivarcBlockDefinition` | 21 |
 | `ManageSivarcScreenLayout` | 21 |
+| `ResolveSivarcExpression` | 21 |
+| `UpgradeSivarcDefinitions` | 21 |
 | `UploadDeviceParameters` | 21 |
