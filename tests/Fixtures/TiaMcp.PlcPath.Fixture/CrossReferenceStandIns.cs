@@ -6,7 +6,7 @@ using TiaMcp.Adapters.Native.Plc;
 
 namespace Siemens.Engineering
 {
-    public interface IEngineeringServiceProvider { T GetService<T>() where T : class; }
+    public interface IEngineeringServiceProvider { public T GetService<T>() where T : class; }
 }
 
 namespace Siemens.Engineering.CrossReference
@@ -60,13 +60,13 @@ namespace TiaMcp.Adapters.Native.Plc
 {
     public partial interface IPlcOrganisationSession
     {
-        PlcSoftware? GetPlcSoftware(string path);
-        List<(string Path, bool? Consistent)> ReadPlcConsistency(string path);
-        bool RecoverableAuditError(Exception error);
-        object? OptionalUnit(PlcSoftware plc, string unitName, string unitKind);
-        PlcBlockGroup BlockRootOf(PlcSoftware plc, object? unit);
-        PlcTypeGroup TypeRootOf(PlcSoftware plc, object? unit);
-        object ExactObjectUnder(object root, string path, string collection, string label);
+        public PlcSoftware? GetPlcSoftware(string path);
+        public List<(string Path, bool? Consistent)> ReadPlcConsistency(string path);
+        public bool RecoverableAuditError(Exception error);
+        public object? OptionalUnit(PlcSoftware plc, string unitName, string unitKind);
+        public PlcBlockGroup BlockRootOf(PlcSoftware plc, object? unit);
+        public PlcTypeGroup TypeRootOf(PlcSoftware plc, object? unit);
+        public object ExactObjectUnder(object root, string path, string collection, string label);
     }
     internal static partial class PlcOrganisationPrimitives
     {

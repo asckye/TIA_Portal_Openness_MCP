@@ -863,6 +863,16 @@
     ]
   },
   {
+    "project": "tests/Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj",
+    "properties": {},
+    "targetFramework": "net10.0",
+    "defineConstants": [
+      "PLC_SOFTWARE_CROSS_REFERENCES",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
     "project": "tests/Fixtures/TiaMcp.UnifiedWorker.Fixture/TiaMcp.UnifiedWorker.Fixture.csproj",
     "properties": {},
     "targetFramework": "net10.0",
