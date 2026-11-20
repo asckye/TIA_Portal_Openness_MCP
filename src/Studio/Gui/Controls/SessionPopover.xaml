@@ -1,8 +1,7 @@
 <UserControl x:Class="TiaOpenness.Gui.Controls.SessionPopover"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization"
-    Width="312" Margin="12,0,0,32" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsTabStop="False"
-    AutomationProperties.Name="{Binding Text,ElementName=SessionHeading}">
+    Width="312" Margin="12,0,0,32" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsTabStop="False">
   <Grid>
     <ContentControl Style="{StaticResource Primer.Shadow}"/>
     <Border CornerRadius="{StaticResource Ui.Radius.Large}" Padding="16" Background="{DynamicResource Primer.window}"

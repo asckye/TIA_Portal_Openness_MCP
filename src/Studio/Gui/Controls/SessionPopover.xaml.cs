@@ -21,6 +21,7 @@ public partial class SessionPopover : UserControl
         _navigate = navigate;
         _close = close;
         InitializeComponent();
+        SetHeading(model.Panel?.Attached == true);
         DataContext = model;
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -43,6 +44,14 @@ public partial class SessionPopover : UserControl
         Loc.Current.LanguageChanged -= OnLanguageChanged;
     }
 
+    // The popover's accessible name follows its visible heading; set in code because an ElementName binding on the root
+    // element cannot see its own children.
+    private void SetHeading(bool shared)
+    {
+        SessionHeading.Text = shared ? Loc.Current["Overlay.SharedSession"] : Loc.Current["Overlay.Session"];
+        System.Windows.Automation.AutomationProperties.SetName(this, SessionHeading.Text);
+    }
+
     private void OnLanguageChanged(object? sender, EventArgs e) => Refresh();
     private void OnChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
@@ -51,7 +60,7 @@ public partial class SessionPopover : UserControl
         var session = _model.Session;
         var panel = _model.Panel;
         var release = TiaVersionCatalog.Get(session.SelectedReleaseKey);
-        SessionHeading.Text = panel?.Attached == true ? Loc.Current["Overlay.SharedSession"] : Loc.Current["Overlay.Session"];
+        SetHeading(panel?.Attached == true);
         // Both the bridge and the shared worker use the release's Openness owner apartment.
         Release.Text = session.IsConnected ? release.DisplayName + " · " + release.OwnerApartment : "—";
         ConnectedTag.Visibility = session.IsConnected ? Visibility.Visible : Visibility.Collapsed;
