@@ -205,8 +205,8 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
     }
 
     [Theory]
-    [InlineData(AppLanguage.Chinese, "客户端检测：", "就绪。服务与客户端配置在同一页完成，两端使用同一密钥。", "已配置 3 个客户端")]
-    [InlineData(AppLanguage.English, "Client detection: ", "Ready. Configure the service and clients on one page, using the same secret on both sides.", "3 clients configured")]
+    [InlineData(AppLanguage.Chinese, "客户端检测：", "就绪。可在此页配置服务和客户端。", "已配置 3 个客户端")]
+    [InlineData(AppLanguage.English, "Client detection: ", "Ready. Configure the service and clients on this page.", "3 clients configured")]
     public void Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs(
         AppLanguage language, string detection, string ready, string status)
     {

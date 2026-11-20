@@ -12,7 +12,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         [McpServerTool(Name = "GetApprovalStatus"),
             Description("[L0][Diagnostics][READ] Read this session's pending approvals and latest 16 decisions without contacting TIA. " +
-                "Reports approval settings, always-confirmed online writes, configured online targets and vault names (never secret values). " +
+                "Reports approval settings, always-confirmed online writes and configured online targets. " +
                 "Approval is decided only by a person in the Workbench; this tool cannot approve, deny or change settings.")]
         public static CallToolResult GetApprovalStatus()
             => SessionToolContract.Run("GetApprovalStatus", false, false, ReadApprovalStatus);

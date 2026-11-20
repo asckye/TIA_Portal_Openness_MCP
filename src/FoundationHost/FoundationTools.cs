@@ -34,7 +34,8 @@ internal static class FoundationTools
     private static Argument S(string name) => new(name);
     private static Argument Dry() => new("dryRun", "boolean", false, true);
     private const string UmacUser = "umacUserName: UMAC user of a protected project; give it together with umacPassword. Empty for an unprotected project.";
-    private const string UmacPassword = "umacPassword: UMAC password or vault:<name> reference for umacUserName; the host resolves vault references only after its vault approval and destination checks. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.";
+    private const string UmacPassword = "umacPassword: pass the UMAC password for umacUserName directly. Converted to SecureString in the worker; " +
+        "never logged, journaled, echoed or shown on the approval card.";
     private const string UmacType = "umacUserType: Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword.";
     private static readonly Definition[] RenderDefinitions = {
         new("RenderPlcBlock", "RenderPlcBlock", "[L2][PLC-Software][FILE] Render one existing SimaticML block export as self-contained static HTML. Offline local files only; writes a new absolute .html path, never overwrites. No Siemens calls.", new[]{S("inputPath"),S("outputPath")}, "PlcRender"),

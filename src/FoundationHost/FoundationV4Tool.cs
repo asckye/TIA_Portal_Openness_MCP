@@ -283,6 +283,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         try
         {
             var argumentsInput = JsonSerializer.SerializeToElement(args);
+            if (HostBehavior.RemovedVaultReference(tool.Name, argumentsInput) is { } credentialError)
+                return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, credentialError));
             var capabilityInput = argumentsInput;
             if (inner is FoundationTool { Ported: true } declared)
             {

@@ -98,8 +98,7 @@ def measure(command, data, http=False):
             with mutex:
                 counter += 1
                 request_id = counter
-            headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream',
-                       'Authorization': 'Bearer p6-58-test-key', 'X-API-Key': 'p6-58-test-key'}
+            headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}
             if sessions[slot]:
                 headers['Mcp-Session-Id'] = sessions[slot]
             payload = dict(jsonrpc='2.0', id=request_id, method=method)

@@ -101,6 +101,16 @@ public sealed class UiSettingsTests : IDisposable
     }
 
     [Fact]
+    public void Command_line_overrides_accept_named_palettes_and_ignore_undefined_numbers()
+    {
+        var settings = new UiSettings();
+        App.ApplyCommandLineOverrides(["--theme", "dark", "--accent", "petrol"], settings);
+        App.ApplyCommandLineOverrides(["--theme", "99", "--accent", "-1"], settings);
+        Assert.Equal(AppTheme.Dark, settings.Theme);
+        Assert.Equal(AppAccent.Petrol, settings.Accent);
+    }
+
+    [Fact]
     public void Legacy_auto_theme_maps_cleanly_to_light()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(_path)!);

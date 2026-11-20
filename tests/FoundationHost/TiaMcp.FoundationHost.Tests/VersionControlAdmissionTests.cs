@@ -17,7 +17,8 @@ public sealed class VersionControlAdmissionTests
 {
     [Theory]
     [InlineData("online-targets.settings", "ONLINE~1.SET")]
-    public async Task Online_target_settings_are_human_only_including_file_aliases(string fileName, string shortName)
+    [InlineData("secrets.vault", "SECRET~1.VAU")]
+    public async Task Online_target_settings_and_vault_are_human_only_including_file_aliases(string fileName, string shortName)
     {
         using var fixture = new FileToolFixture("21");
         using var session = fixture.EnterSession();

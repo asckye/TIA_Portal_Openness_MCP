@@ -28,8 +28,11 @@ public enum AppAccent
 /// </summary>
 public sealed class ThemeManager : INotifyPropertyChanged
 {
+    // DynamicResource bindings follow this slot across palette changes and retain the live window state.
     private const int PaletteSlot = 0;
 
+    // Absolute pack URIs work in hosts that have no Application.ResourceAssembly.
+    // Reading the assembly name here also keeps palette lookup valid after an executable rename.
     internal static readonly string PackPrefix =
         $"pack://application:,,,/{typeof(ThemeManager).Assembly.GetName().Name};component/Themes/";
 
@@ -98,6 +101,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
     public bool UseLowEffects => ResolveLowEffects(LowEffects, RenderCapability.Tier >> 16, SystemParameters.IsRemoteSession, _virtualMachine);
     internal static bool ResolveLowEffects(LowEffectsMode mode, int tier, bool remote, bool vm)
         => mode == LowEffectsMode.On || mode == LowEffectsMode.Auto && (tier == 0 || remote || vm);
+    // Primer has no visual effects. Keep the persisted low-effects setting readable.
     private void ApplyEffects() { }
     private void OnRenderingChanged(object? sender, EventArgs e) => Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
     { ApplyEffects(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseLowEffects))); }));
@@ -119,6 +123,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
         catch (Exception ex) { System.Diagnostics.Trace.TraceInformation("VM rendering hint unavailable: " + ex.GetType().Name); return false; }
     }
 
+    // The selectors bind directly to these flags. Selecting another segment handles deselection.
     public bool IsLight
     {
         get => _theme == AppTheme.Light;
@@ -145,6 +150,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     public bool EffectivelyDark => _theme == AppTheme.Dark;
 
+    /// <summary>Called after App.xaml resources load. Track OS high contrast and rendering changes while the window is open.</summary>
     public void Initialize(AppTheme theme, LowEffectsMode lowEffects = LowEffectsMode.Auto, AppAccent accent = AppAccent.Cobalt)
     {
         _theme = theme;
@@ -170,6 +176,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
         if (e.Category is not (Microsoft.Win32.UserPreferenceCategory.General or Microsoft.Win32.UserPreferenceCategory.Color
             or Microsoft.Win32.UserPreferenceCategory.Accessibility or Microsoft.Win32.UserPreferenceCategory.VisualStyle)) return;
         if (!EffectivelyHighContrast) return;
+        // The notification arrives on a system thread.
         Application.Current?.Dispatcher.Invoke(Apply);
     }
 

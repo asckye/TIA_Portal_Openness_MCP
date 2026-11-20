@@ -12,9 +12,9 @@
 ## 核心能力
 
 - **八版统一架构**：统一的 .NET 10 FoundationHost 宿主为每个 MCP 会话启动独立的 .NET Framework 4.8 PLC worker，加载按对应版本官方 Openness SDK 编译的适配器，避免跨版本混用与对象泄漏。
-- **默认人工审批与工控安全护栏**：所有写操作与在线写操作默认先运行只读预览预检，再进入工作台人工审批，批准后复核再派发，并写入 `data/logs/audit` 哈希链。在线写支持显式 IPv4 白名单、Windows DPAPI 凭据保管库 (`vault:<name>`) 及真实 PLC 下载强确认。
+- **默认人工审批与工控安全护栏**：所有写操作与在线写操作默认先运行只读预览预检，再进入工作台人工审批，批准后复核再派发，并写入 `data/logs/audit` 哈希链。在线写支持显式 IPv4 白名单及真实 PLC 下载强确认。
 - **人机共享同一窗口**：单一中英双语工作台窗口提供 **MCP 与客户端** 和 **项目** 页面。工程师可直接附着 AI 正在使用的 MCP 会话，共用同一套工具、审批和审计；没有 AI 会话时也可创建工作台自有宿主会话。
-- **本机与虚拟机开箱即用**：内置客户端配置卡片，一键写入并备份 Claude Code、Codex、Gemini CLI、Cursor、VS Code Copilot、OpenCode (DeepSeek / GLM / Grok)、Qwen、Kimi、Yuanbao 等客户端配置；虚拟机 ↔ 宿主机模式经本机 stdio 中继转发，密钥由 DPAPI 加密保护，不落盘明文凭据。
+- **本机与虚拟机开箱即用**：内置客户端配置卡片，一键写入并备份 Claude Code、Codex、Gemini CLI、Cursor、VS Code Copilot、OpenCode (DeepSeek / GLM / Grok)、Qwen、Kimi、Yuanbao 等客户端配置。虚拟机 ↔ 宿主机模式经本机 stdio 中继连接免密钥 HTTP 端点。可访问端点的设备都能调用工具，仅在可信局域网或虚拟机的仅主机网络中使用。
 - **覆盖工程全链路与离线分析**：支持 PLC 程序块（SCL、LAD、DB、UDT 与软件单元）、监控表与强制表、经典 HMI 与 WinCC Unified、硬件与子网、库对象、PLC 测试库与 JUnit / FAT / SAT 报告、SimaticML 离线解码与可视化差异、静态梯形图渲染及 Git 工作流。
 
 ## 快速开始

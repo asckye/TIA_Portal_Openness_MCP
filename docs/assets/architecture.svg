@@ -34,7 +34,7 @@
   <text x="44" y="126" class="heading">AI MCP client</text>
   <text x="44" y="154" class="body">Local STDIO or VM HTTP relay</text>
   <text x="44" y="178" class="body">10+ supported MCP clients</text>
-  <text x="44" y="200" class="muted">DPAPI-protected relay secrets</text>
+  <text x="44" y="200" class="muted">Local stdio relay to HTTP</text>
 
   <rect x="28" y="242" width="236" height="168" rx="8" class="box"/>
   <text x="44" y="272" class="heading">Workbench</text>
@@ -54,7 +54,7 @@
   <text x="328" y="242" class="body">Shared human / AI session</text>
   <text x="328" y="276" class="body">Openness lane &amp; write fence</text>
   <text x="328" y="302" class="body">Lease, call journal &amp; audit chain</text>
-  <text x="328" y="328" class="muted">Credential vault &amp; IPv4 allowlist</text>
+  <text x="328" y="328" class="muted">Approval &amp; IPv4 allowlist</text>
   <rect x="328" y="376" width="144" height="22" rx="11" class="pill"/>
   <text x="340" y="391" class="badge">Bundled .NET 10</text>
 

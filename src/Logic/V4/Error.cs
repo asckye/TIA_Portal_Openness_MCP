@@ -57,11 +57,25 @@ namespace TiaMcp.Logic.V4
         private static readonly AsyncLocal<Scope?> Current = new AsyncLocal<Scope?>();
         public static string? RequestId => Current.Value?.RequestId;
         public static IDisposable Begin(string requestId, JsonElement arguments) => new Scope(requestId, arguments);
-        public static void IncludeArguments(JsonElement arguments, bool resolved = false)
-        {
-            if (Current.Value is { } scope) Collect(arguments, scope.Secrets, false, resolved);
-        }
         public static string RedactSecrets(string text) => ReplaceSecrets(text, Current.Value?.Secrets ?? Enumerable.Empty<string>());
+
+        public static void RedactResponseValues(JsonNode? data)
+        {
+            if (Current.Value?.Secrets is not { Count: > 0 }) return;
+            void Visit(JsonNode? node)
+            {
+                if (node is JsonObject obj)
+                    foreach (var field in obj.ToArray()) Visit(field.Value);
+                else if (node is JsonArray array)
+                    for (int i = 0; i < array.Count; i++) Visit(array[i]);
+                else if (node is JsonValue value && value.TryGetValue<string>(out var text))
+                {
+                    string redacted = RedactSecrets(text);
+                    if (redacted != text) node.ReplaceWith(redacted);
+                }
+            }
+            Visit(data);
+        }
 
         public static Error FromException(Error error, Exception exception, string? nativeMessage = null)
         {
@@ -97,7 +111,7 @@ namespace TiaMcp.Logic.V4
                 || name.Contains("credential") || name.Contains("authorization") || name == "pwd" || name == "sk");
         }
 
-        private static void Collect(JsonElement value, HashSet<string> secrets, bool credential, bool resolved = false)
+        private static void Collect(JsonElement value, HashSet<string> secrets, bool credential)
         {
             if (value.ValueKind == JsonValueKind.Object)
             {
@@ -108,12 +122,11 @@ namespace TiaMcp.Logic.V4
                 {
                     if (!credential && !named && PolicyScalar(pair.Name, pair.Value.GetRawText())) continue;
                     Collect(pair.Value, secrets,
-                        credential || Credential(pair.Name) || named && pair.Name.Equals("value", StringComparison.OrdinalIgnoreCase),
-                        resolved || named && pair.Name.Equals("value", StringComparison.OrdinalIgnoreCase));
+                        credential || Credential(pair.Name) || named && pair.Name.Equals("value", StringComparison.OrdinalIgnoreCase));
                 }
             }
             else if (value.ValueKind == JsonValueKind.Array)
-                foreach (var item in value.EnumerateArray()) Collect(item, secrets, credential, resolved);
+                foreach (var item in value.EnumerateArray()) Collect(item, secrets, credential);
             else if (credential && value.ValueKind is JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False)
                 secrets.Add(value.GetRawText());
             else if (value.ValueKind == JsonValueKind.String && value.GetString() is { } text)
@@ -127,7 +140,7 @@ namespace TiaMcp.Logic.V4
                     try
                     {
                         using var document = JsonDocument.Parse(text);
-                        Collect(document.RootElement, secrets, false, resolved);
+                        Collect(document.RootElement, secrets, false);
                     }
                     catch (JsonException) /* swallow(parse-fallback): ordinary argument text has no embedded credential fields */ { }
                 }

@@ -22,6 +22,46 @@ namespace TiaMcp.Logic.V4
             }
         }
 
+        // Only the top-level credential fields that formerly resolved vault references reserve this prefix.
+        internal static Error? RemovedVaultReference(string tool, JsonElement arguments, string path = "/arguments")
+        {
+            if (arguments.ValueKind != JsonValueKind.Object) return null;
+            Error? Forwarded(JsonElement call, string prefix)
+                => call.ValueKind == JsonValueKind.Object && call.TryGetProperty("name", out var target) && target.ValueKind == JsonValueKind.String
+                    && call.TryGetProperty("arguments", out var nested) ? RemovedVaultReference(target.GetString()!, nested, prefix + "/arguments") : null;
+            if (tool is "CallTool" or "PreviewToolCall") return Forwarded(arguments, path);
+            if (tool is "PreviewToolBatch" or "RunReadOnlyToolBatch" && arguments.TryGetProperty("operations", out var operations)
+                && operations.ValueKind == JsonValueKind.Array)
+            {
+                int i = 0;
+                foreach (var operation in operations.EnumerateArray())
+                    if (Forwarded(operation, path + "/operations/" + i++) is { } error) return error;
+                return null;
+            }
+            foreach (var field in arguments.EnumerateObject())
+            {
+                bool credential = field.Name switch
+                {
+                    "password" => tool is "CompilePlcDiagnostics" or "CompilePlcSoftware" or "ConnectOnlinePlc" or "DownloadPlc"
+                        or "GetPlcBlockFingerprints" or "UploadStationFromPlc" or "UploadDeviceParameters" or "ManagePlcBlockProtection"
+                        or "ManagePlcBlockWriteProtection" or "ManagePlcCertificate" or "ManagePlcProtection" or "ManageDeviceUsers"
+                        or "ManageProjectUserManagement" or "ManagePlcSafety" or "ManageHardwareUtilities" or "ManageDriveSecurity"
+                        or "ManageTeamcenterConnection" or "ManageSinumerikArchive" or "GetPlcWebVars" or "WritePlcWebVars"
+                        or "GetPlcWebDiagnostics" or "SetPlcWebOperatingMode",
+                    "moduleAccessPassword" or "blockBindingPassword" or "masterSecretPassword" => tool == "DownloadPlc",
+                    "umacPassword" => tool is "OpenProject" or "RetrieveProjectArchive",
+                    "currentPassword" => tool == "ManageCfcChartProtection",
+                    "newPassword" => tool is "ManagePlcBlockWriteProtection" or "ManagePlcProtection",
+                    "serverPassword" => tool == "ManageUmcUsers",
+                    _ => false
+                };
+                if (credential && field.Value.ValueKind == JsonValueKind.String && field.Value.GetString()!.StartsWith("vault:", StringComparison.Ordinal))
+                    return new Error("vault references were removed (ADR 0035); pass the credential directly",
+                        new InvalidArgumentDetails(path + "/" + field.Name, Array.Empty<string>()));
+            }
+            return null;
+        }
+
         internal static bool KnownMissingTarget(Exception error)
             => HostFailurePolicy.KnownNoMutation(error) && !HostFailurePolicy.PriorMutation(error) && !HostFailurePolicy.WorkerOutcomeUnknown(error)
                 && TiaMcp.Adapters.Contracts.MutationEvidence.FailureCode(error) == "NOT_FOUND";

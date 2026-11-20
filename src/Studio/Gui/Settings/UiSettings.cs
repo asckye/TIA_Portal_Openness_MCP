@@ -8,6 +8,8 @@ namespace TiaOpenness.Gui.Settings;
 
 /// <summary>
 /// Preferences remembered between runs: language, theme, brand accent and rendering effects.
+/// Operators can inspect or remove the key=value file with a text editor. Missing
+/// or unreadable preferences fall back to defaults without a schema migration.
 /// </summary>
 public sealed class UiSettings
 {
@@ -28,6 +30,7 @@ public sealed class UiSettings
 
     public static UiSettings Load() => Load(FilePath);
 
+    /// <summary>Tests pass an isolated path to exercise the round trip outside the user profile.</summary>
     public static UiSettings Load(string path)
     {
         var settings = new UiSettings();
@@ -69,6 +72,7 @@ public sealed class UiSettings
         }
         catch (Exception) /* swallow(ui): unreadable preferences leave defaults or already parsed values available so the workbench can start */
         {
+            // A preference file that cannot be read is not a reason to refuse to start.
         }
 
         return settings;
@@ -94,6 +98,7 @@ public sealed class UiSettings
         }
         catch (Exception) /* swallow(ui): failure to persist language and theme preferences must not prevent the window from closing */
         {
+            // Losing a preference is a smaller failure than refusing to close the window.
         }
     }
 }

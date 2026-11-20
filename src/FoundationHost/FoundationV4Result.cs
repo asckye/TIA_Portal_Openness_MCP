@@ -24,9 +24,6 @@ internal static class FoundationV4Result
         var error = V4Json.Deserialize<Error>(body["error"]!.ToJsonString());
         var restricted = new InputSchema(schema).Restrict(error, arguments, body["data"] as JsonObject);
         restricted = UnifiedInputAdmission.UnknownRuntimeChangeError((string?)body["meta"]?["tool"], arguments, error) ?? restricted;
-        // Vault admission must identify the exact refused position, including caller-chosen map keys.
-        if (error.Details is InvalidArgumentDetails { Expected: "declared credential parameter" } vaultPointer)
-            restricted = new Error(restricted.Message, vaultPointer);
         body["error"] = JsonNode.Parse(V4Json.Serialize(restricted));
         return new CallToolResult { IsError = result.IsError, StructuredContent = body,
             Content = new[] { new TextContentBlock { Text = body.ToJsonString() } } };

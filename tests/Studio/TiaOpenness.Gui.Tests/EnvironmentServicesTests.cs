@@ -348,6 +348,19 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
     { using var reader = new StreamReader(archive.GetEntry(entry)!.Open()); return reader.ReadToEnd(); }
 
     [Fact]
+    public void Saved_endpoints_come_from_current_server_and_client_settings()
+    {
+        using var fixture = new Fixture();
+        var config = Directory.CreateDirectory(fixture.Context.ConfigDirectory).FullName;
+        File.WriteAllText(Path.Combine(config, "remote-obsolete.json"), "{invalid old key record");
+        File.WriteAllText(Path.Combine(config, "client.json"), """{"Address":"192.0.2.10","Port":8765}""");
+        File.WriteAllText(Path.Combine(config, "http-v21.json"), """{"ReleaseKey":"21","Address":"127.0.0.1","Port":8766}""");
+        EnvironmentServiceContext.LoadEndpoint(fixture.Context);
+        Assert.Equal(new[] { "http://127.0.0.1:8766/mcp", "http://192.0.2.10:8765/mcp" }, fixture.Context.RemoteEndpoints);
+        Assert.Equal("http://127.0.0.1:8766/", fixture.Context.HttpPrefix);
+    }
+
+    [Fact]
     public void Damaged_saved_endpoint_does_not_hide_data_or_runtime_checks()
     {
         using var fixture = new Fixture(); Directory.CreateDirectory(fixture.Context.ConfigDirectory);

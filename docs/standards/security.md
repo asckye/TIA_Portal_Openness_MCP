@@ -21,7 +21,7 @@
 |---|---|---|
 | 用户的 TIA 项目与 PLC 程序 | TIA Portal 中打开的项目、`.ap<主版本>` 文件 | 程序被改错或丢失；客户知识产权泄露 |
 | 在线 PLC 状态 | 经在线通道连接的 CPU、PLCSIM；仅当接口显式指定 PLCSIM 虚拟网卡或 PLCSIM/Softbus、目标不落入任何状态的非 PLCSIM 网卡子网，且匹配运行中实例地址或有效 PLCSIM 子网时归为模拟器，其余按真实 PLC | 设备行为改变，可能危及机器旁人员；真实下载须显式确认并始终人工审批 |
-| 凭据 | UMAC、PLC 保护、Web 服务器等工具参数中的密码；HTTP 访问密钥 | 设备或服务被他人访问 |
+| 凭据 | UMAC、PLC 保护、Web 服务器等工具参数中的密码 | 设备或服务被他人访问 |
 | 审批与审计记录 | `<数据根>/config/approval.settings`、`<数据根>/logs/audit/` | 写调用绕过人工审批，或事后无法追查 |
 | 调用日志与诊断 | `<数据根>/diagnostics/`、`<数据根>/logs/` | 凭据或项目内容泄露 |
 | Openness 用户组带来的本机权限 | Windows 组 “Siemens TIA Openness” | 组成员可经 Openness 操作本机全部 TIA 实例 |
@@ -33,7 +33,7 @@
 |---|---|---|---|
 | MCP 客户端与模型 → FoundationHost | 工具调用、参数、批次 | V4 准入与类型化参数；写调用审批；预览不执行 | `src/Logic/V4/`、`src/FoundationHost/FoundationTools.cs` |
 | 项目内容、导入文件 → 模型 | 块注释、变量名、导出的 XML 与源 | 作为数据返回，不作为指令执行；写入仍须审批 | 同上 |
-| 宿主机 → 虚拟机中的 HTTP 端点 | MCP over HTTP | Bearer 访问密钥（定长比较）；绑定的 IP 字面量；防火墙规则只开放本地子网 | `src/FoundationHost/EngineReleaseHost.cs`、`src/FoundationHost/HostOptions.cs`、`src/Shared/WindowsFirewallRule.cs` |
+| 宿主机 → 虚拟机中的 HTTP 端点 | MCP over HTTP | 可信局域网或虚拟机仅主机网络；绑定的 IP 字面量与 Host/Origin 校验；防火墙规则只开放本地子网 | `src/FoundationHost/EngineReleaseHost.cs`、`src/FoundationHost/HostOptions.cs`、`src/Shared/WindowsFirewallRule.cs` |
 | FoundationHost ↔ 工作台审批管道 | 待批请求与决定 | 受保护 DACL、拒绝远程客户端、双方核对 SID；宿主生成 nonce；重放请求被拒绝 | `src/Shared/LocalPipeSecurity.cs`、`src/Shared/ApprovalPipe.cs` |
 | AI → 工作台控制通道 | 显示、读取、预填 | 同上，另核对工作台映像路径；协议中没有审批操作 | `src/Shared/WorkbenchControlPipe.cs`、`src/Shared/WorkbenchControlProtocol.cs`、`src/Studio/Gui/WorkbenchControl.cs` |
 | 工作台 ↔ MCP 会话（操作端管道） | 项目页发起的调用 | 同上，另核对映像路径；发起的写调用同样须审批 | `src/Shared/OperatorPipe.cs` |
@@ -50,7 +50,7 @@
 |---|---|---|
 | 仿冒（Spoofing） | 其他进程冒充工作台批准写调用 | SEC-01、SEC-02 |
 | 仿冒 | 被替换的 worker 或适配器接入宿主 | SEC-07 |
-| 仿冒 | 局域网中的其他电脑调用 HTTP 端点 | SEC-05 |
+| 仿冒 | 局域网中的其他电脑调用 HTTP 端点 | HTTP 不验证调用者身份，可达端点的设备均能发起调用；仅在可信局域网或虚拟机的仅主机网络中启用 |
 | 篡改（Tampering） | 模型或注入文本让写调用绕过审批，或改写 `approval.settings` | SEC-01、SEC-03 |
 | 篡改 | 审计记录被修改、删除或插入 | SEC-04 |
 | 篡改 | 恶意标准包、导入文件或 MCP 输出写到预期目录之外 | SEC-01、SEC-08、SEC-09 |
@@ -110,7 +110,7 @@
 - 所有请求（包括健康检查）校验 Host 和可选 Origin。允许配置端点、同端口回环源与 `--http-allowed-origins` 明确列出的源；其他值返回 403 并记录不含原始头值的审计事件，防止 DNS rebinding。
 - `/mcp/health` 返回版本、发布键和档位；`/mcp/ready` 返回宿主就绪状态。
 - 配置网络时，以提升权限添加只授予当前用户的 URL ACL，并添加只允许本地子网的入站防火墙规则。
-- 远程客户端使用随包 stdio 中继连接远程 HTTP 端点，不携带任何认证头或凭据。私网、回环和链路本地地址绕过代理，其他地址遵守环境/系统代理及 NO_PROXY。不跟随重定向，不记录 HTTP 异常正文或凭据，不自动重放请求。
+- 远程客户端使用随包 stdio 中继连接远程 HTTP 端点，中继不添加 HTTP 访问密钥。工具调用可能包含 PLC 或工程凭据。私网、回环和链路本地地址绕过代理，其他地址遵守环境/系统代理及 NO_PROXY。不跟随重定向，不记录 HTTP 异常正文或凭据，不自动重放请求。
 - 实现：`src/FoundationHost/HostOptions.cs`、`EngineReleaseHost.cs`、`HttpRequestBoundary.cs`、`StdioHttpRelay.cs`、`src/Shared/HttpEndpoint.cs`、`RemoteProxyPolicy.cs`、`src/Studio/Gui/Configuration/ConfigCore.cs`、`src/Shared/WindowsFirewallRule.cs`。
 - 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs`、`HttpHostOptionsTests.cs`、`HttpRequestBoundaryTests.cs`、`HttpRelayTests.cs`、`tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs`、`tests/Studio/TiaOpenness.Core.Tests/WindowsFirewallRuleTests.cs`。
 
@@ -186,7 +186,7 @@
 - 实现：`src/Adapters.Contracts/OnlineTargetPolicy.cs`、`src/Shared/OnlineTargetSettings.cs`、`src/ToolPipeline/WorkerToolInvoker.cs`、`src/FoundationHost/PortedToolContract.cs`。测试：`RuntimeOnlineTargetPolicyTests`、`RuntimeOnlineTargetAdmissionTests`；注入 S7、Web API、OPC UA 客户端工厂，拒绝路径不创建客户端或打开套接字。工作台编辑路径复用 SEC-14 的 `SafetySettingsService` 和 `SettingsView.Safety.cs`，不改变运行时准入规则。实机验收仍为 **NOT RUN**，见[真机台账](../reference/real-machine-ledger.md)。
 ### SEC-16 机密保管库（已移除）
 
-- 为减少桌面端本机/局域网使用时的维护复杂度，已移除 DPAPI 机密保管库及 `vault:<name>` 引用语法；凭据参数直接按 SEC-06 的参数名脱敏规则在审批卡、日志、审计和响应中被屏蔽，不落盘保存。
+- 为减少桌面端本机/局域网使用时的维护复杂度，已移除 DPAPI 机密保管库及 `vault:<name>` 引用语法；凭据参数直接按 SEC-06 的参数名脱敏规则在审批卡、日志、审计和响应中被屏蔽，不落盘保存。旧版留下的 `config/secrets.vault` 仍受 MCP 文件工具访问限制保护。
 
 ### SEC-17 审批状态只读与会话隔离
 
@@ -201,11 +201,11 @@
 |---|---|---|
 | PLC companion 的自由参数无法逐主机约束（TIA-SAFE-5 Round 2） | `RunPlcCompanionTool mode=run` 的 net、sim、trace 等命令可能通过参数、配置或脚本连接任意设备，无法保证只连接白名单主机 | 白名单文件存在时（含空、无效或不可读状态），在审批和启动 companion 前以 `online-target-not-allowed` 或 `online-target-list-invalid` 拒绝 mode=run，预览同样拒绝。catalog/help 不执行命令回调，继续允许；文件不存在时保留原有行为。不按自由参数猜测目标，也不提供 MCP 绕过开关 |
 | HTTP 请求的 Origin 与 Host 头 | RELAY-1 已实现每请求校验、403 与审计，含伪造头测试 | 已补齐；新增可信源须显式配置 |
-| 局域网免密钥 HTTP 传输 | 为简化局域网/虚拟机直连，已移除 Bearer 访问密钥与 `--http-api-key` | 仅在可信局域网或本机虚拟机使用，依赖 Host/Origin 边界、本地子网防火墙与人工审批 |
+| 局域网免密钥 HTTP 传输 | 为简化局域网/虚拟机直连，已移除 Bearer 访问密钥与 `--http-api-key` | 仅在可信局域网或虚拟机的仅主机网络中使用。可达端点的设备均可调用工具，写入仍遵循审批规则 |
 | UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批，输入、预览和审批前的身份检查仍可能查询远程主机并暴露 Windows NTLM 凭据 | 维护者 2026-11-04 已决定在 AI 准入层拒绝网络路径，含指向 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。尚未实现，排 4.0 前 |
 | `BuildDeviceAmlDocument` 分类 | 按文件目标审批，但仍为 OFFLINE / readOnlyHint=true | 单独重分类并重捕获八版基线，本任务不改契约 |
 | 更新包没有签名（S3） | 只有同一发布的 `.sha256`，GitHub 账户被控制后可发布恶意更新 | 维护者 2026-11-04 接受风险，签名尚未完成，移出 4.0 前实施清单 |
-| 局域网传输未加密（S5） | 使用明文 HTTP，同一网络上的人可以读取访问密钥和 PLC 密码，DPAPI 仅保护本机存储 | 维护者 2026-11-04 接受风险，保留明文 HTTP，移出 4.0 前实施清单。仅在可信网络使用 |
+| 局域网传输未加密（S5） | 使用明文 HTTP，链路上的监听者可以读取请求和响应，包括工程数据及直接传入的 PLC 密码 | 维护者 2026-11-04 接受风险，保留明文 HTTP，移出 4.0 前实施清单。只在可信局域网或虚拟机的仅主机网络中使用 |
 | 凭据按参数名替换 | 没有 UMAC、PLC 保护、Web 服务器凭据的专用名单 | 新增带凭据参数的工具时按 SEC-06 的命名规则命名，并在测试中证明被替换 |
 | 原生失败的诊断信息 | DES-4R3 返回去敏消息首行和 `innererror` 的短异常类型、HResult、关联请求号，worker 从解包异常产生数值 HResult，ported 工具读取该证据 | 当前调用的凭据字符串在诊断构造时替换，数字与布尔值保持文本含义，堆栈只进日志，见[设计规范](design.md)第 6.5 节 |
 | EplanMCP 的安全借鉴项 | 虚拟机 HTTP 加固、“项目内容是数据”的服务器说明、审批卡清理等 | P8-95a–g，尚未实施 |

@@ -94,7 +94,8 @@ namespace TiaMcpConfigurator
                         if (i == 1 && !request.Contains("/mcp/ready")) throw new Exception("Wrong readiness path");
                         bool failure = unavailable && i == 1;
                         string body = i == 0 ? "{\"fileVersion\":\"test\"}" : "{\"mcpHostReady\":true}";
-                        string response = "HTTP/1.1 " + (failure ? "503 Service Unavailable" : "200 OK") + "\r\nContent-Type: application/json\r\nContent-Length: " + Encoding.UTF8.GetByteCount(body) + "\r\nConnection: close\r\n\r\n" + body;
+                        string response = "HTTP/1.1 " + (failure ? "503 Service Unavailable" : "200 OK")
+                            + "\r\nContent-Type: application/json\r\nContent-Length: " + Encoding.UTF8.GetByteCount(body) + "\r\nConnection: close\r\n\r\n" + body;
                         byte[] bytes = Encoding.UTF8.GetBytes(response); stream.Write(bytes, 0, bytes.Length);
                     }
                 }
@@ -291,7 +292,8 @@ namespace TiaMcpConfigurator
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text == "1 selected"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).ToolTip.ToString() == "DeepSeek", "remote mode shows the live endpoint, state and selected client");
                 Assert(((System.Windows.Controls.Border)form.FindName("ClientActionsBand")).Visibility == System.Windows.Visibility.Visible
-                    && ((System.Windows.Controls.Grid)form.FindName("AddressRow")).Visibility == System.Windows.Visibility.Visible, "remote mode shows the client actions band and the address row");
+                    && ((System.Windows.Controls.Grid)form.FindName("AddressRow")).Visibility == System.Windows.Visibility.Visible,
+                    "remote mode shows the client actions band and the address row");
                 form.CapturePage(Path.Combine(output, "local.png"), 1);
                 // Local mode preserves configuration values while disabling HTTP-only operations.
                 Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkEndpoint")).Text.StartsWith("stdio")
@@ -313,7 +315,7 @@ namespace TiaMcpConfigurator
                 double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
                 Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
                 var caption = (System.Windows.FrameworkElement)window.FindName("CaptionBar");
-                Assert(caption.ActualHeight == 64 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 64 pixels inside the frame");
+                Assert(caption.ActualHeight == 44 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 44 pixels inside the frame");
                 using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
                     Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
                         >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");
@@ -328,18 +330,18 @@ namespace TiaMcpConfigurator
                     && window.FontFamily.Source == ((System.Windows.Media.FontFamily)System.Windows.Application.Current.FindResource("Ui.Font")).Source,
                     "configuration window uses the system Ui.Font chain");
                 ThemeManager.Current.Theme = AppTheme.Dark;
-                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF000000", "dark palette switches live");
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FF0B0F15", "dark palette switches live");
                 ThemeManager.Current.Theme = AppTheme.Light;
-                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFF2F2F7", "light palette switches live");
-                string preservedSecret = "language-switch-fixture";
-                password.Password = preservedSecret;
+                Assert(((System.Windows.Media.SolidColorBrush)((System.Windows.Controls.Grid)window.FindName("Root")).Background).Color.ToString() == "#FFF3F6FA", "light palette switches live");
+                var port = (System.Windows.Controls.TextBox)form.FindName("ServerPort");
+                port.Text = "8766";
                 Loc.Current.Language = AppLanguage.Chinese;
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                 Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "一页连接 TIA 与 AI"
                     && ((System.Windows.Controls.Button)form.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "空闲", "Chinese page updates title, action and service state");
-                Assert(password.Password == preservedSecret && ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text == "192.0.2.10"
-                    && choices.SelectedItems.Count == 1 && (string)versions.SelectedValue == "21", "language switch preserves the secret, address, client and version");
+                Assert(port.Text == "8766" && ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text == "192.0.2.10"
+                    && choices.SelectedItems.Count == 1 && (string)versions.SelectedValue == "21", "language switch preserves the port, address, client and version");
                 ((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked = true;
                 Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "同一台电脑，一次完成"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "stdio", "Chinese local mode is localized");
@@ -361,11 +363,11 @@ namespace TiaMcpConfigurator
                     };
                     list.ItemsSource = fixture;
                     for (int i=0;i<3;i++) list.SelectedItems.Add(fixture[i]);
-                    password.Password="visual-fixture-not-a-real-secret";
+                    port.Text = "8765";
                     ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text=Loc.Current["Config.Detected"];
                     ((System.Windows.Controls.ContentControl)form.FindName("DetectionChip")).Tag=TiaOpenness.Gui.ViewModels.FeatureTone.Accent;
-                    ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="Last test · HTTP reachable, auth passed, MCP ready. Version 1.4.2. TIA project connection not yet verified.";
-                    ((TiaOpenness.Gui.Controls.WorkbenchLogView)form.FindName("ActivityLog")).LogText="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Secret generated · [redacted]\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · auth ok · MCP ready\n09:43:05   Status · Connection OK";
+                    ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="Last test · HTTP reachable, MCP ready. Version 1.4.2. TIA project connection not yet verified.";
+                    ((TiaOpenness.Gui.Controls.WorkbenchLogView)form.FindName("ActivityLog")).LogText="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Remote endpoint configured\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · MCP ready\n09:43:05   Status · Connection OK";
                     ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 entries";
                     form.CapturePage(Path.Combine(capture,"configurator-light.png"),0);
                     ThemeManager.Current.Theme = AppTheme.Dark;
@@ -375,8 +377,8 @@ namespace TiaMcpConfigurator
                     window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text=Loc.Current["Config.Detected"];
                     ((System.Windows.Controls.ContentControl)form.FindName("DetectionChip")).Tag=TiaOpenness.Gui.ViewModels.FeatureTone.Accent;
-                    ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="上次测试 · HTTP 可达，鉴权通过，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。";
-                    ((TiaOpenness.Gui.Controls.WorkbenchLogView)form.FindName("ActivityLog")).LogText="09:41:02   配置已载入 · tia-portal-vm\n09:41:03   已检测到安装路径（注册表）\n09:41:03   客户端扫描 · 已检测到 3 个\n09:42:17   密钥已生成 · [redacted]\n09:42:40   两端配置已保存\n09:43:05   测试 · HTTP 正常 · 鉴权通过 · MCP 就绪\n09:43:05   状态 · 连接正常";
+                    ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="上次测试 · HTTP 可达，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。";
+                    ((TiaOpenness.Gui.Controls.WorkbenchLogView)form.FindName("ActivityLog")).LogText="09:41:02   配置已载入 · tia-portal-vm\n09:41:03   已检测到安装路径（注册表）\n09:41:03   客户端扫描 · 已检测到 3 个\n09:42:17   远程端点已配置\n09:42:40   两端配置已保存\n09:43:05   测试 · HTTP 正常 · MCP 就绪\n09:43:05   状态 · 连接正常";
                     ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 条记录";
                     form.CapturePage(Path.Combine(capture,"configurator-zh-dark.png"),0);
                     form.CapturePage(Path.Combine(capture,"configurator-local-zh-dark.png"),1);

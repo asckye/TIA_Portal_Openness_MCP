@@ -47,7 +47,7 @@ public partial class App : Application
         DispatcherUnhandledException += OnUnhandledException;
 
         Settings = UiSettings.Load();
-        ApplyCommandLineOverrides(args);
+        ApplyCommandLineOverrides(args, Settings);
 
         Loc.Current.Language = Settings.Language;
         ThemeManager.Current.Initialize(Settings.Theme, Settings.LowEffects, Settings.Accent);
@@ -89,31 +89,31 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// <c>--lang en|zh</c> and <c>--theme auto|light|dark</c>. Present so a screenshot or a demo
+    /// <c>--lang en|zh</c> and <c>--theme light|dark</c> with <c>--accent cobalt|petrol</c>. Present so a screenshot or a demo
     /// can be pinned to one appearance without touching the saved preference.
     /// </summary>
-    private static void ApplyCommandLineOverrides(string[] args)
+    internal static void ApplyCommandLineOverrides(string[] args, UiSettings settings)
     {
         for (var i = 0; i < args.Length - 1; i++)
         {
             if (string.Equals(args[i], "--lang", StringComparison.OrdinalIgnoreCase))
             {
-                Settings.Language = args[i + 1].ToLowerInvariant() switch
+                settings.Language = args[i + 1].ToLowerInvariant() switch
                 {
                     "zh" or "zh-cn" or "chinese" => AppLanguage.Chinese,
                     "en" or "en-us" or "english" => AppLanguage.English,
-                    _ => Settings.Language,
+                    _ => settings.Language,
                 };
             }
             else if (string.Equals(args[i], "--theme", StringComparison.OrdinalIgnoreCase)
-                     && Enum.TryParse<AppTheme>(args[i + 1], ignoreCase: true, out var theme))
+                     && Enum.TryParse<AppTheme>(args[i + 1], ignoreCase: true, out var theme) && Enum.IsDefined(theme))
             {
-                Settings.Theme = theme;
+                settings.Theme = theme;
             }
             else if (string.Equals(args[i], "--accent", StringComparison.OrdinalIgnoreCase)
-                     && Enum.TryParse<AppAccent>(args[i + 1], ignoreCase: true, out var accent))
+                     && Enum.TryParse<AppAccent>(args[i + 1], ignoreCase: true, out var accent) && Enum.IsDefined(accent))
             {
-                Settings.Accent = accent;
+                settings.Accent = accent;
             }
         }
     }

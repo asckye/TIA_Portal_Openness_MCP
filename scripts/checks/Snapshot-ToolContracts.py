@@ -22,7 +22,6 @@ import uuid
 from contextlib import contextmanager
 import os
 import queue
-import secrets
 import socket
 import threading
 import time
@@ -88,7 +87,6 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
             yield value
         return
     transport = args.transport
-    key = secrets.token_urlsafe(24)
     port = 0
     if transport == 'http':
         with socket.socket() as sock:
@@ -100,7 +98,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
     if portal_root is not None:
         command += ['--tia-portal-location', str(portal_root)]
     if transport == 'http':
-        command += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
+        command += ['--http-prefix', f'http://127.0.0.1:{port}/']
     # Without --plc-worker the host starts its own default worker (the bundled PlcWorker of a packaged capture).
     environment = engine_host_environment(args, release, plc, env_overrides)
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -120,8 +118,7 @@ def engine_host_server(args, release, portal_root, profile, env_overrides):
     session_id = None
     def http(body):
         nonlocal session_id
-        headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream',
-                   'Authorization': 'Bearer ' + key}
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}
         if session_id:
             headers['Mcp-Session-Id'] = session_id
         request = urllib.request.Request(endpoint, json.dumps(body).encode('utf-8'), headers)

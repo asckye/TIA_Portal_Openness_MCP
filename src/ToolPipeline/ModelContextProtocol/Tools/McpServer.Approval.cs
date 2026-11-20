@@ -117,8 +117,10 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static async Task<CallToolResult?> PrecheckBeforeApproval(string name, string arguments,
             Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
         {
+            var input = JsonSerializer.Deserialize<JsonElement>(arguments);
+            if (HostBehavior.RemovedVaultReference(name, input) is { } credentialError) return V4Reject(name, credentialError);
             if (ApprovalPreviewDepth.Value > 0) return null;
-            var args = JsonNode.Parse(arguments)!.AsObject();
+            var args = JsonObject.Create(input)!;
             try
             {
                 try { ApprovalOutputTargets.ValidateWhitespace(name, args); }

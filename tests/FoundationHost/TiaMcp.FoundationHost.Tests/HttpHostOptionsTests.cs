@@ -8,6 +8,15 @@ using HttpHostOptions = foundationhost::TiaMcp.FoundationHost.HttpHostOptions;
 // The HTTP hosts must not watch the working directory they were started from.
 public sealed class HttpHostOptionsTests
 {
+    [Fact]
+    public void Removed_http_key_reports_the_migration_without_echoing_the_value()
+    {
+        string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        var error = Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(
+            ["--bundle-root", root, "--release-key", "21", "--http-api-key", "private-fixture"], root));
+        Assert.Equal("--http-api-key was removed (ADR 0035); HTTP no longer uses an access key", error.Message);
+    }
+
     [Theory]
     [InlineData("http://user:fixture-secret@127.0.0.1:8765/")]
     [InlineData("http://127.0.0.1:8765/#fixture-secret")]

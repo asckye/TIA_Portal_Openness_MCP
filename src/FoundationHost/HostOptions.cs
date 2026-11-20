@@ -83,6 +83,7 @@ internal sealed class HostOptions
         {
             if (args[i] is "--native-session" or "--offline" or "--catalog" or "--with-ui" or "--plc-worker") { flags.Add(args[i]); continue; }
             var name = args[i];
+            if (name == "--http-api-key") throw new ArgumentException("--http-api-key was removed (ADR 0035); HTTP no longer uses an access key");
             if (!valued.Contains(name) || i + 1 == args.Length || args[i + 1].StartsWith("--", StringComparison.Ordinal))
                 throw new ArgumentException("Unknown or incomplete option: " + name);
             if (!options.TryAdd(name, args[++i])) throw new ArgumentException("Repeated option: " + name);

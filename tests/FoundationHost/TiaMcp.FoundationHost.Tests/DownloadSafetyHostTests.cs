@@ -7,6 +7,81 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 public sealed class DownloadSafetyHostTests
 {
+    [Theory]
+    [InlineData(false, false)] [InlineData(true, false)]
+    [InlineData(false, true)] [InlineData(true, true)]
+    public async Task Download_approval_card_identifies_the_target_and_masks_the_password(bool nested, bool simulated)
+    {
+        using var targets = new OnlineTargetSettingsScope(null);
+        const string password = "fixture-download-password";
+        var previous = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
+        var cards = new List<(PendingApproval Card, ApprovalSettings Settings)>();
+        try
+        {
+            new ApprovalSettings(true, 1, 137).Save(ApprovalSettings.SettingsPath);
+            using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(
+                () => simulated ? DownloadSafetyPolicyTests.RunningInstance("192.0.2.10") : null,
+                _ => TiaMcp.Engine.Tests.Shared.DownloadTargetCases.Network());
+            Task<ApprovalOutcome> Wait(PendingApproval pending, ApprovalSettings settings, CancellationToken token)
+            {
+                cards.Add((pending, settings));
+                return Task.FromResult(new ApprovalOutcome(pending, false, "denied"));
+            }
+            using var waitScope = new ApprovalWaitScope(Wait);
+            using var worker = new BoundWorker { Simulated = simulated };
+            using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker, approvalWait: Wait);
+            using var session = fixture.EnterSession();
+            var args = Arguments(simulated ? "PLCSIM" : "Intel(R) Ethernet", !simulated);
+            args["password"] = password;
+            var preview = await Call(fixture, nested, args);
+            Assert.True((bool?)preview["ok"], preview.ToJsonString());
+            Assert.Empty(cards);
+            args["dryRun"] = false;
+            args["expectedPlanHash"] = (string?)preview["data"]?["planHash"];
+            args["expectedProjectFile"] = BoundWorker.Project;
+            var result = await Call(fixture, nested, args);
+            Assert.Equal("CONFIRMATION_REQUIRED", (string?)result["error"]?["code"]);
+            var (pending, settings) = Assert.Single(cards);
+            Assert.True(settings.Enabled);
+            Assert.Equal(137, settings.OnlinePlanLifetimeSeconds);
+            var card = JsonNode.Parse(pending.ParametersJson)!;
+            Assert.Equal(simulated ? "plcsim" : "physical", (string?)card["onlineTarget"]?["kind"]);
+            Assert.Equal("192.0.2.10", (string?)card["onlineTarget"]?["targetIpAddress"]);
+            Assert.Equal("••••", (string?)card["password"]);
+            Assert.Contains("192.0.2.10", pending.Operations.Single().Target);
+            Assert.DoesNotContain(password, pending.ParametersJson + pending.ProjectIdentity);
+            Assert.Equal(0, worker.OnlineCalls);
+            Assert.DoesNotContain("APPROVAL_DISABLED", result.ToJsonString(), StringComparison.Ordinal);
+        }
+        finally { previous.Save(ApprovalSettings.SettingsPath); }
+    }
+
+    [Theory]
+    [InlineData(false, false)] [InlineData(true, false)]
+    [InlineData(false, true)] [InlineData(true, true)]
+    public async Task Removed_credential_refuses_download_before_simulator_evidence_or_approval(bool nested, bool dryRun)
+    {
+        using var targets = new OnlineTargetSettingsScope(null);
+        int approvals = 0;
+        Task<ApprovalOutcome> Wait(PendingApproval pending, ApprovalSettings settings, CancellationToken token)
+        {
+            approvals++;
+            return Task.FromResult(new ApprovalOutcome(pending, false, "denied"));
+        }
+        using var waitScope = new ApprovalWaitScope(Wait);
+        using var worker = new BoundWorker();
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker, approvalWait: Wait);
+        var args = Arguments("PLCSIM", true);
+        args["dryRun"] = dryRun;
+        args["moduleAccessPassword"] = "vault:old";
+        var result = await Call(fixture, nested, args);
+        Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
+        Assert.Equal("vault references were removed (ADR 0035); pass the credential directly", (string?)result["error"]?["message"]);
+        Assert.Equal(0, approvals);
+        Assert.Equal(0, worker.Listings);
+        Assert.Equal(0, worker.Calls);
+    }
+
     public static IEnumerable<object[]> CollidingInstances => from nested in new[] { false, true }
         from sample in new[] { ("Intel(R) Ethernet", (System.Net.NetworkInformation.OperationalStatus?)null),
             ("", (System.Net.NetworkInformation.OperationalStatus?)null),

@@ -248,7 +248,7 @@ internal static partial class Strings
                 "客户端检测：{0}（✓ = 本机检测到；未检测到的仍可写入）"),
         ("Config.ClientInstructionsCaption", "Client instructions", "客户端使用说明"),
         ("Config.BrowseTiaDescription", "Select the Portal V{0} installation directory, without Bin", "选择 Portal V{0} 安装目录，不带 Bin"),
-        ("Config.Ready", "Ready. Configure the service and clients on one page, using the same secret on both sides.", "就绪。服务与客户端配置在同一页完成，两端使用同一密钥。"),
+        ("Config.Ready", "Ready. Configure the service and clients on this page.", "就绪。可在此页配置服务和客户端。"),
         ("Config.ChooseClients", "Select one or more clients. Saving writes their configuration automatically.", "选择一个或多个客户端，保存后将自动写入对应配置。"),
         ("Config.ClientInstructionsDetected", "{0}: {1} (Detected: {2})", "{0}：{1}（已检测到：{2}）"),
         ("Config.ClientInstructionsNotDetected", "{0}: {1} (Not detected: {2})", "{0}：{1}（未检测到：{2}）"),
@@ -270,9 +270,8 @@ internal static partial class Strings
                 "up:\n\n",
                 "请先退出所选客户端，避免配置同时写入。\n将保留其它设置并备份原文件：\n\n"),
             ("Config.WriteClientsContinue",
-                    "\n\nRemote access keys stay in the protected Workbench store. Existing backups may contain older credentials; keep them private. " +
-                    "Continue?",
-                    "\n\n远程访问密钥保留在工作台的用户保护存储中。已有备份可能含旧凭据，请妥善保管。继续？"),
+                    "\n\nExisting backups may contain older credentials. Keep them private. Continue?",
+                    "\n\n已有备份可能含旧凭据，请妥善保管。继续？"),
         ("Config.ClientSaved", "{0} saved: {1}", "{0} 已保存：{1}"),
         ("Config.RestartClients",
                 "Restart the configured clients and use {0} to read the project tree. Do not let multiple AIs modify the same project at the same time.",
@@ -385,9 +384,9 @@ internal static partial class Strings
                 "Writes to Tencent CodeBuddy Code CLI .mcp.json (select Hunyuan / DeepSeek or other models in CodeBuddy). Restart and check with /mcp.",
                 "写入腾讯 CodeBuddy Code CLI 的 .mcp.json（混元 / DeepSeek 等模型在 CodeBuddy 里选）。重启后用 /mcp 检查。"),
         ("Config.ClientHint.QwenAgent",
-                "Writes to Qwen Agent .qwen-agent\\mcp.json (url + Bearer header, without OAuth). Fully quit the Qwen Agent process, rather than just " +
+                "Writes to Qwen Agent .qwen-agent\\mcp.json (stdio command and arguments). Fully quit the Qwen Agent process, rather than just " +
                 "closing its window, then reopen it to reload. For a single project, place the same file in <project>\\.qwen-agent\\mcp.json.",
-                "写入千问工作助理（Qwen Agent）的 .qwen-agent\\mcp.json（url + Bearer 头，不走 OAuth）。必须完全退出千问工作助理进程（不是关窗口）再打开才会重新读取；只对一个项目生效时把同名文件放到 <项目>\\.qwen-agent\\mcp.json。"),
+                "写入千问工作助理（Qwen Agent）的 .qwen-agent\\mcp.json（stdio 命令与参数）。必须完全退出千问工作助理进程（不是关窗口）再打开才会重新读取；只对一个项目生效时把同名文件放到 <项目>\\.qwen-agent\\mcp.json。"),
         ("Config.ClientHint.Cursor", "Restart Cursor, then check and enable tia-portal-vm in MCP settings.", "重启 Cursor，在 MCP 设置中检查 tia-portal-vm 并启用。"),
         ("Config.ClientHint.VsCode",
                 "Uses the default VS Code user configuration (Insiders if it is the only edition installed). Reload the window, then start and trust the " +
@@ -432,8 +431,8 @@ internal static partial class Strings
         ("Config.TiaApiNotFound",
                 "The {0} Openness API ({1}) was not found in this directory. Select the installation root or the corresponding PublicAPI directory.",
                 "该目录未找到 {0} Openness API（{1}）。请选择安装根目录或对应 PublicAPI 目录。"),
-        ("Config.RemoteReady", "HTTP is reachable, authentication passed, and MCP is ready. Version: {0}. The TIA project connection has not been verified.",
-                "HTTP 可达，鉴权通过，MCP 已就绪。版本：{0}。尚未验证 TIA 项目连接。"),
+        ("Config.RemoteReady", "HTTP is reachable and MCP is ready. Version: {0}. The TIA project connection has not been verified.",
+                "HTTP 可达，MCP 已就绪。版本：{0}。尚未验证 TIA 项目连接。"),
         ("Config.InvalidReleaseJson", "GitHub did not return a release JSON object.", "GitHub 返回的不是 release JSON。"),
         ("Config.InvalidReleaseTag", "The release tag is not a version number: {0}", "release 的 tag 不是版本号：{0}"),
         ("Config.MissingReleaseTag", "The release page did not provide the latest version tag (API: {0}).", "发布页没有给出最新版本的 tag（API：{0}）"),

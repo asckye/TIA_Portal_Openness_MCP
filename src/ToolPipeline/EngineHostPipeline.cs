@@ -223,6 +223,8 @@ namespace TiaMcp.FoundationHost
                 args = args["arguments"] as JsonObject ?? new JsonObject();
             }
             if (name != "DownloadPlc" || args["targetIpAddress"] is not JsonValue value || !value.TryGetValue<string>(out var target)) return null;
+            // Admission reports the credential error below. A rejected download must not probe the simulator first.
+            if (HostBehavior.RemovedVaultReference(name, JsonSerializer.SerializeToElement(args)) != null) return null;
             var online = new TiaMcp.Adapters.Contracts.OnlineRequest { Operation = name, TargetIpAddress = target };
             if (TiaMcp.Adapters.Contracts.OnlineCapabilities.Unsupported(EngineHostConfiguration.ReleaseKey, online) != null) return null;
             TiaMcp.Adapters.Contracts.OnlineTargetList? targets;

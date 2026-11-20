@@ -102,7 +102,7 @@ public sealed class ApprovalStatusTests
     public async Task Foundation_direct_approval_uses_the_same_session_board()
     {
         using var targets = new OnlineTargetSettingsScope(null);
-        using var worker = new OnlinePortAdmissionTests.VaultOnlineWorker();
+        using var worker = new OnlinePortAdmissionTests.OnlineWorker();
         var entered = new TaskCompletionSource<PendingApproval>(TaskCreationOptions.RunContinuationsAsynchronously);
         var decision = new TaskCompletionSource<ApprovalOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker,

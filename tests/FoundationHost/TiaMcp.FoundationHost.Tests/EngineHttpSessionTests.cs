@@ -287,17 +287,25 @@ public sealed partial class EngineHttpSessionTestsPlc
     }
 
     [Fact]
-    public async Task Health_has_file_version_and_readiness_requires_authentication()
+    public async Task Health_has_file_version_and_key_free_readiness_checks_host_and_origin()
     {
         using var host = await Fixture.Start("21"); using var client = new HttpClient(new HttpClientHandler { UseProxy = false }) {
             BaseAddress = new Uri(host.Url) };
         var health = await client.GetFromJsonAsync<JsonObject>("/mcp/health");
         Assert.Equal("plc-foundation", (string?)health!["profile"]); Assert.False(string.IsNullOrWhiteSpace((string?)health["fileVersion"]));
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/mcp/ready")).StatusCode);
-        client.DefaultRequestHeaders.Authorization = new("Bearer", "fixture-key");
-        var ready = await client.GetFromJsonAsync<JsonObject>("/mcp/ready");
+        using var valid = await client.GetAsync("/mcp/ready");
+        Assert.Equal(HttpStatusCode.OK, valid.StatusCode);
+        var ready = await valid.Content.ReadFromJsonAsync<JsonObject>();
         Assert.True((bool?)ready!["mcpHostReady"]); Assert.Equal("21", (string?)ready["releaseKey"]); Assert
             .Equal("NOT RUN", (string?)ready["nativeAcceptance"]);
+        using var forgedHost = new HttpRequestMessage(HttpMethod.Get, "/mcp/ready");
+        forgedHost.Headers.Host = "untrusted.invalid";
+        using var hostResponse = await client.SendAsync(forgedHost);
+        Assert.Equal(HttpStatusCode.Forbidden, hostResponse.StatusCode);
+        using var forgedOrigin = new HttpRequestMessage(HttpMethod.Get, "/mcp/ready");
+        forgedOrigin.Headers.Add("Origin", "http://untrusted.invalid");
+        using var originResponse = await client.SendAsync(forgedOrigin);
+        Assert.Equal(HttpStatusCode.Forbidden, originResponse.StatusCode);
     }
 
     [Theory, InlineData("20"), InlineData("21")]
@@ -310,7 +318,7 @@ public sealed partial class EngineHttpSessionTestsPlc
         // Hold a POST body open: shutdown must cancel transport reads as well as session workers.
         using var upload = new TcpClient(); await upload.ConnectAsync("127.0.0.1", new Uri(host.Url).Port);
         var bytes = System.Text.Encoding.ASCII
-            .GetBytes("POST /mcp HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer fixture-key\r\nContent-Type: application/json\r\nContent-Length: " +
+            .GetBytes("POST /mcp HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: " +
             "1000\r\n\r\n{");
         await upload.GetStream().WriteAsync(bytes);
         await Task.Delay(100);
@@ -328,7 +336,6 @@ public sealed partial class EngineHttpSessionTestsPlc
         internal string? Id;
         internal async Task<JsonNode> Call(string method, JsonObject input)
         {
-            client.DefaultRequestHeaders.Authorization = new("Bearer", "fixture-key");
             if (client.DefaultRequestHeaders.Accept.Count == 0)
                 client.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/event-stream");
             using var response = await client

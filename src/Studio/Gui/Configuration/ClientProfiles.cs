@@ -138,7 +138,7 @@ namespace TiaMcpConfigurator
                 new ClientProfile("zhipu", "GLM", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", LocalizedText.Key("Config.ClientModel.GLM")),
                         "opencode"),
                 new ClientProfile("grok", "Grok", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", "xAI Grok"), "opencode"),
-                // 千问工作助理（桌面应用）只读 ~/.qwen-agent/mcp.json（或项目下 .qwen-agent/mcp.json）：url + Bearer 头，不走 OAuth；改完必须完全退出进程再打开才会重新读取。
+                // 千问工作助理（桌面应用）只读 ~/.qwen-agent/mcp.json（或项目下 .qwen-agent/mcp.json）：远程连接使用本地 stdio 中继命令与参数；改完必须完全退出进程再打开才会重新读取。
                 new ClientProfile("qwen-agent", "Qwen Agent", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), LocalizedText
                         .Key("Config.ClientHint.QwenAgent"), "qwen-agent", "Desktop"),
                 new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), LocalizedText.Key("Config.ClientHint.Cursor"), null,

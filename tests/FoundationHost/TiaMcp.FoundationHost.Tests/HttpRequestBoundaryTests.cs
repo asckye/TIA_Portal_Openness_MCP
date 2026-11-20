@@ -40,7 +40,7 @@ public sealed class HttpRequestBoundaryTests(ITestOutputHelper output)
         var builder = WebApplication.CreateBuilder(); builder.Logging.ClearProviders(); builder.WebHost.UseSetting("urls", "http://127.0.0.1:0");
         await using var app = builder.Build();
         var audit = new ConcurrentBag<string>(); var boundary = new Boundary(Options("http://127.0.0.1:0/"), audit.Add);
-        app.Use(boundary.Invoke); app.Run(context => { context.Response.StatusCode = 401; return Task.CompletedTask; });
+        app.Use(boundary.Invoke); app.Run(context => { context.Response.StatusCode = 200; return Task.CompletedTask; });
         await app.StartAsync();
         using var client = new HttpClient(new HttpClientHandler { UseProxy = false });
         foreach (string route in new[] { "/mcp", "/mcp/health", "/unknown" })
@@ -50,7 +50,7 @@ public sealed class HttpRequestBoundaryTests(ITestOutputHelper output)
             using var originResponse = await client.SendAsync(forgedOrigin); Assert.Equal(HttpStatusCode.Forbidden, originResponse.StatusCode);
             using var forgedHost = new HttpRequestMessage(HttpMethod.Get, app.Urls.Single() + route); forgedHost.Headers.Host = "evil.test";
             using var hostResponse = await client.SendAsync(forgedHost); Assert.Equal(HttpStatusCode.Forbidden, hostResponse.StatusCode);
-            using var validResponse = await client.GetAsync(app.Urls.Single() + route); Assert.Equal(HttpStatusCode.Unauthorized, validResponse.StatusCode);
+            using var validResponse = await client.GetAsync(app.Urls.Single() + route); Assert.Equal(HttpStatusCode.OK, validResponse.StatusCode);
         }
         Assert.Equal(3, audit.Count(value => value == "FORBIDDEN_HOST")); Assert.Equal(3, audit.Count(value => value == "FORBIDDEN_ORIGIN"));
     }

@@ -16,6 +16,77 @@ public sealed class SessionAuditHostTests
     private const string Secret = "Umac-Secret-7f3!";
 
     [Theory]
+    [InlineData("OpenProject")]
+    [InlineData("CallTool")]
+    [InlineData("PreviewToolCall")]
+    [InlineData("PreviewToolBatch")]
+    [InlineData("RunReadOnlyToolBatch")]
+    public async Task Removed_vault_references_fail_before_approval_or_worker_dispatch(string entry)
+    {
+        int approvals = 0;
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", approvalWait: (card, _, _) => {
+            approvals++; return Task.FromResult(new ApprovalOutcome(card, false, "denied")); });
+        var arguments = new { path = "C:/Fixture/P.ap21", umacUserName = "engineer", umacPassword = "vault:old" };
+        var call = new { name = "OpenProject", arguments };
+        var result = (await fixture.Call(entry, entry switch {
+            "OpenProject" => (object)arguments, "PreviewToolBatch" or "RunReadOnlyToolBatch" => new { operations = new[] { call } }, _ => call
+        })).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
+        Assert.Equal("vault references were removed (ADR 0035); pass the credential directly", (string?)result["error"]?["message"]);
+        Assert.Equal(0, approvals);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("ConnectOnlinePlc", "password")]
+    [InlineData("RetrieveProjectArchive", "umacPassword")]
+    [InlineData("DownloadPlc", "moduleAccessPassword")]
+    [InlineData("DownloadPlc", "blockBindingPassword")]
+    [InlineData("DownloadPlc", "masterSecretPassword")]
+    [InlineData("ManageCfcChartProtection", "currentPassword")]
+    [InlineData("ManagePlcBlockWriteProtection", "newPassword")]
+    [InlineData("ManageUmcUsers", "serverPassword")]
+    public void Only_former_credential_parameters_reserve_the_vault_prefix(string tool, string field)
+    {
+        var args = new JsonObject { [field] = "vault:" };
+        var failure = HostBehavior.RemovedVaultReference(tool, JsonSerializer.SerializeToElement(args));
+        Assert.Equal("/arguments/" + field, Assert.IsType<InvalidArgumentDetails>(failure?.Details).Parameter);
+        args[field] = "prefix-vault:literal";
+        args["description"] = "vault:ordinary-text";
+        Assert.Null(HostBehavior.RemovedVaultReference(tool, JsonSerializer.SerializeToElement(args)));
+    }
+
+    [Fact]
+    public async Task Parked_download_reply_redacts_the_plain_text_credential()
+    {
+        using var targets = new OnlineTargetSettingsScope(null);
+        const string marker = "native fixture detail";
+        using var worker = new OnlinePortAdmissionTests.OnlineWorker(diagnostic: marker + new string('x', 24000));
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker,
+            approvalWait: (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)));
+        var args = new JsonObject { ["softwarePath"] = "PLC_1", ["targetIpAddress"] = "192.0.2.10",
+            ["pgPcInterface"] = "PLCSIM", ["confirmPhysicalTarget"] = true, ["password"] = Secret, ["dryRun"] = true };
+        var preview = (await fixture.Call("DownloadPlc", args)).StructuredContent!;
+        Assert.True((bool?)preview["ok"], preview.ToJsonString());
+        args["password"] = "changed-download-credential";
+        var changed = (await fixture.Call("DownloadPlc", args)).StructuredContent!;
+        Assert.True((bool?)changed["ok"], changed.ToJsonString());
+        Assert.NotEqual((string?)preview["data"]!["planHash"], (string?)changed["data"]!["planHash"]);
+        args["password"] = Secret;
+        args["expectedPlanHash"] = preview["data"]!["planHash"]!.DeepClone();
+        args["expectedProjectFile"] = "C:/Fixture/P.ap21";
+        args["dryRun"] = false;
+        var applied = (await fixture.Call("DownloadPlc", args)).StructuredContent!;
+        Assert.True((bool?)applied["ok"], applied.ToJsonString());
+        Assert.Equal(Secret, worker.Password);
+        using var session = fixture.EnterSession();
+        var handle = (string)applied["data"]!["export"]!["id"]!;
+        var payload = toolpipeline::TiaMcp.FoundationHost.SessionExportStore.Get(handle)!.Content;
+        Assert.Contains(marker, payload);
+        Assert.DoesNotContain(Secret, payload);
+    }
+
+    [Theory]
     [InlineData("14sp1", false)] [InlineData("15.1", true)] [InlineData("16", true)] [InlineData("17", true)]
     [InlineData("18", true)] [InlineData("19", true)] [InlineData("20", true)] [InlineData("21", true)]
     public void OpenProject_offers_umac_credentials_exactly_where_the_SDK_has_UmacDelegate(string release, bool umac)
@@ -45,6 +116,7 @@ public sealed class SessionAuditHostTests
         Assert.DoesNotContain(Secret, CallJournalPayload.Redact(json), StringComparison.Ordinal);
         Assert.DoesNotContain(Secret, CallJournalPayload.Sanitize(json), StringComparison.Ordinal);
         var pending = PendingApproval.Create("foundation", "21", tool, json, "{\"ProjectFile\":\"C:/Projects/P/P.ap21\"}", 120);
+        Assert.Equal("••••", (string?)JsonNode.Parse(pending.ParametersJson)!["umacPassword"]);
         Assert.DoesNotContain(Secret, pending.ParametersJson, StringComparison.Ordinal);
         Assert.DoesNotContain(Secret, pending.ProjectIdentity, StringComparison.Ordinal);
         Assert.DoesNotContain(Secret, string.Join("|", pending.Operations.Select(o => o.Tool + o.Action + o.Target)), StringComparison.Ordinal);

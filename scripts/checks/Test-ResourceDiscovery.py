@@ -217,12 +217,13 @@ def stdio_reader_failure_self_test():
 
 def prompt_requirements(root):
     """Derive dependencies from the prompt source, including shared rules and forwarding methods."""
-    from engine_sources import block_after
     source = (root / 'src/ToolPipeline/ModelContextProtocol/McpPrompts.cs').read_text(encoding='utf-8-sig')
     universe = set()
     for path in (root / 'manifest/contracts/v4/baseline').glob('*.json'):
         universe.update(tool['name'] for tool in json.loads(path.read_text(encoding='utf-8'))['tools'])
-    shared = set(re.findall(r'\b[A-Z][A-Za-z0-9]+\b', block_after(source, 'private static string WithV4Rules'))) & universe
+    shared_rules = re.findall(r'private static string WithV4Rules\(string task\)\s*\{\s*return task \+ @"((?:[^"]|"")*)";\s*\}', source)
+    require(len(shared_rules) == 1, 'Expected the shared WithV4Rules prompt text')
+    shared = set(re.findall(r'\b[A-Z][A-Za-z0-9]+\b', shared_rules[0])) & universe
     matches = list(re.finditer(r'\[McpServerPrompt\(Name = "([^"]+)"\).*?public static string (\w+)\(', source, re.S))
     bodies = {match[2]: source[match.end():matches[index + 1].start() if index + 1 < len(matches) else len(source)]
               for index, match in enumerate(matches)}
@@ -271,7 +272,7 @@ def plc_fixture_evidence(worker, exe):
 
 
 def host_command(exe, portal_root, major, transport, profile, public_api=None, *,
-                 plc_worker=None, bundle_root=None, port=0, key=''):
+                 plc_worker=None, bundle_root=None, port=0):
     """One launch contract for the shared server and transport lifetime probes."""
     exe = Path(exe).resolve()
     if exe.name != 'TiaMcp.FoundationHost.exe':
@@ -287,7 +288,7 @@ def host_command(exe, portal_root, major, transport, profile, public_api=None, *
         args += ['--tia-portal-location', str(Path(portal_root).resolve())]
     args += ['--transport', transport, '--logging', '1']
     if transport == 'http':
-        args += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
+        args += ['--http-prefix', f'http://127.0.0.1:{port}/']
     return args
 
 
@@ -324,11 +325,9 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
     port = 0
     if transport == 'http':
         port = allocate_http_port()
-    key = secrets.token_urlsafe(24)
-    foundation = True
     bundle_root = (env_overrides or {}).get('TIA_MCP_BUNDLE_ROOT') or os.environ.get('TIA_MCP_BUNDLE_ROOT') or str(Path(__file__).resolve().parents[2])
     args = host_command(exe, portal_root, major, transport, profile, public_api,
-                        plc_worker=plc_worker, bundle_root=bundle_root, port=port, key=key)
+                        plc_worker=plc_worker, bundle_root=bundle_root, port=port)
     env = dict(os.environ, TIA_MCP_PROFILE=profile)
     if plc_worker is not None:
         env['TIA_MCP_PLC_WORKER_SDK_READY'] = '1' if sdk_ready else '0'
@@ -355,12 +354,10 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
     client = PersistentHttp(f'http://127.0.0.1:{port}', timeout=rpc_timeout)
 
     session_id = None
-    def http(body, authorized=True):
+    def http(body):
         nonlocal session_id
-        headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' if foundation else 'application/json'}
-        if authorized:
-            headers['Authorization'] = 'Bearer ' + key
-        if foundation and session_id:
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}
+        if session_id:
             headers['Mcp-Session-Id'] = session_id
         with client.request('/mcp', 'POST', json.dumps(body).encode('utf-8'), headers) as response:
             session_id = response.headers.get('Mcp-Session-Id', session_id)
@@ -429,10 +426,8 @@ def _server(exe, portal_root, major, transport, profile, harness=None, public_ap
             while True:
                 require(process.poll() is None, 'HTTP server exited at startup: ' + ''.join(errors))
                 try:
-                    with client.request('/mcp' + ('/health' if foundation else '/ready'),
-                                        headers={'Authorization': 'Bearer ' + key} if foundation else {'X-API-Key': key},
-                                        timeout=2) as response:
-                        if json.load(response).get('status' if foundation else 'mcpHostReady'):
+                    with client.request('/mcp/health', timeout=2) as response:
+                        if json.load(response).get('status'):
                             break
                 except (urllib.error.URLError, TimeoutError):
                     pass
@@ -569,11 +564,9 @@ def run(args):
                         'Unknown method no longer returns MethodNotFound')
                 passed += 1
                 if transport == 'http':
-                    try:
-                        http({'jsonrpc': '2.0', 'id': 1, 'method': 'resources/list'}, authorized=False)
-                        raise AssertionError('Resource discovery bypassed HTTP authentication')
-                    except urllib.error.HTTPError as error:
-                        require(error.code == 401, 'Expected HTTP 401 for resource discovery')
+                    response = http({'jsonrpc': '2.0', 'id': 1, 'method': 'resources/list'})
+                    require(response.get('id') == 1 and response.get('result') == {'resources': []},
+                            'Key-free HTTP resource discovery must return the resource list')
                     passed += 1
             print('PASS ' + label + ': resources, templates, capabilities, repeated IDs and tools')
     if args.usage_output:

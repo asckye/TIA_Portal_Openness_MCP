@@ -14,12 +14,11 @@ using Service = toolpipeline::TiaMcpServer.Siemens.Services.OnlineDownloadServic
 
 public sealed class OnlinePortAdmissionTests
 {
-    internal sealed class VaultOnlineWorker(bool fail = false, string? diagnostic = null) : IFoundationWorker, Engine.IEngineWorker
+    internal sealed class OnlineWorker(bool fail = false, string? diagnostic = null) : IFoundationWorker, Engine.IEngineWorker
     {
         internal int Calls;
         internal string? Password;
         internal readonly List<OnlineRequest> Requests = new();
-        internal Func<Exception>? Failure;
         public bool Faulted => false;
         public object SessionKey { get; } = new();
         public JsonNode? Binding => new JsonObject { ["identity"] = new JsonObject { ["projectPath"] = "C:/Fixture/P.ap21" } };
@@ -39,7 +38,6 @@ public sealed class OnlinePortAdmissionTests
             var request = arguments["request"]!.Deserialize<OnlineRequest>()!;
             Password = request.Password;
             Requests.Add(request);
-            if (Failure != null) throw Failure();
             var result = new JsonObject { ["MayHaveChanged"] = !fail, ["OutcomeUnknown"] = false,
                 ["Value"] = new JsonObject { ["State"] = fail ? "Protected" : request.Operation == "DownloadPlc" ? "Success" : "Online",
                     ["IsOnline"] = !fail, ["Ok"] = !fail,

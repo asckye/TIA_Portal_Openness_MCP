@@ -86,14 +86,12 @@ class Stdio:
 
 
 class Http:
-    def __init__(self, url, key='fixture-key'):
-        self.url, self.sid, self.seq, self.key = url, None, 0, key
+    def __init__(self, url):
+        self.url, self.sid, self.seq = url, None, 0
         self.http = resources.PersistentHttp(url)
 
-    def request(self, path, method='GET', body=None, auth=True):
+    def request(self, path, method='GET', body=None):
         headers = {'Accept': 'application/json, text/event-stream', 'MCP-Protocol-Version': '2025-03-26'}
-        if auth:
-            headers['Authorization'] = 'Bearer ' + self.key
         if self.sid:
             headers['Mcp-Session-Id'] = self.sid
         if body is not None:
@@ -144,7 +142,7 @@ def self_test():
 
         def do_GET(self):
             body = b'{"ok": true}'
-            self.send_response(401 if self.path == '/unauthorized' else 200)
+            self.send_response(403 if self.path == '/forbidden' else 200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Content-Length', str(len(body)))
             if self.path == '/close':
@@ -179,11 +177,13 @@ def self_test():
                 with client.request('/json') as response:
                     assert json.load(response) == {'ok': True}
             assert server.connections == 1, ('Expected one TCP connection for ten requests', server.connections)
+            with client.request('/mcp/ready') as response:
+                assert response.status == 200 and json.load(response) == {'ok': True}
             try:
-                client.request('/unauthorized')
+                client.request('/forbidden')
                 raise AssertionError('Expected HTTPError')
             except urllib.error.HTTPError as error:
-                assert error.code == 401
+                assert error.code == 403
                 assert json.load(error) == {'ok': True}
             with client.request('/json') as response:
                 assert response.read(1) == b'{'
@@ -278,7 +278,7 @@ def transport_scheduling_self_test():
     client = Http('http://127.0.0.1:1')
     client.http.connection = ExhaustedConnection()
     try:
-        client.request('/mcp/health', auth=False)
+        client.request('/mcp/health')
         raise AssertionError('Socket exhaustion must fail outside readiness retries')
     except RuntimeError as error:
         assert 'WinError 10055' in str(error)
@@ -587,11 +587,10 @@ def plc_transports(args, temp, counts):
                 # Keep the no-TIA HTTP readiness and schema refusals as well as the ready session proof below.
                 command = unready[0].args
                 url = command[command.index('--http-prefix') + 1].rstrip('/')
-                secret = command[command.index('--http-api-key') + 1]
-                unready_first = Http(url, secret)
+                unready_first = Http(url)
                 clients.callback(unready_first.http.close)
                 exercise_engine(unready_first, key, ready=False)
-                unready_second = Http(url, secret)
+                unready_second = Http(url)
                 clients.callback(unready_second.http.close)
                 if CHECK_PROFILE == 'merge':
                     exercise_isolation(unready_second, unready_first, key, full=True)
@@ -608,20 +607,15 @@ def plc_transports(args, temp, counts):
             process = owned[0]
             command = process.args
             url = command[command.index('--http-prefix') + 1].rstrip('/')
-            secret = command[command.index('--http-api-key') + 1]
-            first, second = Http(url, secret), Http(url, secret)
+            first, second = Http(url), Http(url)
             clients.callback(first.http.close)
             clients.callback(second.http.close)
-            with first.request('/mcp/health', auth=False) as response:
+            with first.request('/mcp/health') as response:
                 health = json.load(response)
                 assert health['releaseKey'] == key
                 assert health['fileVersion'] and health['profile'] == 'plc-foundation'
-            try:
-                first.request('/mcp/ready', auth=False)
-                raise AssertionError('Unauthenticated readiness accepted')
-            except urllib.error.HTTPError as error:
-                assert error.code == 401
             with first.request('/mcp/ready') as response:
+                assert response.status == 200
                 ready = json.load(response)
                 assert ready['mcpHostReady']
                 if full:
@@ -735,7 +729,10 @@ def main():
             url = f'http://127.0.0.1:{number}'
             logfile = temp / f'http-{key}.jsonl'
             env = dict(os.environ, TIA_FIXTURE_LOG=str(logfile), TIA_MCP_DATA_DIRECTORY=str(temp / ('data-' + key)))
-            command = [str((args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe').resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full', '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http', '--http-prefix', url + '/', '--http-api-key', 'fixture-key']
+            executable = args.host_exe or ROOT / f'runtime/v{key}/TiaMcp.FoundationHost.exe'
+            command = [str(executable.resolve()), '--bundle-root', str(ROOT), '--release-key', key, '--profile', 'full',
+                       '--worker-exe', str(args.fixture.resolve()), '--public-api', str(temp), '--transport', 'http',
+                       '--http-prefix', url + '/']
             with ExitStack() as clients, (args.output / f'http-{key}.log').open('w', encoding='utf-8') as stderr:
                 p = subprocess.Popen(command, env=env, cwd=temp, stderr=stderr, stdout=stderr)
                 try:
@@ -746,7 +743,7 @@ def main():
                     deadline = time.monotonic() + 60
                     while True:
                         try:
-                            with first.request('/mcp/health', auth=False) as response:
+                            with first.request('/mcp/health') as response:
                                 assert json.load(response)['releaseKey'] == key
                             break
                         except urllib.error.URLError:
@@ -755,12 +752,8 @@ def main():
                                 log = (args.output / f'http-{key}.log').read_text('utf-8', errors='replace')[-4000:]
                                 raise AssertionError('HTTP host not listening: ' + fixture_exit_description(p.poll(), log))
                             time.sleep(.1)
-                    try:
-                        first.request('/mcp/ready', auth=False)
-                        raise AssertionError('Unauthenticated readiness accepted')
-                    except urllib.error.HTTPError as error:
-                        assert error.code == 401
                     with first.request('/mcp/ready') as response:
+                        assert response.status == 200
                         assert json.load(response)['mcpHostReady']
                     exercise(first, key, logfile, 0)
                     # Wait for session deletion to close the first synthetic child.

@@ -877,6 +877,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
 
     [Theory]
     [InlineData("password", "weak-secret")]
+    [InlineData("umacPassword", "weak-secret")]
     [InlineData("nested", "{\"name\":\"password\",\"value\":\"weak-secret\"}")]
     [InlineData("embedded", "{\"token\":\"weak-secret\"}")]
     [InlineData("text", "Bearer weak-secret")]
@@ -889,13 +890,14 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
         using var session = pipeline.EnterSession();
         var arguments = new JsonObject { [field] = field == "nested" ? JsonNode.Parse(value) : JsonValue.Create(value) };
+        string tool = field == "umacPassword" ? "RetrieveProjectArchive" : "DownloadPlc";
         int calls = 0;
-        CallToolResult Execute() { calls++; return Host.V4Result("DownloadPlc", new JsonObject(), completed: true); }
-        JsonObject Preview() => Host.RunWritePreview("DownloadPlc", true, arguments, Execute).StructuredContent!["data"]!.AsObject();
+        CallToolResult Execute() { calls++; return Host.V4Result(tool, new JsonObject(), completed: true); }
+        JsonObject Preview() => Host.RunWritePreview(tool, true, arguments, Execute).StructuredContent!["data"]!.AsObject();
         var preview = Preview(); string hash = (string)preview["planHash"]!;
         Assert.Equal(hash, (string?)Preview()["planHash"]);
         Assert.DoesNotContain("weak-secret", preview.ToJsonString());
-        var unkeyed = new JsonObject { ["releaseKey"] = "21", ["tool"] = "DownloadPlc", ["arguments"] = arguments.DeepClone(),
+        var unkeyed = new JsonObject { ["releaseKey"] = "21", ["tool"] = tool, ["arguments"] = arguments.DeepClone(),
             ["inputFiles"] = new JsonArray(), ["targetIdentity"] = worker.Identity.DeepClone() };
         unkeyed["hostLifetime"] = (string?)typeof(Host).Assembly.GetType("TiaOpenness.Shared.CallJournalPayload")!
             .GetProperty("PlanHostLifetime", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
@@ -906,7 +908,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         if (field == "nested") arguments[field]!["value"] = "another-secret";
         else arguments[field] = value.Replace("weak-secret", "another-secret", StringComparison.Ordinal);
         Assert.NotEqual(hash, (string?)Preview()["planHash"]);
-        var stale = Host.RunWritePreview("DownloadPlc", false, arguments, Execute, hash, "C:/Projects/original.ap21");
+        var stale = Host.RunWritePreview(tool, false, arguments, Execute, hash, "C:/Projects/original.ap21");
         Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
         Assert.Equal(0, calls);
     }

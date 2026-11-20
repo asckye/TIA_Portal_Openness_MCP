@@ -226,24 +226,17 @@ public static class EnvironmentServiceContext
     {
         try
         {
+            var configurations = Directory.Exists(context.ConfigDirectory) ? Directory.GetFiles(context.ConfigDirectory, "http-v*.json") : [];
+            var client = Path.Combine(context.ConfigDirectory, "client.json");
             var endpoints = new List<string>();
-            foreach (string path in Directory.Exists(context.ConfigDirectory) ? Directory.GetFiles(context.ConfigDirectory, "*.json") : [])
+            foreach (string path in File.Exists(client) ? configurations.Append(client) : configurations)
             {
-                if (!Path.GetFileName(path).StartsWith("http-v", StringComparison.Ordinal) && !Path.GetFileName(path)
-                        .StartsWith("remote-", StringComparison.Ordinal) && Path.GetFileName(path) != "client.json")
-                    continue;
                 using var record = JsonDocument.Parse(File.ReadAllText(path));
-                if (record.RootElement.TryGetProperty("Endpoint", out var endpoint)) endpoints
-                    .Add(HttpEndpoint.Parse(endpoint.GetString()!).AbsoluteUri);
-                else if (record.RootElement.TryGetProperty("Address", out var address))
-                    endpoints
-                        .Add(ConfigCore
-                            .Prefix(address.GetString() ?? throw new InvalidDataException("Missing remote address."), record.RootElement.GetProperty("Port")
-                                .GetInt32())
-                            + "mcp");
+                if (record.RootElement.TryGetProperty("Address", out var address))
+                    endpoints.Add(ConfigCore.Prefix(address.GetString() ?? throw new InvalidDataException("Missing remote address."),
+                        record.RootElement.GetProperty("Port").GetInt32()) + "mcp");
             }
             context.RemoteEndpoints = endpoints.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-            var configurations = Directory.Exists(context.ConfigDirectory) ? Directory.GetFiles(context.ConfigDirectory, "http-v*.json") : [];
             var latest = configurations.OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
             if (latest == null) return;
             context.HttpConfigurationPath = latest;
