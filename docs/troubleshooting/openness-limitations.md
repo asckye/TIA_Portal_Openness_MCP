@@ -45,7 +45,7 @@ HMI 路径使用绝对 `/Group/Sub/Name`，段按 URI 转义；相对路径和�
 | PLCSIM Advanced API | V20/V21管理仿真实例、读写标签并运行限定场景。 | 本机安装匹配 API；仿真通过不等于真实 CPU 验收。 |
 | 其他运行时/伴随工具 | 按各工具声明的 OPC UA、S7 或独立程序接口执行。 | 分别检查连接目标和实际协议，不能因 Openness 已连接就视为这些通道已就绪。 |
 
-宿主只提供其公开的 PLC 子集，不因V20/V21存在某个运行时工具而自动具备该工具。V20/V21中部分选件入口仅在一个版本有实际调用路径，详情见[逐版 Openness 覆盖](../reference/openness-coverage.md#v20v21-optional-tools-and-scope)。
+宿主只提供其公开的 PLC 子集，不因V20/V21存在某个运行时工具而自动具备该工具。V20/V21中部分选件入口仅在一个版本有实际调用路径，详情见[逐版 Openness 覆盖](../reference/openness-coverage.md#selected-v4-tools-and-release-scope)。
 
 ## 当前没有可承诺的 Openness 路线
 

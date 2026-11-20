@@ -137,12 +137,12 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 | Export technology-object XML | I | I | I | I | I | I | I | I |
 | Watch-table listing and XML exchange | N | P | P | P | P | P | I | I |
 | Hardware catalog search / exact catalog device creation | N | N | N | N | P | I | I | I |
-| Create a device with its initial item | B | B | B | B | B | I | I | I |
+| Create a device with its initial item | I | I | I | I | I | I | I | I |
 | Network interface/connection engineering | P | P | P | P | P | P | P | P |
-| CAx device exchange | B | B | B | B | B | B | I | I |
-| Project/global library engineering | B | B | B | B | B | B | P | P |
+| CAx device exchange | I | I | I | I | I | I | I | I |
+| Project/global library engineering | P | P | P | P | P | P | P | P |
 | Version Control Interface through MCP | N | N | P | P | P | P | P | P |
-| Classic HMI engineering | B | B | B | B | B | B | P | P |
+| Classic HMI engineering | P | P | P | P | P | P | P | P |
 | Unified HMI engineering | ? | ? | ? | ? | ? | B | P | P |
 | PLC software-unit engineering | N | N | B | B | B | B | P | P |
 | Safety offline-program login for compilation | N | N | N | P | P | P | I | I |
@@ -214,10 +214,8 @@ After OUTCOME_UNKNOWN, inspect the affected target before repeating the call. Ge
    and [V18 object namespace change](https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18).
 5. **Several legacy gaps are exposure gaps.** Watch-table import exists from V15.1,
    catalog search types from V18, and common device creation from V14 SP1. Classic
-   HMI, project libraries and CAx APIs also exist in every inspected SDK. Studio's
-   V16-V19 VCI implementation is an existing reuse candidate. These families need
-   contract-level ports, not duplicate generic implementations or one tool per
-   unreferenced member.
+   HMI, project libraries and device CAx exchange have registered tools on all eight releases. Studio's
+   V16-V19 VCI implementation is an existing reuse candidate. Further coverage depends on the individual operation and release.
 
 For each completed scope, update this table and the JSON together, add its calls and
 programming assets to the existing unified example library, and record functional
@@ -225,9 +223,9 @@ test evidence separately from native test-project import/compile/readback eviden
 Original V14/V15, uninspected SDKs, missing optional services and untested project
 types do not inherit support from a nearby release number.
 
-## V20/V21 optional tools and scope
+## Selected V4 tools and release scope
 
-These V4 tools are registered on V20/V21. Exact parameters and examples
+Exact parameters and examples
 come from `GetToolUsage`; registration does not prove that an optional product is
 installed or that a native operation has passed acceptance.
 
@@ -236,18 +234,19 @@ installed or that a native operation has passed acceptance.
 | `GetOpennessCompatibility` | V20/V21 | Reports loaded Siemens assembly identity, server build identity, cross-reference policy, and known issue links. Installed update/hotfix state remains unknown unless directly supplied. |
 | `InspectSimaticSdCompatibility` | V20/V21 | Offline checks `.s7dcl` for known language and format risks. It is not a complete parser; no warning does not establish import compatibility. |
 | `GetNativeInvocationLog` | V20/V21 | Reads bounded native-call diagnostics. It records call stages, not every native path, and omits credentials and engineering payloads. |
-| `GetPlcBlockScopes` | V20/V21 | Enumerates root, software-unit, and safety-unit PLC blocks. Partial enumeration is not reported as a complete empty result. |
+| `GetPlcBlockScopes` | All eight releases | Enumerates root PLC blocks and, where supported by the release, blocks in software units and safety units. Partial enumeration is not reported as a complete empty result. |
 | `ManagePlcBlockDocuments` | V20/V21 | Lists, reads, exports, or imports documents in explicit user block groups. SIMATIC SD import requires an offline project; system groups are not import targets. |
-| `ManageSinumerikArchive` | V20 only | Uses the SINUMERIK archive provider for archive/retrieve/address-archive operations. Output checks do not validate every restored engineering property. |
-| `ImportSinumerikAlarmTexts` | V20 only | Imports the selected TS/CSV alarm text files through the NCU alarm text provider. Existing DB2 text can be replaced; returned success is not per-row content verification. |
-| `ManageSinumerikSafetyMode` | V20 only | Reads or sets NCU safety mode with an explicit dry-run/confirmation contract and readback. This does not replace safety engineering acceptance. |
+| `ManageSinumerikArchive` | V16–V20 | Uses the SINUMERIK archive provider for archive/retrieve/address-archive operations. Output checks do not validate every restored engineering property. |
+| `ImportSinumerikAlarmTexts` | V18–V20 | Imports the selected TS/CSV alarm text files through the NCU alarm text provider. Existing DB2 text can be replaced; returned success is not per-row content verification. |
+| `ManageSinumerikSafetyMode` | V16–V20 | Reads or sets NCU safety mode with an explicit dry-run/confirmation contract and readback. This does not replace safety engineering acceptance. |
 | `InitializeSimotionScripting` | V20 only | Calls the project SIMOTION initializer and returns its string; it does not execute that string or run an external SCOUT script. |
-| `ExportScadaData` | V20 only | Exports project or PLC configuration through the SCADA Export provider. It requires the optional component and does not deploy a WinCC runtime. |
+| `ExportScadaData` | V17–V20 | Exports project or PLC configuration through the SCADA Export provider. It requires the optional component and does not deploy a WinCC runtime. |
+| `ListSivarcBlockDefinitions` / `ManageSivarcBlockDefinition` | V21 only | The V17 tag/text definition collections share the same native implementation as V18–V20, which terminate TIA when enumerating. V17 is untested. Crash probes are pending (CRASH-PROBE). |
 | `GetPlcCrossReferences` | V18–V21 | Enabled by default on V18–V21. Save before the first query. If TIA exits, inspect the project and logs before recovery. Complete, true block/type consistency evidence and the reflection refusal remain. Not queried never means zero references. |
 | `AnalyzePlcCrossReferences` | All eight releases | Bounded ordinary software/group XML export followed by offline callers/callees/global-site analysis. Only published exports are indexed; the result states software/export count, omitted scope and export/indexing failures. No native CrossReferenceService; partial or empty is not proof of no references. |
 | `CheckDownloadReadiness` | V20/V21 | Unknown device reachability, access, hardware consistency, or download prompts remain unknown; `Ready=null` is not permission to download. |
 
-The optional providers above have no matching V21 SDK types in the supplied
+The SCADA Export, SINUMERIK and SIMOTION providers above have no matching V21 SDK types in the supplied
 baseline, so their 4.0 routes reject on V21. This says only that the supplied SDK
 does not expose the reviewed path; it does not establish that Siemens has no V21
 product capability. V21's modular optional-product assemblies and installed
@@ -259,7 +258,7 @@ Used since P8-81c, with the releases where the SDK has each member:
 
 | Official API | Releases | Use |
 |---|---|---|
-| `ProjectComposition.Open/OpenWithUpgrade/Retrieve/RetrieveWithUpgrade(..., UmacDelegate)`, `UmacCredentials` | 15.1-21 | Optional `umacUserName`/`umacPassword`/`umacUserType` on `OpenProject` (and its session candidate) and `RetrieveProjectArchive`. The password exists only as a `SecureString`; it is never logged, journaled, echoed, stored in results or audit records, or shown on the approval card. V14 SP1 has no UMAC overloads. |
+| `ProjectComposition.Open/Retrieve/RetrieveWithUpgrade(..., UmacDelegate)`, `UmacCredentials` | 15.1-21 | Optional `umacUserName`/`umacPassword`/`umacUserType` on `OpenProject` (and its session candidate) and `RetrieveProjectArchive`. The password exists only as a `SecureString`; it is never logged, journaled, echoed, stored in results or audit records, or shown on the approval card. V14 SP1 has no UMAC overloads. |
 | `TiaPortal.Authentication` | 17-21 | Answered for the one open or retrieve call only when credentials were given. Without credentials no handler is installed; a refused protected project is `PRECONDITION_FAILED` naming the missing credentials. |
 | `TiaPortal.Confirmation`, `Notification`, `Disposed` | all eight | Confirmations use Cancel, Abort, No or NoToAll in that order. An Ok-only confirmation is acknowledged after recording, and notifications are recorded and marked handled. Yes-only confirmations remain for a person. Bounded structured stderr records reach `running.dialog`; unanswered confirmations return `in-progress` immediately. A read-only host Win32 probe supplies `running.window` for unreported windows. `Disposed` marks the session lost. `GetPortalInfo` lists the records. |
 | `TiaPortal.GetProcess(int, TimeSpan)` | all eight | Targeted attach lookup with a 30-second timeout inside the host's attach budget. |
@@ -284,12 +283,20 @@ V14 SP1 exposes neither new parameter. `GetToolUsage` provides `sequence/seconda
 
 Official APIs in this family that no 4.0 tool uses:
 
+- `OpenProject` uses `ProjectComposition.Open`. Opening a project with `ProjectComposition.OpenWithUpgrade` (all eight SDKs) is deferred to 4.1.
 - `ProjectComposition.Retrieve` with `ProjectOpenMode` (V15.1–V21).
 - `LocalSessionComposition.OpenServerProject` and `ProjectServer.CreateLocalSession`, `AddProjectToServer`, `DeleteLocalSessionFromServer`, `SetHostName`, `SetPort`, `SetProtocol` (17-21). `ManageMultiuserSession` does not claim them.
 - `ProjectBase.ExportProjectTexts(FileInfo, Language, IEnumerable<Language>, IEnumerable<TextCategory>, IEnumerable<IEngineeringObject>)` (21 only). `ExportProjectTexts` uses the culture-pair overload that exists on all eight releases.
 - The Workbench Studio session (`TiaOpenness.Bridge`) has no process picker: with several running TIA Portal processes it refuses and lists them instead of attaching to the first one.
 
 Not verified on a real TIA Portal: every row above. In particular the headless behaviour of a protected project without credentials, the dialog texts that reach Confirmation or Notification, whether Ok-only acknowledgement and Notification.IsHandled suppress a dialog, whether the Win32 title probe identifies an unreported modal window, whether `UmacCredentials` is supplied in `AuthenticationEventArgs`, and whether a worker-started headless TIA Portal outlives the worker.
+
+## Deliberately not exposed
+
+- Add-In APIs run inside TIA Portal as published add-ins and are outside the scope of this external client.
+- The non-TLS login refusal policy excludes `ConnectionConfiguration.EnableLegacyCommunication` (V17+).
+- Multiuser object marking is deferred to 4.1 (API-P2). `MarkingService.GetMarkStateInfo` starts in V17. `MarkObjects`, `UnmarkObjects` and `IsMarkable` start in V20.
+- A user-facing `Node.DisconnectFromSubnet` operation is deferred to 4.1. The API exists in all eight SDKs.
 
 ## PLC software (API audit 2026-10-19, P8-81d)
 

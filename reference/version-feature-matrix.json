@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedDate": "2026-10-03",
   "reviewBaseline": "c5379c1",
-  "workingTreeReview": "Includes external-source creation/generation, the compile execution fix and per-release flat declaration formats. Catalog-derived tool lists were refreshed after the successful final Build-Release and Build-MultiVersion -Test. P8-03x (2026-10-09 maintainer decision): ported registration requires at least one implemented usable action; PortedFamilies.ToolReleases is authoritative and partial tools keep action refusals before native calls.",
+  "workingTreeReview": "Includes external-source creation/generation, the compile execution fix and per-release flat declaration formats. Catalog-derived tool lists were refreshed after the successful final Build-Release and Build-MultiVersion -Test. P8-03x (2026-10-09 maintainer decision): ported registration requires at least one implemented usable action; PortedFamilies.ToolReleases is authoritative and partial tools keep action refusals before native calls. On 2026-11-20 the hardware-create, cax-exchange, libraries and classic-hmi rows were rechecked against manifest/version-tools.json. The catalogEvidence totals describe the original review.",
   "scope": "Functional review of selected engineering workflows and major version migration families; not an exhaustive API completeness claim.",
   "implementationMeaning": {
     "implemented": "An advertised implementation exists for the explicitly described scope; this is not native acceptance.",
@@ -1694,19 +1694,19 @@
     {
       "id": "hardware-create",
       "title": "Create a device with its initial item",
-      "scope": "Native CreateWithItem exists in every supplied SDK; foundation exposure currently starts at V19. Device/catalog-specific compatibility still requires a target.",
+      "scope": "CreateDevice uses an exact type identifier to create a device with its initial item on all eight releases.",
       "implementation": {
-        "14sp1": "pending",
-        "15.1": "pending",
-        "16": "pending",
-        "17": "pending",
-        "18": "pending",
+        "14sp1": "implemented",
+        "15.1": "implemented",
+        "16": "implemented",
+        "17": "implemented",
+        "18": "implemented",
         "19": "implemented",
         "20": "implemented",
         "21": "implemented"
       },
       "tools": [
-        "AddDeviceWithFallback"
+        "CreateDevice"
       ],
       "sdkIdentifiers": [
         "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
@@ -1715,7 +1715,7 @@
         "src/Adapters/Native/Hardware/PlcDeviceAdd.cs",
         "src/Adapters/Native/Hardware/PlcDeviceAddPolicy.cs"
       ],
-      "nextStep": "Separate the common exact-identifier creation API from newer catalog-search helpers before porting older releases.",
+      "nextStep": "Verify the requested device and initial item on each target.",
       "sdkEvidence": {
         "14sp1": {
           "present": [
@@ -1767,19 +1767,29 @@
         }
       },
       "advertisedTools": {
-        "14sp1": [],
-        "15.1": [],
-        "16": [],
-        "17": [],
-        "18": [],
+        "14sp1": [
+          "CreateDevice"
+        ],
+        "15.1": [
+          "CreateDevice"
+        ],
+        "16": [
+          "CreateDevice"
+        ],
+        "17": [
+          "CreateDevice"
+        ],
+        "18": [
+          "CreateDevice"
+        ],
         "19": [
-          "AddDeviceWithFallback"
+          "CreateDevice"
         ],
         "20": [
-          "AddDeviceWithFallback"
+          "CreateDevice"
         ],
         "21": [
-          "AddDeviceWithFallback"
+          "CreateDevice"
         ]
       }
     },
@@ -1892,27 +1902,28 @@
     {
       "id": "cax-exchange",
       "title": "CAx device exchange",
-      "scope": "CAx provider exists in every supplied SDK; foundation hosts do not expose the full engine AML import route.",
+      "scope": "Device AML export and import are registered on all eight releases. Import returns a log through V18 and a transfer result from V19.",
       "implementation": {
-        "14sp1": "pending",
-        "15.1": "pending",
-        "16": "pending",
-        "17": "pending",
-        "18": "pending",
-        "19": "pending",
+        "14sp1": "implemented",
+        "15.1": "implemented",
+        "16": "implemented",
+        "17": "implemented",
+        "18": "implemented",
+        "19": "implemented",
         "20": "implemented",
         "21": "implemented"
       },
       "tools": [
+        "ExportDeviceAml",
         "ImportDeviceAml"
       ],
       "sdkIdentifiers": [
         "T:Siemens.Engineering.Cax.CaxProvider"
       ],
       "sourceFiles": [
-        "src/FoundationHost/FoundationTools.cs"
+        "src/Adapters/Native/Hardware/HardwareAml.cs"
       ],
-      "nextStep": "Port provider-backed device exchange and verify import log plus actual device identities.",
+      "nextStep": "Verify imported device identities and the release-specific import result.",
       "sdkEvidence": {
         "14sp1": {
           "present": [
@@ -1964,16 +1975,36 @@
         }
       },
       "advertisedTools": {
-        "14sp1": [],
-        "15.1": [],
-        "16": [],
-        "17": [],
-        "18": [],
-        "19": [],
+        "14sp1": [
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ],
+        "15.1": [
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ],
+        "16": [
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ],
+        "17": [
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ],
+        "18": [
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ],
+        "19": [
+          "ExportDeviceAml",
+          "ImportDeviceAml"
+        ],
         "20": [
+          "ExportDeviceAml",
           "ImportDeviceAml"
         ],
         "21": [
+          "ExportDeviceAml",
           "ImportDeviceAml"
         ]
       }
@@ -1981,19 +2012,19 @@
     {
       "id": "libraries",
       "title": "Project/global library engineering",
-      "scope": "Project library types exist in all releases. Dedicated foundation routes are missing; full engines expose multiple library operations with version-specific options.",
+      "scope": "Project and global library operations are registered on all eight releases. Available actions depend on the release and library object.",
       "implementation": {
-        "14sp1": "pending",
-        "15.1": "pending",
-        "16": "pending",
-        "17": "pending",
-        "18": "pending",
-        "19": "pending",
+        "14sp1": "partial",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
         "20": "partial",
         "21": "partial"
       },
       "tools": [
-        "ReadLibraryOverview",
+        "GetLibraryOverview",
         "ManageGlobalLibrary",
         "ManageLibraryType",
         "ManageLibraryTypeVersion",
@@ -2003,10 +2034,10 @@
         "T:Siemens.Engineering.Library.ProjectLibrary"
       ],
       "sourceFiles": [
-        "src/FoundationHost/FoundationTools.cs",
-        "src/Engine/Siemens/ToolVersionPolicy.cs"
+        "src/Adapters/Native/Libraries/LibraryService.cs",
+        "src/Adapters/Native/Libraries/LibraryService.Manage.cs"
       ],
-      "nextStep": "Port read/instantiate/import operations first and keep type versions, master copies and global library lifecycle separate.",
+      "nextStep": "Verify supported lifecycle and instantiation actions on each target.",
       "sdkEvidence": {
         "14sp1": {
           "present": [
@@ -2058,21 +2089,57 @@
         }
       },
       "advertisedTools": {
-        "14sp1": [],
-        "15.1": [],
-        "16": [],
-        "17": [],
-        "18": [],
-        "19": [],
+        "14sp1": [
+          "GetLibraryOverview",
+          "ManageGlobalLibrary",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ManageLibraryMasterCopy"
+        ],
+        "15.1": [
+          "GetLibraryOverview",
+          "ManageGlobalLibrary",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ManageLibraryMasterCopy"
+        ],
+        "16": [
+          "GetLibraryOverview",
+          "ManageGlobalLibrary",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ManageLibraryMasterCopy"
+        ],
+        "17": [
+          "GetLibraryOverview",
+          "ManageGlobalLibrary",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ManageLibraryMasterCopy"
+        ],
+        "18": [
+          "GetLibraryOverview",
+          "ManageGlobalLibrary",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ManageLibraryMasterCopy"
+        ],
+        "19": [
+          "GetLibraryOverview",
+          "ManageGlobalLibrary",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ManageLibraryMasterCopy"
+        ],
         "20": [
-          "ReadLibraryOverview",
+          "GetLibraryOverview",
           "ManageGlobalLibrary",
           "ManageLibraryType",
           "ManageLibraryTypeVersion",
           "ManageLibraryMasterCopy"
         ],
         "21": [
-          "ReadLibraryOverview",
+          "GetLibraryOverview",
           "ManageGlobalLibrary",
           "ManageLibraryType",
           "ManageLibraryTypeVersion",
@@ -2187,14 +2254,14 @@
     {
       "id": "classic-hmi",
       "title": "Classic HMI engineering",
-      "scope": "Classic HMI target API exists in all eight SDKs; no foundation HMI tool family is advertised. Existing full tools do not certify every older object/action.",
+      "scope": "Screen browsing, editing, XML exchange and script tools are registered on all eight releases. Available actions depend on the panel and release.",
       "implementation": {
-        "14sp1": "pending",
-        "15.1": "pending",
-        "16": "pending",
-        "17": "pending",
-        "18": "pending",
-        "19": "pending",
+        "14sp1": "partial",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
         "20": "partial",
         "21": "partial"
       },
@@ -2209,9 +2276,10 @@
         "T:Siemens.Engineering.Hmi.HmiTarget"
       ],
       "sourceFiles": [
-        "src/FoundationHost/FoundationTools.cs"
+        "src/Adapters/Native/Hmi/ClassicHmiLogic.cs",
+        "src/Adapters/Native/Hmi/HmiExchangeAdapter.cs"
       ],
-      "nextStep": "Start with screen/tag/script read and version-native import/export before object editing.",
+      "nextStep": "Verify the supported screen and script operations on each target.",
       "sdkEvidence": {
         "14sp1": {
           "present": [
@@ -2263,12 +2331,48 @@
         }
       },
       "advertisedTools": {
-        "14sp1": [],
-        "15.1": [],
-        "16": [],
-        "17": [],
-        "18": [],
-        "19": [],
+        "14sp1": [
+          "GetClassicHmiScreenTree",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ExportHmiScreen",
+          "ImportHmiScreen"
+        ],
+        "15.1": [
+          "GetClassicHmiScreenTree",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ExportHmiScreen",
+          "ImportHmiScreen"
+        ],
+        "16": [
+          "GetClassicHmiScreenTree",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ExportHmiScreen",
+          "ImportHmiScreen"
+        ],
+        "17": [
+          "GetClassicHmiScreenTree",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ExportHmiScreen",
+          "ImportHmiScreen"
+        ],
+        "18": [
+          "GetClassicHmiScreenTree",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ExportHmiScreen",
+          "ImportHmiScreen"
+        ],
+        "19": [
+          "GetClassicHmiScreenTree",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ExportHmiScreen",
+          "ImportHmiScreen"
+        ],
         "20": [
           "GetClassicHmiScreenTree",
           "ManageClassicHmiScreenObject",

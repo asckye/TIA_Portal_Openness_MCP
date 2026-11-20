@@ -47,8 +47,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] =
                     false; meta["mayHaveWrittenFiles"] = false;
                 meta["nativeLimits"] =
-                    "Openness V20/V21 expose no typed supervision composition; entries are reachable only through IEngineeringObject composition metadata of " +
-                    "the providers or through XLSX exchange (ExchangePlcSupervisions).";
+                    "read returns provider metadata. readComposition pages entries from a composition advertised by the selected provider. " +
+                    "The per-FB collection FB.Supervisions (V15.1+) is outside this tool. Use ExchangePlcSupervisions for XLSX exchange.";
                 var supervision = OptionalOfficialService(owner, SupervisionProvider, out var supervisionState);
                 var settings = OptionalOfficialService(owner, SupervisionSettingsProvider, out var settingsState);
                 meta["providerStates"] = new PlcB5Object { ["SupervisionProvider"] = supervisionState, ["SupervisionSettingsProvider"] = settingsState };

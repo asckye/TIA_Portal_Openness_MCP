@@ -66,14 +66,14 @@ internal static class MotionProDiagClassicHmiShapeChecks
         Service(T(step7,motion+"CamDataSupport")); Service(T(step7,motion+"InterpreterProgramSupport"));
         var ident=Optional(step7,"Siemens.Engineering.SW.TechnologicalObjects.Ident.IdentTechnologicalObjectProvider","connectIdent must return NotSupported on V20.");
         if(ident!=null) { Service(ident); Method(ident,"Connect",deviceItem); Property(ident,"ConnectedIdentDevice"); }
-        // ProDiag: only providers exist; no typed supervision composition on either version.
+        // ProDiag: check the provider namespace. The per-FB collection belongs to SW.Blocks.
         var supervision=T(step7,"Siemens.Engineering.SW.Supervision.SupervisionProvider"); Service(supervision);
         var settings=T(step7,"Siemens.Engineering.SW.Supervision.SupervisionSettingsProvider"); Service(settings);
         Method(settings,"Export",typeof(System.IO.FileInfo)); Method(settings,"Import",typeof(System.IO.FileInfo));
         var settingsResult=T(step7,"Siemens.Engineering.SW.Supervision.SupervisionSettingsExportImportResult");
         foreach(var p in new[]{"State","ErrorCount","WarningCount","Messages"}) Property(settingsResult,p);
         check(Enum.GetNames(T(step7,"Siemens.Engineering.SW.Supervision.SupervisionSettingsExportImportResultState")).Contains("Success"),"Settings result state has Success");
-        check(step7.GetType("Siemens.Engineering.SW.Supervision.Supervision")==null && step7.GetType("Siemens.Engineering.SW.Supervision.SupervisionComposition")==null,"No typed supervision composition exists; entries go through IEngineeringObject compositions only");
+        check(step7.GetType("Siemens.Engineering.SW.Supervision.Supervision")==null && step7.GetType("Siemens.Engineering.SW.Supervision.SupervisionComposition")==null,"The SW.Supervision provider namespace contains neither Supervision nor SupervisionComposition");
         // Official dynamic object API used for attributes, compositions, creation and invocation.
         var engineeringObject=T(core,"Siemens.Engineering.IEngineeringObject");
         Method(engineeringObject,"GetAttributeInfos"); Method(engineeringObject,"GetAttribute",typeof(string)); Method(engineeringObject,"SetAttribute",typeof(string),typeof(object));
