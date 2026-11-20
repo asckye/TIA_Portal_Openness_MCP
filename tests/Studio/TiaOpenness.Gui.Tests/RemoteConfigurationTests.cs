@@ -121,6 +121,10 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             mcp.CopyClientText = value => copied = value;
             Click(clients.CopyJson);
             Assert.Equal(clients.JsonText.Text, copied);
+            Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+            Assert.Same(window.FindResource("Primer.ok"), window.ToastDot.Fill);
+            Assert.Equal(Loc.Current.T("Config.FormatCopied", "JSON"), window.ToastMessage.Text);
+            Assert.Null(clients.FindName("ClientStatus"));
             Navigate(clients.EditTarget);
             mcp.ServerPort.Text = "bad";
             Assert.False(clients.CopyJson.IsEnabled);

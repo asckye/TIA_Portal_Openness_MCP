@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
+using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui.Views;
 
@@ -123,6 +124,7 @@ public partial class SettingsView
             SaveTargetChanges.Visibility = Visibility.Collapsed;
             SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(entries.Length == 0
                 ? "Settings.TargetsEmpty" : "Settings.TargetsConfigured"));
+            NotifySettings(ToastKind.Success, LocalizedText.Key("Toast.Saved"));
             return true;
         }
         catch (TiaOpenness.Shared.OnlineTargetSettingsChangedException) /* swallow(privacy): report a fixed reload prompt without file contents. */
@@ -151,10 +153,33 @@ public partial class SettingsView
         => SafetyConfirmationForTests?.Invoke(key) ?? Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), Loc.Current.T(key, arguments),
             Loc.Current["Settings.HumanOnly"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK;
 
+    private void NotifySettings(ToastKind kind, LocalizedText text) => (Window.GetWindow(this) as MainWindow)?.ShowToast(kind, text, "settings");
+
+    private TextBlock? InputError(object sender) => sender == CustomTimeout ? CustomTimeoutError
+        : sender == OnlinePlanLifetime ? OnlinePlanLifetimeError : OnlineTargetInputError;
+
+    private void OnSafetyInputChanged(object sender, TextChangedEventArgs e)
+    {
+        if (InputError(sender) is not { } label) return;
+        label.Text = "";
+        label.Visibility = Visibility.Collapsed;
+    }
+
     private void ShowSafetyError(string key)
     {
-        if (SafetyErrorForTests != null) { SafetyErrorForTests(key); return; }
-        Controls.WorkbenchMessageBox.Show(Window.GetWindow(this), Loc.Current[key], Loc.Current["Dialog.Error.Caption"],
-            MessageBoxButton.OK, MessageBoxImage.Error);
+        TextBlock? label = key switch
+        {
+            "Settings.TimeoutInvalid" => CustomTimeoutError,
+            "Settings.PlanLifetimeInvalid" => OnlinePlanLifetimeError,
+            "Settings.TargetInvalid" => OnlineTargetInputError,
+            _ => null
+        };
+        if (label != null)
+        {
+            label.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(key));
+            label.Visibility = Visibility.Visible;
+        }
+        SafetyErrorForTests?.Invoke(key);
+        NotifySettings(ToastKind.Error, LocalizedText.Key(key));
     }
 }

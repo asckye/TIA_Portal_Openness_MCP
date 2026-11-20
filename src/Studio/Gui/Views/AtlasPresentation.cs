@@ -38,6 +38,7 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
     }
 
     public bool Visible => _state != "Idle";
+    public bool HasOutputOrProgress => Running || Done;
     public bool Running => _state == "Running";
     public bool Done => _state == "Done";
     public bool Failed => _state == "Failed";
@@ -83,6 +84,7 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
             {
                 _state = "Done";
                 _detail = result.HtmlPath;
+                _model.Activity.Notify(ToastKind.Success, LocalizedText.Key("Pages.AtlasDone"), "atlas");
                 Raise(null);
                 if (singleBlock) Open();
             }
@@ -116,7 +118,11 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
         catch (Exception ex) { Fail(ex.Message); }
     }
 
-    private void Fail(string reason) { _state = "Failed"; _detail = reason; Raise(null); }
+    private void Fail(string reason)
+    {
+        _state = "Failed"; _detail = reason; Raise(null);
+        _model.Activity.Notify(ToastKind.Error, LocalizedText.Literal(Label + " · " + reason), "atlas");
+    }
     private void OnLanguageChanged(object? sender, EventArgs e) => Raise(null);
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e)
     {

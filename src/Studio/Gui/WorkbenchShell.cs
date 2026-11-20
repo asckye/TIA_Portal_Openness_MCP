@@ -196,7 +196,7 @@ public partial class MainWindow
         UpdateShell();
         CommandManager.InvalidateRequerySuggested();
     }
-    private void OnShellLanguageChanged(object? sender, EventArgs e) { UpdateLanguage(); UpdateShell(); }
+    private void OnShellLanguageChanged(object? sender, EventArgs e) { UpdateLanguage(); UpdateShell(); RenderToast(); }
     private void UpdateLanguage()
     {
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(Loc.Current.Language == AppLanguage.Chinese ? "zh-CN" : "en-US");
@@ -263,7 +263,6 @@ public partial class MainWindow
             DrawerTitle.SetResourceReference(TextBlock.FontFamilyProperty, "Ui.FontMono");
         }
         Features.Release = _model.SelectedReleaseKey;
-        UpdateFeatureToastText();
     }
 
     private LocalizedText? PageUnavailable(string page)
@@ -289,11 +288,7 @@ public partial class MainWindow
         page = ResolvePage(page);
         if (PageUnavailable(page) is { } reason)
         {
-            _approvalToast = null;
-            _featureTitle = LocalizedText.Key("Shell.PageUnavailable");
-            _featureFeedback = reason;
-            UpdateFeatureToast(ToastKind.Warning);
-            Controls.AccessibleStatus.Announce(ToastMessage);
+            ShowToast(ToastKind.Warning, reason, "navigation", title: LocalizedText.Key("Shell.PageUnavailable"));
             return;
         }
         if (page is "Mcp" or "Clients" or "Settings") EnsureConfiguration();
@@ -363,7 +358,7 @@ public partial class MainWindow
     {
         try { Navigate(page); }
         catch (Exception ex) {
-            Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
+            ShowToast(ToastKind.Error, LocalizedText.Literal(ex.Message), "navigation"); }
     }
 
     internal void OpenSettings() => Navigate("Settings");
@@ -429,11 +424,5 @@ public partial class MainWindow
     private void OnDiagnostics(object sender, RoutedEventArgs e)
     {
         Features.Export();
-    }
-    private void OnDismissToast(object sender, RoutedEventArgs e) { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
-    private void OnToastClick(object sender, RoutedEventArgs e)
-    {
-        Toast.Visibility = Visibility.Collapsed;
-        Navigate(_approvalToast != null ? "Approvals" : "Environment");
     }
 }

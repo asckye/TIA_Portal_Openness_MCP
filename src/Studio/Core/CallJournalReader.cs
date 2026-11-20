@@ -33,7 +33,7 @@ namespace TiaOpenness.Core
         public string McpSession { get; internal set; }
         public bool ArgumentsTruncated { get; internal set; }
         public bool ResultTruncated { get; internal set; }
-        internal DateTimeOffset Updated;
+        public DateTimeOffset Updated { get; internal set; }
     }
 
     /// <summary>Reads the existing host JSONL files; never creates files or owns a native session.</summary>
@@ -60,23 +60,34 @@ namespace TiaOpenness.Core
             if (live) timer = new Timer(_ => Poll(), null, PollMilliseconds, PollMilliseconds);
         }
 
-        public void Poll()
+        public void Poll() => Poll(changedFilesOnly: false);
+
+        public void PollChangedFiles() => Poll(changedFilesOnly: true);
+
+        private void Poll(bool changedFilesOnly)
         {
             lock (sync)
             {
                 if (disposed) return;
-                string[] paths;
-                try { paths = Directory.GetFiles(directory, "calls-*.jsonl*"); }
-                catch (IOException) /* swallow(probe-optional): absent or rotating directories are retried at the next bounded poll */ { paths = Array.Empty<string>(); }
-                catch (UnauthorizedAccessException) /* swallow(probe-optional): inaccessible journals cannot be consumed */ { paths = Array.Empty<string>(); }
+                FileInfo[] entries;
+                try { entries = new DirectoryInfo(directory).GetFiles("calls-*.jsonl*"); }
+                catch (IOException) /* swallow(probe-optional): absent or rotating directories are retried at the next bounded poll */ { entries = Array.Empty<FileInfo>(); }
+                catch (UnauthorizedAccessException) /* swallow(probe-optional): inaccessible journals cannot be consumed */ { entries = Array.Empty<FileInfo>(); }
                 bool changed = false;
-                foreach (string missing in files.Keys.Except(paths, StringComparer.OrdinalIgnoreCase).ToArray()) { files.Remove(missing); changed = true; }
-                foreach (string path in paths.OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+                foreach (string missing in files.Keys.Except(entries.Select(entry => entry.FullName), StringComparer.OrdinalIgnoreCase).ToArray())
                 {
+                    files.Remove(missing);
+                    changed = true;
+                }
+                foreach (var info in entries.OrderBy(file => file.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    string path = info.FullName;
                     try
                     {
-                        var info = new FileInfo(path);
-                        if (!files.TryGetValue(path, out var cursor) || info.Length < cursor.Position || info.CreationTimeUtc != cursor.Created
+                        files.TryGetValue(path, out var cursor);
+                        // Directory enumeration already supplies both values. A partial read keeps Position below Length.
+                        if (changedFilesOnly && cursor != null && info.Length == cursor.Position && info.LastWriteTimeUtc == cursor.Modified) continue;
+                        if (cursor == null || info.Length < cursor.Position || info.CreationTimeUtc != cursor.Created
                             || info.Length == cursor.Position && info.LastWriteTimeUtc != cursor.Modified)
                         { files[path] = cursor = new FileCursor { Created = info.CreationTimeUtc }; changed = true; }
                         long position = cursor.Position;

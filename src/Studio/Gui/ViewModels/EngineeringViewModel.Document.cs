@@ -72,14 +72,14 @@ public sealed partial class EngineeringViewModel
                 if (string.IsNullOrWhiteSpace(source))
                 {
                     SetSource([], LocalizedText.Key("Project.NoSource"));
-                    _activity.SetStatus("Project.NoSource");
+                    _activity.SetStatus("Project.NoSource", kind: null);
                     return;
                 }
                 string normalized = source.ReplaceLineEndings("\n");
                 if (normalized.EndsWith('\n')) normalized = normalized[..^1];
                 SetSource(normalized.Split('\n'), LocalizedText.Empty);
-                if (SourceLines.Count == 1) _activity.SetStatus("Project.OneLine");
-                else _activity.SetStatus("Project.Lines", SourceLines.Count);
+                if (SourceLines.Count == 1) _activity.SetStatus("Project.OneLine", kind: null);
+                else _activity.SetStatus("Project.Lines", kind: null, SourceLines.Count);
             }
             catch (Exception error)
             {

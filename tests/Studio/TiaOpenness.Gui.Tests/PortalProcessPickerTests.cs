@@ -90,6 +90,8 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
             var client = new FakeProjectClient { ConnectHandler = _ => Task.FromException<SessionState>(new PortalProcessSelectionRequiredException(processes)) };
             var dialogs = new FakeDialogService();
             using var model = new MainViewModel(client, dialogs);
+            var messages = new List<FeatureFeedback>();
+            model.Activity.Feedback += (_, message) => messages.Add(message);
             model.Session.ProjectPath = openProject ? @"D:\Other.ap21" : "";
             (openProject ? model.Session.OpenProject : model.Session.Connect).Execute(null);
             Assert.False(model.Session.Connect.IsRunning);
@@ -97,6 +99,9 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
             Assert.False(model.Session.IsConnected);
             Assert.Equal(new[] { "Start", "Connect" }, client.Calls.Select(c => c.Name));
             Assert.Same(processes, Assert.Single(dialogs.ProcessRequests));
+            var notice = Assert.Single(messages);
+            Assert.Equal(ToastKind.Warning, notice.Kind);
+            Assert.Equal(Loc.Current["Status.NotConnected"], notice.Message.Resolve());
             Assert.Empty(model.Session.ProjectName);
         });
     }

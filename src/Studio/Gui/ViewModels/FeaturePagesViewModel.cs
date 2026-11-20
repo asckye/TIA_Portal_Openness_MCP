@@ -14,8 +14,8 @@ namespace TiaOpenness.Gui.ViewModels;
 
 public enum FeatureTone { Normal, Muted, Accent, Warning, Success, Unchecked }
 
-public enum ToastKind { Success, Approval, Warning }
-public readonly record struct FeatureFeedback(LocalizedText Message, ToastKind Kind = ToastKind.Success);
+public enum ToastKind { Success, Approval, Warning, Error, Info }
+public readonly record struct FeatureFeedback(LocalizedText Message, ToastKind Kind = ToastKind.Success, string Source = "feature");
 
 public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
 {
@@ -23,6 +23,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     private readonly INotifyPropertyChanged[] _sources;
     private readonly DispatcherTimer _timer;
     private readonly Func<DateTimeOffset> _now;
+    private readonly DateTimeOffset _opened;
+    private IReadOnlyList<CallRecord> _previousCalls;
+    internal event Action<CallRecord>? CallCompleted;
     private IReadOnlyList<CallRecord>? _pausedCalls;
     private bool _writeOnly, _failOnly, _releaseOnly, _humanOnly, _aiOnly, _disposed;
     private string _search = "", _release = TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey();
@@ -55,6 +58,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     {
         Approvals = approvals; Journal = journal; Audit = audit; Environment = environment; Diagnostics = diagnostics;
         _now = now ?? (() => DateTimeOffset.UtcNow);
+        _opened = _now();
+        _previousCalls = journal.Calls;
         _sources = [approvals, journal, audit, environment, diagnostics];
         foreach (var source in _sources) source.PropertyChanged += OnChanged;
         Loc.Current.LanguageChanged += OnLanguageChanged;
@@ -128,6 +133,18 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         _pausedCalls = FollowLatest ? Journal.Calls.ToArray() : null; RefreshCalls(); Notify(nameof(FollowLatest), nameof(FollowLabel)); }
     public void OpenApprovals() => DrawerRequested?.Invoke(this, "Approvals");
     public void OpenCall(CallRow row) { _selectedCall = row.Record.JournalKey; Raise(nameof(SelectedCall)); DrawerRequested?.Invoke(this, "CallDetail"); }
+    internal bool OpenCompletedCall(CallRecord call)
+    {
+        if (!_callCache.TryGetValue(call.JournalKey, out var row) || row.Record.Result != call.Result)
+        {
+            if (FollowLatest) return false;
+            ToggleFollow();
+            if (!_callCache.TryGetValue(call.JournalKey, out row) || row.Record.Result != call.Result) return false;
+        }
+        OpenCall(row);
+        return true;
+    }
+
     public void Decide(ApprovalRow row, bool approve) => RunFeedback(() =>
     {
         bool accepted = approve ? Approvals.Approve(row.Request.Id) : Approvals.Deny(row.Request.Id);
@@ -179,8 +196,10 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
                 ? service.Verify(percent => Dispatch(() => { VerificationProgress = percent; Raise(nameof(VerificationProgress)); })) : Audit.Verify());
             _verifiedEvents = Audit.Events;
             _auditBreak = null; RefreshAudit(); NotifyVerification();
+            Feedback?.Invoke(this, new(LocalizedText.Literal(VerificationText),
+                _verification.Passed switch { true => ToastKind.Success, false => ToastKind.Error, null => ToastKind.Info }, "verify"));
         }
-        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Warning)); }
+        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Error, "verify")); }
         finally { _verifying = false; Notify(nameof(Verifying)); }
     }
     public AuditRow? JumpToBreak()
@@ -197,8 +216,12 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public void SetRetention(int value, bool size) => _ = SetRetentionAsync(value, size);
     internal async Task SetRetentionAsync(int value, bool size)
     {
-        try { await Task.Run(() => { if (size) Audit.FileSizeMb = value; else Audit.Copies = value; }); }
-        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Warning)); }
+        try
+        {
+            await Task.Run(() => { if (size) Audit.FileSizeMb = value; else Audit.Copies = value; });
+            Feedback?.Invoke(this, new(LocalizedText.Key("Toast.Saved"), ToastKind.Success, "retention"));
+        }
+        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Error, "retention")); }
     }
 
     public IReadOnlyList<EnvironmentGroupRow> EnvironmentGroups => _groups;
@@ -239,14 +262,19 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public int DiagnosticPercent => Math.Clamp(Diagnostics.Progress.Percent, 0, 100);
     public string DiagnosticPath => Diagnostics.Progress.Path;
     internal Action<string> CopyText { get; set; } = System.Windows.Clipboard.SetText;
-    public void Copy(string text) => Run(() => { CopyText(text); return LocalizedText.Empty; });
+    public void Copy(string text) => Run(() => { CopyText(text); return LocalizedText.Key("Toast.Copied"); });
     public void Export() =>
-        Run(() => { string message = Diagnostics.Export(); return message.Length == 0 ? LocalizedText.Empty : LocalizedText.Key(message); });
-    public void Run(Func<LocalizedText> action) => RunFeedback(() => new(action()));
-    private void RunFeedback(Func<FeatureFeedback> action)
+        Run(() =>
+        {
+            string message = Diagnostics.Export();
+            return message.Length == 0 ? LocalizedText.Empty : LocalizedText.Key(message);
+        }, "diagnostics", ToastKind.Info);
+    public void Run(Func<LocalizedText> action, [System.Runtime.CompilerServices.CallerMemberName] string source = "",
+        ToastKind kind = ToastKind.Success) => RunFeedback(() => new(action(), kind), source);
+    private void RunFeedback(Func<FeatureFeedback> action, [System.Runtime.CompilerServices.CallerMemberName] string source = "")
     {
-        try { var result = action(); if (result.Message.Resolve().Length > 0) Feedback?.Invoke(this, result); }
-        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Warning)); }
+        try { var result = action(); if (result.Message.Resolve().Length > 0) Feedback?.Invoke(this, result with { Source = source }); }
+        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Error, source)); }
     }
     internal static FeatureTone CheckTone(IReadOnlyList<EnvironmentCheck> rows) => rows.Any(r => r.Status == CheckStatus.Checking) ? FeatureTone.Accent
         : rows.Any(r => r.Status is CheckStatus.Warn or CheckStatus.Fail) ? FeatureTone.Warning
@@ -281,6 +309,22 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         _queued = true;
         _dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(Flush));
     });
+    private void NotifyCompletedCalls()
+    {
+        var calls = Journal.Calls;
+        if (ReferenceEquals(calls, _previousCalls)) return;
+        var previous = _previousCalls.ToDictionary(c => c.JournalKey, c => c.Result, StringComparer.Ordinal);
+        _previousCalls = calls;
+        CallRecord? latest = null;
+        foreach (var call in calls)
+        {
+            if (call.Actor != "mcp" || call.Result is CallResult.Pending or CallResult.Executing or CallResult.Approved) continue;
+            if (previous.TryGetValue(call.JournalKey, out var old) ? old == call.Result : (call.Updated ?? call.Time) < _opened) continue;
+            if (latest == null || (call.Updated ?? call.Time) >= (latest.Updated ?? latest.Time)) latest = call;
+        }
+        if (latest != null) CallCompleted?.Invoke(latest);
+    }
+
     private void Flush()
     {
         _queued = false;
@@ -301,6 +345,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
                 Notify(nameof(ApprovalSetting), nameof(ApprovalPolicy), nameof(ApprovalPolicyTone));
             UpdateTimer();
         }
+        if (Changed(Journal, nameof(ICallJournalService.Calls))) NotifyCompletedCalls();
         if (_dirty.ContainsKey(Journal) && (_callsVisible || _detailVisible))
         {
             if (Changed(Journal, nameof(ICallJournalService.Calls))) RefreshCalls();
@@ -327,9 +372,24 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         {
             _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
             RefreshEnvironmentSelection();
+            if (_dirty[Environment].Contains(nameof(IEnvironmentCheckService.LogTail)))
+            {
+                var checks = Environment.Groups.SelectMany(group => group.Rows).ToArray();
+                var kind = checks.Any(row => row.Status == CheckStatus.Fail) ? ToastKind.Error
+                    : checks.Any(row => row.Status != CheckStatus.Pass) ? ToastKind.Warning : ToastKind.Success;
+                Feedback?.Invoke(this, new(LocalizedText.Literal(EnvironmentSummary), kind, "environment"));
+            }
             Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
                 nameof(EnvironmentAttentionCount), nameof(EnvironmentCheckCount), nameof(EnvironmentPassedCount),
                 nameof(EnvironmentPendingCount), nameof(LogTail));
+        }
+        if (Changed(Diagnostics, nameof(IDiagnosticBundleService.Progress)))
+        {
+            var result = Diagnostics.Progress;
+            if (result.State == DiagnosticState.Done)
+                Feedback?.Invoke(this, new(LocalizedText.Key("Toast.Exported", result.Path), ToastKind.Success, "diagnostics"));
+            else if (result.State == DiagnosticState.Idle && result.Step.Resolve().Length > 0)
+                Feedback?.Invoke(this, new(result.Step, ToastKind.Error, "diagnostics"));
         }
         if (_dirty.ContainsKey(Diagnostics)) Notify(nameof(DiagnosticCanStart), nameof(DiagnosticIdle), nameof(DiagnosticRunning),
             nameof(DiagnosticDone), nameof(DiagnosticLabel), nameof(DiagnosticTone), nameof(DiagnosticStep), nameof(DiagnosticPercent), nameof(DiagnosticPath));

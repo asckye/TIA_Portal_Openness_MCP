@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
-using System.Windows.Shapes;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.Services.Stubs;
@@ -13,9 +12,6 @@ public partial class MainWindow
 {
     internal FeaturePagesViewModel Features { get; private set; } = null!;
     private IApprovalNotification _approvalNotification = new WindowsApprovalNotification();
-    private ApprovalRequest? _approvalToast;
-    private LocalizedText _featureFeedback;
-    private LocalizedText _featureTitle = LocalizedText.Key("Shell.Diagnostics");
     private bool _featuresDisposed;
 
     private void InitializeFeaturePages()
@@ -33,6 +29,7 @@ public partial class MainWindow
         {
             Features.DrawerRequested -= OnFeatureDrawer;
             Features.Feedback -= OnFeatureFeedback;
+            Features.CallCompleted -= OnCallCompleted;
             Features.Dispose();
             (Features.Journal as IDisposable)?.Dispose();
             (Features.Audit as IDisposable)?.Dispose();
@@ -46,6 +43,7 @@ public partial class MainWindow
         SettingsContent.SetFeatures(Features);
         Features.DrawerRequested += OnFeatureDrawer;
         Features.Feedback += OnFeatureFeedback;
+        Features.CallCompleted += OnCallCompleted;
         Features.SetVisibility(_page == "Calls", _page == "Audit", _page == "Approvals", _drawer == "CallDetail");
         if (ControlSurface != null) { HookControlFeatures(); QueueControlSnapshot(); }
     }
@@ -61,26 +59,39 @@ public partial class MainWindow
 
     private void OnFeatureDrawer(object? sender, string drawer) => OpenDrawer(drawer);
     private void OnFeatureFeedback(object? sender, FeatureFeedback feedback)
+        => ShowToast(feedback.Kind, feedback.Message, feedback.Source);
+
+    private void OnCallCompleted(CallRecord call)
     {
-        _approvalToast = null; _featureFeedback = feedback.Message; _featureTitle = LocalizedText.Key("Shell.Diagnostics");
-        UpdateFeatureToast(feedback.Kind);
-        Controls.AccessibleStatus.Announce(ToastMessage);
+        var row = new CallRow(call);
+        var kind = call.Result switch
+        {
+            CallResult.Success => ToastKind.Success,
+            CallResult.Rejected => ToastKind.Warning,
+            _ => ToastKind.Error
+        };
+        var text = LocalizedText.Literal(call.Tool + " · " + row.Result + (row.HasError ? " · " + row.Error : ""));
+        ShowToast(kind, text, "ai-calls", () =>
+        {
+            Navigate("Calls");
+            if (!Features.OpenCompletedCall(call)) { Navigate("Log"); LogContent.ShowMessage(text.Resolve()); }
+        }, actionShowsDetails: true);
     }
+
     private void OnNewApproval(object? sender, ApprovalRequest request)
     {
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => OnNewApproval(sender, request)); return; }
         if (_featuresDisposed) return;
-        _approvalToast = request;
+        var title = LocalizedText.Key("Approval.ToastTitle", request.Operations.Count);
+        var help = LocalizedText.Key("Approval.ToastHelp");
         if (request.Actor == "workbench" && request.OperatorCallId != null && _model.Panel?.Attached == true)
         { OpenDrawer("Approvals"); ApprovalsContent.FocusRequest(request.Id); }
-        UpdateFeatureToast(ToastKind.Approval);
-        System.Windows.Automation.AutomationProperties.SetLiveSetting(ToastTitle, System.Windows.Automation.AutomationLiveSetting.Assertive);
-        Controls.AccessibleStatus.Announce(ToastTitle);
+        ShowToast(ToastKind.Approval, help, "approval", () => { Navigate("Approvals"); ApprovalsContent.FocusRequest(request.Id); }, title);
         if (WindowState == WindowState.Minimized)
         {
             try {
                 _approvalNotification
-                    .Show(ToastTitle.Text, ToastMessage.Text, () => Dispatcher
+                    .Show(title.Resolve(), help.Resolve(), () => Dispatcher
                         .Invoke(() => {
                             if (_featuresDisposed) return; WindowState = WindowState.Normal; Activate(); OpenDrawer("Approvals"); ApprovalsContent
                                 .FocusRequest(request.Id);
@@ -89,24 +100,6 @@ public partial class MainWindow
             catch (Exception ex) { System.Diagnostics.Trace.TraceWarning("Approval notification failed: {0}", ex.Message); }
         }
     }
-    private void UpdateFeatureToast(ToastKind kind)
-    {
-        ToastDot.SetResourceReference(Shape.FillProperty, kind switch
-        {
-            ToastKind.Approval => "Primer.accent",
-            ToastKind.Warning => "Primer.warn",
-            ToastKind.Success => "Primer.ok",
-            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-        });
-        UpdateFeatureToastText();
-        Toast.Visibility = Visibility.Visible;
-    }
-
-    private void UpdateFeatureToastText()
-    {
-        ToastTitle.Text = _approvalToast == null ? _featureTitle.Resolve() : Loc.Current.T("Approval.ToastTitle", _approvalToast.Operations.Count);
-        ToastMessage.Text = _approvalToast == null ? _featureFeedback.Resolve() : Loc.Current["Approval.ToastHelp"];
-    }
     private void DisposeFeaturePages()
     {
         _featuresDisposed = true;
@@ -114,6 +107,7 @@ public partial class MainWindow
         _model.PropertyChanged -= OnFeatureReleaseChanged;
         Features.DrawerRequested -= OnFeatureDrawer;
         Features.Feedback -= OnFeatureFeedback;
+        Features.CallCompleted -= OnCallCompleted;
         DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext =
             CallDetailContent.DataContext = null;
         OperationsContent.SetFeatures(null, null);

@@ -30,6 +30,7 @@ public sealed record CallRecord(string RequestId, DateTimeOffset Time, string Ho
     LocalizedText Summary, string ErrorCode, LocalizedText ErrorMessage, LocalizedText ApprovalRecord)
 {
     public string JournalKey { get; init; } = RequestId;
+    public DateTimeOffset? Updated { get; init; }
     public string? Actor { get; init; }
     public string? McpSession { get; init; }
     public string ResultJson { get; init; } = "null";

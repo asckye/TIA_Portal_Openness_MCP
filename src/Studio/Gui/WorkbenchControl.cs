@@ -50,6 +50,7 @@ public partial class MainWindow
     private static void OnControlDialogSized(object sender, SizeChangedEventArgs e)
     {
         if (sender is not Window { Owner: MainWindow owner } dialog || e.PreviousSize != default) return;
+        owner.UpdateToastPresentation();
         owner.QueueControlSnapshot();
         dialog.IsVisibleChanged -= owner.OnControlWindowChanged;
         dialog.IsVisibleChanged += owner.OnControlWindowChanged;
@@ -62,6 +63,7 @@ public partial class MainWindow
         var dialog = (Window)sender!;
         dialog.IsVisibleChanged -= OnControlWindowChanged;
         dialog.Closed -= OnControlDialogClosed;
+        UpdateToastPresentation();
         QueueControlSnapshot();
     }
 
@@ -465,7 +467,11 @@ public partial class MainWindow
     private void OnConfirmControlPrefill(object sender, RoutedEventArgs e) => ConfirmControlPrefill();
     private void ConfirmControlPrefill() { _prefillRestore.Clear(); _prefills.ClearByHuman(); UpdateControlPrefill(); QueueControlSnapshot(); }
     private void OnControlEnabledChanged(object? sender, EventArgs e) => QueueControlSnapshot();
-    private void OnControlWindowChanged(object sender, DependencyPropertyChangedEventArgs e) => QueueControlSnapshot();
+    private void OnControlWindowChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        UpdateToastPresentation();
+        QueueControlSnapshot();
+    }
     private void TrackControlInput()
     {
         if (_inputIdleTimer.IsEnabled || !ControlGuard.HumanActive) return;

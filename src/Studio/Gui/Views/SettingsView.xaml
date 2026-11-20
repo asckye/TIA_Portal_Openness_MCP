@@ -317,8 +317,11 @@
                 <Button x:Name="ApplyTimeout" DockPanel.Dock="Right" Content="{l:Tr Settings.ApplySeconds}" AutomationProperties.Name="{l:Tr Settings.ApplySeconds}"
                   Style="{StaticResource Primer.Secondary}" Click="OnSaveTimeout" Margin="8,0,0,0"/>
                 <TextBox x:Name="CustomTimeout" AutomationProperties.Name="{l:Tr Settings.TimeoutSeconds}" AutomationProperties.LabeledBy="{Binding ElementName=TimeoutLabel}"
+                  AutomationProperties.HelpText="{Binding Text,ElementName=CustomTimeoutError}" TextChanged="OnSafetyInputChanged"
                   Style="{StaticResource Primer.Input}"/>
               </DockPanel>
+              <TextBlock x:Name="CustomTimeoutError" AutomationProperties.LiveSetting="Polite" Visibility="Collapsed"
+                Foreground="{DynamicResource Ant.colorError}" TextWrapping="Wrap"/>
               <DockPanel Margin="0,10">
                 <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}" Margin="12,0,0,0">
                   <StackPanel Orientation="Horizontal">
@@ -343,8 +346,11 @@
                 <Button x:Name="ApplyPlanLifetime" DockPanel.Dock="Right" Content="{l:Tr Settings.ApplySeconds}" AutomationProperties.Name="{l:Tr Settings.ApplySeconds}"
                   Style="{StaticResource Primer.Secondary}" ToolTip="{l:Tr Settings.SavePlanLifetime}" Click="OnSavePlanLifetime" Margin="8,0,0,0"/>
                 <TextBox x:Name="OnlinePlanLifetime" AutomationProperties.Name="{l:Tr Settings.PlanLifetime}" AutomationProperties.LabeledBy="{Binding ElementName=PlanLifetimeLabel}"
+                  AutomationProperties.HelpText="{Binding Text,ElementName=OnlinePlanLifetimeError}" TextChanged="OnSafetyInputChanged"
                   Style="{StaticResource Primer.Input}"/>
               </DockPanel>
+              <TextBlock x:Name="OnlinePlanLifetimeError" AutomationProperties.LiveSetting="Polite" Visibility="Collapsed"
+                Foreground="{DynamicResource Ant.colorError}" TextWrapping="Wrap"/>
 
             </StackPanel>
           </Border>
@@ -392,8 +398,11 @@
               <DockPanel Margin="0,0,0,8">
                 <Button x:Name="AddTarget" Content="{l:Tr Settings.AddAndSave}" AutomationProperties.Name="{l:Tr Settings.AddAndSave}" DockPanel.Dock="Right"
                   Style="{StaticResource Primer.Button.Primary.Medium}" Click="OnAddTarget" Margin="8,0,0,0"/>
-                <TextBox x:Name="OnlineTargetInput" AutomationProperties.LabeledBy="{Binding ElementName=TargetAddressLabel}" AutomationProperties.Name="{l:Tr Settings.TargetAddress}" Style="{StaticResource Primer.Input}"/>
+                <TextBox x:Name="OnlineTargetInput" AutomationProperties.LabeledBy="{Binding ElementName=TargetAddressLabel}" AutomationProperties.Name="{l:Tr Settings.TargetAddress}" AutomationProperties.HelpText="{Binding Text,ElementName=OnlineTargetInputError}" TextChanged="OnSafetyInputChanged"
+                  Style="{StaticResource Primer.Input}"/>
               </DockPanel>
+              <TextBlock x:Name="OnlineTargetInputError" AutomationProperties.LiveSetting="Polite" Visibility="Collapsed"
+                Foreground="{DynamicResource Ant.colorError}" TextWrapping="Wrap"/>
               <WrapPanel Margin="0,4,0,0">
                 <Button x:Name="SaveTargetChanges" Content="{l:Tr Settings.SaveTargets}" AutomationProperties.Name="{l:Tr Settings.SaveTargets}"
                   Style="{StaticResource Primer.OutlinedAccent}" Click="OnSaveTargets" Margin="0,0,8,0"/>

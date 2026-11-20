@@ -16,6 +16,7 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
 {
     private readonly object _sync = new();
     private readonly CallJournalReader _reader;
+    private readonly object _modeLock = new();
     private ChangeMonitor? _monitor;
     private volatile bool _active = true;
     private string _connectionStamp = "";
@@ -37,25 +38,33 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
         if (!live) Refresh();
         else _ = Task.Run(() =>
         {
-            lock (_sync)
+            var monitor = new ChangeMonitor(RefreshIfActive, _reader.PollChangedFiles,
+                directory ?? TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory, _configDirectory);
+            lock (_modeLock)
             {
-                if (_disposed) return;
-                _monitor = new ChangeMonitor(Refresh, directory ?? TiaOpenness.Shared.DataLocations.Current.DiagnosticsDirectory, _configDirectory);
-                if (_disposed) { _monitor.Dispose(); return; }
-                _monitor.SetActive(_active);
+                if (_disposed) { monitor.Dispose(); return; }
+                _monitor = monitor;
+                monitor.SetActive(_active);
             }
-            if (_active) Refresh();
+            RefreshIfActive();
         });
     }
 
-    public void SetRelease(string release) { if (_release == release) return; _release = release; _ = Task.Run(Refresh); }
-    public void SetActive(bool active) { _active = active; _monitor?.SetActive(active); }
-    public void Refresh()
+    public void SetRelease(string release) { if (_release == release) return; _release = release; if (_active) _ = Task.Run(RefreshIfActive); }
+    public void SetActive(bool active)
+    {
+        lock (_modeLock) { _active = active; _monitor?.SetActive(active); }
+    }
+    public void Refresh() => Refresh(activeOnly: false);
+    private void RefreshIfActive() => Refresh(activeOnly: true);
+
+    private void Refresh(bool activeOnly)
     {
         lock (_sync)
         {
-            if (_disposed) return;
+            if (_disposed || activeOnly && !_active) return;
             _reader.Poll();
+            if (activeOnly && !_active) return;
             var connection = ReadConnection();
             if (connection != _connection) { Volatile.Write(ref _connection, connection); Raise(nameof(Connection)); }
         }
@@ -95,7 +104,7 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
             }, c.DurationMs, c.Target, c.Arguments, LocalizedText.Key("Calls.JournalSummary", c.Outcome, c.Execution, c.Completeness),
             c.ErrorCode, LocalizedText.Empty, LocalizedText.Key("Calls.ApprovalUnavailable"))
         {
-            JournalKey = c.Identity, ResultJson = c.Result, Outcome = c.Outcome, Execution = c.Execution, Completeness = c.Completeness,
+            JournalKey = c.Identity, Updated = c.Updated, ResultJson = c.Result, Outcome = c.Outcome, Execution = c.Execution, Completeness = c.Completeness,
             Actor = c.Actor, McpSession = c.McpSession,
             ParametersTruncated = c.ArgumentsTruncated, ResultTruncated = c.ResultTruncated
         };
@@ -108,6 +117,7 @@ public sealed class CallJournalService : ObservableObject, ICallJournalService, 
 
     public void Dispose()
     {
-        _disposed = true; _monitor?.Dispose(); _reader.Changed -= OnChanged; _ = Task.Run(_reader.Dispose);
+        lock (_modeLock) { _disposed = true; _monitor?.Dispose(); }
+        _reader.Changed -= OnChanged; _ = Task.Run(_reader.Dispose);
     }
 }

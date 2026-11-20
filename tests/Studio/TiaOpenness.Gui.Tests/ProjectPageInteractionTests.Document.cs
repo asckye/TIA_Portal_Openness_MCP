@@ -176,6 +176,7 @@ public sealed partial class ProjectPageInteractionTests
             editor.FocusedBlock = editor.Blocks.Single();
             client.LogicHandler = (_, _) => Task.FromException<string>(new IOException("Read interrupted."));
             WpfContext.Complete(editor.ReadFocusedBlockAsync());
+            Assert.Equal("Read interrupted.", model.Activity.Status);
             Assert.Equal("Read interrupted.", editor.SourceStatus);
             Assert.Empty(editor.SourceLines);
             client.LogicHandler = (_, _) => Task.FromResult("A\r\nB\n\n");

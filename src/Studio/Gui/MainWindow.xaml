@@ -13,10 +13,12 @@
     <KeyBinding Key="D5" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Environment"/>
     <KeyBinding Key="D6" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Audit"/>
     <KeyBinding Key="D7" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Log"/>
+    <KeyBinding Key="J" Modifiers="Control+Shift" Command="{x:Static ux:WorkbenchCommands.ToastAction}"/>
     <KeyBinding Key="K" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.CommandPalette}"/>
     <KeyBinding Key="OemComma" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Settings"/>
   </Window.InputBindings>
   <Window.CommandBindings>
+    <CommandBinding Command="{x:Static ux:WorkbenchCommands.ToastAction}" Executed="OnToastClick" CanExecute="OnCanInvokeToastAction"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.CommandPalette}" Executed="OnCommandPalette" CanExecute="OnCanOpenPalette"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Open}" Executed="OnOpenExecuted"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Engineering}" Executed="OnPageExecuted"/>
@@ -160,7 +162,7 @@
             <Grid x:Name="CallsPage" Visibility="Collapsed">
               <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
               <views:AiCallsView x:Name="CallsContent" Visibility="Collapsed"/>
-              <Grid x:Name="DockedInspector" AutomationProperties.Name="{l:Tr Calls.Detail}" Grid.Column="1" Width="344" Visibility="Collapsed"/>
+              <Grid x:Name="DockedInspector" AutomationProperties.Name="{l:Tr Calls.Detail}" Grid.Column="1" Width="344" Margin="0,0,-16,0" Visibility="Collapsed"/>
             </Grid>
             <views:AuditLogView x:Name="AuditContent" Visibility="Collapsed"/>
             <views:EnvironmentView x:Name="EnvironmentContent" Visibility="Collapsed"/>
@@ -267,7 +269,8 @@
     <Border VerticalAlignment="Bottom" Margin="80,0,24,36"
       Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Container}">
       <StackPanel>
-        <TextBlock AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Activity.Status}" Text="{Binding Activity.Status}" Style="{StaticResource Primer.Muted}"/>
+        <TextBlock Text="{Binding Activity.ProgressLabel}" Style="{StaticResource Primer.Muted}" AutomationProperties.LiveSetting="Polite"
+          ux:AccessibleStatus.Text="{Binding Activity.ProgressLabel}"/>
         <ProgressBar Height="3" Margin="0,6,0,0" IsIndeterminate="{Binding Activity.ProgressIndeterminate}" Maximum="{Binding Activity.ProgressMax}" Value="{Binding Activity.ProgressValue,Mode=OneWay}"/>
       </StackPanel>
     </Border>
@@ -301,19 +304,20 @@
       </Border>
     </Grid>
     <ContentControl Style="{StaticResource Primer.Shadow}" Width="{Binding ActualWidth,ElementName=Toast}" Height="{Binding ActualHeight,ElementName=Toast}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="{Binding Margin,ElementName=Toast}" Visibility="{Binding Visibility,ElementName=Toast}"/>
-    <Border x:Name="Toast" HorizontalAlignment="Center" VerticalAlignment="Bottom" MaxWidth="900" Margin="16,0,16,36"
+    <Border x:Name="Toast" HorizontalAlignment="Center" VerticalAlignment="Bottom" MinWidth="240" MaxWidth="560" Height="36" Margin="16,0,16,36"
       Visibility="Collapsed" Style="{StaticResource Primer.Toast}">
-      <DockPanel VerticalAlignment="Center">
+      <local:ToastPanel x:Name="ToastLine" xmlns:local="clr-namespace:TiaOpenness.Gui" VerticalAlignment="Center">
         <Ellipse x:Name="ToastDot" DockPanel.Dock="Left" Width="6" Height="6" Margin="0,0,8,0"/>
-        <Button DockPanel.Dock="Right" Content="×" AutomationProperties.Name="{l:Tr Access.Dismiss}" Click="OnDismissToast"
+        <Button x:Name="ToastClose" Focusable="False" DockPanel.Dock="Right" Content="×" AutomationProperties.Name="{l:Tr Access.Dismiss}" Click="OnDismissToast"
           Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
-        <Button x:Name="ToastAction" DockPanel.Dock="Right" Content="{l:Tr Common.Open}" AutomationProperties.Name="{Binding Text,ElementName=ToastTitle}"
+        <Button x:Name="ToastAction" Focusable="False" DockPanel.Dock="Right" Content="{l:Tr Common.Open}"
+          AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"
           Click="OnToastClick" Style="{StaticResource Primer.Link}" Margin="8,0,0,0" Padding="4,0"/>
-        <TextBlock x:Name="ToastTitle" DockPanel.Dock="Left" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"
-          ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}" FontWeight="SemiBold" Margin="0,0,8,0"/>
+        <TextBlock x:Name="ToastTitle" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="{DynamicResource Ui.FontSize.12_5}"
+          TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" Margin="0,0,8,0"/>
         <TextBlock x:Name="ToastMessage" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"
-          Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
-      </DockPanel>
+          Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.12_5}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+      </local:ToastPanel>
     </Border>
     <Grid x:Name="OverlayHost" Visibility="Collapsed"/>
   </Grid>

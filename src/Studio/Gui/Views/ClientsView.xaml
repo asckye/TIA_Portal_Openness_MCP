@@ -147,7 +147,6 @@
                                TextWrapping="Wrap" TextTrimming="None" Margin="0,8,0,0"/>
                   </StackPanel>
                 </Border>
-                <TextBlock x:Name="ClientStatus" Visibility="Collapsed" TextWrapping="Wrap" Style="{StaticResource Primer.Muted}" AutomationProperties.LiveSetting="Polite"/>
               </StackPanel>
             </Border>
           </ContentControl>

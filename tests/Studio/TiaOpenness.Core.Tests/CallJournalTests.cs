@@ -135,6 +135,36 @@ public sealed class CallJournalTests : IDisposable
     }
 
     [Fact]
+    public void Idle_poll_keeps_unchanged_files_closed_and_follows_growth_same_size_rewrites_and_removals()
+    {
+        string stable = Path.Combine(root, "calls-stable.jsonl"), changing = Path.Combine(root, "calls-changing.jsonl");
+        File.WriteAllLines(stable, Rows("stable", result: Envelope()));
+        var rows = Rows("before", result: Envelope());
+        File.WriteAllLines(changing, [rows[0]]);
+        using var reader = new CallJournalReader(root, false);
+        var original = reader.Calls;
+        var stableCall = original.Single(call => call.DisplayOutcome == "succeeded");
+        using var exclusive = File.Open(stable, FileMode.Open, FileAccess.Read, FileShare.None);
+        reader.PollChangedFiles();
+        Assert.Same(original, reader.Calls);
+        File.AppendAllText(changing, rows[1] + "\n");
+        reader.PollChangedFiles();
+        Assert.Equal(2, reader.Calls.Count);
+        Assert.All(reader.Calls, call => Assert.Equal("succeeded", call.DisplayOutcome));
+        var stamp = File.GetLastWriteTimeUtc(changing);
+        string old = File.ReadAllText(changing);
+        string replacement = old.Replace("\"id\":\"before\"", "\"id\":\"second\"");
+        Assert.NotEqual(old, replacement);
+        File.WriteAllText(changing, replacement);
+        File.SetLastWriteTimeUtc(changing, stamp.AddSeconds(2));
+        reader.PollChangedFiles();
+        Assert.Contains(reader.Calls, call => call.Identity.Contains(":second:"));
+        File.Delete(changing);
+        reader.PollChangedFiles();
+        Assert.Same(stableCall, Assert.Single(reader.Calls));
+    }
+
+    [Fact]
     public void Rotation_duplicates_truncated_tail_and_disappearing_files_are_handled()
     {
         string path = Path.Combine(root, "calls-process.jsonl");

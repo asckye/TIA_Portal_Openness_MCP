@@ -39,9 +39,11 @@ public sealed class WorkbenchShellDesignTests(WpfContext wpf)
                 }
 
                 window.Features.Export();
-                AssertDot("Primer.ok");
+                AssertDot("Primer.accent");
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
                 service.Receive(FeaturePageFixtures.Request());
                 AssertDot("Primer.accent");
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
                 window.Navigate("Approvals");
                 var request = Assert.Single(window.Features.Requests);
                 window.Features.Decide(request, true);
@@ -51,15 +53,19 @@ public sealed class WorkbenchShellDesignTests(WpfContext wpf)
                 Assert.Equal(Loc.Current["Approval.NoLongerPending"], window.ToastMessage.Text);
                 AssertDot("Primer.warn");
 
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
                 window.Navigate("VersionControl");
                 Assert.Equal(Loc.Current["Shell.PageUnavailable"], window.ToastTitle.Text);
                 AssertDot("Primer.warn");
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
                 window.Features.Run(() => throw new InvalidOperationException("fixture failure"));
                 Assert.Equal("fixture failure", window.ToastMessage.Text);
-                AssertDot("Primer.warn");
+                AssertDot("Ant.colorError");
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
 
                 window.Features.Export();
-                AssertDot("Primer.ok");
+                AssertDot("Primer.accent");
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
                 var done = new TaskCompletionSource();
                 var busy = model.Activity.Guarded("Env.Checking", () => done.Task);
                 try

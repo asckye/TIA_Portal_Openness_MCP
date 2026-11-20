@@ -377,7 +377,9 @@ namespace TiaMcpConfigurator
                     port.Text = "8765";
                     ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text=Loc.Current["Config.Detected"];
                     ((System.Windows.Controls.ContentControl)form.FindName("DetectionChip")).Tag=TiaOpenness.Gui.ViewModels.FeatureTone.Accent;
-                    ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="Last test · HTTP reachable, MCP ready. Version 1.4.2. TIA project connection not yet verified.";
+                    window.ShowToast(TiaOpenness.Gui.ViewModels.ToastKind.Success,
+                        LocalizedText.Literal("Last test · HTTP reachable, MCP ready. Version 1.4.2. TIA project connection not yet verified."),
+                        "connection-test");
                     ((TiaOpenness.Gui.Controls.WorkbenchLogView)form.FindName("ActivityLog")).LogText="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Remote endpoint configured\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · MCP ready\n09:43:05   Status · Connection OK";
                     ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 entries";
                     form.CapturePage(Path.Combine(capture,"configurator-light.png"),0);
@@ -388,7 +390,8 @@ namespace TiaMcpConfigurator
                     window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text=Loc.Current["Config.Detected"];
                     ((System.Windows.Controls.ContentControl)form.FindName("DetectionChip")).Tag=TiaOpenness.Gui.ViewModels.FeatureTone.Accent;
-                    ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="上次测试 · HTTP 可达，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。";
+                    window.ShowToast(TiaOpenness.Gui.ViewModels.ToastKind.Success,
+                        LocalizedText.Literal("上次测试 · HTTP 可达，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。"), "connection-test");
                     ((TiaOpenness.Gui.Controls.WorkbenchLogView)form.FindName("ActivityLog")).LogText="09:41:02   配置已载入 · tia-portal-vm\n09:41:03   已检测到安装路径（注册表）\n09:41:03   客户端扫描 · 已检测到 3 个\n09:42:17   远程端点已配置\n09:42:40   两端配置已保存\n09:43:05   测试 · HTTP 正常 · MCP 就绪\n09:43:05   状态 · 连接正常";
                     ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 条记录";
                     form.CapturePage(Path.Combine(capture,"configurator-zh-dark.png"),0);

@@ -64,7 +64,7 @@ public sealed partial class UnifiedDesktopTests
             using var trace = new BindingPathTests.BindingTrace();
             var previous = ThemeManager.Current.Theme;
             ThemeManager.Current.Theme = theme;
-            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false);
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, toastClock: () => TimeSpan.Zero);
             try
             {
                 window.ShowConfiguration(false);
@@ -194,7 +194,7 @@ public sealed partial class UnifiedDesktopTests
         {
             bool saved = App.Settings.LeftPaneOpen;
             App.Settings.LeftPaneOpen = false;
-            var window = new MainWindow(ProjectPageTestSupport.Model(), false) { Width = 1024, Height = 640 };
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, toastClock: () => TimeSpan.Zero) { Width = 1024, Height = 640 };
             try
             {
                 WpfContext.ShowWindow(window); window.Navigate(page); WpfContext.Drain();
@@ -226,9 +226,9 @@ public sealed partial class UnifiedDesktopTests
                 }
                 if (page == "Settings") Assert.Same(list.SelectedItem, Keyboard.FocusedElement);
                 else Assert.Same(tree, Keyboard.FocusedElement);
-                var escape = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(pane), 0, Key.Escape)
-                    { RoutedEvent = Keyboard.PreviewKeyDownEvent };
-                ((UIElement)Keyboard.FocusedElement).RaiseEvent(escape);
+                window.ShowToast(ViewModels.ToastKind.Info, LocalizedText.Literal("fixture"), "flyout");
+                var escape = WorkbenchToastTests.PressEscape((UIElement)Keyboard.FocusedElement);
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
                 Assert.True(escape.Handled);
                 Assert.Equal(Visibility.Collapsed, pane.Visibility);
                 Assert.Same(toggle, Keyboard.FocusedElement);

@@ -118,7 +118,7 @@
                 <WrapPanel>
                   <Button AutomationProperties.Name="{l:Tr Primer.ReadStatus}" Content="{l:Tr Primer.ReadStatus}"
                     Command="{Binding VersionControl.VcRefresh}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-                  <Button AutomationProperties.Name="{l:Tr Pages.GitTools}" Content="{l:Tr Pages.GitTools}" Click="OnGitTools"
+                  <Button x:Name="GitToolsButton" AutomationProperties.Name="{l:Tr Pages.GitTools}" Content="{l:Tr Pages.GitTools}" Click="OnGitTools"
                     Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
                   <Button AutomationProperties.Name="{l:Tr Pages.Options}" Content="{l:Tr Pages.Options}" Click="OnWorkspaceOptions"
                     Style="{StaticResource Primer.Quiet}"/>

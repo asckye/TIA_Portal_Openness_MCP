@@ -74,7 +74,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
                 PlcTags = tags;
                 TagCount = tags.Count;
                 Set(ref _tagStatus, tags.Count == 0 ? LocalizedText.Key("Project.EmptyTags") : LocalizedText.Empty, nameof(TagStatus));
-                _activity.SetStatus("Project.TagsRead", tags.Count);
+                _activity.SetStatus("Project.TagsRead", kind: null, tags.Count);
             }
             catch (Exception error)
             {
@@ -289,7 +289,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             FocusedBlock = focusedPath == null ? null : Blocks.FirstOrDefault(row => row.Path == focusedPath);
             LoadedDeviceId = deviceId;
             RebuildTree();
-            _activity.SetStatus("Status.BlocksIn", blocks.Count, deviceId);
+            _activity.SetStatus("Status.BlocksIn", kind: null, blocks.Count, deviceId);
         }, deviceId);
     }
 
@@ -318,12 +318,12 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
 
         if (result.Failed > 0)
         {
-            _activity.SetStatus("Status.ExportedFailed",
+            _activity.SetStatus("Status.ExportedFailed", ToastKind.Error,
                 result.Succeeded, result.Requested, result.OutputDirectory, result.Failed);
         }
         else
         {
-            _activity.SetStatus("Status.Exported", result.Succeeded, result.Requested, result.OutputDirectory);
+            _activity.SetStatus("Status.Exported", ToastKind.Success, result.Succeeded, result.Requested, result.OutputDirectory);
         }
 
         _activity.AppendStatus();
@@ -349,7 +349,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             _activity.AppendLocalized("Log.Failed", item.FilePath, item.Error);
         }
 
-        _activity.SetStatus("Status.Imported", result.Succeeded, result.Requested);
+        _activity.SetStatus("Status.Imported", result.Succeeded < result.Requested ? ToastKind.Error : ToastKind.Success, result.Succeeded, result.Requested);
         _activity.AppendStatus();
         await RefreshBlocksAsync();
     });
@@ -366,7 +366,8 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
                     : WorkbenchActivity.Severity.Warning);
         }
 
-        _activity.SetStatus("Status.CompileResult",
+        _activity.SetStatus("Status.CompileResult", result.ErrorCount > 0 || result.State == "Error" ? ToastKind.Error
+            : result.WarningCount > 0 || result.State == "Warning" ? ToastKind.Warning : ToastKind.Success,
             result.State, result.ErrorCount, result.WarningCount,
             result.Duration.TotalSeconds.ToString("F1", CultureInfo.CurrentCulture));
 
@@ -385,7 +386,9 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             foreach (var finding in group) _activity.Append($"    [{finding.Severity}] {finding.Target}: {finding.Message}");
         }
 
-        _activity.SetStatus("Status.InspectResult", report.Findings.Count, report.BlocksScanned);
+        var severity = report.Findings.Any(f => f.Severity == Contracts.Models.CheckStatus.Fail) ? ToastKind.Error
+            : report.Findings.Any(f => f.Severity == Contracts.Models.CheckStatus.Warn) ? ToastKind.Warning : ToastKind.Success;
+        _activity.SetStatus("Status.InspectResult", severity, report.Findings.Count, report.BlocksScanned);
         _activity.AppendStatus();
     });
 
@@ -399,7 +402,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         }
 
         await _client.SaveProjectAsync();
-        _activity.SetStatus("Status.ProjectSaved");
+        _activity.SetStatus("Status.ProjectSaved", ToastKind.Success);
         _activity.AppendStatus();
     });
 

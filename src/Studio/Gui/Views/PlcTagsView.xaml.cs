@@ -64,14 +64,20 @@ public partial class PlcTagsView : UserControl
     private void OnCsv(object sender, RoutedEventArgs e)
     {
         var dialog = new SaveFileDialog { FileName = "plc-tags.csv", Filter = "CSV (*.csv)|*.csv", Title = Loc.Current["Project.ExportCsv"] };
-        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        if (dialog.ShowDialog(Window.GetWindow(this)) == true) SaveCsv(dialog.FileName);
+    }
+
+    internal void SaveCsv(string path)
+    {
         try
         {
-            using var writer = new StreamWriter(dialog.FileName, false, new UTF8Encoding(true));
-            WriteCsv(writer, TagRows.Items.Cast<TagInfo>());
+            using (var writer = new StreamWriter(path, false, new UTF8Encoding(true)))
+                WriteCsv(writer, TagRows.Items.Cast<TagInfo>());
+            ((MainViewModel)DataContext).Activity.Notify(ToastKind.Success, LocalizedText.Key("Toast.Exported", path), "tag-export");
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
+            ((MainViewModel)DataContext).Activity.Notify(ToastKind.Error, LocalizedText.Literal(error.Message), "tag-export");
             ((MainViewModel)DataContext).Activity.AppendLocalized("Log.Error", error.Message);
         }
     }

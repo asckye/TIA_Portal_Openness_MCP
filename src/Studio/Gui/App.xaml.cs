@@ -139,9 +139,13 @@ public partial class App : Application
             TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaOpenness.crash", logError);
         }
 
-        MessageBox.Show(
-            error.Message + System.Environment.NewLine + System.Environment.NewLine +
-            details,
-            Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+        PresentUiError(error.Message + System.Environment.NewLine + System.Environment.NewLine + details);
+    }
+
+    internal static void PresentUiError(string message)
+    {
+        if (Current?.MainWindow is MainWindow window && !window.ToastHostClosed)
+            window.ShowToast(ViewModels.ToastKind.Error, LocalizedText.Literal(message), "dispatcher");
+        else MessageBox.Show(message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
     }
 }

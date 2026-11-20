@@ -34,7 +34,7 @@
             Style="{StaticResource Primer.IdeSearch}" Tag="{l:Tr Pages.LogSearch}" Width="180" Height="28" TextChanged="OnSearch" Margin="0,0,8,0"/>
           <ToggleButton x:Name="FollowLatest" Content="{l:Tr Calls.Follow}" AutomationProperties.Name="{l:Tr Calls.Follow}"
             IsChecked="True" Style="{StaticResource Primer.IdeToolToggle}" Click="OnFollow"/>
-          <Button Content="{l:Tr Feature.Copy}" AutomationProperties.Name="{l:Tr Pages.CopyLog}" Click="OnCopyLog"
+          <Button x:Name="CopyLogButton" Content="{l:Tr Feature.Copy}" AutomationProperties.Name="{l:Tr Pages.CopyLog}" Click="OnCopyLog"
             Style="{StaticResource Primer.IdeToolButton}" Margin="4,0"/>
           <Button x:Name="ClearLogButton" Content="{l:Tr Pages.ClearLog}" AutomationProperties.Name="{l:Tr Pages.ClearLog}" Click="OnClearLog"
             Style="{StaticResource Primer.IdeToolButton}" ContentTemplate="{StaticResource Primer.CommandText}" Margin="0,0,8,0"/>
@@ -55,7 +55,15 @@
         <TextBlock x:Name="StoragePath" TextAlignment="Right" Style="{StaticResource Primer.Mono.textFaint}" VerticalAlignment="Center"/>
       </DockPanel>
     </Border>
-    <StackPanel x:Name="DiagnosticStrip" DockPanel.Dock="Top">
+    <DockPanel x:Name="MessageDetails" DockPanel.Dock="Top" Visibility="Collapsed" Margin="14,6">
+      <Button DockPanel.Dock="Right" Content="×" AutomationProperties.Name="{l:Tr Access.Dismiss}" Click="OnCloseMessage"
+        Style="{StaticResource Primer.IdeToolButton}"/>
+      <TextBlock x:Name="MessageDetailsLabel" DockPanel.Dock="Top" Text="{l:Tr Toast.Details}"
+        Foreground="{DynamicResource Primer.textMuted}"/>
+      <TextBox x:Name="MessageText" AutomationProperties.LabeledBy="{Binding ElementName=MessageDetailsLabel}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="160" VerticalScrollBarVisibility="Auto"
+        AutomationProperties.Name="{l:Tr Toast.Details}" Style="{StaticResource Primer.Input}"/>
+    </DockPanel>
+    <StackPanel x:Name="DiagnosticStrip" DockPanel.Dock="Top" AutomationProperties.Name="{l:Tr Shell.Diagnostics}">
       <Border Style="{StaticResource Primer.Workbench.DiagnosticStrip}" Visibility="{Binding DiagnosticRunning, Converter={StaticResource BoolToVisibility}}">
         <StackPanel>
           <DockPanel>

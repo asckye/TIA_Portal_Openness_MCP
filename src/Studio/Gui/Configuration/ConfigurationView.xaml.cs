@@ -17,6 +17,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Automation;
+using TiaOpenness.Gui;
+using TiaOpenness.Gui.ViewModels;
 using TiaOpenness.Gui.Views;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -105,8 +107,8 @@ namespace TiaMcpConfigurator
             InitializeClients();
             RemoteNav.Checked += delegate { InstallDetails.IsExpanded = true; Mode(true); };
             LocalNav.Checked += delegate { InstallDetails.IsExpanded = false; Mode(false); };
-            Find<TextBox>("ServerAddress").TextChanged += delegate { UpdateLink(); };
-            Find<TextBox>("ServerPort").TextChanged += delegate { UpdateLink(); };
+            ServerAddress.TextChanged += OnEndpointChanged;
+            ServerPort.TextChanged += OnEndpointChanged;
             Click("BrowseTia", delegate {
                 using (var dialog = new System.Windows.Forms.FolderBrowserDialog {
                         Description = Loc.Current.T("Config.BrowseTiaDescription", SelectedVersion), SelectedPath = Text("TiaPath") })
@@ -119,9 +121,13 @@ namespace TiaMcpConfigurator
             ClickAsync("StopServer", OnStopServer);
             ClickAsync("Network", OnNetwork);
             ClickAsync("TestClient", OnTestClient);
-            Click("ClearLog", delegate { while (pendingLog.TryDequeue(out _)) { } activityLog = ""; ActivityLog.LogText = ""; logEntries = 0; UpdateLogCount();
-                });
-            Click("CheckUpdate", async delegate { await OnCheckUpdate(true); });
+            Click("ClearLog", delegate
+            {
+                while (pendingLog.TryDequeue(out _)) { }
+                activityLog = ""; ActivityLog.LogText = ""; logEntries = 0; UpdateLogCount();
+                Notify(ToastKind.Success, LocalizedText.Key("Toast.Cleared"), "configuration-log");
+            });
+            ClickAsync("CheckUpdate", () => OnCheckUpdate(true));
             Click("RunUpdate", OnRunUpdate);
             Click("OpenReleases", delegate {
                     Process
@@ -271,13 +277,9 @@ namespace TiaMcpConfigurator
 
         private void UpdateLastTest()
         {
-            var note = Find<TextBlock>("LastTest");
-            note.ToolTip = Loc.Current.T("Config.LastTest", lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Config.TestNotRun"]);
-            note.Inlines.Clear();
-            var label = new System.Windows.Documents.Run(Loc.Current.T("Config.LastTest", "")) { FontWeight = FontWeights.SemiBold };
-            label.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "Primer.noteAccent");
-            note.Inlines.Add(label);
-            note.Inlines.Add(lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Mcp.TestNotRun"]);
+            TestClient.ToolTip = Loc.Current.T("Config.LastTest", lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Config.TestNotRun"]);
+            AutomationProperties.SetHelpText(TestClient, Loc.Current.T("Config.LastTest",
+                lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Mcp.TestNotRun"]));
         }
         private void UpdateLogCount()
         { Find<TextBlock>("LogCount").Text = Loc.Current.T(logEntries == 1 ? "Config.Entry" : "Config.Entries", logEntries); }
@@ -286,7 +288,10 @@ namespace TiaMcpConfigurator
         private void ClickAsync(string name, Func<Task> action) {
             Find<Button>(name).Click += async (_, _) => { try { await action(); } catch (Exception ex) { Report(ex); } }; }
         private void Guard(Action action) { try { action(); } catch (Exception ex) { Report(ex); } }
-        private void SetStatus(string key, params object[] args) { SetLocalizedText("Status", TextBlock.TextProperty, key, args); }
+        internal void SetStatus(string key, params object[] args) => Notify(
+            key is "Config.Testing" or "Config.ConfiguringNetwork" ? ToastKind.Info : ToastKind.Success, LocalizedText.Key(key, args));
+        private void Notify(ToastKind kind, LocalizedText text, string source = "configuration", LocalizedText title = default)
+            => (Window as MainWindow)?.ShowToast(kind, text, source, title: title);
         private void ServiceStatus(bool active)
         {
             UpdateLink();
@@ -336,6 +341,28 @@ namespace TiaMcpConfigurator
             ActivityLog.LogText = activityLog;
             logEntries = activityLog.Count(c => c == '\n'); UpdateLogCount();
         }
+        private void OnEndpointChanged(object sender, TextChangedEventArgs e)
+        {
+            EndpointError.Text = "";
+            EndpointError.Visibility = Visibility.Collapsed;
+            UpdateLink();
+        }
+
+        private string ReadEndpoint(out int port)
+        {
+            try
+            {
+                port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture);
+                return ConfigCore.Prefix(Text("ServerAddress"), port);
+            }
+            catch (Exception error) when (error is FormatException or OverflowException or ArgumentException)
+            {
+                EndpointError.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding("Config.InvalidEndpoint"));
+                EndpointError.Visibility = Visibility.Visible;
+                throw;
+            }
+        }
+
         private void Report(Exception ex)
         {
             string message = ex.GetBaseException().Message;
@@ -348,21 +375,31 @@ namespace TiaMcpConfigurator
                 message = Loc.Current.T("Config.ConnectionFailed", message);
                 if (response != null) response.Close();
             }
-            SetStatus("Config.NeedsAttention"); Append(message); TiaOpenness.Gui.Controls.WorkbenchMessageBox
-                .Show(Window, message, Loc.Current["Config.NeedsAttention"], MessageBoxButton.OK, MessageBoxImage.Warning);
+            Append(message);
+            Notify(ToastKind.Error, LocalizedText.Literal(message), title: LocalizedText.Key("Config.NeedsAttention"));
         }
         // 自动探测安装目录：环境变量 → 注册表 → 默认目录（与引擎同一顺序）。explicit=false 时只在探测成功才覆盖文本框，找不到保持原值不打扰。
         private void DetectTiaPath(bool explicitRequest)
         {
             if (preview != null) return;
-            var found = ConfigCore.DetectTia(SelectedVersion);
+            PresentDetection(ConfigCore.DetectTia(SelectedVersion), explicitRequest);
+        }
+
+        internal void PresentDetection(KeyValuePair<string, string> found, bool explicitRequest)
+        {
             tiaDetected = found.Key != null;
             SetTileDetection(SelectedReleaseTile, tiaDetected);
             UpdateDetectionLabel();
             Find<TextBlock>("DetectionSource").ToolTip = found.Value;
             if (found.Key != null) {
                 Find<TextBox>("TiaPath").Text = found.Key; Append(Loc.Current.T("Config.TiaDetected", SelectedVersion, found.Value, found.Key)); }
-            else if (explicitRequest) Append(Loc.Current.T("Config.TiaNotDetected", found.Value, SelectedVersion));
+            if (explicitRequest)
+            {
+                var text = found.Key != null ? LocalizedText.Key("Config.TiaDetected", SelectedVersion, found.Value, found.Key)
+                    : LocalizedText.Key("Config.TiaNotDetected", found.Value, SelectedVersion);
+                if (found.Key == null) Append(text.Resolve());
+                Notify(found.Key == null ? ToastKind.Warning : ToastKind.Success, text, "detect");
+            }
         }
         private void SetBusy(bool value)
         {

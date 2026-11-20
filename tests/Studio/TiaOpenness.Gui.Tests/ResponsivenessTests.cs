@@ -50,6 +50,54 @@ public sealed class ResponsivenessTests(WpfContext wpf)
     }
 
     [Fact]
+    public async Task Hidden_journal_delivers_completed_calls_without_loading_connection_settings_until_activated()
+    {
+        string directory = Scratch(), config = Path.Combine(directory, "config");
+        Directory.CreateDirectory(config);
+        using var journal = new CallJournalService("21", directory, config);
+        string path = Path.Combine(directory, "calls-42.jsonl");
+        var started = DateTimeOffset.UtcNow;
+        string Row(bool done) => JsonSerializer.Serialize(new
+        {
+            callProjection = 1, mcpProcessId = 42, id = "fixture", requestId = "fixture", tool = "ReadFixture", host = "engine", releaseKey = "21",
+            actor = "mcp", startedUtc = started, utc = DateTimeOffset.UtcNow, phase = done ? "AFTER" : "BEFORE", ok = done,
+            outcome = done ? "succeeded" : "", execution = done ? "read-only" : "", completeness = done ? "complete" : ""
+        }) + "\n";
+        File.WriteAllText(path, Row(false));
+        journal.Refresh();
+        Assert.Equal(CallResult.Executing, Assert.Single(journal.Calls).Result);
+        var completed = new TaskCompletionSource<CallRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var window = wpf.Run(() =>
+        {
+            var shell = new MainWindow(ProjectPageTestSupport.Model(connected: false), false);
+            shell.ConfigureFeaturePages(journal, new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment());
+            shell.Navigate("Log");
+            shell.Features.CallCompleted += row => completed.TrySetResult(row);
+            return shell;
+        });
+        try
+        {
+            File.WriteAllText(Path.Combine(config, "http-v21.json"), "{\"Address\":\"127.0.0.1\",\"Port\":8123}");
+            File.AppendAllText(path, Row(true));
+            var record = await completed.Task.WaitAsync(TestDeadlines.Hang);
+            Assert.Equal(CallResult.Success, record.Result);
+            Assert.Empty(journal.Connection.Address);
+            wpf.Run(() =>
+            {
+                Assert.Equal("Log", window.CurrentPage);
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                Assert.Contains(record.Tool, window.ToastMessage.Text);
+                Assert.Same(window.FindResource("Primer.ok"), window.ToastDot.Fill);
+                window.Navigate("Calls");
+            });
+            using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
+            while (journal.Connection.Address.Length == 0) await Task.Delay(25, deadline.Token);
+            Assert.Contains("8123", journal.Connection.Address);
+        }
+        finally { wpf.Run(window.Close); }
+    }
+
+    [Fact]
     public void Bursts_coalesce_and_hidden_pages_do_not_project_calls()
     {
         wpf.Run(() =>

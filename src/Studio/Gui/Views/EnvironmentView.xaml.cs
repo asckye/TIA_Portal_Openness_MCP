@@ -31,6 +31,6 @@ public partial class EnvironmentView : UserControl
             if (window.CurrentPage == "Mcp") window.Configuration?.RepairRemoteClients();
             return;
         }
-        Model.Run(() => Model.Environment.Fix(row.Check.Id));
+        Model.Run(() => Model.Environment.Fix(row.Check.Id), kind: ToastKind.Info);
     }
 }

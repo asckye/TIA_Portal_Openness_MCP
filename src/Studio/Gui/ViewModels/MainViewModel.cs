@@ -135,7 +135,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
     {
         await Engineering.LoadDevicesAsync(projectName);
         // Populate VCI up front, including its unsupported state, after loading the blocks.
-        if (_client is IStudioClient) await VersionControl.VcRefreshAsync();
+        if (_client is IStudioClient) await VersionControl.RefreshWorkspaceAsync(requested: false);
     }
 
     private void OnSessionChanged(object? sender, PropertyChangedEventArgs e)

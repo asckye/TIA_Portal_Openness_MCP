@@ -13,9 +13,14 @@ internal sealed class ChangeMonitor : IDisposable
     private readonly FileSystemWatcher[] _watchers;
     private readonly Timer _defer;
     private readonly Action _refresh;
+    private readonly Action? _idleCheck;
+    private const int IdleIntervalMs = 5000;
     private bool _active = true, _disposed, _running, _pending;
-    internal ChangeMonitor(Action refresh, params string[] paths)
+    internal ChangeMonitor(Action refresh, params string[] paths) : this(refresh, null, paths) { }
+
+    internal ChangeMonitor(Action refresh, Action? idleCheck, params string[] paths)
     {
+        _idleCheck = idleCheck;
         _refresh = refresh;
         _defer = new Timer(_ => Run(), null, Timeout.Infinite, Timeout.Infinite);
         _watchers = paths.Select(Path.GetFullPath).Select(path =>
@@ -55,17 +60,29 @@ internal sealed class ChangeMonitor : IDisposable
             if (_disposed || _active == active) return;
             _active = active;
             foreach (var watcher in _watchers) watcher.EnableRaisingEvents = active;
-            if (active) { _pending = true; _defer.Change(1, Timeout.Infinite); } else _defer.Change(Timeout.Infinite, Timeout.Infinite);
+            if (active) { _pending = true; _defer.Change(1, Timeout.Infinite); }
+            else _defer.Change(_idleCheck == null ? Timeout.Infinite : IdleIntervalMs, Timeout.Infinite);
         }
     }
     private void Run()
     {
-        lock (_sync) { if (_disposed || !_active || _running) return; _running = true; _pending = false; }
-        try { _refresh(); }
+        Action? work;
+        lock (_sync)
+        {
+            work = _active ? _refresh : _idleCheck;
+            if (_disposed || _running || work == null) return;
+            _running = true; _pending = false;
+        }
+        try { work(); }
         catch (Exception ex) { Trace.TraceWarning("Workbench refresh unavailable: " + ex.GetType().Name); }
         finally
         {
-            lock (_sync) { _running = false; if (!_disposed && _active && _pending) _defer.Change(75, Timeout.Infinite); }
+            lock (_sync)
+            {
+                _running = false;
+                if (!_disposed && _active && _pending) _defer.Change(75, Timeout.Infinite);
+                if (!_disposed && !_active && _idleCheck != null) _defer.Change(IdleIntervalMs, Timeout.Infinite);
+            }
         }
     }
     public void Dispose()

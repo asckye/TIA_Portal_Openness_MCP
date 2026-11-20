@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System;
+using TiaOpenness.Gui.ViewModels;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -43,7 +44,7 @@ namespace TiaMcpConfigurator
         }
         private ServerSettings Settings()
         {
-            int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); ConfigCore.Prefix(Text("ServerAddress"), port);
+            ReadEndpoint(out int port);
             ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion);
             return new ServerSettings {
                 Version = TiaVersionCatalog.Get(SelectedVersion).MajorVersion, ReleaseKey = SelectedVersion, Address = Text("ServerAddress"), Port = port,
@@ -55,8 +56,7 @@ namespace TiaMcpConfigurator
             if (busy) return;
             try
             {
-                string ip = Text("ServerAddress"); int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); ConfigCore
-                    .Prefix(ip, port);
+                string ip = Text("ServerAddress"); ReadEndpoint(out int port);
                 if (TiaOpenness.Gui.Controls.WorkbenchMessageBox
                         .Show(Window, Loc.Current["Config.NetworkPrompt"], Loc.Current["Config.Network"], MessageBoxButton.OKCancel, MessageBoxImage
                             .Information) != MessageBoxResult
@@ -99,7 +99,10 @@ namespace TiaMcpConfigurator
                 if (!closing) Window.Dispatcher
                     .BeginInvoke(new Action(delegate {
                             if (closing) return; Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false;
-                            SetReleaseEnabled(CanUpdate?.Invoke() ?? true); SetStatus("Config.ServiceStopped"); ServiceStatus(false);
+                            SetReleaseEnabled(CanUpdate?.Invoke() ?? true);
+                            if (exitCode is not null and not 0) Notify(ToastKind.Error, LocalizedText.Key("Config.ServiceExited", exitCode));
+                            else SetStatus("Config.ServiceStopped");
+                            ServiceStatus(false);
                         }));
             };
             try { if (!process.Start()) throw new InvalidOperationException(Loc.Current["Config.ServiceNotStarted"]); }
@@ -140,7 +143,12 @@ namespace TiaMcpConfigurator
         private async void OnClosing(object sender, CancelEventArgs e)
         {
             if (e.Cancel || closing) return;
-            if (busy) { e.Cancel = true; Append(Loc.Current["Config.WaitBeforeClosing"]); return; }
+            if (busy)
+            {
+                e.Cancel = true;
+                Append(Loc.Current["Config.WaitBeforeClosing"]);
+                Notify(ToastKind.Warning, LocalizedText.Key("Config.WaitBeforeClosing"), "busy"); return;
+            }
             if (server != null && !server.HasExited)
             {
                 e.Cancel = true;

@@ -16,9 +16,11 @@ public partial class MainWindow : Window
 
     public MainWindow() : this(new MainViewModel(MainViewModel.OfflineDemoRequested(System.Environment.GetCommandLineArgs()))) { }
 
-    internal MainWindow(MainViewModel model, bool loadExistingConfiguration = true, Services.Stubs.IApprovalService? approvals = null, Services.Stubs
-            .IDiagnosticBundleService? diagnostics = null, TiaMcpConfigurator.ConfigurationPreview? preview = null)
+    internal MainWindow(MainViewModel model, bool loadExistingConfiguration = true,
+        Services.Stubs.IApprovalService? approvals = null, Services.Stubs.IDiagnosticBundleService? diagnostics = null,
+        TiaMcpConfigurator.ConfigurationPreview? preview = null, Func<TimeSpan>? toastClock = null)
     {
+        _toasts = new Services.ToastQueue(toastClock ?? (() => System.Diagnostics.Stopwatch.GetElapsedTime(0)));
         _preview = preview;
         _model = model;
         _loadExistingConfiguration = loadExistingConfiguration;
@@ -26,6 +28,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = _model;
         Root.Tag = new Controls.ResultPresentation(_model);
+        InitializeToast();
         InitializeShell(approvals, diagnostics);
         UpdateMcpStatus();
         Localization.Loc.Current.LanguageChanged += OnMcpLanguageChanged;
@@ -33,11 +36,8 @@ public partial class MainWindow : Window
         {
             if (!_model.Busy) return;
             e.Cancel = true;
-            _approvalToast = null;
-            _featureTitle = Localization.LocalizedText.Key("Shell.BusyTitle");
-            _featureFeedback = Localization.LocalizedText.Key("Shell.BusyClose", _model.Activity.Status);
-            UpdateFeatureToast(ToastKind.Warning);
-            Controls.AccessibleStatus.Announce(ToastTitle);
+            ShowToast(ToastKind.Warning, Localization.LocalizedText.Key("Shell.BusyClose", _model.Activity.Status),
+                "busy", title: Localization.LocalizedText.Key("Shell.BusyTitle"));
         };
         Loaded += async (_, _) => {
             if (!_loadExistingConfiguration) return;
@@ -70,6 +70,7 @@ public partial class MainWindow : Window
         try
         {
             Localization.Loc.Current.LanguageChanged -= OnMcpLanguageChanged;
+            DisposeToast();
             DisposeShell();
             DisposeConfiguration();
             BlocksContent.Dispose();
@@ -186,10 +187,16 @@ public partial class MainWindow : Window
         bool modal = ShellModalOpen;
         if (modal && Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
             && e.Key is Key.O or Key.S or Key.B or Key.K or Key.OemComma or >= Key.D1 and <= Key.D7) e.Handled = true;
-        if (!modal && e.Key == Key.Escape && _leftPaneFlyoutOpen)
-        { CloseLeftPaneFlyout(); e.Handled = true; }
-        else if (!modal && e.Key == Key.Escape && Toast.Visibility == Visibility.Visible)
-        { Toast.Visibility = Visibility.Collapsed; e.Handled = true; }
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Handled || e.Key != Key.Escape || ShellModalOpen) return;
+        if (_leftPaneFlyoutOpen) CloseLeftPaneFlyout();
+        else if (_toasts.Visible != null) _toasts.Dismiss();
+        else return;
+        e.Handled = true;
     }
     private void OnOpenExecuted(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
     {

@@ -154,7 +154,9 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     /// Loads the VCI panel. If the project exposes no service, the panel disables itself
     /// rather than offering buttons that can only fail.
     /// </summary>
-    public async Task VcRefreshAsync() => await _activity.Guarded("Status.ReadingVc", async () =>
+    public Task VcRefreshAsync() => RefreshWorkspaceAsync(requested: true);
+
+    internal async Task RefreshWorkspaceAsync(bool requested) => await _activity.Guarded("Status.ReadingVc", async () =>
     {
         if (!_client.CanRead) { ClearPresentation(); return; }
         VcSupported = await _client.VcSupportedAsync();
@@ -167,7 +169,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
         if (!VcSupported)
         {
-            _activity.SetStatus("Status.VcUnsupported");
+            _activity.SetStatus("Status.VcUnsupported", requested ? ToastKind.Warning : null);
             _activity.AppendStatus();
             return;
         }
@@ -177,21 +179,19 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
         if (Workspaces.Count == 0)
         {
-            _activity.SetStatus("Status.VcNoWorkspace");
+            _activity.SetStatus("Status.VcNoWorkspace", requested ? ToastKind.Info : null);
             return;
         }
 
-        _activity.SetStatus("Status.VcWorkspaces", Workspaces.Count);
+        _activity.SetStatus("Status.VcWorkspaces", kind: null, Workspaces.Count);
 
         // Load the diff straight away: opening the tab should answer "what changed?" without
         // a second click, and it is read-only.
-        await LoadVcStatusAsync();
+        await LoadVcStatusAsync(requested: false);
     });
 
     /// <summary>
-    /// Loads the selected object's diff. Failures land in the caption rather than as an error
-    /// dialog: no Git, or a workspace folder that is not a repository, is a normal state for
-    /// someone who has not set that up, not something that went wrong.
+    /// Loads the selected object's diff. The caption describes the selected file, including an unavailable diff.
     /// </summary>
     private async Task LoadVcDiffAsync()
     {
@@ -225,7 +225,9 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            if (item == SelectedVcItem && workspace == SelectedWorkspace) VcDiffCaption = ex.Message;
+            if (item != SelectedVcItem || workspace != SelectedWorkspace) return;
+            VcDiffCaption = item.Name;
+            _activity.Notify(ToastKind.Error, LocalizedText.Literal(ex.Message), "workspace-diff");
         }
         finally
         {
@@ -233,7 +235,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task LoadVcStatusAsync()
+    private async Task LoadVcStatusAsync(bool requested)
     {
         var workspace = SelectedWorkspace;
         HasStatus = false;
@@ -249,17 +251,17 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         // changed", and answering it should not need a second click.
         SelectedVcItem = VcStatusItems.FirstOrDefault();
 
-        if (report.InSync) _activity.SetStatus("Status.VcInSync", report.Total);
-        else _activity.SetStatus("Status.VcDiffer", report.Total, report.Differing);
+        if (report.InSync) _activity.SetStatus("Status.VcInSync", requested ? ToastKind.Info : null, report.Total);
+        else _activity.SetStatus("Status.VcDiffer", requested ? ToastKind.Info : null, report.Total, report.Differing);
     }
 
     private async Task VcCreateAsync() => await _activity.Guarded("Status.CreatingWorkspace", async () =>
     {
         var workspace = await _client.VcCreateWorkspaceAsync(NewWorkspaceName, NewWorkspaceFolder);
         _activity.AppendLocalized("Log.WorkspaceCreated", workspace.Name, workspace.RootPath);
-        await VcRefreshAsync();
+        await RefreshWorkspaceAsync(requested: false);
         SelectedWorkspace = Workspaces.FirstOrDefault(w => w.Name == workspace.Name);
-        _activity.SetStatus("Status.VcCreated");
+        _activity.SetStatus("Status.VcCreated", ToastKind.Success);
     });
 
     private async Task VcMapAsync() => await _activity.Guarded("Status.MappingProject", async () =>
@@ -277,17 +279,19 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         }
         else
         {
-            _activity.SetStatus("Status.VcMapApplied",
+            _activity.SetStatus("Status.VcMapApplied", result.Failed > 0 ? ToastKind.Error : ToastKind.Success,
                 result.Mapped, result.AlreadyMapped, result.Unsupported, result.Failed);
         }
 
         _activity.AppendStatus();
-        if (!result.DryRun) await VcStatusAsync();
+        if (!result.DryRun) await CompareWorkspaceAsync(requested: false);
     });
 
-    private async Task VcStatusAsync() => await _activity.Guarded("Status.ComparingWorkspace", async () =>
+    private Task VcStatusAsync() => CompareWorkspaceAsync(requested: true);
+
+    private async Task CompareWorkspaceAsync(bool requested) => await _activity.Guarded("Status.ComparingWorkspace", async () =>
     {
-        await LoadVcStatusAsync();
+        await LoadVcStatusAsync(requested);
         _activity.AppendStatus();
     });
 
@@ -319,7 +323,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         }
         else
         {
-            _activity.SetStatus("Status.VcSyncApplied", result.Synchronized, result.Failed, result.SkippedEqual);
+            _activity.SetStatus("Status.VcSyncApplied", result.Failed > 0 ? ToastKind.Error : ToastKind.Success,
+                result.Synchronized, result.Failed, result.SkippedEqual);
         }
 
         _activity.AppendStatus();
@@ -329,7 +334,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             _activity.Append(direction == SyncDirection.ProjectToWorkspace
                 ? Loc.Current.T("Log.CommitHint", result.RootPath)
                 : Loc.Current["Log.PullHint"]);
-            await VcStatusAsync();
+            await CompareWorkspaceAsync(requested: false);
         }
     }, direction);
 

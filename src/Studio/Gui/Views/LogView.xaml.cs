@@ -120,18 +120,16 @@ public partial class LogView : UserControl
             if (FollowLatest.IsChecked == true && LogList.Items.Count > 0) LogList.ScrollIntoView(LogList.Items[^1]);
         }));
     }
+    internal void ShowMessage(string text)
+    {
+        MessageText.Text = text;
+        MessageDetails.Visibility = Visibility.Visible;
+    }
+    private void OnCloseMessage(object sender, RoutedEventArgs e) => MessageDetails.Visibility = Visibility.Collapsed;
     private void OnCopyLog(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            Clipboard.SetText(string.Join("\n", LogRows?.Cast<ResultPresentation.LogRow>()
-                .Select(row => row.Time + " " + row.Message) ?? []));
-        }
-        catch (System.Runtime.InteropServices.COMException) /* swallow(ui): another process can hold the clipboard; an unsuccessful log copy does not interrupt the workbench */
-        {
-            // The clipboard is a shared OS resource and another process can hold it open.
-            // Failing to copy a log is not worth an error dialog.
-        }
+        _features?.Copy(string.Join("\n", LogRows?.Cast<ResultPresentation.LogRow>()
+            .Select(row => row.Time + " " + row.Message) ?? []));
     }
 
     internal Func<bool>? ConfirmClear { get; set; }
@@ -139,7 +137,11 @@ public partial class LogView : UserControl
     {
         bool confirmed = ConfirmClear?.Invoke() ?? WorkbenchMessageBox.Show(Window.GetWindow(this),
             Loc.Current["Pages.ClearLogPrompt"], Loc.Current["Pages.ClearLog"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK;
-        if (confirmed) Model.Activity.ClearLog();
+        if (confirmed)
+        {
+            Model.Activity.ClearLog();
+            Model.Activity.Notify(ToastKind.Success, LocalizedText.Key("Toast.Cleared"), "clear-log");
+        }
     }
     private void OnGenerate(object sender, RoutedEventArgs e) => _features?.Export();
     private void OnOpenFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Diagnostics.OpenFolder); }

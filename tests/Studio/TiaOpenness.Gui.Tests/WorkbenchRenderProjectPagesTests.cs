@@ -296,7 +296,18 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         window.Dispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
                         host.UpdateLayout();
                         Assert.True(blocks.Atlas.Visible);
-                        var bar = (Border)blocks.FindName("AtlasBar");
+                        var bar = state.Item7 == "failed" ? window.Toast : (Border)blocks.FindName("AtlasBar");
+                        if (state.Item7 == "failed")
+                        {
+                            Assert.Equal(Visibility.Collapsed, blocks.AtlasBar.Visibility);
+                            Assert.Contains(blocks.Atlas.Detail, window.ToastMessage.Text);
+                            Assert.Same(window.FindResource("Ant.colorError"), window.ToastDot.Fill);
+                        }
+                        if (state.Item7 == "done")
+                        {
+                            Assert.Equal(Loc.Current["Pages.AtlasDone"], window.ToastMessage.Text);
+                            Assert.Same(window.FindResource("Primer.ok"), window.ToastDot.Fill);
+                        }
                         Assert.Equal(Visibility.Visible, bar.Visibility);
                         Assert.True(bar.ActualHeight > 0);
                     }

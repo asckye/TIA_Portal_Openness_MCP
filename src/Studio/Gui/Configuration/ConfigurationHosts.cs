@@ -98,6 +98,8 @@ public sealed partial class ConfigurationView
                 using var process = await HostLifecycleService.Restart(host, start, confirmForce: ConfirmForce);
             }
             else await HostLifecycleService.Stop(host, confirmForce: ConfirmForce);
+            if (restart) SetStatus("Hosts.Restarted", host.Display);
+            else SetStatus("Hosts.Stopped", host.Display);
             await RefreshHostListAsync();
         }
         finally { SetBusy(false); UpdateHostActions(); }

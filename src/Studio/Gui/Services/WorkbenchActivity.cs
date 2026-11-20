@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using TiaOpenness.Gui.Common;
+using TiaOpenness.Gui.ViewModels;
 using TiaOpenness.Gui.Localization;
 
 namespace TiaOpenness.Gui.Services;
@@ -29,6 +30,7 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
     private string _log = string.Empty;
     private bool _busy;
     private int _activeOperations;
+    private readonly AsyncLocal<string?> _operationSource = new();
     private int _progressValue;
     private int _progressMax;
 
@@ -36,6 +38,10 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public bool Busy { get => _busy; private set { if (Set(ref _busy, value)) Raise(nameof(ProgressIndeterminate)); } }
 
+    private LocalizedText _progressLabel;
+    public string ProgressLabel => _progressLabel.Resolve();
+    public event EventHandler<FeatureFeedback>? Feedback;
+    public void Notify(ToastKind kind, LocalizedText text, string source) => Feedback?.Invoke(this, new(text, kind, source));
     public string Status => _status.Resolve();
 
     public string Log
@@ -65,10 +71,16 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public void SetStatus(string key, params object?[] args)
     {
+        SetStatus(key, ToastKind.Info, args);
+    }
+
+    public void SetStatus(string key, ToastKind? kind, params object?[] args)
+    {
         _statusKey = key;
         _statusArgs = (object?[])args.Clone();
         _status = LocalizedText.Key(key, args);
         Raise(nameof(Status));
+        if (kind.HasValue) Feedback?.Invoke(this, new(_status, kind.Value, _operationSource.Value ?? key));
     }
 
     /// <summary>For text that is already final - an exception message from the bridge.</summary>
@@ -81,9 +93,12 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public async Task Guarded(string workingKey, Func<Task> action, params object?[] workingArgs)
     {
+        var previousSource = _operationSource.Value;
+        _operationSource.Value = workingKey;
         _activeOperations++;
         Busy = true;
-        _status = LocalizedText.Working(workingKey, workingArgs);
+        _progressLabel = _status = LocalizedText.Working(workingKey, workingArgs);
+        Raise(nameof(ProgressLabel));
         Raise(nameof(Status));
 
         try
@@ -93,10 +108,12 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
         catch (Exception ex)
         {
             SetStatusLiteral(ex.Message);
+            Feedback?.Invoke(this, new(_status, ToastKind.Error, workingKey));
             AppendLocalized("Log.Error", ex.Message);
         }
         finally
         {
+            _operationSource.Value = previousSource;
             if (--_activeOperations == 0)
             {
                 ProgressMax = 0;
@@ -112,6 +129,8 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
             ProgressMax = payload.Total;
             ProgressValue = payload.Current;
             SetStatusLiteral($"{payload.Operation} {payload.Current}/{payload.Total}: {payload.Message}");
+            _progressLabel = _status;
+            Raise(nameof(ProgressLabel));
         });
     }
 
@@ -161,7 +180,7 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public void ClearLog() { while (_pendingEntries.TryDequeue(out _)) { } _entries.Clear(); Log = string.Empty; }
 
-    private void OnLanguageChanged(object? sender, EventArgs e) => Raise(nameof(Status));
+    private void OnLanguageChanged(object? sender, EventArgs e) { Raise(nameof(Status)); Raise(nameof(ProgressLabel)); }
 
     public void Dispose() { _disposed = true; Loc.Current.LanguageChanged -= OnLanguageChanged; }
 }

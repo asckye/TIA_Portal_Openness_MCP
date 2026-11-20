@@ -204,8 +204,9 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                     Assert.Equal("First" + Loc.Current["Config.ListSeparator"] + "Second",
                         ((TextBlock)page.FindName("LinkClient")).ToolTip);
                     Assert.Equal(Loc.Current.T("Config.Entries", entries), Text("LogCount"));
-                    Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Mcp.TestNotRun"]), Text("LastTest"));
-                    Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestNotRun"]), ((TextBlock)page.FindName("LastTest")).ToolTip);
+                    Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Mcp.TestNotRun"]),
+                        System.Windows.Automation.AutomationProperties.GetHelpText(page.TestClient));
+                    Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestNotRun"]), page.TestClient.ToolTip);
                     Assert.Equal(Loc.Current[detected ? "Config.Detected" : "Config.NotDetected"], Text("DetectionSource"));
                     Assert.Equal(Loc.Current.T("Config.ClientInstructionsDetected", "First", "first hint", "first evidence") + "\n" +
                         Loc.Current.T("Config.ClientInstructionsNotDetected", "Second", "second hint", "second evidence"), Text("ClientInstructions"));
@@ -226,7 +227,8 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
     {
         wpf.RunWithLanguage(language, () =>
         {
-            var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
+            var elapsed = TimeSpan.Zero;
+            var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false, toastClock: () => elapsed);
             try
             {
                 window.ShowConfiguration(false);
@@ -239,7 +241,10 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 typeof(ConfigurationView).GetMethod("SetStatus", flags)!.Invoke(page, new object[] { "Config.ClientsConfigured", new object[] { 3 } });
                 typeof(ConfigurationView).GetField("lastTestFailed", flags)!.SetValue(page, true);
                 typeof(ConfigurationView).GetField("tiaDetected", flags)!.SetValue(page, true);
-                Assert.Equal(status, ((TextBlock)page.FindName("Status")).Text);
+                Assert.Null(page.FindName("Status"));
+                Assert.Null(page.FindName("LastTest"));
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                Assert.Equal(status, window.ToastMessage.Text);
                 typeof(ConfigurationView).GetMethod("SetLocalizedText", flags)!.Invoke(page, new object[]
                 {
                     "UpdateStateItem", TextBlock.TextProperty, "Config.UpdateAvailable",
@@ -248,8 +253,12 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
 
                 Loc.Current.Language = language == AppLanguage.Chinese ? AppLanguage.English : AppLanguage.Chinese;
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
-                Assert.Equal(Loc.Current.T("Config.ClientsConfigured", 3), ((TextBlock)page.FindName("Status")).Text);
-                Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestFailed"]), TextContent((TextBlock)page.FindName("LastTest")));
+                elapsed = TimeSpan.FromSeconds(3);
+                window.TickToast();
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                Assert.Equal(Loc.Current.T("Config.ClientsConfigured", 3), window.ToastMessage.Text);
+                Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestFailed"]),
+                    System.Windows.Automation.AutomationProperties.GetHelpText(page.TestClient));
                 Assert.Equal(Loc.Current["Config.Detected"], ((TextBlock)page.FindName("DetectionSource")).Text);
                 Assert.Equal(Loc.Current.T("Config.UpdateAvailable", "9.0", Loc.Current.T("Config.UpdateSize", "15.4 MB")),
                     ((TextBlock)((TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent")).FindName("UpdateStateItem")).Text);
@@ -261,7 +270,11 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 Assert.Equal(history, log.LogText);
                 Loc.Current.Language = language;
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
-                Assert.Equal(status, ((TextBlock)page.FindName("Status")).Text);
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                Assert.Equal(status, window.ToastMessage.Text);
+                elapsed = TimeSpan.FromSeconds(4);
+                window.TickToast();
+                Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
                 Assert.Equal(history, log.LogText);
             }
             finally { window.Close(); }

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System;
+using TiaOpenness.Gui.ViewModels;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -60,16 +61,22 @@ namespace TiaMcpConfigurator
             }
             string installed = UpdateCheck.Installed(root);
             if (installed == null) return;
+            await CheckUpdateAsync(explicitRequest, installed, () => UpdateCheck.Latest(installed, UpdateCheck.Repository));
+        }
+
+        internal async Task CheckUpdateAsync(bool explicitRequest, string installed, Func<UpdateInfo> fetch)
+        {
             var check = Find<Button>("CheckUpdate");
             check.IsEnabled = false; SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.CheckingUpdate");
             try
             {
-                var info = await Task.Run(() => UpdateCheck.Latest(installed, UpdateCheck.Repository));
+                var info = await Task.Run(fetch);
                 latest = info;
                 if (info.UpdateAvailable)
                 {
                     var size = info.ZipSizeText.Length > 0 ? LocalizedText.Key("Config.UpdateSize", info.ZipSizeText) : LocalizedText.Empty;
                     SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.UpdateAvailable", info.Latest, size);
+                    if (explicitRequest) Notify(ToastKind.Info, LocalizedText.Key("Config.UpdateAvailable", info.Latest, size), "update");
                     Find<Button>("RunUpdate").Visibility = Visibility.Visible;
                     Find<Button>("RunUpdate").IsEnabled = !UpdateCheck.IsSourceRepository(root);
                     Append(Loc.Current.T("Config.UpdateAvailableLog", installed, info.Latest, size, info.ReleaseUrl));
@@ -79,13 +86,18 @@ namespace TiaMcpConfigurator
                     SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.UpToDate", info.Tag); Find<Button>("RunUpdate").Visibility = Visibility
                         .Collapsed;
                     Find<Button>("RunUpdate").IsEnabled = false;
+                    if (explicitRequest) Notify(ToastKind.Success, LocalizedText.Key("Config.UpToDate", info.Tag), "update");
                     Append(Loc.Current.T("Config.UpToDateLog", installed, info.Source));
                 }
             }
             catch (Exception ex)
             {
                 SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.CannotCheckUpdate", ex.GetBaseException().Message);
-                if (explicitRequest) Append(Loc.Current.T("Config.UpdateCheckFailed", ex.GetBaseException().Message));
+                if (explicitRequest)
+                {
+                    var text = LocalizedText.Key("Config.UpdateCheckFailed", ex.GetBaseException().Message);
+                    Append(text.Resolve()); Notify(ToastKind.Error, text, "update");
+                }
             }
             finally { check.IsEnabled = true; }
         }

@@ -141,7 +141,7 @@
                   </RadioButton>
                 </UniformGrid>
               </ux:PageHeadPanel>
-              <Border x:Name="ServerPane" Style="{StaticResource Primer.Plain}" Margin="0,16,0,0"
+              <Border x:Name="ServerPane" Style="{StaticResource Primer.Plain}" Margin="0,16,0,0" MinHeight="156"
                           Visibility="{Binding IsChecked,ElementName=RemoteNav,Converter={StaticResource BoolToVisibility}}">
                 <StackPanel>
                   <Border Style="{StaticResource Primer.Divider}" Margin="0,0,0,12"/>
@@ -168,13 +168,15 @@
                         <Label x:Name="AccessibleLabel3" Target="{Binding ElementName=ServerAddress}" Content="{l:Tr Access.FieldConfigIpv4}"
                                Style="{StaticResource Primer.FormLabel}"/>
                         <TextBox x:Name="ServerAddress" Style="{StaticResource Primer.MonoInput}" AutomationProperties.Name="{l:Tr Config.Ipv4}"
-                                 AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}"/>
+                                 AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}"
+                                 AutomationProperties.HelpText="{Binding Text, ElementName=EndpointError}"/>
                       </StackPanel>
                       <StackPanel Grid.Column="1" Width="80" Margin="0,0,8,0">
                         <Label x:Name="AccessibleLabel4" Target="{Binding ElementName=ServerPort}" Content="{l:Tr Access.FieldConfigPort}"
                                Style="{StaticResource Primer.FormLabel}"/>
                         <TextBox x:Name="ServerPort" Text="8765" Style="{StaticResource Primer.MonoInput}" AutomationProperties.Name="{l:Tr Config.Port}"
-                                 AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}"/>
+                                 AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}"
+                                 AutomationProperties.HelpText="{Binding Text, ElementName=EndpointError}"/>
                       </StackPanel>
                       <Grid Grid.Column="2" x:Name="ServerActions" HorizontalAlignment="Left" VerticalAlignment="Bottom">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -185,6 +187,8 @@
                       </Grid>
                     </Grid>
                   </DockPanel>
+                  <TextBlock x:Name="EndpointError" Foreground="{DynamicResource Ant.colorError}" TextWrapping="Wrap"
+                             Visibility="Collapsed" AutomationProperties.LiveSetting="Polite"/>
                   <Border Style="{StaticResource Primer.CodeBlock}" Padding="12,8" Margin="0,12,0,0">
                     <DockPanel>
                       <TextBlock x:Name="LinkEndpoint" DockPanel.Dock="Right" Style="{StaticResource Primer.ListMonoValue}"><Run
@@ -192,7 +196,6 @@
                       <TextBlock Text="{l:Tr Config.Address}" Style="{StaticResource Primer.Muted}"/>
                     </DockPanel>
                   </Border>
-                  <TextBlock x:Name="LastTest" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                 </StackPanel>
               </Border>
             </StackPanel>
@@ -295,7 +298,6 @@
                       <TextBlock x:Name="LinkServer" Style="{StaticResource Primer.ListValue}"/>
                     </DockPanel>
                     <TextBlock x:Name="Transport" Style="{StaticResource Primer.ListValue}"/>
-                    <TextBlock x:Name="Status" Style="{StaticResource Primer.Muted}" AutomationProperties.LiveSetting="Polite"/>
                   </StackPanel>
                 </Border>
               </Expander>

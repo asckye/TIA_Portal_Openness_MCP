@@ -1,4 +1,5 @@
 using System;
+using TiaOpenness.Gui.ViewModels;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -26,7 +27,7 @@ namespace TiaMcpConfigurator
             // Existing configuration consumers resolve these names on the shared configuration surface.
             // Register the controls themselves so selection, UI Automation and localization all use the same instances.
             foreach (var control in new FrameworkElement[] { Clients.ClientChoices, Clients.ClientSelection, Clients.SaveClient,
-                Clients.WriteTargets, Clients.ClientPane, Clients.ClientActionsBand, Clients.RelayNote, Clients.ClientStatus })
+                Clients.WriteTargets, Clients.ClientPane, Clients.ClientActionsBand, Clients.RelayNote })
                 RegisterName(control.Name, control);
 
             var choices = Clients.ClientChoices;
@@ -56,8 +57,7 @@ namespace TiaMcpConfigurator
             Clients.SaveClient.Click += (_, _) => Guard(() => SaveClients(Remote));
             Clients.CopyJson.Click += (_, _) => Guard(() => {
                 CopyClientText(Clients.JsonText.Text);
-                SetLocalizedText("ClientStatus", TextBlock.TextProperty, "Config.FormatCopied", PreviewFormatName);
-                Clients.ClientStatus.Visibility = Visibility.Visible;
+                Notify(ToastKind.Success, LocalizedText.Key("Config.FormatCopied", PreviewFormatName), "copy");
             });
         }
 
@@ -115,8 +115,7 @@ namespace TiaMcpConfigurator
             ShowClientGuidance();
             e.Handled = true;
         }
-        private void ShowClientGuidance() => WorkbenchMessageBox.Show(Window, clientInstructions,
-            Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
+        private void ShowClientGuidance() => Notify(ToastKind.Info, LocalizedText.Literal(clientInstructions), "client-guidance");
         internal bool PreviewClientSelection(ClientProfile profile)
         {
             if (ConfirmClientSelection != null) return ConfirmClientSelection(profile);
@@ -233,14 +232,18 @@ namespace TiaMcpConfigurator
         // Save endpoint settings on the client machine even when the service is installed on a different machine.
         private void OnSaveBoth()
         {
-            int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); string ip = Text("ServerAddress");
-            ConfigCore.Prefix(ip, port);
+            ReadEndpoint(out int port);
+            string ip = Text("ServerAddress");
             ConfigCore
                 .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
                     Address = ip, Port = port });
             Append(Loc.Current["Config.ClientConnectionSaved"]);
             try { ConfigCore.AtomicJson(StatePath, Settings()); Append(Loc.Current["Config.ServerSaved"]); }
-            catch (Exception ex) { Append(Loc.Current.T("Config.ClientOnlySaved", ex.GetBaseException().Message)); }
+            catch (Exception ex)
+            {
+                var text = LocalizedText.Key("Config.ClientOnlySaved", ex.GetBaseException().Message);
+                Append(text.Resolve()); Notify(ToastKind.Error, text); return;
+            }
             SetStatus("Config.Saved");
         }
 
@@ -250,8 +253,8 @@ namespace TiaMcpConfigurator
             if (selected.Count == 0) throw new InvalidOperationException(Loc.Current["Config.SelectClientsFirst"]);
             string engine = null, ip = null; int port = 0;
             if (remote) {
-                ip = Text("ServerAddress"); port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture);
-                ConfigCore.Prefix(ip, port); engine = ConfigCore.Engine(root, SelectedVersion);
+                ip = Text("ServerAddress"); ReadEndpoint(out port);
+                engine = ConfigCore.Engine(root, SelectedVersion);
             }
             else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }
             // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
@@ -281,11 +284,9 @@ namespace TiaMcpConfigurator
             if (remote && saved > 0) ConfigCore
                 .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
                     Address = ip, Port = port });
-            SetStatus("Config.ClientsConfigured", saved);
-            SetLocalizedText("ClientStatus", TextBlock.TextProperty, "Config.ClientsConfigured", saved);
-            Clients.ClientStatus.Visibility = Visibility.Visible;
             Append(Loc.Current.T("Config.RestartClients", remote ? "tia-portal-vm" : "tia-portal"));
             if (errors.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.SomeClientsNotSaved", string.Join("\n", errors)));
+            SetStatus("Config.ClientsConfigured", saved);
         }
 
         internal void RepairRemoteClients()
@@ -296,8 +297,7 @@ namespace TiaMcpConfigurator
                     throw new InvalidOperationException(Loc.Current["Config.RelayNeedsConnection"]);
                 var choices = Clients.ClientChoices;
                 choices.SelectedItems.Clear();
-                string endpoint = ConfigCore.Prefix(Text("ServerAddress"), int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture))
-                    + "mcp";
+                string endpoint = ReadEndpoint(out _) + "mcp";
                 foreach (ClientProfile profile in choices.Items)
                     if (ClientProfiles.HasRemoteEntry(profile, endpoint)) choices.SelectedItems.Add(profile);
                 WorkbenchCommands.Navigate.Execute("Clients", this);
@@ -309,12 +309,12 @@ namespace TiaMcpConfigurator
             if (busy) return;
             try
             {
-                string ip = Text("ServerAddress"); int port = int
-                    .Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture);
+                string ip = Text("ServerAddress"); ReadEndpoint(out int port);
                 SetBusy(true); SetStatus("Config.Testing");
                 string result = await Task.Run(() => ConfigCore.TestRemote(ip, port));
                 lastTestResult = result; lastTestFailed = false; UpdateLastTest();
-                Append(result); SetStatus("Config.ConnectionOk");
+                Append(result);
+                Notify(ToastKind.Success, LocalizedText.Literal(Loc.Current["Config.ConnectionOk"] + " · " + result));
             }
             catch (Exception ex) { lastTestResult = null; lastTestFailed = true; UpdateLastTest(); Report(ex); }
             finally { SetBusy(false); }

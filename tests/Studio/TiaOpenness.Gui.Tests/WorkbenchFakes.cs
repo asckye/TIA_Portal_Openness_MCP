@@ -51,6 +51,10 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
     public bool VcSupported { get; set; } = true;
     public ProjectInfo? AttachedProject { get; set; }
     public Exception? ImportError { get; set; }
+    public List<InspectionFinding> Findings { get; } = [];
+    public int DifferingItems { get; set; }
+    public int FailedMappings { get; set; }
+    public int FailedSynchronizations { get; set; }
     public Func<string, string[], string, ExportFormat, ExportResult>? ExportHandler { get; set; }
     public List<DeviceInfo> Devices { get; } = [new() { Id = "PLC_1", Name = "PLC_1", Category = "Plc" }];
     public List<BlockInfo> Blocks { get; } = [new() { Name = "Main", Path = "Main", Kind = BlockKind.OB, IsConsistent = true }];
@@ -117,7 +121,7 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
     public CompileResult CompileResult { get; set; } = new() { State = "Success" };
     public Task<CompileResult> CompileAsync(string deviceId) => Reply("Compile", CompileResult, deviceId);
     public Task<InspectionReport> InspectAsync(string deviceId, string? blockNamePattern)
-        => Reply("Inspect", new InspectionReport { DeviceId = deviceId }, deviceId, blockNamePattern);
+        => Reply("Inspect", new InspectionReport { DeviceId = deviceId, Findings = Findings }, deviceId, blockNamePattern);
     public Task<bool> VcSupportedAsync() => Reply("VcSupported", VcSupported);
     public Task<List<WorkspaceInfo>> VcListWorkspacesAsync() => Reply("Workspaces", Workspaces);
     public Task<WorkspaceInfo> VcCreateWorkspaceAsync(string name, string folderPath)
@@ -127,12 +131,13 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
         return Reply("VcCreate", workspace, name, folderPath);
     }
     public Task<MappingResult> VcMapProjectAsync(string? workspaceName, string? deviceId, bool dryRun)
-        => Reply("VcMap", new MappingResult { DryRun = dryRun }, workspaceName, deviceId, dryRun);
+        => Reply("VcMap", new MappingResult { DryRun = dryRun, Failed = FailedMappings }, workspaceName, deviceId, dryRun);
     public Task<WorkspaceStatusReport> VcStatusAsync(string? workspaceName, bool changedOnly)
-        => Reply("VcStatus", new WorkspaceStatusReport { Items = StatusItems, Total = StatusItems.Count }, workspaceName, changedOnly);
+        => Reply("VcStatus", new WorkspaceStatusReport { Items = StatusItems, Total = StatusItems.Count, Differing = DifferingItems },
+            workspaceName, changedOnly);
     public Task<WorkspaceDiff> VcDiffAsync(string? workspaceName, string? file)
         => Reply("VcDiff", new WorkspaceDiff { Available = true, Lines = [new() { Kind = DiffLineKind.Added, Text = "+fixture" }] }, workspaceName, file);
     public Task<SyncResult> VcSyncAsync(string? workspaceName, SyncDirection direction, bool dryRun)
-        => Reply("VcSync", new SyncResult { DryRun = dryRun, Direction = direction }, workspaceName, direction, dryRun);
+        => Reply("VcSync", new SyncResult { DryRun = dryRun, Direction = direction, Failed = FailedSynchronizations }, workspaceName, direction, dryRun);
     public void Dispose() => Disposed = true;
 }

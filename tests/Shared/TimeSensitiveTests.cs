@@ -51,6 +51,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Gui.Tests.ResponsivenessTests"] = "Reader throttling, latency measurement and bounded lock recovery.",
             ["TiaOpenness.Gui.Tests.ResponsivenessHarness"] = "Opt-in dispatcher p95/max latency and idle CPU thresholds.",
             ["TiaOpenness.Gui.Tests.WorkbenchControlLoadTests"] = "Continuous dispatcher and control pressure; functional completion checks.",
+            ["TiaOpenness.Gui.Tests.WorkbenchToastTests"] = "Keyboard focus and dismissal in the toast host.",
             ["TiaOpenness.Gui.Tests.WorkbenchControlOverlayTests"] = "Keyboard focus, traversal and preview input in workbench overlays.",
             ["TiaOpenness.Gui.Tests.ApprovalServiceTests"] = "Pipe connection and approval delivery protected by hang guards.",
             ["TiaOpenness.Gui.Tests.WorkbenchControlPipeTests"] = "Pipe connection and response protected by hang guards.",
@@ -304,14 +305,29 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Gui.Tests.ResponsivenessTests"] = new[] {
                 "Idle_services_do_not_notify_and_repeated_reads_keep_rows_and_redacted_json",
                 "Bursts_coalesce_and_hidden_pages_do_not_project_calls",
+                "Hidden_journal_delivers_completed_calls_without_loading_connection_settings_until_activated",
                 "Continuous_changes_are_throttled_without_starving_the_reader_and_inactive_readers_sleep",
                 "Contended_audit_and_retention_locks_do_not_block_dispatcher_actions"
             },
             ["TiaOpenness.Gui.Tests.ResponsivenessHarness"] = new[] {
-                "Measure_dispatcher_under_fake_engine_load"
+                "Measure_dispatcher_under_fake_engine_load",
+                "Measure_hidden_page_with_unchanged_journals"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlLoadTests"] = new[] {
                 "Continuous_control_queue_applies_requests_and_keeps_reads_available"
+            },
+            ["TiaOpenness.Gui.Tests.WorkbenchToastTests"] = new[] {
+                "Toast_announces_full_text_and_dismisses_without_stealing_focus_or_blocking_control",
+                "Escape_closes_the_open_combo_before_dismissing_a_visible_toast",
+                "Shortcut_opens_full_text_or_invokes_the_visible_action_from_the_focused_control",
+                "Failed_reads_leave_the_reason_in_the_empty_panel_after_the_toast_expires",
+                "Page_actions_publish_feedback_and_leave_validation_with_its_field",
+                "Docked_inspector_reaches_the_right_edge_of_the_calls_page_gutter",
+                "Client_guidance_failed_submission_and_busy_close_use_shell_feedback",
+                "Operations_publish_their_outcome_in_the_shell",
+                "Dispatcher_error_is_readable_in_full_from_the_active_shell",
+                "New_AI_completion_opens_the_exact_call_from_another_page",
+                "Configuration_loading_failures_are_shown_by_both_navigation_commands"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlOverlayTests"] = new[] {
                 "Frozen_state_follows_recent_input_and_clears_after_the_operator_is_idle",

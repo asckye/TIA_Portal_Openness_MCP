@@ -126,6 +126,49 @@ public sealed class ResponsivenessHarness(WpfContext wpf)
         }
         finally { wpf.Run(() => { model.Dispose(); audit.Dispose(); approvals.Dispose(); }); }
     }
+    [Fact]
+    public async Task Measure_hidden_page_with_unchanged_journals()
+    {
+        string? performanceOutput = Environment.GetEnvironmentVariable("TIA_PERFORMANCE_OUTPUT");
+        if (string.IsNullOrEmpty(performanceOutput)) return;
+        string output = Path.ChangeExtension(performanceOutput, ".journal.json");
+        string directory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, "idle-journal-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var timestamp = DateTimeOffset.UtcNow.AddMinutes(-1);
+        for (int i = 0; i < 64; i++)
+        {
+            string row = JsonSerializer.Serialize(new { callProjection = 1, mcpProcessId = 42, id = i.ToString(), requestId = $"request-{i}",
+                tool = "ReadFixture", host = "engine", releaseKey = "21", startedUtc = timestamp, utc = timestamp, actor = "mcp", phase = "BEFORE" });
+            File.WriteAllText(Path.Combine(directory, $"calls-{i}.jsonl"), row + "\n");
+        }
+        using var journal = new CallJournalService("21", directory, Path.Combine(directory, "config"));
+        var model = wpf.Run(() =>
+        {
+            var vm = new FeaturePagesViewModel(FeaturePageFixtures.Approvals(false), journal, new FeaturePageFixtures.Audit(),
+                new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics());
+            vm.SetVisibility(false, false, false);
+            return vm;
+        });
+        try
+        {
+            journal.Refresh();
+            Assert.Equal(64, journal.Calls.Count);
+            await Task.Delay(1000);
+            using var process = Process.GetCurrentProcess();
+            var cpu = process.TotalProcessorTime;
+            var watch = Stopwatch.StartNew();
+            // Unrelated diagnostics activity must not wake the hidden journal's full reader.
+            for (int i = 0; i < 60; i++)
+            {
+                File.AppendAllText(Path.Combine(directory, "diagnostics.log"), "fixture\n");
+                await Task.Delay(150);
+            }
+            File.WriteAllText(output, JsonSerializer.Serialize(new { files = 64, unrelatedWrites = 60, seconds = watch.Elapsed.TotalSeconds,
+                cpuCorePercent = (process.TotalProcessorTime - cpu).TotalSeconds / watch.Elapsed.TotalSeconds * 100 }));
+        }
+        finally { wpf.Run(model.Dispose); }
+    }
+
     private sealed class FakeApprovals : ObservableObject, IApprovalService
     {
         private readonly ApprovalService _real;

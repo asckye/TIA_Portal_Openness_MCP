@@ -262,6 +262,9 @@ public sealed class VciPanelTests(WpfContext wpf)
             Assert.Equal(Visibility.Visible, projectItem.Visibility);
             Assert.True(projectItem.IsEnabled);
             Assert.False(model.VersionControlPageVisible);
+            Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+            // Drain the successful connection and project-load results before exercising the navigation notice.
+            while (window.Toast.Visibility == Visibility.Visible) UnifiedDesktopTests.ClickControl(window.ToastClose);
             window.Navigate("VersionControl"); Assert.False(model.IsVcTab);
             Assert.Equal("Engineering", window.CurrentPage);
             Assert.True(projectItem.IsChecked);

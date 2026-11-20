@@ -176,6 +176,7 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
             client.TagHandler = _ => Task.FromException<List<TagInfo>>(new InvalidOperationException("Unknown table."));
             WpfContext.Complete(engineering.ReadTagsAsync());
             Assert.Empty(engineering.PlcTags);
+            Assert.Equal("Unknown table.", model.Activity.Status);
             Assert.Equal("Unknown table.", engineering.TagStatus);
             Assert.Null(engineering.TagCount);
             var late = new TaskCompletionSource<List<TagInfo>>();

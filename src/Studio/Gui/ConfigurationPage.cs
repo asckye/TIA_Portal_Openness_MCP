@@ -74,8 +74,7 @@ public partial class MainWindow
         catch (Exception ex)
         {
             ShowEngineering();
-            TiaOpenness.Gui.Controls.WorkbenchMessageBox
-                .Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowToast(ToastKind.Error, LocalizedText.Literal(ex.Message), "navigation");
         }
     }
     private void OnServiceStateChanged(object? sender, EventArgs e)

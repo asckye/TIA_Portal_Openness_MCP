@@ -179,12 +179,11 @@ public partial class SettingsView : UserControl
         await SaveApproval(() => _approvals.TimeoutSeconds = seconds);
     }
 
-    private async Task SaveApproval(Action action)
+    internal async Task SaveApproval(Action action)
     {
-        try { await Task.Run(action); }
+        try { await Task.Run(action); NotifySettings(ToastKind.Success, LocalizedText.Key("Toast.Saved")); }
         catch (Exception ex) {
-            Controls.WorkbenchMessageBox
-                .Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+            NotifySettings(ToastKind.Error, LocalizedText.Literal(ex.Message));
         }
         UpdateApproval();
     }
@@ -216,8 +215,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            Controls.WorkbenchMessageBox
-                .Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Warning);
+            NotifySettings(ToastKind.Error, LocalizedText.Literal(ex.Message));
         }
     }
 }

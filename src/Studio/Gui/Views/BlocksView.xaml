@@ -84,8 +84,8 @@
             <TextBlock Text="{l:Tr Project.NoInterface}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
           </Border>
         </Grid>
-        <Border x:Name="AtlasFooter" Style="{StaticResource Primer.FooterStrip}" Grid.Row="3" Visibility="{Binding Atlas.Visible,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
-          <Border x:Name="AtlasBar" Padding="12,8" Visibility="{Binding Atlas.Visible,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.AtlasState}">
+        <Border x:Name="AtlasFooter" Style="{StaticResource Primer.FooterStrip}" Grid.Row="3" Visibility="{Binding Atlas.HasOutputOrProgress,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
+          <Border x:Name="AtlasBar" Padding="12,8" Visibility="{Binding Atlas.HasOutputOrProgress,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.AtlasState}">
             <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="8"/>
@@ -94,7 +94,8 @@
                 <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
               <Ellipse Width="8" Height="8" Fill="{Binding Path=(TextElement.Foreground),RelativeSource={RelativeSource AncestorType=Border}}"/>
-              <TextBlock Grid.Column="1" AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Atlas.Label,ElementName=PageRoot}" Text="{Binding Atlas.Label,ElementName=PageRoot}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" Margin="12,0" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"
+                AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Atlas.Label,ElementName=PageRoot}" Text="{Binding Atlas.Label,ElementName=PageRoot}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" Margin="12,0" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="2" Text="{Binding Atlas.Detail,ElementName=PageRoot}" ToolTip="{Binding Atlas.Detail,ElementName=PageRoot}" Style="{StaticResource Primer.Mono}"/>
               <Button Grid.Column="3" Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}" Click="OnCancelAtlas" Style="{StaticResource Primer.Secondary}" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
               <ProgressBar Grid.Column="2" IsIndeterminate="{Binding Atlas.Indeterminate,ElementName=PageRoot}" Width="120" Height="4" Maximum="100" Value="{Binding Atlas.Percent,ElementName=PageRoot,Mode=OneWay}" Margin="12,0,0,0" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>

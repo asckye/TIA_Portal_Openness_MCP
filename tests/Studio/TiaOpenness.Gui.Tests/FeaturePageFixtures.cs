@@ -97,6 +97,7 @@ internal static class FeaturePageFixtures
         public LocalizedText Recheck() { RecheckCount++; return LocalizedText.Empty; }
         public LocalizedText Fix(string checkId) { FixedId = checkId; return LocalizedText.Empty; }
         internal void Replace(IReadOnlyList<EnvironmentGroup> groups) { Groups = groups; Raise(nameof(Groups)); }
+        internal void Complete(IReadOnlyList<EnvironmentGroup> groups) { Replace(groups); Raise(nameof(LogTail)); }
     }
 
     internal sealed class Diagnostics : ObservableObject, IDiagnosticBundleService

@@ -165,15 +165,19 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     [Theory]
     [InlineData("Light")]
     [InlineData("Dark")]
+    [InlineData("Light.Petrol")]
+    [InlineData("Dark.Petrol")]
     [InlineData("HighContrast")]
     public void Toast_text_and_actions_contrast_with_the_spotlight_surface(string theme)
     {
         wpf.Run(() =>
         {
             var previous = ThemeManager.Current.Theme;
+            var previousAccent = ThemeManager.Current.Accent;
             var previousContrast = ThemeManager.Current.HighContrastOverride;
             ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
-            ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+            ThemeManager.Current.Theme = theme.StartsWith("Dark", StringComparison.Ordinal) ? AppTheme.Dark : AppTheme.Light;
+            ThemeManager.Current.Accent = theme.EndsWith(".Petrol", StringComparison.Ordinal) ? AppAccent.Petrol : AppAccent.Cobalt;
             var window = new MainWindow(ProjectPageTestSupport.Model(), false);
             try
             {
@@ -189,6 +193,14 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                     .Select(name => ((TextBlock)window.FindName(name)).Foreground)
                     .Concat(DesktopCapture.Descendants<Button>(toast).Select(button => button.Foreground)).ToArray();
                 Assert.True(foregrounds.Length >= 4);
+                foreach (var kind in Enum.GetValues<ViewModels.ToastKind>())
+                {
+                    window.ShowToast(kind, Localization.LocalizedText.Literal("Message"), "sample");
+                    var dot = Composite(((SolidColorBrush)window.ToastDot.Fill).Color, background);
+                    double dotLight = Luminance(dot), backLight = Luminance(background);
+                    double contrast = (Math.Max(dotLight, backLight) + .05) / (Math.Min(dotLight, backLight) + .05);
+                    Assert.True(contrast >= 3, $"{theme} {kind}: dot contrast {contrast:F2} < 3");
+                }
                 foreach (var brush in foregrounds)
                 {
                     var foreground = Composite(((SolidColorBrush)brush).Color, background);
@@ -202,6 +214,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 window.Close();
                 ThemeManager.Current.HighContrastOverride = previousContrast;
                 ThemeManager.Current.Theme = previous;
+                ThemeManager.Current.Accent = previousAccent;
             }
         });
     }

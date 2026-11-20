@@ -102,7 +102,11 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         if (_loadedSharedBinding == binding) return;
         _loadedSharedBinding = binding;
         try { await _loadProject(ProjectName); }
-        catch (Exception error) { _activity.AppendLocalized("Log.Error", error.Message); }
+        catch (Exception error)
+        {
+            _activity.AppendLocalized("Log.Error", error.Message);
+            _activity.Notify(ToastKind.Error, LocalizedText.Literal(error.Message), "project-load");
+        }
     }
 
     /// <summary>
@@ -171,8 +175,8 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
             _activity.AppendLocalized("Log.Installed", install.Version, install.EngineeringDllPath);
         }
 
-        if (report.CanRunOpenness) _activity.SetStatus("Status.EnvOk");
-        else _activity.SetStatus("Status.EnvNotReady");
+        if (report.CanRunOpenness) _activity.SetStatus("Status.EnvOk", ToastKind.Success);
+        else _activity.SetStatus("Status.EnvNotReady", ToastKind.Warning);
     });
 
     private async Task ConnectAsync() => await _activity.Guarded("Status.Connecting", async () =>
@@ -188,7 +192,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
                 Loc.Current.T("Session.DisconnectWarning", (string?)project.Session.State?["participants"]?["mcpClient"] ?? "MCP"),
                 Loc.Current["Pages.Disconnect"], DialogButtons.OKCancel, DialogIcon.Warning,
                 new(ConfirmationAction.EndSharedSession));
-            if (decision == DialogResult.Detach) { await project.Session.DetachAsync(); return; }
+            if (decision == DialogResult.Detach) { await project.Session.DetachAsync(); _activity.SetStatus("Session.Detached"); return; }
             if (decision != DialogResult.OK) return;
         }
         await _client.DisconnectAsync();
@@ -217,12 +221,12 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         catch (PortalProcessSelectionRequiredException selection)
         {
             var processId = _dialogs.PickPortalProcess(selection.Processes);
-            if (!processId.HasValue) { _activity.SetStatus("Status.NotConnected"); return false; }
+            if (!processId.HasValue) { _activity.SetStatus("Status.NotConnected", ToastKind.Warning); return false; }
             state = await _client.ConnectAsync(!Headless, processId);
         }
         IsConnected = true;
         SetOpennessVersion(state.OpennessVersion);
-        _activity.SetStatus("Status.Connected", state.Mode, state.OpennessVersion);
+        _activity.SetStatus("Status.Connected", ToastKind.Success, state.Mode, state.OpennessVersion);
 
         // Attaching to a running TIA inherits whatever project it already had open.
         if (adoptOpenProject && state.OpenProject is not null)
@@ -251,14 +255,14 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         if (!IsConnected)
         {
             if (!await ConnectCoreAsync(adoptOpenProject: false)) return;
-            _activity.SetStatus("Status.OpeningProject");
+            _activity.SetStatus("Status.OpeningProject", kind: null);
         }
 
         var project = await _client.OpenProjectAsync(ProjectPath);
         OpenProjectFile = project.Path ?? ProjectPath;
         ProjectName = project.Name ?? string.Empty;
         _activity.AppendLocalized("Log.Opened", project.Name, project.Path);
-        _activity.SetStatus("Status.ProjectOpen", project.Name);
+        _activity.SetStatus("Status.ProjectOpen", ToastKind.Success, project.Name);
         await _loadProject(ProjectName);
     });
 
