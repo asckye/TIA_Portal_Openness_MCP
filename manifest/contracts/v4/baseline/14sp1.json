@@ -8743,7 +8743,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "2af400429e3e458dc7cd052981bb5d14331662d06fa40ffc9ba4f06291a8f7d2",
+      "descriptionSha256": "1962fbbe2f391fb84525d44ee8d8ff45cba3493fa192d0e7aae32b75cdc324e3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},

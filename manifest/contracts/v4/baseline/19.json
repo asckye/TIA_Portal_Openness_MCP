@@ -17691,7 +17691,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "2af400429e3e458dc7cd052981bb5d14331662d06fa40ffc9ba4f06291a8f7d2",
+      "descriptionSha256": "1962fbbe2f391fb84525d44ee8d8ff45cba3493fa192d0e7aae32b75cdc324e3",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},
@@ -34247,7 +34247,7 @@
           },
           "umacPassword": {
             "default": "",
-            "description": "umacPassword: UMAC password or vault:<name> reference for umacUserName; the host resolves vault references only after its vault approval and destination checks. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.",
+            "description": "umacPassword: pass the UMAC password for umacUserName directly. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.",
             "type": "string"
           },
           "umacUserName": {
@@ -35730,7 +35730,7 @@
           },
           "umacPassword": {
             "default": "",
-            "description": "umacPassword: password of umacUserName. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card. Vault references for Global (UMC) users are refused by OpenProject and RetrieveProjectArchive: the target UMC server cannot be read from a bound target project before these operations. Vault credentials for UMC-type UMAC users are supported only where the server can be read from the bound project.",
+            "description": "umacPassword: pass the UMAC password for umacUserName directly. Converted to SecureString in the worker; never logged, journaled, echoed or shown on the approval card.",
             "type": "string"
           },
           "umacUserName": {
