@@ -244,9 +244,9 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                     new FeaturePageFixtures.Diagnostics(), preview);
                 try
                 {
-                    window.ShowConfiguration(false);
+                    window.Navigate("Clients");
                     var host = WorkbenchRenderTests.CreateHost(window, width, height);
-                    var list = (ListBox)window.Configuration!.FindName("ClientChoices");
+                    var list = (ListBox)window.Configuration!.Clients.FindName("ClientChoices");
                     foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
                     {
                         ThemeManager.Current.Theme = theme;
@@ -318,7 +318,7 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                         ThemeManager.Current.Theme = theme;
                         WorkbenchRenderTests.ApplyCurrentPalette(host);
                         string suffix = $"{width}x{height}-{language}-{theme}";
-                        foreach (string page in new[] { "Mcp", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log" })
+                        foreach (string page in new[] { "Mcp", "Clients", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log" })
                         {
                             window.Navigate(page); Layout(host, width, height);
                             Assert.Same(Application.Current.FindResource("Primer.bg"), ((Grid)window.FindName("Root")).Background);
@@ -331,11 +331,12 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             Assert.Equal(Loc.Current["Rail.Doctor"], System.Windows.Automation.AutomationProperties.GetName(environmentItem));
                             AssertSingleLine(brand, context);
                             AssertWholeWords(environmentLabel, context);
-                            if (page == "Mcp")
+                            if (page == "Mcp") AssertWholeWords((TextBlock)window.Configuration!.FindName("PageSubtitle"), context);
+                            if (page is "Mcp" or "Clients")
                             {
-                                AssertWholeWords((TextBlock)window.Configuration!.FindName("PageSubtitle"), context);
-                                var configuration = window.Configuration!;
-                                foreach (string key in new[] { "Config.Installation", "Config.HttpService", "Config.Write", "Mcp.Clients" })
+                                FrameworkElement configuration = page == "Mcp" ? window.Configuration! : window.Configuration!.Clients;
+                                var headings = page == "Mcp" ? new[] { "Config.Installation", "Config.HttpService" } : new[] { "Config.Write", "Mcp.Clients" };
+                                foreach (string key in headings)
                                     AssertWholeWords(Descendants<TextBlock>(configuration).Single(text => text.Text == Loc.Current[key]
                                         && ReferenceEquals(text.Style, Application.Current.FindResource("Primer.ContainerTitle"))), context);
                             }

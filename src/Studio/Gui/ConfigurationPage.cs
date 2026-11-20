@@ -50,6 +50,7 @@ public partial class MainWindow
             page.ServiceStateChanged += OnServiceStateChanged;
             page.ReleaseChanged += OnConfigurationReleaseChanged;
             ConfigurationHost.Content = page;
+            ClientsHost.Content = page.Clients;
             _model.PropertyChanged += OnDesktopModelChanged;
             UpdateMcpStatus();
         }

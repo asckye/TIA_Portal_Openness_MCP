@@ -1,37 +1,105 @@
-using System.Collections.Concurrent;
-using System.Threading;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Security.Principal;
-using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using TiaMcp.Versioning;
-using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Controls;
-using TiaOpenness.Gui.Services;
-using TiaOpenness.Shared;
+using TiaOpenness.Gui.Localization;
 
 namespace TiaMcpConfigurator
 {
     public sealed partial class ConfigurationView
     {
-        private void OnClientGuidanceKey(object sender, System.Windows.Input.KeyEventArgs e)
+        private static readonly JsonSerializerOptions PreviewFormat = new() { WriteIndented = true };
+        internal Action<string> CopyClientText { get; set; } = Clipboard.SetText;
+
+        private void InitializeClients()
         {
-            if (e.Key is not (System.Windows.Input.Key.Enter or System.Windows.Input.Key.Space)) return;
+            // Existing configuration consumers resolve these names on the shared configuration surface.
+            // Register the controls themselves so selection, UI Automation and localization all use the same instances.
+            foreach (var control in new FrameworkElement[] { Clients.ClientChoices, Clients.ClientSelection, Clients.SaveClient,
+                Clients.WriteTargets, Clients.ClientPane, Clients.ClientActionsBand, Clients.RelayNote, Clients.ClientStatus })
+                RegisterName(control.Name, control);
+
+            var choices = Clients.ClientChoices;
+            var cards = preview?.Clients ?? ClientProfiles.All();
+            choices.ItemsSource = cards;
+            int firstDetected = cards.FindIndex(profile => profile.Detected);
+            choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
+            Append(Loc.Current.T("Config.ClientDetection",
+                string.Join(Loc.Current["Config.ClientListSeparator"], cards.Select(profile => profile.DisplayName + (profile.Detected ? " ✓" : " –")))));
+
+            Clients.PreviewTarget.ItemsSource = choices.SelectedItems;
+            Clients.PreviewTarget.SelectionChanged += (_, _) => UpdateJsonPreview();
+            Clients.PreviewJson.Expanded += (_, _) => UpdateJsonPreview();
+            choices.SelectionChanged += (_, _) => UpdateInstructions();
+            choices.PreviewMouseLeftButtonDown += OnClientPreviewMouse;
+            choices.PreviewKeyDown += OnClientPreviewKey;
+            choices.AddHandler(ToggleButton.CheckedEvent, new RoutedEventHandler(OnClientSwitch));
+            choices.AddHandler(ToggleButton.UncheckedEvent, new RoutedEventHandler(OnClientSwitch));
+            Clients.ClientSelection.KeyDown += OnClientGuidanceKey;
+            Clients.ClientSelection.MouseLeftButtonUp += (_, _) => WorkbenchMessageBox.Show(Window, clientInstructions,
+                Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
+            Clients.SelectDetected.Click += (_, _) => Guard(SelectDetectedClients);
+            Clients.ClearClients.Click += (_, _) => choices.UnselectAll();
+            Clients.SaveClient.Click += (_, _) => Guard(() => SaveClients(Remote));
+            Clients.CopyJson.Click += (_, _) => Guard(() => {
+                CopyClientText(Clients.JsonText.Text);
+                SetLocalizedText("ClientStatus", TextBlock.TextProperty, "Config.JsonCopied");
+            });
+        }
+
+        private void SelectDetectedClients()
+        {
+            var choices = Clients.ClientChoices;
+            var detected = choices.Items.Cast<ClientProfile>().Where(profile => profile.Detected).ToList();
+            foreach (var profile in detected)
+                if (!choices.SelectedItems.Contains(profile) && !PreviewClientSelection(profile)) return;
+            // Apply the batch only after all new targets have been reviewed.
+            foreach (var profile in choices.Items.Cast<ClientProfile>())
+                if (!profile.Detected) choices.SelectedItems.Remove(profile);
+            foreach (var profile in detected)
+                if (!choices.SelectedItems.Contains(profile)) choices.SelectedItems.Add(profile);
+        }
+
+        private void UpdateJsonPreview()
+        {
+            if (!Clients.PreviewJson.IsExpanded) return;
+            Clients.CopyJson.IsEnabled = false;
+            if (Clients.PreviewTarget.SelectedItem is not ClientProfile target)
+            {
+                Clients.JsonText.Text = Loc.Current["Config.SelectClientsFirst"];
+                return;
+            }
+            try
+            {
+                int port = Remote ? int.Parse(ServerPort.Text.Trim(), CultureInfo.InvariantCulture) : 0;
+                var entry = ClientProfiles.Entry(target, Remote, ServerAddress.Text.Trim(), port, ConfigCore.Engine(root, SelectedVersion),
+                    SelectedVersion, TiaPath.Text.Trim());
+                string section = target.Client == "codex" ? "mcp_servers" : ClientProfiles.RootKey(target);
+                var servers = new Dictionary<string, object> { [ClientProfiles.ServerName(target, Remote)] = entry };
+                Clients.JsonText.Text = JsonSerializer.Serialize(new Dictionary<string, object> { [section] = servers }, PreviewFormat);
+                Clients.CopyJson.IsEnabled = true;
+            }
+            catch (Exception ex) when (ex is IOException or ArgumentException or InvalidOperationException or FormatException or OverflowException)
+            {
+                Clients.JsonText.Text = ex is FormatException or OverflowException ? Loc.Current["Config.InvalidEndpoint"] : ex.Message;
+            }
+        }
+
+        private void OnClientGuidanceKey(object sender, KeyEventArgs e)
+        {
+            if (e.Key is not (Key.Enter or Key.Space)) return;
             TiaOpenness.Gui.Controls.WorkbenchMessageBox
-                .Show(Window, (string)ClientSelection.ToolTip, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage
+                .Show(Window, (string)Clients.ClientSelection.ToolTip, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage
                     .Information);
             e.Handled = true;
         }
@@ -47,38 +115,43 @@ namespace TiaMcpConfigurator
         }
         internal bool SetClientSelected(ClientProfile profile, bool selected)
         {
-            if (ClientChoices.SelectedItems.Contains(profile) == selected) return true;
+            if (Clients.ClientChoices.SelectedItems.Contains(profile) == selected) return true;
             if (selected && !PreviewClientSelection(profile)) return false;
-            if (selected) ClientChoices.SelectedItems.Add(profile); else ClientChoices.SelectedItems.Remove(profile);
+            if (selected) Clients.ClientChoices.SelectedItems.Add(profile); else Clients.ClientChoices.SelectedItems.Remove(profile);
             return true;
         }
         private void OnClientSwitch(object sender, RoutedEventArgs e)
         {
-            if (updatingClientSwitch || e.OriginalSource is not System.Windows.Controls.Primitives.ToggleButton toggle
+            if (updatingClientSwitch || e.OriginalSource is not ToggleButton toggle
                 || toggle.DataContext is not ClientProfile profile) return;
             // Selection bindings also raise Checked while the collection is still updating.
-            if (ItemsControl.ContainerFromElement(ClientChoices, toggle) is ListBoxItem item
+            if (ItemsControl.ContainerFromElement(Clients.ClientChoices, toggle) is ListBoxItem item
                 && toggle.IsChecked == item.IsSelected) return;
             updatingClientSwitch = true;
             try
             {
                 SetClientSelected(profile, toggle.IsChecked == true);
-                toggle.GetBindingExpression(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?.UpdateTarget();
+                toggle.GetBindingExpression(ToggleButton.IsCheckedProperty)?.UpdateTarget();
             }
             finally { updatingClientSwitch = false; }
         }
-        private void OnClientPreviewMouse(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void OnClientPreviewMouse(object sender, MouseButtonEventArgs e)
         {
-            var item = ItemsControl.ContainerFromElement(ClientChoices, e.OriginalSource as DependencyObject) as ListBoxItem;
-            if (item?.DataContext is not ClientProfile profile) return;
-            SetClientSelected(profile, !item.IsSelected);
+            var source = e.OriginalSource as DependencyObject;
+            if (ItemsControl.ContainerFromElement(Clients.ClientChoices, source) is not ListBoxItem item) return;
             item.Focus();
+            // The tile handles a normal button release. Clicks in the gutter must not select an item without its review.
+            while (source != null && source != item)
+            {
+                if (source is ToggleButton) return;
+                source = source is Visual ? VisualTreeHelper.GetParent(source) : LogicalTreeHelper.GetParent(source);
+            }
             e.Handled = true;
         }
-        private void OnClientPreviewKey(object sender, System.Windows.Input.KeyEventArgs e)
+        private void OnClientPreviewKey(object sender, KeyEventArgs e)
         {
-            if (e.Key is not (System.Windows.Input.Key.Space or System.Windows.Input.Key.Enter)) return;
-            var item = ItemsControl.ContainerFromElement(ClientChoices, System.Windows.Input.Keyboard.FocusedElement as DependencyObject) as ListBoxItem;
+            if (e.Key is not (Key.Space or Key.Enter)) return;
+            var item = ItemsControl.ContainerFromElement(Clients.ClientChoices, Keyboard.FocusedElement as DependencyObject) as ListBoxItem;
             if (item?.DataContext is not ClientProfile profile) return;
             SetClientSelected(profile, !item.IsSelected);
             e.Handled = true;
@@ -86,34 +159,41 @@ namespace TiaMcpConfigurator
         private void UpdateLink()
         {
             bool remote = Remote;
-            var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
+            var selected = Clients.ClientChoices.SelectedItems.Cast<ClientProfile>().ToList();
             Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? Loc.Current["Config.NoSelection"] : Loc.Current.T("Config.Selected", selected.Count);
             Find<TextBlock>("LinkClient").ToolTip = string.Join(Loc.Current["Config.ListSeparator"], selected.Select(x => x.DisplayName));
             Find<TextBlock>("LinkServer").Text = Loc.Current.T("Common.McpPortal", TiaVersionCatalog.Get(SelectedVersion).DisplayName);
             bool running = DisplayRunning;
             string address = Text("ServerAddress");
-            Find<TextBlock>("LinkEndpoint").Text = !remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"]
-                : address + ":" + Text("ServerPort");
+            bool http = remote && address.Length > 0;
+            EndpointScheme.Text = http ? "http://" : "";
+            EndpointAddress.Text = http ? address + ":" + Text("ServerPort") : ServiceEndpoint;
+            EndpointPath.Text = http ? "/mcp" : "";
             Find<TextBlock>("LinkState").Text = Loc.Current[!remote ? "Config.Local" : running ? "Config.Running" : "Config.Idle"];
             ServiceStatusText.Text = LinkState.Text;
             ServiceStateChip.Tag = running ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
             StartServer.Visibility = running ? Visibility.Collapsed : Visibility.Visible;
             StopServer.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
-            UpdateSteps();
+            Clients.TargetEndpoint.Text = remote ? ServiceEndpoint : "stdio · " + TiaVersionCatalog.Get(SelectedVersion).DisplayName;
+            UpdateJsonPreview();
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
         private void UpdateInstructions()
         {
-            var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            Find<TextBlock>("ClientSelection").Text = Loc.Current
-                .T("Mcp.ClientCounts", selected.Count, ClientChoices.Items.Cast<ClientProfile>().Count(x => x.Detected));
-            WriteTargets.Text = Loc.Current["Mcp.WillWrite"] + " " + string.Join("; ", selected.Select(x => x.DisplayName + " → " + x.Path));
+            var selected = Clients.ClientChoices.SelectedItems.Cast<ClientProfile>().ToList();
+            Clients.ClientSelection.Text = Loc.Current
+                .T("Mcp.ClientCounts", selected.Count, Clients.ClientChoices.Items.Cast<ClientProfile>().Count(x => x.Detected));
+            Clients.SaveClient.IsEnabled = Clients.ClearClients.IsEnabled = selected.Count > 0;
+            Clients.SelectDetected.IsEnabled = Clients.ClientChoices.Items.Cast<ClientProfile>().Any(profile => profile.Detected);
+            if (Clients.PreviewTarget.SelectedIndex < 0 && selected.Count > 0) Clients.PreviewTarget.SelectedIndex = 0;
+            Clients.WriteTargets.Text = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
+                Loc.Current["Mcp.WillWrite"] + " " + string.Join(Loc.Current["Config.ListSeparator"], selected.Select(x => x.DisplayName + " → " + x.Path));
             clientInstructions = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
                 string
                     .Join("\n", selected
                         .Select(x => Loc.Current
                             .T(x.Detected ? "Config.ClientInstructionsDetected" : "Config.ClientInstructionsNotDetected", x.Name, x.Hint, x.Evidence)));
-            Find<TextBlock>("ClientSelection").ToolTip = clientInstructions;
+            Clients.ClientSelection.ToolTip = clientInstructions;
             UpdateLink();
         }
         // 宿主机上没有服务端配置，用上次填写的连接信息补齐同一组字段。
@@ -125,8 +205,7 @@ namespace TiaMcpConfigurator
             ConfigCore.Prefix(settings.Address, settings.Port);
             Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString();
         }
-        // 一页两侧，所以保存也是两侧：客户端侧的连接信息总能保存；服务端配置只在本机确实装了
-        // TIA 和引擎时才写，宿主机上校验失败不算错误，只记一行说明。
+        // Save endpoint settings on the client machine even when the service is installed on a different machine.
         private void OnSaveBoth()
         {
             int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); string ip = Text("ServerAddress");
@@ -142,7 +221,7 @@ namespace TiaMcpConfigurator
 
         private void SaveClients(bool remote)
         {
-            var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
+            var selected = Clients.ClientChoices.SelectedItems.Cast<ClientProfile>().ToList();
             if (selected.Count == 0) throw new InvalidOperationException(Loc.Current["Config.SelectClientsFirst"]);
             string engine = null, ip = null; int port = 0;
             if (remote) {
@@ -178,6 +257,7 @@ namespace TiaMcpConfigurator
                 .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
                     Address = ip, Port = port });
             SetStatus("Config.ClientsConfigured", saved);
+            SetLocalizedText("ClientStatus", TextBlock.TextProperty, "Config.ClientsConfigured", saved);
             Append(Loc.Current.T("Config.RestartClients", remote ? "tia-portal-vm" : "tia-portal"));
             if (errors.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.SomeClientsNotSaved", string.Join("\n", errors)));
         }
@@ -188,12 +268,13 @@ namespace TiaMcpConfigurator
                 Find<RadioButton>("RemoteNav").IsChecked = true;
                 if (Text("ServerAddress").Length == 0)
                     throw new InvalidOperationException(Loc.Current["Config.RelayNeedsConnection"]);
-                var choices = Find<ListBox>("ClientChoices");
+                var choices = Clients.ClientChoices;
                 choices.SelectedItems.Clear();
                 string endpoint = ConfigCore.Prefix(Text("ServerAddress"), int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture))
                     + "mcp";
                 foreach (ClientProfile profile in choices.Items)
                     if (ClientProfiles.HasRemoteEntry(profile, endpoint)) choices.SelectedItems.Add(profile);
+                WorkbenchCommands.Navigate.Execute("Clients", this);
                 SaveClients(true);
             });
         }

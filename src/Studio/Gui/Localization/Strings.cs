@@ -318,7 +318,7 @@ internal static partial class Strings
                 "将停止本窗口启动的 MCP，中断客户端连接。\n请确认没有正在执行的项目操作。继续？"),
         ("Config.StopServiceCaption", "Stop MCP", "停止 MCP"),
         ("Config.WaitBeforeClosing", "Configuration is in progress. Wait before closing.", "正在处理配置，请稍候再关闭。"),
-        ("Desktop.Configuration", "MCP & clients", "MCP 与客户端"),
+        ("Desktop.Configuration", McpRailLabel, McpRailLabel),
 
         ("Primer.Transfer", "Import / Export", "导入 / 导出"),
 

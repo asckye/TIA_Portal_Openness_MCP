@@ -38,8 +38,9 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
             try
             {
                 window.ShowConfiguration(false);
+                window.Navigate("Clients");
                 var configuration = window.Configuration!;
-                var choices = (ListBox)configuration.FindName("ClientChoices");
+                var choices = (ListBox)configuration.Clients.FindName("ClientChoices");
                 var host = WorkbenchRenderTests.CreateHost(window);
                 var row = (ListBoxItem)choices.ItemContainerGenerator.ContainerFromIndex(1);
                 var toggle = WorkbenchRenderFeaturePagesTests.Descendants<System.Windows.Controls.Primitives.ToggleButton>(row).Single();
@@ -66,6 +67,7 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 Assert.Equal(2, previews);
                 Assert.False(File.Exists(path));
                 Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(path)!, Path.GetFileName(path) + ".bak_*"));
+                window.Navigate("Mcp");
                 Assert.True(((Button)configuration.FindName("SaveBoth")).IsDefault);
                 Assert.Equal(DependencyProperty.UnsetValue, configuration.ReadLocalValue(FrameworkElement.LanguageProperty));
             }

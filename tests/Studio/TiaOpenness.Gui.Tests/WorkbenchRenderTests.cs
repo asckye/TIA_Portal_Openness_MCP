@@ -75,7 +75,13 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(TextAlignment.Right, value.TextAlignment);
                     }
                     Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, ((Border)window.FindName("CallsCountBadge")).Visibility);
-                    if (state.Page == "Mcp") Assert.Equal(360, ((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth);
+                    var clientPane = (FrameworkElement)window.Configuration.Clients.FindName("ClientPane");
+                    if (state.Page == "Mcp")
+                    {
+                        window.Navigate("Clients"); WpfContext.Drain(); host.UpdateLayout();
+                        Assert.Equal(860, clientPane.ActualWidth);
+                        window.Navigate("Mcp"); WpfContext.Drain(); host.UpdateLayout();
+                    }
                     string serviceStatus = state.Local ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state.Running ? "Config.Running" : "Config.Idle"];
                     Assert.Equal(Loc.Current.T("Shell.McpStatus", serviceStatus), ((TextBlock)window.FindName("McpStatusText")).Text);
                     var release = TiaMcp.Versioning.TiaVersionCatalog.Get(((MainViewModel)window.DataContext).SelectedReleaseKey).DisplayName;
@@ -85,7 +91,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     if (state.Name == "mcp-zh-light")
                     {
                         var metrics = new List<string>();
-                        metrics.Add($"ClientPane: {((FrameworkElement)window.Configuration.FindName("ClientPane")).ActualWidth}");
+                        metrics.Add($"ClientPane: {clientPane.ActualWidth}");
                         foreach (string name in new[] { "RailMcp", "RailEngineering", "RailAgent", "RailAudit", "RailEnvironment", "RailLog" })
                         {
                             var element = (FrameworkElement)window.FindName(name);

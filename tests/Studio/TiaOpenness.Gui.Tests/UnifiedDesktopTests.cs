@@ -138,7 +138,9 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
             {
                 window.ShowConfiguration(false);
                 var page = window.Configuration!;
-                var choices = (ListBox)page.FindName("ClientChoices");
+                window.Navigate("Clients");
+                var clients = page.Clients;
+                var choices = (ListBox)clients.FindName("ClientChoices");
                 choices.SelectedItems.Clear();
                 var fixtures = new[]
                 {
@@ -165,26 +167,38 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 ThemeManager.Current.Theme = initialTheme;
                 AssertAppearance(initialLanguage);
 
+                window.Navigate("Clients");
                 choices.SelectedItems.Clear();
+                window.Navigate("Mcp");
                 ((RadioButton)page.FindName("LocalNav")).IsChecked = true;
                 Loc.Current.Language = nextLanguage;
                 FlushBindings();
                 Assert.Equal(Loc.Current["Config.ChooseClients"], Text("ClientInstructions"));
-                Assert.Equal(Loc.Current["Config.LocalTitle"], Text("PageTitle"));
+                Assert.Equal("MCP", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
+                Assert.Equal(Loc.Current["Config.LocalTitle"], ((RadioButton)page.FindName("LocalNav")).ToolTip);
                 Assert.Equal(Loc.Current["Config.NoSelection"], Text("LinkClient"));
                 Assert.Equal(Loc.Current["Config.Local"], Text("LinkState"));
 
                 void FlushBindings() => window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
-                string Text(string name) => name == "ClientInstructions" ? (string)((TextBlock)page.FindName("ClientSelection")).ToolTip : TextContent((TextBlock)page.FindName(name));
+                string Text(string name) => name switch
+                {
+                    "ClientInstructions" => (string)((TextBlock)clients.FindName("ClientSelection")).ToolTip,
+                    "ClientSelection" => TextContent((TextBlock)clients.FindName(name)),
+                    _ => TextContent((TextBlock)page.FindName(name)),
+                };
                 void AssertAppearance(AppLanguage language)
                 {
+                    window.Navigate("Mcp");
                     FlushBindings();
                     Assert.Equal(language == AppLanguage.Chinese ? "zh-cn" : "en-us", page.Language.IetfLanguageTag);
                     Assert.False(page.Resources.Contains("Primer.bg"));
                     Assert.Same(Application.Current.FindResource("Primer.card"), ((Border)page.FindName("InstallationCard")).Background);
                     Assert.Same(Application.Current.FindResource("Ui.Font"), page.FontFamily);
-                    Assert.Equal(Loc.Current["Config.RemoteTitle"], Text("PageTitle"));
-                    Assert.Equal(Loc.Current["Config.Write"], ((Button)page.FindName("SaveClient")).Content);
+                    Assert.Equal("MCP", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
+                    Assert.Equal(Loc.Current["Config.RemoteTitle"], ((RadioButton)page.FindName("RemoteNav")).ToolTip);
+                    window.Navigate("Clients");
+                    Assert.Equal(language == AppLanguage.Chinese ? "客户端" : "Clients", ((TextBlock)window.FindName("CurrentPageTitle")).Text);
+                    Assert.Equal(Loc.Current["Config.Write"], ((Button)clients.FindName("SaveClient")).Content);
                     Assert.Equal(Loc.Current.T("Mcp.ClientCounts", 2, 1), Text("ClientSelection"));
                     Assert.Equal(Loc.Current.T("Config.Selected", 2), Text("LinkClient"));
                     Assert.Equal("First" + Loc.Current["Config.ListSeparator"] + "Second",
@@ -195,7 +209,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                     Assert.Equal(Loc.Current[detected ? "Config.Detected" : "Config.NotDetected"], Text("DetectionSource"));
                     Assert.Equal(Loc.Current.T("Config.ClientInstructionsDetected", "First", "first hint", "first evidence") + "\n" +
                         Loc.Current.T("Config.ClientInstructionsNotDetected", "Second", "second hint", "second evidence"), Text("ClientInstructions"));
-                    Assert.Equal(Text("ClientInstructions"), ((TextBlock)page.FindName("ClientSelection")).ToolTip);
+                    Assert.Equal(Text("ClientInstructions"), ((TextBlock)clients.FindName("ClientSelection")).ToolTip);
                     Assert.Equal("192.0.2.77", address.Text);
                     Assert.Equal(history, log.LogText);
                 }

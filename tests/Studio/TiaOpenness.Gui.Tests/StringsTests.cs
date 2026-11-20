@@ -122,6 +122,7 @@ public class StringsTests(WpfContext wpf)
             "App.Title", "App.Monogram", "Badge.NoVersion", "Badge.Version",
             "Lang.English", "Lang.Chinese", "Status.Working", "Settings.English", "Settings.Chinese", "Settings.EngineVersion", "Settings.Releases", "Config.Local",
             // Product names, protocol identifiers and units stay the same in both languages.
+            "Desktop.Configuration", // Standard abbreviation MCP (product name)
             "Shell.McpStatus", "Audit.Size5", "Audit.Size10", "Audit.Size50", "Actor.AI",
             "Common.Plc", // Standard abbreviation: programmable logic controller.
             "Common.Id", // Standard abbreviation: identifier.

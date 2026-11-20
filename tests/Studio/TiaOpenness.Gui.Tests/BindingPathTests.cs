@@ -190,12 +190,16 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 var configuration = window.Configuration!;
                 foreach (string mode in new[] { "RemoteNav", "LocalNav" })
                 {
+                    window.Navigate("Mcp");
                     Find<RadioButton>(configuration, mode).IsChecked = true;
                     Layout(host);
                     Assert.Equal(1106, configuration.ActualWidth);
-                    var clients = Find<ListBox>(configuration, "ClientChoices");
-                    RealizeItems(host, clients, clients.Items.Count);
                     RealizePickers(configuration);
+                    window.Navigate("Clients");
+                    Layout(host);
+                    var clients = Find<ListBox>(configuration.Clients, "ClientChoices");
+                    RealizeItems(host, clients, clients.Items.Count);
+                    RealizePickers(configuration.Clients);
                     clients.SelectedItems.Clear();
                     clients.SelectedItems.Add(clients.Items[0]);
                     clients.SelectedItems.Add(clients.Items[1]);

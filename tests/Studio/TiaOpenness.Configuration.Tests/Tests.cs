@@ -278,38 +278,43 @@ namespace TiaMcpConfigurator
                 Loc.Current.Language = AppLanguage.English;
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                 AssertShellLabels(false);
-                Assert(((System.Windows.Controls.TextBlock)form.FindName("ClientSelection")).ToolTip != null
+                window.Navigate("Clients");
+                var clients = form.Clients;
+                Assert(((System.Windows.Controls.TextBlock)clients.FindName("ClientSelection")).ToolTip != null
                     && settings.FindName("OpenProjectPage") != null && settings.FindName("VersionText") != null && settings.FindName("OpenReleases") != null,
                     "client instructions and settings project home, about version and GitHub Releases remain reachable");
-                var choices = (System.Windows.Controls.ListBox)form.FindName("ClientChoices");
+                var choices = (System.Windows.Controls.ListBox)clients.FindName("ClientChoices");
                 choices.SelectedItems.Add(choices.Items.Cast<ClientProfile>().First(x => !choices.SelectedItems.Contains(x)));
-                Assert(((System.Windows.Controls.TextBlock)form.FindName("ClientSelection")).Text.Contains("2"), "client multi-select updates live count");
+                Assert(((System.Windows.Controls.TextBlock)clients.FindName("ClientSelection")).Text.Contains("2"), "client multi-select updates live count");
                 Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text.Contains("2"), "link bar follows the client selection");
                 choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items[6]);
+                window.Navigate("Mcp");
                 ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text = "192.0.2.10";
                 form.CapturePage(Path.Combine(output, "remote.png"), 0);
-                Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkEndpoint")).Text == "192.0.2.10:8765"
+                Assert(((System.Windows.Documents.Run)form.FindName("EndpointAddress")).Text == "192.0.2.10:8765"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "idle"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text == "1 selected"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).ToolTip.ToString() == "DeepSeek", "remote mode shows the live endpoint, state and selected client");
-                Assert(((System.Windows.Controls.Border)form.FindName("ClientActionsBand")).Visibility == System.Windows.Visibility.Visible
+                Assert(((System.Windows.Controls.Border)clients.FindName("ClientActionsBand")).Visibility == System.Windows.Visibility.Visible
                     && ((System.Windows.Controls.Grid)form.FindName("AddressRow")).Visibility == System.Windows.Visibility.Visible,
                     "remote mode shows the client actions band and the address row");
                 form.CapturePage(Path.Combine(output, "local.png"), 1);
                 // Local mode preserves configuration values while disabling HTTP-only operations.
                 Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkEndpoint")).Text.StartsWith("stdio")
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "stdio", "local mode reports the stdio transport");
-                Assert(((System.Windows.Controls.Border)form.FindName("ClientActionsBand")).Visibility == System.Windows.Visibility.Visible
+                Assert(((System.Windows.Controls.Border)clients.FindName("ClientActionsBand")).Visibility == System.Windows.Visibility.Visible
                     && !((System.Windows.Controls.Grid)form.FindName("AddressRow")).IsEnabled
                     && !((System.Windows.Controls.Grid)form.FindName("ServerActions")).IsEnabled
                     && ((System.Windows.Controls.Border)form.FindName("ServerPane")).Opacity == .45,
                     "local mode dims the HTTP card and disables address and service actions");
                 form.CapturePage(Path.Combine(output, "remote.png"), 0);
-                var list = (System.Windows.Controls.ListBox)form.FindName("ClientChoices");
+                window.Navigate("Clients"); window.UpdateLayout();
+                var list = (System.Windows.Controls.ListBox)clients.FindName("ClientChoices");
                 var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
-                var clientPane = (System.Windows.Controls.Border)form.FindName("ClientPane");
+                var clientPane = (System.Windows.FrameworkElement)form.Clients.FindName("ClientPane");
                 Assert(list.ActualHeight <= clientPane.ActualHeight && double.IsNaN(list.Height), "client list fits inside its card");
                 Assert(double.IsNaN(serverPane.Height) && serverPane.ActualHeight >= 156 && double.IsNaN(clientPane.Height) && clientPane.ActualHeight > list.ActualHeight, $"Primer service halves and client container use the handoff heights (server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1}, window {window.ActualWidth:F0}x{window.ActualHeight:F0})");
+                window.Navigate("Mcp"); window.UpdateLayout();
                 // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
                 var shell = (System.Windows.FrameworkElement)window.Content;
                 var pill = (System.Windows.Controls.TextBlock)form.FindName("LinkState");
@@ -323,8 +328,11 @@ namespace TiaMcpConfigurator
                 form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
                 window.Width = window.MinWidth; window.Height = window.MinHeight;
                 form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
-                Assert(window.MinWidth == 1024 && window.MinHeight == 640 && list.ItemsPanel.LoadContent() is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 1,
+                window.Navigate("Clients"); window.UpdateLayout();
+                var tilePanel = System.Windows.Media.VisualTreeHelper.GetParent(list.ItemContainerGenerator.ContainerFromIndex(0));
+                Assert(window.MinWidth == 1024 && window.MinHeight == 640 && tilePanel is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 1,
                     "minimum window size keeps the single-column client switches");
+                window.Navigate("Mcp");
                 NarrowWindowChecks(window, form, output);
                 window.Width = 1200; window.Height = 780;
                 Assert(window.FontFamily.Source == "Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI"
@@ -338,18 +346,19 @@ namespace TiaMcpConfigurator
                 port.Text = "8766";
                 Loc.Current.Language = AppLanguage.Chinese;
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "一页连接 TIA 与 AI"
-                    && ((System.Windows.Controls.Button)form.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
+                Assert(((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP"
+                    && ((System.Windows.Controls.Button)clients.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "空闲", "Chinese page updates title, action and service state");
                 Assert(port.Text == "8766" && ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text == "192.0.2.10"
                     && choices.SelectedItems.Count == 1 && (string)versions.SelectedValue == "21", "language switch preserves the port, address, client and version");
                 ((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked = true;
-                Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "同一台电脑，一次完成"
+                Assert(((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP"
+                    && (string)((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).ToolTip == "同一台电脑，一次完成"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "stdio", "Chinese local mode is localized");
                 Loc.Current.Language = AppLanguage.English;
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                 Assert(((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked == true
-                    && ((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "Same machine, one pass", "switching language preserves the selected transport");
+                    && ((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP", "switching language preserves the selected transport");
                 ((System.Windows.Controls.RadioButton)form.FindName("RemoteNav")).IsChecked = true;
                 // Synthetic screenshot fixture only; the shipping view always uses ClientProfiles.All().
                 string capture = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS");
@@ -401,9 +410,9 @@ namespace TiaMcpConfigurator
         {
             var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
             var installation = (System.Windows.Controls.Border)form.FindName("InstallationCard");
-            var clientPane = (System.Windows.Controls.Border)form.FindName("ClientPane");
-            var head = (TiaOpenness.Gui.Controls.PageHeadPanel)form.FindName("PageHead");
-            var title = (System.Windows.Controls.TextBlock)form.FindName("PageTitle");
+            var clientPane = (System.Windows.FrameworkElement)form.Clients.FindName("ClientPane");
+            var head = (TiaOpenness.Gui.Controls.PageHeadPanel)form.FindName("ModeHead");
+            var title = (System.Windows.Controls.TextBlock)form.FindName("ModeTitle");
             var segments = (System.Windows.FrameworkElement)((System.Windows.FrameworkElement)form.FindName("RemoteNav")).Parent;
             bool Inside(System.Windows.FrameworkElement element, System.Windows.Controls.Border card)
             {
@@ -417,6 +426,8 @@ namespace TiaMcpConfigurator
                 Loc.Current.Language = language; ThemeManager.Current.Theme = theme;
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                 string state = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToString().ToLowerInvariant();
+                window.Navigate("Clients"); window.UpdateLayout();
+                window.Navigate("Mcp");
                 form.CapturePage(Path.Combine(output, "remote-1044x780-" + state + ".png"), 0);
                 window.UpdateLayout();
                 var probe = new System.Windows.Controls.TextBlock { Text = title.Text, FontFamily = title.FontFamily, FontSize = title.FontSize, FontWeight = title.FontWeight };

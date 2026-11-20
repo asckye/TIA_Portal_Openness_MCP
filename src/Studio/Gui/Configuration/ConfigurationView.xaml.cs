@@ -14,6 +14,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation;
+using TiaOpenness.Gui.Views;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -28,6 +30,7 @@ namespace TiaMcpConfigurator
     public sealed partial class ConfigurationView : UserControl, IDisposable
     {
         public Window Window { get; private set; }
+        internal ClientsView Clients { get; } = new();
         private readonly string root;
         public event EventHandler ServiceStateChanged;
         public event EventHandler ReleaseChanged;
@@ -44,8 +47,8 @@ namespace TiaMcpConfigurator
             get
             {
                 string address = Text("ServerAddress");
-                return !Remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":"
-                    + Text("ServerPort");
+                return !Remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"]
+                    : "http://" + address + ":" + Text("ServerPort") + "/mcp";
             }
         }
         public string SelectedReleaseKey
@@ -94,19 +97,8 @@ namespace TiaMcpConfigurator
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
             versions.SelectedValue = TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey(root);
-            var choices = Find<ListBox>("ClientChoices");
-            var cards = preview?.Clients ?? ClientProfiles.All(); choices.ItemsSource = cards;
-            int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
-            Append(Loc.Current
-                    .T("Config.ClientDetection", string
-                        .Join(Loc.Current["Config.ClientListSeparator"], cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –")))));
-            choices.SelectionChanged += delegate { UpdateInstructions(); };
-            choices.AddHandler(System.Windows.Controls.Primitives.ToggleButton.CheckedEvent, new RoutedEventHandler(OnClientSwitch));
-            choices.AddHandler(System.Windows.Controls.Primitives.ToggleButton.UncheckedEvent, new RoutedEventHandler(OnClientSwitch));
-            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate {
-                TiaOpenness.Gui.Controls.WorkbenchMessageBox
-                    .Show(Window, clientInstructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
-            };
+            InitializeReleaseTiles();
+            InitializeClients();
             Find<RadioButton>("RemoteNav").Checked += delegate { Mode(true); };
             Find<RadioButton>("LocalNav").Checked += delegate { Mode(false); };
             Find<TextBox>("ServerAddress").TextChanged += delegate { UpdateLink(); };
@@ -116,13 +108,13 @@ namespace TiaMcpConfigurator
                         Description = Loc.Current.T("Config.BrowseTiaDescription", SelectedVersion), SelectedPath = Text("TiaPath") })
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
-            Click("DetectTia", delegate { DetectTiaPath(true); });
+            Click("DetectTia", delegate { RefreshReleaseDetections(); UpdateReleaseSelection(); DetectTiaPath(true); });
+            TiaPath.TextChanged += (_, _) => UpdateJsonPreview();
             Click("SaveBoth", OnSaveBoth);
             Click("StartServer", OnStartServer);
             ClickAsync("StopServer", OnStopServer);
-            Click("Network", async delegate { await OnNetwork(); });
-            Click("TestClient", async delegate { await OnTestClient(); });
-            Click("SaveClient", delegate { SaveClients(Remote); });
+            ClickAsync("Network", OnNetwork);
+            ClickAsync("TestClient", OnTestClient);
             Click("ClearLog", delegate { while (pendingLog.TryDequeue(out _)) { } activityLog = ""; ActivityLog.LogText = ""; logEntries = 0; UpdateLogCount();
                 });
             Click("CheckUpdate", async delegate { await OnCheckUpdate(true); });
@@ -136,8 +128,12 @@ namespace TiaMcpConfigurator
             Click("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true });
                 });
             ShowInstalledVersion();
-            Find<ComboBox>("Version").SelectionChanged += delegate {
-                Guard(delegate { LoadServer(loadExisting); }); UpdateLink(); ReleaseChanged?.Invoke(this, EventArgs.Empty); };
+            Version.SelectionChanged += delegate {
+                Guard(delegate { LoadServer(loadExisting && preview == null); });
+                UpdateReleaseSelection();
+                UpdateLink();
+                ReleaseChanged?.Invoke(this, EventArgs.Empty);
+            };
             if (loadExisting && preview == null)
             {
                 Window.Width = Math.Max(Window.MinWidth, Math.Min(Window.Width, SystemParameters.WorkArea.Width - 32));
@@ -195,18 +191,50 @@ namespace TiaMcpConfigurator
         {
             DetectionSource.Text = Loc.Current[tiaDetected ? "Config.Detected" : "Config.NotDetected"];
             DetectionChip.Tag = tiaDetected ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
-            UpdateSteps();
         }
-        // Ant Steps: an installation that was detected, a running service (or local stdio, which needs none)
-        // finish their steps; the first unfinished one is current, and writing the clients is the last step.
-        private void UpdateSteps()
+        private void InitializeReleaseTiles()
         {
-            bool installed = tiaDetected, served = !Remote || DisplayRunning;
-            int current = !installed ? 1 : !served ? 2 : 3;
-            Step1Icon.Tag = installed ? "Done" : "Current";
-            Step2Icon.Tag = served && installed ? "Done" : current == 2 ? "Current" : null;
-            Step3Icon.Tag = current == 3 ? "Current" : null;
+            ReleaseTiles.SizeChanged += (_, e) => ReleaseTiles.Columns = e.NewSize.Width >= 800 ? 8 : 4;
+            foreach (var release in TiaVersionCatalog.Runnable)
+            {
+                var tile = new RadioButton {
+                    Content = release, ContentTemplate = (DataTemplate)FindResource("Configuration.Release"),
+                    Style = (Style)FindResource("Primer.Tile"), Margin = new Thickness(2), Padding = new Thickness(4, 8, 4, 8)
+                };
+                AutomationProperties.SetName(tile, release.DisplayName);
+                tile.Checked += (_, _) => Version.SelectedValue = release.Key;
+                ReleaseTiles.Children.Add(tile);
+            }
+            RefreshReleaseDetections();
+            UpdateReleaseSelection();
         }
+
+        private void RefreshReleaseDetections()
+        {
+            foreach (RadioButton tile in ReleaseTiles.Children)
+            {
+                var release = (TiaVersionDescriptor)tile.Content;
+                bool installed = preview == null ? ConfigCore.DetectTia(release.Key).Key != null : preview.Detected && preview.ReleaseKey == release.Key;
+                SetTileDetection(tile, installed);
+            }
+        }
+
+        private static void SetTileDetection(RadioButton tile, bool installed)
+        {
+            tile.Tag = installed;
+            tile.SetBinding(AutomationProperties.HelpTextProperty, TrExtension.CreateBinding(installed ? "Config.Detected" : "Config.NotDetected"));
+        }
+
+        private RadioButton SelectedReleaseTile => ReleaseTiles.Children.Cast<RadioButton>().Single(tile => Equals(tile.Content, Version.SelectedItem));
+
+        private void UpdateReleaseSelection()
+        {
+            var tile = SelectedReleaseTile;
+            tile.IsChecked = true;
+            tiaDetected = (bool)tile.Tag;
+            UpdateDetectionLabel();
+        }
+
         private void UpdateLastTest()
         {
             var note = Find<TextBlock>("LastTest");
@@ -233,10 +261,8 @@ namespace TiaMcpConfigurator
         // Mode changes only presentation; existing configuration values stay in place.
         private void Mode(bool remote)
         {
-            RelayNote.Text = Loc.Current[remote ? "Config.RelayLabel" : "Mcp.ClientsNote"];
-            RelayNote.ToolTip = remote ? Loc.Current["Config.RelayMode"] : null;
-            Find<TextBlock>("PageStep").Text = Loc.Current["Config.Eyebrow"];
-            Find<TextBlock>("PageTitle").Text = Loc.Current[remote ? "Config.RemoteTitle" : "Config.LocalTitle"];
+            Clients.RelayNote.Text = Loc.Current[remote ? "Config.RelayLabel" : "Mcp.ClientsNote"];
+            Clients.RelayNote.ToolTip = remote ? Loc.Current["Config.RelayMode"] : null;
             Find<TextBlock>("PageSubtitle").Text = Loc.Current[remote ? "Config.RemoteSubtitle" : "Config.LocalSubtitle"];
             Find<TextBlock>("Transport").Text = remote ? "HTTP" : "stdio";
             ServerPane.Opacity = remote ? 1 : .45;
@@ -290,7 +316,9 @@ namespace TiaMcpConfigurator
         {
             if (preview != null) return;
             var found = ConfigCore.DetectTia(SelectedVersion);
-            tiaDetected = found.Key != null; UpdateDetectionLabel();
+            tiaDetected = found.Key != null;
+            SetTileDetection(SelectedReleaseTile, tiaDetected);
+            UpdateDetectionLabel();
             Find<TextBlock>("DetectionSource").ToolTip = found.Value;
             if (found.Key != null) {
                 Find<TextBox>("TiaPath").Text = found.Key; Append(Loc.Current.T("Config.TiaDetected", SelectedVersion, found.Value, found.Key)); }
@@ -298,7 +326,10 @@ namespace TiaMcpConfigurator
         }
         private void SetBusy(bool value)
         {
-            busy = value; Find<Grid>("Panes").IsEnabled = !value;
+            busy = value;
+            Panes.IsEnabled = Clients.IsEnabled = !value;
+            DetectTia.IsEnabled = !value;
+            SetReleaseEnabled(CanUpdate?.Invoke() ?? true);
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
         public void CapturePage(string path, int mode, bool scrollToBottom = false)

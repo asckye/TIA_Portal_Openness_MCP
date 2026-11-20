@@ -99,7 +99,7 @@ namespace TiaMcpConfigurator
                 if (!closing) Window.Dispatcher
                     .BeginInvoke(new Action(delegate {
                             if (closing) return; Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false;
-                            Find<ComboBox>("Version").IsEnabled = true; SetStatus("Config.ServiceStopped"); ServiceStatus(false);
+                            SetReleaseEnabled(CanUpdate?.Invoke() ?? true); SetStatus("Config.ServiceStopped"); ServiceStatus(false);
                         }));
             };
             try { if (!process.Start()) throw new InvalidOperationException(Loc.Current["Config.ServiceNotStarted"]); }

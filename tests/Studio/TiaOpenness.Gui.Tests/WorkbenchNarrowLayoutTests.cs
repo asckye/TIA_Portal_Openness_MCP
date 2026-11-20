@@ -25,9 +25,10 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
 {
-    private static readonly string[] Pages = ["Approvals", "Mcp", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log", "Settings"];
-    // The screenshot set the maintainer reviews: MCP & clients, Project, Environment and AI calls.
-    private static readonly string[] CapturedPages = ["Mcp", "Engineering", "Environment", "Calls"];
+    private static readonly string[] Pages =
+        ["Approvals", "Mcp", "Clients", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log", "Settings"];
+    // The screenshot set the maintainer reviews: MCP, Clients, Project, Environment and AI calls.
+    private static readonly string[] CapturedPages = ["Mcp", "Clients", "Engineering", "Environment", "Calls"];
 
     [Fact]
     public void Rail_selects_only_the_current_group_after_leaving_version_control()
@@ -210,8 +211,9 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                 try
                 {
                     window.ShowConfiguration(false);
+                    window.Navigate("Clients");
                     var host = WorkbenchRenderTests.CreateHost(window);
-                    var list = (ListBox)window.Configuration!.FindName("ClientChoices");
+                    var list = (ListBox)window.Configuration!.Clients.FindName("ClientChoices");
                     Settle(host, 1200, 780);
                     var rows = clients.Select((client, i) =>
                         Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(i))).ToArray();
@@ -239,7 +241,8 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                         Assert.InRange(content.ColumnDefinitions[0].ActualWidth,
                             name.FontSize * 3 + name.Margin.Left + name.Margin.Right, content.ActualWidth);
                         Assert.Equal(((ClientProfile)row.DataContext).Tooltip, content.ToolTip);
-                        var tile = Assert.IsType<Border>(row.Template.FindName("Tile", row));
+                        var toggle = Descendants<ToggleButton>(row).Single();
+                        var tile = Assert.IsType<Border>(toggle.Template.FindName("Surface", toggle));
                         Assert.True(tile.ActualHeight >= name.ActualHeight + tile.BorderThickness.Top + tile.BorderThickness.Bottom);
                     }
                     Assert.True(wrapped > 0, "The long-name fixture must actually wrap without truncation.");
@@ -287,7 +290,7 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                         AssertContextColumn(root, host, width, context);
                         AssertHeadsKeepTheirTitle(root, host, context);
                         AssertNothingClipped(root, host, context);
-                        if (page == "Mcp") AssertConfigurationCards(window, height, context);
+                        if (page is "Mcp" or "Clients") AssertConfigurationCards(window, height, context);
                         if (page == "Settings")
                         {
                             var settings = (Views.SettingsView)window.FindName("SettingsContent");
@@ -332,6 +335,7 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
     private static FrameworkElement PageRoot(MainWindow window, string page) => page switch
     {
         "Mcp" => window.Configuration!,
+        "Clients" => window.Configuration!.Clients,
         "Settings" => (FrameworkElement)window.FindName("SettingsContent"),
         "Approvals" => (FrameworkElement)window.FindName("ApprovalsContent"),
         "Engineering" => (FrameworkElement)window.FindName("EngineeringPage"),
@@ -419,14 +423,18 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
     private static void AssertConfigurationCards(MainWindow window, int height, string context)
     {
         var form = window.Configuration!;
+        if (window.ClientsHost.Visibility == Visibility.Visible)
+        {
+            double client = ((FrameworkElement)form.Clients.FindName("ClientPane")).ActualHeight;
+            if (height >= 780) Assert.True(client > 300, $"{context}: the client card is {client} px high");
+            return;
+        }
         foreach (string name in new[] { "InstallationCard", "ServerPane" })
         {
             double actual = ((FrameworkElement)form.FindName(name)).ActualHeight;
             Assert.Equal(double.NaN, ((FrameworkElement)form.FindName(name)).Height);
             Assert.True(actual >= 156, $"{context}: {name} sizes to its numbered header, fields and actions");
         }
-        double client = ((FrameworkElement)form.FindName("ClientPane")).ActualHeight;
-        if (height >= 780) Assert.True(client > 300, $"{context}: the client card is {client} px high");
     }
 
     // Titles, form labels, fields and command buttons. List rows are data with tooltips and may trim.

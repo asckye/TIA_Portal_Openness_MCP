@@ -12,6 +12,14 @@ internal static partial class Strings
 
     private static readonly (string Key, string En, string Zh)[] ConfigurationCatalogue =
     [
+        ("Config.McpService", "MCP service", "MCP 服务"),
+        ("Config.EditTarget", "Edit target in MCP", "在 MCP 页修改目标"),
+        ("Config.SelectDetected", "Select detected", "选择已检测到的客户端"),
+        ("Config.BackupWrite", "Back up and write…", "备份并写入…"),
+        ("Config.PreviewJson", "Preview JSON", "预览 JSON"),
+        ("Config.PreviewTarget", "Client", "客户端"),
+        ("Config.CopyJson", "Copy JSON", "复制 JSON"),
+        ("Config.JsonCopied", "Copied the configuration JSON.", "已复制配置 JSON。"),
         ("Config.RelayLabel", "Remote clients connect through the local stdio relay on your LAN.", "远程客户端通过本地 stdio 中继直连局域网 / 虚拟机。"),
         ("Config.RelayMode",
                 "Remote clients use the bundled local stdio relay without bearer keys. Private and loopback addresses bypass " +
