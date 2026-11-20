@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-20T23:15:34.3282283+00:00",
+  "generatedAt": "2026-11-20T23:54:17.1400057+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "3d19182d5597a5ccc488a946ddbef7d264e1575be6c1e65ce043ddbeb7e15097",
+  "workerSha256": "6c3d0d11bc013e98fef80ba5ce4a9cb1b5f549c305eb5a696dd2a04489300d65",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -1130,7 +1130,7 @@
         "dryRun",
         "attributes"
       ],
-      "description": "[L2][PLC-Software][WRITE] ProDiag native object access on an exact PLC or block: read provider metadata (attributes, advertised compositions), readComposition/createEntry/deleteEntry through the official IEngineeringObject composition API (typeName must be advertised by GetCreationInfos), setAttributes on the provider, exportSettings/importSettings (.dat) via SupervisionSettingsProvider. Openness exposes no typed supervision list; XLSX bulk exchange is ExchangePlcSupervisions. Offline PLC for real writes; deletes need confirmDelete=true. Default preview; no save/compile/download. Examples: GetToolUsage(toolName: \"ManagePlcSupervision\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][WRITE] ProDiag native object access on an exact PLC or block: read provider metadata (attributes, advertised compositions), readComposition/createEntry/deleteEntry through the official IEngineeringObject composition API (typeName must be advertised by GetCreationInfos), setAttributes on the provider, exportSettings/importSettings (.dat) via SupervisionSettingsProvider. readComposition pages entries of the selected provider. FB.Supervisions exists from V15.1 and is outside this tool. Use ExchangePlcSupervisions for XLSX bulk exchange. Offline PLC for real writes; deletes need confirmDelete=true. Default preview; no save/compile/download. Examples: GetToolUsage(toolName: \"ManagePlcSupervision\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"action\":\"read\",\"confirmDelete\":false,\"dryRun\":true}"
     },
     {

@@ -29908,7 +29908,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "31c4e4a09e801838e0d90077146d0407ed7e16122a9e9c9b9e0c3e10cee91f6e",
+      "descriptionSha256": "270d8000547a57276e509c65c8eedf8756fe1a9c04a0d565142e1bf12984236b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
