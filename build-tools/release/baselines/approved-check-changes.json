@@ -6985,6 +6985,73 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchResourceTests/Row_and_control_sizes_follow_the_maintainer_scale( ):17ff9965eceeef110a034acfa0e9f83ee2f573a28c6cfe5a171df564ccc26b4e:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-18",
+      "maintainerDate": "2026-11-20",
+      "reason": "VMFIX-18 amendments approved changes: A1 WriteRefusalTests findThrows, B1 HonestWriteSources CAx admission rows and the CAx readback row, D status-check expectations, trend counts, test rename and draft formatter calls (maintainer standing approval 2026-11-17 for recommended options)",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HardwareWriteFailureTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.HardwareWriteFailureTests/Real_aml_step_preserves_typed_edit_refusal( string release ):1a5cdceadcee7dbceeb5da0430e204e61cc24aa6239477ce31b41dc6ee1da73c:1"
+        },
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/WriteRefusalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.WriteRefusalTests/Workspace_export_tracks_native_dispatch_and_fresh_Find_after_a_throw( string result ):56427dc65497eb2c20044d09ffa9757ba08face15894a3263f1dbefbd399b7bf:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/DocsOnlyRunNeedsNeitherSdkNorPython( ):37c2704725a3f49f5bac6cc260309a58e759d36994e5ea6f19455021a8c49c1c:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/TrendFilesAreMergedAfterTheStage( bool failedCheck ):51f7df1f456e632204e1aa978ab9bca746fb9105aa93a8411ac1d070a493291b:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/TrendFilesAreMergedAfterTheStage( bool failedCheck ):8ed1dc6cd71a6ff88bc2197a2cb25bbb26e9cff2e83b5058d49ce7528daa8a46:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/DocsPlanHasExactlyThreeChecksAndNoBuildsOrSuites( string path ):655faf05b62cadbbcadaedfd710c9fc4bb77b5cb4abf4c6e400ae35f52e3df50"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/NotVerifiedSectionComesFromTheLedgerAndTheChecklist( ):2746cb01b554a615dfbaccabb9d1f446f4d14458ac9d5359cc4cac6bb066e4fc:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/NotVerifiedSectionComesFromTheLedgerAndTheChecklist( ):9a99ffee1d675b990cf0021098c946a57e7e28379c75b5c264ff1226c16125ac:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/HonestWriteSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.HonestWriteSources/Aml_import_uses_admission_without_exclusive_access_for_the_transfer_result_overload( ):0dc0f0b904096da2e9cf8b4eafe5a6f69308173fb2709e5b56f8a115bb150700:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/HonestWriteSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.HonestWriteSources/Aml_import_uses_admission_without_exclusive_access_for_the_transfer_result_overload( ):8e491116ff214b12dc17974c2278163f096c366342401b27260778289a91b741:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/HonestWriteSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.HonestWriteSources/Aml_import_uses_admission_without_exclusive_access_for_the_transfer_result_overload( ):c9e177f8c791406a7c3e62feec5d82cd2d2a5bc9c684c4dcd0d7336cb7000b7e:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/HonestWriteSources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.HonestWriteSources/Hardware_writes_initialize_unchanged_before_edit_admission( string path , string method , string admission ):e2fee4740abc478c7775511b7c0eb48f9913fccff4545213fd2d7a88ed3d657a:1"
+        }
+      ]
     }
   ]
 }
