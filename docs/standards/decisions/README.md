@@ -47,6 +47,7 @@
 | [0033](0033-canonical-tool-parameters.md) | 统一工具参数形式并保留一代别名 | 已采纳 | 2026-11-04 | DES-4-P1 |
 | [0034](0034-no-session-lock.md) | 结果未知只影响本次调用，取消会话锁 | 已关闭 | 2026-11-15 | NO-LOCK |
 | [0035](0035-workbench-native-ide-dual-accent.md) | 工作台采用原生桌面 IDE 布局与双强调色工程色板 | 已采纳 | 2026-11-19 | — |
+| [0036](0036-workbench-final-ide-layout.md) | 工作台最终 IDE 布局：活动栏、命令面板、合并页面，审批红线不变 | 已采纳 | 2026-11-20 | — |
 
 ## 待补写的决定
 
