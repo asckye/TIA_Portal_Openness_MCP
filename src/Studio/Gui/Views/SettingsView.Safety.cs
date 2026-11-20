@@ -15,6 +15,7 @@ public partial class SettingsView
     private SafetySettingsService safety = new();
     private readonly ObservableCollection<string> targets = [];
     private bool safetyBusy;
+    private Task? loadingTargets;
     internal Func<string, bool>? SafetyConfirmationForTests { get; set; }
     internal Action<string>? SafetyErrorForTests { get; set; }
 
@@ -25,7 +26,9 @@ public partial class SettingsView
 
     internal void SetSafetyService(SafetySettingsService service) => safety = service;
 
-    internal async Task LoadSafetyAsync()
+    internal Task LoadSafetyAsync() => loadingTargets is { IsCompleted: false } ? loadingTargets : loadingTargets = LoadSafetyCoreAsync();
+
+    private async Task LoadSafetyCoreAsync()
     {
         if (safetyBusy) return;
         SetSafetyBusy(true);
@@ -36,6 +39,7 @@ public partial class SettingsView
             {
                 targets.Clear();
                 if (list != null) foreach (string entry in list.Entries) targets.Add(entry);
+                SaveTargetChanges.Visibility = list == null ? Visibility.Visible : Visibility.Collapsed;
                 SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(list == null ? "Settings.TargetsUnconfigured"
                     : list.Entries.Count == 0 ? "Settings.TargetsEmpty" : "Settings.TargetsConfigured"));
             }
@@ -69,22 +73,29 @@ public partial class SettingsView
     {
         if (!safety.TargetsReadOnly || !ConfirmSafety("Settings.ConfirmReplaceTargets", safety.TargetsPath)) return false;
         safety.ConfirmTargetReplacement();
+        SaveTargetChanges.Visibility = Visibility.Visible;
         targets.Clear();
         UpdateTargetEditor();
         SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding("Settings.TargetsReplacementReady"));
         return true;
     }
 
-    private void OnAddTarget(object sender, RoutedEventArgs e)
+    private async void OnAddTarget(object sender, RoutedEventArgs e)
     {
         if (safety.TargetsReadOnly) return;
         try
         {
             string entry = SafetySettingsService.ValidateTarget(OnlineTargetInput.Text.Trim());
-            if (!targets.Contains(entry)) targets.Add(entry);
-            OnlineTargetInput.Clear();
-            OnlineTargetInput.Focus();
-            SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding("Settings.TargetsUnsaved"));
+            if (!targets.Contains(entry))
+            {
+                targets.Add(entry);
+                SaveTargetChanges.Visibility = Visibility.Visible;
+            }
+            if (await SaveTargetsAsync())
+            {
+                OnlineTargetInput.Clear();
+                OnlineTargetInput.Focus();
+            }
         }
         catch (ArgumentException) /* swallow(privacy): show the localized input rule instead of echoing the rejected text. */
         { ShowSafetyError("Settings.TargetInvalid"); }
@@ -93,23 +104,26 @@ public partial class SettingsView
     private void OnRemoveTarget(object sender, RoutedEventArgs e)
     {
         if (safety.TargetsReadOnly) return;
-        if (OnlineTargets.SelectedItem is not string entry) return;
+        if (((Button)sender).DataContext is not string entry) return;
         targets.Remove(entry);
+        SaveTargetChanges.Visibility = Visibility.Visible;
         SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding("Settings.TargetsUnsaved"));
     }
 
     private async void OnSaveTargets(object sender, RoutedEventArgs e) => await SaveTargetsAsync();
 
-    internal async Task SaveTargetsAsync()
+    internal async Task<bool> SaveTargetsAsync()
     {
-        if (safety.TargetsReadOnly) return;
+        if (safetyBusy || safety.TargetsReadOnly) return false;
         string[] entries = targets.ToArray();
         SetSafetyBusy(true);
         try
         {
             await Task.Run(() => safety.SaveTargets(entries));
+            SaveTargetChanges.Visibility = Visibility.Collapsed;
             SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(entries.Length == 0
                 ? "Settings.TargetsEmpty" : "Settings.TargetsConfigured"));
+            return true;
         }
         catch (TiaOpenness.Shared.OnlineTargetSettingsChangedException) /* swallow(privacy): report a fixed reload prompt without file contents. */
         {
@@ -119,6 +133,7 @@ public partial class SettingsView
         catch (Exception) /* swallow(privacy): failed writes or audit appends are reported without exposing settings contents. */
         { ShowSafetyError("Settings.SafetySaveFailed"); }
         finally { SetSafetyBusy(false); }
+        return false;
     }
 
     private async void OnReloadSafety(object sender, RoutedEventArgs e) => await LoadSafetyAsync();

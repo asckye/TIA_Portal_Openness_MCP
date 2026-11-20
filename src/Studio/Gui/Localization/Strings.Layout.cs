@@ -45,7 +45,7 @@ internal static partial class Strings
         ("Shell.ApprovalsPill", "Approvals", "协作与审批"),
         ("Shell.ApprovalOnStatus", "Manual", "人工审批"),
         ("Shell.ApprovalOffStatus", "Auto-write", "自动放行"),
-        ("Settings.Sections", "Settings sections", "设置分区"),
+        ("Settings.Sections", "Settings", "偏好与安全"),
         ("Settings.HumanOnly", "Human only", "仅限人工操作"),
         ("Settings.Folders", "Folders", "目录"),
         ("Settings.DataDirectory", "Data folder", "数据目录"),

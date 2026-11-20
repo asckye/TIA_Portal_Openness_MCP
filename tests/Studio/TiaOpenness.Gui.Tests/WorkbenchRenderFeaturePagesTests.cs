@@ -219,6 +219,226 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData(1366, 860, AppTheme.Light, AppLanguage.Chinese)]
+    [InlineData(1366, 860, AppTheme.Light, AppLanguage.English)]
+    [InlineData(1366, 860, AppTheme.Dark, AppLanguage.Chinese)]
+    [InlineData(1024, 640, AppTheme.Light, AppLanguage.Chinese)]
+    public void Final_feature_views_use_the_design_sizes_and_actual_request_fields(int width, int height, AppTheme theme, AppLanguage language)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var themes = ThemeManager.Current;
+            var previous = (themes.Theme, themes.Accent, themes.HighContrastOverride, App.Settings.LeftPaneOpen);
+            themes.Theme = theme; themes.Accent = AppAccent.Cobalt; themes.HighContrastOverride = false; App.Settings.LeftPaneOpen = true;
+            var approvals = FeaturePageFixtures.Approvals(false);
+            string planHash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData("fixture plan"u8));
+            var import = FeaturePageFixtures.Request() with
+            {
+                PlanHash = planHash,
+                Operations = [new(LocalizedText.Literal("ImportPlcBlock"), "Conveyor / Conveyor_Ctrl_FB", "ImportPlcBlock")],
+                Risks = [LocalizedText.Key("Approval.OverwritesExisting")],
+                ParametersJson = """{"plc":"PLC_1","blockName":"Conveyor_Ctrl_FB","overwrite":true}"""
+            };
+            approvals.Receive(FeaturePageFixtures.Request("previous-import") with { PlanHash = planHash });
+            Assert.True(approvals.Approve("previous-import"));
+            approvals.Transition("previous-import", Services.ApprovalState.Executing);
+            approvals.Transition("previous-import", Services.ApprovalState.Completed);
+            approvals.Receive(import);
+            approvals.Receive(import with
+            {
+                Id = "online-review", Risk = Services.ApprovalRisk.Destructive, RiskAction = "online",
+                Operations = [new(LocalizedText.Literal("DownloadPlc"), "PLC_1", "DownloadPlc")], Risks = [],
+                ParametersJson = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    onlineTarget = new { kind = "physical", targetIpAddress = "192.0.2.10", pgPcInterface = "Fixture adapter" },
+                    expectedPlanHash = planHash,
+                })
+            });
+            var model = ProjectPageTestSupport.Model(results: true);
+            var window = new MainWindow(model, false, approvals, new FeaturePageFixtures.Diagnostics()) { Width = width, Height = height };
+            try
+            {
+                using var trace = new BindingPathTests.BindingTrace();
+                using var settings = new SafetySettingsServiceTests.Fixture();
+                settings.Service.SaveTargets(["192.0.2.10", "198.51.100.0/24"]);
+                window.SettingsContent.SetSafetyService(settings.Service);
+                settings.Audit.Append("request", import.Id, "engine", "21", "ImportPlcBlock");
+                settings.Audit.Approval(import.Id, "engine", "21", "ImportPlcBlock", "granted", planHash);
+                settings.Audit.Append("start", import.Id, "engine", "21", "ImportPlcBlock");
+                settings.Audit.Append("end", import.Id, "engine", "21", "ImportPlcBlock", "succeeded");
+                using var audit = new Services.AuditLogService(Path.Combine(settings.Root, "audit"), Path.Combine(settings.Root, "diagnostics"),
+                    Path.Combine(settings.Root, "retention"), _ => { });
+                WpfContext.Complete(audit.RefreshAsync());
+                var journal = new FeaturePageFixtures.Journal();
+                journal.Replace(journal.Calls.Select(call => call.Tool == "ExportBlock" ? call with
+                {
+                    ResultJson = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        schemaVersion = 4, ok = false, data = (object?)null,
+                        error = new { code = call.ErrorCode, message = call.ErrorMessage.Resolve(), details = new { } },
+                        meta = new
+                        {
+                            timestamp = call.Time, releaseKey = call.Release, tool = call.Tool, requestId = call.RequestId,
+                            outcome = "read-failed", execution = "read-only", behaviorPolicy = "current", completeness = "none",
+                            paging = (object?)null, warnings = Array.Empty<object>(),
+                        },
+                    }),
+                } : call).ToArray());
+                window.ConfigureFeaturePages(journal, audit,
+                    new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
+                var host = WorkbenchRenderTests.CreateHost(window, width, height);
+                window.Content = host;
+                WpfContext.ShowWindow(window);
+                void Capture(string view)
+                {
+                    WpfContext.Drain(); host.UpdateLayout();
+                    if (Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR") is not { Length: > 0 } output) return;
+                    var dir = Directory.CreateDirectory(Path.Combine(output, "b2"));
+                    string suffix = $"{theme.ToString().ToLowerInvariant()}-{(Loc.Current.IsChinese ? "zh" : "en")}-{width}x{height}";
+                    WorkbenchRenderTests.SaveRender(host, Path.Combine(dir.FullName, view + "-" + suffix + ".png"), width, height);
+                }
+
+                void CheckColumn(FrameworkElement column, double left, double expectedWidth)
+                {
+                    Assert.Equal(expectedWidth, column.ActualWidth);
+                    Assert.InRange(column.TranslatePoint(new Point(), host).X, left - 1, left + 1);
+                }
+
+                window.Navigate("Approvals");
+                Capture("agent-approvals");
+                if (width == 1366) CheckColumn(window.ApprovalsContent.DetailScroll, 434, 820);
+                Assert.Equal(Loc.Current["Approval.ApproveImport"], window.ApprovalsContent.ApproveRequest.Content);
+                void CheckButton(System.Windows.Controls.Primitives.ButtonBase button, int height)
+                {
+                    var peer = System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(button);
+                    Assert.NotNull(peer);
+                    Assert.False(string.IsNullOrWhiteSpace(peer.GetName()));
+                    Assert.Equal(height, button.ActualHeight);
+                }
+                CheckButton(window.ApprovalsContent.ApproveRequest, 32);
+                CheckButton(window.ApprovalsContent.DenyRequest, 32);
+                if (width == 1366) Assert.Equal(262, window.ApprovalsContent.RequestListPane.ActualWidth);
+                Assert.True(approvals.Deny(import.Id));
+                WpfContext.Drain();
+                var destructive = window.Features.SelectedRequest!;
+                Assert.Equal(4, destructive.DestructiveFields.Count);
+                UnifiedDesktopTests.ClickControl(window.ApprovalsContent.ApproveRequest);
+                Capture("danger-sheet");
+                var sheet = Descendants<Border>(window.ApprovalsContent.ConfirmationSheet).Single(b => b.Width == 420);
+                CheckColumn(sheet, (width - 420) / 2d, 420);
+                double middle = sheet.TranslatePoint(new Point(0, sheet.ActualHeight / 2), host).Y;
+                Assert.InRange(middle, height / 2d - 1, height / 2d + 1);
+                Assert.True(window.ApprovalsContent.ConfirmationSheet.IsVisible);
+                CheckButton(window.ApprovalsContent.CancelDestructive, 36);
+                CheckButton(window.ApprovalsContent.ConfirmDestructive, 36);
+                Assert.Equal("workbench-modal-open", window.ApplyControl(WorkbenchControlTests.Request()).Refusal?.Condition);
+                Assert.Equal(1, approvals.PendingCount);
+                UnifiedDesktopTests.ClickControl(window.ApprovalsContent.CancelDestructive);
+
+                window.Navigate("Calls");
+                if (width >= 1260) window.Features.OpenCall(window.Features.Calls.Single(row => row.Tool == "ExportBlock"));
+                Capture("agent-calls");
+                CheckButton(window.CallsContent.AllFilter, 26);
+                Assert.Equal(28, window.CallsContent.SearchBox.ActualHeight);
+                var header = Descendants<Border>(window.CallsContent).Single(border =>
+                    ReferenceEquals(border.Style, window.FindResource("Primer.TableHeaderBand")));
+                Assert.Equal(34, header.ActualHeight);
+                window.Navigate("Environment"); Capture("doctor");
+                if (width == 1366)
+                {
+                    var column = Descendants<StackPanel>(window.EnvironmentContent).Single(panel => panel.MaxWidth == 860);
+                    CheckColumn(column, 283, 860);
+                }
+                window.Navigate("Audit");
+                Assert.Equal(64, window.Features.SelectedAudit!.Hash.Length);
+                Capture("audit");
+                model.Activity.ClearLog();
+                model.Activity.Append("ImportPlcBlock · Conveyor_Ctrl_FB", Services.WorkbenchActivity.Severity.Info);
+                model.Activity.Append("DownloadPlc · " + Loc.Current["Approval.Pending"], Services.WorkbenchActivity.Severity.Warning);
+                model.Activity.Append("ExportBlock · KNOW_HOW_PROTECTED", Services.WorkbenchActivity.Severity.Error);
+                window.Navigate("Log"); Capture("logs");
+                window.Navigate("Settings"); window.SettingsContent.ShowSection("AI");
+                WpfContext.Complete(window.SettingsContent.LoadSafetyAsync());
+                Capture("settings");
+                var settingsView = window.SettingsContent;
+                if (width == 1366)
+                {
+                    var column = Descendants<StackPanel>(settingsView).Single(panel => panel.MaxWidth == 740);
+                    CheckColumn(column, 461, 740);
+                    Assert.Contains(Descendants<TextBlock>(settingsView.SectionList),
+                        text => text.Text == (Loc.Current.IsChinese ? "偏好与安全" : "Settings"));
+                }
+                var policy = Descendants<TextBlock>(settingsView.AiPanel).Single(text => text.Text == Loc.Current["Settings.AlwaysConfirmed"]);
+                Assert.False(policy.IsVisible);
+                UnifiedDesktopTests.ClickControl(settingsView.ShowPolicyDetails);
+                WpfContext.Drain();
+                Assert.True(policy.IsVisible);
+                UnifiedDesktopTests.ClickControl(settingsView.ShowPolicyDetails);
+                WpfContext.Drain();
+                Assert.False(policy.IsVisible);
+                Assert.Equal(2, window.SettingsContent.OnlineTargets.Items.Count);
+                if (width == 1366) Assert.Equal(236, ((Border)window.SettingsContent.SectionList.Parent).ActualWidth);
+                Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
+            }
+            finally
+            {
+                window.Close();
+                (themes.Theme, themes.Accent, themes.HighContrastOverride, App.Settings.LeftPaneOpen) = previous;
+            }
+        });
+    }
+
+    [Fact]
+    public void Approval_details_omit_missing_fields_and_never_infer_safeguards()
+    {
+        wpf.Run(() =>
+        {
+            var approvals = FeaturePageFixtures.Approvals(false);
+            using var model = new FeaturePagesViewModel(approvals, new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(),
+                new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics(), () => FeaturePageFixtures.Now);
+            var request = FeaturePageFixtures.Request() with
+            {
+                Project = "", Plc = "", Risks = [], Operations = [], ParametersJson = "{}", Risk = Services.ApprovalRisk.Destructive,
+            };
+            foreach (string json in new[] { "{}", "invalid", "[]", """{"onlineTarget":null}""" })
+            {
+                var row = new ApprovalRow(request with { ParametersJson = json }, model);
+                Assert.Empty(row.Target); Assert.Empty(row.Change); Assert.Empty(row.Safeguard);
+                Assert.Empty(row.FirstObject); Assert.Empty(row.DestructiveFields);
+            }
+        });
+    }
+
+    [Fact]
+    public void Journal_JSON_colouring_preserves_escaped_names_unicode_numbers_and_truncation()
+    {
+        wpf.Run(() =>
+        {
+            var text = new TextBlock();
+            string json = """{"指令\"名称" : "S7", "amount": -1.25e3, "flags":[true,false,null]}""";
+            Views.CallDetailDrawer.SetJsonPreview(text, json);
+            Assert.Equal(json, text.Text);
+            var runs = text.Inlines.OfType<System.Windows.Documents.Run>().ToList();
+            Assert.Equal(json, string.Concat(runs.Select(run => run.Text)));
+            Assert.Same(Application.Current.FindResource("Primer.syntaxKeyword"), runs[1].Foreground);
+            Assert.Same(Application.Current.FindResource("Primer.syntaxNumber"), runs.Single(run => run.Text == "-1.25e3").Foreground);
+            string truncated = json[..^1] + TiaOpenness.Shared.CallJournalPayload.Truncated;
+            Views.CallDetailDrawer.SetJsonPreview(text, truncated);
+            Assert.Equal(truncated, text.Text);
+            Assert.Equal(truncated, Assert.Single(text.Inlines.OfType<System.Windows.Documents.Run>()).Text);
+        });
+    }
+
+    [Fact]
+    public void Product_markup_and_translations_contain_no_reference_project_data()
+    {
+        var sources = SourceScan.Markup.Concat(SourceScan.Code.Where(file => file.Name.Contains(".Localization.Strings", StringComparison.Ordinal)));
+        foreach (var file in sources)
+        foreach (string sample in new[] { "Line04_Packaging", "req-9041", "192.168.10.21", "Intel I225-V", "CPU 1515F", "FB_ConveyorCtrl" })
+            Assert.DoesNotContain(sample, file.Text, StringComparison.Ordinal);
+    }
+
     internal static Border Detach(MainWindow window)
     {
         var content = (FrameworkElement)window.Content; window.Content = null;

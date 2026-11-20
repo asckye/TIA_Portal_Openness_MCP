@@ -4,6 +4,26 @@ internal static partial class Strings
 {
     private static (string Key, string En, string Zh)[] SafetyCatalogue =>
     [
+        ("Settings.SafetyTitle", "Safety & AI", "安全与 AI 控制"),
+        ("Settings.AppearanceTitle", "Appearance", "外观与语言"),
+        ("Settings.StorageTitle", "Storage & about", "存储、更新与关于"),
+        ("Settings.SafetySubtitle", "Human-only local controls", "仅允许在本机工作台修改"),
+        ("Settings.AppearanceSubtitle", "Theme, accent & language", "主题、点缀色与界面语言"),
+        ("Settings.StorageSubtitle", "Data paths, updates & info", "本地数据目录、版本检查与关于"),
+        ("Settings.ApprovalRule", "Require approval for MCP writes", "普通写操作默认工作台人工审批"),
+        ("Settings.ApprovalRuleHint", "Changes immediately. Physical PLC writes still require confirmation.", "切换后立即生效，真实 PLC 写入仍须人工确认。"),
+        ("Settings.ExpiryHint", "Auto-deny on expiry", "倒计时归零自动拒绝"),
+        ("Settings.PlanHint", "Expired plans require a new preview", "过期后须重新预检"),
+        ("Settings.DurationCustom", "Custom", "自定义"),
+        ("Settings.TimeoutSeconds", "Timeout in seconds (1–3600)", "超时秒数（1–3600）"),
+        ("Settings.TimeoutInvalid", "Enter a whole number of seconds from 1 to 3600.", "请输入 1–3600 的整数秒数。"),
+        ("Settings.PlanDuration", "Online plan lifetime", "在线预检计划有效期"),
+        ("Settings.Plan5", "5 min", "5 分钟"),
+        ("Settings.Plan15", "15 min", "15 分钟"),
+        ("Settings.Plan30", "30 min", "30 分钟"),
+        ("Settings.ApplySeconds", "Apply", "应用"),
+        ("Settings.AddAndSave", "Add & save", "添加并保存"),
+        ("Settings.PolicyDetails", "Approval policy details", "查看审批策略详情"),
         ("Settings.AlwaysConfirmed", "Even with approval off, the Workbench requires confirmation to execute CloseProject with discardChanges=true " +
             "or to write to a physical online target. ManagePlcDataBlockSnapshot read/exportSnapshot and InvokeUnifiedOpenPipe read/browse messages " +
             "can proceed. The createSnapshot action, verified PLCSIM downloads and the three PLCSIM-only tools follow the ordinary approval switch.",
@@ -16,10 +36,10 @@ internal static partial class Strings
         ("Settings.PlanLifetime", "Online write plan lifetime (seconds, 1–86400)", "在线写入计划有效期（秒，1–86400）"),
         ("Settings.SavePlanLifetime", "Save plan lifetime", "保存计划有效期"),
         ("Settings.PlanLifetimeInvalid", "Enter a whole number of seconds from 1 to 86400.", "请输入 1–86400 的整数秒数。"),
-        ("Settings.OnlineTargets", "Online targets", "在线目标"),
-        ("Settings.OnlineTargetsHelp", "Add IPv4 addresses or CIDR subnets, then save. The list covers Openness, S7, Web API and OPC UA. " +
+        ("Settings.OnlineTargets", "Online target IPv4 allowlist", "在线目标 IPv4 白名单"),
+        ("Settings.OnlineTargetsHelp", "Add and save IPv4 addresses or CIDR subnets. The list covers Openness, S7, Web API and OPC UA. " +
             "Saving an empty list denies all targets. Reload discards unsaved edits.",
-            "添加 IPv4 地址或 CIDR 子网后保存。列表覆盖 Openness、S7、Web API 和 OPC UA。保存空列表会拒绝全部目标。重新加载会放弃未保存的编辑。"),
+            "添加并保存 IPv4 地址或 CIDR 子网。列表覆盖 Openness、S7、Web API 和 OPC UA。保存空列表会拒绝全部目标。重新加载会放弃未保存的编辑。"),
         ("Settings.TargetsUnconfigured", "No list configured; address restrictions are off.", "未配置列表；尚未限制地址。"),
         ("Settings.TargetsEmpty", "Empty list saved; all online targets are refused.", "已保存空列表；将拒绝全部在线目标。"),
         ("Settings.TargetsConfigured", "The saved list limits online targets.", "已保存列表；在线目标受此列表限制。"),
@@ -36,7 +56,6 @@ internal static partial class Strings
         ("Settings.TargetsChanged", "The list file changed after loading. Reload the lists before saving; your save was refused.",
             "列表文件在加载后已改变。此次保存已拒绝，请重新加载列表后再保存。"),
         ("Settings.TargetAddress", "IPv4 address or CIDR subnet", "IPv4 地址或 CIDR 子网"),
-        ("Settings.AddTarget", "Add target", "添加目标"),
         ("Settings.RemoveTarget", "Remove selected target", "移除所选目标"),
         ("Settings.SaveTargets", "Save online targets", "保存在线目标"),
         ("Settings.ReloadSafety", "Reload lists", "重新加载列表"),

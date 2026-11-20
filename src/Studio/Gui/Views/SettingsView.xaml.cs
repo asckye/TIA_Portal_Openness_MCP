@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using TiaMcpConfigurator;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services.Stubs;
@@ -23,7 +24,8 @@ public partial class SettingsView : UserControl
     {
         InitializeComponent();
         InitializeSafetyEditors();
-        ShowSection("Appearance");
+        ShowSection("AI");
+        IsVisibleChanged += (_, _) => { if (IsVisible && AiSection.IsSelected) _ = LoadSafetyAsync(); };
         VersionText.Text = Loc.Current.T("Common.WorkbenchVersion", MainViewModel.AppVersion).TrimStart('v');
         LoadPaths();
     }
@@ -83,9 +85,11 @@ public partial class SettingsView : UserControl
         ServicePanel.Visibility = section == "Service" ? Visibility.Visible : Visibility.Collapsed;
         AiPanel.Visibility = section == "AI" ? Visibility.Visible : Visibility.Collapsed;
         SectionTitle.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(section switch
-            { "Service" => "Settings.Engine", "AI" => "Control.Section", _ => "Settings.Appearance" }));
+            { "Service" => "Settings.StorageTitle", "AI" => "Settings.SafetyTitle", _ => "Settings.AppearanceTitle" }));
+        SectionSubtitle.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(section switch
+            { "Service" => "Settings.StorageSubtitle", "AI" => "Settings.SafetySubtitle", _ => "Settings.AppearanceSubtitle" }));
         DetailScroll.ScrollToTop();
-        if (section == "AI") _ = LoadSafetyAsync();
+        if (section == "AI" && IsVisible) _ = LoadSafetyAsync();
     }
 
     internal static string ReadPackageName(string bundleRoot)
@@ -128,7 +132,23 @@ public partial class SettingsView : UserControl
         Timeout60.IsChecked = _approvals.TimeoutSeconds == 60;
         Timeout120.IsChecked = _approvals.TimeoutSeconds == 120;
         Timeout300.IsChecked = _approvals.TimeoutSeconds == 300;
+        TimeoutCustom.IsChecked = _approvals.TimeoutSeconds is not (60 or 120 or 300);
+        CustomTimeout.Text = _approvals.TimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        Plan5.IsChecked = _approvals.OnlinePlanLifetimeSeconds == 300;
+        Plan15.IsChecked = _approvals.OnlinePlanLifetimeSeconds == 900;
+        Plan30.IsChecked = _approvals.OnlinePlanLifetimeSeconds == 1800;
+        PlanCustom.IsChecked = _approvals.OnlinePlanLifetimeSeconds is not (300 or 900 or 1800);
         OnlinePlanLifetime.Text = _approvals.OnlinePlanLifetimeSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private async void OnPolicySwitchKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Space || _approvals == null) return;
+        e.Handled = true;
+        if (e.IsRepeat) return;
+        bool target = !_approvals.Enabled;
+        await SaveApproval(() => _approvals.Enabled = target);
+        if (AiPanel.IsKeyboardFocusWithin) (_approvals.Enabled ? ApprovalOn : ApprovalOff).Focus();
     }
 
     private async void OnApprovalClick(object sender, RoutedEventArgs e)
@@ -143,6 +163,20 @@ public partial class SettingsView : UserControl
     {
         int value = int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture);
         if (_approvals != null) await SaveApproval(() => _approvals.TimeoutSeconds = value);
+    }
+
+    private async void OnPlanPreset(object sender, RoutedEventArgs e)
+    {
+        int seconds = int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture);
+        if (_approvals != null) await SaveApproval(() => _approvals.OnlinePlanLifetimeSeconds = seconds);
+    }
+
+    private async void OnSaveTimeout(object sender, RoutedEventArgs e)
+    {
+        if (_approvals == null) return;
+        if (!int.TryParse(CustomTimeout.Text, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int seconds)
+            || seconds is < 1 or > 3600) { ShowSafetyError("Settings.TimeoutInvalid"); return; }
+        await SaveApproval(() => _approvals.TimeoutSeconds = seconds);
     }
 
     private async Task SaveApproval(Action action)

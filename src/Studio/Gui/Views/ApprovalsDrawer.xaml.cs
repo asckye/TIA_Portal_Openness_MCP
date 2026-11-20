@@ -56,8 +56,6 @@ public partial class ApprovalsDrawer : UserControl
         else if (_row is { Pending: true })
         { e.Handled = true; if ((_row.Destructive || DenyRequest.IsKeyboardFocusWithin) && !Guarded) Model.Decide(_row, false); }
     }
-    private void OnWaiting(object sender, RoutedEventArgs e) { if (DataContext is FeaturePagesViewModel model) model.HandledRequests = false; }
-    private void OnHandled(object sender, RoutedEventArgs e) { if (DataContext is FeaturePagesViewModel model) model.HandledRequests = true; }
     private void OnModelChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.OldValue is FeaturePagesViewModel previous) previous.PropertyChanged -= OnModelPropertyChanged;
@@ -66,7 +64,14 @@ public partial class ApprovalsDrawer : UserControl
     }
     private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     { if (e.PropertyName == nameof(FeaturePagesViewModel.SelectedRequest)) SelectRow(); }
-    private void OnSelectionChanged(object sender, SelectionChangedEventArgs e) => SelectRow();
+    private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (RequestList.SelectedItem is ApprovalRow row && DataContext is FeaturePagesViewModel model && row != model.SelectedRequest)
+        {
+            model.HandledRequests = !row.Pending;
+            model.SelectedRequest = row;
+        }
+    }
     private void SelectRow()
     {
         var next = (DataContext as FeaturePagesViewModel)?.SelectedRequest;
@@ -90,7 +95,6 @@ public partial class ApprovalsDrawer : UserControl
     internal void FocusRequest(string id)
     {
         Model.HandledRequests = false;
-        WaitingTab.IsChecked = true;
         Model.SelectedRequest = System.Linq.Enumerable.FirstOrDefault(Model.Requests, r => r.Request.Id == id);
         Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => { if (IsVisible && _row?.Request.Id == id) RequestTitle.Focus(); }));
     }

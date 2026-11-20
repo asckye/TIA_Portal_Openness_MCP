@@ -98,6 +98,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public string CallsCount => Loc.Current.T("Calls.Count", _snapshotCount, Approvals.PendingCount);
     public string CallEmptyTitle => Loc.Current[_snapshotCount == 0 ? "Calls.EmptyTitle" : "Calls.NoMatches"];
     // Statistic cards over the same snapshot the count line uses: the journal plus pending approvals, before filters.
+    public int WriteCount { get; private set; }
+    public int HumanCount { get; private set; }
+    public int AiCount { get; private set; }
     public int CallStatTotal => _snapshotCount;
     public int CallStatPending => _callStats.Pending;
     public int CallStatFailed => _callStats.Failed;
@@ -106,6 +109,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public string Address => string.IsNullOrEmpty(Journal.Connection.Address) ? Loc.Current["Feature.NotConnected"] : Journal.Connection.Address;
     public string Transport => string.IsNullOrEmpty(Journal.Connection.Transport) ? "—" : Journal.Connection.Transport;
     public string ConnectionJson => _connectionJson;
+    public FeatureTone ApprovalPolicyTone => Approvals.Enabled ? FeatureTone.Success : FeatureTone.Warning;
+    public string ApprovalPolicy => Approvals.Enabled ? Loc.Current["Agent.Manual"] : Loc.Current["Agent.Automatic"];
     public string ApprovalSetting => Approvals.Enabled ? Loc.Current.T("Calls.ApprovalOn", Approvals.TimeoutSeconds) : Loc.Current["Shell.ApprovalOff"];
     public IReadOnlyList<ApprovalRow> Requests => _requests;
     public IReadOnlyList<ApprovalRow> VisibleRequests => _visibleRequests;
@@ -140,6 +145,10 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public bool AuditEmpty => _auditRows.Count == 0;
     public string AuditEmptyText => Loc.Current[Audit.Events.Count == 0 ? "Shell.AuditEmpty" : "Audit.NoMatches"];
     public string AuditCount => Loc.Current.T("Feature.Count", Audit.TotalCount.ToString("N0"));
+    public bool LatestAuditPage => Audit is not AuditLogService log || log.IsLatest;
+    public bool OlderAuditPage => !LatestAuditPage;
+    public bool CanPageOlder => Audit is AuditLogService { HasOlder: true };
+    public string AuditHead => Audit.Events.LastOrDefault() is { } last ? $"SHA-256 · #{last.Index}" : "SHA-256";
     public bool HasVerification => _verification != null;
     public bool VerificationBroken => _verification?.Passed == false;
     public FeatureTone VerificationTone => _verification?.Passed switch { true => FeatureTone.Success, false => FeatureTone.Warning, _ => FeatureTone.Muted };
@@ -193,6 +202,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     }
 
     public IReadOnlyList<EnvironmentGroupRow> EnvironmentGroups => _groups;
+    public bool HasEnvironmentStats => _groups.Any(g => g.Group.Rows.Count > 0);
+    public IReadOnlyList<EnvironmentGroupRow> EnvironmentStats => _groups.Where(g => g.Group.Rows.Count > 0).ToArray();
+    public IReadOnlyList<EnvironmentRow> EnvironmentRows => _groups.SelectMany(g => g.Rows).ToArray();
     public IReadOnlyList<EnvironmentRow> AttentionChecks => _groups.SelectMany(g => g.Rows).Where(r => r.Check.Status != CheckStatus.Pass).ToArray();
     public IReadOnlyList<EnvironmentRow> PassedChecks => _groups.SelectMany(g => g.Rows).Where(r => r.Check.Status == CheckStatus.Pass).ToArray();
     public EnvironmentRow? SelectedEnvironment { get => _selectedEnvironment; set { if (value != null) Set(ref _selectedEnvironment, value); } }
@@ -201,7 +213,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         string? id = _selectedEnvironment?.Check.Id;
         _selectedEnvironment = _groups.SelectMany(g => g.Rows).FirstOrDefault(r => r.Check.Id == id)
             ?? AttentionChecks.FirstOrDefault(row => row.Warning) ?? AttentionChecks.FirstOrDefault() ?? PassedChecks.FirstOrDefault();
-        Notify(nameof(AttentionChecks), nameof(PassedChecks), nameof(SelectedEnvironment));
+        Notify(nameof(HasEnvironmentStats), nameof(EnvironmentStats), nameof(EnvironmentRows), nameof(AttentionChecks), nameof(PassedChecks),
+            nameof(SelectedEnvironment));
     }
     public int EnvironmentCheckCount => _groups.Sum(g => g.Group.Rows.Count);
     public int EnvironmentPassedCount => _groups.Sum(g => g.Group.Rows.Count(r => r.Status == CheckStatus.Pass));
@@ -284,7 +297,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             }
             if (Changed(Approvals, nameof(IApprovalService.PendingCount)))
                 Notify(nameof(PendingCount), nameof(CallsCount), nameof(PendingSummary), nameof(WaitingLabel), nameof(ApprovalsTabLabel));
-            if (Changed(Approvals, nameof(IApprovalService.Enabled), nameof(IApprovalService.TimeoutSeconds))) Raise(nameof(ApprovalSetting));
+            if (Changed(Approvals, nameof(IApprovalService.Enabled), nameof(IApprovalService.TimeoutSeconds)))
+                Notify(nameof(ApprovalSetting), nameof(ApprovalPolicy), nameof(ApprovalPolicyTone));
             UpdateTimer();
         }
         if (_dirty.ContainsKey(Journal) && (_callsVisible || _detailVisible))
@@ -331,7 +345,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         RefreshEnvironmentSelection();
         RefreshCalls(); RefreshAudit(languageChanged: true);
         Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
-            nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting),
+            nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting), nameof(ApprovalPolicy),
             nameof(PendingCount), nameof(WaitingLabel), nameof(RequestsEmptyTitle), nameof(ApprovalsTabLabel),
             nameof(CallsTabLabel), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
         NotifyVerification();
@@ -383,6 +397,10 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         Sync(_calls, next);
         if ((previousCount == 0) != (_calls.Count == 0)) Raise(nameof(CallsEmpty));
         SetSnapshotCount(records.Length);
+        WriteCount = records.Count(c => c.IsWrite);
+        HumanCount = records.Count(c => c.Actor == "workbench");
+        AiCount = records.Count(c => c.Actor == "mcp");
+        Notify(nameof(WriteCount), nameof(HumanCount), nameof(AiCount));
         var timed = records.Where(c => c.DurationMs != null).ToArray();
         var stats =
             (records.Count(c => c.Result == CallResult.Pending), records.Count(c => c.Result is CallResult.Failed or CallResult.Partial or CallResult.Unknown),
@@ -400,6 +418,11 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             if (previous.TryGetValue(r.Id, out var row)) { row.Update(r); return row; }
             return new ApprovalRow(r, this);
         }).ToArray();
+        foreach (var group in next.GroupBy(row => row.Pending))
+        {
+            var first = group.First();
+            foreach (var row in group) row.SetGroupHeader(ReferenceEquals(row, first), group.Count());
+        }
         Sync(_requests, next); FilterRequests();
     }
     private void FilterRequests()
@@ -431,7 +454,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         }
         Sync(_auditRows, next);
         SelectedAudit = next.FirstOrDefault(r => r.Record.Chain == selection?.Chain && r.Record.Index == selection?.Index) ?? next.FirstOrDefault();
-        Notify(nameof(AuditEmpty), nameof(AuditEmptyText), nameof(AuditCount));
+        Notify(nameof(AuditEmpty), nameof(AuditEmptyText), nameof(AuditCount), nameof(AuditHead),
+            nameof(LatestAuditPage), nameof(OlderAuditPage), nameof(CanPageOlder));
     }
     private void RefreshConnection()
     {
@@ -550,7 +574,31 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         : Loc.Current.T("Approval.UnverifiedClient", string.IsNullOrWhiteSpace(Request.Client) ? Client : Request.Client);
     public bool Destructive => Request.Risk == ApprovalRisk.Destructive;
     public string Risk => Loc.Current[Destructive ? "Approval.RiskDestructive" : "Approval.RiskWrite"];
-    public string RiskIcon => Destructive ? "!" : "↑";
+    private bool _startsGroup;
+    private int _groupCount;
+    public bool StartsGroup => _startsGroup;
+    public int GroupCount => _groupCount;
+    public string GroupTitle => Loc.Current[Pending ? "Approval.FeedPending" : "Approval.FeedRecent"];
+    internal void SetGroupHeader(bool startsGroup, int count)
+    {
+        Set(ref _startsGroup, startsGroup, nameof(StartsGroup));
+        Set(ref _groupCount, count, nameof(GroupCount));
+    }
+    public string Timer => $"{Remaining / 60:00}:{Remaining % 60:00}";
+    public string TimerLabel => Pending ? Loc.Current.T("Approval.Timer", Timer) : State;
+    public string FeedTime => Pending ? Timer : Request.Deadline.AddSeconds(-Request.TimeoutSeconds).ToLocalTime().ToString("HH:mm");
+    public string FeedKind => Pending ? State + " · " + Risk : State;
+    public string FirstObject => Request.Operations.FirstOrDefault()?.Object ?? "";
+    public string ObjectPreview => FirstObject.Length <= 64 ? FirstObject : FirstObject[..63] + "…";
+    public string Target => JoinFields(Request.Project, Request.Plc);
+    public string Change => Request.Operations.FirstOrDefault() is { } op
+        ? Request.Operations.Count > 1 ? Loc.Current.T("Approval.MoreActions", op.Action.Resolve(), Request.Operations.Count - 1) : op.Action.Resolve()
+        : "";
+    public string Safeguard => JoinFields(Request.Risks.Select(r => r.Resolve()).ToArray());
+    public string DenyLabel => Loc.Current[Destructive ? "Approval.DenyDefault" : "Approval.Deny"];
+    public string DecisionHint => Loc.Current[Destructive ? "Approval.DestructiveHint" : "Approval.WriteHint"];
+    private static string JoinFields(params string[] values) => string.Join(" · ", values.Where(v => !string.IsNullOrWhiteSpace(v)));
+
     public string Summary => Request.Operations.Count == 1
         ? Loc.Current.T("Approval.Summary", Request.Operations[0].Action.Resolve()
             + (Request.Operations[0].Object.Length == 0 ? "" : " · " + Request.Operations[0].Object), Request.Project.Length == 0 ? "—" : Request.Project)
@@ -558,44 +606,65 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
             string.Join(" / ", Request.Operations.Select(op => op.Action.Resolve()).Distinct(StringComparer.Ordinal).Take(3)
                 .Select(text => text.Length > 64 ? text[..64] + "…" : text)) + (Request.Operations.Count > 3 ? "…" : ""));
     public string AccessibleSummary => Summary + " · " + Risk + " · " + UnverifiedClient;
-    public string ApproveLabel => Loc.Current[!Destructive ? "Approval.Approve" : Request.RiskAction switch
+    public string ApproveLabel => Loc.Current[!Destructive
+        ? Request.Operations.Count > 0 && Request.Operations.All(op => op.Tool.StartsWith("Import", StringComparison.Ordinal))
+            ? "Approval.ApproveImport" : "Approval.Approve"
+        : Request.RiskAction switch
         { "delete" => "Approval.ApproveDelete", "online" => "Approval.ApproveOnline", _ => "Approval.ApproveDestructive" }];
-    public string ConfirmationTitle => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteTitle" : "Approval.ConfirmTitle"];
-    public string ConfirmationAction => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAction" : "Approval.ConfirmAction"];
-    public string ConfirmationAccessible => Loc.Current[Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAccessible" : "Approval.ConfirmAccessible"];
+    private bool PhysicalDownload => Request.Operations.Count == 1 && Request.Operations[0].Tool == "DownloadPlc"
+        && Field(TargetParameters?["onlineTarget"] as System.Text.Json.Nodes.JsonObject, "kind") == "physical";
+    public string ConfirmationTitle => Loc.Current[PhysicalDownload ? "Approval.ConfirmDownloadTitle"
+        : Request.RiskAction == "delete" ? "Approval.ConfirmDeleteTitle" : "Approval.ConfirmTitle"];
+    public string ConfirmationAction => Loc.Current[PhysicalDownload ? "Approval.ConfirmDownloadAction"
+        : Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAction" : "Approval.ConfirmAction"];
+    public string ConfirmationAccessible => Loc.Current[PhysicalDownload ? "Approval.ConfirmDownloadAccessible"
+        : Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAccessible" : "Approval.ConfirmAccessible"];
+    private System.Text.Json.Nodes.JsonObject? TargetParameters
+    {
+        get
+        {
+            try { return System.Text.Json.Nodes.JsonNode.Parse(Parameters) as System.Text.Json.Nodes.JsonObject; }
+            catch (System.Text.Json.JsonException) /* swallow(ui): a truncated or redacted payload has no structured fields. */ { return null; }
+        }
+    }
+    private static string Field(System.Text.Json.Nodes.JsonObject? obj, string key) =>
+        obj?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
     public string ConfirmationConsequence
     {
         get
         {
-            try
-            {
-                var target = System.Text.Json.Nodes.JsonNode.Parse(Request.ParametersJson)?["onlineTarget"];
-                if ((string?)target?["kind"] == "physical")
-                    return Loc.Current.T("Approval.PhysicalConsequence", (string?)target["targetIpAddress"] ?? "—");
-            }
-            catch (System.Text.Json.JsonException) /* swallow(parse-fallback): malformed display data retains the generic consequence. */ { }
+            var target = TargetParameters?["onlineTarget"] as System.Text.Json.Nodes.JsonObject;
+            if (Field(target, "kind") == "physical" && Field(target, "targetIpAddress") is { Length: > 0 } address)
+                return Loc.Current.T("Approval.PhysicalConsequence", address);
             return Loc.Current.T(Request.RiskAction == "delete" ? "Approval.DeleteConsequence" : "Approval.OnlineConsequence", Request.Project);
         }
     }
-    public string HostVersion => Request.Host + " · " + Request.Release;
+    public IReadOnlyList<KeyValuePair<string, string>> DestructiveFields
+    {
+        get
+        {
+            if (!Destructive) return [];
+            var args = TargetParameters;
+            var target = args?["onlineTarget"] as System.Text.Json.Nodes.JsonObject;
+            var rows = new List<KeyValuePair<string, string>>();
+            Add(Loc.Current["Approval.TargetKind"], Field(target, "kind"));
+            Add(Loc.Current["Approval.TargetAddress"], Field(target, "targetIpAddress") is { Length: > 0 } address ? address : Field(args, "targetIpAddress"));
+            Add(Loc.Current["Approval.Adapter"], Field(target, "pgPcInterface") is { Length: > 0 } adapter ? adapter : Field(args, "pgPcInterface"));
+            Add(Loc.Current["Approval.PlanHash"], Field(args, "expectedPlanHash"));
+            return rows;
+            void Add(string label, string value)
+            {
+                if (value.Length > 0) rows.Add(new(label, value));
+            }
+        }
+    }
+    public string Context => JoinFields(Actor, Request.Transport, Request.Host, Request.Release);
     public event EventHandler<int>? CountdownThreshold;
     public bool Pending => Request.State == ApprovalState.Pending;
     public bool CanDecide => Pending && owner.Approvals.CanDecide(Request.Id);
     public int Remaining => owner.Remaining(Request);
     public string RemainingText => Loc.Current.T("Common.Seconds", Remaining);
-    public double Percent => 100.0 * Remaining / Request.TimeoutSeconds;
     public FeatureTone CountdownTone => Remaining < 30 ? FeatureTone.Warning : FeatureTone.Accent;
-    public System.Windows.Media.Geometry CountdownArc
-    {
-        get
-        {
-            double fraction = Math.Clamp(Percent / 100, 0, .99999), angle = fraction * 2 * Math.PI;
-            var figure = new System.Windows.Media.PathFigure { StartPoint = new System.Windows.Point(32, 1.5) };
-            figure.Segments.Add(new System.Windows.Media.ArcSegment(new System.Windows.Point(32 + 30.5 * Math.Sin(angle), 32 - 30.5 * Math.Cos(angle)),
-                new System.Windows.Size(30.5, 30.5), 0, fraction > .5, System.Windows.Media.SweepDirection.Clockwise, true));
-            var geometry = new System.Windows.Media.PathGeometry([figure]); geometry.Freeze(); return geometry;
-        }
-    }
     public bool JsonOpen { get => _jsonOpen; set => Set(ref _jsonOpen, value); }
     public string Parameters => _parameters ??= FeatureJson.Redact(Request.ParametersJson);
     public bool IsGenerationPlan => Request.GenerationPlan != null;
@@ -627,7 +696,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
                 .Select(step => new GenerationStepRow((string)step!["id"]!, (string)step["phase"]!, (string)step["key"]!, (string)step["tool"]!)).ToArray();
         }
     }
-    public string Metadata => "#" + Request.PlanHash + " · " + Request.Id;
+    public string Metadata => JoinFields(UnverifiedClient, Request.Id, string.Join(" / ", Request.Operations.Select(op => op.Tool).Distinct()));
     public FeatureTone Tone => Request.State switch
     {
         ApprovalState.Approved or ApprovalState.Executing => FeatureTone.Accent,
@@ -652,15 +721,20 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     internal void Update(ApprovalRequest request)
     {
         if (Request == request) return;
-        if (Request.ParametersJson != request.ParametersJson) { _parameters = null; Raise(nameof(Parameters)); }
-        Request = request; Raise(nameof(Request)); RefreshLanguage(); RefreshCountdown();
+        bool changed = Request.ParametersJson != request.ParametersJson;
+        Request = request;
+        if (changed) { _parameters = null; Raise(nameof(Parameters)); }
+        Raise(nameof(Request)); RefreshLanguage(); RefreshCountdown();
     }
     internal void RefreshLanguage()
     {
         foreach (string name in new[] {
-                nameof(Actor), nameof(Client), nameof(UnverifiedClient), nameof(Risk), nameof(Destructive), nameof(RiskIcon), nameof(Summary),
+                nameof(Actor), nameof(Client), nameof(UnverifiedClient), nameof(Risk), nameof(Destructive), nameof(GroupTitle),
+                    nameof(FeedKind), nameof(Summary),
                     nameof(AccessibleSummary), nameof(ApproveLabel), nameof(ConfirmationTitle), nameof(ConfirmationAction), nameof(ConfirmationAccessible),
-                    nameof(ConfirmationConsequence), nameof(HostVersion), nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note),
+                    nameof(ConfirmationConsequence), nameof(Context), nameof(Metadata), nameof(Target), nameof(FirstObject), nameof(ObjectPreview),
+                    nameof(Change), nameof(Safeguard), nameof(DecisionHint), nameof(DenyLabel), nameof(DestructiveFields), nameof(TimerLabel),
+                    nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note),
                     nameof(HasNote), nameof(IsGenerationPlan), nameof(IsToolRequest), nameof(GenerationDifferences), nameof(GenerationSteps),
                     nameof(CompletePlan)
             })
@@ -678,7 +752,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         }
         _lastRemaining = remaining;
         foreach (string name in new[] {
-                nameof(Remaining), nameof(RemainingText), nameof(Percent), nameof(CountdownArc), nameof(CountdownTone), nameof(CanDecide) })
+                nameof(Remaining), nameof(RemainingText), nameof(Timer), nameof(TimerLabel), nameof(FeedTime), nameof(CountdownTone), nameof(CanDecide) })
             Raise(name);
     }
 }
@@ -688,6 +762,7 @@ public sealed record AuditRow(AuditEvent Record, bool Selected)
     public string PreviousHash { get; init; } = "—";
     public string Hash => string.IsNullOrEmpty(Record.Hash) ? "—" : Record.Hash;
     public string ShortHash => Hash[..Math.Min(8, Hash.Length)];
+    public DateTimeOffset LocalTime => Record.Time.ToLocalTime();
     public string Sequence => "#" + Record.Index.ToString(System.Globalization.CultureInfo.InvariantCulture);
     internal bool Matches(string query) => query.Length == 0 || Sequence.Contains(query, StringComparison.OrdinalIgnoreCase)
         || Record.ToolObject.Contains(query, StringComparison.OrdinalIgnoreCase) || Record.Hash.Contains(query, StringComparison.OrdinalIgnoreCase)
@@ -730,13 +805,20 @@ public sealed record EnvironmentGroupRow(EnvironmentGroup Group)
     public string Name => Group.Name.Resolve();
     public string Summary => FeaturePagesViewModel.CheckSummary(Group.Rows);
     public FeatureTone Tone => FeaturePagesViewModel.CheckTone(Group.Rows);
-    public IReadOnlyList<EnvironmentRow> Rows => Group.Rows.Select(r => new EnvironmentRow(r)).ToArray();
+    public IReadOnlyList<EnvironmentRow> Rows => Group.Rows.Select(r => new EnvironmentRow(r) { Category = Name }).ToArray();
 }
 
 public sealed record EnvironmentRow(EnvironmentCheck Check)
 {
+    public string Category { get; init; } = "";
     public string Name => Check.Name.Resolve();
     public string Result => Check.Result.Resolve();
+    public bool Passed => Check.Status == CheckStatus.Pass;
+    public string Status => Loc.Current[Check.Status switch
+    {
+        CheckStatus.Pass => "Env.Passed", CheckStatus.Warn => "Env.StatusWarning", CheckStatus.Fail => "Env.Failed",
+        CheckStatus.Checking => "Env.Checking", _ => "Env.Unchecked",
+    }];
     public string Fix => Check.FixAction.Resolve();
     public string Detail => Check.Detail.Resolve();
     public bool HasFix => Fix.Length > 0 && Check.Status != CheckStatus.Checking;

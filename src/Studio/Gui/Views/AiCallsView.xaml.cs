@@ -20,7 +20,7 @@ public partial class AiCallsView : UserControl
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
     internal void LocateControlCall(CallRow row)
     {
-        CallList.SelectedItem = row;
+        CallList.SetCurrentValue(ListBox.SelectedItemProperty, row);
         CallList.ScrollIntoView(row);
     }
     private void OnModelChanged(object sender, DependencyPropertyChangedEventArgs e)

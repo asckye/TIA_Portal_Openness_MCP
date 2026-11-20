@@ -33,7 +33,7 @@ public sealed class ApprovalServiceStub : ObservableObject, IApprovalService
         get => _timeoutSeconds;
         set
         {
-            if (value is not (60 or 120 or 300)) throw new ArgumentOutOfRangeException(nameof(value));
+            if (value is < 1 or > 3600) throw new ArgumentOutOfRangeException(nameof(value));
             Set(ref _timeoutSeconds, value);
         }
     }

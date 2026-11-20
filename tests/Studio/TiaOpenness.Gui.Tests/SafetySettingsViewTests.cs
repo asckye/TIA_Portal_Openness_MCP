@@ -4,6 +4,10 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Threading.Tasks;
+using TiaMcp.Engine.Tests.Shared;
+using TiaOpenness.Gui.Services;
+using TiaOpenness.Shared;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Views;
 using Xunit;
@@ -114,6 +118,178 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
                 Assert.False(string.IsNullOrWhiteSpace(AutomationProperties.GetName(control)), name);
             }
             view.Dispose();
+        });
+    }
+
+    [Fact]
+    public void Presets_and_custom_seconds_round_trip_through_the_approval_settings_file()
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new SafetySettingsServiceTests.Fixture();
+            string path = Path.Combine(fixture.Root, "approval.settings");
+            new ApprovalSettings(true, 75, 420).Save(path, fixture.Audit);
+            using var approvals = new ApprovalService(path, "settings-" + Guid.NewGuid().ToString("N"), fixture.Audit);
+            var view = new SettingsView();
+            view.Initialize(approvals);
+            try
+            {
+                Assert.True(view.TimeoutCustom.IsChecked);
+                Assert.True(view.PlanCustom.IsChecked);
+                Assert.Equal("75", view.CustomTimeout.Text);
+                Assert.Equal("420", view.OnlinePlanLifetime.Text);
+                void Change(System.Windows.Controls.Primitives.ButtonBase action, string property)
+                {
+                    var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    void Saved(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+                    { if (e.PropertyName == property) changed.TrySetResult(); }
+                    approvals.PropertyChanged += Saved;
+                    try
+                    {
+                        UnifiedDesktopTests.ClickControl(action);
+                        WpfContext.Complete(changed.Task.WaitAsync(TestDeadlines.Hang));
+                        WpfContext.Drain();
+                    }
+                    finally { approvals.PropertyChanged -= Saved; }
+                }
+                Change(view.Timeout60, nameof(approvals.TimeoutSeconds));
+                Change(view.Plan30, nameof(approvals.OnlinePlanLifetimeSeconds));
+                Assert.True(view.Timeout60.IsChecked); Assert.True(view.Plan30.IsChecked);
+                Assert.False(view.TimeoutCustom.IsChecked); Assert.False(view.PlanCustom.IsChecked);
+                var presets = ApprovalSettings.Load(path);
+                Assert.Equal(60, presets.TimeoutSeconds); Assert.Equal(1800, presets.OnlinePlanLifetimeSeconds);
+                UnifiedDesktopTests.ClickControl(view.TimeoutCustom);
+                UnifiedDesktopTests.ClickControl(view.PlanCustom);
+                string? error = null;
+                view.SafetyErrorForTests = key => error = key;
+                view.CustomTimeout.Text = "3601";
+                UnifiedDesktopTests.ClickControl(view.ApplyTimeout);
+                Assert.Equal("Settings.TimeoutInvalid", error);
+                Assert.Equal(60, ApprovalSettings.Load(path).TimeoutSeconds);
+                view.CustomTimeout.Text = "3599";
+                Change(view.ApplyTimeout, nameof(approvals.TimeoutSeconds));
+                UnifiedDesktopTests.ClickControl(view.PlanCustom);
+                view.OnlinePlanLifetime.Text = "86400";
+                Change(view.ApplyPlanLifetime, nameof(approvals.OnlinePlanLifetimeSeconds));
+                var saved = ApprovalSettings.Load(path);
+                Assert.Equal(3599, saved.TimeoutSeconds); Assert.Equal(86400, saved.OnlinePlanLifetimeSeconds);
+                Assert.True(saved.Enabled); Assert.True(fixture.Audit.Verify().Passed);
+            }
+            finally { view.Dispose(); }
+        });
+    }
+
+    [Fact]
+    public void The_write_approval_switch_uses_its_whole_track_and_Space_changes_the_setting_once()
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new SafetySettingsServiceTests.Fixture();
+            var approvals = FeaturePageFixtures.Approvals(false);
+            var view = new SettingsView();
+            view.SetSafetyService(fixture.Service);
+            view.Initialize(approvals);
+            var window = new Window { Content = view, Width = 1024, Height = 640 };
+            try
+            {
+                WpfContext.ShowWindow(window);
+                var track = (Grid)view.ApprovalOn.Parent;
+                void CheckHitTargets(RadioButton expected)
+                {
+                    foreach (double x in new[] { 4d, track.ActualWidth - 4 })
+                    {
+                        var hit = Assert.IsAssignableFrom<DependencyObject>(track.InputHitTest(new Point(x, track.ActualHeight / 2)));
+                        while (hit is not RadioButton) hit = System.Windows.Media.VisualTreeHelper.GetParent(hit);
+                        Assert.Same(expected, hit);
+                    }
+                }
+                Assert.True(approvals.Enabled);
+                CheckHitTargets(view.ApprovalOff);
+                var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                approvals.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(approvals.Enabled)) changed.TrySetResult(); };
+                view.ApprovalOn.Focus();
+                var key = new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice, PresentationSource.FromVisual(view),
+                    0, System.Windows.Input.Key.Space) { RoutedEvent = System.Windows.Input.Keyboard.PreviewKeyDownEvent };
+                view.ApprovalOn.RaiseEvent(key);
+                Assert.True(key.Handled);
+                WpfContext.Complete(changed.Task.WaitAsync(TestDeadlines.Hang));
+                WpfContext.Drain(); view.UpdateLayout();
+                Assert.False(approvals.Enabled);
+                CheckHitTargets(view.ApprovalOn);
+            }
+            finally { window.Close(); view.Dispose(); }
+        });
+    }
+
+    [Fact]
+    public void A_saved_empty_list_displays_the_deny_all_policy_on_open()
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new SafetySettingsServiceTests.Fixture();
+            fixture.Service.SaveTargets([]);
+            var view = new SettingsView();
+            try
+            {
+                view.SetSafetyService(fixture.Service);
+                WpfContext.Complete(view.LoadSafetyAsync());
+                Assert.Empty(view.OnlineTargets.Items);
+                Assert.Equal(Loc.Current["Settings.TargetsEmpty"], view.SafetyStatus.Text);
+                Assert.True(view.TargetEditor.IsEnabled);
+            }
+            finally { view.Dispose(); }
+        });
+    }
+
+    [Fact]
+    public void Adding_and_removing_the_last_chip_distinguishes_unconfigured_from_saved_empty()
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new SafetySettingsServiceTests.Fixture();
+            var view = new SettingsView();
+            view.SetSafetyService(fixture.Service);
+            string? saveError = null;
+            view.SafetyErrorForTests = key => saveError = key;
+            var window = new Window { Content = view, Width = 1024, Height = 640 };
+            try
+            {
+                WpfContext.ShowWindow(window);
+                WpfContext.Complete(view.LoadSafetyAsync());
+                Assert.Equal(Loc.Current["Settings.TargetsUnconfigured"], view.SafetyStatus.Text);
+                Assert.False(File.Exists(fixture.TargetsPath));
+                void Save(Button action)
+                {
+                    var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    void BusyChanged(object sender, DependencyPropertyChangedEventArgs e)
+                    { if (view.SafetyEditors.IsEnabled) done.TrySetResult(); }
+                    view.SafetyEditors.IsEnabledChanged += BusyChanged;
+                    try
+                    {
+                        UnifiedDesktopTests.ClickControl(action);
+                        WpfContext.Complete(done.Task.WaitAsync(TestDeadlines.Hang));
+                        Assert.Null(saveError);
+                        WpfContext.Drain(); view.UpdateLayout();
+                    }
+                    finally { view.SafetyEditors.IsEnabledChanged -= BusyChanged; }
+                }
+                view.OnlineTargetInput.Text = "192.0.2.10";
+                Save(view.AddTarget);
+                Assert.Equal("192.0.2.10", Assert.Single(fixture.Service.LoadTargets()!.Entries));
+                Assert.Equal("", view.OnlineTargetInput.Text);
+                var remove = WorkbenchRenderFeaturePagesTests.Descendants<Button>(view.OnlineTargets)
+                    .Single(button => Equals(button.DataContext, "192.0.2.10"));
+                UnifiedDesktopTests.ClickControl(remove);
+                Assert.Empty(view.OnlineTargets.Items);
+                Assert.Equal(Loc.Current["Settings.TargetsUnsaved"], view.SafetyStatus.Text);
+                Assert.Single(fixture.Service.LoadTargets()!.Entries);
+                Save(view.SaveTargetChanges);
+                WpfContext.Complete(view.LoadSafetyAsync());
+                Assert.Empty(fixture.Service.LoadTargets()!.Entries);
+                Assert.Equal(Loc.Current["Settings.TargetsEmpty"], view.SafetyStatus.Text);
+                Assert.True(fixture.Audit.Verify().Passed);
+            }
+            finally { window.Close(); view.Dispose(); }
         });
     }
 }

@@ -371,6 +371,14 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Risky_confirmation_defaults_to_the_safe_choice",
                 "Approval_sheet_accepts_Space_and_the_localized_T_access_key"
             },
+            ["TiaOpenness.Gui.Tests.SafetySettingsViewTests"] = new[] {
+                "Presets_and_custom_seconds_round_trip_through_the_approval_settings_file",
+                "Adding_and_removing_the_last_chip_distinguishes_unconfigured_from_saved_empty",
+                "The_write_approval_switch_uses_its_whole_track_and_Space_changes_the_setting_once"
+            },
+            ["TiaOpenness.Gui.Tests.WorkbenchRenderFeaturePagesTests"] = new[] {
+                "Final_feature_views_use_the_design_sizes_and_actual_request_fields"
+            },
             ["TiaOpenness.Gui.Tests.CallJournalPanelTests"] = new[] {
                 "Escape_rejects_a_destructive_request_only_after_its_confirmation_sheet_closes"
             },

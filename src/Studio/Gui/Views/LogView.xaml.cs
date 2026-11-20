@@ -1,5 +1,8 @@
 using System;
 using System.ComponentModel;
+using System.Collections.Specialized;
+using System.IO;
+using System.Threading.Tasks;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,6 +25,27 @@ public partial class LogView : UserControl
     public LogView()
     {
         InitializeComponent();
+        IsVisibleChanged += OnLogVisibility;
+    }
+    private async void OnLogVisibility(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (!IsVisible) return;
+        string directory = TiaOpenness.Shared.DataLocations.Current.LogsDirectory;
+        StoragePath.Text = directory;
+        StoragePath.ToolTip = directory;
+        try
+        {
+            long bytes = await Task.Run(() => new DirectoryInfo(directory).EnumerateFiles("*", new EnumerationOptions
+            {
+                RecurseSubdirectories = true, IgnoreInaccessible = false, AttributesToSkip = FileAttributes.ReparsePoint
+            }).Sum(file => file.Length));
+            StorageSize.Text = $"{bytes / 1048576d:N2} MB";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            System.Diagnostics.Trace.TraceWarning("Log directory size unavailable: {0}", ex.GetType().Name);
+            StorageSize.Text = "—";
+        }
     }
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void SetFeatures(FeaturePagesViewModel? features)
@@ -40,12 +64,32 @@ public partial class LogView : UserControl
     protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (e.Property == TagProperty && e.NewValue is ResultPresentation results)
+        if (e.Property != TagProperty) return;
+        if (e.OldValue is ResultPresentation previous)
+            CollectionChangedEventManager.RemoveHandler((INotifyCollectionChanged)previous.LogRows, OnLogRowsChanged);
+        if (e.NewValue is ResultPresentation results)
         {
+            CollectionChangedEventManager.AddHandler((INotifyCollectionChanged)results.LogRows, OnLogRowsChanged);
             var source = new CollectionViewSource { Source = results.LogRows };
             SetValue(LogRowsProperty, source.View);
             source.View.Filter = Matches;
+            UpdateCounts();
         }
+    }
+    private bool _countsQueued;
+    private void OnLogRowsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_countsQueued) return;
+        _countsQueued = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.DataBind, new Action(() => { _countsQueued = false; UpdateCounts(); }));
+    }
+    private void UpdateCounts()
+    {
+        if (Tag is not ResultPresentation results) return;
+        var rows = results.LogRows;
+        AllLevelsCount.Text = rows.Count.ToString();
+        WarningsOnlyCount.Text = rows.Count(row => row.Level == LogLevel.Warning).ToString();
+        ErrorsOnlyCount.Text = rows.Count(row => row.Level == LogLevel.Error).ToString();
     }
     private bool Matches(object item)
     {

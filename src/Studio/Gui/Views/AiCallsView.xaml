@@ -1,4 +1,4 @@
-<UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.AiCallsView">
+<UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.AiCallsView" Margin="-16,-12,0,-12">
   <DockPanel>
     <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
       <ux:PageHeadPanel VerticalAlignment="Center" Spacing="4">
@@ -23,7 +23,7 @@
               <TextBlock Text="{l:Tr Calls.Milliseconds}" Style="{StaticResource Primer.Muted}" Margin="4,0,0,0"/>
             </StackPanel>
           </WrapPanel>
-          <ToggleButton AutomationProperties.Name="{Binding FollowLabel}" x:Name="FollowButton" Content="{Binding FollowLabel}" IsChecked="{Binding FollowLatest,Mode=OneWay}" Style="{StaticResource Primer.Switch}" Margin="12,0,0,0" Click="OnFollow"/>
+          <ToggleButton AutomationProperties.Name="{Binding FollowLabel}" x:Name="FollowButton" Content="{Binding FollowLabel}" IsChecked="{Binding FollowLatest,Mode=OneWay}" Style="{StaticResource Primer.IdeToolToggle}" Margin="12,0,0,0" Click="OnFollow"/>
         </WrapPanel>
       </ux:PageHeadPanel>
     </Border>
@@ -37,11 +37,31 @@
         <Border Style="{StaticResource Primer.IdeSubBar}">
           <WrapPanel VerticalAlignment="Center">
             <WrapPanel VerticalAlignment="Center" Margin="0,0,12,0">
-              <ToggleButton AutomationProperties.Name="{l:Tr Calls.All}" x:Name="AllFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.All}" IsChecked="{Binding AllCalls,Mode=OneWay}" Click="OnAllCalls"/>
-              <ToggleButton AutomationProperties.Name="{l:Tr Calls.WriteOnly}" x:Name="WriteFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.WriteOnly}" IsChecked="{Binding WriteOnly}"/>
-              <ToggleButton AutomationProperties.Name="{l:Tr Calls.FailOnly}" x:Name="FailFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.FailOnly}" IsChecked="{Binding FailOnly}"/>
-              <ToggleButton AutomationProperties.Name="{l:Tr Calls.HumanOnly}" x:Name="HumanFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.HumanOnly}" IsChecked="{Binding HumanOnly}"/>
-              <ToggleButton AutomationProperties.Name="{l:Tr Calls.AiOnly}" x:Name="AiFilter" Style="{StaticResource Primer.Filter}" Content="{l:Tr Calls.AiOnly}" IsChecked="{Binding AiOnly}"/>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.All}" x:Name="AllFilter" Style="{StaticResource Primer.IdeChipButton}" IsChecked="{Binding AllCalls,Mode=OneWay}" Click="OnAllCalls">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="{l:Tr Calls.All}"/><TextBlock Text="{Binding CallStatTotal}" FontFamily="{DynamicResource Ui.FontMono}" Margin="5,0,0,0"/>
+                </StackPanel>
+              </ToggleButton>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.WriteOnly}" x:Name="WriteFilter" Style="{StaticResource Primer.IdeChipButton}" IsChecked="{Binding WriteOnly}">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="{l:Tr Calls.WriteOnly}"/><TextBlock Text="{Binding WriteCount}" FontFamily="{DynamicResource Ui.FontMono}" Margin="5,0,0,0"/>
+                </StackPanel>
+              </ToggleButton>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.FailOnly}" x:Name="FailFilter" Style="{StaticResource Primer.IdeChipButton}" IsChecked="{Binding FailOnly}">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="{l:Tr Calls.FailOnly}"/><TextBlock Text="{Binding CallStatFailed}" FontFamily="{DynamicResource Ui.FontMono}" Margin="5,0,0,0"/>
+                </StackPanel>
+              </ToggleButton>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.HumanOnly}" x:Name="HumanFilter" Style="{StaticResource Primer.IdeChipButton}" IsChecked="{Binding HumanOnly}">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="{l:Tr Calls.HumanOnly}"/><TextBlock Text="{Binding HumanCount}" FontFamily="{DynamicResource Ui.FontMono}" Margin="5,0,0,0"/>
+                </StackPanel>
+              </ToggleButton>
+              <ToggleButton AutomationProperties.Name="{l:Tr Calls.AiOnly}" x:Name="AiFilter" Style="{StaticResource Primer.IdeChipButton}" IsChecked="{Binding AiOnly}">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="{l:Tr Calls.AiOnly}"/><TextBlock Text="{Binding AiCount}" FontFamily="{DynamicResource Ui.FontMono}" Margin="5,0,0,0"/>
+                </StackPanel>
+              </ToggleButton>
             </WrapPanel>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,4">
               <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ReleaseFilter}" x:Name="ReleaseLabel" Content="{l:Tr Calls.ReleaseScope}" Target="{Binding ElementName=ReleaseFilter}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
@@ -54,44 +74,42 @@
             </StackPanel>
           </WrapPanel>
         </Border>
-        <Border Grid.Row="1" Style="{StaticResource Primer.ColumnHeaderStrip}">
+        <Border Grid.Row="1" Style="{StaticResource Primer.TableHeaderBand}">
           <Grid>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="62"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="1*" MinWidth="51"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="1.4*"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="44"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="90"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="60"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="1.4*"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="74"/>
-              </Grid.ColumnDefinitions>
-              <TextBlock Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Time}"/>
-              <TextBlock Grid.Column="2" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Host}"/>
-              <TextBlock Grid.Column="4" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Tool}"/>
-              <TextBlock Grid.Column="6" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.ReadWrite}"/>
-              <TextBlock Grid.Column="8" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Result}"/>
-              <TextBlock Grid.Column="10" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Duration}"/>
-              <TextBlock Grid.Column="12" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Target}"/>
-              <TextBlock Grid.Column="14" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Actor.Title}"/>
-            </Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="68"/>
+              <ColumnDefinition Width="10"/>
+              <ColumnDefinition Width="1*" MinWidth="51"/>
+              <ColumnDefinition Width="10"/>
+              <ColumnDefinition Width="1.4*"/>
+              <ColumnDefinition Width="10"/>
+              <ColumnDefinition Width="44"/>
+              <ColumnDefinition Width="10"/>
+              <ColumnDefinition Width="88"/>
+              <ColumnDefinition Width="10"/>
+              <ColumnDefinition Width="60"/>
+              <ColumnDefinition Width="10"/>
+              <ColumnDefinition Width="1.4*"/>
+              <ColumnDefinition Width="10"/>
+              <ColumnDefinition Width="74"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Time}"/>
+            <TextBlock Grid.Column="2" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Tool}"/>
+            <TextBlock Grid.Column="4" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Host}"/>
+            <TextBlock Grid.Column="6" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.ReadWrite}"/>
+            <TextBlock Grid.Column="8" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Result}"/>
+            <TextBlock Grid.Column="10" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Duration}"/>
+            <TextBlock Grid.Column="12" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Calls.Target}"/>
+            <TextBlock Grid.Column="14" Style="{StaticResource Primer.TableHeader}" Margin="0" Text="{l:Tr Actor.Title}"/>
           </Grid>
         </Border>
-        <ListBox AutomationProperties.Name="{l:Tr Shell.Calls}" AutomationProperties.HelpText="{l:Tr Calls.Subtitle}" x:Name="CallList" Grid.Row="2" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Calls}">
+        <ListBox AutomationProperties.Name="{l:Tr Shell.Calls}" AutomationProperties.HelpText="{l:Tr Calls.Subtitle}" x:Name="CallList" Grid.Row="2" UseLayoutRounding="True" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding Calls}" SelectedItem="{Binding SelectedCall,Mode=OneWay}">
           <ListBox.ItemTemplate>
             <DataTemplate>
-              <Button AutomationProperties.Name="{Binding Tool}" Style="{StaticResource Primer.TableButton}" CommandParameter="Approvals" Click="OnCall" ToolTip="{Binding Tool}">
+              <Button AutomationProperties.Name="{Binding Tool}" Style="{StaticResource Primer.CallButton}" CommandParameter="Approvals" Click="OnCall" ToolTip="{Binding Tool}">
                 <Grid>
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="62"/>
+                    <ColumnDefinition Width="68"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="1*" MinWidth="51"/>
                     <ColumnDefinition Width="10"/>
@@ -99,7 +117,7 @@
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="44"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="88"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition Width="10"/>
@@ -108,10 +126,13 @@
                     <ColumnDefinition Width="74"/>
                   </Grid.ColumnDefinitions>
                   <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
-                  <TextBlock Grid.Column="2" Text="{Binding Host}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Host}"/>
-                  <TextBlock Grid.Column="4" Text="{Binding Tool}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold"/>
+                  <TextBlock Grid.Column="4" Text="{Binding Host}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Host}"/>
+                  <TextBlock Grid.Column="2" Text="{Binding Tool}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold"/>
                   <TextBlock Grid.Column="6" Text="{Binding ReadWrite}" Style="{StaticResource Primer.ToneText}" Tag="{Binding WriteTone}"/>
-                  <TextBlock Grid.Column="8" Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
+                  <DockPanel Grid.Column="8" VerticalAlignment="Center">
+                    <Ellipse Style="{StaticResource Primer.StatusDot}" Tag="{Binding Tone}" Margin="0,0,5,0"/>
+                    <TextBlock Text="{Binding Result}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" ToolTip="{Binding Result}"/>
+                  </DockPanel>
                   <TextBlock Grid.Column="10" Text="{Binding Duration}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
                   <TextBlock Grid.Column="12" Text="{Binding Target}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding Target}"/>
                   <TextBlock Grid.Column="14" Text="{Binding Actor}" Style="{StaticResource Primer.Muted}"/>

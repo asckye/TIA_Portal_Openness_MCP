@@ -3,69 +3,82 @@
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
     <Border Grid.RowSpan="2" Style="{StaticResource Primer.Workbench.SettingsPane}">
-      <ListBox x:Name="SectionList" ItemContainerStyle="{StaticResource Primer.Workbench.SettingsSection}" AutomationProperties.Name="{l:Tr Settings.Sections}"
+      <ListBox x:Name="SectionList" Style="{StaticResource Primer.SettingsNavigation}" ItemContainerStyle="{StaticResource Primer.Workbench.SettingsSection}" AutomationProperties.Name="{l:Tr Settings.Sections}"
         SelectionChanged="OnSectionChanged" BorderThickness="0" Background="Transparent" Margin="8" HorizontalContentAlignment="Stretch">
-        <ListBoxItem x:Name="AppearanceSection" Content="{l:Tr Settings.Appearance}" Tag="Appearance" MinHeight="44"/>
-        <ListBoxItem x:Name="ServiceSection" Content="{l:Tr Settings.Engine}" Tag="Service" MinHeight="44"/>
-        <ListBoxItem x:Name="AiSection" Content="{l:Tr Control.Section}" Tag="AI" MinHeight="44"/>
+        <ListBoxItem x:Name="AiSection" Content="{l:Tr Settings.SafetyTitle}" Tag="AI" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
+        <ListBoxItem x:Name="AppearanceSection" ToolTip="{l:Tr Settings.Appearance}" Content="{l:Tr Settings.AppearanceTitle}" Tag="Appearance" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
+        <ListBoxItem x:Name="ServiceSection" Content="{l:Tr Settings.StorageTitle}" Tag="Service" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
       </ListBox>
     </Border>
     <Border Grid.Column="1" Style="{StaticResource Primer.IdeBar}">
-      <TextBlock x:Name="SectionTitle" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
+      <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="SectionTitle" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
+        <TextBlock x:Name="SectionSubtitle" Style="{StaticResource Primer.Muted}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+      </StackPanel>
     </Border>
     <ScrollViewer x:Name="DetailScroll" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
-      <Border Style="{StaticResource Primer.Container}" Padding="16" Margin="12" VerticalAlignment="Top"><StackPanel>
+      <Grid Margin="24"><StackPanel MaxWidth="740" VerticalAlignment="Top">
         <StackPanel x:Name="AppearancePanel">
-          <Grid MinHeight="32" Margin="0,4,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="140"/>
-              <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="GroupSettingsTheme" Text="{l:Tr Settings.Theme}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-            <Grid Grid.Column="2">
-              <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
-                <StackPanel Orientation="Horizontal">
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.Light}" x:Name="Light" Content="{l:Tr Settings.Light}" Style="{StaticResource Primer.Tile}" MinWidth="90" Margin="2,0" IsChecked="{Binding IsLight,Source={x:Static themes:ThemeManager.Current}}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTheme}"/>
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.Dark}" x:Name="Dark" Content="{l:Tr Settings.Dark}" Style="{StaticResource Primer.Tile}" MinWidth="90" Margin="2,0" IsChecked="{Binding IsDark,Source={x:Static themes:ThemeManager.Current}}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTheme}"/>
-                </StackPanel>
-              </Border>
-            </Grid>
-          </Grid>
-          <Grid MinHeight="32" Margin="0,4,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="140"/>
-              <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="GroupSettingsAccent" Text="{l:Tr Settings.Accent}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-            <Grid Grid.Column="2">
-              <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
-                <StackPanel Orientation="Horizontal">
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.AccentCobalt}" x:Name="AccentCobalt" Content="{l:Tr Settings.AccentCobalt}" Style="{StaticResource Primer.Tile}" MinWidth="90" Margin="2,0" IsChecked="{Binding IsCobalt,Source={x:Static themes:ThemeManager.Current}}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsAccent}"/>
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.AccentPetrol}" x:Name="AccentPetrol" Content="{l:Tr Settings.AccentPetrol}" Style="{StaticResource Primer.Tile}" MinWidth="90" Margin="2,0" IsChecked="{Binding IsPetrol,Source={x:Static themes:ThemeManager.Current}}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsAccent}"/>
-                </StackPanel>
-              </Border>
-            </Grid>
-          </Grid>
-          <Grid MinHeight="32" Margin="0,4,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="140"/>
-              <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="GroupSettingsLanguage" Text="{l:Tr Settings.Language}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-            <Grid Grid.Column="2">
-              <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
-                <StackPanel Orientation="Horizontal">
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.English}" x:Name="English" Content="{l:Tr Settings.English}" Style="{StaticResource Primer.Tile}" MinWidth="90" Margin="2,0" IsChecked="{Binding IsEnglish,Source={x:Static l:Loc.Current}}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsLanguage}"/>
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.Chinese}" x:Name="Chinese" Content="{l:Tr Settings.Chinese}" Style="{StaticResource Primer.Tile}" MinWidth="90" Margin="2,0" IsChecked="{Binding IsChinese,Source={x:Static l:Loc.Current}}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsLanguage}"/>
-                </StackPanel>
-              </Border>
-            </Grid>
-          </Grid>
+          <Border Style="{StaticResource Primer.Container}" Padding="20">
+            <StackPanel>
+              <TextBlock x:Name="GroupSettingsTheme" Text="{l:Tr Settings.Theme}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,0,12"/>
+              <UniformGrid Rows="1">
+                <RadioButton x:Name="Light" AutomationProperties.Name="{l:Tr Settings.Light}" GroupName="Theme"
+                  AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTheme}" Style="{StaticResource Primer.Tile}" Margin="0,0,5,0"
+                  Tag="{DynamicResource Primer.primaryBg}" IsChecked="{Binding IsLight,Source={x:Static themes:ThemeManager.Current}}">
+                  <StackPanel>
+                    <ContentControl Content="" ContentTemplate="{StaticResource Pages.ThemePreview}">
+                      <ContentControl.Resources><ResourceDictionary Source="/TiaOpenness;component/Themes/Palette.Light.xaml"/></ContentControl.Resources>
+                    </ContentControl>
+                    <TextBlock Text="{l:Tr Settings.Light}" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                  </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="Dark" AutomationProperties.Name="{l:Tr Settings.Dark}" GroupName="Theme"
+                  AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTheme}" Style="{StaticResource Primer.Tile}" Margin="5,0,0,0"
+                  Tag="{DynamicResource Primer.primaryBg}" IsChecked="{Binding IsDark,Source={x:Static themes:ThemeManager.Current}}">
+                  <StackPanel>
+                    <ContentControl Content="" ContentTemplate="{StaticResource Pages.ThemePreview}">
+                      <ContentControl.Resources><ResourceDictionary Source="/TiaOpenness;component/Themes/Palette.Dark.xaml"/></ContentControl.Resources>
+                    </ContentControl>
+                    <TextBlock Text="{l:Tr Settings.Dark}" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                  </StackPanel>
+                </RadioButton>
+              </UniformGrid>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Primer.Container}" Padding="20" Margin="0,16,0,0">
+            <StackPanel>
+              <DockPanel Margin="0,6">
+                <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}">
+                  <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="AccentCobalt" Content="{l:Tr Settings.AccentCobalt}" GroupName="Accent" IsChecked="{Binding IsCobalt,Source={x:Static themes:ThemeManager.Current}}"
+                      AutomationProperties.Name="{l:Tr Settings.AccentCobalt}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsAccent}"
+                      Style="{StaticResource Primer.Segment}"/>
+                    <RadioButton x:Name="AccentPetrol" Content="{l:Tr Settings.AccentPetrol}" GroupName="Accent" IsChecked="{Binding IsPetrol,Source={x:Static themes:ThemeManager.Current}}"
+                      AutomationProperties.Name="{l:Tr Settings.AccentPetrol}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsAccent}"
+                      Style="{StaticResource Primer.Segment}"/>
+                  </StackPanel>
+                </Border>
+                <TextBlock x:Name="GroupSettingsAccent" Text="{l:Tr Settings.Accent}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              </DockPanel>
+              <DockPanel Margin="0,6">
+                <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}">
+                  <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="Chinese" Content="{l:Tr Settings.Chinese}" GroupName="Language" IsChecked="{Binding IsChinese,Source={x:Static l:Loc.Current}}"
+                      AutomationProperties.Name="{l:Tr Settings.Chinese}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsLanguage}"
+                      Style="{StaticResource Primer.Segment}"/>
+                    <RadioButton x:Name="English" Content="{l:Tr Settings.English}" GroupName="Language" IsChecked="{Binding IsEnglish,Source={x:Static l:Loc.Current}}"
+                      AutomationProperties.Name="{l:Tr Settings.English}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsLanguage}"
+                      Style="{StaticResource Primer.Segment}"/>
+                  </StackPanel>
+                </Border>
+                <TextBlock x:Name="GroupSettingsLanguage" Text="{l:Tr Settings.Language}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              </DockPanel>
+            </StackPanel>
+          </Border>
         </StackPanel>
         <StackPanel x:Name="ServicePanel" Visibility="Collapsed">
+          <Border Style="{StaticResource Primer.Container}" Padding="20"><StackPanel>
           <DockPanel Margin="0,8,0,8">
             <Border Width="3" Height="14" Margin="0,0,8,0" Style="{StaticResource Primer.SectionMark}"/>
             <TextBlock Text="{l:Tr Settings.Update}" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="SemiBold"/>
@@ -109,7 +122,8 @@
             </Grid>
           </Grid>
           <Button AutomationProperties.Name="{l:Tr Config.RunUpdate}" x:Name="RunUpdate" Content="{l:Tr Config.RunUpdate}" Style="{StaticResource Primer.OutlinedAccent}" IsEnabled="False" HorizontalAlignment="Right" Visibility="Collapsed"/>
-          <Border Height="4" Style="{StaticResource Primer.Plain}"/>
+          </StackPanel></Border>
+          <Border Style="{StaticResource Primer.Container}" Padding="20" Margin="0,16,0,0"><StackPanel>
           <DockPanel Margin="0,8,0,8">
             <Border Width="3" Height="14" Margin="0,0,8,0" Style="{StaticResource Primer.SectionMark}"/>
             <TextBlock Text="{l:Tr Settings.Folders}" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="SemiBold"/>
@@ -156,8 +170,8 @@
               </DockPanel>
             </Grid>
           </Grid>
-          <Border Height="4" Style="{StaticResource Primer.Plain}"/>
-          <Border Style="{StaticResource Primer.Inset}" Padding="12" Margin="0,8"><StackPanel x:Name="StorageTools">
+          </StackPanel></Border>
+          <Border Style="{StaticResource Primer.Container}" Padding="20" Margin="0,16,0,0"><StackPanel x:Name="StorageTools">
             <DockPanel Margin="0,8,0,8">
               <Border Width="3" Height="14" Margin="0,0,8,0" Style="{StaticResource Primer.SectionMark}"/>
               <TextBlock Text="{l:Tr Audit.Retention}" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="SemiBold"/>
@@ -229,6 +243,7 @@
               </WrapPanel>
             </StackPanel>
           </StackPanel></Border>
+          <Border Style="{StaticResource Primer.Container}" Padding="20" Margin="0,16,0,0"><StackPanel>
           <TextBlock Text="{l:Tr Settings.About}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,16,0,8"/>
           <TextBlock Text="{l:Tr App.Title}" TextWrapping="Wrap" Margin="0,0,0,8"/>
           <Grid MinHeight="32" Margin="0,0,0,6">
@@ -256,60 +271,103 @@
               </DockPanel>
             </Grid>
           </Grid>
+          </StackPanel></Border>
         </StackPanel>
         <StackPanel x:Name="AiPanel" Visibility="Collapsed">
-          <TextBlock Text="{l:Tr Settings.HumanOnly}" Style="{StaticResource Primer.Text.warn}" Margin="0,0,0,12"/>
-          <TextBlock Text="{l:Tr Control.Help}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,4,0,8"/>
-          <ToggleButton AutomationProperties.Name="{l:Tr Control.Enabled}" x:Name="ControlEnabled" Content="{l:Tr Control.Enabled}" Style="{StaticResource Primer.Switch}" Click="OnControlEnabledClick" Margin="0,8,0,12"/>
-          <DockPanel Margin="0,8,0,8">
-            <Border Width="3" Height="14" Margin="0,0,8,0" Style="{StaticResource Primer.SectionMark}"/>
-            <TextBlock Text="{l:Tr Settings.Approval}" FontSize="{DynamicResource Ui.FontSize.Control}" FontWeight="SemiBold"/>
-          </DockPanel>
-          <Grid MinHeight="32" Margin="0,0,0,6">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="140"/>
-              <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="GroupSettingsApproval" Text="{l:Tr Settings.Approval}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-            <Grid Grid.Column="2">
-              <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
-                <StackPanel Orientation="Horizontal">
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.On}" x:Name="ApprovalOn" Content="{l:Tr Settings.On}" Style="{StaticResource Primer.Segment}" Click="OnApprovalClick" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsApproval}"/>
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.Off}" x:Name="ApprovalOff" Content="{l:Tr Settings.Off}" Style="{StaticResource Primer.Segment}" Click="OnApprovalClick" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsApproval}"/>
+          <Border Style="{StaticResource Primer.Container}" Padding="20,6">
+            <StackPanel>
+              <DockPanel Margin="0,10">
+                <Grid DockPanel.Dock="Right" Width="40" Height="28" Margin="12,0,0,0" VerticalAlignment="Center"
+                  ToolTip="{l:Tr Settings.ApprovalRule}" PreviewKeyDown="OnPolicySwitchKeyDown">
+                  <Border Style="{StaticResource Primer.PolicySwitchTrack}"/>
+                  <RadioButton x:Name="ApprovalOff" GroupName="WriteApproval" Content="{l:Tr Settings.Off}" Style="{StaticResource Primer.PolicySwitchPosition}"
+                    AutomationProperties.Name="{l:Tr Settings.Off}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsApproval}" Click="OnApprovalClick"/>
+                  <RadioButton x:Name="ApprovalOn" GroupName="WriteApproval" Content="{l:Tr Settings.On}" Tag="On" Style="{StaticResource Primer.PolicySwitchPosition}"
+                    AutomationProperties.Name="{l:Tr Settings.On}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsApproval}" Click="OnApprovalClick"/>
+                </Grid>
+                <ToggleButton x:Name="ShowPolicyDetails" DockPanel.Dock="Right" Style="{StaticResource Primer.Link}" Foreground="{DynamicResource Primer.textFaint}"
+                  Content="{l:Tr Settings.PolicyDetails}" AutomationProperties.Name="{l:Tr Settings.PolicyDetails}" VerticalAlignment="Center"/>
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock ToolTip="{l:Tr Settings.Approval}" x:Name="GroupSettingsApproval" Text="{l:Tr Settings.ApprovalRule}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                  <TextBlock Visibility="{Binding IsChecked, ElementName=ShowPolicyDetails, Converter={StaticResource BoolToVisibility}}" Text="{l:Tr Settings.AlwaysConfirmed}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+                  <TextBlock Text="{l:Tr Settings.ApprovalRuleHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
                 </StackPanel>
-              </Border>
-            </Grid>
-          </Grid>
-          <Grid MinHeight="32" Margin="0,0,0,6">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="140"/>
-              <ColumnDefinition Width="12"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="GroupSettingsTimeout" Text="{l:Tr Settings.Timeout}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-            <Grid Grid.Column="2">
-              <Border Padding="3" HorizontalAlignment="Left" Style="{StaticResource Primer.SegmentGroup}">
-                <StackPanel Orientation="Horizontal">
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.Timeout60}" x:Name="Timeout60" Content="{l:Tr Settings.Timeout60}" Tag="60" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTimeout}"/>
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.Timeout120}" x:Name="Timeout120" Content="{l:Tr Settings.Timeout120}" Tag="120" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTimeout}"/>
-                  <RadioButton AutomationProperties.Name="{l:Tr Settings.Timeout300}" x:Name="Timeout300" Content="{l:Tr Settings.Timeout300}" Tag="300" Style="{StaticResource Primer.Segment}" Click="OnTimeoutClick" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTimeout}"/>
+              </DockPanel>
+              <DockPanel Margin="0,10">
+                <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}" Margin="12,0,0,0">
+                  <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="Timeout60" Content="{l:Tr Settings.Timeout60}" Style="{StaticResource Primer.Segment}"
+                      AutomationProperties.Name="{l:Tr Settings.Timeout60}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTimeout}" Tag="60" Click="OnTimeoutClick"/>
+                    <RadioButton x:Name="Timeout120" Content="{l:Tr Settings.Timeout120}" Style="{StaticResource Primer.Segment}"
+                      AutomationProperties.Name="{l:Tr Settings.Timeout120}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTimeout}" Tag="120" Click="OnTimeoutClick"/>
+                    <RadioButton x:Name="Timeout300" Content="{l:Tr Settings.Timeout300}" Style="{StaticResource Primer.Segment}"
+                      AutomationProperties.Name="{l:Tr Settings.Timeout300}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTimeout}" Tag="300" Click="OnTimeoutClick"/>
+                    <RadioButton x:Name="TimeoutCustom" Content="{l:Tr Settings.DurationCustom}" Style="{StaticResource Primer.Segment}"
+                      AutomationProperties.Name="{l:Tr Settings.DurationCustom}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTimeout}"/>
+                  </StackPanel>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock x:Name="GroupSettingsTimeout" Text="{l:Tr Settings.Timeout}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                  <TextBlock Text="{l:Tr Settings.ExpiryHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
                 </StackPanel>
+              </DockPanel>
+              <DockPanel Visibility="{Binding IsChecked, ElementName=TimeoutCustom, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,8">
+                <Label x:Name="TimeoutLabel" AutomationProperties.Name="{l:Tr Settings.TimeoutSeconds}" Content="{l:Tr Settings.TimeoutSeconds}"
+                  Target="{Binding ElementName=CustomTimeout}" Style="{StaticResource Primer.FormLabel}" Margin="0,0,12,0"/>
+                <Button x:Name="ApplyTimeout" DockPanel.Dock="Right" Content="{l:Tr Settings.ApplySeconds}" AutomationProperties.Name="{l:Tr Settings.ApplySeconds}"
+                  Style="{StaticResource Primer.Secondary}" Click="OnSaveTimeout" Margin="8,0,0,0"/>
+                <TextBox x:Name="CustomTimeout" AutomationProperties.Name="{l:Tr Settings.TimeoutSeconds}" AutomationProperties.LabeledBy="{Binding ElementName=TimeoutLabel}"
+                  Style="{StaticResource Primer.Input}"/>
+              </DockPanel>
+              <DockPanel Margin="0,10">
+                <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}" Margin="12,0,0,0">
+                  <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="Plan5" Content="{l:Tr Settings.Plan5}" Style="{StaticResource Primer.Segment}"
+                      AutomationProperties.Name="{l:Tr Settings.Plan5}" AutomationProperties.LabeledBy="{Binding ElementName=GroupPlanLifetime}" Tag="300" Click="OnPlanPreset"/>
+                    <RadioButton x:Name="Plan15" Content="{l:Tr Settings.Plan15}" Style="{StaticResource Primer.Segment}"
+                      AutomationProperties.Name="{l:Tr Settings.Plan15}" AutomationProperties.LabeledBy="{Binding ElementName=GroupPlanLifetime}" Tag="900" Click="OnPlanPreset"/>
+                    <RadioButton x:Name="Plan30" Content="{l:Tr Settings.Plan30}" Style="{StaticResource Primer.Segment}"
+                      AutomationProperties.Name="{l:Tr Settings.Plan30}" AutomationProperties.LabeledBy="{Binding ElementName=GroupPlanLifetime}" Tag="1800" Click="OnPlanPreset"/>
+                    <RadioButton x:Name="PlanCustom" Content="{l:Tr Settings.DurationCustom}" Style="{StaticResource Primer.Segment}"
+                      AutomationProperties.Name="{l:Tr Settings.DurationCustom}" AutomationProperties.LabeledBy="{Binding ElementName=GroupPlanLifetime}"/>
+                  </StackPanel>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock ToolTip="{l:Tr Settings.DownloadSafety}" x:Name="GroupPlanLifetime" Text="{l:Tr Settings.PlanDuration}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                  <TextBlock ToolTip="{l:Tr Settings.DownloadSafetyHelp}" Text="{l:Tr Settings.PlanHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+                </StackPanel>
+              </DockPanel>
+              <DockPanel Visibility="{Binding IsChecked, ElementName=PlanCustom, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,8">
+                <Label x:Name="PlanLifetimeLabel" AutomationProperties.Name="{l:Tr Settings.PlanLifetime}" Content="{l:Tr Settings.PlanLifetime}"
+                  Target="{Binding ElementName=OnlinePlanLifetime}" Style="{StaticResource Primer.FormLabel}" Margin="0,0,12,0"/>
+                <Button x:Name="ApplyPlanLifetime" DockPanel.Dock="Right" Content="{l:Tr Settings.ApplySeconds}" AutomationProperties.Name="{l:Tr Settings.ApplySeconds}"
+                  Style="{StaticResource Primer.Secondary}" ToolTip="{l:Tr Settings.SavePlanLifetime}" Click="OnSavePlanLifetime" Margin="8,0,0,0"/>
+                <TextBox x:Name="OnlinePlanLifetime" AutomationProperties.Name="{l:Tr Settings.PlanLifetime}" AutomationProperties.LabeledBy="{Binding ElementName=PlanLifetimeLabel}"
+                  Style="{StaticResource Primer.Input}"/>
+              </DockPanel>
+
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Primer.Container}" Padding="20,14" Margin="0,16">
+            <DockPanel>
+              <ToggleButton DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Control.Enabled}" ToolTip="{l:Tr Control.Section}" x:Name="ControlEnabled"
+                Style="{StaticResource Primer.Switch}" Click="OnControlEnabledClick" Margin="12,0,0,0"/>
+              <StackPanel>
+                <TextBlock Text="{l:Tr Control.Enabled}" FontWeight="SemiBold"/>
+                <TextBlock Text="{l:Tr Control.Help}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+          <Border Style="{StaticResource Primer.Container}" Padding="20"><StackPanel x:Name="SafetyEditors">
+            <DockPanel Margin="0,0,0,8">
+              <Border Style="{StaticResource Primer.Tag}" DockPanel.Dock="Right">
+                <TextBlock Text="{Binding Items.Count, ElementName=OnlineTargets}" VerticalAlignment="Center"/>
               </Border>
-            </Grid>
-          </Grid>
-          <TextBlock Text="{l:Tr Settings.AlwaysConfirmed}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,4,0,12"/>
-          <TextBlock Text="{l:Tr Settings.DownloadSafety}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,12,0,8"/>
-          <TextBlock Text="{l:Tr Settings.DownloadSafetyHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-          <Label x:Name="PlanLifetimeLabel" AutomationProperties.Name="{l:Tr Settings.PlanLifetime}" Style="{StaticResource Primer.FormLabel}" Target="{Binding ElementName=OnlinePlanLifetime}" Content="{l:Tr Settings.PlanLifetime}"/>
-          <DockPanel Margin="0,0,0,12">
-            <Button Content="{l:Tr Settings.SavePlanLifetime}" AutomationProperties.Name="{l:Tr Settings.SavePlanLifetime}"
-              DockPanel.Dock="Right" Style="{StaticResource Primer.OutlinedAccent}" Click="OnSavePlanLifetime" Margin="8,0,0,0"/>
-            <TextBox x:Name="OnlinePlanLifetime" AutomationProperties.LabeledBy="{Binding ElementName=PlanLifetimeLabel}" AutomationProperties.Name="{l:Tr Settings.PlanLifetime}" Style="{StaticResource Primer.Input}"/>
-          </DockPanel>
-          <Border Style="{StaticResource Primer.Inset}" Padding="12" Margin="0,4,0,8"><StackPanel x:Name="SafetyEditors">
-            <TextBlock x:Name="OnlineTargetsHeading" Text="{l:Tr Settings.OnlineTargets}" AutomationProperties.HeadingLevel="Level3"
-              Style="{StaticResource Primer.ContainerTitle}" Margin="0,12,0,8"/>
+              <Button x:Name="ReloadSafety" Content="{l:Tr Settings.ReloadSafety}" AutomationProperties.Name="{l:Tr Settings.ReloadSafety}"
+              Style="{StaticResource Primer.Link}" Click="OnReloadSafety" DockPanel.Dock="Right" VerticalAlignment="Center" Foreground="{DynamicResource Primer.textFaint}"/>
+              <TextBlock x:Name="OnlineTargetsHeading" Text="{l:Tr Settings.OnlineTargets}" AutomationProperties.HeadingLevel="Level3"
+                Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
+            </DockPanel>
             <TextBlock Text="{l:Tr Settings.OnlineTargetsHelp}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
             <TextBlock x:Name="SafetyStatus" AutomationProperties.LiveSetting="Polite" Style="{StaticResource Primer.Text}"
               TextWrapping="Wrap" Margin="0,0,0,8"/>
@@ -318,25 +376,33 @@
               Click="OnReplaceTargetFile" Visibility="Collapsed" HorizontalAlignment="Left" Margin="0,0,0,8"/>
             <StackPanel x:Name="TargetEditor">
               <ListBox Style="{StaticResource Primer.List}" x:Name="OnlineTargets" AutomationProperties.LabeledBy="{Binding ElementName=OnlineTargetsHeading}" AutomationProperties.Name="{l:Tr Settings.OnlineTargets}"
-                ItemContainerStyle="{StaticResource Primer.TableItem}" MinHeight="72" MaxHeight="180" Margin="0,0,0,8"/>
+                ItemContainerStyle="{StaticResource Primer.TableItem}" MaxHeight="180" Margin="0,0,0,8" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
+                <ListBox.ItemTemplate><DataTemplate>
+                  <Border Style="{StaticResource Primer.Chip}" Padding="8,0">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock Text="{Binding}" Style="{StaticResource Primer.Mono.text}"/>
+                      <Button Content="×" AutomationProperties.Name="{l:Tr Settings.RemoveTarget}" ToolTip="{Binding}"
+                        Style="{StaticResource Primer.Button.Ghost.Small}" Padding="4,0" Click="OnRemoveTarget"/>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
               <Label x:Name="TargetAddressLabel" AutomationProperties.Name="{l:Tr Settings.TargetAddress}" Style="{StaticResource Primer.FormLabel}" Target="{Binding ElementName=OnlineTargetInput}" Content="{l:Tr Settings.TargetAddress}"/>
               <DockPanel Margin="0,0,0,8">
-                <Button Content="{l:Tr Settings.AddTarget}" AutomationProperties.Name="{l:Tr Settings.AddTarget}" DockPanel.Dock="Right"
-                  Style="{StaticResource Primer.OutlinedAccent}" Click="OnAddTarget" Margin="8,0,0,0"/>
+                <Button x:Name="AddTarget" Content="{l:Tr Settings.AddAndSave}" AutomationProperties.Name="{l:Tr Settings.AddAndSave}" DockPanel.Dock="Right"
+                  Style="{StaticResource Primer.Button.Primary.Medium}" Click="OnAddTarget" Margin="8,0,0,0"/>
                 <TextBox x:Name="OnlineTargetInput" AutomationProperties.LabeledBy="{Binding ElementName=TargetAddressLabel}" AutomationProperties.Name="{l:Tr Settings.TargetAddress}" Style="{StaticResource Primer.Input}"/>
               </DockPanel>
-              <WrapPanel Margin="0,0,0,12">
-                <Button Content="{l:Tr Settings.RemoveTarget}" AutomationProperties.Name="{l:Tr Settings.RemoveTarget}"
-                  Style="{StaticResource Primer.OutlinedAccent}" Click="OnRemoveTarget" Margin="0,0,8,8"/>
-                <Button Content="{l:Tr Settings.SaveTargets}" AutomationProperties.Name="{l:Tr Settings.SaveTargets}"
-                  Style="{StaticResource Primer.OutlinedAccent}" Click="OnSaveTargets" Margin="0,0,8,8"/>
+              <WrapPanel Margin="0,4,0,0">
+                <Button x:Name="SaveTargetChanges" Content="{l:Tr Settings.SaveTargets}" AutomationProperties.Name="{l:Tr Settings.SaveTargets}"
+                  Style="{StaticResource Primer.OutlinedAccent}" Click="OnSaveTargets" Margin="0,0,8,0"/>
               </WrapPanel>
             </StackPanel>
-            <Button x:Name="ReloadSafety" Content="{l:Tr Settings.ReloadSafety}" AutomationProperties.Name="{l:Tr Settings.ReloadSafety}"
-              Style="{StaticResource Primer.OutlinedAccent}" Click="OnReloadSafety" HorizontalAlignment="Left" Margin="0,0,0,12"/>
+
           </StackPanel></Border>
         </StackPanel>
-      </StackPanel></Border>
+      </StackPanel></Grid>
     </ScrollViewer>
   </Grid>
 </UserControl>

@@ -119,9 +119,11 @@ public sealed class ApprovalPageTests(WpfContext wpf)
     [InlineData(AppTheme.Light)] [InlineData(AppTheme.Dark)]
     public void Destructive_answers_keep_AA_text_and_an_accent_Reject_hover(AppTheme theme)
     {
+        foreach (var accent in new[] { AppAccent.Cobalt, AppAccent.Petrol })
         wpf.Run(() =>
         {
-            var previous = ThemeManager.Current.Theme; var contrast = ThemeManager.Current.HighContrastOverride;
+            var previous = (ThemeManager.Current.Theme, ThemeManager.Current.Accent, ThemeManager.Current.HighContrastOverride);
+            ThemeManager.Current.Accent = accent;
             ThemeManager.Current.HighContrastOverride = false; ThemeManager.Current.Theme = theme;
             try
             {
@@ -138,12 +140,15 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                 void CheckContrast(Button button)
                 {
                     var foreground = ((SolidColorBrush)button.Foreground).Color;
+                    double textLum = ThemeSurfaceTests.Luminance(foreground);
+                    double fillLum = ThemeSurfaceTests.Luminance(((SolidColorBrush)button.Background).Color);
+                    Assert.True((Math.Max(textLum, fillLum) + .05) / (Math.Min(textLum, fillLum) + .05) >= 4.5, theme + ": " + accent + ": " + button.Name);
                     var hover = ((SolidColorBrush)((Border)button.Template.FindName("Hover", button)).Background).Color;
                     double first = ThemeSurfaceTests.Luminance(foreground), second = ThemeSurfaceTests.Luminance(hover);
                     Assert.True((Math.Max(first, second) + .05) / (Math.Min(first, second) + .05) >= 4.5, theme + ": " + button.Name);
                 }
             }
-            finally { ThemeManager.Current.HighContrastOverride = contrast; ThemeManager.Current.Theme = previous; }
+            finally { (ThemeManager.Current.Theme, ThemeManager.Current.Accent, ThemeManager.Current.HighContrastOverride) = previous; }
         });
     }
 
@@ -301,17 +306,23 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                     }
                     Assert.Equal(262, view.RequestListPane.ActualWidth);
                     var caption = (TextBlock)view.FindName("CountdownCaption");
-                    Assert.Equal(120, caption.ActualWidth); Assert.Equal(TextWrapping.Wrap, caption.TextWrapping);
+                    var chip = (Border)view.FindName("TimerChip");
+                    Assert.Equal(Loc.Current.T("Approval.Timer", "01:58"), caption.Text);
+                    Assert.Equal(TextWrapping.Wrap, caption.TextWrapping);
                     var probe = new TextBlock { Text = caption.Text, FontFamily = caption.FontFamily, FontSize = caption.FontSize, TextWrapping = TextWrapping.Wrap };
-                    probe.Measure(new Size(120, double.PositiveInfinity));
+                    probe.Measure(new Size(caption.ActualWidth, double.PositiveInfinity));
                     Assert.True(caption.ActualHeight >= probe.DesiredSize.Height - 1);
-                    var ring = DesktopCapture.Descendants<Grid>(view).Single(g => g.Width == 64 && g.Height == 64);
-                    Assert.True(caption.TranslatePoint(new Point(), view).Y >= ring.TranslatePoint(new Point(), view).Y + 64);
+                    Assert.True(chip.ActualWidth >= caption.ActualWidth + chip.Padding.Left + chip.Padding.Right);
+                    Assert.True(chip.ActualHeight >= 22);
+                    Assert.True(view.RequestTitle.TranslatePoint(new Point(), view).X + view.RequestTitle.ActualWidth
+                        <= chip.TranslatePoint(new Point(), view).X);
                     var approve = (Button)view.FindName("ApproveRequest"); var reject = (Button)view.FindName("DenyRequest");
                     var selectedItem = (ListBoxItem)((ListBox)view.FindName("RequestList")).ItemContainerGenerator.ContainerFromIndex(0);
                     Assert.Contains(window.Features.SelectedRequest!.Risk, AutomationProperties.GetName(selectedItem));
                     Assert.True(reject.TranslatePoint(new Point(), host).X + reject.ActualWidth <= approve.TranslatePoint(new Point(), host).X);
                     Assert.Equal(risk == ApprovalRisk.Destructive ? "Danger" : "Primary", Ux.GetVariant(approve));
+                    Assert.Same(Application.Current.FindResource(risk == ApprovalRisk.Destructive ? "Ant.colorErrorBorder" : "Primer.primaryBg"),
+                        approve.BorderBrush);
                     Assert.Equal(32, approve.ActualHeight); Assert.Equal(32, reject.ActualHeight);
                     foreach (var button in new[] { approve, reject })
                     {
