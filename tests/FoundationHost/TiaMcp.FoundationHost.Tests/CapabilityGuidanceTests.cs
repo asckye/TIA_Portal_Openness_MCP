@@ -7,6 +7,32 @@ using Xunit;
 
 public sealed class CapabilityGuidanceTests
 {
+    [Theory, InlineData(true, ""), InlineData(false, "Global")]
+    public async Task V16_block_master_copy_refusal_precedes_worker_dispatch(bool preview, string library)
+    {
+        const string name = "CreateLibraryMasterCopy";
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "16");
+        var tool = PortedToolContract.Create(worker, "16").Single(item => item.ProtocolTool.Name == name);
+        var args = new JsonObject { ["sourceKind"] = "block", ["sourcePath"] = "Group/Db", ["dryRun"] = preview, ["libraryName"] = library };
+        var result = await tool.InvokeAsync(new(System.Reflection.DispatchProxy.Create<ModelContextProtocol.Server.IMcpServer,
+            ApprovalPrecheckTests.ServerProxy>()) { Params = new() { Name = name, Arguments =
+                JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } });
+        var body = result.StructuredContent!;
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.Equal(0, worker.Calls);
+        string? reason = ReleaseCapabilityQuery.Problem(name, "16", args);
+        Assert.Equal(reason, (string?)body["error"]?["message"]);
+        Assert.Contains("V16 crash protection", reason);
+        Assert.Contains("Supported releases: V14 SP1, V15.1, V17, V18, V19, V20, V21", reason);
+        Assert.DoesNotContain("Minimum release", reason);
+        var schema = JsonNode.Parse(tool.ProtocolTool.InputSchema.GetRawText())!.AsObject();
+        var example = ToolUsageCatalog.Describe(name, "16", "plc-foundation", "", schema)["example"]!;
+        Assert.Equal("type", (string?)example["request"]?["params"]?["arguments"]?["sourceKind"]);
+        Assert.Contains("refuses PLC block", (string?)example["releaseNote"]);
+    }
+
     [Fact]
     public void Drive_parameter_read_view_reports_the_same_limit_at_the_service_boundary()
     {

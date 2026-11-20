@@ -12,6 +12,12 @@
   },
   "scope": "Examples for every registered tool in both profiles. Target-dependent bindings and operation parameters accompany the call. A sample value is not evidence that an object exists or an API operation is supported by that device. Ported examples are offered only for tools registered on the selected release, using PortedFamilies.ToolReleases; partial tools keep their action and format refusals.",
   "releaseArguments": {
+    "CreateLibraryMasterCopy": [
+      {
+        "releases": ["16"],
+        "arguments": { "sourceKind": "type", "sourcePath": "Examples/MotorData" }
+      }
+    ],
     "ExchangePlcAlarmTextLists": [
       {
         "releases": ["16"],
@@ -10129,6 +10135,9 @@
         "note": "Hardware comparison requires V15.1; software comparisons remain available on V14 SP1. "
       },
       "CreateLibraryMasterCopy": {
+        "releaseNotes": {
+          "16": "V16 refuses PLC block sources because native master-copy creation can terminate TIA Portal. Use a PLC type for this example."
+        },
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",
@@ -21998,6 +22007,9 @@
         ]
       },
       "CreateLibraryMasterCopy": {
+        "releaseNotes": {
+          "16": "V16 refuses PLC block sources because native master-copy creation can terminate TIA Portal. Use a PLC type for this example."
+        },
         "arguments": {
           "sourceKind": "block",
           "sourcePath": "Examples/Example_1",

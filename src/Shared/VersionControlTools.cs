@@ -51,17 +51,13 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => McpServer
-                .RunWritePreview("CreateVersionControlWorkspace", dryRun, new { workspaceName, folderPath }, () => LibraryToolContract
-                    .Run("CreateVersionControlWorkspace", true, true, () =>
-            {
-                return CreateVersionControlWorkspace(workspaceName, folderPath);
-            }), expectedPlanHash, expectedProjectFile);
-
-        internal ResponseMessage CreateVersionControlWorkspace(
-            string workspaceName,
-            string folderPath)
-        => _versionControl.CreateVersionControlWorkspace(workspaceName, folderPath);
+        {
+            const string tool = "CreateVersionControlWorkspace";
+            CallToolResult Run(bool preview) => LibraryToolContract.Run(tool, !preview, true,
+                () => _versionControl.CreateVersionControlWorkspace(workspaceName, folderPath, preview));
+            return McpServer.RunNativeWritePreview(tool, dryRun, new { workspaceName, folderPath },
+                () => Run(true), () => Run(false), expectedPlanHash, expectedProjectFile);
+        }
 
         [McpServerTool(Name = "GetVersionControlStatus"), Description(
             "[L1][VersionControl] Per-object status of a VCI workspace: which mapped objects differ between the " +

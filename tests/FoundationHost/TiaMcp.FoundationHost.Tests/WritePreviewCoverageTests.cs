@@ -1377,9 +1377,21 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         var method = typeof(Host).Assembly.GetTypes().SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             .Single(candidate => candidate.GetCustomAttributesData().Any(attribute => attribute.AttributeType.Name == "McpServerToolAttribute"
                 && attribute.NamedArguments.Any(argument => argument.MemberName == "Name" && (string?)argument.TypedValue.Value == name)));
-        // Unconfigured services make any accidental service access fail; published admission is covered separately.
+        // Only workspace creation reads native state during these previews.
         var constructor = method.DeclaringType!.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Single();
-        var target = constructor.Invoke(new object?[constructor.GetParameters().Length]);
+        var services = new object?[constructor.GetParameters().Length];
+        int workspaceReads = 0;
+        if (name == "CreateVersionControlWorkspace")
+            services[0] = new toolpipeline::TiaMcpServer.Siemens.Services.VersionControlPortService((operation, args) => {
+                Assert.Equal("version-control.ExecuteVersionControl", operation);
+                Assert.True((bool?)args["dryRun"]);
+                Assert.True((bool?)args["request"]?["DryRun"]);
+                Assert.True(Directory.Exists((string?)args["request"]?["FolderPath"]));
+                Assert.Null(args["confirm"]);
+                workspaceReads++;
+                return new JsonObject { ["Message"] = "Workspace name is available.", ["Meta"] = new JsonObject { ["success"] = true } };
+            }, () => "C:/Projects/original.ap21");
+        var target = constructor.Invoke(services);
         var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), release);
         var path = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "reference", "tool-examples", "calls.json");
@@ -1400,8 +1412,16 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             });
         Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
         Assert.True((bool?)result.StructuredContent?["data"]?["dryRun"]);
-        Assert.False((bool?)result.StructuredContent?["data"]?["targetVerified"]);
-        Assert.Contains("target is not verified", (string?)result.StructuredContent?["data"]?["scope"], StringComparison.OrdinalIgnoreCase);
+        if (name == "CreateVersionControlWorkspace")
+        {
+            Assert.Equal(1, workspaceReads);
+            Assert.Equal("Workspace name is available.", (string?)result.StructuredContent?["data"]?["summary"]);
+        }
+        else
+        {
+            Assert.False((bool?)result.StructuredContent?["data"]?["targetVerified"]);
+            Assert.Contains("target is not verified", (string?)result.StructuredContent?["data"]?["scope"], StringComparison.OrdinalIgnoreCase);
+        }
         Assert.Equal("read-only", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.Matches("^[0-9a-f]{64}$", (string)result.StructuredContent!["data"]!["planHash"]!);
         Assert.Equal(0, worker.Calls);
@@ -1482,6 +1502,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         internal PreviewInputFixture(string tool, JsonObject arguments)
         {
             Directory.CreateDirectory(root);
+            if (tool == "CreateVersionControlWorkspace") arguments["folderPath"] = root;
             // These previews read caller bytes but never invoke the native format parser.
             // Use the maintained SIMATIC XML fixture for the file contents.
             string xml = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),

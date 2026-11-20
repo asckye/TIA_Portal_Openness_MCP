@@ -6,6 +6,17 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 // ConnectProjectToWorkspace puts the UngroupedDevicesGroup devices under one fixed workspace folder (decided 2026-10-19).
 public sealed class VciWorkspaceLayoutTests
 {
+    [Theory]
+    [InlineData(@"\Motor.xml", "")]
+    [InlineData(@"\PLC_1\Blocks\Line.Motor.xml", "PLC_1/Blocks")]
+    [InlineData(@"PLC_1\Blocks\Line.Motor.xml", "PLC_1/Blocks")]
+    public void Legacy_mapping_directory_resolves_from_the_workspace_root(string relativePath, string expectedFolder)
+    {
+        string root = Path.Combine(Path.GetTempPath(), "VCI");
+        string expected = Path.Combine(root, expectedFolder.Replace('/', Path.DirectorySeparatorChar));
+        Assert.Equal(expected, VciWorkspaceLayout.LegacyMappingDirectory(root, relativePath).FullName);
+    }
+
     [Fact]
     public void The_ungrouped_folder_is_fixed_and_language_independent()
         => Assert.Equal("UngroupedDevices", VciWorkspaceLayout.UngroupedFolder);

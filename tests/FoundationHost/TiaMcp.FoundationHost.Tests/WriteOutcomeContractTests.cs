@@ -163,15 +163,89 @@ public sealed class WriteOutcomeContractTests
     }
 
     [Theory, InlineData(0, 0, false, "failed"), InlineData(1, 0, false, "partial"), InlineData(0, 1, false, "partial"),
-        InlineData(0, 0, true, "unknown")]
+        InlineData(0, 0, true, "unknown"), InlineData(0, 3, false, "partial")]
     public void Vci_refusals_use_confirmed_mapping_results_and_unanswered_exports(int mapped, int foundAfter, bool unanswered, string expected)
     {
         int exports = mapped + foundAfter + (unanswered ? 1 : 0);
-        var reply = new Host.ResponseMessage { Meta = new JsonObject { ["success"] = false, ["failed"] = 1, ["exportsIssued"] = exports,
+        int failed = Math.Max(1, foundAfter);
+        var reply = new Host.ResponseMessage { Meta = new JsonObject { ["success"] = false, ["failed"] = failed, ["exportsIssued"] = exports,
+            ["alreadyMapped"] = 2, ["queryRefusals"] = failed - foundAfter - (unanswered ? 1 : 0),
             ["mapped"] = mapped, ["mappedAfterFailure"] = foundAfter, ["mayHaveChanged"] = exports > 0, ["writeOutcomeUnknown"] = unanswered,
             ["nativeMessage"] = "VCI refused the object" } };
         var body = Host.LibraryToolContract.Map("ConnectProjectToWorkspace", reply, true).StructuredContent!;
         Assert.Equal(expected, (string?)body["meta"]?["outcome"]);
         if (unanswered) Assert.Equal("VCI refused the object", (string?)body["error"]?["details"]?["evidence"]?["nativeMessage"]);
+        if (expected == "partial")
+        {
+            var details = body["error"]!["details"]!;
+            Assert.Equal(mapped, (int?)details["succeeded"]);
+            Assert.Equal(mapped == 0 ? 0 : failed, (int?)details["failed"]);
+            Assert.Equal(0, (int?)details["notExecuted"]);
+            Assert.Equal("VCI refused the object", (string?)body["data"]?["evidence"]?["nativeMessage"]);
+            if (mapped == 0)
+            {
+                Assert.Contains("mappings exist but the initial export failed", (string?)body["error"]?["message"]);
+                Assert.Contains("VCI refused the object", (string?)body["error"]?["message"]);
+            }
+        }
+        if (expected == "failed") Assert.Equal("VCI refused the object", (string?)body["error"]?["details"]?["nativeMessage"]);
     }
+
+    [Theory, InlineData(0, 3, 0, "failed", "NATIVE_OPERATION_FAILED"), InlineData(1, 2, 0, "partial", "PARTIAL_FAILURE"),
+        InlineData(0, 1, 1, "unknown", "OUTCOME_UNKNOWN")]
+    public void Sync_uses_confirmed_exports_and_unanswered_writes(int ok, int failed, int unconfirmed, string outcome, string code)
+    {
+        var reply = new Host.ResponseStringList { Meta = new JsonObject { ["success"] = false, ["synchronized"] = ok, ["failed"] = failed,
+            ["exportsIssued"] = ok + failed, ["mayHaveChanged"] = true, ["unconfirmed"] = unconfirmed,
+            ["writeOutcomeUnknown"] = unconfirmed > 0, ["nativeMessage"] = "VCI refused the object" } };
+        var body = Host.LibraryToolContract.Map("SynchronizeVersionControlWorkspace", reply, true).StructuredContent!;
+        Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
+        Assert.Equal(code, (string?)body["error"]?["code"]);
+        var details = body["error"]!["details"]!;
+        if (outcome == "failed") Assert.Equal("VCI refused the object", (string?)details["nativeMessage"]);
+        if (outcome == "partial")
+        {
+            Assert.Equal(ok, (int?)details["succeeded"]);
+            Assert.Equal(failed, (int?)details["failed"]);
+        }
+    }
+
+    [Fact]
+    public void Interrupted_sync_after_issue_remains_unknown()
+    {
+        var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.VciSyncTests.InterruptedSync();
+        var body = MapVci("SynchronizeVersionControlWorkspace", reply, true);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Equal("unknown", (string?)body["meta"]?["execution"]);
+    }
+
+    [Theory, InlineData("ConnectProjectToWorkspace"), InlineData("SynchronizeVersionControlWorkspace"), InlineData("GetVersionControlStatus")]
+    public void Workspace_selection_refusals_remain_before_operation(string tool)
+    {
+        foreach (bool empty in new[] { true, false })
+        {
+            var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.VciSyncTests.WorkspaceRefusal(empty);
+            var body = MapVci(tool, reply, tool != "GetVersionControlStatus");
+            Assert.Equal(empty ? "PRECONDITION_FAILED" : "NOT_FOUND", (string?)body["error"]?["code"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            if (empty) Assert.Equal("no-workspace", (string?)body["error"]?["details"]?["condition"]);
+        }
+    }
+
+    [Theory, InlineData(true), InlineData(false)]
+    public void Unknown_objects_are_disclosed_in_both_sync_modes(bool preview)
+    {
+        var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.VciSyncTests.SkippedUnknown(preview);
+        var body = MapVci("SynchronizeVersionControlWorkspace", reply, !preview);
+        Assert.Equal("partial", (string?)body["meta"]?["completeness"]);
+        Assert.Equal(3, (int?)body["data"]?["evidence"]?["skippedUnknown"]);
+        Assert.False((bool?)body["data"]?["evidence"]?["dataComplete"]);
+        Assert.Equal("Status probe 0", (string?)body["data"]?["evidence"]?["statusProbe"]?["nativeMessage"]);
+        Assert.DoesNotContain("in sync", (string?)body["data"]?["summary"]);
+        Assert.Contains("changedOnly=false", (string?)body["data"]?["summary"]);
+    }
+
+    private static JsonNode MapVci(string tool, TiaMcp.Adapters.Contracts.VersionControlResult reply, bool writes)
+        => Host.LibraryToolContract.Map(tool, new Host.ResponseStringList { Message = reply.Message,
+            Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() }, writes).StructuredContent!;
 }

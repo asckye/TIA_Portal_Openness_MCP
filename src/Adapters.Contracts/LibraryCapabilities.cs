@@ -52,6 +52,9 @@ namespace TiaMcp.Adapters.Contracts
                 return "Library document import requires V20 or later.";
             if (operation == "ImportMasterCopyFromGlobalLibrary" && !EngineeringServicesCapabilities.AtLeast(release, "19"))
                 return "Unified HMI master-copy import requires V19 or later.";
+            if (operation == "CreateLibraryMasterCopy" && sourceKind == "block" && release == "16")
+                return "V16 crash protection: MasterCopyComposition.Create from a PLC block made TIA Portal V16 exit for a global DB and an FC. " +
+                    "V15.1 and V21 create it. Create the master copy on another release or drag the block into the library in TIA Portal.";
             if (operation == "CreateLibraryMasterCopy" && sourceKind == "screen"
                 && !EngineeringServicesCapabilities.AtLeast(release, "16"))
                 return "Unified HMI library operations require V16 or later.";

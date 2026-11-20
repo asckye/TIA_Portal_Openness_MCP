@@ -89,6 +89,8 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.Connect.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciExportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciExportAttempts.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciSyncAttempts.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.Policy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlWorker.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/LegacyVciPortPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hmi/ClassicHmiFoldersAdapter.cs" />

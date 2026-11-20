@@ -9,6 +9,14 @@ Stored PLC test libraries add no Openness member: library runs reuse the existin
 `RunPlcTestLibrary` calls those same executors sequentially after one batch approval; its PLCSIM scenarios use the existing simulation service.
 It adds no Openness call, and real execution remains NOT RUN.
 
+## V16 library master copies
+
+| Operation | Affected release | Coverage gap |
+|---|---|---|
+| `CreateLibraryMasterCopy` with `sourceKind="block"` | V16 | Preview and execution refuse PLC blocks for project and global libraries. Native creation terminated TIA Portal for a global DB and an FC. Create the copy on another release or drag the block into the library in TIA Portal. |
+
+V15.1 and V21 created block master copies in the recorded runs. Type, device and screen sources remain available on V16 and await native verification.
+
 ## V16 PLC alarm text workbooks
 
 On a PLC without text lists or alarms, V16 can terminate TIA during XLSX export. V16 has no API to enumerate these objects before export. V17 adds `TextListNotFoundException`.

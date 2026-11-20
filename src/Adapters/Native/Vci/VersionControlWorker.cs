@@ -24,18 +24,14 @@ public sealed partial class PlcFoundationEngine
         {
             "ListVersionControlWorkspaces" => VersionControl.GetVersionControlWorkspaces(),
             "GetVersionControlStatus" => VersionControl.GetVersionControlStatus(request.WorkspaceName, request.ChangedOnly),
-            "CreateVersionControlWorkspace" => VersionControl.CreateVersionControlWorkspace(request.WorkspaceName, request.FolderPath),
+            "CreateVersionControlWorkspace" => VersionControl.CreateVersionControlWorkspace(request.WorkspaceName, request.FolderPath, dryRun),
             "ConnectProjectToWorkspace" => VersionControl
                 .ConnectProjectToWorkspace(request.WorkspaceName, dryRun, request.DeviceFilter, request.MaxObjects, request.WalkTrace),
             "SynchronizeVersionControlWorkspace" => VersionControl
                 .SyncVersionControlWorkspace(request.Direction, request.WorkspaceName, dryRun, request.ChangedOnly),
             _ => throw new ArgumentException("Unregistered VCI operation: " + request.Operation)
         };
-        reply.OutcomeUnknown = request.Operation == "ConnectProjectToWorkspace" ? reply.Meta.TryGetValue("writeOutcomeUnknown", out var unknown)
-            && unknown is true : !dryRun && reply.Meta.TryGetValue("success", out var success) && success is false
-            && (reply.MayHaveChanged || reply.Meta.TryGetValue("failed", out var failed) && failed is int count && count > 0);
-        if (reply.OutcomeUnknown) { reply.Meta["writeOutcomeUnknown"] = true; }
-        return reply;
+        return VersionControlAdapter.WithWriteOutcome(request, reply);
 #else
         throw new NotSupportedException("VersionControlInterface requires V16 or later.");
 #endif

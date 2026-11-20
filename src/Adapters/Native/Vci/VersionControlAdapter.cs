@@ -10,7 +10,6 @@ using Siemens.Engineering.VersionControl;
 using System;
 using TiaMcpServer.Siemens;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
@@ -107,32 +106,20 @@ namespace TiaMcp.Adapters.Native.Vci
         }
 
         private Workspace FindWorkspace(VersionControlInterface vci, string name)
+            => Select(AllWorkspaces(vci), name, PortVci.Name);
+
+        // A throwing Openness call can dispose the workspace and its children.
+        private Workspace ReAcquireWorkspace(string name)
         {
-            var all = AllWorkspaces(vci).ToList();
-            if (all.Count == 0)
-                throw new InvalidOperationException(
-                    "This project has no version control workspace yet. Create one with " +
-                    "CreateVersionControlWorkspace, then map objects into it with " +
-                    "ConnectProjectToWorkspace (no UI interaction needed).");
-            if (string.IsNullOrWhiteSpace(name)) return all[0];
-            var hit = all.FirstOrDefault(w => string.Equals(PortVci.Name(w), name.Trim(), StringComparison.OrdinalIgnoreCase));
-            if (hit == null)
-                throw new InvalidOperationException(
-                    "No workspace named '" + name + "'. Available: " +
-                    string.Join(", ", all.Select(w => PortVci.Name(w))));
-            return hit;
+            _vciCached = null;
+            _vciOwnerProject = null;
+            _vciKeepAlive.Clear();
+            return FindWorkspace(RequireVci(), name);
         }
 
-        private static HmiObject FailureEvidence(Exception error, bool issued = false)
+        private IEnumerable<MappedObject> WorkspaceMappings(Workspace workspace)
         {
-            var meta = HmiMeta.Basic(false);
-            meta["mayHaveChanged"] = issued;
-            if (!issued)
-                meta["v4Rejection"] = error is PortalException portal && portal.Code == PortalErrorCode.InvalidState ? "PROJECT_NOT_BOUND"
-                    : error is AdapterPreconditionException ? "PRECONDITION_FAILED"
-                    : error is ArgumentException ? "INVALID_ARGUMENT"
-                    : error is DirectoryNotFoundException ? "NOT_FOUND" : null;
-            return meta;
+            foreach (var mapping in PortVci.Enumerate(Keep(PortVci.MappedObjects(workspace)))) yield return mapping;
         }
 
         public VersionControlResult GetVersionControlWorkspaces()
@@ -184,20 +171,13 @@ namespace TiaMcp.Adapters.Native.Vci
 
         public VersionControlResult CreateVersionControlWorkspace(
             string workspaceName,
-            string folderPath)
+            string folderPath,
+            bool dryRun)
         {
             bool issued = false;
             try
             {
-                if (string.IsNullOrWhiteSpace(workspaceName))
-                    throw new ArgumentException("workspaceName is required.");
-                if (string.IsNullOrWhiteSpace(folderPath))
-                    throw new ArgumentException("folderPath is required.");
-                var dir = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(folderPath.Trim()));
-                if (!dir.Exists)
-                    throw new DirectoryNotFoundException(
-                        "folderPath does not exist: " + dir.FullName + ". Create the folder (or clone the repo) first.");
-
+                var dir = VciWorkspaceLayout.CreationDirectory(workspaceName, folderPath, TiaOpenness.Shared.NativeInputPolicy.FullPath);
                 var vci = RequireVci();
                 var existing = AllWorkspaces(vci)
                     .FirstOrDefault(w => string.Equals(PortVci.Name(w), workspaceName.Trim(), StringComparison.OrdinalIgnoreCase));
@@ -209,14 +189,19 @@ namespace TiaMcp.Adapters.Native.Vci
                         Meta = HmiMeta.Basic(false, ("v4Rejection", "ALREADY_EXISTS")),
                     };
 
+                if (dryRun)
+                    return new VersionControlResult {
+                        Message = "Version-control workspace '" + workspaceName.Trim() + "' would be created. Folder: " + dir.FullName,
+                        Meta = HmiMeta.Basic(true, ("dryRun", true), ("mayHaveChanged", false)),
+                    };
+
                 var group = Keep(PortVci.Group(vci));
                 issued = true;
                 var ws = Keep(PortVci.Create(Keep(PortVci.Workspaces(group)), workspaceName.Trim(), dir));
                 return new VersionControlResult
                 {
-                    Message = "Created workspace '" + PortVci.Name(ws) + "' at " + dir.FullName +
-                              ". Next: ConnectProjectToWorkspace to map the project's objects into it, " +
-                              "then SynchronizeVersionControlWorkspace to write them out.",
+                    Message = "Version-control workspace '" + PortVci.Name(ws) + "' was created. " +
+                              "Call ConnectProjectToWorkspace to map objects, then SynchronizeVersionControlWorkspace to export them. Folder: " + dir.FullName,
                     Meta = HmiMeta.Basic(true),
                 };
             }
@@ -314,7 +299,8 @@ namespace TiaMcp.Adapters.Native.Vci
             bool dryRun = true,
             bool changedOnly = true)
         {
-            bool issued = false;
+            var attempts = new VciSyncAttempts();
+            var selection = new VciSyncSelection();
             var lines = new List<string>();
             int ok = 0, failed = 0;
             try
@@ -353,66 +339,78 @@ namespace TiaMcp.Adapters.Native.Vci
                 // equal"), so "force every object" is not a thing that exists — asking for it just
                 // produced one failure per object. Equal is always skipped; changedOnly only decides
                 // whether objects whose status could not be determined are attempted anyway.
-                var targets = new List<MappedObject>();
-                int skippedEqual = 0;
-                foreach (var mo in PortVci.Enumerate(Keep(PortVci.MappedObjects(ws))))
+                string ReadStatus(MappedObject mo) => PortVci.State(PortVci.ReadStatus(mo)).ToString();
+                string ReadDirectory(MappedObject mo) => PortVci.Directory(mo)?.ToString() ?? "";
+                string wsName = PortVci.Name(ws);
+                string wsRoot = SafeRoot(ws);
+                var targets = new List<(MappedObject Object, bool ProbeFailed)>();
+                foreach (var mo in WorkspaceMappings(ws))
+                    if (selection.Include(() => ReadStatus(mo), changedOnly, out bool probeFailed))
+                        targets.Add((mo, probeFailed));
+
+                HmiObject Evidence()
                 {
-                    string st;
-                    try { st = PortVci.State(PortVci.ReadStatus(mo)).ToString(); } catch { /* swallow(probe-optional): A failed status probe retains Unknown so the existing synchronization selection rules can decide whether to proceed. */ st = "Unknown"; }
-                    if (string.Equals(st, "Equal", StringComparison.OrdinalIgnoreCase)) { skippedEqual++; continue; }
-                    if (changedOnly && string.Equals(st, "Unknown", StringComparison.OrdinalIgnoreCase)) continue;
-                    targets.Add(mo);
+                    var meta = selection.Evidence(dryRun, ok, failed);
+                    meta["workspaceName"] = wsName;
+                    meta["rootPath"] = wsRoot;
+                    attempts.AddEvidence(meta);
+                    return meta;
                 }
 
                 if (targets.Count == 0)
                     return new VersionControlResult
                     {
-                        Message = "Workspace '" + PortVci.Name(ws) + "': nothing to synchronize — every mapped object is already in sync.",
-                        Meta = new HmiObject {
-                            ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
-                                ["rootPath"] = SafeRoot(ws), ["dryRun"] = dryRun, ["synchronized"] = 0, ["failed"] = 0, ["skippedEqual"] = skippedEqual
-                        },
+                        Message = selection.Summary("Workspace '" + wsName + "': nothing selected to synchronize.", noTargets: true),
+                        Meta = Evidence(),
                     };
 
                 if (dryRun)
                 {
-                    foreach (var mo in targets) lines.Add(SafeName(mo) + " | would sync " + mode);
-                    return new VersionControlResult
+                    foreach (var target in targets) lines.Add(SafeName(target.Object) + " | would sync " + mode);
+                    string message = string.Format(
+                        "DRY RUN — nothing was written. {0} object(s) would be synchronized {1} in workspace '{2}'. Call again with dryRun=false to do it.",
+                        targets.Count, mode, wsName);
+                    message = selection.Summary(message) + " Folder: " + wsRoot;
+                    var meta = Evidence();
+                    meta["wouldSynchronize"] = targets.Count;
+                    return new VersionControlResult { Message = message, Items = lines, Meta = meta };
+                }
+
+                var failures = new HmiArray();
+                // If one export disposes the workspace, the other selected mappings may also need fresh handles.
+                var prepared = targets.Select(t => (t.Object, t.ProbeFailed,
+                    Path: VciSyncTarget.Capture(SafeName(t.Object), () => ReadDirectory(t.Object)))).ToArray();
+                Workspace? current = ws;
+                MappedObject FindCurrent(VciSyncTarget path) => path.Find(
+                    WorkspaceMappings(current ??= ReAcquireWorkspace(wsName)), PortVci.FileName, ReadDirectory);
+                foreach (var target in prepared)
+                {
+                    var mo = failed == 0 ? target.Object : FindCurrent(target.Path);
+                    string? failure = attempts.Synchronize(wsRoot, target.Path, () => PortVci.Synchronize(mo, mode),
+                        () => { current = null; return FindCurrent(target.Path); }, ReadStatus, target.ProbeFailed, out var statusAfter);
+                    string name = target.Path.Stem;
+                    if (failure == null)
                     {
-                        Message = string.Format(
-                            "DRY RUN — nothing was written. {0} object(s) would be synchronized {1} in workspace '{2}' " +
-                            "(folder {3}). Call again with dryRun=false to do it.",
-                            targets.Count, mode, PortVci.Name(ws), SafeRoot(ws)),
-                        Items = lines,
-                        Meta = new HmiObject {
-                            ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
-                                ["rootPath"] = SafeRoot(ws), ["dryRun"] = true, ["synchronized"] = 0, ["wouldSynchronize"] = targets.Count, ["failed"] = 0,
-                                ["skippedEqual"] = skippedEqual
-                        },
-                    };
+                        ok++;
+                        lines.Add(name + " | synchronized");
+                    }
+                    else
+                    {
+                        if (statusAfter == null) current = null;
+                        failed++;
+                        lines.Add(name + " | FAILED: " + failure);
+                        failures.Add(new HmiObject { ["name"] = name, ["statusAfter"] = statusAfter ?? "Unknown" });
+                    }
                 }
 
-                foreach (var mo in targets)
-                {
-                    try { issued = true; PortVci.Synchronize(mo, mode); ok++; lines.Add(SafeName(mo) + " | synchronized"); }
-                    catch (Exception ex) { failed++; lines.Add(SafeName(mo) + " | FAILED: " + ex.Message); }
-                }
-
-                return new VersionControlResult
-                {
-                    Message = string.Format(
-                        "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {6} already equal (skipped). Folder: {4}.{5}",
-                        PortVci.Name(ws), mode, ok, failed, SafeRoot(ws),
-                        mode == SynchronizationMode.ProjectToWorkspace
-                            ? " The text files are updated — `git add -A && git commit` from that folder."
-                            : " The project now holds the workspace's version — compile and save to persist it.",
-                        skippedEqual),
-                    Items = lines,
-                    Meta = new HmiObject {
-                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = failed == 0, ["workspaceName"] = PortVci.Name(ws),
-                            ["rootPath"] = SafeRoot(ws), ["dryRun"] = false, ["synchronized"] = ok, ["failed"] = failed, ["skippedEqual"] = skippedEqual
-                    },
-                };
+                string summary = string.Format(
+                    "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {4} already equal (skipped).",
+                    wsName, mode, ok, failed, selection.SkippedEqual);
+                if (failed == 0) summary += " The text files are updated — `git add -A && git commit` from that folder.";
+                summary = selection.Summary(summary) + " Folder: " + wsRoot;
+                var resultMeta = Evidence();
+                resultMeta["failures"] = failures;
+                return new VersionControlResult { Message = summary, Items = lines, Meta = resultMeta };
             }
             catch (Exception ex)
             {
@@ -420,7 +418,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 {
                     Message = "SynchronizeVersionControlWorkspace failed: " + ex.Message,
                     Items = lines,
-                    Meta = FailureEvidence(ex, issued),
+                    Meta = attempts.Interrupted(ex),
                 };
             }
         }

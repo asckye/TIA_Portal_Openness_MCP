@@ -30,7 +30,7 @@ internal static class LegacyVciPortPrimitives
     internal static int Count(WorkspaceMappingComposition mappings) => mappings.Count;
     internal static string FileName(WorkspaceMapping mapped) => Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath);
     internal static DirectoryInfo Directory(WorkspaceMapping mapped)
-        => new DirectoryInfo(Path.Combine(((Workspace)mapped.Parent).RootPath.FullName, Path.GetDirectoryName(mapped.RelativeWorkspacePath) ?? ""));
+        => TiaMcp.Adapters.Contracts.VciWorkspaceLayout.LegacyMappingDirectory(((Workspace)mapped.Parent).RootPath.FullName, mapped.RelativeWorkspacePath);
     internal static string Format(WorkspaceMapping mapped) => "xml";
     internal static CultureInfo? Language(Workspace workspace)
     {

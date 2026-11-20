@@ -39,24 +39,28 @@ public static class ReleaseCapabilityQuery
     }
 
     public static Error Error(string name, string release, JsonObject args, string reason)
-        => UnsupportedCapabilityDetails.ErrorFor(release, name, Selector(args), Explain(reason, key => Reason(name, key, args) == null));
+        => UnsupportedCapabilityDetails.ErrorFor(release, name, Selector(args), Explain(release, reason, key => Reason(name, key, args) == null));
 
     public static string? OptionalProblem(string release, OptionalEngineeringRequest request)
     {
         string? reason = OptionalEngineeringCapabilities.Unsupported(release, request);
         if (reason == null) return null;
         string name = request.Operation;
-        return Explain(reason, key => PortedFamilies.Available(key, name)
+        return Explain(release, reason, key => PortedFamilies.Available(key, name)
             && (request.Action.Length == 0 || PortedFamilies.ForTool(name).SupportsAction(key, request.Action))
             && OptionalProductCapabilities.Unsupported(key, name, request.Category, request.Kind, request.Action, "", "") == null
             && OptionalEngineeringCapabilities.Unsupported(key, request) == null);
     }
 
-    private static string Explain(string reason, Func<string, bool> supported)
+    private static string Explain(string release, string reason, Func<string, bool> supported)
     {
-        var first = ReleaseRange.All.FirstOrDefault(supported);
-        return first == null ? reason + " Unavailable on all supported releases."
-            : reason + " Minimum release for this request is " + TiaVersionCatalog.Get(first).DisplayName + ".";
+        var releases = ReleaseRange.All;
+        int first = Array.FindIndex(releases, key => supported(key));
+        if (first < 0) return reason + " Unavailable on all supported releases.";
+        if (first < Array.IndexOf(releases, release))
+            return reason + " Supported releases: " + string.Join(", ", releases.Skip(first).Where(supported)
+                .Select(key => TiaVersionCatalog.Get(key).DisplayName)) + ".";
+        return reason + " Minimum release for this request is " + TiaVersionCatalog.Get(releases[first]).DisplayName + ".";
     }
 
     private static string? Reason(string name, string release, JsonObject args)

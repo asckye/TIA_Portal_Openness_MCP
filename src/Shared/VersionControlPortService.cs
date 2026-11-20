@@ -49,13 +49,7 @@ internal sealed class VersionControlPortService
         try
         {
             if (request.Operation == "CreateVersionControlWorkspace")
-            {
-                if (string.IsNullOrWhiteSpace(request.WorkspaceName)) throw new ArgumentException("workspaceName is required.");
-                if (string.IsNullOrWhiteSpace(request.FolderPath)) throw new ArgumentException("folderPath is required.");
-                var directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(request.FolderPath.Trim()));
-                if (!directory.Exists)
-                    throw new DirectoryNotFoundException("folderPath does not exist: " + directory.FullName + ". Create the folder (or clone the repo) first.");
-            }
+                VciWorkspaceLayout.CreationDirectory(request.WorkspaceName, request.FolderPath, TiaOpenness.Shared.NativeInputPolicy.FullPath);
             if (request.Operation == "SynchronizeVersionControlWorkspace")
             {
                 string direction = (request.Direction ?? "").Trim();
@@ -83,10 +77,10 @@ internal sealed class VersionControlPortService
             Invoke<ResponseStringList>(new VersionControlRequest {
                 Operation = "GetVersionControlStatus", WorkspaceName = workspaceName, ChangedOnly = changedOnly });
 
-    public ResponseMessage CreateVersionControlWorkspace(string workspaceName, string folderPath)
+    public ResponseMessage CreateVersionControlWorkspace(string workspaceName, string folderPath, bool dryRun)
         =>
             Invoke<ResponseMessage>(new VersionControlRequest {
-                Operation = "CreateVersionControlWorkspace", WorkspaceName = workspaceName, FolderPath = folderPath, DryRun = false });
+                Operation = "CreateVersionControlWorkspace", WorkspaceName = workspaceName, FolderPath = folderPath, DryRun = dryRun });
 
     public ResponseStringList ConnectProjectToWorkspace(string workspaceName = "", bool dryRun = true, string deviceFilter = "", int maxObjects = 3000,
             bool walkTrace = false)

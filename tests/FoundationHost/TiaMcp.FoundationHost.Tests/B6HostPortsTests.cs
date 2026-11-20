@@ -11,6 +11,56 @@ using Xunit;
 
 public sealed class B6HostPortsTests
 {
+    [Fact]
+    public void Workspace_preview_requires_an_existing_folder_and_bound_project_before_returning_a_plan()
+    {
+        using var worker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("16", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var tools = new Host.VersionControlTools(new Services.VersionControlPortService((_, _) => throw new Exception("Unexpected dispatch."), () => ""));
+        string folder = Path.GetTempPath();
+        var missing = tools.CreateVersionControlWorkspaceV4("Engineering", Path.Combine(folder, Guid.NewGuid().ToString("N"))).StructuredContent!;
+        Assert.Equal("NOT_FOUND", (string?)missing["error"]?["code"]);
+        Assert.Contains("Create it first or pass an existing folder.", (string?)missing["error"]?["message"]);
+        Assert.Equal("not-started", (string?)missing["meta"]?["execution"]);
+        Assert.Null(missing["data"]?["planHash"]);
+        var unbound = tools.CreateVersionControlWorkspaceV4("Engineering", folder).StructuredContent!;
+        Assert.Equal("PROJECT_NOT_BOUND", (string?)unbound["error"]?["code"]);
+        Assert.Null(unbound["data"]?["planHash"]);
+        Assert.Equal(0, worker.Calls);
+    }
+
+    [Fact]
+    public void Workspace_creation_binds_the_native_preview_and_applies_only_on_confirmation()
+    {
+        const string project = "C:/Projects/original.ap21";
+        using var worker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var modes = new List<bool>();
+        var tools = new Host.VersionControlTools(new Services.VersionControlPortService((operation, args) => {
+            Assert.Equal("version-control.ExecuteVersionControl", operation);
+            var request = args["request"]!.Deserialize<VersionControlRequest>()!;
+            Assert.Equal("CreateVersionControlWorkspace", request.Operation);
+            Assert.Equal(request.DryRun, (bool?)args["dryRun"]);
+            Assert.Equal(request.DryRun ? null : true, (bool?)args["confirm"]);
+            Assert.Equal(request.DryRun ? null : project, (string?)args["expectedProjectFile"]);
+            modes.Add(request.DryRun);
+            bool exists = request.WorkspaceName == "Taken";
+            return new JsonObject { ["Meta"] = new JsonObject { ["success"] = !exists, ["v4Rejection"] = exists ? "ALREADY_EXISTS" : null } };
+        }, () => project));
+        var folder = Path.GetTempPath();
+        var duplicate = tools.CreateVersionControlWorkspaceV4("Taken", folder).StructuredContent!;
+        Assert.Equal("ALREADY_EXISTS", (string?)duplicate["error"]?["code"]);
+        Assert.Null(duplicate["data"]?["planHash"]);
+        var preview = tools.CreateVersionControlWorkspaceV4("Engineering", folder).StructuredContent!;
+        string hash = (string)preview["data"]!["planHash"]!;
+        Assert.Matches("^[0-9a-f]{64}$", hash);
+        var applied = tools.CreateVersionControlWorkspaceV4("Engineering", folder, false, hash, project).StructuredContent!;
+        Assert.True((bool?)applied["ok"], applied.ToJsonString());
+        Assert.Equal(new[] { true, true, false }, modes);
+    }
+
     [Theory]
     [InlineData(false)][InlineData(true)]
     public void Library_instantiation_maps_all_target_and_mode_parameters(bool preview)

@@ -10,6 +10,8 @@
 
 ## 未发布改动的验收边界
 
+VMFIX-16（2026-11-20）：`rc-full-v16/results-C.jsonl` 第 158 行、`results-C2.jsonl` 第 208 行及 `results-D.jsonl` 第 118、120、122、249 行记录了本次修复所依据的库和版本控制问题。把分组内的全局 DB、无软件单元的 PLC 根下的全局 DB 或一致的 FC 创建为项目库主副本时，`MasterCopyComposition.Create` 导致 TIA Portal V16 退出。V15.1 与 V21 创建成功。V16 对项目库和全局库均在派发前拒绝块来源；类型、设备和画面来源的真机验收为 **NOT RUN**。修复后的 V16 拒绝、工作区创建预览、映射计数及同步异常后的文件与状态回读，均待真机复验。
+
 VMFIX-15（2026-11-19）：V16 的 `rc-full-v16/results-B.jsonl` 第 102 行与 `results-B2.jsonl` 第 143 行记录了空 PLC 报警文本列表或报警实例文本导出 XLSX 时 TIA 进程退出。V16 已撤下两个独立导出工具，并拒绝交换工具的导出动作。**NOT RUN**：修复后在同一会话重连、V16 无报警 PLC 的实例文本导入，以及 V17 及以上的真机导出复验。
 
 TIA-BATCH-5a：**NOT RUN**。V21 工程副本上按 unified-alarms-excel 与 unified-tags-excel 各走一遍 60 行（两个批次），含一个故意失败的行，核对失败项回滚、其后为 NOT_EXECUTED、Excel 文件可读。另逐行对照当前 PLC 导出核对变量绑定的数据类型与读写权限，确认不匹配或证据缺失的行在批次预览前报告并排除；核对多语言报警文本与变更后的读回结果。

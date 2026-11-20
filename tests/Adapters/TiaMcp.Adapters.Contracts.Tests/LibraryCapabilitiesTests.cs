@@ -8,6 +8,15 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class LibraryCapabilitiesTests
 {
+    [Fact]
+    public void Only_V16_refuses_block_master_copies()
+    {
+        foreach (string release in ReleaseRange.All)
+            Assert.Equal(release == "16", LibraryCapabilities.Unsupported(release, "CreateLibraryMasterCopy", sourceKind: "block") != null);
+        foreach (string kind in new[] { "type", "device", "screen", "Block" })
+            Assert.Null(LibraryCapabilities.Unsupported("16", "CreateLibraryMasterCopy", sourceKind: kind));
+    }
+
     [Theory]
     [InlineData("14sp1", false)][InlineData("15.1", false)][InlineData("16", false)][InlineData("17", false)]
     [InlineData("18", false)][InlineData("19", false)][InlineData("20", true)][InlineData("21", true)]

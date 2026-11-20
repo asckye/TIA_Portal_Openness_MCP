@@ -132,13 +132,23 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
-            else if (tool == "ConnectProjectToWorkspace" && writes && success == false && evidence["exportsIssued"] != null
-                && Flag(evidence, "writeOutcomeUnknown") == false && evidence["v4Rejection"] == null)
+            else if (tool is ("ConnectProjectToWorkspace" or "SynchronizeVersionControlWorkspace") && writes && success == false
+                && evidence["exportsIssued"] != null && Flag(evidence, "writeOutcomeUnknown") == false && evidence["v4Rejection"] == null)
             {
-                var mapped = succeeded + Count(evidence, "mappedAfterFailure") + Count(evidence, "alreadyMapped");
-                outcome = mapped > 0 ? Outcome.Partial : Outcome.Failed;
-                error = mapped > 0 ? new Error("Some objects have confirmed workspace mappings.", new PartialFailureDetails(mapped, Math.Max(1, failed), 0))
-                    : NativeFailure(HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) ?? nativeMessage);
+                bool connect = tool == "ConnectProjectToWorkspace";
+                int exported = Count(evidence, connect ? "mapped" : "synchronized");
+                string? diagnostic = HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) ?? nativeMessage;
+                if (exported > 0)
+                {
+                    outcome = Outcome.Partial;
+                    error = new Error("Some objects were exported to the workspace.", new PartialFailureDetails(exported, failed, 0));
+                }
+                else if (connect && Count(evidence, "mappedAfterFailure") > 0)
+                {
+                    outcome = Outcome.Partial;
+                    error = new Error(("Workspace mappings exist but the initial export failed. " + diagnostic).TrimEnd(), new PartialFailureDetails(0, 0, 0));
+                }
+                else { outcome = Outcome.Failed; error = NativeFailure(diagnostic); }
             }
             else if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
             {
@@ -160,7 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : status == "UNSUPPORTED_CAPABILITY" || status == "NotSupported" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : status == "ALREADY_EXISTS" ? new AlreadyExistsDetails(null)
                     : status == "INVALID_ARGUMENT" ? McpServer.ArgumentDetails(tool, null, evidence)
-                    : new PreconditionFailedDetails("engineering-before-operation", null);
+                    : new PreconditionFailedDetails((string?)evidence["condition"] ?? "engineering-before-operation", null);
                 error =
                     new Error(refusedScreenItemImport ? screenItemRefusal : nativeMessage ?? "The engineering request was rejected before execution.", details);
             }

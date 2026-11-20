@@ -204,13 +204,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 // An Openness call that throws DISPOSES the objects involved: after one
                 // "The Object is not supported" the Workspace handle itself is dead. Since asking about an
                 // unsupported object is a normal part of the sweep, re-acquire the handle after every failure.
-                Workspace ReAcquire()
-                {
-                    _vciCached = null;
-                    _vciOwnerProject = null;
-                    _vciKeepAlive.Clear();
-                    return FindWorkspace(RequireVci(), wsName);
-                }
+                Workspace ReAcquire() => ReAcquireWorkspace(wsName);
 
                 int already = 0, failed = 0, unsupported = 0, visited = 0;
                 bool truncated = false;

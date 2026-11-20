@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace TiaMcp.Adapters.Contracts;
@@ -11,6 +12,26 @@ namespace TiaMcp.Adapters.Contracts;
 public static class VciWorkspaceLayout
 {
     public const string UngroupedFolder = "UngroupedDevices";
+
+    internal static DirectoryInfo LegacyMappingDirectory(string root, string relativeWorkspacePath)
+    {
+        // V16 can prefix a mapping with a single separator to denote the workspace root.
+        string path = relativeWorkspacePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+        if (path.StartsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal)) path = path.Substring(1);
+        if (Path.IsPathRooted(path)) throw new ArgumentException("Expected a workspace-relative mapping path.");
+        return new DirectoryInfo(Path.Combine(root, Path.GetDirectoryName(path) ?? ""));
+    }
+
+    public static DirectoryInfo CreationDirectory(string workspaceName, string folderPath, Func<string, string> fullPath)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceName)) throw new ArgumentException("workspaceName is required.");
+        if (string.IsNullOrWhiteSpace(folderPath)) throw new ArgumentException("folderPath is required.");
+        var directory = new DirectoryInfo(fullPath(folderPath.Trim()));
+        if (!directory.Exists)
+            throw new DirectoryNotFoundException(
+                "The workspace folder does not exist. Create it first or pass an existing folder. Folder: " + directory.FullName);
+        return directory;
+    }
 
     /// <summary>The first root entry whose workspace folder is <see cref="UngroupedFolder"/>, or null.</summary>
     public static string? UngroupedFolderOwner(IEnumerable<(string Name, string Folder)> rootEntries)
