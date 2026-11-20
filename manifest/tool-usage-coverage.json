@@ -1,6 +1,6 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "e5fa8aa25a4ac1cbb08c1472772b3650c560f8c84cad812a832cf9b5ce242aa8",
+  "catalogSha256": "a95f93fad942ee80f4d4f38e0eeb56e910c8ddbd27b111f376240dfe02f07d7b",
   "uniqueTools": 524,
   "documents": 89,
   "versionToolPairs": 3257,
@@ -18552,7 +18552,7 @@
             {
               "operation": "fAddressArchive",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSinumerikArchive.fAddressArchive is unavailable on TIA V17. CreateFAddressAssignmentArchive is absent on V17. Minimum release for this request is V16."
+              "releaseProblem": "ManageSinumerikArchive.fAddressArchive is unavailable on TIA V17. CreateFAddressAssignmentArchive is absent on V17. Supported releases: V16, V18, V19, V20."
             }
           ]
         },
@@ -39724,22 +39724,22 @@
             {
               "operation": "read",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSivarcBlockDefinition.read is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Minimum release for this request is V17."
+              "releaseProblem": "ManageSivarcBlockDefinition.read is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Supported releases: V17, V18, V19, V21."
             },
             {
               "operation": "create",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSivarcBlockDefinition.create is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Minimum release for this request is V17."
+              "releaseProblem": "ManageSivarcBlockDefinition.create is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Supported releases: V17, V18, V19, V21."
             },
             {
               "operation": "update",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSivarcBlockDefinition.update is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Minimum release for this request is V17."
+              "releaseProblem": "ManageSivarcBlockDefinition.update is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Supported releases: V17, V18, V19, V21."
             },
             {
               "operation": "delete",
               "exampleKind": "parameterized-call-example",
-              "releaseProblem": "ManageSivarcBlockDefinition.delete is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Minimum release for this request is V17."
+              "releaseProblem": "ManageSivarcBlockDefinition.delete is unavailable on TIA V20. SiVArc block-definition reads, writes, expression resolution and definition upgrades are refused for every block type, action and preview on TIA Portal V20: the per-block definition subsystem can crash TIA Portal V20 (finding 44 and the FB regression). These operations work on V21; use TIA Portal V21. Supported releases: V17, V18, V19, V21."
             }
           ]
         },
@@ -41582,8 +41582,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "da78b31b7818a7fca846df90ddc4b3ed3f4f3dfec84d9a6c01fad066329d9932",
-      "runtimeSha256": "da78b31b7818a7fca846df90ddc4b3ed3f4f3dfec84d9a6c01fad066329d9932",
+      "sdkWorkerSha256": "1e565fb44590e62a323428be39e76089045e1c056143e94d8b3d74cf1f949212",
+      "runtimeSha256": "1e565fb44590e62a323428be39e76089045e1c056143e94d8b3d74cf1f949212",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -49778,8 +49778,8 @@
         }
       ],
       "hostSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-      "sdkWorkerSha256": "c0bd1d2b6d5cbbc7a167dab65c1947ece671199f6ebc37f8d35ded5adf11d6a4",
-      "runtimeSha256": "c0bd1d2b6d5cbbc7a167dab65c1947ece671199f6ebc37f8d35ded5adf11d6a4",
+      "sdkWorkerSha256": "1f39dade4501c6e486082cc4a640dd5b00dca25f10689e8b2cf918857dd512c5",
+      "runtimeSha256": "1f39dade4501c6e486082cc4a640dd5b00dca25f10689e8b2cf918857dd512c5",
       "workerModel": "foundation-host-plc-worker"
     }
   }
