@@ -6771,6 +6771,43 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Calls_inspector_preserves_the_control_record_and_modal_boundary( int width , bool docked ):5d8b0d3ec3643df32f5dfdbe27a2b98627207f4700ea0e194ae98802ad491cda:1"
         }
       ]
+    },
+    {
+      "task": "UI-0036B3",
+      "maintainerDate": "2026-11-20",
+      "reason": "Clients page split: assertions moved from the combined MCP page to the Clients page with the same binding, layout and clipping intent; client column width follows the ADR 0036 design value (maintainer standing approval 2026-11-17 for recommended options)",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Hosted_configuration_uses_workbench_resources_in_both_directions( AppLanguage initialLanguage , AppTheme initialTheme , AppLanguage nextLanguage , AppTheme nextTheme ):33f4d736e26fe667a2d2332bc585cb061ef3b7d32a82c57f1571eb2e1853f35e:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Hosted_configuration_uses_workbench_resources_in_both_directions( AppLanguage initialLanguage , AppTheme initialTheme , AppLanguage nextLanguage , AppTheme nextTheme ):4292b7d24a382091ede4cbc3c8b4c3bd5fb24822cf5ac898ee0c6f457dc8bfff:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Hosted_configuration_uses_workbench_resources_in_both_directions( AppLanguage initialLanguage , AppTheme initialTheme , AppLanguage nextLanguage , AppTheme nextTheme ):cc04f9d755a807aa6b03740818b9d43b0ddf3ca01960d569faa21fc895707394:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.UnifiedDesktopTests/Hosted_configuration_uses_workbench_resources_in_both_directions( AppLanguage initialLanguage , AppTheme initialTheme , AppLanguage nextLanguage , AppTheme nextTheme ):dafeecb1ca4e98960a2c7503be91c9588a1589e6da5e12f52bb8707dea2c8f76:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchNarrowLayoutTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchNarrowLayoutTests/English_client_switch_names_wrap_without_truncation_and_keep_equal_row_heights( ):9fdadcf79e8d92f4e52abd9246cedadf071139fa41259f89c87d1721cfc79cce:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):6e6c135222dbddb8e03b3007083df9643da5bd295a88fe64d35b50731c4056e9:1"
+        }
+      ]
     }
   ]
 }
