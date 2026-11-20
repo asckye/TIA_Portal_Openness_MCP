@@ -376,14 +376,18 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                 Assert.Contains("fixture AI", popover.Client.Text);
                 Assert.Contains(language == AppLanguage.Chinese ? "（未验证）" : "(unverified)", popover.Client.Text);
                 popover.UpdateLayout();
-                string section = Loc.Current["CrossReferences.Section"];
+                // XREF-1 removed the cross-reference strings, so match the visible words in both languages.
+                static bool Mentions(string? text) => text is not null
+                    && (text.Contains("cross reference", StringComparison.OrdinalIgnoreCase)
+                        || text.Contains("cross-reference", StringComparison.OrdinalIgnoreCase)
+                        || text.Contains("交叉引用", StringComparison.Ordinal));
                 Assert.DoesNotContain(DesktopCapture.Descendants<FrameworkElement>(popover).Prepend(popover),
-                    element => AutomationProperties.GetName(element) == section || element switch
+                    element => Mentions(AutomationProperties.GetName(element)) || element switch
                     {
-                        TextBlock text => text.Text == section,
-                        TextBox field => field.Text == section,
-                        AccessText label => label.Text == section,
-                        ContentControl control => Equals(control.Content, section),
+                        TextBlock text => Mentions(text.Text),
+                        TextBox field => Mentions(field.Text),
+                        AccessText label => Mentions(label.Text),
+                        ContentControl control => Mentions(control.Content as string),
                         _ => false,
                     });
                 Assert.Empty(DesktopCapture.Descendants<ToggleButton>(popover));
