@@ -1,10 +1,8 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
 
 namespace TiaOpenness.Gui.Themes;
@@ -13,46 +11,42 @@ public enum LowEffectsMode { Auto, On, Off }
 
 public enum AppTheme
 {
-    /// <summary>Follow the Windows light/dark setting, and keep following it as it changes.</summary>
-    Auto,
     Light,
     Dark,
 }
 
+public enum AppAccent
+{
+    Cobalt,
+    Petrol,
+}
+
 /// <summary>
-/// Owns which palette is loaded.
-///
-/// The palette lives at a fixed slot in <see cref="Application.Resources"/>, and switching
-/// appearance swaps that one dictionary. Everything downstream refers to palette keys by
-/// DynamicResource, so the swap repaints the live window - no restart, and no window rebuild
-/// that would lose the log, the selection or the open session.
+/// Owns which palette is loaded (Light/Dark × Precision Cobalt / Siemens TIA Petrol,
+/// plus automatic OS High Contrast). Swapping MergedDictionaries[0] repaints the live
+/// window immediately without restarting or dropping open sessions.
 /// </summary>
 public sealed class ThemeManager : INotifyPropertyChanged
 {
-    /// <summary>Index of the palette inside Application.Resources.MergedDictionaries.</summary>
     private const int PaletteSlot = 0;
 
-    // Absolute pack URIs, naming the assembly. A relative one would be resolved against
-    // Application.ResourceAssembly, which is only populated when the app is started through its
-    // generated entry point - so the palette would fail to load in any other host.
-    //
-    // The name is read from the assembly rather than written out, because a hardcoded one turns
-    // renaming the executable into a runtime failure that only shows up when a palette loads.
     internal static readonly string PackPrefix =
         $"pack://application:,,,/{typeof(ThemeManager).Assembly.GetName().Name};component/Themes/";
 
-    private static readonly Uri LightPalette = new(PackPrefix + "Palette.Light.xaml", UriKind.Absolute);
-    private static readonly Uri DarkPalette = new(PackPrefix + "Palette.Dark.xaml", UriKind.Absolute);
-
+    private static readonly Uri LightCobaltPalette = new(PackPrefix + "Palette.Light.xaml", UriKind.Absolute);
+    private static readonly Uri DarkCobaltPalette = new(PackPrefix + "Palette.Dark.xaml", UriKind.Absolute);
+    private static readonly Uri LightPetrolPalette = new(PackPrefix + "Palette.Light.Petrol.xaml", UriKind.Absolute);
+    private static readonly Uri DarkPetrolPalette = new(PackPrefix + "Palette.Dark.Petrol.xaml", UriKind.Absolute);
     private static readonly Uri HighContrastPalette = new(PackPrefix + "Palette.HighContrast.xaml", UriKind.Absolute);
+
     private bool? _highContrastOverride;
     public bool EffectivelyHighContrast => _highContrastOverride ?? SystemParameters.HighContrast;
     public Color SelectionColor => SystemColors.HighlightColor;
     public Color SelectionTextColor => SystemColors.HighlightTextColor;
     internal bool? HighContrastOverride { get => _highContrastOverride; set { _highContrastOverride = value; Apply(); } }
 
-    private AppTheme _theme = AppTheme.Auto;
-    private bool _systemIsDark;
+    private AppTheme _theme = AppTheme.Light;
+    private AppAccent _accent = AppAccent.Cobalt;
     private LowEffectsMode _lowEffects;
     private bool _virtualMachine;
     private ThemeManager() { }
@@ -69,10 +63,21 @@ public sealed class ThemeManager : INotifyPropertyChanged
             if (_theme == value) return;
             _theme = value;
             Apply();
-            foreach (var name in new[] { nameof(Theme), nameof(IsAuto), nameof(IsLight), nameof(IsDark) })
-            {
+            foreach (var name in new[] { nameof(Theme), nameof(IsLight), nameof(IsDark) })
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-            }
+        }
+    }
+
+    public AppAccent Accent
+    {
+        get => _accent;
+        set
+        {
+            if (_accent == value) return;
+            _accent = value;
+            Apply();
+            foreach (var name in new[] { nameof(Accent), nameof(IsCobalt), nameof(IsPetrol) })
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 
@@ -93,7 +98,6 @@ public sealed class ThemeManager : INotifyPropertyChanged
     public bool UseLowEffects => ResolveLowEffects(LowEffects, RenderCapability.Tier >> 16, SystemParameters.IsRemoteSession, _virtualMachine);
     internal static bool ResolveLowEffects(LowEffectsMode mode, int tier, bool remote, bool vm)
         => mode == LowEffectsMode.On || mode == LowEffectsMode.Auto && (tier == 0 || remote || vm);
-    // Primer has no visual effects. Keep the persisted low-effects setting readable.
     private void ApplyEffects() { }
     private void OnRenderingChanged(object? sender, EventArgs e) => Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
     { ApplyEffects(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseLowEffects))); }));
@@ -115,14 +119,6 @@ public sealed class ThemeManager : INotifyPropertyChanged
         catch (Exception ex) { System.Diagnostics.Trace.TraceInformation("VM rendering hint unavailable: " + ex.GetType().Name); return false; }
     }
 
-    // Three one-way-ish flags so the appearance segmented control can bind without a converter.
-    // Setting one to false does nothing: a segment is deselected by another being selected.
-    public bool IsAuto
-    {
-        get => _theme == AppTheme.Auto;
-        set { if (value) Theme = AppTheme.Auto; }
-    }
-
     public bool IsLight
     {
         get => _theme == AppTheme.Light;
@@ -135,23 +131,26 @@ public sealed class ThemeManager : INotifyPropertyChanged
         set { if (value) Theme = AppTheme.Dark; }
     }
 
-    /// <summary>Whether the effective appearance - after resolving Auto - is dark.</summary>
-    public bool EffectivelyDark => _theme switch
+    public bool IsCobalt
     {
-        AppTheme.Dark => true,
-        AppTheme.Light => false,
-        _ => _systemIsDark,
-    };
+        get => _accent == AppAccent.Cobalt;
+        set { if (value) Accent = AppAccent.Cobalt; }
+    }
 
-    /// <summary>
-    /// Called once at startup, after App.xaml's dictionaries exist. Subscribes to the Windows
-    /// appearance setting so Auto keeps tracking it rather than sampling it once.
-    /// </summary>
-    public void Initialize(AppTheme theme, LowEffectsMode lowEffects = LowEffectsMode.Auto)
+    public bool IsPetrol
     {
-        _systemIsDark = ReadSystemIsDark();
+        get => _accent == AppAccent.Petrol;
+        set { if (value) Accent = AppAccent.Petrol; }
+    }
+
+    public bool EffectivelyDark => _theme == AppTheme.Dark;
+
+    public void Initialize(AppTheme theme, LowEffectsMode lowEffects = LowEffectsMode.Auto, AppAccent accent = AppAccent.Cobalt)
+    {
         _theme = theme;
-        _lowEffects = lowEffects; _virtualMachine = DetectVirtualMachine();
+        _accent = accent;
+        _lowEffects = lowEffects;
+        _virtualMachine = DetectVirtualMachine();
         RenderCapability.TierChanged -= OnRenderingChanged; RenderCapability.TierChanged += OnRenderingChanged;
         SystemParameters.StaticPropertyChanged -= OnSystemParametersChanged; SystemParameters.StaticPropertyChanged += OnSystemParametersChanged;
 
@@ -159,9 +158,8 @@ public sealed class ThemeManager : INotifyPropertyChanged
         {
             Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         }
-        catch (Exception) /* swallow(ui): unavailable system events leave Auto using its startup appearance sample without blocking initialization */
+        catch (Exception) /* swallow(ui): unavailable system events leave High Contrast tracking inactive without blocking startup */
         {
-            // No system-event hookup means Auto simply stops updating; not worth failing startup.
         }
 
         Apply();
@@ -171,23 +169,24 @@ public sealed class ThemeManager : INotifyPropertyChanged
     {
         if (e.Category is not (Microsoft.Win32.UserPreferenceCategory.General or Microsoft.Win32.UserPreferenceCategory.Color
             or Microsoft.Win32.UserPreferenceCategory.Accessibility or Microsoft.Win32.UserPreferenceCategory.VisualStyle)) return;
-
-        var dark = ReadSystemIsDark();
-        if (dark == _systemIsDark && !EffectivelyHighContrast) return;
-
-        _systemIsDark = dark;
-        if (_theme != AppTheme.Auto && !EffectivelyHighContrast) return;
-
-        // The notification arrives on a system thread.
+        if (!EffectivelyHighContrast) return;
         Application.Current?.Dispatcher.Invoke(Apply);
     }
+
+    internal static Uri PaletteUri(AppTheme theme, AppAccent accent) => (theme, accent) switch
+    {
+        (AppTheme.Dark, AppAccent.Petrol) => DarkPetrolPalette,
+        (AppTheme.Dark, _) => DarkCobaltPalette,
+        (_, AppAccent.Petrol) => LightPetrolPalette,
+        _ => LightCobaltPalette,
+    };
 
     private void Apply()
     {
         var application = Application.Current;
         if (application is null) return;
 
-        var wanted = EffectivelyHighContrast ? HighContrastPalette : EffectivelyDark ? DarkPalette : LightPalette;
+        var wanted = EffectivelyHighContrast ? HighContrastPalette : PaletteUri(_theme, _accent);
         var merged = application.Resources.MergedDictionaries;
 
         var palette = new ResourceDictionary { Source = wanted };
@@ -198,25 +197,5 @@ public sealed class ThemeManager : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectionColor)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectionTextColor)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EffectivelyDark)));
-    }
-
-    /// <summary>
-    /// Reads the Windows "choose your default app mode" setting. Anything unreadable - a locked
-    /// down registry, a future Windows that moves the value - is treated as light, which is the
-    /// Windows default.
-    /// </summary>
-    private static bool ReadSystemIsDark()
-    {
-        try
-        {
-            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-                @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-
-            return key?.GetValue("AppsUseLightTheme") is int light && light == 0;
-        }
-        catch (Exception) /* swallow(env-probe): an unreadable Windows appearance setting uses the light-theme fallback */
-        {
-            return false;
-        }
     }
 }

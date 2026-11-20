@@ -3,10 +3,12 @@
     <Border DockPanel.Dock="Top" Style="{StaticResource Primer.PageHead}">
       <StackPanel>
         <ux:PageHeadPanel>
-          <TextBlock Text="{l:Tr Pages.LogPurpose}" Style="{StaticResource Primer.PageSubtitle}" TextWrapping="Wrap"/>
+          <TextBlock Text="{l:Tr Pages.LogPurpose}" Style="{StaticResource Primer.PageSubtitle}" TextWrapping="Wrap" TextTrimming="None"/>
           <WrapPanel>
+            <Button x:Name="GenerateButton" Content="{l:Tr Env.Generate}" AutomationProperties.Name="{l:Tr Env.Generate}" Click="OnGenerate" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
             <Button Content="{l:Tr Pages.CopyLog}" AutomationProperties.Name="{l:Tr Pages.CopyLog}" Click="OnCopyLog" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-            <Button x:Name="ClearLogButton" Content="{l:Tr Pages.ClearLog}" AutomationProperties.Name="{l:Tr Pages.ClearLog}" Click="OnClearLog" Style="{StaticResource Primer.Secondary}"/>
+            <Button x:Name="ClearLogButton" Content="{l:Tr Pages.ClearLog}" AutomationProperties.Name="{l:Tr Pages.ClearLog}" Click="OnClearLog" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+            <Button x:Name="StorageSettingsButton" Content="{l:Tr Pages.LogStorageSettings}" AutomationProperties.Name="{l:Tr Pages.LogStorageSettings}" Click="OnOpenStorageSettings" Style="{StaticResource Primer.Link}"/>
           </WrapPanel>
         </ux:PageHeadPanel>
         <WrapPanel Margin="0,12,0,0">
@@ -23,96 +25,42 @@
         </WrapPanel>
       </StackPanel>
     </Border>
-    <Grid ux:ResponsiveLayout.Enabled="True">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="320"/></Grid.ColumnDefinitions>
-      <Border x:Name="LogCard" Style="{StaticResource Primer.TableContainer}">
-        <ListBox AutomationProperties.Name="{l:Tr Log.Title}" x:Name="LogList" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">
-          <ListBox.ItemTemplate>
-            <DataTemplate>
-              <Grid Margin="10,0" MinHeight="{DynamicResource Ui.RowHeight}">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="82"/><ColumnDefinition Width="100"/>
-                  <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-                <TextBlock Grid.Column="1" Style="{StaticResource Primer.Mono}"><TextBlock.Text><MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="logLevel"><Binding Path="Level"/><Binding Source="{x:Static l:Loc.Current}" Path="Language"/></MultiBinding></TextBlock.Text></TextBlock>
-                <TextBlock Grid.Column="2" Text="{Binding Message}" ToolTip="{Binding Message}" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.LogLevelText}"/>
-              </Grid>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
-      </Border>
-      <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel x:Name="LogTools">
-          <Border Style="{StaticResource Primer.Container}">
-            <StackPanel>
-              <Button x:Name="GenerateButton" AutomationProperties.Name="{l:Tr Env.Generate}" Content="{l:Tr Env.Generate}" Style="{StaticResource Primer.Run}" Click="OnGenerate" IsEnabled="{Binding DiagnosticCanStart}" HorizontalAlignment="Left" Margin="0,0,0,12"/>
-              <ux:PageHeadPanel Margin="0,0,0,10" Spacing="8">
-                <TextBlock Text="{l:Tr Env.Diagnostics}" Style="{StaticResource Primer.ContainerTitle}"/>
-                <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding DiagnosticTone}">
-                  <TextBlock Text="{Binding DiagnosticLabel}" Style="{StaticResource Primer.StatusText}"/>
-                </ContentControl>
-              </ux:PageHeadPanel>
-              <TextBlock Text="{l:Tr Env.DiagnosticHelp}" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Visibility="{Binding DiagnosticIdle, Converter={StaticResource BoolToVisibility}}"/>
-              <TextBlock Text="{Binding DiagnosticStep}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Visibility="{Binding DiagnosticIdle, Converter={StaticResource BoolToVisibility}}"/>
-              <StackPanel Visibility="{Binding DiagnosticRunning, Converter={StaticResource BoolToVisibility}}">
-                <DockPanel>
-                  <TextBlock DockPanel.Dock="Right" Text="{Binding DiagnosticPercent, StringFormat={}{0}%}" Style="{StaticResource Primer.Mono}"/>
-                  <TextBlock AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding DiagnosticStep}" Text="{Binding DiagnosticStep}" Style="{StaticResource Primer.Muted}"/>
-                </DockPanel>
-                <ProgressBar Style="{StaticResource Primer.Progress}" Height="5" Value="{Binding DiagnosticPercent, Mode=OneWay}" Margin="0,12,0,0"/>
-              </StackPanel>
-              <StackPanel Visibility="{Binding DiagnosticDone, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding DiagnosticPath}" Text="{Binding DiagnosticPath}" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap"/>
-                <Button AutomationProperties.Name="{l:Tr Feature.OpenFolder}" Content="{l:Tr Feature.OpenFolder}" Style="{StaticResource Primer.Secondary}" Margin="0,10,0,8" Click="OnOpenFolder"/>
-                <TextBlock Text="{l:Tr Env.Redacted}" Style="{StaticResource Primer.Muted.ok}"/>
-              </StackPanel>
-            </StackPanel>
-          </Border>
-          <Border Style="{StaticResource Primer.Container}" Margin="0,16,0,0">
-            <StackPanel>
-              <TextBlock Text="{l:Tr Settings.LogDirectory}" Style="{StaticResource Primer.ContainerTitle}"/>
-              <TextBlock x:Name="LogPath" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap" Margin="0,8,0,8"/>
-              <Button x:Name="OpenLog" Content="{l:Tr Pages.OpenRuntimeLog}" AutomationProperties.Name="{l:Tr Pages.OpenRuntimeLog}" Click="OnRuntimeFolder" Style="{StaticResource Primer.Secondary}" HorizontalAlignment="Left"/>
-            </StackPanel>
-          </Border>
-          <Border Style="{StaticResource Primer.Container}" Margin="0,16,0,0">
-            <StackPanel>
-              <TextBlock Text="{l:Tr Audit.Retention}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,0,12"/>
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="74"/>
-                  <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" MinHeight="38"/>
-                  <RowDefinition Height="Auto" MinHeight="38"/>
-                  <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBlock Text="{l:Tr Audit.FileSize}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None"/>
-                <Border Grid.Column="1" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{StaticResource Primer.SegmentGroup}">
-                  <StackPanel Orientation="Horizontal">
-                    <RadioButton AutomationProperties.Name="{l:Tr Audit.Size5}" x:Name="Size5" Tag="5" Content="{l:Tr Audit.Size5}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
-                    <RadioButton AutomationProperties.Name="{l:Tr Audit.Size10}" x:Name="Size10" Tag="10" Content="{l:Tr Audit.Size10}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
-                    <RadioButton AutomationProperties.Name="{l:Tr Audit.Size50}" x:Name="Size50" Tag="50" Content="{l:Tr Audit.Size50}" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditSize" Click="OnSize"/>
-                  </StackPanel>
-                </Border>
-                <TextBlock Grid.Row="1" Text="{l:Tr Audit.Copies}" Style="{StaticResource Primer.Muted}"/>
-                <Border Grid.Row="1" Grid.Column="1" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{StaticResource Primer.SegmentGroup}">
-                  <StackPanel Orientation="Horizontal">
-                    <RadioButton AutomationProperties.Name="3" x:Name="Copies3" Tag="3" Content="3" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
-                    <RadioButton AutomationProperties.Name="5" x:Name="Copies5" Tag="5" Content="5" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
-                    <RadioButton AutomationProperties.Name="10" x:Name="Copies10" Tag="10" Content="10" Style="{StaticResource Primer.Segment}" Padding="6,0" GroupName="AuditCopies" Click="OnCopies"/>
-                  </StackPanel>
-                </Border>
-                <TextBlock Grid.Row="2" Text="{l:Tr Audit.Coverage}" Style="{StaticResource Primer.Muted}"/>
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Coverage}" TextWrapping="Wrap" Style="{StaticResource Primer.ListValue}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-              </Grid>
-              <Button AutomationProperties.Name="{l:Tr Audit.OpenFolder}" Content="{l:Tr Audit.OpenFolder}" Style="{StaticResource Primer.Secondary}" Margin="0,4,0,0" Click="OnRetentionFolder"/>
-            </StackPanel>
-          </Border>
+    <StackPanel x:Name="DiagnosticStrip" DockPanel.Dock="Top">
+      <Border Style="{StaticResource Primer.Workbench.DiagnosticStrip}" Visibility="{Binding DiagnosticRunning, Converter={StaticResource BoolToVisibility}}">
+        <StackPanel>
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Right" Text="{Binding DiagnosticPercent, StringFormat={}{0}%}" Style="{StaticResource Primer.Mono}"/>
+            <TextBlock AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding DiagnosticStep}" Text="{Binding DiagnosticStep}" Style="{StaticResource Primer.Muted}"/>
+          </DockPanel>
+          <ProgressBar Style="{StaticResource Primer.Progress}" Height="4" Value="{Binding DiagnosticPercent, Mode=OneWay}" Margin="0,8,0,0"/>
         </StackPanel>
-      </ScrollViewer>
-    </Grid>
+      </Border>
+      <Border Style="{StaticResource Primer.Workbench.DiagnosticStrip}" Visibility="{Binding DiagnosticDone, Converter={StaticResource BoolToVisibility}}">
+        <DockPanel>
+          <Button DockPanel.Dock="Right" AutomationProperties.Name="{l:Tr Feature.OpenFolder}" Content="{l:Tr Feature.OpenFolder}" Style="{StaticResource Primer.Secondary}" Margin="12,0,0,0" Click="OnOpenFolder"/>
+          <StackPanel>
+            <TextBlock AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding DiagnosticPath}" Text="{Binding DiagnosticPath}" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap"/>
+            <TextBlock Text="{l:Tr Env.Redacted}" Style="{StaticResource Primer.Muted.ok}" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+    </StackPanel>
+    <Border x:Name="LogCard" Style="{StaticResource Primer.TableContainer}">
+      <ListBox AutomationProperties.Name="{l:Tr Log.Title}" x:Name="LogList" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <Grid Margin="10,0" MinHeight="{DynamicResource Ui.RowHeight}">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="82"/><ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+              <TextBlock Grid.Column="1" Style="{StaticResource Primer.Mono}"><TextBlock.Text><MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="logLevel"><Binding Path="Level"/><Binding Source="{x:Static l:Loc.Current}" Path="Language"/></MultiBinding></TextBlock.Text></TextBlock>
+              <TextBlock Grid.Column="2" Text="{Binding Message}" ToolTip="{Binding Message}" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.LogLevelText}"/>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
   </DockPanel>
 </UserControl>

@@ -12,13 +12,13 @@ internal static partial class Strings
 
     private static readonly (string Key, string En, string Zh)[] ConfigurationCatalogue =
     [
-        ("Config.RelayLabel", "Remote clients use a local stdio relay; access keys stay protected.", "远程客户端通过本地 stdio 中继连接，访问密钥受当前用户保护。"),
+        ("Config.RelayLabel", "Remote clients connect through the local stdio relay on your LAN.", "远程客户端通过本地 stdio 中继直连局域网 / 虚拟机。"),
         ("Config.RelayMode",
-                "Remote clients use the bundled local stdio relay. The key stays in your protected Workbench store. Private and loopback addresses bypass " +
+                "Remote clients use the bundled local stdio relay without bearer keys. Private and loopback addresses bypass " +
                 "proxies; public addresses follow proxy and NO_PROXY settings.",
-                "远程客户端使用随包本地 stdio 中继。密钥保留在工作台的用户保护存储中。私网和回环地址绕过代理；公网地址遵守代理及 NO_PROXY 设置。"),
-        ("Config.RelayNeedsConnection", "Save the remote address and access key here first, then write the selected clients using relay mode.",
-                "请先在此保存远程地址和访问密钥，再以中继模式写入所选客户端。"),
+                "远程客户端使用随包本地 stdio 中继免密钥直连。私网和回环地址绕过代理；公网地址遵守代理及 NO_PROXY 设置。"),
+        ("Config.RelayNeedsConnection", "Save the remote address here first, then write the selected clients using relay mode.",
+                "请先在此保存远程地址，再以中继模式写入所选客户端。"),
         ("Config.MigrationConfirmationRequired", "Confirm the client configuration change in the Workbench before writing an existing file.",
                 "请先在工作台确认客户端配置变更，再写入已有文件。"),
         ("Config.TargetEngineUnavailable", "The selected service is missing. Client configuration was not changed.", "所选服务缺失，客户端配置未改动。"),

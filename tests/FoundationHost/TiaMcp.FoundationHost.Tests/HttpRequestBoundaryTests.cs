@@ -12,7 +12,7 @@ using Options = foundationhost::TiaMcp.FoundationHost.HostOptions;
 
 public sealed class HttpRequestBoundaryTests(ITestOutputHelper output)
 {
-    private static Options Options(string prefix = "http://127.0.0.1:8765/") => new() { BundleRoot = ".", ReleaseKey = "21", WorkerExe = "unused", ApiDirectory = "", HttpPrefix = prefix, ApiKey = "fixture",
+    private static Options Options(string prefix = "http://127.0.0.1:8765/") => new() { BundleRoot = ".", ReleaseKey = "21", WorkerExe = "unused", ApiDirectory = "", HttpPrefix = prefix,
         HttpAllowedOrigins = ["https://trusted.example.test:8443"] };
 
     [Theory]
@@ -56,20 +56,16 @@ public sealed class HttpRequestBoundaryTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void Report_per_request_boundary_timing_against_previous_authentication_path()
+    public void Report_per_request_boundary_timing()
     {
         var request = new DefaultHttpContext().Request; request.Host = new HostString("127.0.0.1", 8765);
         var options = Options(); var boundary = new Boundary(options);
         const int count = 100000;
-        byte[] expected = System.Text.Encoding.UTF8.GetBytes("Bearer fixture"); request.Headers.Authorization = "Bearer fixture";
-        bool Authenticate() => System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Text.Encoding.UTF8.GetBytes(request.Headers.Authorization.ToString()), System.Text.Encoding.UTF8.GetBytes("Bearer " + options.ApiKey));
-        for (int i = 0; i < 1000; i++) { Authenticate(); boundary.Rejection(request); }
+        for (int i = 0; i < 1000; i++) boundary.Rejection(request);
         var timer = Stopwatch.StartNew();
-        for (int i = 0; i < count; i++) Authenticate();
-        double before = timer.Elapsed.TotalNanoseconds / count; timer.Restart();
-        for (int i = 0; i < count; i++) { boundary.Rejection(request); System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Text.Encoding.UTF8.GetBytes(request.Headers.Authorization.ToString()), expected); }
-        double after = timer.Elapsed.TotalNanoseconds / count;
-        output.WriteLine($"HTTP hot path, {count} iterations: before={before:F1} ns/request; after={after:F1} ns/request (no timing assertion; machine load is uncontrolled).");
-        Assert.Null(boundary.Rejection(request)); Assert.True(Authenticate());
+        for (int i = 0; i < count; i++) boundary.Rejection(request);
+        double ns = timer.Elapsed.TotalNanoseconds / count;
+        output.WriteLine($"HTTP hot path, {count} iterations: boundary={ns:F1} ns/request (no timing assertion; machine load is uncontrolled).");
+        Assert.Null(boundary.Rejection(request));
     }
 }

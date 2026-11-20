@@ -240,7 +240,6 @@ public class StringsTests(WpfContext wpf)
             void Check<T>(Action action, string key, params object[] args) where T : Exception
                 => Assert.Equal(Loc.Current.T(key, args), Assert.Throws<T>(action).Message);
             Check<ArgumentException>(() => ConfigCore.Prefix("not-an-ip", 8765), "Config.InvalidEndpoint");
-            Check<ArgumentException>(() => ConfigCore.ValidateKey("a\nb"), "Config.InvalidSecret");
             Assert.Throws<TiaOpenness.Shared.BundleResourceUnavailableException>(() => ConfigCore.Engine(missing, "21"));
             string bundle = Path.Combine(Path.GetTempPath(), "studio-missing-engine-" + Guid.NewGuid().ToString("N"));
             try
@@ -260,7 +259,7 @@ public class StringsTests(WpfContext wpf)
                 ("value = \"\"\"unclosed", "Config.UnclosedTomlMultiline"),
                 ("value = \"unclosed", "Config.UnclosedTomlString"),
             })
-                Check<InvalidDataException>(() => ClientProfiles.MergeToml(input, "tia-portal-vm", true, "192.0.2.10", 8765, "secret", "engine", "21", "tia"), key);
+                Check<InvalidDataException>(() => ClientProfiles.MergeToml(input, "tia-portal-vm", true, "192.0.2.10", 8765, "engine", "21", "tia"), key);
             Check<InvalidOperationException>(() => UpdateCheck.ParseRelease("null", "1.0.0", "fixture"), "Config.InvalidReleaseJson");
             Check<InvalidOperationException>(() => UpdateCheck.ParseRelease("{\"tag_name\":\"invalid\"}", "1.0.0", "fixture"), "Config.InvalidReleaseTag", "invalid");
             try
@@ -279,7 +278,7 @@ public class StringsTests(WpfContext wpf)
                     {
                         File.WriteAllText(path, original);
                         byte[] before = File.ReadAllBytes(path);
-                        Check<InvalidDataException>(() => ClientProfiles.Save(profile, true, "192.0.2.10", 8765, "secret", "engine", "21", "tia"),
+                        Check<InvalidDataException>(() => ClientProfiles.Save(profile, true, "192.0.2.10", 8765, "engine", "21", "tia"),
                             original == "null" ? "Config.InvalidClientJson" : "Config.InvalidServerMap", ClientProfiles.RootKey(profile));
                         Assert.Equal(before, File.ReadAllBytes(path));
                     }

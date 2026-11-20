@@ -107,8 +107,8 @@
                 </Grid.ColumnDefinitions>
                 <CheckBox AutomationProperties.Name="{Binding Name}" MinWidth="24" MinHeight="24" IsChecked="{Binding Selected}" Style="{StaticResource Primer.Checkbox}"/>
                 <TextBlock Grid.Column="2" Text="{Binding Name}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold" ToolTip="{Binding Name}"/>
-                <Border Grid.Column="4" Style="{StaticResource Primer.Tag}" HorizontalAlignment="Left">
-                  <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+                <Border Grid.Column="4" Style="{StaticResource Primer.BlkBadge}" HorizontalAlignment="Left">
+                  <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.BlkBadgeText}"/>
                 </Border>
                 <TextBlock Grid.Column="6" Text="{Binding Number}" Style="{StaticResource Primer.Mono.text}" TextAlignment="Right"/>
                 <TextBlock Grid.Column="8" Text="{Binding Language}" Style="{StaticResource Primer.Text}"/>

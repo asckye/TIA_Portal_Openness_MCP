@@ -62,25 +62,6 @@ namespace TiaMcp.Logic.V4
             if (Current.Value is { } scope) Collect(arguments, scope.Secrets, false, resolved);
         }
         public static string RedactSecrets(string text) => ReplaceSecrets(text, Current.Value?.Secrets ?? Enumerable.Empty<string>());
-        public static IDisposable UseVaultArguments(JsonElement original, JsonElement resolved, IReadOnlyList<string> positions)
-        {
-#if TIA_APPROVAL_PRIVATE_JOURNAL
-            return TiaOpenness.Shared.ApprovalJournalPayload.UseVaultArguments(JsonNode.Parse(original.GetRawText())!,
-                JsonNode.Parse(resolved.GetRawText())!, positions);
-#else
-            return TiaOpenness.Shared.CallJournalPayload.UseVaultArguments(JsonNode.Parse(original.GetRawText())!,
-                JsonNode.Parse(resolved.GetRawText())!, positions);
-#endif
-        }
-        internal static bool VaultReference(string text)
-        {
-            if (Current.Value?.Secrets.Contains(text) == true) return false;
-#if TIA_APPROVAL_PRIVATE_JOURNAL
-            return TiaOpenness.Shared.ApprovalJournalPayload.ReadableVaultReference(text);
-#else
-            return TiaOpenness.Shared.CallJournalPayload.ReadableVaultReference(text);
-#endif
-        }
 
         public static Error FromException(Error error, Exception exception, string? nativeMessage = null)
         {
@@ -139,8 +120,7 @@ namespace TiaMcp.Logic.V4
             {
                 if (credential)
                 {
-                    bool reference = VaultReference(text);
-                    if (Replaceable(text) && (resolved || !reference)) secrets.Add(text);
+                    if (Replaceable(text)) secrets.Add(text);
                 }
                 else if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
                 {
@@ -321,11 +301,7 @@ namespace TiaMcp.Logic.V4
                 {
                     if (pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0) obj.Remove(pair.Key);
                     else if (Credential(pair.Key) || named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase)
-                            || !(pair.Value is JsonValue reference && reference.TryGetValue<string>(out var referenceText) && VaultReference(referenceText)))
-                            obj[pair.Key] = "••••";
-                    }
+                        obj[pair.Key] = "••••";
                     else if (pair.Value is JsonValue scalar && scalar.TryGetValue<string>(out var text))
                         obj[pair.Key] = Text(text, depth, secrets);
                     else if (depth >= 16) obj[pair.Key] = "••••";

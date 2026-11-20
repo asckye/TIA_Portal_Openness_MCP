@@ -57,7 +57,6 @@ namespace TiaMcpConfigurator
         public Func<bool> CanUpdate { get; set; }
         private Process server;
         private UpdateInfo latest;   // last successful update check
-        private string runningKey;
         private int logEntries;
         private readonly ConcurrentQueue<string> pendingLog = new();
         private int logQueued;
@@ -81,8 +80,6 @@ namespace TiaMcpConfigurator
         private string StatePath { get { return Path.Combine(ConfigCore.StateDirectory, "http-v" + SelectedVersion + ".json"); } }
         // Both transports use the same configuration page.
         private bool Remote { get { return Find<RadioButton>("RemoteNav").IsChecked == true; } }
-        private string Secret() { return Find<CheckBox>("ShowKey").IsChecked == true ? Text("KeyVisible") : Find<PasswordBox>("Key").Password; }
-        private void SetSecret(string value) { Find<TextBox>("KeyVisible").Text = value; Find<PasswordBox>("Key").Password = value; }
 
         public ConfigurationView(Window owner, string bundleRoot, bool loadExisting = true)
             : this(owner, bundleRoot, loadExisting, null) { }
@@ -110,17 +107,6 @@ namespace TiaMcpConfigurator
                 TiaOpenness.Gui.Controls.WorkbenchMessageBox
                     .Show(Window, clientInstructions, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information);
             };
-            Find<PasswordBox>("Key").PasswordChanged += delegate { UpdateKeyPlaceholder(); };
-            Find<TextBox>("KeyVisible").TextChanged += delegate { UpdateKeyPlaceholder(); };
-            Find<CheckBox>("ShowKey").Click += delegate {
-                bool show = Find<CheckBox>("ShowKey").IsChecked == true;
-                if (show) Find<TextBox>("KeyVisible").Text = Find<PasswordBox>("Key").Password;
-                else Find<PasswordBox>("Key").Password = Find<TextBox>("KeyVisible").Text;
-                Find<TextBox>("KeyVisible").Visibility = show ? Visibility.Visible : Visibility.Collapsed;
-                Find<PasswordBox>("Key").Visibility = show ? Visibility.Collapsed : Visibility.Visible;
-                ShowKey.Content = Loc.Current[show ? "Mcp.Hide" : "Config.Show"];
-                UpdateKeyPlaceholder();
-            };
             Find<RadioButton>("RemoteNav").Checked += delegate { Mode(true); };
             Find<RadioButton>("LocalNav").Checked += delegate { Mode(false); };
             Find<TextBox>("ServerAddress").TextChanged += delegate { UpdateLink(); };
@@ -131,9 +117,6 @@ namespace TiaMcpConfigurator
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
             Click("DetectTia", delegate { DetectTiaPath(true); });
-            Click("GenerateKey", delegate {
-                    byte[] bytes = new byte[24]; using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(bytes); SetSecret(Convert.ToBase64String(bytes));
-                });
             Click("SaveBoth", OnSaveBoth);
             Click("StartServer", OnStartServer);
             ClickAsync("StopServer", OnStopServer);
@@ -176,7 +159,6 @@ namespace TiaMcpConfigurator
                 ServerAddress.Text = preview.Address;
                 tiaDetected = preview.Detected;
                 StopServer.IsEnabled = preview.Running;
-                SetSecret(preview.Secret);
                 LocalNav.IsChecked = preview.Local;
                 RemoteNav.IsChecked = !preview.Local;
             }
@@ -248,12 +230,6 @@ namespace TiaMcpConfigurator
             UpdateLink();
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
-        private void UpdateKeyPlaceholder()
-        {
-            Find<TextBlock>("KeyPlaceholder").Visibility = string.IsNullOrEmpty(Secret()) ? Visibility.Visible : Visibility.Collapsed;
-            Find<PasswordBox>("Key").Tag = string.IsNullOrEmpty(Find<PasswordBox>("Key").Password) ? null : "HasSecret";
-        }
-
         // Mode changes only presentation; existing configuration values stay in place.
         private void Mode(bool remote)
         {
@@ -266,8 +242,7 @@ namespace TiaMcpConfigurator
             ServerPane.Opacity = remote ? 1 : .45;
             AddressRow.IsEnabled = remote;
             ServerActions.IsEnabled = remote;
-            SecretField.IsEnabled = GenerateKey.IsEnabled = ShowKey.IsEnabled = SaveBoth.IsEnabled = TestClient.IsEnabled = remote;
-            ShowKey.Content = Loc.Current[ShowKey.IsChecked == true ? "Mcp.Hide" : "Config.Show"];
+            SaveBoth.IsEnabled = TestClient.IsEnabled = remote;
             UpdateLink();
         }
         internal Func<ClientProfile, bool>? ConfirmClientSelection { get; set; }
@@ -286,7 +261,6 @@ namespace TiaMcpConfigurator
             var batch = new StringBuilder();
             while (pendingLog.TryDequeue(out var line)) batch.Append(line);
             string message = batch.ToString();
-            if (!string.IsNullOrEmpty(runningKey)) message = message.Replace(runningKey, "[redacted]");
             activityLog += message;
             if (activityLog.Length > 40000)
             {
@@ -305,11 +279,9 @@ namespace TiaMcpConfigurator
             if (web != null)
             {
                 var response = web.Response as HttpWebResponse;
-                message = response != null && response.StatusCode == HttpStatusCode.Unauthorized ? Loc.Current["Config.Unauthorized"] :
-                    Loc.Current.T("Config.ConnectionFailed", message);
+                message = Loc.Current.T("Config.ConnectionFailed", message);
                 if (response != null) response.Close();
             }
-            string secret = Secret(); if (!string.IsNullOrEmpty(secret)) message = message.Replace(secret, "[redacted]");
             SetStatus("Config.NeedsAttention"); Append(message); TiaOpenness.Gui.Controls.WorkbenchMessageBox
                 .Show(Window, message, Loc.Current["Config.NeedsAttention"], MessageBoxButton.OK, MessageBoxImage.Warning);
         }

@@ -80,7 +80,7 @@ def measure(command, data, http=False):
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
-        command = command + ['--transport', 'http', '--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', 'p6-58-test-key']
+        command = command + ['--transport', 'http', '--http-prefix', f'http://127.0.0.1:{port}/']
     started = time.perf_counter()
     client = Stdio(command, data)
     try:

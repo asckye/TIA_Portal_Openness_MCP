@@ -117,8 +117,6 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static async Task<CallToolResult?> PrecheckBeforeApproval(string name, string arguments,
             Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
         {
-            var vaultError = SecretVaultArguments.Validate(name, JsonSerializer.Deserialize<JsonElement>(arguments));
-            if (vaultError != null) return V4Reject(name, vaultError);
             if (ApprovalPreviewDepth.Value > 0) return null;
             var args = JsonNode.Parse(arguments)!.AsObject();
             try
@@ -155,16 +153,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 try { ValidateCallerInputFiles(name, arguments); }
                 catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) { return TargetFailure(name, error, false); }
             }
-            if (VaultApproval(name, arguments))
-            {
-                try { _ = await BridgeWait.On(BridgeApprovalIdentityAsync(name, arguments)).ConfigureAwait(false); }
-                catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) when (error.Condition == "vault-destination-unavailable")
-                { return V4Reject(name, new Error(error.Message, new PreconditionFailedDetails(error.Condition, null))); }
-            }
             if (HostBehavior.LegacyBatchImport(name, args)) return null;
-            if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments) || VaultApproval(name, arguments), settings.Enabled,
+            if (!HostBehavior.NeedsPrecheck(ApprovalPreviewDepth.Value > 0, ApprovalWrite(name, arguments), settings.Enabled,
                 TryDryRunDefault(name, out _) || HostBehavior.IsSingleXmlImport(name))) return null;
-            string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync(name, arguments)).ConfigureAwait(false);
+            string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
             AuditInvocation
                 .RecordCurrentRequest(PendingApproval
                     .Create(McpServer.InvocationHostTag, ReleaseKey, name, arguments, identity, settings.TimeoutSeconds, AuditInvocation.CurrentRequestId)
@@ -195,9 +187,6 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static bool PreviewHasNoEffect(JsonNode? body)
             => HostBehavior.PreviewHasNoEffect(body);
-        internal static bool VaultApproval(string tool, string arguments)
-            => CatalogView.Find(tool) is { } descriptor && SecretVaultArguments.RequiresApproval(tool,
-                JsonSerializer.Deserialize<JsonElement>(arguments), descriptor.Tool.InputSchema);
         internal static bool ApprovalDisabled(string tool, string arguments)
             => ApprovalResultWrite(tool, arguments) && !EffectiveApprovalSettings(tool, arguments).Enabled;
 
@@ -226,8 +215,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 tool = target;
                 args = args["arguments"] as JsonObject ?? new JsonObject();
             }
-            settings = settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool, args));
-            return SecretVaultArguments.ApprovalSettingsFor(VaultApproval(tool, args.ToJsonString()), settings);
+            return settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool, args));
         }
         internal static bool ApprovalResultWrite(string tool, string arguments)
         {
@@ -248,11 +236,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(rejected.PlanHash);
                 return ApprovalClient.RejectAdministrativeWrite(rejected);
             }
-            if ((!ApprovalWrite(tool, arguments) && !VaultApproval(tool, arguments)) || tool == "ApplyToolBatch"
+            if (!ApprovalWrite(tool, arguments) || tool == "ApplyToolBatch"
                 || ApprovalPreviewDepth.Value > 0 || AuditInvocation.IsReadOnlyPreview) return null;
             var args = JsonNode.Parse(arguments)!.AsObject();
             var settings = EffectiveApprovalSettings(tool, arguments);
-            string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync(tool, arguments)).ConfigureAwait(false);
+            string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
             var pending = PendingApproval
                 .Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation
                     .CurrentRequestId);
@@ -276,18 +264,6 @@ namespace TiaMcpServer.ModelContextProtocol
             if (pending != null) return pending;
             string? identity = null; ApprovalBindingIdentity(ref identity);
             return Task.FromResult(identity);
-        }
-        private static async Task<string?> BridgeApprovalIdentityAsync(string tool, string arguments)
-        {
-            string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
-            if (!VaultApproval(tool, arguments)) return identity;
-            string? umc = null;
-#if TIA_ENGINE_HOST
-            if (SecretVaultArguments.NeedsUmcDestination(tool, JsonSerializer.Deserialize<JsonElement>(arguments)) && Worker is IHostToolServices services)
-                umc = await SecretVaultArguments.ReadUmcDestinationAsync(services.Call, McpDispatchCancellation.Value,
-                    SecretVaultArguments.TargetProject(tool, JsonSerializer.Deserialize<JsonElement>(arguments))).ConfigureAwait(false);
-#endif
-            return SecretVaultArguments.ApprovalIdentity(tool, JsonSerializer.Deserialize<JsonElement>(arguments), identity, umc);
         }
         internal static CallToolResult ApprovalRefusal(ApprovalOutcome approval)
             => ApprovalRefusalAsync(approval).GetAwaiter().GetResult();
@@ -338,7 +314,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // Target approval must finish before acquiring its lane. The identity
             // check and audit start belong inside that lane, immediately before dispatch.
             bool approvalContext = CatalogView.Find(name)?.Execution != "foundation"
-                && (McpApprovalContext.Value || VaultApproval(name, arguments));
+                && McpApprovalContext.Value;
             var refusal = approvalContext ? await BridgeWait.On(PrecheckBeforeApproval(name, arguments, previewArgs => CallToolCoreAsync(name,
                 new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.Deserialize<JsonElement>(previewArgs))), McpDispatchCancellation.Value))
                     .ConfigureAwait(false) : null;
@@ -373,7 +349,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 ApprovalDisabled(name, arguments))).ConfigureAwait(false);
             TiaOpenness.Shared.AuditInvocation.StartCurrent();
             using var nativeCalls = InvocationJournal.BeginNativeCallScope();
-            using var vaultApproval = SecretVaultArguments.Approved(name, JsonSerializer.Deserialize<JsonElement>(arguments), approval);
             try
             {
                 var invoked = await BridgeWait.On(invoke()).ConfigureAwait(false);
@@ -403,7 +378,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (approval.Disabled) return true;
             try
             {
-                string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync(approval.Request.Tool, arguments)).ConfigureAwait(false);
+                string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
                 return PendingApproval.Create(McpServer.InvocationHostTag, ReleaseKey, approval.Request.Tool, arguments, identity,
                     approval.Request.TimeoutSeconds).ArgumentDigest == approval.Request.ArgumentDigest;
             }

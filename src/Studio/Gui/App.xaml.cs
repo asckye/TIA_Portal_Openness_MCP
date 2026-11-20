@@ -50,7 +50,7 @@ public partial class App : Application
         ApplyCommandLineOverrides(args);
 
         Loc.Current.Language = Settings.Language;
-        ThemeManager.Current.Initialize(Settings.Theme, Settings.LowEffects);
+        ThemeManager.Current.Initialize(Settings.Theme, Settings.LowEffects, Settings.Accent);
 
         // Persist whatever the window is showing when it closes, not at the moment of the click,
         // so a language toggled and then toggled back does not write twice.
@@ -58,6 +58,7 @@ public partial class App : Application
         {
             Settings.Language = Loc.Current.Language;
             Settings.Theme = ThemeManager.Current.Theme;
+            Settings.Accent = ThemeManager.Current.Accent;
             Settings.LowEffects = ThemeManager.Current.LowEffects;
             Settings.Save();
         };
@@ -108,6 +109,11 @@ public partial class App : Application
                      && Enum.TryParse<AppTheme>(args[i + 1], ignoreCase: true, out var theme))
             {
                 Settings.Theme = theme;
+            }
+            else if (string.Equals(args[i], "--accent", StringComparison.OrdinalIgnoreCase)
+                     && Enum.TryParse<AppAccent>(args[i + 1], ignoreCase: true, out var accent))
+            {
+                Settings.Accent = accent;
             }
         }
     }

@@ -9,7 +9,6 @@ namespace TiaOpenness.Gui.Services;
 internal sealed class SafetySettingsService
 {
     private readonly string targetsPath;
-    private readonly SecretVault vault;
     private readonly AuditLog? audit;
     private string? revision;
     private bool replacementConfirmed;
@@ -17,10 +16,9 @@ internal sealed class SafetySettingsService
     internal string? TargetsProblem { get; private set; }
     internal bool TargetsReadOnly => TargetsProblem != null && !replacementConfirmed;
 
-    internal SafetySettingsService(string? targetsPath = null, string? vaultPath = null, AuditLog? audit = null)
+    internal SafetySettingsService(string? targetsPath = null, AuditLog? audit = null)
     {
         this.targetsPath = targetsPath ?? OnlineTargetSettings.SettingsPath;
-        vault = new SecretVault(vaultPath);
         this.audit = audit;
     }
 
@@ -52,14 +50,4 @@ internal sealed class SafetySettingsService
         TargetsProblem = null;
         replacementConfirmed = false;
     }
-
-    internal string[] SecretNames() => vault.Names(validateProtected: false);
-    internal bool HasSecret(string name) => SecretNames().Contains(name, StringComparer.Ordinal);
-    internal void SetSecret(string name, string value, bool replaceConfirmed = false)
-    {
-        if (string.IsNullOrEmpty(value)) throw new ArgumentException("Secret values must not be empty.", nameof(value));
-        if (!replaceConfirmed && HasSecret(name)) throw new InvalidOperationException("Confirm replacement of the existing secret.");
-        vault.Set(name, value, audit);
-    }
-    internal bool RemoveSecret(string name) => vault.Remove(name, audit);
 }

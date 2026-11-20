@@ -42,6 +42,7 @@ public partial class MainWindow
             CallDetailContent.DataContext = Features;
         OperationsContent.SetFeatures(Features, () => Navigate("Environment"));
         LogContent.SetFeatures(Features);
+        SettingsContent.SetFeatures(Features);
         Features.DrawerRequested += OnFeatureDrawer;
         Features.Feedback += OnFeatureFeedback;
         Features.SetVisibility(_page == "Calls", _page == "Audit", _page == "Approvals", _drawer == "CallDetail");
@@ -103,6 +104,7 @@ public partial class MainWindow
             CallDetailContent.DataContext = null;
         OperationsContent.SetFeatures(null, null);
         LogContent.SetFeatures(null);
+        SettingsContent.SetFeatures(null);
         Features.Dispose(); (Features.Journal as IDisposable)?.Dispose(); (Features.Audit as IDisposable)?.Dispose(); _approvalNotification.Dispose();
     }
 }

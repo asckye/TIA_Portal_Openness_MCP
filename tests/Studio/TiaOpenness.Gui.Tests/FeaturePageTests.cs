@@ -16,7 +16,7 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class FeaturePageTests(WpfContext wpf)
 {
     [Fact]
-    public void Environment_selection_survives_recheck_and_diagnostics_and_retention_live_on_logs()
+    public void Environment_selection_survives_recheck_and_diagnostics_stay_on_logs_while_retention_lives_in_settings()
     {
         wpf.Run(() =>
         {
@@ -35,6 +35,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 Assert.Equal("membership", features.SelectedEnvironment!.Check.Id);
                 window.Navigate("Log");
                 var log = (Views.LogView)window.FindName("LogContent");
+                var settings = (Views.SettingsView)window.FindName("SettingsContent");
                 var host = Detach(window); Layout(host);
                 UnifiedDesktopTests.ClickControl((Button)log.FindName("GenerateButton")); WpfContext.Drain();
                 Assert.True(features.DiagnosticRunning);
@@ -43,10 +44,11 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 Assert.True(features.DiagnosticDone);
                 UnifiedDesktopTests.ClickControl(Descendants<Button>(log).Single(button => Equals(button.Content, Loc.Current["Feature.OpenFolder"])));
                 Assert.Equal(1, diagnostics.OpenCount);
+                Assert.Null(log.FindName("Size50"));
                 WpfContext.Complete(features.SetRetentionAsync(50, true)); WpfContext.Drain();
-                Assert.True(((RadioButton)log.FindName("Size50")).IsChecked);
+                Assert.True(((RadioButton)settings.FindName("Size50")).IsChecked);
                 WpfContext.Complete(features.SetRetentionAsync(10, false)); WpfContext.Drain();
-                Assert.True(((RadioButton)log.FindName("Copies10")).IsChecked);
+                Assert.True(((RadioButton)settings.FindName("Copies10")).IsChecked);
                 Assert.Null(((Views.EnvironmentView)window.FindName("EnvironmentContent")).FindName("GenerateButton"));
                 Assert.Null(((Views.AuditLogView)window.FindName("AuditContent")).FindName("Size50"));
             }

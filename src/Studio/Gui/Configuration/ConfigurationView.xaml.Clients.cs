@@ -124,18 +124,16 @@ namespace TiaMcpConfigurator
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(path));
             ConfigCore.Prefix(settings.Address, settings.Port);
             Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString();
-            SetSecret(ConfigCore.Unprotect(settings.ProtectedKey));
         }
         // 一页两侧，所以保存也是两侧：客户端侧的连接信息总能保存；服务端配置只在本机确实装了
         // TIA 和引擎时才写，宿主机上校验失败不算错误，只记一行说明。
         private void OnSaveBoth()
         {
-            int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); string ip = Text("ServerAddress"), secret = Secret();
-            ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret);
-            ConfigCore.SaveRemoteKey(ip, port, secret);
+            int port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); string ip = Text("ServerAddress");
+            ConfigCore.Prefix(ip, port);
             ConfigCore
                 .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
-                    Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
+                    Address = ip, Port = port });
             Append(Loc.Current["Config.ClientConnectionSaved"]);
             try { ConfigCore.AtomicJson(StatePath, Settings()); Append(Loc.Current["Config.ServerSaved"]); }
             catch (Exception ex) { Append(Loc.Current.T("Config.ClientOnlySaved", ex.GetBaseException().Message)); }
@@ -146,16 +144,16 @@ namespace TiaMcpConfigurator
         {
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
             if (selected.Count == 0) throw new InvalidOperationException(Loc.Current["Config.SelectClientsFirst"]);
-            string engine = null, ip = null, secret = null; int port = 0;
+            string engine = null, ip = null; int port = 0;
             if (remote) {
-                ip = Text("ServerAddress"); port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture); secret = Secret();
-                ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret); engine = ConfigCore.Engine(root, SelectedVersion);
+                ip = Text("ServerAddress"); port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture);
+                ConfigCore.Prefix(ip, port); engine = ConfigCore.Engine(root, SelectedVersion);
             }
             else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }
             // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
             var targets = selected.GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
                 .Select(g => new { Profile = g.First(), Names = string.Join(" / ", g.Select(x => x.Name)),
-                    Change = ClientProfiles.PrepareSave(g.First(), remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")) }).ToList();
+                    Change = ClientProfiles.PrepareSave(g.First(), remote, ip, port, engine, SelectedVersion, Text("TiaPath")) }).ToList();
             string message = Loc.Current["Config.WriteClientsPrompt"] + string.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path
                 + "\n" + Loc.Current.T("Pages.ClientBackupPreview", x.Profile.Path)));
             if (remote) message += "\n\n" + Loc.Current["Config.RelayMode"];
@@ -171,7 +169,6 @@ namespace TiaMcpConfigurator
             {
                 try
                 {
-                    if (remote) target.Change.BeforeApply = () => ConfigCore.SaveRemoteKey(ip!, port, secret!);
                     target.Change.Apply(true); saved++; Append(Loc.Current.T("Config.ClientSaved", target.Names, target.Profile.Path));
                     if (target.Change.BackupPath != null) Append(Loc.Current.T("Config.ClientBackupSaved", target.Change.BackupPath));
                 }
@@ -179,7 +176,7 @@ namespace TiaMcpConfigurator
             }
             if (remote && saved > 0) ConfigCore
                 .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
-                    Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
+                    Address = ip, Port = port });
             SetStatus("Config.ClientsConfigured", saved);
             Append(Loc.Current.T("Config.RestartClients", remote ? "tia-portal-vm" : "tia-portal"));
             if (errors.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.SomeClientsNotSaved", string.Join("\n", errors)));
@@ -189,7 +186,7 @@ namespace TiaMcpConfigurator
         {
             Guard(() => {
                 Find<RadioButton>("RemoteNav").IsChecked = true;
-                if (Text("ServerAddress").Length == 0 || Secret().Length == 0)
+                if (Text("ServerAddress").Length == 0)
                     throw new InvalidOperationException(Loc.Current["Config.RelayNeedsConnection"]);
                 var choices = Find<ListBox>("ClientChoices");
                 choices.SelectedItems.Clear();
@@ -205,10 +202,10 @@ namespace TiaMcpConfigurator
             if (busy) return;
             try
             {
-                string ip = Text("ServerAddress"), secret = Secret(); int port = int
+                string ip = Text("ServerAddress"); int port = int
                     .Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture);
                 SetBusy(true); SetStatus("Config.Testing");
-                string result = await Task.Run(() => ConfigCore.TestRemote(ip, port, secret));
+                string result = await Task.Run(() => ConfigCore.TestRemote(ip, port));
                 lastTestResult = result; lastTestFailed = false; UpdateLastTest();
                 Append(result); SetStatus("Config.ConnectionOk");
             }

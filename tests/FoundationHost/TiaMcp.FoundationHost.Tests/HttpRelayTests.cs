@@ -12,7 +12,6 @@ using Xunit;
 using Xunit.Abstractions;
 using Relay = foundationhost::TiaMcp.FoundationHost.StdioHttpRelay;
 using Policy = foundationhost::TiaOpenness.Shared.RemoteProxyPolicy;
-using Keys = foundationhost::TiaOpenness.Shared.HttpAccessKeyStore;
 
 public sealed class HttpRelayTests(ITestOutputHelper output)
 {
@@ -62,7 +61,7 @@ public sealed class HttpRelayTests(ITestOutputHelper output)
         await using var fake = await FakeEndpoint.Start();
         var input = new Input(); var output = new Output();
         using var client = Relay.CreateClient();
-        var run = Relay.Run(fake.Endpoint, FakeEndpoint.Key, input, output, client);
+        var run = Relay.Run(fake.Endpoint, input, output, client);
         await input.Send(Initialize);
         Assert.Equal("2025-03-26", (string?)(await output.Read())["result"]?["protocolVersion"]);
         await input.Send("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
@@ -92,7 +91,7 @@ public sealed class HttpRelayTests(ITestOutputHelper output)
     {
         await using var fake = await FakeEndpoint.Start(true);
         var input = new Input(); var output = new Output();
-        var run = Relay.Run(fake.Endpoint, FakeEndpoint.Key, input, output);
+        var run = Relay.Run(fake.Endpoint, input, output);
         await input.Send(Initialize); Assert.Equal(1, (int?)(await output.Read())["id"]);
         await input.Send("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
         await fake.GetConnected.Task;
@@ -103,38 +102,34 @@ public sealed class HttpRelayTests(ITestOutputHelper output)
 
     [Theory]
     [InlineData(false)][InlineData(true)]
-    public async Task Bundled_relay_command_reads_DPAPI_key_and_never_prints_it(bool rejectedKey)
+    public async Task Bundled_relay_command_connects_key_free_and_reports_unreachable_endpoint(bool reject)
     {
-        await using var fake = await FakeEndpoint.Start();
+        await using var fake = await FakeEndpoint.Start(reject: reject);
         string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
         string data = Path.Combine(root, "bin-build", "relay-tests", Guid.NewGuid().ToString("N"));
-        string key = rejectedKey ? "wrong-synthetic-relay-key" : FakeEndpoint.Key;
-        Keys.Save(Path.Combine(data, "config"), fake.Endpoint, key);
-        Assert.DoesNotContain(key, File.ReadAllText(Keys.PathFor(Path.Combine(data, "config"), fake.Endpoint)));
         string executable = Path.Combine(root, "src", "FoundationHost", "bin", "Release", "net10.0", "TiaMcp.FoundationHost.exe");
         var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true };
         foreach (string argument in new[] { "--bundle-root", root, "--relay", fake.Endpoint.AbsoluteUri }) start.ArgumentList.Add(argument);
         start.Environment["TIA_MCP_DATA_DIRECTORY"] = data;
         start.Environment["HTTP_PROXY"] = "http://127.0.0.1:1"; start.Environment["HTTPS_PROXY"] = "http://127.0.0.1:1";
         start.Environment["NO_PROXY"] = "";
-        Assert.DoesNotContain(key, string.Join(" ", start.ArgumentList));
         using var process = Process.Start(start)!;
         var errors = process.StandardError.ReadToEndAsync();
         try
         {
             await process.StandardInput.WriteLineAsync(Initialize); await process.StandardInput.FlushAsync();
             string? reply = await process.StandardOutput.ReadLineAsync();
-            if (!rejectedKey)
+            if (!reject)
             {
                 Assert.True(reply != null, process.HasExited ? await errors : "Relay closed stdout before initialization.");
                 Assert.Equal(1, (int?)JsonNode.Parse(reply!)?["id"]);
             }
             process.StandardInput.Close();
-            string remaining = await process.StandardOutput.ReadToEndAsync();
+            _ = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
             string diagnostics = await errors;
-            Assert.Equal(rejectedKey ? 2 : 0, process.ExitCode); Assert.DoesNotContain(key, reply + remaining + diagnostics);
-            if (rejectedKey) { Assert.Contains("RELAY_CONNECTION_FAILED", diagnostics); Assert.Equal(1, fake.Attempts); }
+            Assert.Equal(reject ? 2 : 0, process.ExitCode);
+            if (reject) { Assert.Contains("RELAY_CONNECTION_FAILED", diagnostics); Assert.Equal(1, fake.Attempts); }
         }
         finally
         {
@@ -153,7 +148,6 @@ public sealed class HttpRelayTests(ITestOutputHelper output)
     {
         await using var fake = await FakeEndpoint.Start();
         using var direct = Relay.CreateClient();
-        direct.DefaultRequestHeaders.Authorization = new("Bearer", FakeEndpoint.Key);
         direct.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/event-stream");
         async Task Direct(string message)
         {
@@ -164,7 +158,7 @@ public sealed class HttpRelayTests(ITestOutputHelper output)
         var timer = Stopwatch.StartNew(); await Direct(Initialize); double directSession = timer.Elapsed.TotalMilliseconds;
         direct.DefaultRequestHeaders.Add("Mcp-Session-Id", "relay-fixture-session");
         var input = new Input(); var result = new Output();
-        timer.Restart(); var run = Relay.Run(fake.Endpoint, FakeEndpoint.Key, input, result);
+        timer.Restart(); var run = Relay.Run(fake.Endpoint, input, result);
         await input.Send(Initialize); await result.Read(); double relaySession = timer.Elapsed.TotalMilliseconds;
         const string ping = "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"ping\"}";
         for (int i = 0; i < 8; i++) { await Direct(ping); await input.Send(ping); await result.Read(); }
@@ -178,29 +172,20 @@ public sealed class HttpRelayTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task Http_host_reads_its_saved_protected_key_without_a_command_line_key()
+    public async Task Http_host_starts_key_free_without_a_command_line_key()
     {
         string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
         string data = Path.Combine(root, "bin-build", "relay-tests", Guid.NewGuid().ToString("N"));
-        string config = Path.Combine(data, "config"); Directory.CreateDirectory(config);
-        var endpoint = new Uri("http://127.0.0.1:8765/mcp");
-        Keys.Save(config, endpoint, "a-different-client-key");
-        File.WriteAllText(Path.Combine(config, "http-v21.json"), System.Text.Json.JsonSerializer.Serialize(new {
-            Version = 21, ReleaseKey = "21", Address = "127.0.0.1", Port = 8765, TiaPath = "", ProtectedKey = Keys.Protect(FakeEndpoint.Key)
-        }));
         string executable = Path.Combine(root, "src", "FoundationHost", "bin", "Release", "net10.0", "TiaMcp.FoundationHost.exe");
         var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
         foreach (string argument in new[] { "--bundle-root", root, "--release-key", "21", "--transport", "http", "--http-prefix", "http://127.0.0.1:8765/", "--offline", "--catalog" }) start.ArgumentList.Add(argument);
         start.Environment["TIA_MCP_DATA_DIRECTORY"] = data;
-        Assert.DoesNotContain(FakeEndpoint.Key, string.Join(" ", start.ArgumentList));
         using var process = Process.Start(start)!;
         var output = process.StandardOutput.ReadToEndAsync(); var error = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
         Assert.Equal(0, process.ExitCode);
-        string catalog = await output, diagnostics = await error;
-        Assert.Equal("21", (string?)JsonNode.Parse(catalog)?["releaseKey"]); Assert.DoesNotContain(FakeEndpoint.Key, catalog + diagnostics);
-        Assert.Equal(FakeEndpoint.Key, Keys.ReadHost(config, "21", endpoint));
-        Assert.Equal("a-different-client-key", Keys.Read(config, endpoint));
+        string catalog = await output;
+        Assert.Equal("21", (string?)JsonNode.Parse(catalog)?["releaseKey"]);
     }
 
     private const string Initialize = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"relay-fixture\",\"version\":\"1\"}}}";
@@ -219,9 +204,8 @@ public sealed class HttpRelayTests(ITestOutputHelper output)
         internal async Task<JsonNode> Read() => JsonNode.Parse(await lines.Reader.ReadAsync())!;
     }
 
-    private sealed class FakeEndpoint(WebApplication app, Uri endpoint, bool standaloneNotifications) : IAsyncDisposable
+    private sealed class FakeEndpoint(WebApplication app, Uri endpoint, bool standaloneNotifications, bool reject) : IAsyncDisposable
     {
-        internal const string Key = "relay-synthetic-fixture-key";
         internal Uri Endpoint => endpoint;
         internal readonly ConcurrentBag<JsonNode> Messages = [];
         internal readonly ConcurrentBag<string> SessionHeaders = [];
@@ -231,20 +215,20 @@ public sealed class HttpRelayTests(ITestOutputHelper output)
         internal int Attempts;
         private readonly TaskCompletionSource cancelled = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly TaskCompletionSource clientReply = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        internal static async Task<FakeEndpoint> Start(bool standaloneNotifications = false)
+        internal static async Task<FakeEndpoint> Start(bool standaloneNotifications = false, bool reject = false)
         {
             var builder = WebApplication.CreateBuilder(); builder.Logging.ClearProviders();
             builder.WebHost.UseSetting("urls", "http://127.0.0.1:0");
             var app = builder.Build(); FakeEndpoint? fake = null;
             app.Map("/mcp", async context => await fake!.Handle(context));
-            await app.StartAsync(); fake = new FakeEndpoint(app, new Uri(app.Urls.Single() + "/mcp"), standaloneNotifications); return fake;
+            await app.StartAsync(); fake = new FakeEndpoint(app, new Uri(app.Urls.Single() + "/mcp"), standaloneNotifications, reject); return fake;
         }
         private async Task Handle(HttpContext context)
         {
             Interlocked.Increment(ref Attempts);
-            if (context.Request.Headers.Authorization != "Bearer " + Key)
+            if (reject)
             {
-                context.Response.StatusCode = 401; await context.Response.WriteAsync("Untrusted reflection: " + context.Request.Headers.Authorization); return;
+                context.Response.StatusCode = 503; await context.Response.WriteAsync("Service unavailable"); return;
             }
             if (context.Request.Method == "GET" && standaloneNotifications)
             {

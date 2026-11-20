@@ -109,9 +109,7 @@ public sealed class HostCatalogTests : IDisposable
         Assert.Equal(release != "14sp1", close.TryGetProperty("secondaryProjectFile", out var file));
         if (release == "14sp1") return;
         string passwordDescription = open.GetProperty("umacPassword").GetProperty("description").GetString()!;
-        Assert.Contains("vault:", passwordDescription);
         Assert.Contains("SecureString", passwordDescription);
-        Assert.Contains("Global (UMC)", passwordDescription);
         Assert.Equal("primary", mode.GetProperty("default").GetString());
         Assert.Equal(new[] { "primary", "secondary" }, mode.GetProperty("enum").EnumerateArray().Select(value => value.GetString()));
         Assert.Equal("", file.GetProperty("default").GetString());

@@ -10,7 +10,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static IList<McpServerTool> WrapTools(IList<McpServerTool> tools)
         {
             foreach (var tool in tools) AssertV4Tool(tool.ProtocolTool.Name);
-            var guarded = WrapWithSerializedCalls(WrapWithResponseGuard(tools.Select(tool => (McpServerTool)new SecretVaultTool(tool)).ToList()));
+            var guarded = WrapWithSerializedCalls(WrapWithResponseGuard(tools));
             return WrapWithAuditCalls(WrapWithVersionPolicy(Dispatch.OpennessReadinessGuard.Wrap(guarded),
                 name => Siemens.ToolVersionPolicy.ToolProblem(ReleaseKey, name), ReleaseKey));
         }

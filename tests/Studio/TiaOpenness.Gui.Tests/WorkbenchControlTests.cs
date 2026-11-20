@@ -118,7 +118,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             try
             {
                 if (guard == "modal") window.OpenSettings();
-                if (guard == "confirm") ((FrameworkElement)window.FindName("ConfirmOverlay")).Visibility = Visibility.Visible;
+                if (guard == "confirm") window.Features.OpenCall(window.Features.Calls[0]);
                 if (guard == "human") { window.ControlGuard = new(); window.ControlGuard.HumanInput(); }
                 if (guard == "busy") busy = model.Activity.Guarded("Status.ReadingBlocks", () => finish.Task);
                 Assert.Equal(guard switch { "human" => "workbench-user-active", "busy" => "workbench-busy", _ => "workbench-modal-open" },

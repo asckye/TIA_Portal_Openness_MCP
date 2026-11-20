@@ -100,7 +100,7 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Equal(Visibility.Visible, settings.Visibility);
                 Assert.Equal(3, ((ListBox)settings.FindName("SectionList")).Items.Count);
                 Assert.Equal(320, ((Grid)settings.Content).ColumnDefinitions[0].Width.Value);
-                foreach (string name in new[] { "CheckUpdate", "RunUpdate", "OpenReleases", "OpenProjectPage", "OpenConfig", "OpenData" })
+                foreach (string name in new[] { "CheckUpdate", "RunUpdate", "OpenReleases", "OpenProjectPage", "OpenConfig", "OpenLog", "OpenData" })
                     Assert.IsType<Button>(settings.FindName(name));
                 ClickControl((RadioButton)settings.FindName("Chinese"));
                 Assert.Equal(AppLanguage.Chinese, Loc.Current.Language);
@@ -109,6 +109,19 @@ public sealed partial class UnifiedDesktopTests
                 ClickControl((RadioButton)settings.FindName("Dark"));
                 Assert.Equal(AppTheme.Dark, ThemeManager.Current.Theme);
                 ClickControl((RadioButton)settings.FindName("Light"));
+                Assert.Equal(AppTheme.Light, ThemeManager.Current.Theme);
+                var previousAccent = ThemeManager.Current.Accent;
+                try
+                {
+                    ClickControl((RadioButton)settings.FindName("AccentPetrol"));
+                    Assert.Equal(AppAccent.Petrol, ThemeManager.Current.Accent);
+                    ClickControl((RadioButton)settings.FindName("AccentCobalt"));
+                    Assert.Equal(AppAccent.Cobalt, ThemeManager.Current.Accent);
+                }
+                finally { ThemeManager.Current.Accent = previousAccent; }
+                ClickControl((Button)window.FindName("QuickThemeButton"));
+                Assert.Equal(AppTheme.Dark, ThemeManager.Current.Theme);
+                ClickControl((Button)window.FindName("QuickThemeButton"));
                 Assert.Equal(AppTheme.Light, ThemeManager.Current.Theme);
                 Assert.Same(window.Configuration, ((ContentControl)window.FindName("ConfigurationHost")).Content);
                 var settingsShortcut = window.InputBindings.OfType<KeyBinding>().Single(binding => binding.Key == Key.OemComma);
@@ -128,7 +141,7 @@ public sealed partial class UnifiedDesktopTests
     }
 
     [Fact]
-    public void Approval_off_requires_confirmation_and_diagnostics_export_remains_available()
+    public void Approval_toggles_directly_and_diagnostics_export_remains_available()
     {
         wpf.Run(() =>
         {
@@ -141,14 +154,8 @@ public sealed partial class UnifiedDesktopTests
                 settings.ShowSection("AI");
                 Assert.Equal(0, window.Approvals.PendingCount);
                 Assert.Equal(120, window.Approvals.TimeoutSeconds);
-                ClickControl((RadioButton)settings.FindName("ApprovalOff"));
-                Assert.True(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ConfirmOverlay")).Visibility);
-                ClickControl((Button)window.FindName("CancelApprovalOff"));
-                Assert.True(window.Approvals.Enabled);
-                ClickControl((RadioButton)settings.FindName("ApprovalOff"));
-                ((TextBox)window.FindName("ApprovalOffConfirmation")).Text = Loc.Current.Language == AppLanguage.Chinese ? "关闭审批" : "Turn off approval";
-                ClickApprovalControl((Button)window.FindName("ConfirmApprovalOff"), window.Approvals, nameof(window.Approvals.Enabled));
+                ClickApprovalControl((RadioButton)settings.FindName("ApprovalOff"), window.Approvals, nameof(window.Approvals.Enabled));
+                WpfContext.Drain();
                 Assert.False(window.Approvals.Enabled);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
                 ClickApprovalControl((RadioButton)settings.FindName("Timeout300"), window.Approvals, nameof(window.Approvals.TimeoutSeconds));

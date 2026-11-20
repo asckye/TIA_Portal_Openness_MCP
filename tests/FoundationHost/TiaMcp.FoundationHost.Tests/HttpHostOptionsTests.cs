@@ -15,9 +15,9 @@ public sealed class HttpHostOptionsTests
     {
         string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
         var error = Assert.Throws<ArgumentException>(() => foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(
-            ["--bundle-root", root, "--release-key", "21", "--transport", "http", "--http-prefix", prefix, "--http-api-key", "synthetic-key"],
+            ["--bundle-root", root, "--release-key", "21", "--transport", "http", "--http-prefix", prefix],
             Path.Combine(root, "bin-build", "relay-option-fixture")));
-        Assert.DoesNotContain("fixture-secret", error.Message); Assert.DoesNotContain("synthetic-key", error.Message);
+        Assert.DoesNotContain("fixture-secret", error.Message);
     }
 
     [Fact]

@@ -25,7 +25,6 @@ namespace TiaMcpConfigurator
         public string Address { get; set; }
         public int Port { get; set; }
         public string TiaPath { get; set; }
-        public string ProtectedKey { get; set; }
     }
 
     public static class ConfigCore
@@ -42,20 +41,6 @@ namespace TiaMcpConfigurator
                 address != ip.ToString())
                 throw new ArgumentException(Loc.Current["Config.InvalidEndpoint"]);
             return "http://" + ip + ":" + port + "/";
-        }
-
-        public static string Protect(string key)
-        {
-            ValidateKey(key);
-            return TiaOpenness.Shared.HttpAccessKeyStore.Protect(key);
-        }
-        public static string Unprotect(string value)
-        {
-            return TiaOpenness.Shared.HttpAccessKeyStore.Unprotect(value);
-        }
-        public static void ValidateKey(string key)
-        {
-            if (string.IsNullOrWhiteSpace(key) || key.Any(char.IsControl)) throw new ArgumentException(Loc.Current["Config.InvalidSecret"]);
         }
 
         // Windows CommandLineToArgvW/CRT quoting, including embedded quotes and trailing backslashes.
@@ -186,11 +171,10 @@ namespace TiaMcpConfigurator
             AtomicJson(path, root);
         }
 
-        public static Dictionary<string, object> RemoteEntry(string address, int port, string key, string? engine = null, string version = "21")
+        public static Dictionary<string, object> RemoteEntry(string address, int port, string? engine = null, string version = "21")
         {
-            ValidateKey(key);
             var profile = new ClientProfile("claude-code", "Claude Code", "", "");
-            return ClientProfiles.Entry(profile, true, address, port, key, engine ?? Engine(null, version), version, null);
+            return ClientProfiles.Entry(profile, true, address, port, engine ?? Engine(null, version), version, null);
         }
 
         public static string[] RelayArguments(string engine, string versionKey, string address, int port)
@@ -200,15 +184,11 @@ namespace TiaMcpConfigurator
             return new[] { local[0], local[1], "--relay", Prefix(address, port) + "mcp" };
         }
 
-        public static void SaveRemoteKey(string address, int port, string key)
-            => TiaOpenness.Shared.HttpAccessKeyStore.Save(StateDirectory, new Uri(Prefix(address, port) + "mcp"), key);
-
         public static string VersionArgument(string releaseKey)
         { return TiaOpenness.Shared.BundleLayout.GetProduct(releaseKey).VersionOption; }
 
-        public static string Arguments(ServerSettings settings, string key, string bundleRoot = null)
+        public static string Arguments(ServerSettings settings, string bundleRoot = null)
         {
-            ValidateKey(key);
             var root = TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, bundleRoot);
             return string
                 .Join(" ", new[] {
@@ -226,24 +206,22 @@ namespace TiaMcpConfigurator
             }
         }
 
-        private static Dictionary<string, object> GetJson(string url, string key)
+        private static Dictionary<string, object> GetJson(string url)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Proxy = null;
             request.Timeout = 8000;
             request.ReadWriteTimeout = 8000;
-            if (key != null) request.Headers[HttpRequestHeader.Authorization] = "Bearer " + key;
             using (var response = request.GetResponse())
             using (var reader = new StreamReader(response.GetResponseStream()))
                 return Json().DeserializeObject(reader.ReadToEnd()) as Dictionary<string, object>;
         }
 
-        public static string TestRemote(string address, int port, string key)
+        public static string TestRemote(string address, int port)
         {
-            ValidateKey(key);
             string prefix = Prefix(address, port);
-            var health = GetJson(prefix + "mcp/health", null);
-            var ready = GetJson(prefix + "mcp/ready", key);
+            var health = GetJson(prefix + "mcp/health");
+            var ready = GetJson(prefix + "mcp/ready");
             object isReady;
             if (ready == null || !ready.TryGetValue("mcpHostReady", out isReady) || !(isReady is bool) || !(bool)isReady)
                 throw new InvalidOperationException(Loc.Current["Config.RemoteNotReady"]);

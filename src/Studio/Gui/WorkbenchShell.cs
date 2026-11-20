@@ -17,7 +17,7 @@ public partial class MainWindow
     private string _page = "Engineering";
     private string? _drawer;
     private bool _shellQueued;
-    private Controls.ModalPane? _drawerFocus, _confirmFocus;
+    private Controls.ModalPane? _drawerFocus;
     private bool HasProject => _model.Session.IsConnected && !string.IsNullOrEmpty(_model.Session.ProjectName);
 
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
@@ -26,7 +26,6 @@ public partial class MainWindow
         _diagnostics = diagnostics ?? new Services.DiagnosticBundleService();
         InitializeFeaturePages();
         SettingsContent.Initialize(Approvals, _model.Panel);
-        SettingsContent.DisableApprovalRequested += OnDisableApprovalRequested;
         EngineeringSideContent.EnvironmentRequested += OnEnvironmentRequested;
         EngineeringSideContent.InspectionRulesRequested += OnInspectionRulesRequested;
         BlocksContent.TransferOptionsRequested += OnTransferOptionsRequested;
@@ -43,12 +42,10 @@ public partial class MainWindow
 
     private void DisposeShell()
     {
-        _confirmFocus?.Dispose();
         _drawerFocus?.Dispose();
         DisposeControl();
         DisposeFeaturePages();
         SettingsContent.Dispose();
-        SettingsContent.DisableApprovalRequested -= OnDisableApprovalRequested;
         EngineeringSideContent.EnvironmentRequested -= OnEnvironmentRequested;
         EngineeringSideContent.InspectionRulesRequested -= OnInspectionRulesRequested;
         BlocksContent.TransferOptionsRequested -= OnTransferOptionsRequested;
@@ -106,8 +103,6 @@ public partial class MainWindow
     private void UpdateLanguage()
     {
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(Loc.Current.Language == AppLanguage.Chinese ? "zh-CN" : "en-US");
-        ApprovalOffConfirmationLabel.Text = Loc.Current.T("Settings.ConfirmOffPrompt", ApprovalOffConfirmationWord);
-        UpdateApprovalOffConfirmation();
     }
     private void UpdateShell()
     {
@@ -250,53 +245,13 @@ public partial class MainWindow
         _drawerFocus?.Dispose(); _drawerFocus = null;
         QueueControlSnapshot();
     }
-    private void OnDisableApprovalRequested(object? sender, EventArgs e)
+    private void OnToggleTheme(object sender, RoutedEventArgs e)
     {
-        ApprovalOffConfirmation.Clear();
-        UpdateApprovalOffConfirmation();
-        ConfirmOverlay.Visibility = Visibility.Visible;
-        _confirmFocus?.Dispose();
-        _confirmFocus = new Controls.ModalPane(ConfirmOverlay, CancelApprovalOff, CancelApprovalConfirmation);
+        Themes.ThemeManager.Current.Theme = Themes.ThemeManager.Current.Theme == Themes.AppTheme.Dark
+            ? Themes.AppTheme.Light
+            : Themes.AppTheme.Dark;
     }
-    private void CancelApprovalConfirmation()
-    {
-        ConfirmOverlay.Visibility = Visibility.Collapsed;
-        _confirmFocus?.Dispose(); _confirmFocus = null;
-        SettingsContent.UpdateApproval();
-    }
-    private void OnConfirmApprovalKeyDown(object sender, KeyEventArgs e)
-    {
-        // C6: Enter always remains safe, including when the destructive button has focus.
-        if (e.Key == Key.Enter || e.Key == Key.System && e.SystemKey == Key.Enter) e.Handled = true;
-    }
-    private string ApprovalOffConfirmationWord
-    {
-        get
-        {
-            string label = Loc.Current["Settings.TurnOff"];
-            // The confirmation word excludes both inline and trailing access-key markers.
-            int accessKey = label.IndexOf("(_", StringComparison.Ordinal);
-            return (accessKey < 0 ? label : label[..accessKey]).Replace("_", "", StringComparison.Ordinal).Trim();
-        }
-    }
-    private bool IsApprovalOffConfirmed => string.Equals(ApprovalOffConfirmation.Text.Trim(), ApprovalOffConfirmationWord,
-        StringComparison.OrdinalIgnoreCase);
-    private void UpdateApprovalOffConfirmation() => ConfirmApprovalOff.IsEnabled = IsApprovalOffConfirmed;
-    private void OnApprovalOffConfirmationChanged(object sender, TextChangedEventArgs e) => UpdateApprovalOffConfirmation();
-    private void OnCancelApprovalOff(object sender, RoutedEventArgs e) => CancelApprovalConfirmation();
-    private async void OnConfirmApprovalOff(object sender, RoutedEventArgs e)
-    {
-        if (ConfirmOverlay.Visibility != Visibility.Visible || !IsApprovalOffConfirmed) return;
-        await SetApprovalEnabled(false);
-        CancelApprovalConfirmation();
-    }
-    private async Task SetApprovalEnabled(bool enabled)
-    {
-        try { await Task.Run(() => Approvals.Enabled = enabled); }
-        catch (Exception ex) {
-            Controls.WorkbenchMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error); }
-        SettingsContent.UpdateApproval();
-    }
+
     private void OnDiagnostics(object sender, RoutedEventArgs e)
     {
         Features.Export();

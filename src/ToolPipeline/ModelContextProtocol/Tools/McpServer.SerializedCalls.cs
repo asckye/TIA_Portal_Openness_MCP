@@ -309,8 +309,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (sessionPrelude) await McpServer.ValidateRuntimeToolAsync(ProtocolTool.Name, ProtocolTool.Description).ConfigureAwait(false);
                     TiaOpenness.Shared.AuditInvocation.StartCurrent();
                 }
-                using var vaultApproval = SecretVaultArguments.Approved(ProtocolTool.Name,
-                    System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(arguments), approval);
                 issued = true;
                 McpServer.ValidateCallerInputFiles(ProtocolTool.Name, arguments);
                 var result = McpServer

@@ -98,31 +98,14 @@
               </Grid>
             </Grid>
           </Border>
-          <Border x:Name="SecretBand" Style="{StaticResource Primer.Container}" Margin="0,16,0,0">
+          <Border x:Name="ClientActionsBand" Style="{StaticResource Primer.Container}" Margin="0,16,0,0">
             <Grid>
-              <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+              <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
               <DockPanel Margin="0,0,0,12">
                 <Border x:Name="Step3Icon" Style="{StaticResource Primer.StepIcon}" DockPanel.Dock="Left" Margin="0,0,8,0"><TextBlock Text="3" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-                <TextBlock Text="{l:Tr Mcp.SecretTitle}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap" TextTrimming="None"/>
+                <TextBlock Text="{l:Tr Config.Write}" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap" TextTrimming="None"/>
               </DockPanel>
-              <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto"/>
-                  <ColumnDefinition Width="*"/>
-                  <ColumnDefinition Width="Auto"/>
-                  <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid x:Name="SecretField" Grid.Column="1" ToolTip="{l:Tr Mcp.SecretNote}">
-                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=Key}" x:Name="AccessibleLabel5" Content="{l:Tr Access.FieldMcpSecretTitle}" Target="{Binding ElementName=Key}" Style="{StaticResource Primer.FormLabel}"/>
-                    <PasswordBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel5}" AutomationProperties.Name="{l:Tr Mcp.SecretTitle}" x:Name="Key" Style="{StaticResource Primer.SecretInput}"/></StackPanel>
-                  <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=KeyVisible}" x:Name="AccessibleLabel6" Content="{l:Tr Access.FieldMcpSecretTitle}" Target="{Binding ElementName=KeyVisible}" Style="{StaticResource Primer.FormLabel}"/>
-                    <TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel6}" AutomationProperties.Name="{l:Tr Mcp.SecretTitle}" x:Name="KeyVisible" FontFamily="{DynamicResource Ui.FontMono}" Visibility="Collapsed" Style="{StaticResource Primer.MonoInput}"/></StackPanel>
-                  <TextBlock x:Name="KeyPlaceholder" Text="{l:Tr Mcp.NoSecret}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="12,0,12,8" VerticalAlignment="Bottom" IsHitTestVisible="False" Style="{StaticResource Primer.Text.textFaint}"/>
-                </Grid>
-                <Button AutomationProperties.Name="{l:Tr Config.Generate}" x:Name="GenerateKey" Grid.Column="2" Content="{l:Tr Config.Generate}" Margin="8,0,0,0" VerticalAlignment="Bottom" Style="{StaticResource Primer.Secondary}"/>
-                <CheckBox AutomationProperties.Name="{l:Tr Config.Show}" x:Name="ShowKey" Grid.Column="3" Content="{l:Tr Config.Show}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0" VerticalAlignment="Bottom"/>
-              </Grid>
-              <StackPanel Grid.Row="3" Margin="0,12,0,0">
+              <StackPanel Grid.Row="1">
                 <TextBlock x:Name="WriteTargets" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                 <WrapPanel>
                   <Button x:Name="SaveBoth" Content="{l:Tr Pages.SaveBoth}" AutomationProperties.Name="{l:Tr Pages.SaveBoth}" Style="{StaticResource Primer.Run}" IsDefault="True" Margin="0,0,8,8"/>

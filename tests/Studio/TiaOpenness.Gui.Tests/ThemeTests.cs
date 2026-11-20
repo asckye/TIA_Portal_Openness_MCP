@@ -34,8 +34,14 @@ public class ThemeTests(WpfContext wpf)
         {
             var light = KeysOf(Palette("Palette.Light.xaml"));
             var dark = KeysOf(Palette("Palette.Dark.xaml"));
+            var lightPetrol = KeysOf(Palette("Palette.Light.Petrol.xaml"));
+            var darkPetrol = KeysOf(Palette("Palette.Dark.Petrol.xaml"));
+            var highContrast = KeysOf(Palette("Palette.HighContrast.xaml"));
 
             Assert.Equal(light, dark);
+            Assert.Equal(light, lightPetrol);
+            Assert.Equal(light, darkPetrol);
+            Assert.Equal(light, highContrast);
         });
     }
 
@@ -171,6 +177,34 @@ public class ThemeTests(WpfContext wpf)
             finally
             {
                 ThemeManager.Current.Theme = previous;
+            }
+        });
+    }
+
+    [Fact]
+    public void Switching_brand_accent_repaints_primary_and_accent_tokens()
+    {
+        wpf.Run(() =>
+        {
+            var previousTheme = ThemeManager.Current.Theme;
+            var previousAccent = ThemeManager.Current.Accent;
+            try
+            {
+                ThemeManager.Current.Theme = AppTheme.Light;
+                ThemeManager.Current.Accent = AppAccent.Cobalt;
+                var cobalt = ((SolidColorBrush)Application.Current.FindResource("Primer.primaryBg")).Color;
+
+                ThemeManager.Current.Accent = AppAccent.Petrol;
+                var petrol = ((SolidColorBrush)Application.Current.FindResource("Primer.primaryBg")).Color;
+
+                Assert.NotEqual(cobalt, petrol);
+                Assert.True(ThemeManager.Current.IsPetrol);
+                Assert.False(ThemeManager.Current.IsCobalt);
+            }
+            finally
+            {
+                ThemeManager.Current.Theme = previousTheme;
+                ThemeManager.Current.Accent = previousAccent;
             }
         });
     }

@@ -7,12 +7,7 @@ using TiaOpenness.Gui.Themes;
 namespace TiaOpenness.Gui.Settings;
 
 /// <summary>
-/// Preferences remembered between runs: language, appearance and rendering effects.
-///
-/// Deliberately a key=value file rather than JSON or the registry - it has no schema to
-/// version, a corrupt or half-written file costs nothing because every read falls back to the
-/// system default, and an operator can read or delete it without tooling. Nothing here is worth
-/// a dependency.
+/// Preferences remembered between runs: language, theme, brand accent and rendering effects.
 /// </summary>
 public sealed class UiSettings
 {
@@ -20,10 +15,12 @@ public sealed class UiSettings
     internal static void SaveRetention(string path, int fileSizeMb, int copies) => new TiaOpenness.Shared.JournalRetention(fileSizeMb, copies).Save(path);
     private const string LanguageKey = "language";
     private const string ThemeKey = "theme";
+    private const string AccentKey = "accent";
 
     public AppLanguage Language { get; set; } = Loc.FromSystem();
 
-    public AppTheme Theme { get; set; } = AppTheme.Auto;
+    public AppTheme Theme { get; set; } = AppTheme.Light;
+    public AppAccent Accent { get; set; } = AppAccent.Cobalt;
     public LowEffectsMode LowEffects { get; set; } = LowEffectsMode.Auto;
     public bool WorkbenchControlEnabled { get; set; } = true;
 
@@ -31,8 +28,6 @@ public sealed class UiSettings
 
     public static UiSettings Load() => Load(FilePath);
 
-    /// <summary>Overload taking a path so the round trip can be exercised without touching
-    /// the real user profile.</summary>
     public static UiSettings Load(string path)
     {
         var settings = new UiSettings();
@@ -53,18 +48,27 @@ public sealed class UiSettings
                 {
                     settings.Language = language;
                 }
-                else if (key == "lowEffects" && Enum.TryParse<LowEffectsMode>(value, true, out var effects) && Enum.IsDefined(effects)) settings.LowEffects =
-                    effects;
-                else if (key == "workbenchControlEnabled" && bool.TryParse(value, out var controlEnabled)) settings.WorkbenchControlEnabled = controlEnabled;
-                else if (key == ThemeKey && Enum.TryParse<AppTheme>(value, ignoreCase: true, out var theme))
+                else if (key == "lowEffects" && Enum.TryParse<LowEffectsMode>(value, true, out var effects) && Enum.IsDefined(effects))
                 {
-                    settings.Theme = theme;
+                    settings.LowEffects = effects;
+                }
+                else if (key == "workbenchControlEnabled" && bool.TryParse(value, out var controlEnabled))
+                {
+                    settings.WorkbenchControlEnabled = controlEnabled;
+                }
+                else if (key == ThemeKey)
+                {
+                    if (string.Equals(value, "Auto", StringComparison.OrdinalIgnoreCase)) settings.Theme = AppTheme.Light;
+                    else if (Enum.TryParse<AppTheme>(value, ignoreCase: true, out var theme) && Enum.IsDefined(theme)) settings.Theme = theme;
+                }
+                else if (key == AccentKey && Enum.TryParse<AppAccent>(value, ignoreCase: true, out var accent) && Enum.IsDefined(accent))
+                {
+                    settings.Accent = accent;
                 }
             }
         }
         catch (Exception) /* swallow(ui): unreadable preferences leave defaults or already parsed values available so the workbench can start */
         {
-            // A preference file that cannot be read is not a reason to refuse to start.
         }
 
         return settings;
@@ -83,13 +87,13 @@ public sealed class UiSettings
             {
                 $"{LanguageKey}={Language}",
                 $"{ThemeKey}={Theme}",
+                $"{AccentKey}={Accent}",
                 $"lowEffects={LowEffects}",
                 $"workbenchControlEnabled={WorkbenchControlEnabled}",
             });
         }
         catch (Exception) /* swallow(ui): failure to persist language and theme preferences must not prevent the window from closing */
         {
-            // Losing a preference is a smaller failure than refusing to close the window.
         }
     }
 }

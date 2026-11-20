@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,28 +22,21 @@ public partial class LogView : UserControl
     public LogView()
     {
         InitializeComponent();
-        LogPath.Text = TiaOpenness.Shared.DataLocations.Current.LogsDirectory;
     }
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void SetFeatures(FeaturePagesViewModel? features)
     {
         if (_features != null) _features.PropertyChanged -= OnFeatureChanged;
         _features = features;
-        LogTools.DataContext = features;
-        if (features != null) { features.PropertyChanged += OnFeatureChanged; UpdateRetention(); }
+        DiagnosticStrip.DataContext = features;
+        if (features != null) features.PropertyChanged += OnFeatureChanged;
+        UpdateGenerateState();
     }
     private void OnFeatureChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(FeaturePagesViewModel.RetentionSize) or nameof(FeaturePagesViewModel.RetentionCopies)) UpdateRetention();
+        if (e.PropertyName == nameof(FeaturePagesViewModel.DiagnosticCanStart)) UpdateGenerateState();
     }
-    private void UpdateRetention()
-    {
-        if (_features == null) return;
-        foreach (var button in new[] { Size5, Size10, Size50 })
-            button.IsChecked = int.Parse((string)button.Tag, System.Globalization.CultureInfo.InvariantCulture) == _features.RetentionSize;
-        foreach (var button in new[] { Copies3, Copies5, Copies10 })
-            button.IsChecked = int.Parse((string)button.Tag, System.Globalization.CultureInfo.InvariantCulture) == _features.RetentionCopies;
-    }
+    private void UpdateGenerateState() => GenerateButton.IsEnabled = _features?.DiagnosticCanStart ?? false;
     protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
@@ -107,21 +99,12 @@ public partial class LogView : UserControl
     }
     private void OnGenerate(object sender, RoutedEventArgs e) => _features?.Export();
     private void OnOpenFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Diagnostics.OpenFolder); }
-    private void OnSize(object sender, RoutedEventArgs e) => _features?
-        .SetRetention(int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture), true);
-    private void OnCopies(object sender, RoutedEventArgs e) => _features?
-        .SetRetention(int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture), false);
-    private void OnRetentionFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Audit.OpenFolder); }
-    private void OnRuntimeFolder(object sender, RoutedEventArgs e)
+    private void OnOpenStorageSettings(object sender, RoutedEventArgs e)
     {
-        try
+        if (Window.GetWindow(this) is MainWindow window)
         {
-            string path = LogPath.Text;
-            if (!Directory.Exists(path)) throw new DirectoryNotFoundException(Loc.Current.T("Settings.PathMissing", path));
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+            window.OpenSettings();
+            if (window.FindName("SettingsContent") is SettingsView settings) settings.ShowSection("Service");
         }
-        catch (Exception ex) {
-            WorkbenchMessageBox.Show(Window.GetWindow(this), ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Warning); }
     }
-
 }

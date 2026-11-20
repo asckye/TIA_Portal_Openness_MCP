@@ -331,7 +331,7 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             {
                                 AssertWholeWords((TextBlock)window.Configuration!.FindName("PageSubtitle"), context);
                                 var configuration = window.Configuration!;
-                                foreach (string key in new[] { "Config.Installation", "Config.HttpService", "Mcp.SecretTitle", "Mcp.Clients" })
+                                foreach (string key in new[] { "Config.Installation", "Config.HttpService", "Config.Write", "Mcp.Clients" })
                                     AssertWholeWords(Descendants<TextBlock>(configuration).Single(text => text.Text == Loc.Current[key]
                                         && ReferenceEquals(text.Style, Application.Current.FindResource("Primer.ContainerTitle"))), context);
                             }
@@ -356,7 +356,14 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             if (page == "Log")
                             {
                                 var log = (DependencyObject)window.FindName("LogContent");
-                                AssertWholeWords(Descendants<TextBlock>(log).Single(text => text.Text == Loc.Current["Audit.FileSize"]), context);
+                                AssertWholeWords(Descendants<TextBlock>(log).Single(text => text.Text == Loc.Current["Pages.LogPurpose"]), context);
+                            }
+                            if (page == "Settings")
+                            {
+                                var settings = (Views.SettingsView)window.FindName("SettingsContent");
+                                settings.ShowSection("Service");
+                                Layout(host, width, height);
+                                AssertWholeWords(Descendants<TextBlock>(settings).Single(text => text.Text == Loc.Current["Audit.FileSize"]), context);
                             }
                             if (page == "Calls")
                             {

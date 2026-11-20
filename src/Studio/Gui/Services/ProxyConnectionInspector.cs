@@ -49,12 +49,13 @@ internal static class ProxyConnectionInspector
         bool captured = false, failed = false;
         foreach (string value in endpoints.Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            var endpoint = HttpAccessKeyStore.Endpoint(value);
+            var endpoint = HttpEndpoint.Parse(value);
+            var healthEndpoint = new Uri(endpoint, "/mcp/health");
             var proxy = policy.ConventionalProxy(endpoint);
             bool proxied = proxy != endpoint;
             captured |= proxied;
-            int direct = probe(endpoint, null), viaProxy = proxied ? probe(endpoint, proxy) : direct;
-            failed |= direct != 401 && viaProxy != 401;
+            int direct = probe(healthEndpoint, null), viaProxy = proxied ? probe(healthEndpoint, proxy) : direct;
+            failed |= direct != 200 && viaProxy != 200;
             evidence.Add(Loc.Current.T("Env.ProxyEvidence", endpoint.AbsoluteUri,
                 proxied ? SafeProxy(proxy.AbsoluteUri) : Loc.Current["Env.ProxyDirect"],
                 direct, viaProxy, policy.IsBypassed(endpoint) ? Loc.Current["Env.ProxyDirect"] : Loc.Current["Env.ProxySystem"]));
@@ -71,7 +72,6 @@ internal static class ProxyConnectionInspector
         using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(8) };
         try
         {
-            // A protected endpoint responds 401 before MCP dispatch. No key is read or sent for this check.
             using var response = client.Send(new HttpRequestMessage(HttpMethod.Get, endpoint), HttpCompletionOption.ResponseHeadersRead);
             return (int)response.StatusCode;
         }

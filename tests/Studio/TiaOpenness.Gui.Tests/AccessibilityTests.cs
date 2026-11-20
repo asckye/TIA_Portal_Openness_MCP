@@ -188,39 +188,10 @@ public sealed class AccessibilityTests(WpfContext wpf)
             try
             {
                 WpfContext.ShowWindow(window);
-                var trigger = (RadioButton)window.FindName("SettingsButton"); trigger.Focus();
                 window.OpenSettings(); WpfContext.Drain();
                 var settings = (Views.SettingsView)window.FindName("SettingsContent");
                 Assert.True(settings.IsEnabled);
                 Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("DrawerOverlay")).Visibility);
-                settings.ShowSection("AI");
-                var off = (RadioButton)settings.FindName("ApprovalOff"); off.Focus();
-                UnifiedDesktopTests.ClickControl(off); WpfContext.Drain();
-                var sheet = (Grid)window.FindName("ConfirmOverlay");
-                Assert.Equal(KeyboardNavigationMode.Cycle, KeyboardNavigation.GetTabNavigation(sheet));
-                Assert.False(settings.IsEnabled);
-                var cancel = (Button)window.FindName("CancelApprovalOff");
-                Assert.True(cancel.IsDefault); Assert.True(cancel.IsCancel); Assert.Same(cancel, Keyboard.FocusedElement);
-                var confirmation = (TextBox)window.FindName("ApprovalOffConfirmation");
-                confirmation.Text = Loc.Current.Language == AppLanguage.Chinese ? "关闭审批" : "Turn off approval";
-                cancel.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-                var turnOff = (Button)window.FindName("ConfirmApprovalOff");
-                Assert.Same(turnOff, Keyboard.FocusedElement);
-                var enter = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(turnOff), 0, Key.Enter)
-                    { RoutedEvent = Keyboard.PreviewKeyDownEvent };
-                turnOff.RaiseEvent(enter); WpfContext.Drain();
-                Assert.True(enter.Handled);
-                Assert.True(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Visible, sheet.Visibility);
-                ((UIElement)Keyboard.FocusedElement).MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-                Assert.Same(confirmation, Keyboard.FocusedElement);
-                confirmation.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-                Assert.Same(cancel, Keyboard.FocusedElement);
-                Escape(cancel); WpfContext.Drain();
-                Assert.Equal(Visibility.Collapsed, sheet.Visibility);
-                Assert.True(window.Approvals.Enabled);
-                Assert.Same(off, Keyboard.FocusedElement);
-                Assert.True(settings.IsEnabled);
                 window.Navigate("Calls");
                 var callTrigger = (RadioButton)window.FindName("RailCalls"); callTrigger.Focus();
                 window.Features.OpenCall(window.Features.Calls[0]); WpfContext.Drain();
@@ -257,47 +228,6 @@ public sealed class AccessibilityTests(WpfContext wpf)
             Assert.DoesNotContain("_", UIElementAutomationPeer.CreatePeerForElement(safe)!.GetName());
             Escape(safe);
             Assert.Equal(buttons == MessageBoxButton.YesNo ? MessageBoxResult.No : MessageBoxResult.Cancel, dialog.Window.Result);
-        });
-    }
-
-    [Theory]
-    [InlineData(AppLanguage.English, false)]
-    [InlineData(AppLanguage.Chinese, false)]
-    [InlineData(AppLanguage.English, true)]
-    [InlineData(AppLanguage.Chinese, true)]
-    public void Approval_sheet_accepts_Space_and_the_localized_T_access_key(AppLanguage language, bool accessKey)
-    {
-        wpf.RunWithLanguage(language, () =>
-        {
-            var window = Window();
-            try
-            {
-                WpfContext.ShowWindow(window); window.OpenSettings();
-                var settings = (Views.SettingsView)window.FindName("SettingsContent"); settings.ShowSection("AI");
-                UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOff")); WpfContext.Drain();
-                var button = (Button)window.FindName("ConfirmApprovalOff");
-                ((TextBox)window.FindName("ApprovalOffConfirmation")).Text = language == AppLanguage.Chinese ? "关闭审批" : "Turn off approval";
-                var saved = new System.Threading.Tasks.TaskCompletionSource();
-                bool clicked = false; button.Click += (_, _) => clicked = true;
-                window.Approvals.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(window.Approvals.Enabled)) saved.TrySetResult(); };
-                ((Button)window.FindName("CancelApprovalOff")).MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-                Assert.Same(button, Keyboard.FocusedElement);
-                Assert.False(button.IsDefault);
-                if (accessKey)
-                {
-                    Assert.True(AccessKeyManager.IsKeyRegistered(PresentationSource.FromVisual(button), "t"));
-                    AccessKeyManager.ProcessKey(PresentationSource.FromVisual(button), "t", false);
-                }
-                else
-                {
-                    WpfContext.PressSpace(button);
-                }
-                Assert.True(clicked);
-                WpfContext.Complete(saved.Task);
-                Assert.False(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("ConfirmOverlay")).Visibility);
-            }
-            finally { window.Close(); }
         });
     }
 

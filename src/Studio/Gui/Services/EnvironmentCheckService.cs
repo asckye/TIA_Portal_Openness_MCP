@@ -234,7 +234,7 @@ public static class EnvironmentServiceContext
                     continue;
                 using var record = JsonDocument.Parse(File.ReadAllText(path));
                 if (record.RootElement.TryGetProperty("Endpoint", out var endpoint)) endpoints
-                    .Add(HttpAccessKeyStore.Endpoint(endpoint.GetString()!).AbsoluteUri);
+                    .Add(HttpEndpoint.Parse(endpoint.GetString()!).AbsoluteUri);
                 else if (record.RootElement.TryGetProperty("Address", out var address))
                     endpoints
                         .Add(ConfigCore

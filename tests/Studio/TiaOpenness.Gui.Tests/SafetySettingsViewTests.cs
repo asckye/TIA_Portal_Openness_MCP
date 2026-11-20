@@ -19,10 +19,9 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
         wpf.Run(() =>
         {
             var view = new SettingsView();
-            foreach (string name in new[] { "PlanLifetimeLabel", "TargetAddressLabel", "SecretNameLabel", "SecretValueLabel" })
+            foreach (string name in new[] { "PlanLifetimeLabel", "TargetAddressLabel" })
                 Assert.Same(view.FindResource("Primer.FormLabel"), ((Label)view.FindName(name)).Style);
-            foreach (string name in new[] { "OnlineTargets", "SecretNames" })
-                Assert.Same(view.FindResource("Primer.List"), ((ListBox)view.FindName(name)).Style);
+            Assert.Same(view.FindResource("Primer.List"), ((ListBox)view.FindName("OnlineTargets")).Style);
             view.Dispose();
         });
     }
@@ -82,68 +81,25 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
         });
     }
 
-    [Fact]
-    public void Empty_values_and_cancelled_secret_replacements_or_removals_do_not_write()
-    {
-        wpf.Run(() =>
-        {
-            using var fixture = new SafetySettingsServiceTests.Fixture();
-            fixture.Service.SetSecret("plc1", "synthetic-original");
-            var view = new SettingsView();
-            view.SetSafetyService(fixture.Service);
-            WpfContext.Complete(view.LoadSafetyAsync());
-            var name = (TextBox)view.FindName("SecretName");
-            var value = (PasswordBox)view.FindName("SecretValue");
-            var names = (ListBox)view.FindName("SecretNames");
-            string? error = null;
-            int confirmations = 0;
-            view.SafetyErrorForTests = key => error = key;
-            view.SafetyConfirmationForTests = _ => { confirmations++; return false; };
-            name.Text = "plc1";
-            WpfContext.Complete(view.SetSecretAsync());
-            Assert.Equal("Settings.SecretEmpty", error);
-            Assert.Equal(0, confirmations);
-            value.Password = "synthetic-replacement";
-            WpfContext.Complete(view.SetSecretAsync());
-            Assert.Empty(value.Password);
-            Assert.Equal(1, confirmations);
-            names.SelectedIndex = 0;
-            WpfContext.Complete(view.RemoveSecretAsync());
-            Assert.Equal(2, confirmations);
-            Assert.Equal("plc1", Assert.Single(fixture.Service.SecretNames()));
-            Assert.Single(fixture.Audit.Read());
-            view.Dispose();
-        });
-    }
     [Theory]
     [InlineData(AppLanguage.English)]
     [InlineData(AppLanguage.Chinese)]
-    public void Editors_load_names_only_and_clear_password_when_selection_changes(AppLanguage language)
+    public void Editors_load_targets_and_keep_accessible_names(AppLanguage language)
     {
         wpf.RunWithLanguage(language, () =>
         {
             using var fixture = new SafetySettingsServiceTests.Fixture();
             fixture.Service.SaveTargets(new[] { "192.0.2.10" });
-            fixture.Service.SetSecret("plc1", "synthetic-private-value");
             var view = new SettingsView();
             view.SetSafetyService(fixture.Service);
             WpfContext.Complete(view.LoadSafetyAsync());
             var targets = (ListBox)view.FindName("OnlineTargets");
-            var secrets = (ListBox)view.FindName("SecretNames");
-            var value = (PasswordBox)view.FindName("SecretValue");
             Assert.Equal("192.0.2.10", Assert.Single(targets.Items));
-            Assert.Equal("plc1", Assert.Single(secrets.Items));
-            Assert.Empty(value.Password);
-            value.Password = "synthetic-unsaved-value";
-            secrets.SelectedIndex = 0;
-            Assert.Empty(value.Password);
-            Assert.Equal("plc1", ((TextBox)view.FindName("SecretName")).Text);
-            foreach (string name in new[] { "OnlineTargets", "OnlineTargetInput", "SecretNames", "SecretName", "SecretValue", "OnlinePlanLifetime" })
+            foreach (string name in new[] { "OnlineTargets", "OnlineTargetInput", "OnlinePlanLifetime" })
             {
                 var control = (Control)view.FindName(name);
                 Assert.True(control.Focusable);
                 Assert.False(string.IsNullOrWhiteSpace(AutomationProperties.GetName(control)), name);
-                Assert.DoesNotContain("synthetic-private-value", AutomationProperties.GetName(control));
             }
             view.Dispose();
         });

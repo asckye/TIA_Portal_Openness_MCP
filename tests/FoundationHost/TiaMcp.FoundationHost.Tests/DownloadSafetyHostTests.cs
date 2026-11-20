@@ -7,56 +7,6 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 public sealed class DownloadSafetyHostTests
 {
-    [Theory]
-    [InlineData(false, false)] [InlineData(true, false)]
-    [InlineData(false, true)] [InlineData(true, true)]
-    public async Task Vault_download_requires_approval_and_keeps_the_download_target_card(bool nested, bool simulated)
-    {
-        using var targets = new OnlineTargetSettingsScope(null);
-        using var vault = new VaultFileScope();
-        vault.Vault.Set("plc1", SecretVaultTests.Secret, vault.Audit);
-        var previous = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
-        int waits = 0;
-        try
-        {
-            new ApprovalSettings(false, 1, 137).Save(ApprovalSettings.SettingsPath);
-            using var evidence = TiaMcpServer.Siemens.DownloadTargetPolicy.UseSources(
-                () => simulated ? DownloadSafetyPolicyTests.RunningInstance("192.0.2.10") : null,
-                _ => TiaMcp.Engine.Tests.Shared.DownloadTargetCases.Network());
-            Task<ApprovalOutcome> Wait(PendingApproval pending, ApprovalSettings settings, CancellationToken token)
-            {
-                waits++;
-                Assert.True(settings.Enabled);
-                Assert.Equal(137, settings.OnlinePlanLifetimeSeconds);
-                var card = JsonNode.Parse(pending.ParametersJson)!;
-                Assert.Equal(simulated ? "plcsim" : "physical", (string?)card["onlineTarget"]?["kind"]);
-                Assert.Equal("192.0.2.10", (string?)card["onlineTarget"]?["targetIpAddress"]);
-                Assert.Contains("vault:plc1", pending.ParametersJson);
-                Assert.Contains("192.0.2.10", pending.Operations.Single().Target);
-                Assert.DoesNotContain(SecretVaultTests.Secret, pending.ParametersJson + pending.ProjectIdentity);
-                return Task.FromResult(new ApprovalOutcome(pending, false, "denied"));
-            }
-            using var waitScope = new ApprovalWaitScope(Wait);
-            using var worker = new BoundWorker { Simulated = simulated };
-            using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker, approvalWait: Wait);
-            using var session = fixture.EnterSession();
-            var args = Arguments(simulated ? "PLCSIM" : "Intel(R) Ethernet", !simulated);
-            args["password"] = "vault:plc1";
-            var preview = await Call(fixture, nested, args);
-            Assert.True((bool?)preview["ok"], preview.ToJsonString());
-            Assert.Equal(0, waits);
-            args["dryRun"] = false;
-            args["expectedPlanHash"] = (string?)preview["data"]?["planHash"];
-            args["expectedProjectFile"] = BoundWorker.Project;
-            var result = await Call(fixture, nested, args);
-            Assert.Equal("CONFIRMATION_REQUIRED", (string?)result["error"]?["code"]);
-            Assert.Equal(1, waits);
-            Assert.Equal(0, worker.OnlineCalls);
-            Assert.DoesNotContain("APPROVAL_DISABLED", result.ToJsonString(), StringComparison.Ordinal);
-        }
-        finally { previous.Save(ApprovalSettings.SettingsPath); }
-    }
-
     public static IEnumerable<object[]> CollidingInstances => from nested in new[] { false, true }
         from sample in new[] { ("Intel(R) Ethernet", (System.Net.NetworkInformation.OperationalStatus?)null),
             ("", (System.Net.NetworkInformation.OperationalStatus?)null),

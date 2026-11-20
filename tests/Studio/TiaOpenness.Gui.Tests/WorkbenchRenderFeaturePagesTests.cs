@@ -56,8 +56,6 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                         var settings = (Views.SettingsView)window.FindName("SettingsContent");
                         settings.ShowSection("AI");
                         Assert.Equal(Visibility.Visible, ((FrameworkElement)settings.FindName("AiPanel")).Visibility);
-                        UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOff"));
-                        Assert.Equal(Visibility.Visible, ((Grid)window.FindName("ConfirmOverlay")).Visibility);
                     }
                     if (page == "toast") Assert.Equal(Visibility.Visible, ((Border)window.FindName("Toast")).Visibility);
                     var host = Detach(window);

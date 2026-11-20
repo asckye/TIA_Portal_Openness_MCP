@@ -341,20 +341,6 @@ namespace TiaMcp.Adapters.Native.Security
                                         .ToArray());
                             }
                             catch (Exception ex) { meta["attributeNamesError"] = ex.GetBaseException().Message; }
-                            if (this.request.ReadVaultDestination && server != null)
-                            {
-                                meta["vaultDestinationProject"] = _session.CurrentProject!.Path.FullName;
-                                var endpointNames = new[] { "ServerAddress", "ServerName", "Address" };
-                                var advertised = server.GetAttributeInfos().Select(info => info.Name).ToArray();
-                                foreach (string endpoint in endpointNames)
-                                {
-                                    if (!advertised.Contains(endpoint)) continue;
-                                    var address = server.GetAttribute(endpoint) as string;
-                                    if (string.IsNullOrWhiteSpace(address)) continue;
-                                    meta["vaultDestination"] = address;
-                                    break;
-                                }
-                            }
                             meta["apiCallSuccess"] = true; meta["dataComplete"] = server != null;
                             return "UMC server configurator read; the server object carries no public scalars (users/groups are fetched by name with " +
                                 "credentials).";
@@ -362,12 +348,6 @@ namespace TiaMcp.Adapters.Native.Security
                         if (server == null)
                             throw new PortalException(PortalErrorCode.NotFound,
                                 "UmcServerConfigurator.UmcServer is null; no UMC server is configured for this project.");
-                        if (action == "checkConsistency" && dryRun && serverPassword.StartsWith("vault:", StringComparison.Ordinal))
-                        {
-                            meta["apiCallSuccess"] = true; meta["dataComplete"] = false; meta["loggedIn"] = false;
-                            meta["contactedServer"] = false; meta["checkConsistencySkipped"] = true;
-                            return "preview did not log in (vault credential)";
-                        }
                         var handler = UmcAuthenticationHandler(serverUserName, secure, meta);
                         if (handler != null) server.Authentication += handler;
                         try

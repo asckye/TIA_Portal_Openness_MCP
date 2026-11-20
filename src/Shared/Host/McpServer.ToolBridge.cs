@@ -137,8 +137,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static async Task<CallToolResult> CallToolCoreAsync(string name, ToolArguments? arguments, Func<Task<CallToolResult?>>? beforeDispatch = null)
         {
-            var vaultAdmission = SecretVaultArguments.Validate(name, (arguments ?? EmptyArguments()).Json);
-            if (vaultAdmission != null) return V4Reject(name, vaultAdmission);
 #if TIA_ENGINE_HOST
             arguments = TiaMcp.FoundationHost.CanonicalParameterTool.ApplyDefaults(name, arguments ?? EmptyArguments(), out var defaultError);
             if (defaultError != null) return V4Reject(name, defaultError);
@@ -211,30 +209,8 @@ namespace TiaMcpServer.ModelContextProtocol
             try { return AuditBridgeResult(audit, await BridgeWait.On(ApprovedBridgeCallAsync(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
                 async () =>
                 {
-                    // Foundation implementations own their innermost approval/body boundary.
-                    if (SecretVaultArguments.ForwardsArguments(name) || CatalogView.Find(name)?.Execution == "foundation")
-                    { issued = true; return (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result; }
-                    var original = (arguments ?? EmptyArguments()).Json;
-                    var vaultError = SecretVaultArguments.Prepare(name, original,
-                        !SecretVaultArguments.IsPreview(original, CatalogView.Find(name)!.Tool.InputSchema), out var resolved, out bool changed);
-                    if (vaultError != null) return V4Reject(name, vaultError);
-                    using var vaultScope = changed ? SecretVaultArguments.Begin(original, resolved) : null;
-                    try
-                    {
-                        if (changed)
-                        {
-                            var bindingError = ToolInvoker.Bind(name, new ToolArguments(JsonSerializer.SerializeToElement(resolved)), out call);
-                            if (bindingError != null) return SecretVaultArguments.Scrub(V4Reject(name, bindingError));
-                        }
-                        issued = true;
-                        var result = (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result;
-                        return changed ? SecretVaultArguments.Scrub(result) : result;
-                    }
-                    catch (Exception failure)
-                    {
-                        var result = TargetFailure(name, failure, issued, original.GetRawText());
-                        return changed ? SecretVaultArguments.Scrub(result) : result;
-                    }
+                    issued = true;
+                    return (await BridgeWait.On(call!.InvokeAsync(ApprovalPreviewDepth.Value > 0)).ConfigureAwait(false)).Result;
                 },
                     beforeDispatch)).ConfigureAwait(false), disabled); }
             catch (OperationCanceledException) when (!issued) /* swallow(privacy): typed cancellation before dispatch does not expose exception text */

@@ -21,7 +21,6 @@ public partial class SettingsView
     private void InitializeSafetyEditors()
     {
         OnlineTargets.ItemsSource = targets;
-        Unloaded += (_, _) => SecretValue.Clear();
     }
 
     internal void SetSafetyService(SafetySettingsService service) => safety = service;
@@ -46,9 +45,8 @@ public partial class SettingsView
                     safety.TargetsPath);
             }
             UpdateTargetEditor();
-            SecretNames.ItemsSource = await Task.Run(safety.SecretNames);
         }
-        catch (Exception) /* swallow(privacy): editor errors never expose vault contents or credential values. */
+        catch (Exception) /* swallow(privacy): editor errors never expose settings file contents. */
         { ShowSafetyError("Settings.SafetyLoadFailed"); }
         finally { SetSafetyBusy(false); }
     }
@@ -124,56 +122,6 @@ public partial class SettingsView
     }
 
     private async void OnReloadSafety(object sender, RoutedEventArgs e) => await LoadSafetyAsync();
-
-    private void OnSecretSelected(object sender, SelectionChangedEventArgs e)
-    {
-        SecretName.Text = SecretNames.SelectedItem as string ?? "";
-        SecretValue.Clear();
-        RemoveSecret.IsEnabled = SecretNames.SelectedItem != null;
-    }
-
-    private async void OnSetSecret(object sender, RoutedEventArgs e) => await SetSecretAsync();
-
-    internal async Task SetSecretAsync()
-    {
-        string name = SecretName.Text;
-        string value = SecretValue.Password;
-        SecretValue.Clear();
-        if (value.Length == 0) { ShowSafetyError("Settings.SecretEmpty"); return; }
-        SetSafetyBusy(true);
-        try
-        {
-            bool replacing = await Task.Run(() => safety.HasSecret(name));
-            if (replacing && !ConfirmSafety("Settings.ConfirmReplaceSecret", name)) return;
-            await Task.Run(() => safety.SetSecret(name, value, replaceConfirmed: replacing));
-            SecretNames.ItemsSource = await Task.Run(safety.SecretNames);
-            SecretName.Clear();
-        }
-        catch (ArgumentException) /* swallow(privacy): report the naming rule without echoing the name or secret. */
-        { ShowSafetyError("Settings.SecretNameInvalid"); }
-        catch (Exception) /* swallow(privacy): encryption, file and audit errors must not echo any supplied secret. */
-        { ShowSafetyError("Settings.SafetySaveFailed"); }
-        finally { SecretValue.Clear(); SetSafetyBusy(false); }
-    }
-
-    private async void OnRemoveSecret(object sender, RoutedEventArgs e) => await RemoveSecretAsync();
-
-    internal async Task RemoveSecretAsync()
-    {
-        if (SecretNames.SelectedItem is not string name) return;
-        SecretValue.Clear();
-        if (!ConfirmSafety("Settings.ConfirmRemoveSecret", name)) return;
-        SetSafetyBusy(true);
-        try
-        {
-            await Task.Run(() => safety.RemoveSecret(name));
-            SecretNames.ItemsSource = await Task.Run(safety.SecretNames);
-            SecretName.Clear();
-        }
-        catch (Exception) /* swallow(privacy): only a fixed message is displayed if removal or its audit append fails. */
-        { ShowSafetyError("Settings.SafetySaveFailed"); }
-        finally { SetSafetyBusy(false); }
-    }
 
     private async void OnSavePlanLifetime(object sender, RoutedEventArgs e)
     {

@@ -219,8 +219,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     obj.Remove(pair.Key);
                 }
                 else if (pair.Key == "skippedLines" || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)
-                    && !(pair.Value is JsonValue reference && reference.TryGetValue<string>(out var referenceText)
-                        && TiaOpenness.Shared.CallJournalPayload.ReadableVaultReference(referenceText))
                     || pair.Key.Equals("token", StringComparison.OrdinalIgnoreCase) && pair.Value is JsonObject) obj.Remove(pair.Key);
                 else Sanitize(pair.Value);
             }

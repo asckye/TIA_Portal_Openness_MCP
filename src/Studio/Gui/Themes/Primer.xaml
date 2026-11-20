@@ -1084,7 +1084,8 @@
     <Setter Property="Background" Value="Transparent"/>
     <Style.Triggers>
       <Trigger Property="IsChecked" Value="True">
-        <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.accent}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Background" Value="{DynamicResource Primer.menuBg}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorPrimary}"/>
       </Trigger>
@@ -1255,7 +1256,8 @@
     <Setter Property="Foreground" Value="{DynamicResource Primer.textMuted}"/>
     <Style.Triggers>
       <Trigger Property="IsChecked" Value="True">
-        <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.accent}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Background" Value="{DynamicResource Primer.menuBg}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorPrimary}"/>
       </Trigger>
@@ -2244,10 +2246,10 @@
     <Setter Property="CornerRadius" Value="{StaticResource Ui.Radius}"/>
     <Setter Property="Padding" Value="0"/>
   </Style>
-  <!-- Layout header (the light ProLayout header): colorBgContainer. -->
+  <!-- Layout header (Native IDE titlebar): Primer.titlebar with 1px divider. -->
   <Style x:Key="Primer.HeaderBar" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
-    <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource Primer.cardBorder}"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.titlebar}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
     <Setter Property="BorderThickness" Value="0,0,0,1"/>
   </Style>
   <Style x:Key="Primer.TabStrip" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
@@ -2258,7 +2260,9 @@
   <Style x:Key="Primer.SubTabStrip" TargetType="Border" BasedOn="{StaticResource Primer.TabStrip}">
     <Setter Property="Background" Value="{DynamicResource Primer.bg}"/>
   </Style>
-  <Style x:Key="Primer.StatusBar" TargetType="Border" BasedOn="{StaticResource Primer.TabStrip}">
+  <Style x:Key="Primer.StatusBar" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
+    <Setter Property="Background" Value="{DynamicResource Primer.statusBar}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
     <Setter Property="BorderThickness" Value="0,1,0,0"/>
     <Setter Property="TextElement.FontSize" Value="{DynamicResource Ui.FontSize.Caption}"/>
   </Style>

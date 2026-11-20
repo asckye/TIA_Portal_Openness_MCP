@@ -176,8 +176,6 @@ namespace TiaMcpServer.ModelContextProtocol
             // Otherwise keep the order: typed families, the argument budget,
             // then BindV4Call (duplicates, release, typed contract, binding).
             var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<string, JsonElement>());
-            if (SecretVaultArguments.Validate(name, arguments) is { } vaultError)
-            { result = V4Reject(name, vaultError); return; }
 #if TIA_ENGINE_HOST
             var validationArguments = TiaMcp.FoundationHost.CanonicalParameterTool.PublicRequestArguments(method, request, arguments);
 #else

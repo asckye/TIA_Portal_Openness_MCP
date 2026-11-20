@@ -106,19 +106,18 @@
 
 ### SEC-05 HTTP 传输
 
-- 默认前缀是 `http://127.0.0.1:8735/`。HTTP 传输要求前缀是明确的 IP 字面量，并从工作台的当前用户 DPAPI 保护存储读取非空且不含控制字符的密钥。`--http-api-key` 仅兼容一个发布周期并输出不含密钥的弃用提示；工作台生成的命令不再包含它。
-- 所有请求（包括健康检查）在鉴权前校验 Host 和可选 Origin。允许配置端点、同端口回环源与 `--http-allowed-origins` 明确列出的源；其他值返回 403 并记录不含原始头值的审计事件，防止 DNS rebinding。
-- 除 `/mcp/health` 外，所有请求必须带 `Authorization: Bearer <密钥>`，用定长比较核对，不符返回 401。`/mcp/health` 不需要密钥，只返回版本、发布键和档位。
-- 工作台生成 24 字节随机密钥，以 DPAPI（当前用户）保存。工作台只接受 IPv4 字面量，拒绝 `0.0.0.0` 和广播地址，允许局域网地址。配置网络时，以提升权限添加只授予当前用户的 URL ACL，并添加只允许本地子网的入站防火墙规则。
-- 远程客户端使用随包 stdio 中继，命令和客户端配置不含密钥；中继从同一用户的数据目录读取按端点绑定的保护记录。私网、回环和链路本地地址绕过代理，其他地址遵守环境/系统代理及 NO_PROXY。不跟随重定向，不记录 HTTP 异常正文或凭据，不自动重放请求。
-- 实现：`src/FoundationHost/HostOptions.cs`、`EngineReleaseHost.cs`、`HttpRequestBoundary.cs`、`StdioHttpRelay.cs`、`src/Shared/HttpAccessKeyStore.cs`、`RemoteProxyPolicy.cs`、`src/Studio/Gui/Configuration/ConfigCore.cs`、`src/Shared/WindowsFirewallRule.cs`。
+- 默认前缀是 `http://127.0.0.1:8735/`。HTTP 传输要求前缀是明确的 IP 字面量（拒绝 `0.0.0.0` 和广播地址），局域网 / 虚拟机直连免 Bearer 访问密钥。
+- 所有请求（包括健康检查）校验 Host 和可选 Origin。允许配置端点、同端口回环源与 `--http-allowed-origins` 明确列出的源；其他值返回 403 并记录不含原始头值的审计事件，防止 DNS rebinding。
+- `/mcp/health` 返回版本、发布键和档位；`/mcp/ready` 返回宿主就绪状态。
+- 配置网络时，以提升权限添加只授予当前用户的 URL ACL，并添加只允许本地子网的入站防火墙规则。
+- 远程客户端使用随包 stdio 中继连接远程 HTTP 端点，不携带任何认证头或凭据。私网、回环和链路本地地址绕过代理，其他地址遵守环境/系统代理及 NO_PROXY。不跟随重定向，不记录 HTTP 异常正文或凭据，不自动重放请求。
+- 实现：`src/FoundationHost/HostOptions.cs`、`EngineReleaseHost.cs`、`HttpRequestBoundary.cs`、`StdioHttpRelay.cs`、`src/Shared/HttpEndpoint.cs`、`RemoteProxyPolicy.cs`、`src/Studio/Gui/Configuration/ConfigCore.cs`、`src/Shared/WindowsFirewallRule.cs`。
 - 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs`、`HttpHostOptionsTests.cs`、`HttpRequestBoundaryTests.cs`、`HttpRelayTests.cs`、`tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs`、`tests/Studio/TiaOpenness.Core.Tests/WindowsFirewallRuleTests.cs`。
 
 ### SEC-06 敏感值与诊断信息不外泄
 
 - 键名含 password、passwd、secret、token、credential、authorization，或以 key、keys 结尾（`releaseKey` 除外），或等于 `pwd`、`sk` 的参数值被替换为占位符；同级 `name`/`key` 为敏感名时，`value` 也被替换。自由文本中的 Bearer/Basic 令牌、`name=value` 形式的密钥、URL 用户信息和 PEM 私钥被清除。
 - 审批摘要和审计记录使用上述去敏规则。写入预览的计划哈希沿用同一敏感值识别规则，但将敏感值替换为 HMAC-SHA-256，密钥随机生成并仅保存在宿主进程内存中；应用须使用预览时相同的密码，宿主重启后须重新预览。计划还绑定输入文件的 SHA-256，以及输入目录中按相对名称排序的全部文件摘要；内容变化后须重新预览。
-- 已声明凭据参数中的完整 `vault:<name>` 引用保留可读，审批摘要、计划、审计和调用日志只接触引用。宿主在审批前检查引用，审批后紧邻工具执行时解析副本；解析值加入当前调用的原生诊断去敏范围，响应中的回显也被替换。计划哈希绑定引用名，同一引用在预览和执行时一致，更换引用须重新预览；保管库中的值不会进入计划哈希。明文敏感值继续按原规则去敏。
 - V4 信封的 `details` 和 `data` 不含堆栈与凭据：`Clean()` 删除键名含 `stack` 或等于 `password` 的字段，把多行堆栈文本替换为固定占位；`HostBehavior.SafeDiagnostic` 把盘符和 UNC 路径替换为 `<path>`。
 - 限制：替换按参数名匹配。UMAC、PLC 保护和 Web 服务器凭据只有在参数名符合上述规则时才被替换，没有单独的名单。
 - 实现：`src/Shared/CallJournalPayload.cs`、`src/Shared/ApprovalProtocol.cs`、`src/Shared/PlcToolContract.cs`、`src/Logic/V4/HostBehavior.cs`。
@@ -173,7 +172,7 @@
 
 - `ConnectOnlinePlc` 必须提供 `ipAddress`；`DownloadPlc`、`UploadDeviceParameters`、`GetPlcBlockFingerprints` 和 `UploadStationFromPlc` 必须提供 `targetIpAddress`。只接受完整的 IPv4 字面量，八位组除单个 `0` 外不允许前导零；缺失、空串、地址内外空白、主机名、IPv6 和缩写地址均在审批及 worker 调用之前拒绝，预览同样检查。
 - 白名单位于数据配置目录的 `online-targets.settings`，每行 `target=<IPv4>` 或 `target=<IPv4>/<0..32>`；支持空行和 `#` 注释。文件不存在时不限制合法显式地址，读取不创建目录或锁文件，非地址工具不读取该文件；已保存的空文件拒绝全部地址；文件格式无效或无法读取时按 `online-target-list-invalid` 拒绝，未列出的地址按 `online-target-not-allowed` 拒绝，不返回列表内容。
-- MCP 不能写入 `online-targets.settings` 或 `secrets.vault`，包括短文件名和文件身份别名。人工保存白名单使用文件锁及原子替换，只审计设置变更事件，不记录地址。审计追加失败会报告给调用方，不能视为保存成功；此时文件可能已经替换，须检查并补齐审计。工作台在设置的 AI 控制分区提供人工编辑入口；添加或移除后须显式保存，空列表明确提示拒绝全部目标。无效或不可读文件锁定编辑区，只有明确确认替换才解锁；保存锁内比对加载时的时间和摘要，并发变化会拒绝保存并提示重新加载。
+- MCP 不能写入 `online-targets.settings`，包括短文件名和文件身份别名。人工保存白名单使用文件锁及原子替换，只审计设置变更事件，不记录地址。审计追加失败会报告给调用方，不能视为保存成功；此时文件可能已经替换，须检查并补齐审计。工作台在设置的 AI 控制分区提供人工编辑入口；添加或移除后须显式保存，空列表明确提示拒绝全部目标。无效或不可读文件锁定编辑区，只有明确确认替换才解锁；保存锁内比对加载时的时间和摘要，并发变化会拒绝保存并提示重新加载。
 - V14 SP1 不再注册 `ConnectOnlinePlc`；`GetOnlineState`、断开和在线比较等原有入口保留。V15.1–V20 连接先成功应用调用方的地址再调用无地址重载；V21 使用地址重载。R/H 在 V15.1–V20 同样先应用精确地址，V21 只用地址重载。已在线的标准 PLC 保留当前连接并报告此前状态。
 - 实现：`src/Adapters.Contracts/OnlineTargetPolicy.cs`、`src/Shared/OnlineTargetSettings.cs`、`src/Studio/Gui/Services/SafetySettingsService.cs`、`src/Studio/Gui/Views/SettingsView.Safety.cs`、`src/Shared/ApprovalSettings.cs`、`src/FoundationHost/PortedToolContract.cs`、`src/Adapters/Native/Online/OnlineDownloadAdapter.cs`。
 - 测试：`tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OnlineTargetPolicyTests.cs`、`tests/FoundationHost/TiaMcp.FoundationHost.Tests/OnlineTargetAdmissionTests.cs`、`OnlineTargetSettingsTests.cs`、`VersionControlAdmissionTests.cs` 与 `tests/Repository/TiaMcp.SourceContracts.Tests/OnlineTargetSourceContracts.cs`。原生连接尚待八版真机验收，见[真机台账](../reference/real-machine-ledger.md)。
@@ -185,23 +184,15 @@
 - PLCSIM Advanced 与 Unified Open Pipe 没有 PLC 地址参数，不读取此列表。此限制不改变通道的认证、TLS、写入确认、审批或原生调用顺序。
 - OPC UA 使用 Workstation.UaClient 3.2.3 的字符串 URL 构造入口；该入口保留请求的完整 URL，只从 discovery 回复复制安全与身份元数据。离线 UA TCP 协议夹具返回不同主机、端口和路径的 EndpointUrl，核对库入口及实际工具的两次 HEL 仍连接原地址，替代监听器没有收到连接；`OpcUaEndpointAuthorityTests` 守住此依赖行为。
 - 实现：`src/Adapters.Contracts/OnlineTargetPolicy.cs`、`src/Shared/OnlineTargetSettings.cs`、`src/ToolPipeline/WorkerToolInvoker.cs`、`src/FoundationHost/PortedToolContract.cs`。测试：`RuntimeOnlineTargetPolicyTests`、`RuntimeOnlineTargetAdmissionTests`；注入 S7、Web API、OPC UA 客户端工厂，拒绝路径不创建客户端或打开套接字。工作台编辑路径复用 SEC-14 的 `SafetySettingsService` 和 `SettingsView.Safety.cs`，不改变运行时准入规则。实机验收仍为 **NOT RUN**，见[真机台账](../reference/real-machine-ledger.md)。
-### SEC-16 机密保管库
+### SEC-16 机密保管库（已移除）
 
-- 文件位于数据根的 `config/secrets.vault`，UTF-8 JSON 格式为 `{"version":1,"secrets":{"<name>":"<base64 DPAPI CurrentUser>"}}`。值由当前 Windows 用户的 DPAPI 加密；复制到其他用户下不能解密。名称区分大小写，长度 1–64，只允许 ASCII 字母、数字、下划线、点和连字符，首字符必须是字母或数字。
-- 只有显式允许列表中的精确工具名和顶层凭据参数名可使用完整的 `vault:<name>`；嵌套字段、调用者自定映射键和其他参数中的引用一律在审批前带指针拒绝。明文密码仍兼容；实际密码以 `vault:` 开头时须先存入保管库，再通过名称引用。
-- 任意会解析保管库引用的执行都必须经过工作台审批，含只读在线工具、`CallTool` 和只读批次子项，普通审批开关不能关闭此要求。审批卡显示凭据目的地；UMC 目的地取自项目配置，无法识别或审批后变化则拒绝。预览和内部预检不替换引用；Web API 预览跳过登录，并报告 `preview did not log in (vault credential)`。
-- 解析还要求当前调用持有已经成功完成的工作台审批结果，工具名和参数摘要必须匹配；调用结束或抛错后清除作用域，缺少审批目录项时也不能解析。Web 和使用保管库引用的 Teamcenter 目的地拒绝 userinfo、非 ASCII 主机及 URI 解析改变主机/端口的文本；Uri.Host 必须与 Uri.IdnHost 一致，审批卡使用 Uri.IdnHost/Uri.Port。Teamcenter 的非保管库调用沿用原有 hostUrl 规则。
-- UMC checkConsistency 的保管库预览和审批预检不调用一致性检查、不登录，并明确报告跳过；实际执行先解析获批引用，再进行原检查。UMAC 的卡片以目标 path/archivePath 为准；Global 用户还须绑定该目标项目的 UMC 服务器，未知或属于其他项目时拒绝。
-- 文件缺失视为空保管库。未知名称、格式错误、读不到文件或当前用户无法解密时，在审批和 worker 派发前返回带参数 JSON pointer 的 `INVALID_ARGUMENT`；不可读状态以 `secret-vault-unreadable` 标识在消息和 `details.expected` 中。不跨调用缓存保管库。
-- MCP 不能读取或写入保管库文件，通用文件工具的人工设置保护同样覆盖它。内部 `Set`/`Remove` 供工作台编辑器使用，原子替换文件，审计只记名称及 set/remove 动作，不记值；工作台设置的机密保管库编辑器只加载名称，使用密码框接收新值，提交和选择变化后清空，不能显示或复制已保存的值。新值不得为空，替换既有名称和删除前均须人工确认。
-- 实现：`src/Shared/SecretVault.cs`、`src/Shared/CurrentUserProtection.cs`、`src/ToolPipeline/ModelContextProtocol/Tools/McpServer.SecretVault.cs`、`src/FoundationHost/FoundationV4Tool.cs`。
-- 测试：`SecretVaultTests`、`SecretVaultFoundationBoundaryTests`、`SessionAuditHostTests`、`OnlinePortAdmissionTests` 和 `PipelineTests`。在线认证提示的原生验收见[真机台账](../reference/real-machine-ledger.md)，当前为 **NOT RUN**。
+- 为减少桌面端本机/局域网使用时的维护复杂度，已移除 DPAPI 机密保管库及 `vault:<name>` 引用语法；凭据参数直接按 SEC-06 的参数名脱敏规则在审批卡、日志、审计和响应中被屏蔽，不落盘保存。
 
 ### SEC-17 审批状态只读与会话隔离
 
 - 八版 `GetApprovalStatus` 为 L0/Diagnostics/READ 的宿主工具，不进入 Openness 通道，审批等待期间仍可读取。仅人工工作台可决定审批，此工具不接受审批或设置修改参数。
 - 状态板以宿主审批会话对象为弱引用键，记录当前 pending 和最近 16 个审批结果；仅保留请求 ID、工具、风险、风险动作、期限及开始/结束时间，不保留参数、工程路径或机密值。共享管线与 Foundation 直接审批写入同一状态板；其他会话不可见。普通审批关闭而直接执行的写入不保留为 recent，避免挤出人工决定；审批和在线计划路径在缺少活动会话时仍拒绝，只有此状态工具允许返回空状态板。
-- 返回普通审批开关、等待时间和在线写入计划有效期，另明确返回不能通过普通开关关闭的在线写入及保管库审批规则。白名单只返回格式化条目；保管库只返回名称与 `vault:<name>` 语法，不返回加密记录或明文值。名称枚举不解密、不创建目录或锁文件；结构可读不代表可解密，实际凭据准入仍严格验证解密。保管库不可读时只报告 `secret-vault-unreadable` 状态。
+- 返回普通审批开关、等待时间和在线写入计划有效期，另明确返回不能通过普通开关关闭的物理在线写入审批规则。白名单只返回格式化条目。
 - 实现：`src/Shared/ApprovalStatusBoard.cs`、`src/Shared/Host/McpServer.Worker.cs`、`src/ToolPipeline/ModelContextProtocol/Tools/McpServer.Approval.cs`、`src/FoundationHost/FoundationV4Tool.cs`。设置编辑器：`src/Studio/Gui/Services/SafetySettingsService.cs`、`src/Studio/Gui/Views/SettingsView.Safety.cs`。测试：`ApprovalStatusTests`、`SafetySettingsServiceTests`、`SafetySettingsViewTests`。
 
 ## 6 已知缺口与已决定未实现的事项
@@ -210,7 +201,7 @@
 |---|---|---|
 | PLC companion 的自由参数无法逐主机约束（TIA-SAFE-5 Round 2） | `RunPlcCompanionTool mode=run` 的 net、sim、trace 等命令可能通过参数、配置或脚本连接任意设备，无法保证只连接白名单主机 | 白名单文件存在时（含空、无效或不可读状态），在审批和启动 companion 前以 `online-target-not-allowed` 或 `online-target-list-invalid` 拒绝 mode=run，预览同样拒绝。catalog/help 不执行命令回调，继续允许；文件不存在时保留原有行为。不按自由参数猜测目标，也不提供 MCP 绕过开关 |
 | HTTP 请求的 Origin 与 Host 头 | RELAY-1 已实现每请求校验、403 与审计，含伪造头测试 | 已补齐；新增可信源须显式配置 |
-| HTTP 访问密钥在命令行和客户端配置中是明文 | RELAY-1 的宿主与中继读取 DPAPI 存储；新配置仅含 stdio 中继命令 | 新路径已补齐；弃用的 `--http-api-key` 在下一发布周期移除，旧备份仍可能包含明文 |
+| 局域网免密钥 HTTP 传输 | 为简化局域网/虚拟机直连，已移除 Bearer 访问密钥与 `--http-api-key` | 仅在可信局域网或本机虚拟机使用，依赖 Host/Origin 边界、本地子网防火墙与人工审批 |
 | UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批，输入、预览和审批前的身份检查仍可能查询远程主机并暴露 Windows NTLM 凭据 | 维护者 2026-11-04 已决定在 AI 准入层拒绝网络路径，含指向 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。尚未实现，排 4.0 前 |
 | `BuildDeviceAmlDocument` 分类 | 按文件目标审批，但仍为 OFFLINE / readOnlyHint=true | 单独重分类并重捕获八版基线，本任务不改契约 |
 | 更新包没有签名（S3） | 只有同一发布的 `.sha256`，GitHub 账户被控制后可发布恶意更新 | 维护者 2026-11-04 接受风险，签名尚未完成，移出 4.0 前实施清单 |

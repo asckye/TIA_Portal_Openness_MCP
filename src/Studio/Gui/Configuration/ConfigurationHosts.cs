@@ -79,7 +79,7 @@ public sealed partial class ConfigurationView
             restartEndpoint = prefix;
             if (settings.EffectiveReleaseKey != host.ReleaseKey || host.HttpPrefix != null && prefix != host.HttpPrefix)
                 throw new InvalidOperationException(Loc.Current["Hosts.ConfigMismatch"]);
-            start = new(ConfigCore.Engine(root, host.ReleaseKey), ConfigCore.Arguments(settings, ConfigCore.Unprotect(settings.ProtectedKey), root))
+            start = new(ConfigCore.Engine(root, host.ReleaseKey), ConfigCore.Arguments(settings, root))
                 { WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true };
             HostLifecycleService.PrepareWorkbenchHost(start);
         }

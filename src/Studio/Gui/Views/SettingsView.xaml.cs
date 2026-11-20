@@ -17,7 +17,7 @@ public partial class SettingsView : UserControl
 {
     private IApprovalService? _approvals;
     private McpSessionPanel? _session;
-    internal event EventHandler? DisableApprovalRequested;
+    private FeaturePagesViewModel? _features;
     internal event EventHandler? ControlEnabledChanged;
 
     public SettingsView()
@@ -26,6 +26,7 @@ public partial class SettingsView : UserControl
         InitializeSafetyEditors();
         ShowSection("Appearance");
         VersionText.Text = Loc.Current.T("Common.WorkbenchVersion", MainViewModel.AppVersion).TrimStart('v');
+        LoadPaths();
     }
 
     internal void Initialize(IApprovalService approvals, McpSessionPanel? session = null)
@@ -39,9 +40,37 @@ public partial class SettingsView : UserControl
         ControlEnabled.IsChecked = App.Settings.WorkbenchControlEnabled;
     }
 
+    internal void SetFeatures(FeaturePagesViewModel? features)
+    {
+        if (_features != null) _features.PropertyChanged -= OnFeatureChanged;
+        _features = features;
+        StorageTools.DataContext = features;
+        if (features != null)
+        {
+            features.PropertyChanged += OnFeatureChanged;
+            UpdateRetention();
+        }
+    }
+
+    private void OnFeatureChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(FeaturePagesViewModel.RetentionSize) or nameof(FeaturePagesViewModel.RetentionCopies))
+            UpdateRetention();
+    }
+
+    private void UpdateRetention()
+    {
+        if (_features == null) return;
+        foreach (var button in new[] { Size5, Size10, Size50 })
+            button.IsChecked = int.Parse((string)button.Tag, System.Globalization.CultureInfo.InvariantCulture) == _features.RetentionSize;
+        foreach (var button in new[] { Copies3, Copies5, Copies10 })
+            button.IsChecked = int.Parse((string)button.Tag, System.Globalization.CultureInfo.InvariantCulture) == _features.RetentionCopies;
+    }
+
     internal void LoadPaths()
     {
         ConfigPath.Text = DataLocations.Current.ConfigDirectory;
+        LogPath.Text = DataLocations.Current.LogsDirectory;
         DataPath.Text = DataLocations.Current.WorkbenchDataDirectory;
     }
 
@@ -61,7 +90,6 @@ public partial class SettingsView : UserControl
             { "Service" => "Settings.Engine", "AI" => "Control.Section", _ => "Settings.Appearance" }));
         DetailScroll.ScrollToTop();
         if (section == "AI") _ = LoadSafetyAsync();
-        else SecretValue.Clear();
     }
 
     internal static string ReadPackageName(string bundleRoot)
@@ -82,11 +110,13 @@ public partial class SettingsView : UserControl
         }
     }
 
-    internal void Dispose() {
-        SecretValue.Clear();
-        if (_session != null) _session.PropertyChanged -= OnSessionChanged; _session = null; if (_approvals != null) _approvals
-            .PropertyChanged -= OnApprovalChanged; _approvals = null;
+    internal void Dispose()
+    {
+        SetFeatures(null);
+        if (_session != null) _session.PropertyChanged -= OnSessionChanged; _session = null;
+        if (_approvals != null) _approvals.PropertyChanged -= OnApprovalChanged; _approvals = null;
     }
+
     private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.TimeoutSeconds)
@@ -94,6 +124,7 @@ public partial class SettingsView : UserControl
         if (Dispatcher.CheckAccess()) UpdateApproval();
         else Dispatcher.BeginInvoke(UpdateApproval);
     }
+
     internal void UpdateApproval()
     {
         if (_approvals == null) return;
@@ -108,9 +139,9 @@ public partial class SettingsView : UserControl
     private async void OnApprovalClick(object sender, RoutedEventArgs e)
     {
         if (_approvals == null) return;
-        if (sender == ApprovalOn) await SaveApproval(() => _approvals.Enabled = true);
-        else if (_approvals.Enabled) DisableApprovalRequested?.Invoke(this, EventArgs.Empty);
-        UpdateApproval();
+        bool target = sender == ApprovalOn;
+        if (_approvals.Enabled != target) await SaveApproval(() => _approvals.Enabled = target);
+        else UpdateApproval();
     }
 
     private async void OnTimeoutClick(object sender, RoutedEventArgs e)
@@ -129,12 +160,23 @@ public partial class SettingsView : UserControl
         UpdateApproval();
     }
 
+    private void OnSize(object sender, RoutedEventArgs e) => _features?
+        .SetRetention(int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture), true);
+
+    private void OnCopies(object sender, RoutedEventArgs e) => _features?
+        .SetRetention(int.Parse((string)((RadioButton)sender).Tag, System.Globalization.CultureInfo.InvariantCulture), false);
+
+    private void OnRetentionFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Audit.OpenFolder); }
+    private void OnGenerateDiagnostics(object sender, RoutedEventArgs e) => _features?.Export();
+    private void OnOpenDiagnosticsFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Diagnostics.OpenFolder); }
+
     private void OnSessionChanged(object? sender, PropertyChangedEventArgs e) => UpdateNativeCrossReferences();
     private void UpdateNativeCrossReferences()
     {
         NativeCrossReferencesEnabled.IsEnabled = _session?.CanSetNativeCrossReferences == true;
         NativeCrossReferencesEnabled.IsChecked = _session?.NativeCrossReferencesAllowed == true;
     }
+
     private async void OnNativeCrossReferencesClick(object sender, RoutedEventArgs e)
     {
         if (_session?.CanSetNativeCrossReferences != true) { UpdateNativeCrossReferences(); return; }
@@ -157,7 +199,7 @@ public partial class SettingsView : UserControl
 
     private void OnOpenPath(object sender, RoutedEventArgs e)
     {
-        string path = sender == OpenConfig ? ConfigPath.Text : DataPath.Text;
+        string path = sender == OpenConfig ? ConfigPath.Text : sender == OpenLog ? LogPath.Text : DataPath.Text;
         try
         {
             if (!Directory.Exists(path)) throw new DirectoryNotFoundException(Loc.Current.T("Settings.PathMissing", path));

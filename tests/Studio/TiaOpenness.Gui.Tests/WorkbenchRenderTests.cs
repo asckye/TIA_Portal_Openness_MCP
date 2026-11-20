@@ -342,7 +342,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         var text = DesktopCapture.Descendants<TextBlock>(button).Single();
                         Assert.Equal(TextWrapping.NoWrap, text.TextWrapping);
                         Assert.Equal(TextTrimming.CharacterEllipsis, text.TextTrimming);
-                        Assert.Equal(size.Width < 1200 ? Visibility.Collapsed : Visibility.Visible, text.Visibility);
+                        Assert.Equal(Visibility.Visible, text.Visibility);
                         var dot = DesktopCapture.Descendants<System.Windows.Shapes.Ellipse>(button).Single();
                         Assert.Equal(fullText, System.Windows.Automation.AutomationProperties.GetName(dot));
                         Assert.Equal(fullText, dot.ToolTip);
@@ -353,14 +353,12 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     {
                         window.Navigate(page); Settle();
                         var title = (TextBlock)window.FindName("CurrentPageTitle");
-                        Assert.Equal(28, title.FontSize); Assert.Equal(FontWeights.Bold, title.FontWeight);
+                        Assert.Equal(17, title.FontSize); Assert.Equal(FontWeights.SemiBold, title.FontWeight);
                         Assert.Equal(title.Text + " – " + Loc.Current["App.Title"], window.Title);
                         Save(page);
                     }
                     var settings = (Views.SettingsView)window.FindName("SettingsContent");
                     foreach (string section in new[] { "Service", "AI" }) { settings.ShowSection(section); Settle(); Save("Settings-" + section); }
-                    UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOff")); Settle(); Save("ApprovalOffSheet");
-                    UnifiedDesktopTests.ClickControl((Button)window.FindName("CancelApprovalOff"));
                     Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
                     void Settle() { WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout(); }
                     void Save(string page)

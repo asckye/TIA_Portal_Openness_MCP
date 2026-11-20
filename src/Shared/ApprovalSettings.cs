@@ -60,18 +60,16 @@ namespace TiaOpenness.Shared
                 string name = TargetName(component);
                 if (name.Equals("approval.settings", StringComparison.OrdinalIgnoreCase)
                     || name.Equals("online-targets.settings", StringComparison.OrdinalIgnoreCase)
-                    || name.Equals("secrets.vault", StringComparison.OrdinalIgnoreCase)
                     || System.Text.RegularExpressions.Regex.IsMatch(name, @"^APPROV~[0-9]+\.SET$",
                         System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)
-                    || System.Text.RegularExpressions.Regex.IsMatch(name, @"^ONLINE~[0-9]+\.SET$|^SECRET~[0-9]+\.VAU$",
+                    || System.Text.RegularExpressions.Regex.IsMatch(name, @"^ONLINE~[0-9]+\.SET$",
                         System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant)) return true;
             }
             if (Directory.Exists(path)) return false;
             if (Environment.OSVersion.Platform != PlatformID.Win32NT || string.IsNullOrWhiteSpace(path)) return false;
             // File IDs also cover short names, junctions and existing hard links. An
             // unreadable identity is refused; there is no write probe or native TIA call.
-            foreach (string administrativePath in new[] { SettingsPath, OnlineTargetSettings.SettingsPath,
-                Path.Combine(DataLocations.Current.ConfigDirectory, "secrets.vault") })
+            foreach (string administrativePath in new[] { SettingsPath, OnlineTargetSettings.SettingsPath })
             {
                 using var expected = OpenIdentity(administrativePath, 0, 7, IntPtr.Zero, 3, 0, IntPtr.Zero);
                 if (expected.IsInvalid)

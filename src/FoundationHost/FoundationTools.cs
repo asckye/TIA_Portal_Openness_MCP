@@ -177,12 +177,6 @@ internal sealed partial class FoundationTool : McpServerTool
     internal bool IsRuntimeQuery => definition.ResponseMember == "RuntimeQuery";
     internal bool UsesBundledPlcWorker => worker is WorkerClient { Bundled: true };
     internal string? ApprovalIdentity => (worker as IFoundationSessionWorker)?.ApprovalIdentity;
-    internal Task<string?> ReadUmcVaultDestination(CancellationToken token, string? targetProject = null)
-#if TIA_FOUNDATION_TEST_HOST
-        => toolpipeline::TiaMcpServer.ModelContextProtocol.SecretVaultArguments.ReadUmcDestinationAsync(worker.Call, token, targetProject);
-#else
-        => TiaMcpServer.ModelContextProtocol.SecretVaultArguments.ReadUmcDestinationAsync(worker.Call, token, targetProject);
-#endif
     internal bool WorkerRecoveryNeeded => worker is WorkerClient { RecoveryNeeded: true };
     internal async Task<string?> RecoverApprovalIdentity(CancellationToken token)
     {

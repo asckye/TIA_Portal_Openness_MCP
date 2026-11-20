@@ -59,7 +59,7 @@
 
 ### 2.2 进程与会话
 
-- HTTP 宿主不设会话数上限，部署时按 worker 内存和 TIA 实例数限制客户端并发。`/mcp/health` 不鉴权，返回 `fileVersion`、发布键和档案名；`/mcp/ready` 与 MCP 调用使用同一 Bearer 密钥，只证明宿主已就绪（SEC-05）。
+- HTTP 宿主不设会话数上限，部署时按 worker 内存和 TIA 实例数限制客户端并发。`/mcp/health` 返回 `fileVersion`、发布键和档案名；`/mcp/ready` 证明宿主已就绪；HTTP 传输局域网免密钥直连，并经 Host/Origin 边界防护（SEC-05）。
 - 每个 worker 绑定宿主的 Windows job object（`WorkerJob`），宿主退出或被终止时 worker 随之结束；TIA 进程不属于 job，不受宿主退出影响。
 - 会话结束等待已派发的原生调用完成，再关闭 worker 通道。空闲 worker 最多等待 10 秒，在所属线程上非拥有式分离并把租约写为 `RELEASED`。宿主退出继续由 job object 结束自己的 worker。
 - `DisconnectPortal` 只结束本会话的原生连接，`RestartOpennessWorker` 只重启本会话的 worker；新的 HTTP 会话从未绑定状态开始。

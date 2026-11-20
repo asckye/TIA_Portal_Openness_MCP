@@ -211,9 +211,7 @@ namespace TiaMcp.Logic.V4
                         && (pair.Value is JsonArray || pair.Value is JsonValue stackValue && stackValue.TryGetValue<string>(out _))
                         || pair.Key.Equals("stackTrace", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("nativeStackTrace", StringComparison.OrdinalIgnoreCase)
-                        || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase)
-                            && !(pair.Value is JsonValue reference && reference.TryGetValue<string>(out var referenceText)
-                                && NativeFailureDiagnostics.VaultReference(referenceText)))
+                        || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase))
                         obj.Remove(pair.Key);
                     else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text)
                         && (pair.Key.Equals("nativeMessage", StringComparison.OrdinalIgnoreCase)

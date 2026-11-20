@@ -58,7 +58,7 @@ public sealed class HostLifecycleTests
             string image = Path.Combine(AppContext.BaseDirectory, "host-lifecycle", "TiaMcp.FoundationHost.exe");
             Assert.StartsWith(Root + Path.DirectorySeparatorChar, Path.GetFullPath(image), StringComparison.OrdinalIgnoreCase);
             var start = new ProcessStartInfo(image) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = Root, RedirectStandardInput = true };
-            foreach (string argument in new[] { "--bundle-root", Root, "--release-key", "21", "--transport", "http", "--http-prefix", "http://127.0.0.1:0/", "--http-api-key", "fix-r1-synthetic", "--offline" }) start.ArgumentList.Add(argument);
+            foreach (string argument in new[] { "--bundle-root", Root, "--release-key", "21", "--transport", "http", "--http-prefix", "http://127.0.0.1:0/", "--offline" }) start.ArgumentList.Add(argument);
             start.Environment["TIA_MCP_DATA_DIRECTORY"] = Data;
             start.Environment["TIA_MCP_WORKBENCH_STARTED"] = "1";
             Process = System.Diagnostics.Process.Start(start) ?? throw new IOException("Synthetic host did not start");
@@ -194,7 +194,7 @@ public sealed class HostLifecycleTests
         string data = Path.Combine(root, "bin-build", "fix-r1-force-" + Guid.NewGuid().ToString("N"));
         string image = Path.Combine(AppContext.BaseDirectory, "host-lifecycle", "TiaMcp.FoundationHost.exe");
         var start = new ProcessStartInfo(image) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = root, RedirectStandardInput = true };
-        foreach (string argument in new[] { "--bundle-root", root, "--release-key", "21", "--transport", "http", "--http-prefix", "http://127.0.0.1:0/", "--http-api-key", "fix-r1-synthetic", "--offline" }) start.ArgumentList.Add(argument);
+        foreach (string argument in new[] { "--bundle-root", root, "--release-key", "21", "--transport", "http", "--http-prefix", "http://127.0.0.1:0/", "--offline" }) start.ArgumentList.Add(argument);
         start.Environment["TIA_MCP_DATA_DIRECTORY"] = data;
         start.Environment["TIA_MCP_WORKBENCH_STARTED"] = "1";
         using var process = Process.Start(start) ?? throw new IOException("Synthetic host did not start");
@@ -327,7 +327,7 @@ public sealed class HostLifecycleTests
         var start = new ProcessStartInfo(image) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = root, RedirectStandardInput = true };
         // Port zero binds a private loopback listener; no external service is contacted.
         foreach (string argument in new[] { "--bundle-root", root, "--release-key", "21", "--transport", "http",
-            "--http-prefix", "http://127.0.0.1:0/", "--http-api-key", "des1-synthetic-local-host", "--offline" }) start.ArgumentList.Add(argument);
+            "--http-prefix", "http://127.0.0.1:0/", "--offline" }) start.ArgumentList.Add(argument);
         start.Environment["TIA_MCP_DATA_DIRECTORY"] = data;
         start.Environment["TIA_MCP_WORKBENCH_STARTED"] = "1";
         using var process = Process.Start(start) ?? throw new IOException("Host fixture did not start.");

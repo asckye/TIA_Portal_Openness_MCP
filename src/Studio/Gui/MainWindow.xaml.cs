@@ -92,7 +92,7 @@ public partial class MainWindow : Window
     protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
     {
         base.OnPreviewKeyDown(e);
-        bool modal = DrawerOverlay.Visibility == Visibility.Visible || ConfirmOverlay.Visibility == Visibility.Visible
+        bool modal = DrawerOverlay.Visibility == Visibility.Visible
             || OperationsContent.OptionsOpen || BlocksContent.OptionsOpen || VersionControlContent.OptionsOpen;
         if (modal && System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control)
             && e.Key is System.Windows.Input.Key.O or System.Windows.Input.Key.S or System.Windows.Input.Key.B

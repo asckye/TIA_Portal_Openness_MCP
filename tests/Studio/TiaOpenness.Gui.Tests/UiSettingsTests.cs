@@ -42,12 +42,13 @@ public sealed class UiSettingsTests : IDisposable
     [Fact]
     public void Round_trips_both_choices()
     {
-        new UiSettings { Language = AppLanguage.Chinese, Theme = AppTheme.Dark }.Save(_path);
+        new UiSettings { Language = AppLanguage.Chinese, Theme = AppTheme.Dark, Accent = AppAccent.Petrol }.Save(_path);
 
         var loaded = UiSettings.Load(_path);
 
         Assert.Equal(AppLanguage.Chinese, loaded.Language);
         Assert.Equal(AppTheme.Dark, loaded.Theme);
+        Assert.Equal(AppAccent.Petrol, loaded.Accent);
     }
 
     [Fact]
@@ -64,7 +65,8 @@ public sealed class UiSettingsTests : IDisposable
         var loaded = UiSettings.Load(_path);
 
         Assert.Equal(Loc.FromSystem(), loaded.Language);
-        Assert.Equal(AppTheme.Auto, loaded.Theme);
+        Assert.Equal(AppTheme.Light, loaded.Theme);
+        Assert.Equal(AppAccent.Cobalt, loaded.Accent);
     }
 
     [Fact]
@@ -89,12 +91,24 @@ public sealed class UiSettingsTests : IDisposable
     public void An_unrecognised_value_leaves_that_setting_at_its_default()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-        File.WriteAllLines(_path, ["language=Klingon", "theme=Neon"]);
+        File.WriteAllLines(_path, ["language=Klingon", "theme=Neon", "accent=Magenta"]);
 
         var loaded = UiSettings.Load(_path);
 
         Assert.Equal(Loc.FromSystem(), loaded.Language);
-        Assert.Equal(AppTheme.Auto, loaded.Theme);
+        Assert.Equal(AppTheme.Light, loaded.Theme);
+        Assert.Equal(AppAccent.Cobalt, loaded.Accent);
+    }
+
+    [Fact]
+    public void Legacy_auto_theme_maps_cleanly_to_light()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+        File.WriteAllLines(_path, ["theme=Auto"]);
+
+        var loaded = UiSettings.Load(_path);
+
+        Assert.Equal(AppTheme.Light, loaded.Theme);
     }
 
     [Fact]

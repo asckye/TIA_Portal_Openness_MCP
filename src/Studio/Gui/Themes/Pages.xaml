@@ -35,4 +35,38 @@
       </StackPanel>
     </DockPanel>
   </DataTemplate>
+  <Style x:Key="Primer.BlkBadge" TargetType="Border" BasedOn="{StaticResource Primer.Tag}">
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="6,1"/>
+    <Setter Property="CornerRadius" Value="{StaticResource Ui.Radius.XS}"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.cardSoft}"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.text}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Kind}" Value="OB">
+        <Setter Property="Background" Value="{DynamicResource Primer.blkObBg}"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.blkObFg}"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Kind}" Value="FB">
+        <Setter Property="Background" Value="{DynamicResource Primer.blkFbBg}"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.blkFbFg}"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Kind}" Value="FC">
+        <Setter Property="Background" Value="{DynamicResource Primer.blkFcBg}"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.blkFcFg}"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Kind}" Value="DB">
+        <Setter Property="Background" Value="{DynamicResource Primer.blkDbBg}"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.blkDbFg}"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Kind}" Value="F">
+        <Setter Property="Background" Value="{DynamicResource Primer.blkFsBg}"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.blkFsFg}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.BlkBadgeText" TargetType="TextBlock" BasedOn="{StaticResource Primer.Mono}">
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Caption}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{Binding Path=(TextElement.Foreground),RelativeSource={RelativeSource AncestorType=Border}}"/>
+  </Style>
 </ResourceDictionary>

@@ -240,14 +240,7 @@ internal static class SharedReleaseHost
         var app = builder.Build();
         LocalStabilityTelemetry.StartupStage("http.app.built");
         var boundary = new HttpRequestBoundary(options);
-        var authorization = Encoding.UTF8.GetBytes("Bearer " + options.ApiKey);
         app.Use(boundary.Invoke);
-        app.Use(async (context, next) => {
-            if (context.Request.Path == "/mcp/health") { await next(context); return; }
-            if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(context.Request.Headers.Authorization.ToString()), authorization))
-            { context.Response.StatusCode = 401; return; }
-            await next(context);
-        });
         app.MapMcp("/mcp");
         app
             .MapGet("/mcp/health", () => new {

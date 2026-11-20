@@ -154,7 +154,7 @@ public class MainWindowTests(WpfContext wpf)
                 ThemeManager.Current.Theme = AppTheme.Light;
                 using var rendered = Render();
 
-                var expected = ((SolidColorBrush)Application.Current.FindResource("Primer.card")).Color;
+                var expected = ((SolidColorBrush)Application.Current.FindResource("Primer.titlebar")).Color;
                 var actual = PixelAt(rendered.Bitmap, Width / 2, 6);
 
                 Assert.Equal(255, actual.A);

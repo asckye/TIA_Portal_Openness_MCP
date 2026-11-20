@@ -85,7 +85,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
 
                 host.Measure(new Size(1200, 780)); host.Arrange(new Rect(0, 0, 1200, 780)); host.UpdateLayout();
-                Assert.Equal(918, page.ActualWidth);
+                Assert.Equal(926, page.ActualWidth);
                 var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(host);
                 var output = Environment.GetEnvironmentVariable("TIA_PRIMER_SCREENSHOTS") ??
@@ -149,8 +149,6 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 foreach (var fixture in fixtures) choices.SelectedItems.Add(fixture);
                 var address = (TextBox)page.FindName("ServerAddress");
                 address.Text = "192.0.2.77";
-                var secret = (PasswordBox)page.FindName("Key");
-                secret.Password = "language-switch-fixture";
                 var log = (TiaOpenness.Gui.Controls.WorkbenchLogView)page.FindName("ActivityLog"); WpfContext.Drain();
                 string history = log.LogText;
                 int entries = history.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length;
@@ -199,7 +197,6 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                         Loc.Current.T("Config.ClientInstructionsNotDetected", "Second", "second hint", "second evidence"), Text("ClientInstructions"));
                     Assert.Equal(Text("ClientInstructions"), ((TextBlock)page.FindName("ClientSelection")).ToolTip);
                     Assert.Equal("192.0.2.77", address.Text);
-                    Assert.Equal("language-switch-fixture", secret.Password);
                     Assert.Equal(history, log.LogText);
                 }
             }

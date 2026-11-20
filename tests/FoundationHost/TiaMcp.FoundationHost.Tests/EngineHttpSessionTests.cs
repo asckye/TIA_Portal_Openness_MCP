@@ -442,7 +442,7 @@ public sealed partial class EngineHttpSessionTestsPlc
                 start.Environment["DOTNET_PROCESSOR_COUNT"] = "2";
             }
             foreach (string arg in new[] {
-                    "--bundle-root", root, "--release-key", release, "--transport", "http", "--http-prefix", url + "/", "--http-api-key", "fixture-key",
+                    "--bundle-root", root, "--release-key", release, "--transport", "http", "--http-prefix", url + "/",
                         "--profile", "full"
                 })
                 start.ArgumentList.Add(arg);

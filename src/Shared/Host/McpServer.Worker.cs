@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["onlinePlanLifetimeSeconds"] = settings.OnlinePlanLifetimeSeconds };
             status["alwaysConfirmed"] = new JsonObject {
                 ["rule"] = "ONLINE-WRITE execution requires Workbench approval even when the switch is off, except the three PLCSIM-only tools " +
-                    "and DownloadPlc to a verified PLCSIM target. Every execution resolving a vault reference also requires approval.",
+                    "and DownloadPlc to a verified PLCSIM target.",
                 ["tools"] = new JsonArray(available.Where(name => ToolTaxonomy.OperationOf(name, null).Operation == "ONLINE-WRITE"
                     && name is not ("ManagePlcSimAdvancedInstance" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario"))
                     .OrderBy(name => name, System.StringComparer.Ordinal).Select(name => (JsonNode)JsonValue.Create(name)!).ToArray()),
@@ -44,17 +44,6 @@ namespace TiaMcpServer.ModelContextProtocol
             status["onlineTargets"] = new JsonObject { ["configured"] = targets != null, ["valid"] = targets?.IsValid ?? true,
                 ["entries"] = new JsonArray((targets?.Entries ?? System.Array.Empty<string>())
                     .Select(entry => (JsonNode)JsonValue.Create(entry)!).ToArray()) };
-            try
-            {
-                status["vault"] = new JsonObject { ["valid"] = true, ["referenceSyntax"] = "vault:<name>",
-                    ["names"] = new JsonArray(new TiaOpenness.Shared.SecretVault().Names(validateProtected: false)
-                        .Select(name => (JsonNode)JsonValue.Create(name)!).ToArray()) };
-            }
-            catch (System.IO.IOException) /* swallow(privacy): expose only the vault's unreadable state, never file contents or credentials. */
-            {
-                status["vault"] = new JsonObject { ["valid"] = false, ["referenceSyntax"] = "vault:<name>",
-                    ["names"] = new JsonArray(), ["condition"] = "secret-vault-unreadable" };
-            }
             return status;
         }
 

@@ -16,16 +16,6 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed partial class RuntimeChannelTools
     {
-        private static ResponseJsonReport? VaultWebPreview(string host, string password, bool dryRun = false)
-        {
-            if (!TiaOpenness.Shared.CallJournalPayload.ReadableVaultReference(password)
-                || !(dryRun || McpServer.IsReadOnlyApprovalPreview || TiaOpenness.Shared.AuditInvocation.IsReadOnlyPreview)) return null;
-            return new ResponseJsonReport { Ok = true, Message = "preview did not log in (vault credential)",
-                Data = new JsonObject { ["host"] = host, ["status"] = "Preview", ["dryRun"] = true,
-                    ["loggedIn"] = false, ["contactedDevice"] = false, ["mayHaveChanged"] = false },
-                Meta = RuntimeMeta(true, true, false, true) };
-        }
-
         private static ResponseJsonReport RuntimeRefusal(string message, JsonObject? data = null)
         {
             var meta = ResponseMeta.Basic(false);
@@ -90,7 +80,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (ArgumentException bad) { return RuntimeRefusal(bad.Message); }
                 if (string.IsNullOrWhiteSpace(username)) return RuntimeRefusal("username is empty; give the web server user name (e.g. 'Anonymous').");
 
-                if (VaultWebPreview(h, password ?? "", false) is { } vaultPreview) return vaultPreview;
                 var r = S7WebApiChannel.ReadVars(h, username, password ?? "", vars, ignoreCertificateErrors, timeoutMs);
                 var items = new JsonArray();
                 foreach (var it in r.Items)
@@ -167,7 +156,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     return RuntimeRefusal($"Refused: writing {writes.Count} variable(s) on a running CPU requires confirmWrite=true together with dryRun=false. Nothing was written. Re-run with dryRun=true to preview.",
                         new JsonObject { ["plannedWrites"] = PlannedWrites(writes), ["safety"] = S7WebSafety(false, false) });
 
-                if (VaultWebPreview(h, password ?? "", dryRun) is { } vaultPreview) return vaultPreview;
                 var r = S7WebApiChannel.WriteVars(h, username, password ?? "", writes, ignoreCertificateErrors, timeoutMs, preview: dryRun);
                 var items = new JsonArray();
                 foreach (var it in r.Items)
@@ -256,7 +244,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (ArgumentException bad) { return RuntimeRefusal(bad.Message); }
                 if (string.IsNullOrWhiteSpace(username)) return RuntimeRefusal("username is empty; give the web server user name.");
 
-                if (VaultWebPreview(h, password ?? "", false) is { } vaultPreview) return vaultPreview;
                 var r = S7WebApiChannel.ReadDiagnostics(h, username, password ?? "", ignoreCertificateErrors, timeoutMs);
                 var unavailable = new JsonArray();
                 foreach (var u in r.Unavailable) unavailable.Add(u);
@@ -336,7 +323,6 @@ namespace TiaMcpServer.ModelContextProtocol
                     return RuntimeRefusal($"Refused: switching the CPU at {h} to {m.ToUpperInvariant()} requires confirmModeChange=true together with dryRun=false. No request was sent.",
                         new JsonObject { ["requestedMode"] = m, ["safety"] = S7WebSafety(false, false) });
 
-                if (VaultWebPreview(h, password ?? "", dryRun) is { } vaultPreview) return vaultPreview;
                 var r = S7WebApiChannel.ChangeOperatingMode(h, username, password ?? "", m, ignoreCertificateErrors, timeoutMs, preview: dryRun);
                 var data = new JsonObject
                 {

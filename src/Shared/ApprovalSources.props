@@ -1,8 +1,6 @@
 <Project>
   <Import Project="LocalPipeSecuritySources.props" Condition="'$(TiaLocalPipeSecuritySourcesIncluded)' != 'true'" />
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)SecretVault.cs" Link="Shared/SecretVault.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)CurrentUserProtection.cs" Link="Shared/CurrentUserProtection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SessionBehavior.cs" Link="Shared/SessionBehavior.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApprovalSettings.cs" Link="Shared/ApprovalSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApprovalStatusBoard.cs" Link="Shared/ApprovalStatusBoard.cs" />

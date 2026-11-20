@@ -112,8 +112,8 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
                 string oldEngine = At(scratch, "runtime/v" + release.Key + "/" + "TiaMcp" + "Server.exe");
                 string path = At(scratch, "clients/" + profile.Id + "-" + release.Key + (profile.Client == "codex" ? ".toml" : ".json"));
                 var target = new ClientProfile(profile.Id, profile.Name, path, "", profile.Client);
-                var remote = ClientProfiles.Entry(target, true, "127.0.0.1", 8123, "fixture-key", engine, release.Key, null!);
-                var local = ClientProfiles.Entry(target, false, null!, 0, null!, engine, release.Key, "TIA 中文");
+                var remote = ClientProfiles.Entry(target, true, "127.0.0.1", 8123, engine, release.Key, null!);
+                var local = ClientProfiles.Entry(target, false, null!, 0, engine, release.Key, "TIA 中文");
                 Assert.Equal("tia-portal", ClientProfiles.ServerName(target, false));
                 Assert.Equal("tia-portal-vm", ClientProfiles.ServerName(target, true));
                 string[] relay = target.Client == "opencode" ? ((string[])remote["command"]).Skip(1).ToArray() : (string[])remote["args"];
@@ -145,7 +145,7 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
                 }
                 File.WriteAllText(path, original, new UTF8Encoding(true));
                 byte[] before = File.ReadAllBytes(path);
-                var change = ClientProfiles.PrepareSave(target, false, null!, 0, null!, engine, release.Key, "TIA 中文");
+                var change = ClientProfiles.PrepareSave(target, false, null!, 0, engine, release.Key, "TIA 中文");
                 Assert.True(change.RequiresMigration);
                 Assert.Equal(before, File.ReadAllBytes(path));
                 Assert.Throws<InvalidOperationException>(() => change.Apply(false));
@@ -199,7 +199,7 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
             const string original = "{\"mcpServers\":{\"tia-portal\":{\"command\":\"TiaMcp" + "Server.exe\"}}}";
             File.WriteAllText(profile.Path, original);
             string engine = ConfigCore.Engine(scratch, "21", scratch);
-            var change = ClientProfiles.PrepareSave(profile, false, null!, 0, null!, engine, "21", "TIA");
+            var change = ClientProfiles.PrepareSave(profile, false, null!, 0, engine, "21", "TIA");
             Assert.Throws<IOException>(() => change.Apply(true, (path, value) =>
             {
                 Assert.Equal(original, File.ReadAllText(change.BackupPath));
@@ -207,14 +207,14 @@ public sealed class StudioBundleLayoutTests(WpfContext wpf) : IDisposable
                 throw new IOException("injected after write");
             }));
             Assert.Equal(original, File.ReadAllText(profile.Path));
-            var stale = ClientProfiles.PrepareSave(profile, false, null!, 0, null!, engine, "21", "TIA");
+            var stale = ClientProfiles.PrepareSave(profile, false, null!, 0, engine, "21", "TIA");
             File.WriteAllText(profile.Path, "new user content");
             Assert.Throws<IOException>(() => stale.Apply(true));
             Assert.Null(stale.BackupPath);
             Assert.Equal("new user content", File.ReadAllText(profile.Path));
             File.Delete(engine);
             Assert.Throws<FileNotFoundException>(() => change.Apply(true));
-            Assert.Throws<FileNotFoundException>(() => ClientProfiles.PrepareSave(profile, false, null!, 0, null!, engine, "21", "TIA"));
+            Assert.Throws<FileNotFoundException>(() => ClientProfiles.PrepareSave(profile, false, null!, 0, engine, "21", "TIA"));
             Assert.Equal("new user content", File.ReadAllText(profile.Path));
         });
     }

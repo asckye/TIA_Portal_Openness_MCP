@@ -25,30 +25,6 @@ namespace TiaOpenness.Shared
         internal const int ArgumentTextLimit = 4096;
         public const string Hidden = "••••";
         public const string Truncated = "\n… [truncated]";
-        public static bool IsVaultReference(string text)
-            => Regex.IsMatch(text, @"\Avault:[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\z", RegexOptions.CultureInvariant);
-
-        private static readonly AsyncLocal<VaultArgumentScope?> VaultArguments = new AsyncLocal<VaultArgumentScope?>();
-        internal static IDisposable UseVaultArguments(JsonNode original, JsonNode resolved, IReadOnlyList<string> positions)
-            => new VaultArgumentScope(original, resolved, positions);
-        private sealed class VaultArgumentScope : IDisposable
-        {
-            private readonly VaultArgumentScope? previous = VaultArguments.Value;
-            internal readonly JsonNode Original;
-            internal readonly HashSet<string> Positions;
-            internal readonly HashSet<string> Values = new HashSet<string>(StringComparer.Ordinal);
-            internal VaultArgumentScope(JsonNode original, JsonNode resolved, IReadOnlyList<string> positions)
-            {
-                Original = original;
-                Positions = new HashSet<string>(positions, StringComparer.Ordinal);
-                foreach (string position in positions)
-                    if (resolved[position.Substring(1)] is JsonValue value && value.TryGetValue<string>(out var text)) Values.Add(text);
-                VaultArguments.Value = this;
-            }
-            public void Dispose() => VaultArguments.Value = previous;
-        }
-        public static bool ReadableVaultReference(string text)
-            => IsVaultReference(text) && VaultArguments.Value?.Values.Contains(text) != true;
         private static readonly string[] PairMarkers = { "password", "passwd", "pwd", "secret", "token", "key", "credential" };
         internal static bool IsCredentialPairName(string name)
             => PairMarkers.Any(marker => name.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0);
@@ -72,7 +48,7 @@ namespace TiaOpenness.Shared
             using (var random = RandomNumberGenerator.Create()) random.GetBytes(key);
             return key;
         }
-        internal static JsonNode? ProtectPlanArguments(JsonNode? node) => TransformArguments(node, SecretDigest, VaultArguments.Value?.Original, plan: true);
+        internal static JsonNode? ProtectPlanArguments(JsonNode? node) => TransformArguments(node, SecretDigest);
         internal static string PlanHostLifetime => SecretDigest(JsonValue.Create("host-lifetime")).GetValue<string>();
         private static JsonNode SecretDigest(JsonNode? node)
         {
@@ -80,8 +56,7 @@ namespace TiaOpenness.Shared
             return JsonValue.Create("hmac-sha256:" + BitConverter.ToString(hmac.ComputeHash(Encoding.UTF8.GetBytes(node?.ToJsonString() ?? "null")))
                 .Replace("-", "").ToLowerInvariant())!;
         }
-        private static JsonNode
-            ? TransformArguments(JsonNode? node, Func<JsonNode?, JsonNode?> secret, JsonNode? original = null, string pointer = "", bool plan = false)
+        private static JsonNode? TransformArguments(JsonNode? node, Func<JsonNode?, JsonNode?> secret)
         {
             if (node is JsonObject obj)
             {
@@ -89,22 +64,13 @@ namespace TiaOpenness.Shared
                 var result = new JsonObject();
                 foreach (var pair in obj)
                 {
-                    var reference = (original as JsonObject)?[pair.Key];
-                    string path = pointer + "/" + pair.Key.Replace("~", "~0").Replace("/", "~1");
                     bool namedValue = named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase);
                     bool sensitive = Sensitive(pair.Key) || namedValue;
-                    if (plan && VaultArguments.Value?.Positions.Contains(path) == true)
-                        result[pair.Key] = reference?.DeepClone();
-                    else
-                        result[pair.Key] = sensitive
-                            ? !namedValue && ReferenceValue(pair.Value) ? pair.Value!.DeepClone() : secret(pair.Value)
-                            : TransformArguments(pair.Value, secret, reference, path, plan);
+                    result[pair.Key] = sensitive ? secret(pair.Value) : TransformArguments(pair.Value, secret);
                 }
                 return result;
             }
-            if (node is JsonArray array) return new JsonArray(array.Select((item, index) => TransformArguments(item, secret,
-                original is JsonArray source && index < source.Count ? source[index] : null,
-                pointer + "/" + index.ToString(CultureInfo.InvariantCulture), plan)).ToArray());
+            if (node is JsonArray array) return new JsonArray(array.Select(item => TransformArguments(item, secret)).ToArray());
             if (node is JsonValue value && value.TryGetValue<string>(out var text))
             {
                 if (Embedded(text, out var embedded))
@@ -117,9 +83,6 @@ namespace TiaOpenness.Shared
             }
             return node?.DeepClone();
         }
-
-        private static bool ReferenceValue(JsonNode? node)
-            => node is JsonValue value && value.TryGetValue<string>(out var text) && ReadableVaultReference(text);
 
         public static string Sanitize(string json) => Sanitize(json, boundedText: false);
 
@@ -181,7 +144,6 @@ namespace TiaOpenness.Shared
 
         private static void Values(JsonNode? node, HashSet<string> secrets, bool boundedText, bool literal = false)
         {
-            if (!literal && ReferenceValue(node)) return;
             if (node is JsonValue value && value.TryGetValue<string>(out var text) && text.Length > 0 && text != Hidden)
             {
                 if (boundedText && text.Length > ArgumentTextLimit) return;
@@ -213,10 +175,7 @@ namespace TiaOpenness.Shared
                 foreach (string key in obj.Select(p => p.Key).ToArray())
                 {
                     if (Sensitive(key) || named && key.Equals("value", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (named && key.Equals("value", StringComparison.OrdinalIgnoreCase) || !ReferenceValue(obj[key]))
-                            obj[key] = key.EndsWith("Authorization", StringComparison.OrdinalIgnoreCase) ? "Bearer " + Hidden : Hidden;
-                    }
+                        obj[key] = key.EndsWith("Authorization", StringComparison.OrdinalIgnoreCase) ? "Bearer " + Hidden : Hidden;
                     else if (obj[key] is JsonValue value && value.TryGetValue<string>(out var text)) obj[key] = Text(text, secrets, depth, boundedText);
                     else if (depth >= 16) obj[key] = Hidden;
                     else Scrub(obj[key], secrets, depth + 1, boundedText);

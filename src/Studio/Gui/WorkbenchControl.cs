@@ -184,7 +184,7 @@ public partial class MainWindow
         if (request.Operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection)
             return ControlResponse.Done(request, ControlSurface.Snapshot.Read(request.Arguments));
         if (!App.Settings.WorkbenchControlEnabled) return ControlResponse.Refuse(request, "workbench-control-disabled");
-        if (!IsEnabled || _page is "Settings" or "Approvals" || _drawer != null || ConfirmOverlay.Visibility == Visibility.Visible
+        if (!IsEnabled || _page is "Settings" or "Approvals" || _drawer != null
             || OwnedWindows.OfType<Window>().Any(window => window.IsVisible))
             return ControlResponse.Refuse(request, "workbench-modal-open");
         if (ControlGuard.HumanActive) return ControlResponse.Refuse(request, "workbench-user-active");

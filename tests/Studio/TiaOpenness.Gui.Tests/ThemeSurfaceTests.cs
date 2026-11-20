@@ -58,8 +58,10 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     }
 
     [Theory]
-    [InlineData("Light", "#F2F2F7 #FFFFFF #F2F2F7 #E3E3E8 #D1D1D6 #D1D1D6 #F2F2F7 #86868B #E5E5EA #E3E3E8 #FFFFFF #1D1D1F #636366 #636366 #86868B #0066CC #FFFFFF #0071E3 #B25000 #FFF4E5 #1A7431 #E9F7EE #E8F1FC #0066CC #0066CC #F2F2F7 #1D1D1F #1A7431 #D70015 #FFFFFF #FFFFFF #FFF4E5 #0071E3 #FFFFFF #1D1D1F #1D1D1F #0071E3 #0063C7 #0055AB #0055AB #E3E3E8 #FFFFFF #D1D1D6 #D70015 #FDECEC #D70015 #D70015 #BD0012 #A30010 #994500 #16632A #E5E5EA #F2F2F7 #8E8E93 #40000000 #F01E1E1E #FFFFFF #1F000000 #38000000 Transparent")]
-    [InlineData("Dark", "#000000 #1C1C1E #2C2C2E #3A3A3C #38383A #38383A #2C2C2E #8E8E93 #3A3A3C #3A3A3C #1C1C1E #F5F5F7 #AEAEB2 #AEAEB2 #8E8E93 #409CFF #000000 #0071E3 #FFB340 #3A2A12 #30D158 #12301B #0A2540 #409CFF #409CFF #2C2C2E #F5F5F7 #30D158 #FF6961 #FFFFFF #1E1E1E #3A2A12 #409CFF #1E1E1E #F5F5F7 #F5F5F7 #0071E3 #0063C7 #0055AB #4095F0 #3A3A3C #FFFFFF #38383A #FF6961 #3B1517 #FF6961 #D70015 #BD0012 #A30010 #994500 #16632A #3A3A3C #2C2C2E #8E8E93 #80000000 #F53A3A3C #FFFFFF #1FFFFFFF #99000000 Transparent")]
+    [InlineData("Light", "#F3F6FA #FFFFFF #F3F6FA #E2EAF4 #DCE3EC #DCE3EC #F1F5FA #7B8797 #E5ECF4 #D8E2EE #FFFFFF #0F172A #475569 #57657A #7B8797 #1D4ED8 #FFFFFF #2563EB #9A5504 #FFF4E5 #0E7A50 #E8F7F0 #EFF6FF #1D4ED8 #1D4ED8 #F3F6FA #0F172A #0E7A50 #C81E1E #FFFFFF #FFFFFF #FFF4E5 #1D4ED8 #FFFFFF #0F172A #0F172A #2563EB #1D4ED8 #1E40AF #1E40AF #E2EAF4 #FFFFFF #DCE3EC #C81E1E #FEF2F2 #C81E1E #DC2626 #B91C1C #991B1B #9A5504 #0E7A50 #E5ECF4 #F3F6FA #8B97A8 #400F172A #F20F172A #FFFFFF #1F0F172A #380F172A Transparent")]
+    [InlineData("Dark", "#0B0F15 #141B26 #1A2332 #222E42 #263244 #263244 #0D121B #6D7D94 #1D2736 #263347 #161E2B #E6EDF7 #9BA9BD #8B9BB2 #6D7D94 #60A5FA #0B0F15 #2563EB #FBBF24 #2D220E #34D399 #0F2920 #13233E #60A5FA #60A5FA #0F151F #E6EDF7 #34D399 #F87171 #FFFFFF #0B0F15 #2D220E #60A5FA #0B0F15 #F1F5FA #F1F5FA #2563EB #1D4ED8 #1E40AF #93C5FD #222E42 #FFFFFF #263244 #F87171 #31151B #F87171 #DC2626 #B91C1C #991B1B #D97706 #10B981 #1D2736 #1A2332 #6B7B91 #80000000 #F51E293B #FFFFFF #1FFFFFFF #99000000 Transparent")]
+    [InlineData("Light.Petrol", "#F3F6FA #FFFFFF #F3F6FA #E2EAF4 #DCE3EC #DCE3EC #F1F5FA #7B8797 #E5ECF4 #D8E2EE #FFFFFF #0F172A #475569 #57657A #7B8797 #0B656E #FFFFFF #0E7C86 #9A5504 #FFF4E5 #0E7A50 #E8F7F0 #EBF7F8 #0B656E #0B656E #F3F6FA #0F172A #0E7A50 #C81E1E #FFFFFF #FFFFFF #FFF4E5 #0B656E #FFFFFF #0F172A #0F172A #0E7C86 #0B656E #084F56 #084F56 #E2EAF4 #FFFFFF #DCE3EC #C81E1E #FEF2F2 #C81E1E #DC2626 #B91C1C #991B1B #9A5504 #0E7A50 #E5ECF4 #F3F6FA #8B97A8 #400F172A #F20F172A #FFFFFF #1F0F172A #380F172A Transparent")]
+    [InlineData("Dark.Petrol", "#0B0F15 #141B26 #1A2332 #222E42 #263244 #263244 #0D121B #6D7D94 #1D2736 #263347 #161E2B #E6EDF7 #9BA9BD #8B9BB2 #6D7D94 #2DD4BF #0B0F15 #0E7C86 #FBBF24 #2D220E #34D399 #0F2920 #0F2A2E #2DD4BF #2DD4BF #0F151F #E6EDF7 #34D399 #F87171 #FFFFFF #0B0F15 #2D220E #2DD4BF #0B0F15 #F1F5FA #F1F5FA #0E7C86 #0B656E #084F56 #5EEAD4 #222E42 #FFFFFF #263244 #F87171 #31151B #F87171 #DC2626 #B91C1C #991B1B #D97706 #10B981 #1D2736 #1A2332 #6B7B91 #80000000 #F51E293B #FFFFFF #1FFFFFFF #99000000 Transparent")]
     public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, string colors)
     {
         wpf.Run(() =>
@@ -67,12 +69,13 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
             string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText", "Ant.colorPrimary", "Ant.colorPrimaryHover", "Ant.colorPrimaryActive", "Ant.colorLinkHover", "Ant.controlItemBgActiveHover", "Ant.colorWhite", "Ant.colorBorder", "Ant.colorError", "Ant.colorErrorBg", "Ant.colorErrorBorder", "Ant.colorErrorSolid", "Ant.colorErrorSolidHover", "Ant.colorErrorSolidActive", "Ant.colorWarningBorder", "Ant.colorSuccessBorder", "Ant.colorFillSecondary", "Ant.colorBgContainerDisabled", "Ant.colorTextDisabled", "Ant.colorBgMask", "Ant.colorBgSpotlight", "Ant.colorTextLightSolid", "Ant.boxShadowKey", "Ant.boxShadowUmbra", "Ant.boxShadowAmbient"];
             string[] expected = colors.Split(' ');
-            Assert.Equal(keys.Length + 5, palette.Count);
-            Assert.Equal(theme == "Light" ? "#FFBD0012" : "#FFFF827A",
+            bool light = theme.StartsWith("Light", StringComparison.Ordinal);
+            Assert.Equal(keys.Length + 20, palette.Count);
+            Assert.Equal(light ? "#FFB91C1C" : "#FFFCA5A5",
                 ((SolidColorBrush)palette["Primer.destructiveText"]).Color.ToString());
             Assert.Equal(Colors.White, ((SolidColorBrush)palette["Primer.onPrimary"]).Color);
-            Assert.Equal(theme == "Light" ? "#FFFFFFFF" : "#FF1E1E1E", ((SolidColorBrush)palette["Primer.window"]).Color.ToString());
-            Assert.Equal(theme == "Light" ? "#FFEBEBED" : "#FF2A2A2C", ((SolidColorBrush)palette["Primer.sidebar"]).Color.ToString());
+            Assert.Equal(light ? "#FFF8FAFD" : "#FF101620", ((SolidColorBrush)palette["Primer.window"]).Color.ToString());
+            Assert.Equal(light ? "#FFECF1F7" : "#FF0E141D", ((SolidColorBrush)palette["Primer.sidebar"]).Color.ToString());
             Assert.Equal(0, ((SolidColorBrush)palette["Primer.hcOutline"]).Color.A);
             for (int i = 0; i < keys.Length; i++)
                 Assert.Equal((Color)ColorConverter.ConvertFromString(expected[i]), ((SolidColorBrush)palette[keys[i].StartsWith("Ant.", StringComparison.Ordinal) ? keys[i] : "Primer." + keys[i]]).Color);
@@ -82,6 +85,8 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     [Theory]
     [InlineData("Light")]
     [InlineData("Dark")]
+    [InlineData("Light.Petrol")]
+    [InlineData("Dark.Petrol")]
     public void Text_contrasts_with_every_surface_where_it_is_used(string theme)
     {
         wpf.Run(() =>
@@ -114,6 +119,8 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     [Theory]
     [InlineData("Light")]
     [InlineData("Dark")]
+    [InlineData("Light.Petrol")]
+    [InlineData("Dark.Petrol")]
     [InlineData("HighContrast")]
     public void Control_boundaries_and_focus_contrast_on_all_shared_grounds(string theme)
     {
@@ -182,15 +189,19 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     [Theory]
     [InlineData("Light")]
     [InlineData("Dark")]
+    [InlineData("Light.Petrol")]
+    [InlineData("Dark.Petrol")]
     [InlineData("HighContrast")]
     public void Default_actions_selected_navigation_and_info_tags_keep_AA_text(string theme)
     {
         wpf.Run(() =>
         {
             var previous = ThemeManager.Current.Theme;
+            var previousAccent = ThemeManager.Current.Accent;
             var previousContrast = ThemeManager.Current.HighContrastOverride;
             ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
-            ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+            ThemeManager.Current.Theme = theme.StartsWith("Dark", StringComparison.Ordinal) ? AppTheme.Dark : AppTheme.Light;
+            ThemeManager.Current.Accent = theme.EndsWith(".Petrol", StringComparison.Ordinal) ? AppAccent.Petrol : AppAccent.Cobalt;
             try
             {
                 var ground = ((SolidColorBrush)Application.Current.FindResource("Primer.window")).Color;
@@ -235,6 +246,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             {
                 ThemeManager.Current.HighContrastOverride = previousContrast;
                 ThemeManager.Current.Theme = previous;
+                ThemeManager.Current.Accent = previousAccent;
             }
         });
     }
@@ -242,14 +254,18 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     [Theory]
     [InlineData("Light")]
     [InlineData("Dark")]
+    [InlineData("Light.Petrol")]
+    [InlineData("Dark.Petrol")]
     public void Primary_buttons_and_text_selection_use_the_solid_fill_and_white_text(string theme)
     {
         wpf.Run(() =>
         {
             var previous = ThemeManager.Current.Theme;
+            var previousAccent = ThemeManager.Current.Accent;
             var previousContrast = ThemeManager.Current.HighContrastOverride;
             ThemeManager.Current.HighContrastOverride = false;
-            ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+            ThemeManager.Current.Theme = theme.StartsWith("Dark", StringComparison.Ordinal) ? AppTheme.Dark : AppTheme.Light;
+            ThemeManager.Current.Accent = theme.EndsWith(".Petrol", StringComparison.Ordinal) ? AppAccent.Petrol : AppAccent.Cobalt;
             try
             {
                 Color Token(string key) => ((SolidColorBrush)Application.Current.FindResource("Primer." + key)).Color;
@@ -282,6 +298,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             {
                 ThemeManager.Current.HighContrastOverride = previousContrast;
                 ThemeManager.Current.Theme = previous;
+                ThemeManager.Current.Accent = previousAccent;
             }
         });
     }
@@ -289,6 +306,8 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     [Theory]
     [InlineData("Light")]
     [InlineData("Dark")]
+    [InlineData("Light.Petrol")]
+    [InlineData("Dark.Petrol")]
     [InlineData("HighContrast")]
     public void Primary_and_accent_foreground_brushes_meet_AA_in_every_palette(string theme)
     {
@@ -319,9 +338,11 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             }
 
             var previous = ThemeManager.Current.Theme;
+            var previousAccent = ThemeManager.Current.Accent;
             var previousContrast = ThemeManager.Current.HighContrastOverride;
             ThemeManager.Current.HighContrastOverride = theme == "HighContrast";
-            ThemeManager.Current.Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light;
+            ThemeManager.Current.Theme = theme.StartsWith("Dark", StringComparison.Ordinal) ? AppTheme.Dark : AppTheme.Light;
+            ThemeManager.Current.Accent = theme.EndsWith(".Petrol", StringComparison.Ordinal) ? AppAccent.Petrol : AppAccent.Cobalt;
             try
             {
                 var onPrimary = ((SolidColorBrush)Application.Current.FindResource("Primer.onPrimary")).Color;
@@ -351,6 +372,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
             {
                 ThemeManager.Current.HighContrastOverride = previousContrast;
                 ThemeManager.Current.Theme = previous;
+                ThemeManager.Current.Accent = previousAccent;
             }
         });
     }

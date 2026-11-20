@@ -300,7 +300,7 @@ public sealed class OperatorProtocolTests
     {
         using var fixture = new SessionTests.Fixture("19");
         var options = foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(["--bundle-root", fixture.Options.BundleRoot, "--release-key", "19",
-            "--transport", transport, "--operator-owner", Environment.ProcessId.ToString(), "--http-api-key", "fixture"], AppContext.BaseDirectory);
+            "--transport", transport, "--operator-owner", Environment.ProcessId.ToString()], AppContext.BaseDirectory);
         Assert.Equal(Environment.ProcessId, options.OperatorOwner);
         Assert.Throws<UnauthorizedAccessException>(() => foundationhost::TiaMcp.FoundationHost.OperatorEndpoint.Start(options, _ => throw new InvalidOperationException("Unexpected create.")));
     }

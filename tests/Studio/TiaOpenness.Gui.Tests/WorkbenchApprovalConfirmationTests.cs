@@ -1,9 +1,6 @@
 using TiaMcp.Engine.Tests.Shared;
-using System;
 using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Controls;
-using System.Windows.Input;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services.Stubs;
 using TiaOpenness.Gui.ViewModels;
@@ -15,105 +12,43 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class WorkbenchApprovalConfirmationTests(WpfContext wpf)
 {
     [Theory]
-    [InlineData(AppLanguage.English, "Turn off approval")]
-    [InlineData(AppLanguage.Chinese, "关闭审批")]
-    public void Only_the_complete_localized_word_enables_and_submits(AppLanguage language, string word)
+    [InlineData(AppLanguage.English)]
+    [InlineData(AppLanguage.Chinese)]
+    public void Write_approval_toggles_directly_and_updates_status_indicators(AppLanguage language)
     {
         wpf.RunWithLanguage(language, () =>
         {
             var window = CreateWindow();
             try
             {
-                Open(window);
-                var submit = (Button)window.FindName("ConfirmApprovalOff");
-                Assert.False(submit.IsEnabled);
-                var input = Assert.IsType<TextBox>(window.FindName("ApprovalOffConfirmation"));
-                var label = Assert.IsType<TextBlock>(window.FindName("ApprovalOffConfirmationLabel"));
-                Assert.Contains(word, label.Text);
-                Assert.Equal(label.Text, AutomationProperties.GetName(input));
-                Assert.Same(Application.Current.FindResource("Primer.Input"), input.Style);
-                foreach (string invalid in new[] { "", "wrong", word[..^1], word + "!", word.Replace(" ", "  ", StringComparison.Ordinal) + "x" })
-                {
-                    input.Text = invalid;
-                    Assert.False(submit.IsEnabled);
-                    UnifiedDesktopTests.ClickControl(submit);
-                    Assert.True(window.Approvals.Enabled);
-                    Assert.Equal(Visibility.Visible, ((Grid)window.FindName("ConfirmOverlay")).Visibility);
-                }
-                input.Text = "  " + word.ToUpperInvariant() + "  ";
-                Assert.True(submit.IsEnabled);
-                var saved = new System.Threading.Tasks.TaskCompletionSource();
-                window.Approvals.PropertyChanged += (_, e) =>
-                {
-                    if (e.PropertyName == nameof(IApprovalService.Enabled)) saved.TrySetResult();
-                };
-                UnifiedDesktopTests.ClickControl(submit);
-                WpfContext.Complete(saved.Task.WaitAsync(TestDeadlines.Hang));
-                Assert.False(window.Approvals.Enabled);
-            }
-            finally { window.Close(); }
-        });
-    }
-
-    [Theory]
-    [InlineData(AppLanguage.English, "Turn off approval")]
-    [InlineData(AppLanguage.Chinese, "关闭审批")]
-    public void Enter_is_inert_and_cancel_or_escape_preserves_approval_and_reopening_clears_input(AppLanguage language, string word)
-    {
-        wpf.RunWithLanguage(language, () =>
-        {
-            var window = CreateWindow();
-            try
-            {
-                window.Show(); Open(window);
-                var cancel = (Button)window.FindName("CancelApprovalOff");
-                var submit = (Button)window.FindName("ConfirmApprovalOff");
-                var input = Assert.IsType<TextBox>(window.FindName("ApprovalOffConfirmation"));
-                Assert.Same(cancel, Keyboard.FocusedElement);
-                Assert.True(cancel.IsDefault); Assert.True(cancel.IsCancel); Assert.False(submit.IsDefault);
-                foreach (string text in new[] { "", "wrong", word })
-                {
-                    input.Text = text; input.Focus();
-                    var enter = PressKey(input, Key.Enter);
-                    Assert.True(enter.Handled);
-                    Assert.True(window.Approvals.Enabled);
-                    Assert.Equal(Visibility.Visible, ((Grid)window.FindName("ConfirmOverlay")).Visibility);
-                }
-                UnifiedDesktopTests.ClickControl(cancel);
-                Assert.True(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("ConfirmOverlay")).Visibility);
-                Open(window);
-                Assert.Equal("", input.Text); Assert.False(submit.IsEnabled);
-                input.Text = word;
-                Assert.True(PressKey(input, Key.Escape).Handled);
-                Assert.True(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("ConfirmOverlay")).Visibility);
-                Open(window);
-                Assert.Equal("", input.Text); Assert.False(submit.IsEnabled);
-            }
-            finally { window.Close(); }
-        });
-    }
-
-    [Fact]
-    public void Turning_approval_on_does_not_require_confirmation()
-    {
-        wpf.Run(() =>
-        {
-            var window = CreateWindow();
-            try
-            {
-                window.Approvals.Enabled = false;
+                window.OpenSettings();
                 var settings = (Views.SettingsView)window.FindName("SettingsContent");
-                var saved = new System.Threading.Tasks.TaskCompletionSource();
+                settings.ShowSection("AI");
+                Assert.True(window.Approvals.Enabled);
+
+                var disabled = new System.Threading.Tasks.TaskCompletionSource();
                 window.Approvals.PropertyChanged += (_, e) =>
                 {
-                    if (e.PropertyName == nameof(IApprovalService.Enabled)) saved.TrySetResult();
+                    if (e.PropertyName == nameof(IApprovalService.Enabled) && !window.Approvals.Enabled) disabled.TrySetResult();
+                };
+                UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOff"));
+                WpfContext.Complete(disabled.Task.WaitAsync(TestDeadlines.Hang));
+                WpfContext.Drain();
+                Assert.False(window.Approvals.Enabled);
+                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
+                Assert.Equal(Loc.Current["Shell.ApprovalOffStatus"], ((TextBlock)window.FindName("ApprovalStatusText")).Text);
+
+                var enabled = new System.Threading.Tasks.TaskCompletionSource();
+                window.Approvals.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName == nameof(IApprovalService.Enabled) && window.Approvals.Enabled) enabled.TrySetResult();
                 };
                 UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOn"));
-                WpfContext.Complete(saved.Task.WaitAsync(TestDeadlines.Hang));
+                WpfContext.Complete(enabled.Task.WaitAsync(TestDeadlines.Hang));
+                WpfContext.Drain();
                 Assert.True(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("ConfirmOverlay")).Visibility);
+                Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
+                Assert.Equal(Loc.Current["Shell.ApprovalOnStatus"], ((TextBlock)window.FindName("ApprovalStatusText")).Text);
             }
             finally { window.Close(); }
         });
@@ -121,21 +56,4 @@ public sealed class WorkbenchApprovalConfirmationTests(WpfContext wpf)
 
     private static MainWindow CreateWindow() => new(new MainViewModel(new FakeProjectClient(), new FakeDialogService()),
         false, approvals: new ApprovalServiceStub());
-
-    private static void Open(MainWindow window)
-    {
-        window.OpenSettings();
-        var settings = (Views.SettingsView)window.FindName("SettingsContent");
-        settings.ShowSection("AI");
-        UnifiedDesktopTests.ClickControl((RadioButton)settings.FindName("ApprovalOff"));
-        WpfContext.Drain();
-    }
-
-    private static KeyEventArgs PressKey(UIElement element, Key key)
-    {
-        var args = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(element), 0, key)
-            { RoutedEvent = Keyboard.PreviewKeyDownEvent };
-        element.RaiseEvent(args); WpfContext.Drain();
-        return args;
-    }
 }

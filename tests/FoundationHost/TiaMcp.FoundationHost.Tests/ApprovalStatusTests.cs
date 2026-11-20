@@ -31,9 +31,7 @@ public sealed class ApprovalStatusTests
     [Theory, MemberData(nameof(Releases))]
     public async Task Status_is_host_read_on_every_release_and_answers_while_approval_waits(string release)
     {
-        using var vault = new VaultFileScope();
         using var targets = new OnlineTargetSettingsScope("target=192.0.2.0/24\n");
-        vault.Vault.Set("plc1", SecretVaultTests.Secret, vault.Audit);
         using var fixture = new StatusFixture(release);
         using var session = fixture.EnterSession();
         var catalog = new Engine.FoundationCatalog(release, Array.Empty<McpServerTool>());
@@ -69,12 +67,10 @@ public sealed class ApprovalStatusTests
             Assert.NotNull(row["deadline"]);
             Assert.False(waiting.IsCompleted);
             Assert.Equal("192.0.2.0/24", (string?)Assert.Single(data["onlineTargets"]!["entries"]!.AsArray()));
-            Assert.Equal("plc1", (string?)Assert.Single(data["vault"]!["names"]!.AsArray()));
-            Assert.Contains("vault:<name>", (string?)data["vault"]!["referenceSyntax"]);
+            Assert.Null(data["vault"]);
             var alwaysConfirmed = data["alwaysConfirmed"]!["tools"]!.AsArray();
             Assert.Contains(alwaysConfirmed, name => (string?)name == "WritePlcWebVars");
             Assert.Equal(release != "14sp1", alwaysConfirmed.Any(name => (string?)name == "DownloadPlc"));
-            Assert.DoesNotContain(SecretVaultTests.Secret, data.ToJsonString());
             Assert.DoesNotContain("synthetic-private", data.ToJsonString());
             Assert.Equal(0, fixture.Worker.Calls);
 
@@ -105,15 +101,19 @@ public sealed class ApprovalStatusTests
     [Fact]
     public async Task Foundation_direct_approval_uses_the_same_session_board()
     {
-        using var vault = new VaultFileScope();
         using var targets = new OnlineTargetSettingsScope(null);
-        vault.Vault.Set("plc1", SecretVaultTests.Secret, vault.Audit);
         using var worker = new OnlinePortAdmissionTests.VaultOnlineWorker();
         var entered = new TaskCompletionSource<PendingApproval>(TaskCreationOptions.RunContinuationsAsynchronously);
         var decision = new TaskCompletionSource<ApprovalOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker,
             approvalWait: (card, _, _) => { entered.SetResult(card); return decision.Task; });
-        var call = fixture.Call("ConnectOnlinePlc", new { softwarePath = "PLC_1", ipAddress = "192.0.2.10", password = "vault:plc1" });
+        var args = new JsonObject { ["softwarePath"] = "PLC_1", ["targetIpAddress"] = "192.0.2.10",
+            ["pgPcInterface"] = "PLCSIM", ["confirmPhysicalTarget"] = true, ["dryRun"] = true };
+        var preview = await fixture.Call("DownloadPlc", args);
+        args["dryRun"] = false;
+        args["expectedPlanHash"] = preview.StructuredContent!["data"]!["planHash"]!.DeepClone();
+        args["expectedProjectFile"] = "C:/Fixture/P.ap21";
+        var call = fixture.Call("DownloadPlc", args);
         var pending = await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
         try
         {
@@ -158,52 +158,14 @@ public sealed class ApprovalStatusTests
     [Fact]
     public async Task Unreadable_settings_report_invalid_without_echoing_contents()
     {
-        using var vault = new VaultFileScope();
         using var targets = new OnlineTargetSettingsScope("not-a-list");
-        File.WriteAllText(SecretVault.VaultPath, "invalid-synthetic-vault-content");
         using var fixture = new VersionControlAdmissionTests.FileToolFixture("21");
         var result = await fixture.Call("GetApprovalStatus", new { });
         Assert.False(result.IsError, result.StructuredContent?.ToJsonString());
         var data = result.StructuredContent!["data"]!;
         Assert.True((bool?)data["onlineTargets"]!["configured"]);
         Assert.False((bool?)data["onlineTargets"]!["valid"]);
-        Assert.False((bool?)data["vault"]!["valid"]);
-        Assert.Empty(data["vault"]!["names"]!.AsArray());
-        Assert.DoesNotContain("invalid-synthetic-vault-content", data.ToJsonString());
         Assert.DoesNotContain("not-a-list", data.ToJsonString());
-    }
-
-    [Fact]
-    public void Name_listing_is_read_only_and_does_not_decrypt_protected_values()
-    {
-        string root = Path.Combine(AppContext.BaseDirectory, "status-vault-names", Guid.NewGuid().ToString("N"));
-        string path = Path.Combine(root, "config", "secrets.vault");
-        var vault = new SecretVault(path);
-        Assert.Empty(vault.Names(validateProtected: false));
-        Assert.False(Directory.Exists(root));
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        try
-        {
-            File.WriteAllText(path, "{\"version\":1,\"secrets\":{\"foreign-user\":\"AQID\"}}");
-            Assert.Equal("foreign-user", Assert.Single(vault.Names(validateProtected: false)));
-            Assert.False(File.Exists(path + ".lock"));
-            Assert.Throws<IOException>(() => vault.ContainsName("foreign-user"));
-        }
-        finally { Directory.Delete(root, true); }
-    }
-
-    [Fact]
-    public async Task Status_lists_names_even_when_the_current_user_cannot_decrypt_them()
-    {
-        using var vault = new VaultFileScope();
-        using var targets = new OnlineTargetSettingsScope(null);
-        File.WriteAllText(SecretVault.VaultPath, "{\"version\":1,\"secrets\":{\"foreign-user\":\"AQID\"}}");
-        using var fixture = new StatusFixture("21");
-        var result = await fixture.Call("GetApprovalStatus", new { });
-        Assert.False(result.IsError, result.StructuredContent?.ToJsonString());
-        Assert.True((bool?)result.StructuredContent!["data"]!["vault"]!["valid"]);
-        Assert.Equal("foreign-user", (string?)Assert.Single(result.StructuredContent["data"]!["vault"]!["names"]!.AsArray()));
-        Assert.DoesNotContain("AQID", result.StructuredContent.ToJsonString(), StringComparison.Ordinal);
     }
 
     [Fact]

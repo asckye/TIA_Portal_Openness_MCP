@@ -32,14 +32,14 @@ namespace TiaMcpConfigurator
             Find<TextBox>("TiaPath").Text = Path
                 .Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog.Get(SelectedVersion)
                     .InstallFolder);
-            Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765"; SetSecret("");
+            Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765";
             if (!loadExisting || !File.Exists(StatePath)) { DetectTiaPath(false); return; }
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
             ConfigCore.Prefix(settings.Address, settings.Port);
             if (settings.EffectiveReleaseKey != SelectedVersion) throw new InvalidDataException(Loc.Current["Config.SavedReleaseMismatch"]);
             Find<TextBox>("TiaPath").Text = settings.TiaPath; Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text =
                 settings.Port.ToString();
-            SetSecret(ConfigCore.Unprotect(settings.ProtectedKey)); Append(Loc.Current.T("Config.ServerLoaded", SelectedVersion));
+            Append(Loc.Current.T("Config.ServerLoaded", SelectedVersion));
         }
         private ServerSettings Settings()
         {
@@ -47,7 +47,7 @@ namespace TiaMcpConfigurator
             ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion);
             return new ServerSettings {
                 Version = TiaVersionCatalog.Get(SelectedVersion).MajorVersion, ReleaseKey = SelectedVersion, Address = Text("ServerAddress"), Port = port,
-                    TiaPath = Text("TiaPath"), ProtectedKey = ConfigCore.Protect(Secret())
+                    TiaPath = Text("TiaPath")
             };
         }
         private async Task OnNetwork()
@@ -80,8 +80,8 @@ namespace TiaMcpConfigurator
         {
             if (server != null && !server.HasExited) throw new InvalidOperationException(Loc.Current["Config.ServiceAlreadyStarted"]);
             var settings = Settings(); ConfigCore.CheckListener(ConfigCore.Prefix(settings.Address, settings.Port));
-            ConfigCore.AtomicJson(StatePath, settings); runningKey = Secret(); ConfigCore.SaveRemoteKey(settings.Address, settings.Port, runningKey);
-            var info = new ProcessStartInfo(ConfigCore.Engine(root, SelectedVersion), ConfigCore.Arguments(settings, runningKey, root)) {
+            ConfigCore.AtomicJson(StatePath, settings);
+            var info = new ProcessStartInfo(ConfigCore.Engine(root, SelectedVersion), ConfigCore.Arguments(settings, root)) {
                 WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true,
                 RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true,
                 StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };

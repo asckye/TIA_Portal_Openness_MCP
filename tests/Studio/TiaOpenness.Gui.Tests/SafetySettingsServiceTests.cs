@@ -18,7 +18,7 @@ public sealed class SafetySettingsServiceTests
         var loaded = fixture.Service.LoadTargets();
         Assert.True(loaded!.IsValid);
         Assert.Equal(new[] { "192.0.2.10", "198.51.100.0/24" }, loaded.Entries);
-        var reopened = new SafetySettingsService(fixture.TargetsPath, fixture.VaultPath, fixture.Audit);
+        var reopened = new SafetySettingsService(fixture.TargetsPath, fixture.Audit);
         Assert.Equal(loaded.Entries, reopened.LoadTargets()!.Entries);
         reopened.SaveTargets(new[] { "198.51.100.0/24" });
         Assert.Equal("198.51.100.0/24", Assert.Single(reopened.LoadTargets()!.Entries));
@@ -44,31 +44,6 @@ public sealed class SafetySettingsServiceTests
         Assert.Throws<ArgumentException>(() => fixture.Service.SaveTargets(new[] { entry }));
         Assert.Null(fixture.Service.LoadTargets());
         Assert.Empty(fixture.Audit.Read());
-    }
-
-    [Fact]
-    public void Vault_editor_adds_replaces_lists_names_and_removes_without_echoing_values()
-    {
-        using var fixture = new Fixture();
-        const string first = "synthetic-editor-secret-1", second = "synthetic-editor-secret-2";
-        Assert.Empty(fixture.Service.SecretNames());
-        fixture.Service.SetSecret("plc1", first);
-        fixture.Service.SetSecret("plc1", second, replaceConfirmed: true);
-        Assert.Equal("plc1", Assert.Single(fixture.Service.SecretNames()));
-        var vault = new SecretVault(fixture.VaultPath);
-        Assert.True(vault.TryResolve("plc1", out string resolved));
-        Assert.Equal(second, resolved);
-        Assert.True(fixture.Service.RemoveSecret("plc1"));
-        Assert.False(fixture.Service.RemoveSecret("plc1"));
-        Assert.Empty(fixture.Service.SecretNames());
-        var events = fixture.Audit.Read();
-        Assert.Equal(new[] { "set", "set", "remove" }, events.Select(row => row.Outcome));
-        Assert.All(events, row => Assert.Equal("secret-vault-change", row.Event));
-        string retained = File.ReadAllText(fixture.VaultPath) + string.Join("\n", events.Select(AuditLog.Canonical));
-        Assert.Contains("vault:plc1", retained);
-        Assert.DoesNotContain(first, retained);
-        Assert.DoesNotContain(second, retained);
-        Assert.True(fixture.Audit.Verify().Passed);
     }
 
     [Fact]
@@ -124,31 +99,17 @@ public sealed class SafetySettingsServiceTests
         Assert.Empty(fixture.Audit.Read());
     }
 
-    [Fact]
-    public void Empty_secret_and_unconfirmed_replacement_are_refused_without_audit_or_value_changes()
-    {
-        using var fixture = new Fixture();
-        Assert.Throws<ArgumentException>(() => fixture.Service.SetSecret("plc1", ""));
-        Assert.False(File.Exists(fixture.VaultPath));
-        fixture.Service.SetSecret("plc1", "synthetic-original");
-        Assert.Throws<InvalidOperationException>(() => fixture.Service.SetSecret("plc1", "synthetic-replacement"));
-        Assert.True(new SecretVault(fixture.VaultPath).TryResolve("plc1", out string value));
-        Assert.Equal("synthetic-original", value);
-        Assert.Single(fixture.Audit.Read());
-    }
-
     internal sealed class Fixture : IDisposable
     {
         internal string Root { get; } = Path.GetFullPath(Path.Combine("bin-build", "TIA-SAFE-4", Guid.NewGuid().ToString("N")));
         internal string TargetsPath => Path.Combine(Root, "online-targets.settings");
-        internal string VaultPath => Path.Combine(Root, "secrets.vault");
         internal AuditLog Audit { get; }
         internal SafetySettingsService Service { get; }
         internal Fixture()
         {
             Directory.CreateDirectory(Root);
             Audit = new AuditLog(Path.Combine(Root, "audit"));
-            Service = new SafetySettingsService(TargetsPath, VaultPath, Audit);
+            Service = new SafetySettingsService(TargetsPath, Audit);
         }
         public void Dispose() => Directory.Delete(Root, true);
     }

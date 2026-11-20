@@ -96,8 +96,6 @@ public sealed class UmcPlan
 }
 public sealed class SecurityDeepRequest
 {
-    // Host-only credential admission probe; never a caller-selected MCP parameter.
-    public bool ReadVaultDestination { get; set; }
     public string Operation { get; set; } = "";
     public string Scope { get; set; } = "project";
     public string Action { get; set; } = "read";

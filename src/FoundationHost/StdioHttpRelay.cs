@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Client;
@@ -13,16 +12,14 @@ internal static class StdioHttpRelay
         Proxy = new RemoteProxyPolicy(), UseProxy = true, AllowAutoRedirect = false
     }) { Timeout = Timeout.InfiniteTimeSpan };
 
-    internal static async Task<int> Run(Uri endpoint, string key, TextReader input, TextWriter output, HttpClient? client = null, CancellationToken token =
+    internal static async Task<int> Run(Uri endpoint, TextReader input, TextWriter output, HttpClient? client = null, CancellationToken token =
             default)
     {
-        HttpAccessKeyStore.Validate(key);
         using var ownedClient = client == null ? CreateClient() : null;
         client ??= ownedClient!;
         // Keep transport logging disabled: HTTP failures must never echo headers or response bodies.
         await using var connector = new SseClientTransport(new SseClientTransportOptions {
-            Endpoint = endpoint, TransportMode = HttpTransportMode.StreamableHttp, Name = "remote-relay",
-            AdditionalHeaders = new Dictionary<string, string> { ["Authorization"] = new AuthenticationHeaderValue("Bearer", key).ToString() }
+            Endpoint = endpoint, TransportMode = HttpTransportMode.StreamableHttp, Name = "remote-relay"
         }, client, NullLoggerFactory.Instance, ownsHttpClient: false);
         await using var transport = await connector.ConnectAsync(token);
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token);
