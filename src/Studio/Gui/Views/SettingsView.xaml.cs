@@ -112,6 +112,7 @@ public partial class SettingsView : UserControl
     {
         CheckUpdate.IsEnabled = hasInstalledVersion && !sourceCheckout;
         SourceCheckoutHint.Visibility = sourceCheckout ? Visibility.Visible : Visibility.Collapsed;
+        UpdateStateItem.Visibility = sourceCheckout ? Visibility.Collapsed : Visibility.Visible;
     }
 
     internal static string ReadPackageName(string bundleRoot)

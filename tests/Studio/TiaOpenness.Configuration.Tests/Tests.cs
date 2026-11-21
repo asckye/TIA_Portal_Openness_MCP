@@ -172,6 +172,14 @@ namespace TiaMcpConfigurator
             app.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             ThemeManager.Current.Theme = AppTheme.Light;
             Loc.Current.Language = AppLanguage.English;
+            void AssertBundleUpdateState(TiaOpenness.Gui.Views.SettingsView view, bool sourceCheckout)
+            {
+                var state = sourceCheckout ? view.SourceCheckoutHint : view.UpdateStateItem;
+                Assert(state.Visibility == System.Windows.Visibility.Visible
+                    && state.Text == Loc.Current[sourceCheckout ? "Settings.SourceCheckoutHint" : "Config.NotChecked"]
+                    && (!sourceCheckout || Equals(state.ToolTip, Loc.Current["Config.SourceRepositoryUpdate"])),
+                    Loc.Current.Language + " update state follows the selected bundle and survives language changes");
+            }
             var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
             // No explicit root: the test output directory is a known development anchor (P6-38 strict root rules).
             window.ShowConfiguration(false);
@@ -212,6 +220,14 @@ namespace TiaMcpConfigurator
                     versions.SelectedValue = "21";
                     Assert(((System.Windows.Controls.TextBlock)picker.FindName("LinkServer")).Text.EndsWith("V21"),
                         "selecting the V21 catalog key restores the active engine version");
+                    // A fixture under a Git worktree inherits its source-checkout status. Exercise the installed presentation explicitly.
+                    pickerSettings.SetUpdateAvailability(hasInstalledVersion: true, sourceCheckout: false);
+                    foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese, AppLanguage.English })
+                    {
+                        Loc.Current.Language = language;
+                        pickerOwner.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                        AssertBundleUpdateState(pickerSettings, sourceCheckout: false);
+                    }
                 }
             }
             finally { TiaOpenness.Core.Environment.OpennessLocator.PublicApiDirectory = priorSdk; }
@@ -229,7 +245,6 @@ namespace TiaMcpConfigurator
                     "configuration console output resolves its bundle through the development anchor");
                 string installed = UpdateCheck.Installed(null);
                 bool sourceRepository = UpdateCheck.IsSourceRepository(bundleRoot);
-                string updateStateKey = sourceRepository ? "Config.SourceRepositoryUpdate" : "Config.NotChecked";
                 string ExpectedInstalled() => installed ?? Loc.Current["Config.EngineOutsideBundle"];
                 Assert(window.FindName("MenuBar") == null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled
                     && runUpdate.Visibility == System.Windows.Visibility.Collapsed
@@ -249,9 +264,10 @@ namespace TiaMcpConfigurator
                         (() => Content("SettingsButton"), "Prefs", "设置"),
                         (() => Content("CheckUpdate"), "Check updates", "检查更新"),
                         (() => Content("RunUpdate"), "Update service…", "更新服务…"),
-                        (() => Content("OpenReleases"), "Open", "打开"),
-                        (() => Content("OpenData"), "Open", "打开"),
-                        (() => Content("OpenProjectPage"), "Open", "打开"),
+                        // Final design texts (maintainer 2026-11-21): release link and homepage show their targets.
+                        (() => Content("OpenReleases"), "GitHub Releases ↗", "GitHub Releases ↗"),
+                        (() => Content("OpenData"), "Open folder", "打开文件夹"),
+                        (() => Content("OpenProjectPage"), "github.com/asckye/TIA_Portal_Openness_MCP", "github.com/asckye/TIA_Portal_Openness_MCP"),
                         (() => Content("RailLog"), "Logs", "日志")
                     };
                     Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Pages.SaveBoth"],
@@ -263,8 +279,7 @@ namespace TiaMcpConfigurator
                         (chinese ? "Chinese" : "English") + " caption and rail track the configuration page");
                     foreach (var (read, en, zh) in labels)
                         Assert(read() == (chinese ? zh : en), (chinese ? "Chinese" : "English") + " shell/settings label: " + en);
-                    Assert(((System.Windows.Controls.TextBlock)settings.FindName("UpdateStateItem")).Text == Loc.Current[updateStateKey],
-                        (chinese ? "Chinese" : "English") + " update state follows the selected bundle and survives language changes");
+                    AssertBundleUpdateState(settings, sourceRepository);
                 }
                 // The window is not shown yet, so bindings refresh when the dispatcher runs.
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
@@ -542,7 +557,9 @@ namespace TiaMcpConfigurator
                 Assert(profiles.All(x => x.Name.All(c => c < 128) && x.Kind.All(c => c < 128)), "2.7.62: every client name and kind is English (maintainer)");
                 Assert(profiles.First(x => x.Id == "zhipu").Name == "GLM", "2.8.0: the Zhipu card is named GLM (maintainer)");
                 Assert(profiles[0].Id == "claude-code" && profiles[1].Id == "codex", "Claude Code and Codex are the first two cards");
-                Assert(profiles.TakeWhile(x => x.Kind == "CLI").Count() == 9 && profiles[9].Kind == "Desktop" && profiles.Skip(10).All(x => x.Kind == "IDE"), "CLI cards, then the desktop assistant, then IDE cards");
+                // Maintainer 2026-11-21: card order follows the final design (IDE cards fourth and fifth), undrawn clients after it.
+                Assert(profiles.Select(x => x.Id).SequenceEqual(new[] { "claude-code", "codex", "gemini", "cursor", "vscode", "qwen", "kimi",
+                    "codebuddy", "deepseek", "zhipu", "grok", "qwen-agent" }), "cards follow the final design order, then the clients it does not draw");
                 // Detection never throws; every card carries evidence; Qwen Agent uses command/args without a type.
                 var previousLanguage = Loc.Current.Language;
                 try
