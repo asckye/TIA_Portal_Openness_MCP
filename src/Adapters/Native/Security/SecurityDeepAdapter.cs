@@ -68,6 +68,7 @@ namespace TiaMcp.Adapters.Native.Security
                     throw new ArgumentException("attributes (SysLogAutoAcceptClient / SysLogClientCertificateId / SysLogTrustedCertificateIds) applies " +
                     "to scope=plc action=update only.");
                 if (scope == "project" && action == "create" && !dryRun) throw new NotSupportedException(SecurityCatalog.ProjectSyslogCreateRefusal);
+                if (scope == "plc" && action == "createServer" && !dryRun) throw new NotSupportedException(SecurityCatalog.PlcSyslogCreateRefusal);
                 foreach (var attribute in attributes.Keys) SecurityRules.RequireApprovedAttribute(attribute, SecurityAttributePolicy.SyslogNames);
                 bool write = action != "read" && !dryRun;
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
@@ -93,6 +94,7 @@ namespace TiaMcp.Adapters.Native.Security
                         throw new PortalException(PortalErrorCode.NotFound, "No syslog server with address " + serverAddress
                             + " on the CPU (SysLogServerConfigurationComposition.Find).");
                     meta["requestedProperties"] = properties.DeepClone(); meta["requestedAttributes"] = attributes.DeepClone();
+                    if (action == "createServer" && dryRun) return SecurityCatalog.PlcSyslogCreateRefusal;
                     if (!write) return "PLC syslog " + action
                         + " preview; nothing changed (S7-1500 firmware 3.1 or later; TLS protocols need certificate attributes).";
                     switch (action)

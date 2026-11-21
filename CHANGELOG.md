@@ -6,6 +6,9 @@
 
 ### Changed
 
+- PLC syslog server creation is preview-only on V19–V21. Add the server in the CPU properties. The V21 process exited during native creation.
+- When TIA refuses a named Unified tag or script module import because the signature is unavailable, the tool reports the refusal and explains how to import by directory. Tag safety exports now pass an absolute directory on .NET Framework.
+
 - On V20/V21, `GetSessionState` reports the binding identity before the first worker status reply. A cached identity is marked `identityStatus: "cached"`. Invalid arguments return `INVALID_ARGUMENT` before admission.
 - File-output calls identify a missing parent directory with the shared `output-parent-missing` condition. Global-library inventory rows report individual field failures in a `readErrors` object.
 - Paging reserves about 110 more characters for envelope metadata, so a response near the former cutoff may need another page.

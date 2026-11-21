@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 
 namespace TiaMcp.Adapters.Native.Hmi
 {
-    // No Siemens dependency: request gating and file rules for the Unified native exchange tools
+    // Request gating and file rules for the Unified native exchange tools
     // (HmiTagComposition.Export/Import, HmiScriptModuleComposition.Export/Import, OpcUaAlarm.Import).
     internal static class UnifiedExchangeLogic
     {
@@ -118,10 +118,47 @@ namespace TiaMcp.Adapters.Native.Hmi
             return rows;
         }
 
+        internal static bool Import(Dictionary<string, object?> meta, string fileName, Func<bool> importDirectory, Func<bool> importFile,
+            Func<Dictionary<string, string>>? tagFingerprint = null)
+        {
+            var record = tagFingerprint == null ? null : PrepareTagImport(tagFingerprint, meta);
+            meta["mayHaveChanged"] = true;
+            if (fileName.Length == 0)
+            {
+                record?.Invoke();
+                return importDirectory();
+            }
+            try { return importFile(); }
+            catch (Siemens.Engineering.EngineeringException error) when (!HmiReadPolicy.ConnectionUnavailable(error))
+            {
+                var messages = new List<string?> { error.Message };
+                PlcFoundationEngine.RecordEngineeringDetails(error, meta, messages);
+                if (!NamedImportRefused(messages, tagFingerprint != null)) throw;
+                string native = NativeFailureText.Compose(null, null, messages);
+                record = null;
+                meta["mayHaveChanged"] = false;
+                string files = tagFingerprint == null ? "wanted script module files" : "wanted *.hmi.yml files";
+                throw StepFailureStatus.UnsupportedByTarget(native + " Import without fileName and keep only the " + files + " in the directory.");
+            }
+            finally { record?.Invoke(); }
+        }
+
+        private static bool NamedImportRefused(IEnumerable<string?> messages, bool tags)
+        {
+            const string suffix = " using this signature will be available in future versions.";
+            var lines = messages.OfType<string>().SelectMany(message => message.Split('\r', '\n', ';'))
+                .Select(line => line.Trim().TrimStart('-').TrimStart());
+            return lines.Any(line => tags
+                ? line == "Import of tags" + suffix
+                : line == "Import of scripts" + suffix || line == "Import of script modules" + suffix);
+        }
+
         internal static Dictionary<string, string> ExportFingerprint(Func<DirectoryInfo, object> export)
         {
-            var directory = Directory.CreateDirectory(Path.GetFullPath(Path.Combine(TiaOpenness.Shared.DataLocations.Current.OutputRoot
+            // On .NET Framework, Directory.CreateDirectory(path).ToString() returns only the leaf name.
+            var directory = new DirectoryInfo(Path.GetFullPath(Path.Combine(TiaOpenness.Shared.DataLocations.Current.OutputRoot
                 ?? throw new InvalidOperationException("No session output root for the tag safety export."), "tia-tag-probe-" + Guid.NewGuid().ToString("N"))));
+            directory.Create();
             try
             {
                 var files = VerifyNativeFiles(export(directory), directory);
@@ -140,17 +177,17 @@ namespace TiaMcp.Adapters.Native.Hmi
             finally { directory.Delete(true); }
         }
 
-        internal static void JournalTagImport(Func<Dictionary<string, string>> fingerprint, HmiObject meta)
+        // Capture before dispatch. Enrol the rollback check only if the native signature could have written.
+        private static Action PrepareTagImport(Func<Dictionary<string, string>> fingerprint, Dictionary<string, object?> meta)
         {
             Dictionary<string, string> before;
             try { before = fingerprint(); }
             catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error))
             {
                 meta["beforeExportError"] = NativeFailureText.Compose(error.GetBaseException().Message, null, Array.Empty<string>());
-                EngineeringWriteJournal.Unrestored("Tag import with no verified before export");
-                return;
+                return () => EngineeringWriteJournal.Unrestored("Tag import with no verified before export");
             }
-            EngineeringWriteJournal.Record("Verify the tag-table export after import", () => {
+            return () => EngineeringWriteJournal.Record("Verify the tag-table export after import", () => {
                 var after = fingerprint();
                 if (before.Count == 0 || before.Count != after.Count || before.Any(p => !after.TryGetValue(p.Key, out var hash) || hash != p.Value))
                     throw new InvalidOperationException("Tag-table exports differ after import.");

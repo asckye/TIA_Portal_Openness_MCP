@@ -74,20 +74,56 @@ public sealed class WriteRefusalTests
         fixture.Syslog.EnableSystemLogging = enabled;
         var composition = fixture.Syslog.SysLogServerConfiguration;
         composition.CreateFailure = new InvalidOperationException("TIA refused server.");
+        if (!dryRun) fixture.Cpu.ServiceFailures[fixture.Syslog.GetType()] = new InvalidOperationException("Apply read the CPU syslog service.");
         var session = new SecuritySession(fixture.Engine, new Dictionary<string, SecurityValidationFault>());
         var adapter = new SecurityDeepAdapter(session, new SecurityDeepRequest());
         var reply = adapter.ManageSyslogServers(scope: "plc", action: "createServer", devicePathJson: new[] { "PLC" }, itemPathJson: new[] { "CPU" },
             serverAddress: "192.0.2.1", serverPort: 514, dryRun: dryRun);
-        Assert.Equal(enabled && !dryRun ? 1 : 0, composition.CreateCalls);
+        Assert.Equal(0, composition.CreateCalls);
         Assert.False(reply.MayHaveChanged);
         Assert.False(reply.OutcomeUnknown);
-        if (!enabled) Assert.Equal("system-logging-disabled", reply.Meta["precondition"]);
-        else if (dryRun) Assert.Equal(true, reply.Meta["operationSuccess"]);
-        else
+        if (!dryRun)
         {
-            Assert.Equal("restored", reply.Meta["rollbackOutcome"]);
-            Assert.Equal("TIA refused server.", reply.Meta["nativeMessage"]);
+            Assert.Equal(0, fixture.Portal.ExclusiveCalls);
+            Assert.Equal("NotSupportedOnVersion", reply.Meta["status"]);
+            string message = Assert.IsType<string>(reply.Meta["nativeMessage"]);
+            Assert.Equal(SecurityCatalog.PlcSyslogCreateRefusal, message);
+            Assert.Contains("CPU properties", message);
+            Assert.False(reply.Meta.ContainsKey("rollbackAttempted"));
+            Assert.False(reply.Meta.ContainsKey("rollbackOutcome"));
         }
+        else if (!enabled) Assert.Equal("system-logging-disabled", reply.Meta["precondition"]);
+        else Assert.Equal(true, reply.Meta["operationSuccess"]);
+    }
+
+    [Fact]
+    public void Plc_syslog_create_is_refused_before_edit_or_lookup_and_preview_checks_the_cpu()
+    {
+        const string address = "192.0.2.20";
+        var fixture = HardwareWriteFailureTests.NativeFixture();
+        fixture.Syslog.EnableSystemLogging = true;
+        var servers = fixture.Syslog.SysLogServerConfiguration;
+        var session = new SecuritySession(fixture.Engine, new Dictionary<string, SecurityValidationFault>());
+        var adapter = new SecurityDeepAdapter(session, new SecurityDeepRequest());
+        SecurityResult Create(string cpu, bool dryRun) => adapter.ManageSyslogServers("plc", "createServer", devicePathJson: new[] { "PLC" },
+            itemPathJson: new[] { cpu }, serverAddress: address, serverPort: 6514, dryRun: dryRun);
+
+        var refused = Create("missing CPU", false);
+        Assert.Equal(0, fixture.Portal.ExclusiveCalls);
+        Assert.Equal("NotSupportedOnVersion", refused.Meta["status"]);
+        Assert.Equal("UNSUPPORTED_CAPABILITY", refused.Meta["v4FailureCode"]);
+        Assert.False(refused.MayHaveChanged);
+        Assert.False(refused.OutcomeUnknown);
+        Assert.Contains("CPU properties", Assert.IsType<string>(refused.Meta["nativeMessage"]));
+        var preview = Create("CPU", true);
+        Assert.Equal(true, preview.Meta["operationSuccess"]);
+        Assert.Contains("preview-only", preview.Message);
+        servers.Add(new Siemens.Engineering.HW.Features.SysLogServerConfiguration { SysLogServerAddress = address, SysLogServerPort = 6514 });
+        Assert.Contains("exists on the CPU", Assert.IsType<string>(Create("CPU", true).Meta["nativeMessage"]));
+        fixture.Syslog.EnableSystemLogging = false;
+        Assert.Equal("system-logging-disabled", Create("CPU", true).Meta["precondition"]);
+        Assert.Equal(0, fixture.Portal.ExclusiveCalls);
+        Assert.Equal(0, servers.CreateCalls);
     }
 
     private static Dictionary<string, object?> TypeRow(string state) => new() {
@@ -146,15 +182,64 @@ public sealed class WriteRefusalTests
                     File.WriteAllText(Path.Combine(directory.FullName, "NameData.yml"), "Counter: " + (after && outcome == "overwritten" ? "B" : "A"));
                 return outcome == "onlySideFiles" ? new[] { new FileInfo(Path.Combine(directory.FullName, "NameData.yml")) } : new[] { reported };
             });
-            UnifiedExchangeLogic.JournalTagImport(Export, new HmiObject());
-            meta["mayHaveChanged"] = true;
+            bool Refuse() => throw new InvalidOperationException("Tag import refused.");
             meta["tagCountBefore"] = 1; meta["tagCountAfter"] = 1;
-            throw new InvalidOperationException("Tag import refused.");
+            UnifiedExchangeLogic.Import(meta, "", Refuse, Refuse, Export);
+            return "imported";
         });
         Assert.Equal(outcome is "beforeFailed" or "onlySideFiles" ? 1 : 2, exports);
         Assert.Equal(outcome != "unchanged", reply.OutcomeUnknown);
         Assert.Equal(outcome != "unchanged", reply.MayHaveChanged);
         Assert.Equal("Tag import refused.", reply.Meta["nativeMessage"]);
+    }
+
+    [Theory]
+    [InlineData("tags", "Tags", true, true)]
+    [InlineData("tags", "Tags", false, true)]
+    [InlineData("script modules", "Module", false, true)]
+    [InlineData("tags", "", false, false)]
+    [InlineData("tags", "Tags", false, false)]
+    [InlineData("script modules", "Module", false, false, "Import of tags using this signature will be available in future versions.")]
+    public void Only_the_named_composition_signature_refusal_proves_no_import(string kind, string fileName, bool exportWorks, bool unsupported,
+        string? nativeReason = null)
+    {
+        bool tags = kind == "tags";
+        string reason = nativeReason ?? (fileName.Length == 0 || unsupported ? $"Import of {kind} using this signature will be available in future versions."
+            : "Import stopped after the first table.");
+        string type = tags ? "HmiTags.HmiTagComposition" : "Scripts.HmiScriptModuleComposition";
+        string header = $"Error when calling method 'Import' of type 'Siemens.Engineering.HmiUnified.{type}'.";
+        var native = new Siemens.Engineering.EngineeringException(header);
+        native.MessageData.Text = header;
+        native.MessageData.DetailText = "-" + reason;
+        var calls = new List<string>();
+        Dictionary<string, string> Fingerprint()
+        {
+            calls.Add("Export(dir)");
+            if (!exportWorks) throw new IOException("The argument 'destinationLocation' cannot be a relative path.");
+            return new() { ["Tags.hmi.yml"] = "before" };
+        }
+        bool Import(string signature) { calls.Add(signature); throw native; }
+        var reply = MutationEvidenceTests.RunStep("21", tags ? "ExchangeUnifiedTags" : "ExchangeUnifiedScriptModules", meta => {
+            UnifiedExchangeLogic.Import(meta, fileName, () => Import("Import(dir)"), () => Import("Import(dir, name)"), tags ? Fingerprint : null);
+            return "imported";
+        });
+        var expectedCalls = new List<string>();
+        if (tags) expectedCalls.Add("Export(dir)");
+        expectedCalls.Add(fileName.Length == 0 ? "Import(dir)" : "Import(dir, name)");
+        Assert.Equal(expectedCalls, calls);
+        Assert.Equal(!unsupported, reply.MayHaveChanged);
+        Assert.Equal(!unsupported, reply.OutcomeUnknown);
+        Assert.Equal(unsupported ? "NotSupportedOnVersion" : "ReadOrWriteFailed", reply.Meta["status"]);
+        string message = Assert.IsType<string>(reply.Meta["nativeMessage"]);
+        Assert.Contains(reason, message);
+        if (unsupported)
+        {
+            Assert.Equal("UNSUPPORTED_CAPABILITY", reply.Meta["v4FailureCode"]);
+            Assert.Contains(header, message);
+            Assert.Contains("without fileName", message);
+            if (tags) Assert.Contains("*.hmi.yml", message);
+            Assert.False(reply.Meta.ContainsKey("cleanupRequired"));
+        }
     }
 
     public static HardwareAddressingReply RefusedAutomationMlImport()

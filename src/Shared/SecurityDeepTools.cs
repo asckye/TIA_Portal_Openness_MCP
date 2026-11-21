@@ -23,7 +23,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "CPU item, S7-1500 FW 3.1+): read (EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows, approved dynamic attributes only; " +
                 "the allow-list is currently empty), update (properties EnableSystemLogging/TransportProtocol " +
                 "None|TLSServerAndClientAuthentication|TLSOnlyServerAuthentication|UDP; dynamic attributes are refused until exact names, types and owner " +
-                "are documented or VM-verified), createServer (serverAddress + serverPort via SysLogServerConfigurationComposition.Create), deleteServer " +
+                "are documented or VM-verified), createServer (preview-only with serverAddress + serverPort. Real creation is refused because TIA Portal " +
+                "V21 exited during Create. Add the server in the CPU properties), deleteServer " +
                 "(serverAddress, needs confirmDelete). Default dryRun=true; no save/compile/download.")]
         public CallToolResult ManageSyslogServers(
             [Description("scope: project | plc.")] string scope="project",

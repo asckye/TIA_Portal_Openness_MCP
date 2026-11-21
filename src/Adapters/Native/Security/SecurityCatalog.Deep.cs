@@ -29,4 +29,8 @@ internal static partial class SecurityCatalog
             "scope=project action=create is preview-only: Siemens.Engineering.Security.SyslogServerComposition.Create(name) crashed TIA Portal V21 twice on " +
             "the reference project (2026-09-18, message-less NonRecoverableException, process gone). Create the server in the TIA UI (project security " +
             "settings) and manage it here with read / update / assignModule / unassignModule / delete.";
+        internal const string PlcSyslogCreateRefusal =
+            "scope=plc action=createServer is preview-only. SysLogServerConfigurationComposition.Create(address, port) threw a NonRecoverableException " +
+            "and the TIA Portal V21 process exited (2026-11-21, rc3 batch E). Add the server in the CPU properties, then manage it here with " +
+            "read / update / deleteServer.";
 }

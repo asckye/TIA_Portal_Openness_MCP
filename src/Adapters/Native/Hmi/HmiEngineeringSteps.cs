@@ -134,7 +134,7 @@ namespace TiaMcp.Adapters
             }
         }
 
-        private static void RecordEngineeringDetails(Siemens.Engineering.EngineeringException engineering,
+        internal static void RecordEngineeringDetails(Siemens.Engineering.EngineeringException engineering,
             Dictionary<string, object?> meta, List<string?> messages)
         {
             try
