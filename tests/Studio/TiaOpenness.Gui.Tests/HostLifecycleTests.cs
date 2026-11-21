@@ -150,6 +150,7 @@ public sealed class HostLifecycleTests
         {
             var host = Assert.Single(new HostLifecycleService(root, "4.0.0-beta.2").Discover());
             Assert.Equal(process.Id, host.Pid); Assert.True(host.CallInProgress);
+            Assert.Equal(1, host.SessionCount);
             listener.Flush(); Assert.Contains("malformed.json", messages.ToString());
         }
         finally

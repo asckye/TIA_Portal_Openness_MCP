@@ -288,7 +288,7 @@ namespace TiaMcpConfigurator
                 choices.SelectedItems.Add(choices.Items.Cast<ClientProfile>().First(x => !choices.SelectedItems.Contains(x)));
                 Assert(((System.Windows.Controls.TextBlock)clients.FindName("ClientSelection")).Text.Contains("2"), "client multi-select updates live count");
                 Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text.Contains("2"), "link bar follows the client selection");
-                choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items[6]);
+                choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items.Cast<ClientProfile>().Single(profile => profile.Id == "deepseek"));
                 window.Navigate("Mcp");
                 ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text = "192.0.2.10";
                 form.CapturePage(Path.Combine(output, "remote.png"), 0);

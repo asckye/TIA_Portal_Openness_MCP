@@ -1,0 +1,50 @@
+<Window x:Class="TiaMcpConfigurator.ClientsWriteConfirmation"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    x:ClassModifier="internal" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization"
+    Style="{StaticResource Ui.Window}" Width="440" SizeToContent="Height" WindowStyle="None"
+    AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize" ShowInTaskbar="False"
+    WindowStartupLocation="CenterOwner" AutomationProperties.Name="{Binding Title,RelativeSource={RelativeSource Self}}">
+  <Border Style="{StaticResource Primer.Dialog}" Padding="24">
+    <DockPanel>
+      <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+        <Button x:Name="CancelWrite" Style="{StaticResource Primer.Button.Secondary.Medium}" Content="{l:Tr Dialog.Cancel}"
+                AutomationProperties.Name="{l:Tr Dialog.Cancel}" IsDefault="True" IsCancel="True" Click="Cancel"/>
+        <Button x:Name="ConfirmWrite" Style="{StaticResource Primer.Button.Primary.Medium}" Content="{l:Tr Config.BackupAction}"
+                AutomationProperties.Name="{l:Tr Config.BackupAction}" Margin="8,0,0,0" Click="Confirm"/>
+      </StackPanel>
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+          <DockPanel>
+            <Border DockPanel.Dock="Left" Style="{StaticResource Primer.Tag.Accent}" Width="28" Height="28" Padding="0"
+                    VerticalAlignment="Top" Margin="0,0,12,0">
+              <TextBlock Text="i" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            </Border>
+            <StackPanel>
+              <TextBlock Text="{Binding Title,RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource Primer.ContainerTitle}"
+                         FontSize="{DynamicResource Ui.FontSize.DialogTitle}" TextWrapping="Wrap"/>
+              <TextBlock x:Name="Description" Margin="0,6,0,0" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.12_5}"
+                         TextWrapping="Wrap" TextTrimming="None" LineHeight="20"/>
+            </StackPanel>
+          </DockPanel>
+          <Border Style="{StaticResource Primer.CodeBlock}" Padding="12" Margin="0,16,0,0">
+            <StackPanel>
+              <DockPanel>
+                <TextBlock Text="{l:Tr Config.WriteTargets}" Style="{StaticResource Primer.Muted.textFaint}" Margin="0,0,12,0"/>
+                <TextBlock x:Name="TargetNames" Style="{StaticResource Primer.Mono}" TextAlignment="Right" TextWrapping="Wrap" TextTrimming="None"/>
+              </DockPanel>
+              <DockPanel Margin="0,6,0,0">
+                <TextBlock Text="{l:Tr Config.BackupName}" Style="{StaticResource Primer.Muted.textFaint}" Margin="0,0,12,0"/>
+                <TextBlock Text="{l:Tr Config.BackupPattern}" Style="{StaticResource Primer.Mono}" TextAlignment="Right" TextWrapping="Wrap"/>
+              </DockPanel>
+              <Expander x:Name="Files" Style="{StaticResource Primer.Expander}" Header="{l:Tr Config.WriteDetails}" Margin="0,6,0,0"
+                        AutomationProperties.Name="{l:Tr Config.WriteDetails}">
+                <TextBlock x:Name="TargetFiles" TextWrapping="Wrap" TextTrimming="None" Style="{StaticResource Primer.Mono}"/>
+              </Expander>
+            </StackPanel>
+          </Border>
+          <TextBlock x:Name="Migration" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None" Margin="0,8,0,0"/>
+        </StackPanel>
+      </ScrollViewer>
+    </DockPanel>
+  </Border>
+</Window>

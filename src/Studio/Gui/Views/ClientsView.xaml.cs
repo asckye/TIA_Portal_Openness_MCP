@@ -38,7 +38,8 @@ public partial class ClientsView : UserControl
         };
         badge.Tag = letters;
         badge.SetResourceReference(Border.BackgroundProperty, "Primer.client" + hue + "Bg");
-        badge.SetResourceReference(Border.BorderBrushProperty, "Primer.client" + hue + "Fg");
+        badge.BorderThickness = new Thickness(0);
+        badge.CornerRadius = new CornerRadius(8);
         badge.SetResourceReference(TextElement.ForegroundProperty, "Primer.client" + hue + "Fg");
     }
 
@@ -46,6 +47,18 @@ public partial class ClientsView : UserControl
     {
         var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return string.Concat(words.Take(2).Select(word => StringInfo.GetNextTextElement(word))).ToUpperInvariant();
+    }
+}
+
+// The tile paints its own selection outline. Keep the row's native focus and selection semantics.
+public sealed class ClientChoiceList : ListBox
+{
+    protected override void PrepareContainerForItemOverride(DependencyObject element, object item)
+    {
+        base.PrepareContainerForItemOverride(element, item);
+        var row = (ListBoxItem)element;
+        row.Margin = new Thickness(5);
+        TiaOpenness.Gui.Controls.ContrastSelection.SetActive(row, false);
     }
 }
 

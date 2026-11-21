@@ -335,7 +335,7 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             if (page is "Mcp" or "Clients")
                             {
                                 FrameworkElement configuration = page == "Mcp" ? window.Configuration! : window.Configuration!.Clients;
-                                var headings = page == "Mcp" ? new[] { "Config.Installation", "Config.HttpService" } : new[] { "Config.Write", "Mcp.Clients" };
+                                var headings = page == "Mcp" ? new[] { "Config.Installation", "Config.HostsTitle" } : new[] { "Config.Write", "Mcp.Clients" };
                                 foreach (string key in headings)
                                     AssertWholeWords(Descendants<TextBlock>(configuration).Single(text => text.Text == Loc.Current[key]
                                         && ReferenceEquals(text.Style, Application.Current.FindResource("Primer.ContainerTitle"))), context);

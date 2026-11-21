@@ -19,10 +19,7 @@ public sealed partial class ConfigurationView
     private bool refreshingHosts;
     private void InitializeHosts(bool enabled)
     {
-        HostList.SelectionChanged += (_, _) => UpdateHostActions();
         ClickAsync("RefreshHosts", RefreshHostListAsync);
-        ClickAsync("StopHost", () => ChangeHost(false));
-        ClickAsync("RestartHost", () => ChangeHost(true));
         if (!enabled) return;
         hosts = new HostLifecycleService(DataLocations.Current.WorkbenchDataDirectory, TiaOpenness.Gui.ViewModels.MainViewModel.AppVersion);
         hostTimer.Tick += RefreshHostsTick;
@@ -40,31 +37,32 @@ public sealed partial class ConfigurationView
         refreshingHosts = true;
         try
         {
-            var selected = HostList.SelectedItem as VisibleHost;
             var found = await Task.Run(hosts.Discover);
             if (closing) return;
-            HostList.ItemsSource = found;
-            HostList.SelectedItem = selected == null ? null : found.FirstOrDefault(host => host.Pid == selected.Pid && host.StartTicks == selected.StartTicks);
-            UpdateHostActions();
+            if (!HostList.Items.Cast<VisibleHost>().SequenceEqual(found))
+            {
+                var selected = HostList.SelectedItem as VisibleHost;
+                HostList.ItemsSource = found;
+                if (selected != null)
+                    HostList.SelectedItem = found.FirstOrDefault(host => host.Pid == selected.Pid && host.StartTicks == selected.StartTicks);
+            }
             if (server != null && !server.HasExited)
                 Find<Button>("StopServer").IsEnabled = !busy && found.FirstOrDefault(host => host.Pid == server.Id)?.CallInProgress != true;
         }
         finally { refreshingHosts = false; }
     }
-    private void UpdateHostActions()
+    private void OnRestartHost(object sender, RoutedEventArgs e) => ReviewHostAction((Button)sender, true);
+    private void OnStopHost(object sender, RoutedEventArgs e) => ReviewHostAction((Button)sender, false);
+
+    private async void ReviewHostAction(Button button, bool restart)
     {
-        var host = HostList.SelectedItem as VisibleHost;
-        StopHost.IsEnabled = !busy && host is { CallInProgress: false };
-        RestartHost.IsEnabled = !busy && host is { Transport: "http", CallInProgress: false };
-        HostDetail.Text = host == null ? Loc.Current["Hosts.Hint"]
-            : (host.OlderVersion ? Loc.Current["Hosts.Older"] + "\n" : "")
-                + (host.WorkbenchStarted ? Loc.Current["Hosts.Owned"] : Loc.Current["Hosts.External"])
-                + (host.Transport == "stdio" ? "\n" + Loc.Current["Hosts.Stdio"] : "")
-                + (host.CallInProgress ? "\n" + Loc.Current["Hosts.Busy"] : "");
+        if (busy || button.DataContext is not VisibleHost host) return;
+        try { await ChangeHost(host, restart); }
+        catch (Exception error) { Report(error); }
     }
-    private async Task ChangeHost(bool restart)
+
+    private async Task ChangeHost(VisibleHost host, bool restart)
     {
-        if (HostList.SelectedItem is not VisibleHost host) return;
         if (host.CallInProgress) throw new InvalidOperationException(Loc.Current["Hosts.Busy"]);
         // Make a restart concrete and validate it before stopping a running process.
         System.Diagnostics.ProcessStartInfo? start = null;
@@ -102,6 +100,6 @@ public sealed partial class ConfigurationView
             else SetStatus("Hosts.Stopped", host.Display);
             await RefreshHostListAsync();
         }
-        finally { SetBusy(false); UpdateHostActions(); }
+        finally { SetBusy(false); }
     }
 }

@@ -426,7 +426,8 @@ namespace TiaMcp.Engine.Tests.Shared
             },
             ["TiaOpenness.Gui.Tests.RemoteConfigurationTests"] = new[] {
                 "Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection",
-                "Keyboard_can_select_local_transport_and_reopen_the_install_path_editor"
+                "Keyboard_can_select_local_transport_and_reopen_the_install_path_editor",
+                "Service_and_client_design_states_keep_their_actions_and_confirm_the_actual_targets"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchApprovalConfirmationTests"] = new[] {
                 "Enter_is_inert_and_cancel_or_escape_preserves_approval_and_reopening_clears_input"

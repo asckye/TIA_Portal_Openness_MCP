@@ -23,8 +23,11 @@ internal sealed record HostLifecycleTiming(TimeSpan Grace, TimeSpan PollInterval
 
 internal sealed record VisibleHost(int Pid, long StartTicks, string ReleaseKey, string ImagePath, string BundleRoot,
     string Transport, string? HttpPrefix, string? Version, bool WorkbenchStarted, bool OlderVersion,
-    string? PipeName = null, bool CallInProgress = false, string? RegistrationPath = null)
+    string? PipeName = null, bool CallInProgress = false, string? RegistrationPath = null, int? SessionCount = null)
 {
+    public bool CanRestart => Transport == "http" && !CallInProgress;
+    public string Heading => "V" + ReleaseKey + " · " + Transport.ToUpperInvariant()
+        + (Uri.TryCreate(HttpPrefix, UriKind.Absolute, out var endpoint) ? " :" + endpoint.Port : "");
     public string Display => $"PID {Pid} · V{ReleaseKey} · {Version ?? "?"}{(OlderVersion ? " ⚠" : "")}\n"
         + $"{new DateTime(StartTicks, DateTimeKind.Utc):u} · {Transport} {HttpPrefix ?? (Transport == "http" ? "?" : "")}\n{ImagePath}";
 }
@@ -68,7 +71,7 @@ internal sealed class HostLifecycleService(string dataRoot, string currentVersio
                 bool busy = CallsInProgress(record);
                 var host = new VisibleHost(pid, ticks, Required("releaseKey"), image, bundle, transport,
                     (string?)record["httpPrefix"], (string?)record["hostVersion"], (bool?)record["workbenchStarted"] == true,
-                    IsOlder((string?)record["hostVersion"], currentVersion), pipe, busy, file);
+                    IsOlder((string?)record["hostVersion"], currentVersion), pipe, busy, file, (record["sessions"] as JsonArray)?.Count);
                 using var process = VerifiedProcess(host);
                 if (host.Transport == "http" && host.HttpPrefix == null)
                     host = host with { HttpPrefix = ListeningEndpoint(host.Pid) };

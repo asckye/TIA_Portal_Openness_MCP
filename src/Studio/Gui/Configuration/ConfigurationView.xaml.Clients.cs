@@ -14,6 +14,7 @@ using System.Windows.Media;
 using TiaMcp.Versioning;
 using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Localization;
+using TiaOpenness.Gui.Views;
 
 namespace TiaMcpConfigurator
 {
@@ -83,7 +84,7 @@ namespace TiaMcpConfigurator
             Clients.CopyJson.IsEnabled = false;
             if (Clients.PreviewTarget.SelectedItem is not ClientProfile target)
             {
-                Clients.JsonText.Text = Loc.Current["Config.SelectClientsFirst"];
+                ShowPlainPreview(Loc.Current["Config.SelectClientsFirst"]);
                 return;
             }
             try
@@ -93,20 +94,26 @@ namespace TiaMcpConfigurator
                 string name = ClientProfiles.ServerName(target, Remote);
                 string address = ServerAddress.Text.Trim(), path = TiaPath.Text.Trim();
                 if (target.Client == "codex")
-                    Clients.JsonText.Text = ClientProfiles.MergeToml("", name, Remote, address, port, engine, SelectedVersion, path);
+                    ShowPlainPreview(ClientProfiles.MergeToml("", name, Remote, address, port, engine, SelectedVersion, path));
                 else
                 {
                     var entry = ClientProfiles.Entry(target, Remote, address, port, engine, SelectedVersion, path);
                     var servers = new Dictionary<string, object> { [name] = entry };
                     var document = new Dictionary<string, object> { [ClientProfiles.RootKey(target)] = servers };
-                    Clients.JsonText.Text = JsonSerializer.Serialize(document, PreviewFormat);
+                    CallDetailDrawer.SetJsonPreview(Clients.JsonText, JsonSerializer.Serialize(document, PreviewFormat));
                 }
                 Clients.CopyJson.IsEnabled = true;
             }
             catch (Exception ex) when (ex is IOException or ArgumentException or InvalidOperationException or FormatException or OverflowException)
             {
-                Clients.JsonText.Text = ex is FormatException or OverflowException ? Loc.Current["Config.InvalidEndpoint"] : ex.Message;
+                ShowPlainPreview(ex is FormatException or OverflowException ? Loc.Current["Config.InvalidEndpoint"] : ex.Message);
             }
+        }
+
+        private void ShowPlainPreview(string text)
+        {
+            Clients.JsonText.ClearValue(CallDetailDrawer.JsonPreviewProperty);
+            Clients.JsonText.Text = text;
         }
 
         private void OnClientGuidanceKey(object sender, KeyEventArgs e)
@@ -183,16 +190,14 @@ namespace TiaMcpConfigurator
             EndpointAddress.Text = http ? address + ":" + Text("ServerPort") : ServiceEndpoint;
             EndpointPath.Text = http ? "/mcp" : "";
             Find<TextBlock>("LinkState").Text = Loc.Current[!remote ? "Config.Local" : running ? "Config.Running" : "Config.Idle"];
-            ServiceStatusText.Text = LinkState.Text;
-            ServiceStateChip.Tag = running ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
+            ServiceStateChip.Tag = !remote || running ? FeatureTone.Success : FeatureTone.Muted;
             StartServer.Visibility = running ? Visibility.Collapsed : Visibility.Visible;
             StopServer.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
             var release = TiaVersionCatalog.Get(SelectedVersion);
-            TransportStatus.Text = remote ? "HTTP :" + Text("ServerPort") : Loc.Current.T("Config.LocalStatus", release.DisplayName);
-            TransportStatus.ToolTip = ServiceStatusText.Text;
-            TransportChip.SetResourceReference(StyleProperty, remote && !running ? "Primer.Tag" : "Primer.Tag.Ok");
+            TransportStatus.Text = !remote ? Loc.Current.T("Config.LocalStatus", release.DisplayName)
+                : running ? Loc.Current.T("Config.HttpRunning", listeningPort) : Loc.Current["Config.HttpStopped"];
+            TransportStatus.ToolTip = LinkState.Text;
             string statusBrush = remote && !running ? "Primer.textFaint" : "Primer.ok";
-            TransportDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, statusBrush);
             Clients.TargetDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, statusBrush);
             Clients.TargetEndpoint.Text = remote ? ServiceEndpoint : "STDIO · TIA " + release.DisplayName;
             UpdateJsonPreview();
@@ -259,18 +264,17 @@ namespace TiaMcpConfigurator
             else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }
             // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
             var targets = selected.GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
-                .Select(g => new { Profile = g.First(), Names = string.Join(" / ", g.Select(x => x.Name)),
+                .Select(g => new { Profile = g.First(), Names = string.Join(" / ", g.Select(x => x.DisplayName)),
                     Change = ClientProfiles.PrepareSave(g.First(), remote, ip, port, engine, SelectedVersion, Text("TiaPath")) }).ToList();
-            string message = Loc.Current["Config.WriteClientsPrompt"] + string.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path
+            string files = string.Join("\n\n", targets.Select(x => x.Names + "\n" + x.Profile.Path
                 + "\n" + Loc.Current.T("Pages.ClientBackupPreview", x.Profile.Path)));
-            if (remote) message += "\n\n" + Loc.Current["Config.RelayMode"];
-            if (targets.Any(x => x.Change.RequiresMigration))
-                message += "\n\n" + Loc.Current["Config.MigrateClientsPrompt"] + "\n" + string
-                    .Join("\n", targets.Where(x => x.Change.RequiresMigration).Select(x => x.Profile.Path + " → " + x.Change.TargetCommand));
-            message += Loc.Current["Config.WriteClientsContinue"];
-            if (TiaOpenness.Gui.Controls.WorkbenchMessageBox
-                    .Show(Window, message, Loc.Current["Config.Write"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK)
-                return;
+            var migrations = targets.Where(x => x.Change.RequiresMigration).Select(x => x.Profile.Path + " → " + x.Change.TargetCommand).ToArray();
+            string migration = migrations.Length == 0 ? "" : Loc.Current["Config.MigrateClientsPrompt"] + "\n" + string.Join("\n", migrations);
+            var dialog = new ClientsWriteConfirmation(selected.Count, string.Join(Loc.Current["Config.ListSeparator"], selected.Select(x => x.DisplayName)),
+                files, migration, remote);
+            if (Window.IsVisible) dialog.Owner = Window;
+            WorkbenchMessageBox.ShowModal(dialog);
+            if (dialog.DialogResult != true) return;
             int saved = 0; var errors = new List<string>();
             foreach (var target in targets)
             {

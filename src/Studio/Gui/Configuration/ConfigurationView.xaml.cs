@@ -64,6 +64,7 @@ namespace TiaMcpConfigurator
         public void SetReleaseEnabled(bool enabled) { Find<ComboBox>("Version").IsEnabled = enabled && !LocksRelease; }
         public Func<bool> CanUpdate { get; set; }
         private Process server;
+        private int listeningPort;
         private UpdateInfo latest;   // last successful update check
         private int logEntries;
         private readonly ConcurrentQueue<string> pendingLog = new();
@@ -99,6 +100,8 @@ namespace TiaMcpConfigurator
             root = preview == null ? TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, bundleRoot) : bundleRoot;
             InitializeComponent();
             ((INotifyCollectionChanged)HostList.Items).CollectionChanged += (_, _) => UpdateHostsCard();
+            ConfigurationActivity.Expanded += (_, _) => UpdateLogCount();
+            ConfigurationActivity.Collapsed += (_, _) => UpdateLogCount();
             InitializeHosts(loadExisting && preview == null);
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
@@ -165,6 +168,7 @@ namespace TiaMcpConfigurator
                 TiaPath.Text = preview.InstallPath;
                 ServerAddress.Text = preview.Address;
                 tiaDetected = preview.Detected;
+                listeningPort = int.Parse(ServerPort.Text, System.Globalization.CultureInfo.InvariantCulture);
                 StopServer.IsEnabled = preview.Running;
                 LocalNav.IsChecked = preview.Local;
                 RemoteNav.IsChecked = !preview.Local;
@@ -202,7 +206,8 @@ namespace TiaMcpConfigurator
         private void UpdateDetectionLabel()
         {
             int count = ReleaseTiles.Children.Cast<RadioButton>().Count(tile => Equals(tile.Tag, true));
-            ReleaseSummary.Text = Loc.Current.T(count == 1 ? "Config.OneRelease" : "Config.ReleaseCount", count);
+            ReleaseSummary.Text = Loc.Current["Config.ReleaseHint"];
+            ReleaseSummary.ToolTip = Loc.Current.T(count == 1 ? "Config.OneRelease" : "Config.ReleaseCount", count);
             UpdateAssemblyStatus();
             DetectionSource.Text = Loc.Current[tiaDetected ? "Config.Detected" : "Config.NotDetected"];
             DetectionChip.Tag = tiaDetected ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
@@ -216,8 +221,10 @@ namespace TiaMcpConfigurator
                 var entries = ToolUsageCatalog.ProfileEntries(key);
                 return (entries.Count(entry => entry!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite")), entries.Count);
             });
-            LiteCount.Text = Loc.Current.T("Config.LiteCount", counts.Lite);
-            ToolCount.Text = Loc.Current.T("Config.ToolCount", counts.Tools);
+            LiteCount.Text = counts.Lite + " lite";
+            ToolCount.Text = counts.Tools + " tools";
+            LiteCount.ToolTip = Loc.Current.T("Config.LiteCount", counts.Lite);
+            ToolCount.ToolTip = Loc.Current.T("Config.ToolCount", counts.Tools);
         }
 
         private void UpdateAssemblyStatus()
@@ -237,8 +244,9 @@ namespace TiaMcpConfigurator
             {
                 var tile = new RadioButton {
                     Content = release, ContentTemplate = (DataTemplate)FindResource("Configuration.Release"),
-                    Margin = new Thickness(4, 0, 4, 0), Padding = new Thickness(4, 10, 4, 10), MinHeight = 60
+                    Margin = new Thickness(4, 0, 4, 0), Padding = new Thickness(6, 8, 6, 8), MinHeight = 52
                 };
+                ContrastSelection.SetActive(tile, false);
                 AutomationProperties.SetName(tile, release.DisplayName);
                 tile.Checked += (_, _) => Version.SelectedValue = release.Key;
                 ReleaseTiles.Children.Add(tile);
@@ -260,8 +268,17 @@ namespace TiaMcpConfigurator
         private static void SetTileDetection(RadioButton tile, bool installed)
         {
             tile.Tag = installed;
+            UpdateReleaseTileSurface(tile);
             tile.SetResourceReference(StyleProperty, installed ? "Primer.Tile" : "Primer.Tile.Muted");
             tile.SetBinding(AutomationProperties.HelpTextProperty, TrExtension.CreateBinding(installed ? "Config.Detected" : "Config.NotDetected"));
+        }
+
+        private static void UpdateReleaseTileSurface(RadioButton tile)
+        {
+            bool selected = tile.IsChecked == true;
+            tile.BorderThickness = new Thickness(selected ? 2 : 1);
+            tile.SetResourceReference(Control.BackgroundProperty, selected || Equals(tile.Tag, true) ? "Primer.card" : "Primer.sidebar");
+            tile.SetResourceReference(Control.ForegroundProperty, "Primer.text");
         }
 
         private RadioButton SelectedReleaseTile => ReleaseTiles.Children.Cast<RadioButton>().Single(tile => Equals(tile.Content, Version.SelectedItem));
@@ -270,6 +287,7 @@ namespace TiaMcpConfigurator
         {
             var tile = SelectedReleaseTile;
             tile.IsChecked = true;
+            foreach (RadioButton item in ReleaseTiles.Children) UpdateReleaseTileSurface(item);
             tiaDetected = (bool)tile.Tag;
             UpdateDetectionLabel();
             UpdateReleaseCounts();
@@ -277,12 +295,19 @@ namespace TiaMcpConfigurator
 
         private void UpdateLastTest()
         {
+            HealthResult.Text = Loc.Current[lastTestFailed ? "Config.TestFailed" : lastTestResult == null ? "Config.NoProbe" : "Config.ProbeOk"];
+            HealthResult.SetResourceReference(TextBlock.ForegroundProperty, lastTestFailed ? "Primer.destructiveText" :
+                lastTestResult == null ? "Primer.textFaint" : "Primer.ok");
             TestClient.ToolTip = Loc.Current.T("Config.LastTest", lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Config.TestNotRun"]);
             AutomationProperties.SetHelpText(TestClient, Loc.Current.T("Config.LastTest",
                 lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Mcp.TestNotRun"]));
         }
         private void UpdateLogCount()
-        { Find<TextBlock>("LogCount").Text = Loc.Current.T(logEntries == 1 ? "Config.Entry" : "Config.Entries", logEntries); }
+        {
+            LogCount.Text = Loc.Current.T(logEntries == 1 ? "Config.Entry" : "Config.Entries", logEntries);
+            ActivityTitle.Text = Loc.Current.T("Config.ActivityCount", logEntries);
+            ActivityDisclosure.Text = Loc.Current[ConfigurationActivity.IsExpanded ? "Config.Collapse" : "Config.Expand"];
+        }
 
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
         private void ClickAsync(string name, Func<Task> action) {
@@ -303,18 +328,28 @@ namespace TiaMcpConfigurator
             Clients.RelayNote.Text = Loc.Current[remote ? "Config.RelayLabel" : "Mcp.ClientsNote"];
             Clients.RelayNote.ToolTip = remote ? Loc.Current["Config.RelayMode"] : null;
             Clients.RemoteGuidance.Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
+            ModeHead.Margin = new Thickness(0, 0, 0, remote ? 0 : 20);
+            foreach (var mode in new[] { LocalNav, RemoteNav })
+            {
+                mode.SetResourceReference(Control.BackgroundProperty, "Primer.card");
+                mode.BorderThickness = new Thickness(mode.IsChecked == true ? 2 : 1);
+            }
             ModeTag.Text = Loc.Current[remote ? "Config.RemoteTag" : "Config.LocalTag"];
-            LocalIcon.SetResourceReference(Border.BackgroundProperty, remote ? "Primer.input" : "Primer.accentSoft");
-            RemoteIcon.SetResourceReference(Border.BackgroundProperty, remote ? "Primer.accentSoft" : "Primer.input");
             Find<TextBlock>("Transport").Text = remote ? "HTTP" : "stdio";
             UpdateHostsCard();
             AddressRow.IsEnabled = remote;
             ServerActions.IsEnabled = remote;
-            SaveBoth.IsEnabled = TestClient.IsEnabled = remote;
+            TestClient.IsEnabled = remote;
+            SaveBoth.IsEnabled = remote && !busy;
             UpdateLink();
         }
-        private void UpdateHostsCard() =>
-            HostsCard.Visibility = Remote || HostList.Items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        private void UpdateHostsCard()
+        {
+            bool hasHosts = HostList.HasItems;
+            ActivityCard.Visibility = HostsCard.Visibility = Remote || hasHosts ? Visibility.Visible : Visibility.Collapsed;
+            NoHosts.Visibility = hasHosts ? Visibility.Collapsed : Visibility.Visible;
+            HostList.Visibility = hasHosts ? Visibility.Visible : Visibility.Collapsed;
+        }
 
         internal Func<ClientProfile, bool>? ConfirmClientSelection { get; set; }
         private void Append(string message)
@@ -343,6 +378,9 @@ namespace TiaMcpConfigurator
         }
         private void OnEndpointChanged(object sender, TextChangedEventArgs e)
         {
+            lastTestResult = null;
+            lastTestFailed = false;
+            UpdateLastTest();
             EndpointError.Text = "";
             EndpointError.Visibility = Visibility.Collapsed;
             UpdateLink();
@@ -406,6 +444,7 @@ namespace TiaMcpConfigurator
             busy = value;
             Panes.IsEnabled = Clients.IsEnabled = !value;
             DetectTia.IsEnabled = !value;
+            SaveBoth.IsEnabled = !value && Remote;
             SetReleaseEnabled(CanUpdate?.Invoke() ?? true);
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }

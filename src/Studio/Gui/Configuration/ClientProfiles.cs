@@ -39,7 +39,30 @@ namespace TiaMcpConfigurator
         internal void SetDetectionEvidence(IReadOnlyList<LocalizedText> found) { detectionEvidence = found; }
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e) { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null)); }
-        public string DisplayName { get { return Id == "vscode" ? "VS Code · Copilot" : Name; } }
+        public string DisplayName => Id switch
+        {
+            "codex" => "Codex CLI",
+            "vscode" => "VS Code · Copilot",
+            "qwen" => "Qwen Code",
+            "kimi" => "Kimi Code CLI",
+            _ => Name
+        };
+        public string DisplayPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Path)) return "";
+                var folders = new[] { (Environment.SpecialFolder.ApplicationData, "%APPDATA%"), (Environment.SpecialFolder.UserProfile, "~") };
+                foreach (var (folder, prefix) in folders)
+                {
+                    string directory = Environment.GetFolderPath(folder);
+                    if (directory.Length > 0 && Path.StartsWith(directory + "\\", StringComparison.OrdinalIgnoreCase))
+                        return prefix + Path[directory.Length..].Replace('\\', '/');
+                }
+                string? parent = System.IO.Path.GetDirectoryName(Path);
+                return Path.Length > 48 && parent != null ? "…/" + System.IO.Path.GetFileName(parent) + "/" + System.IO.Path.GetFileName(Path) : Path;
+            }
+        }
         // Tile subtitle without the detection state: the transport family plus, when the card is a model brand, the client that gets written.
         public string CategoryBase { get { string label = ClientProfiles.ClientLabel(Client); return label == null ? Kind : Kind + " · " + label; } }
         public string Category { get { return CategoryBase + " · " + (Detected ? Loc.Current["Config.ClientDetected"] : Loc.Current["Config.NotDetected"]); } }
@@ -129,6 +152,10 @@ namespace TiaMcpConfigurator
                 new ClientProfile("codex", "Codex", System.IO.Path.Combine(codex, "config.toml"), LocalizedText.Key("Config.ClientHint.Codex")),
                 new ClientProfile("gemini", "Gemini CLI", System.IO.Path.Combine(home, ".gemini", "settings.json"), LocalizedText
                         .Key("Config.ClientHint.Gemini")),
+                new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), LocalizedText.Key("Config.ClientHint.Cursor"), null,
+                        "IDE"),
+                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(vscodeUser, "mcp.json"), LocalizedText.Key("Config.ClientHint.VsCode"),
+                        null, "IDE"),
                 // 国产模型与 Grok 没有自带 MCP 客户端，卡片按模型命名，实际写入各家官方 CLI 或 OpenCode。
                 new ClientProfile("qwen", "Qwen", System.IO.Path.Combine(home, ".qwen", "settings.json"), LocalizedText.Key("Config.ClientHint.Qwen")),
                 new ClientProfile("kimi", "Kimi", System.IO.Path.Combine(kimi, "mcp.json"), LocalizedText.Key("Config.ClientHint.Kimi")),
@@ -140,11 +167,7 @@ namespace TiaMcpConfigurator
                 new ClientProfile("grok", "Grok", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", "xAI Grok"), "opencode"),
                 // 千问工作助理（桌面应用）只读 ~/.qwen-agent/mcp.json（或项目下 .qwen-agent/mcp.json）：远程连接使用本地 stdio 中继命令与参数；改完必须完全退出进程再打开才会重新读取。
                 new ClientProfile("qwen-agent", "Qwen Agent", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), LocalizedText
-                        .Key("Config.ClientHint.QwenAgent"), "qwen-agent", "Desktop"),
-                new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), LocalizedText.Key("Config.ClientHint.Cursor"), null,
-                        "IDE"),
-                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(vscodeUser, "mcp.json"), LocalizedText.Key("Config.ClientHint.VsCode"),
-                        null, "IDE")
+                        .Key("Config.ClientHint.QwenAgent"), "qwen-agent", "Desktop")
             };
             foreach (var profile in profiles) Detect(profile);
             return profiles;

@@ -31,7 +31,7 @@ using Xunit;
 namespace TiaOpenness.Gui.Tests;
 
 [Collection(WpfCollection.Name)]
-public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
+public sealed partial class RemoteConfigurationTests(WpfContext wpf) : IDisposable
 {
     private readonly string root = Path.Combine(FindRoot(), "bin-build", "relay-config-tests", Guid.NewGuid().ToString("N"));
     private static string FindRoot()
@@ -42,7 +42,7 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
     }
     private const string Secret = "synthetic-http-access-key";
 
-    private MainWindow ConfigurationWindow(List<ClientProfile>? catalogue = null)
+    private MainWindow ConfigurationWindow(List<ClientProfile>? catalogue = null, bool running = false, string? install = null, string log = "")
     {
         var clients = catalogue ?? new List<ClientProfile> {
             new("vscode", "VS Code", Path.Combine(root, "editor", "mcp.json"), "Editor settings", kind: "IDE") { Detected = true },
@@ -50,7 +50,7 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             new("codex", "Codex", Path.Combine(root, "config.toml"), "CLI settings")
         };
         _ = Engine;
-        var preview = new ConfigurationPreview("21", @"C:\fixture\Portal V21", "127.0.0.1", false, false, true, Secret, "", clients);
+        var preview = new ConfigurationPreview("21", install ?? @"C:\fixture\Portal V21", "127.0.0.1", false, running, true, Secret, log, clients);
         var window = new MainWindow(ProjectPageTestSupport.Model(connected: false, release: "21"), false, preview: preview);
         window.ShowConfiguration(false, root);
         return window;
@@ -78,13 +78,15 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             void CheckCounts()
             {
                 var roster = PlcRendering::TiaOpenness.Shared.ToolUsageCatalog.ProfileEntries(mcp.SelectedReleaseKey);
-                Assert.Equal(Loc.Current.T("Config.ToolCount", roster.Count), mcp.ToolCount.Text);
+                Assert.Equal(roster.Count + " tools", mcp.ToolCount.Text);
+                Assert.Equal(Loc.Current.T("Config.ToolCount", roster.Count), mcp.ToolCount.ToolTip);
                 int lite = roster.Count(row => row!["profiles"]!.AsArray().Any(profile => (string?)profile == "lite"));
-                Assert.Equal(Loc.Current.T("Config.LiteCount", lite), mcp.LiteCount.Text);
+                Assert.Equal(lite + " lite", mcp.LiteCount.Text);
+                Assert.Equal(Loc.Current.T("Config.LiteCount", lite), mcp.LiteCount.ToolTip);
             }
             var tiles = mcp.ReleaseTiles.Children.Cast<RadioButton>().ToArray();
             CheckCounts();
-            Assert.Equal("HTTP :8765", mcp.TransportStatus.Text);
+            Assert.Equal(Loc.Current["Config.HttpStopped"], mcp.TransportStatus.Text);
             Assert.Same(mcp.FindResource("Primer.textFaint"), mcp.Clients.TargetDot.Fill);
             Assert.Equal(Visibility.Visible, mcp.HostsCard.Visibility);
             Assert.Equal(8, tiles.Length);
@@ -135,7 +137,7 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             Assert.Same(mcp.FindResource("Primer.ok"), mcp.Clients.TargetDot.Fill);
             Assert.Equal(Visibility.Collapsed, mcp.HostsCard.Visibility);
             Assert.Equal(Visibility.Collapsed, mcp.ServerPane.Visibility);
-            mcp.HostList.Items.Add(new { Display = "Fixture · stdio" });
+            mcp.HostList.Items.Add(new VisibleHost(37, 1, "21", Engine, root, "stdio", null, "1.0", false, false));
             Assert.Equal(Visibility.Visible, mcp.HostsCard.Visibility);
             mcp.HostList.Items.Clear();
             Assert.Equal(Visibility.Collapsed, mcp.HostsCard.Visibility);
@@ -260,7 +262,9 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
                 string? title = null;
                 var messages = new List<string>();
                 window.Dispatcher.BeginInvoke(DispatcherPriority.Background, () => {
-                    var prompt = Application.Current.Windows.OfType<WorkbenchMessageBox>().Single();
+                    var prompt = window.OwnedWindows.Cast<Window>().Single();
+                    if (prompt is ClientsWriteConfirmation confirm) { confirm.Files.IsExpanded = true; confirm.UpdateLayout(); }
+                    else Assert.IsType<WorkbenchMessageBox>(prompt);
                     title = prompt.Title;
                     messages.AddRange(WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(prompt).Select(text => text.Text));
                     prompt.Close();
@@ -276,9 +280,9 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
             Directory.CreateDirectory(Path.GetDirectoryName(target.Path)!);
             const string original = """{"servers":{"other":{"command":"keep.exe"},"tia-portal-vm":{"url":"http://127.0.0.1:8765/mcp"}}}""";
             File.WriteAllText(target.Path, original);
-            CheckPrompt(() => Click(mcp.Clients.SaveClient), Loc.Current["Config.Write"], target.Path);
+            CheckPrompt(() => Click(mcp.Clients.SaveClient), Loc.Current.T("Config.ConfirmWrite", 1), target.Path);
             Navigate(mcp.Clients.EditTarget);
-            CheckPrompt(mcp.RepairRemoteClients, Loc.Current["Config.Write"], target.Path);
+            CheckPrompt(mcp.RepairRemoteClients, Loc.Current.T("Config.ConfirmWrite", 1), target.Path);
             Assert.Equal(Visibility.Visible, window.ClientsHost.Visibility);
             Assert.Equal(original, File.ReadAllText(target.Path));
             Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(target.Path)!, "*.bak_*"));
@@ -324,8 +328,9 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
                         var row = (ListBoxItem)mcp.Clients.ClientChoices.ItemContainerGenerator.ContainerFromItem(selected);
                         var tile = Assert.Single(WorkbenchRenderFeaturePagesTests.Descendants<ToggleButton>(row));
                         var name = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(tile).Single(text => text.Name == "ClientName");
-                        Assert.Equal(Colors.Yellow, Assert.IsType<SolidColorBrush>(tile.Background).Color);
-                        Assert.Equal(Colors.Black, Assert.IsType<SolidColorBrush>(name.Foreground).Color);
+                        Assert.Equal(Colors.Black, Assert.IsType<SolidColorBrush>(tile.Background).Color);
+                        Assert.Equal(Colors.Yellow, Assert.IsType<SolidColorBrush>(tile.BorderBrush).Color);
+                        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(name.Foreground).Color);
                     }
                     var output = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
                     if (!string.IsNullOrEmpty(output))
@@ -351,14 +356,15 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
                             Assert.Same(tile.FindResource(installed ? "Primer.Tile" : "Primer.Tile.Muted"), tile.Style);
                             var dash = Assert.IsType<System.Windows.Shapes.Rectangle>(tile.Template.FindName("Dash", tile));
                             Assert.Equal(installed ? Visibility.Collapsed : Visibility.Visible, dash.Visibility);
-                            var dot = Assert.Single(WorkbenchRenderFeaturePagesTests.Descendants<System.Windows.Shapes.Ellipse>(tile));
-                            Assert.Same(tile.FindResource(installed ? "Primer.ok" : "Primer.textFaint"), dot.Fill);
-                            Assert.Equal(installed ? 1 : 0.35, dot.Opacity);
                             var labels = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(tile).ToArray();
                             Assert.Equal(2, labels.Length);
-                            Assert.All(labels, label => Assert.Same(installed ? tile.Foreground : tile.FindResource("Primer.textFaint"), label.Foreground));
+                            var mark = Assert.Single(labels, label => label.Name == "InstalledLabel");
+                            Assert.Equal(installed ? Loc.Current["Config.Found"] : "—", mark.Text);
+                            Assert.Same(tile.FindResource(installed ? "Primer.ok" : "Primer.textFaint"), mark.Foreground);
+                            var titleLabel = Assert.Single(labels, label => label.Name == "ReleaseName");
+                            Assert.Same(installed ? tile.Foreground : tile.FindResource("Primer.textFaint"), titleLabel.Foreground);
                         }
-                        Assert.Equal(860, mcp.InstallationCard.ActualWidth);
+                        Assert.Equal(880, mcp.InstallationCard.ActualWidth);
                         Assert.Equal(28, mcp.GoClients.ActualHeight);
                         Assert.Equal("MTA", mcp.ThreadText.Text);
                     }
@@ -490,6 +496,54 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
         Assert.Equal(502, await Task.Run(() => ProxyConnectionInspector.Probe(target, new Uri(proxy.Urls.Single()))));
         Assert.Equal(1, direct); Assert.Equal(1, proxied);
         Assert.Equal("", directAuthorization); Assert.Equal("", proxyAuthorization);
+    }
+
+    [Fact]
+    public async Task Health_status_follows_the_tested_endpoint_and_clears_when_the_target_changes()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Logging.ClearProviders();
+        builder.WebHost.UseSetting("urls", "http://127.0.0.1:0");
+        await using var server = builder.Build();
+        bool ready = true;
+        server.MapGet("/mcp/health", () => Results.Json(new { fileVersion = "1.0" }));
+        server.MapGet("/mcp/ready", () => Results.Json(new { mcpHostReady = ready }));
+        await server.StartAsync();
+        wpf.Run(() =>
+        {
+            var window = ConfigurationWindow(running: true);
+            try
+            {
+                var mcp = window.Configuration!;
+                mcp.ServerPort.Text = new Uri(server.Urls.Single()).Port.ToString();
+                Assert.Equal(Loc.Current.T("Config.HttpRunning", 8765), mcp.TransportStatus.Text);
+                void Probe(string expected)
+                {
+                    var finished = new TaskCompletionSource<bool>();
+                    void Changed(object sender, DependencyPropertyChangedEventArgs args)
+                    {
+                        if (mcp.Panes.IsEnabled) finished.TrySetResult(true);
+                    }
+                    mcp.Panes.IsEnabledChanged += Changed;
+                    try
+                    {
+                        Click(mcp.TestClient);
+                        Assert.False(mcp.SaveBoth.IsEnabled);
+                        WpfContext.Complete(finished.Task.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+                        Assert.True(mcp.SaveBoth.IsEnabled);
+                        Assert.Equal(Loc.Current[expected], mcp.HealthResult.Text);
+                    }
+                    finally { mcp.Panes.IsEnabledChanged -= Changed; }
+                }
+                Probe("Config.ProbeOk");
+                ready = false;
+                Probe("Config.TestFailed");
+                mcp.ServerPort.Text = "8766";
+                Assert.Equal(Loc.Current["Config.NoProbe"], mcp.HealthResult.Text);
+                Assert.Equal(Loc.Current.T("Config.HttpRunning", 8765), mcp.TransportStatus.Text);
+            }
+            finally { window.Close(); }
+        });
     }
 
     public void Dispose()

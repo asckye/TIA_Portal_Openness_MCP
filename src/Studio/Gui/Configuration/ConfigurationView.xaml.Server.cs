@@ -116,6 +116,7 @@ namespace TiaMcpConfigurator
             };
             try { if (!process.Start()) throw new InvalidOperationException(Loc.Current["Config.ServiceNotStarted"]); }
             catch { process.Dispose(); throw; }
+            listeningPort = settings.Port;
             server = process;
             Find<Button>("StartServer").IsEnabled = false; Find<Button>("StopServer").IsEnabled = true; Find<ComboBox>("Version").IsEnabled = false;
             process.BeginOutputReadLine(); process.BeginErrorReadLine(); SetStatus("Config.ServiceRunning");
