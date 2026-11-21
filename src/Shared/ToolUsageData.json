@@ -20121,7 +20121,8 @@
         },
         "set": {
           "arguments": {
-            "action": "set"
+            "action": "set",
+            "mode": "NcSI"
           }
         }
       },
@@ -47467,7 +47468,7 @@
               "requiresBinding": true
             },
             "mode": {
-              "exampleValue": "OnlyHardware"
+              "exampleValue": "NcSI"
             }
           },
           "operations": {
@@ -47476,7 +47477,8 @@
             },
             "set": {
               "arguments": {
-                "action": "set"
+                "action": "set",
+                "mode": "NcSI"
               }
             }
           },
@@ -60786,7 +60788,7 @@
               "requiresBinding": true
             },
             "mode": {
-              "exampleValue": "OnlyHardware"
+              "exampleValue": "NcSI"
             }
           },
           "operations": {
@@ -60795,7 +60797,8 @@
             },
             "set": {
               "arguments": {
-                "action": "set"
+                "action": "set",
+                "mode": "NcSI"
               }
             }
           },
