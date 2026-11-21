@@ -7954,6 +7954,18 @@
           "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):d423665d64def7fe5d168ca50bd8ba2fc462ac29e18c05a5caed9f8b37b2e008:1"
         }
       ]
+    },
+    {
+      "task": "LOW-A",
+      "maintainerDate": "2026-11-21",
+      "reason": "Maintainer approved 2026-11-21: an operation refused by the release guard on every argument set may serve example kind unavailable when marked refusedByReleaseGuard; all other operations keep the call-example assertion",
+      "items": [
+        {
+          "path": "scripts/checks/tool_usage_checks.py",
+          "kind": "assertion-removed",
+          "identifier": "check_usage:48e65b1d431560869b5587b8afeb4b02c084d63e86e75b3cba18933facdc8b8f:1"
+        }
+      ]
     }
   ]
 }
